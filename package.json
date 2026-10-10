@@ -1,0 +1,24 @@
+{
+  "name": "akar",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @akar/web",
+    "build": "npm run build -w @akar/web",
+    "start": "npm run start -w @akar/web",
+    "typecheck": "npm run typecheck -w @akar/web",
+    "test": "node --import tsx --test packages/domain/src/*.test.ts packages/api-client/src/*.test.ts",
+    "test:e2e": "playwright test",
+    "format": "prettier --write apps/web/src packages docs tests"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
