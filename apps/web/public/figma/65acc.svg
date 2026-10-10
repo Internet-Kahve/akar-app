@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="32" height="38.4" viewBox="0 0 32 38.4" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Harita pini">
+<path id="Kemer" d="M16 1.2C20.8 4 26.4 8.8 26.8 16V26.4C26.8 27.7333 26.2667 28.8 25.2 29.6L17.6 36.4C16.5333 37.3067 15.4667 37.3067 14.4 36.4L6.8 29.6C5.73333 28.8 5.2 27.7333 5.2 26.4V16C5.6 8.8 11.2 4 16 1.2Z" fill="#2E7D32" stroke="white" stroke-width="1.6"/>
+<g id="ikon">
+<path id="Vector" d="M12.3333 17.0667C12.3333 14.7333 14 13.7333 16 12.7333C18 13.7333 19.6667 14.7333 19.6667 17.0667H12.3333Z" fill="white"/>
+<path id="Vector_2" d="M10 17.7333H22V18.7333H10V17.7333Z" fill="white"/>
+<path id="Vector_3" fill-rule="evenodd" clip-rule="evenodd" d="M11.3333 19.4H20.6667C19.7778 19.4 19.3333 19.8444 19.3333 20.7333V24.4H12.6667V20.7333C12.6667 19.8444 12.2222 19.4 11.3333 19.4ZM15 24.4V22.4C15 21.7333 15.3333 21.1778 16 20.7333C16.6667 21.1778 17 21.7333 17 22.4V24.4H15Z" fill="white"/>
+</g>
+</g>
+</svg>

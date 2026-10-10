@@ -1,0 +1,323 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import type { HeritageSite } from "@akar/domain";
+import type { Map as MapType, Marker as MarkerType } from "maplibre-gl";
+import {
+  LocateFixed,
+  Plus,
+  Minus,
+  Layers,
+  Compass,
+  MapPin,
+  RotateCcw,
+} from "lucide-react";
+const pins = {
+  cami: "e269f.svg",
+  cesme: "d42c6.svg",
+  hamam: "29586.svg",
+  egitim: "65acc.svg",
+};
+export function HeritageMap({
+  sites,
+  selectedId,
+  onSelect,
+  routeIds,
+  collapsed,
+}: {
+  sites: HeritageSite[];
+  selectedId?: string;
+  onSelect: (id: string) => void;
+  routeIds: string[];
+  collapsed: boolean;
+}) {
+  const container = useRef<HTMLDivElement>(null),
+    map = useRef<MapType | null>(null),
+    markers = useRef<MarkerType[]>([]),
+    selectRef = useRef(onSelect);
+  const [loaded, setLoaded] = useState(false),
+    [failed, setFailed] = useState(false),
+    [tilt, setTilt] = useState(false),
+    [locationError, setLocationError] = useState("");
+  selectRef.current = onSelect;
+  useEffect(() => {
+    let disposed = false;
+    import("maplibre-gl")
+      .then(({ default: lib }) => {
+        if (disposed || !container.current) return;
+        try {
+          const m = new lib.Map({
+            container: container.current,
+            center: [28.981, 41.027],
+            zoom: 15.3,
+            pitch: 0,
+            attributionControl: { compact: true },
+            style: {
+              version: 8,
+              sources: {
+                osm: {
+                  type: "raster",
+                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+                  tileSize: 256,
+                  attribution:
+                    '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
+                  maxzoom: 19,
+                },
+              },
+              layers: [
+                {
+                  id: "osm",
+                  type: "raster",
+                  source: "osm",
+                  paint: { "raster-saturation": -0.65, "raster-opacity": 0.88 },
+                },
+              ],
+            },
+          });
+          map.current = m;
+          m.on("load", () => {
+            if (!disposed) {
+              setLoaded(true);
+              setFailed(false);
+            }
+          });
+          m.on("error", () => {
+            if (!disposed) setFailed(true);
+          });
+        } catch {
+          setFailed(true);
+        }
+      })
+      .catch(() => setFailed(true));
+    return () => {
+      disposed = true;
+      markers.current.forEach((m) => m.remove());
+      map.current?.remove();
+      map.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    const m = map.current;
+    if (!loaded || !m) return;
+    let cancelled = false;
+    import("maplibre-gl").then(({ default: lib }) => {
+      if (cancelled) return;
+      markers.current.forEach((marker) => marker.remove());
+      markers.current = sites.map((site) => {
+        const el = document.createElement("button");
+        el.className = `map-pin ${site.id === selectedId ? "selected" : ""}`;
+        el.setAttribute("aria-label", `${site.name} haritada aç`);
+        const img = document.createElement("img");
+        img.src = `/figma/${pins[site.kind]}`;
+        img.alt = "";
+        if (site.kind === "egitim") {
+          const label = document.createElement("span");
+          label.className = "education-pin";
+          label.textContent = "E";
+          el.append(label);
+        } else el.append(img);
+        if (routeIds.includes(site.id)) {
+          const number = document.createElement("span");
+          number.textContent = String(routeIds.indexOf(site.id) + 1);
+          el.append(number);
+        }
+        el.onclick = () => selectRef.current(site.id);
+        return new lib.Marker({ element: el, anchor: "bottom" })
+          .setLngLat(site.coordinates)
+          .addTo(m);
+      });
+      const coordinates = routeIds
+        .map((id) => sites.find((s) => s.id === id)?.coordinates)
+        .filter((x): x is [number, number] => !!x);
+      const data: GeoJSON.Feature<GeoJSON.LineString> = {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: coordinates.length > 1 ? coordinates : [],
+        },
+      };
+      const source = m.getSource("route") as
+        import("maplibre-gl").GeoJSONSource | undefined;
+      if (source) source.setData(data);
+      else {
+        m.addSource("route", { type: "geojson", data });
+        m.addLayer({
+          id: "route",
+          type: "line",
+          source: "route",
+          paint: {
+            "line-color": "#25477B",
+            "line-width": 3,
+            "line-dasharray": [2, 2],
+          },
+        });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sites, selectedId, routeIds, loaded]);
+  useEffect(() => {
+    const site = sites.find((s) => s.id === selectedId);
+    if (site && loaded)
+      map.current?.easeTo({
+        center: site.coordinates,
+        zoom: 16,
+        duration: 600,
+      });
+  }, [selectedId, loaded, sites]);
+  useEffect(() => {
+    const timeout = setTimeout(() => map.current?.resize(), 250);
+    return () => clearTimeout(timeout);
+  }, [collapsed]);
+  function locate() {
+    if (!navigator.geolocation) {
+      setLocationError("Tarayıcın konumu desteklemiyor.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        map.current?.flyTo({
+          center: [p.coords.longitude, p.coords.latitude],
+          zoom: 15,
+        });
+        setLocationError("Konumuna gidildi. Eserler İstanbul demo bölgesinde.");
+      },
+      () =>
+        setLocationError(
+          "Konum alınamadı. İstanbul demo bölgesinde keşfe devam edebilirsin.",
+        ),
+      { timeout: 8000 },
+    );
+  }
+  return (
+    <div className="map-wrap">
+      <div
+        ref={container}
+        className="map-canvas"
+        aria-label="İstanbul eser haritası"
+      />
+      {(!loaded || failed) && (
+        <div className="map-fallback">
+          <div className="fallback-grid" />
+          <span className="water-label">İSTANBUL BOĞAZI</span>
+          <div className="fallback-note">
+            <MapPin size={16} />
+            {failed
+              ? "Harita yüklenemedi · Şematik konum görünümü"
+              : "Harita hazırlanıyor · Şematik konum görünümü"}
+          </div>
+          {sites.map((site, i) => (
+            <button
+              key={site.id}
+              className="fallback-pin"
+              style={{
+                left: `${15 + (i % 3) * 27}%`,
+                top: `${24 + Math.floor(i / 3) * 32}%`,
+              }}
+              onClick={() => onSelect(site.id)}
+            >
+              {site.kind === "egitim" ? (
+                <span className="education-pin">E</span>
+              ) : (
+                <img src={`/figma/${pins[site.kind]}`} alt="" />
+              )}
+              <span>{site.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="map-location">
+        <span className="live-dot" />
+        İstanbul <span>/</span> Tophane <TagText />
+      </div>
+      <div className="map-tools">
+        <button
+          className="icon-btn"
+          title="Konumuma git"
+          aria-label="Konumuma git"
+          onClick={locate}
+        >
+          <LocateFixed size={20} />
+        </button>
+        <button
+          className="icon-btn"
+          aria-label="Yakınlaştır"
+          onClick={() => map.current?.zoomIn()}
+          disabled={!loaded}
+        >
+          <Plus size={20} />
+        </button>
+        <button
+          className="icon-btn"
+          aria-label="Uzaklaştır"
+          onClick={() => map.current?.zoomOut()}
+          disabled={!loaded}
+        >
+          <Minus size={20} />
+        </button>
+        <button
+          className={`icon-btn ${tilt ? "active" : ""}`}
+          aria-label="Harita eğimini değiştir"
+          disabled={!loaded}
+          onClick={() => {
+            setTilt(!tilt);
+            map.current?.easeTo({ pitch: tilt ? 0 : 50, duration: 500 });
+          }}
+        >
+          <Layers size={20} />
+        </button>
+      </div>
+      <button
+        className="compass icon-btn"
+        aria-label="Demo bölgesine dön"
+        onClick={() => {
+          map.current?.easeTo({
+            center: [28.981, 41.027],
+            zoom: 15.3,
+            bearing: 0,
+            pitch: 0,
+          });
+          setTilt(false);
+        }}
+      >
+        <Compass size={28} />
+      </button>
+      {locationError && (
+        <button
+          className="location-notice"
+          onClick={() => setLocationError("")}
+        >
+          {locationError} ×
+        </button>
+      )}
+      <div className="map-caption">
+        <span>
+          <i className="dot dini" />
+          Dinî
+        </span>
+        <span>
+          <i className="dot su" />
+          Su
+        </span>
+        <span>
+          <i className="dot egitim" />
+          Eğitim
+        </span>
+        <span>
+          <i className="dot akar" />
+          Akar
+        </span>
+      </div>
+      {failed && (
+        <button className="map-retry" onClick={() => window.location.reload()}>
+          <RotateCcw size={14} />
+          Yeniden dene
+        </button>
+      )}
+    </div>
+  );
+}
+function TagText() {
+  return <small>DEMO BÖLGESİ</small>;
+}

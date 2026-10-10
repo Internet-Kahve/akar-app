@@ -1,0 +1,93 @@
+"use client";
+import { useEffect, useRef, type ReactNode } from "react";
+import { X, ArrowLeft, Check, Info } from "lucide-react";
+export function Modal({
+  title,
+  children,
+  onClose,
+  wide = false,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+  wide?: boolean;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement;
+    const dialog = ref.current;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      previous?.focus();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className={`modal ${wide ? "wide" : ""}`}
+      onCancel={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      aria-labelledby="modal-title"
+    >
+      <div className="modal-heading">
+        <h2 id="modal-title">{title}</h2>
+        <button
+          className="icon-btn"
+          aria-label="Pencereyi kapat"
+          onClick={onClose}
+        >
+          <X size={20} />
+        </button>
+      </div>
+      {children}
+    </dialog>
+  );
+}
+export function Back({
+  onClick,
+  children = "Keşfe dön",
+}: {
+  onClick: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <button className="back" onClick={onClick}>
+      <ArrowLeft size={17} />
+      {children}
+    </button>
+  );
+}
+export function Tag({
+  children,
+  tone = "muted",
+}: {
+  children: ReactNode;
+  tone?: string;
+}) {
+  return (
+    <span className={`tag ${tone}`}>
+      {tone === "success" ? <Check size={12} /> : null}
+      {children}
+    </span>
+  );
+}
+export function Notice({ children }: { children: ReactNode }) {
+  return (
+    <div className="notice">
+      <Info size={17} />
+      <span>{children}</span>
+    </div>
+  );
+}
+export function Motif() {
+  return (
+    <div className="motif">
+      <span />
+      <img src="/figma/dd9ae.svg" alt="" />
+      <span />
+    </div>
+  );
+}
