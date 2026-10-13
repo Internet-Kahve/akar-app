@@ -20,7 +20,7 @@ node_modules/
 .tokens_ek_eklendi.css
 
 # Vakıf Katılım kitapları: büyük (29–63 MB) ve izinsiz çoğaltılamaz → ekibe Drive'dan
-#veri/kaynak_pdf/
+veri/kaynak_pdf/
 
 # Repo herkese açıksa bunu da aç (kitapların tam metni):
-veri/metin/
+#veri/metin/
