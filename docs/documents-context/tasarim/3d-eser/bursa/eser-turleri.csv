@@ -1,0 +1,410 @@
+id,cilt,sayfa,ilce,ad_ham,ad_supheli,tur,sablon,rol,olcu_sayisi,kubbe_gecisi,adres
+bursa-001,cilt-1,42,Osmangazi̇,Külliyesi,1,Külliye,kulliye,hayrat,23,17,"Murad Hudâvendigâr Camii ve Medresesi, Osmangazi ilçesi, Çekirge Mahallesi, I."
+bursa-002,cilt-1,54,Osmangazi̇,"Murad Türbesi’nden de esinlenilerek, dönemin sanat anlayı!ı doğrultusunda",1,Türbe,turbe,hayrat,2,3,"Türbe, Osmangazi ilçesi, Çekirge Mahallesi, 22."
+bursa-003,cilt-1,58,Osmangazi̇,II. Murad Külliyesi,0,Külliye,kulliye,hayrat,25,34,"Osmangazi ilçesi, Muradiye Mahallesi, II."
+bursa-004,cilt-1,83,Osmangazi̇,"Şehzade Mahmut Türbesi, Osmangazi ilçesi, Muradiye Mahallesi, Sedat",1,Türbe,turbe,hayrat,2,7,"Şehzade Mahmut Türbesi, Osmangazi ilçesi, Muradiye Mahallesi, Sedat Sokak, No: 1/6’da yer almaktadır."
+bursa-005,cilt-1,89,Osmangazi̇,Hamza Bey Külliyesi,0,Külliye,kulliye,hayrat,4,26,"Hamza Bey Camii, Osmangazi İlçesi, Hamzabey Mahallesi, Kaplıca Caddesi No:55’te bulunan külliyenin ana yapısıdır."
+bursa-006,cilt-1,96,Osmangazi̇,Orhan Bey Külliyesi,0,Külliye,kulliye,hayrat,22,31,"Orhan Bey Camii, Osmangazi ilçesi, Nalbantoğlu Mahallesi, Belediye Caddesi, No: 7’ de yer almaktadır."
+bursa-007,cilt-1,116,Osmangazi̇,Abdal Mehmed Camii,0,Cami,cami,hayrat,8,4,"Abdal Mehmed Camii, Osmangazi İlçesi, Tuzpazarı (Demirtaşpaşa) Mahallesi, Tahal Caddesi, No:28’de yer almaktadır."
+bursa-008,cilt-1,117,Osmangazi̇,Acem Reis (Arap Dede) Camii ve Haziresi,0,Cami,cami,hayrat,8,4,"Mahallesi’nin hemen üst tarafında yer alan caminin, 1913 yılında mahallenin bahçesi hâline geldiğini ve minaresinin yıkık olduğunu belirtmektedir."
+bursa-009,cilt-1,119,Osmangazi̇,Acemler Camii,0,Cami,cami,hayrat,4,0,"Acemler Camii, Reyhan Mahallesi, Haşim İşcan Caddesi, Cami Çıkmazı, No: 2’de yer almaktadır."
+bursa-010,cilt-1,119,Osmangazi̇,Ahmet Dâî Camii,0,Cami,cami,hayrat,10,4,"Acemler Camii, Reyhan Mahallesi, Haşim İşcan Caddesi, Cami Çıkmazı, No: 2’de yer almaktadır."
+bursa-011,cilt-1,121,Osmangazi̇,Ahmet Paşa (Fenârî) Camii ve Haziresi,0,Cami,cami,hayrat,2,0,"Ahmet Paşa (Fenârî) Camii, Osmangazi İlçesi, Ahmetpaşa Mahallesi, Fahri Korutürk Caddesi No: 66’da yer almaktadır."
+bursa-012,cilt-1,122,Osmangazi̇,Akbıyık Camii ve Haziresi,0,Cami,cami,hayrat,4,4,"Akbıyık Camii, Osmangazi İlçesi, Nalbantoğlu Mahallesi, Akbıyık Sokak, No:1’de yer almaktadır."
+bursa-013,cilt-1,124,Osmangazi̇,Alâeddin Bey Camii ve Haziresi,0,Cami,cami,hayrat,2,3,"Akbıyık Mezarlığı, Osmangazi ilçesi, Nalbantoğlu Mahallesi, Akbıyık Caddesi No:12 adresinde yer almaktadır."
+bursa-014,cilt-1,127,Osmangazi̇,Alacahırka Camii,0,Cami,cami,hayrat,0,0,"Alacahırka Camii Osmangazi ilçesi, Alacahırka Mahallesi, Dereağzı Sokak No:3’te yer almaktadır."
+bursa-015,cilt-1,127,Osmangazi̇,Alanyeri Mescidi,0,Mescit,cami,hayrat,0,0,"Alacahırka Camii Osmangazi ilçesi, Alacahırka Mahallesi, Dereağzı Sokak No:3’te yer almaktadır."
+bursa-016,cilt-1,128,Osmangazi̇,Ali Paşa Camii,0,Cami,cami,hayrat,0,0,"Ali Paşa Camii, Osmangazi İlçesi, Alipaşa Mahallesi, Yüceyer Caddesi No:37’de yer almaktadır."
+bursa-017,cilt-1,128,Osmangazi̇,ve Haziresi,1,Hazire,modelsiz,hayrat,0,3,"Ali Paşa Camii, Osmangazi İlçesi, Alipaşa Mahallesi, Yüceyer Caddesi No:37’de yer almaktadır."
+bursa-018,cilt-1,132,Osmangazi̇,Altıparmak Camii ve Haziresi,0,Cami,cami,hayrat,2,5,"Osmangazi ilçesi, Yahşibey Mahallesi, Bozkurt Caddesi, Çıkıntı Sokak, No: 5’te yer almaktadır."
+bursa-019,cilt-1,133,Osmangazi̇,Arap Mehmet Camii,0,Cami,cami,hayrat,3,2,"Osmangazi ilçesi, Tahtakale Mahallesi, İnebey Caddesi, 10."
+bursa-020,cilt-1,134,Osmangazi̇,Araplar Camii ve Haziresi,0,Cami,cami,hayrat,0,0,"Osmangazi ilçesi, Alipaşa (Araplar) Mahallesi, Alper Sokak, No: 1’de yer almaktadır."
+bursa-021,cilt-1,135,Osmangazi̇,Aynalı (Hoca Tabib-Hoca Tayyip-Çapraz) Camii,0,Cami,cami,hayrat,4,4,"Osmangazi ilçesi, Kayhan Mahallesi, Ünlü Cadde ile 2."
+bursa-022,cilt-1,136,Osmangazi̇,Azeb Bey Camii,0,Cami,cami,hayrat,2,2,"Bursa’nın Osmangazi ilçesi, Kocanaib Mahallesi, 10."
+bursa-023,cilt-1,138,Osmangazi̇,Camii ve Haziresi,0,Cami,cami,hayrat,2,5,"Başçı İbrahim Camii ve Haziresi, Osmangazi ilçesi, Maksem Mahallesi, No: 17’de yer almaktadır."
+bursa-024,cilt-1,142,Osmangazi̇,Beşikçiler (Sinan Dede) Camii ve Haziresi,0,Cami,cami,hayrat,6,3,"Osmangazi ilçesi, Muradiye Mahallesi, Beşikçiler Caddesi, No: 23’te yer almaktadır."
+bursa-025,cilt-1,144,Osmangazi̇,Çakır Ağa (Mecnun Dede) Camii ve Haziresi,0,Cami,cami,hayrat,4,8,"Cami, Osmangazi ilçesi, Tahtakale Mahallesi, Kurşunlu Sokak’ta yer almaktadır."
+bursa-026,cilt-1,145,Osmangazi̇,Muslihuddin) Camii,0,Cami,cami,hayrat,0,0,"Osmangazi ilçesi, İbrahim Paşa Mahallesi’nde, İbrahim Paşa Sokağı ile Kız Lisesi Sokağı’nın kesiştiği köşede yer alan cami, Çelebi Sultan Mehmed döneminde Çandarlı İbrahim Paşa tarafından inşa ettiril"
+bursa-027,cilt-1,146,Osmangazi̇,Çerağ (Çırağ) Bey Camii,0,Cami,cami,hayrat,6,5,"Osmangazi ilçesi, Hisar içi, Mollagürani Mahallesi, Çerağ Bey Sokağı’nda yer almaktadır."
+bursa-028,cilt-1,147,Osmangazi̇,(Haraççıoğlu) Haziresi,0,Hazire,modelsiz,hayrat,0,1,"Hazire, Osmangazi ilçesi, Kavaklı Caddesi, No: 39’da yer almaktadır."
+bursa-029,cilt-1,149,Osmangazi̇,(Batpazarı) Camii,0,Cami,cami,hayrat,2,0,"Cami, Osmangazi ilçesi, Kayhan Mahallesi, Demirciler Çarşısı’nda yer almaktadır."
+bursa-030,cilt-1,150,Osmangazi̇,Dâye Hatun (Dâye Kadın - Taya Kadın) Camii,0,Cami,cami,hayrat,3,0,"Caddesi’ne yakın bir konumda bulunan Dâye Hatun Mahallesi’nde, Çelebi Sultan Mehmed’in süt annesi tarafından yaptırılan bir cami bulunmaktadır."
+bursa-031,cilt-1,151,Osmangazi̇,Duhteri Şeref (Fışkırık) Camii,0,Cami,cami,hayrat,9,6,"Cami, Osmangazi ilçesi, Tahtakale Mahallesi, Okul Çıkmazı, No: 19’da yer almaktadır."
+bursa-032,cilt-1,156,Osmangazi̇,Fidan (Mahmudpaşa) Hanı Mescidi,0,Mescit,cami,hayrat,0,0,"Ertuğrul Çelebi’ye ait olan kabir, Osmangazi ilçesi, Nalbantoğlu Mahallesi, Cumhuriyet Caddesi No: 115’te yer almaktadır."
+bursa-033,cilt-1,158,Osmangazi̇,Geyve Hanı Mescidi,0,Mescit,cami,hayrat,0,5,"Osmangazi ilçesi, Nalbantoğlu Mahallesi, Uzunçarşı’da yer alan Geyve Hanı içerisinde bulunmaktadır."
+bursa-034,cilt-1,159,Osmangazi̇,Güngörmez Camii ve Haziresi,0,Cami,cami,hayrat,0,4,"Osmangazi ilçesi, Şehreküstü Mahallesi, Cemal Nadir Caddesi, No."
+bursa-035,cilt-1,160,Osmangazi̇,Hacı Ali Sevinç Camii,0,Cami,cami,hayrat,3,5,"Osmangazi ilçesi, Tahtakale Mahallesi, Fırın Sokak, No: 1’de yer almaktadır."
+bursa-036,cilt-1,162,Osmangazi̇,Hacı İvaz Paşa Camii,0,Cami,cami,hayrat,5,4,"Osmangazi ilçesi, Nalbantoğlu Mahallesi, Ulucami Caddesi, No: 78’de yer almaktadır."
+bursa-037,cilt-1,166,Osmangazi̇,Hafsa Sultan (Bedreddin) Camii ve Haziresi,0,Cami,cami,hayrat,2,0,"Osmangazi ilçesi, Kayhan Mahallesi, Azık Sokağı, No: 2’de yer almaktadır."
+bursa-038,cilt-1,167,Osmangazi̇,Camii ve Kabri,0,Cami,cami,hayrat,6,5,"Cami, Osmangazi ilçesi, Ebuishak Mahallesi, 2."
+bursa-039,cilt-1,169,Osmangazi̇,Hayrettin Paşa Camii,0,Cami,cami,hayrat,0,0,"Osmangazi ilçesi, Alacamescit Mahallesi, Çandarlı Sokak, No:3’te yer almaktadır."
+bursa-040,cilt-1,170,Osmangazi̇,Hıdırlık (Nilüfer Hatun) Camii,0,Cami,cami,hayrat,6,2,"Cami, Osmangazi ilçesi, İvazpaşa Mahallesi, Dikyokuş Sokak, No:1’de yer almaktadır."
+bursa-041,cilt-1,171,Osmangazi̇,Hoca Alizâde Camii ve Haziresi,0,Cami,cami,hayrat,2,3,"Osmangazi ilçesi, Hocaalizâde Mahallesi, Kocaali Sokak, No:1/1’de yer almaktadır."
+bursa-042,cilt-1,173,Osmangazi̇,Hoca Hasan Camii ve Haziresi,0,Cami,cami,hayrat,0,0,"Osmangazi ilçesi, Hocahasan Mahallesi, Değirmen Caddesi, No:2’de yer almaktadır."
+bursa-043,cilt-1,174,Osmangazi̇,İmaret-i İsa Bey Camii,0,Cami,cami,hayrat,2,1,"Cami, Osmangazi ilçesi, Alâaddin Bey Mahallesi, Hastayurdu Caddesi, No:2’de yer almaktadır."
+bursa-044,cilt-1,176,Osmangazi̇,İsa Bey Fenârî (Güdük Minare) Camii,0,Cami,cami,hayrat,4,2,"Osmangazi ilçesi, Alaaddin Paşa Mahallesi, 1."
+bursa-045,cilt-1,177,Osmangazi̇,İsmail Hakkı Tekkesi Camii ve Haziresi,0,Cami,cami,hayrat,0,0,"Osmangazi ilçesi, Tuzpazarı Mahallesi, Hoşgör Sokak, No: 4’te yer almaktadır."
+bursa-046,cilt-1,180,Osmangazi̇,Kademeri (Çukur) Camii ve Haziresi,0,Cami,cami,hayrat,0,0,"Cami, Osmangazi ilçesi, Pınarbaşı Mahallesi, Alacahırka Caddesi, No: 2’de yer almaktadır."
+bursa-047,cilt-1,181,Osmangazi̇,Kanberler (Sitti Hatun) Camii,0,Cami,cami,hayrat,8,3,"Cami, Osmangazi ilçesi, Ebu İshak Mahallesi’nde, Yeni Cumhuriyet Caddesi, Kemal Bengü Caddesi, Sıdıka Hatun Caddesi ve Gökdere Bulvarı’nın oluşturduğu bir adanın içinde yer almaktadır."
+bursa-048,cilt-1,184,Osmangazi̇,Karaşeyh Camii,0,Cami,cami,hayrat,3,3,"Cami, Osmangazi ilçesi, Orhanbey Mahallesi, Albay Bekir Sami Caddesi ile Ressam Şefik Bursalı Caddesi’nin kesiştiği köşede yer almaktadır."
+bursa-049,cilt-1,185,Osmangazi̇,Karakâdî Camii ve Haziresi,0,Cami,cami,hayrat,2,2,"Cami, Osmangazi ilçesi, Tuz Pazarı, Kütahya Hanı (Çukur Han) yakınında yer almakta ve Karakâdî Mahallesi adıyla anılmaktadır."
+bursa-050,cilt-1,187,Osmangazi̇,Kavaklı Camii,0,Cami,cami,hayrat,3,3,"Cami, Osmangazi ilçesi, Kavaklı Mahallesi, Kavaklı Caddesi, No."
+bursa-051,cilt-1,189,Osmangazi̇,Kaygan (Kayhan) Camii ve Haziresi,0,Cami,cami,hayrat,4,11,"Osmangazi ilçesi, Kayhan Mahallesi, Selçuk Hatun Caddesi, Güveri Sokak, No."
+bursa-052,cilt-1,191,Osmangazi̇,Kiremitçi Sinan Bey Camii,0,Cami,cami,hayrat,0,0,"Cami, Osmangazi ilçesi, Kiremitçi Mahallesi, Doğanbey Caddesi, No."
+bursa-053,cilt-1,192,Osmangazi̇,Koca Naip Camii ve Haziresi,0,Cami,cami,hayrat,8,3,"Osmangazi ilçesi, Koca Naib Mahallesi, Cami Sokak, No."
+bursa-054,cilt-1,194,Osmangazi̇,Koza Han Mescidi,0,Mescit,cami,hayrat,0,3,"Mescit, Osmangazi ilçesi, Şehreküstü Mahallesi, Uzunçarşı Caddesi, No."
+bursa-055,cilt-1,196,Osmangazi̇,Lâmiî Çelebi Camii,0,Cami,cami,hayrat,4,0,"Cami, Osmangazi ilçesi, Çekirge Mahallesi, Çekirge Meydanı’nda yer almaktadır."
+bursa-056,cilt-1,196,Osmangazi̇,Maksem (Düsturhan) Camii,0,Cami,cami,hayrat,16,5,"Cami, Osmangazi ilçesi, Çekirge Mahallesi, Çekirge Meydanı’nda yer almaktadır."
+bursa-057,cilt-1,199,Osmangazi̇,Molla Fenârî Camii ve Haziresi,0,Cami,cami,hayrat,6,0,"Osmangazi ilçesi, Molla Fenârî Mahallesi, 12."
+bursa-058,cilt-1,202,Osmangazi̇,"Nakkaş Ali Mescidi haziresi, Osmanlı dönemi edebî ve tasavvuf geleneğinin",1,Mescit,cami,hayrat,2,0,"Hazire, Osmangazi ilçesi, Mollagürani Mahallesi, Satı Caddesi No: 22 adresinde yer almaktadır."
+bursa-059,cilt-1,203,Osmangazi̇,Nalbantoğlu Camii,0,Cami,cami,hayrat,5,4,"Osmangazi ilçesi, Nalbantoğlu Mahallesi, Nalbantoğlu Sokak No: 2 adresinde konumlanmaktadır."
+bursa-060,cilt-1,205,Osmangazi̇,Paşa Camii,0,Cami,cami,hayrat,2,0,"Paşa Camii, Osmangazi ilçesi, Alacahırka Mahallesi, Orhaneli Caddesi, No: 39’da yer almaktadır."
+bursa-061,cilt-1,205,Osmangazi̇,Rusçuk Camii,0,Cami,cami,hayrat,2,0,"Paşa Camii, Osmangazi ilçesi, Alacahırka Mahallesi, Orhaneli Caddesi, No: 39’da yer almaktadır."
+bursa-062,cilt-1,206,Osmangazi̇,Satı Fakih Camii ve Haziresi,0,Cami,cami,hayrat,2,0,"Osmangazi ilçesi, Mollagürani Mahallesi, Oruçbey Caddesi, No: 26’da yer almaktadır."
+bursa-063,cilt-1,207,Osmangazi̇,Selçuk Hatun Camii,0,Cami,cami,hayrat,0,0,"Osmangazi ilçesi, Kayhan Mahallesi, Selçuk Hatun Sokak, No:1’de yer almaktadır."
+bursa-064,cilt-1,208,Osmangazi̇,Selimiye Camii,0,Cami,cami,hayrat,4,3,"Osmangazi ilçesi, Selimiye Mahallesi, Değirmen Caddesi, No: 53/1’de yer almaktadır."
+bursa-065,cilt-1,209,Osmangazi̇,Simkeş (Sırmakeş) Camii,0,Cami,cami,hayrat,9,2,"Osmangazi ilçesi, Orhan Mahallesi, Gümüşçeken Caddesi, Simkeş Çıkmazı, No:1’de yer almaktadır."
+bursa-066,cilt-1,211,Osmangazi̇,Şehadet (Kale-Saray) Camii,0,Cami,cami,hayrat,10,14,"Osmangazi ilçesi, Hasta Yurdu Caddesi, No: 15’te yer almaktadır."
+bursa-067,cilt-1,217,Osmangazi̇,Şeyh Konevî Camii,0,Cami,cami,hayrat,0,4,"Osmangazi ilçesi, İvazpaşa Mahallesi, 1."
+bursa-068,cilt-1,218,Osmangazi̇,Şeyh Paşa (Dibekli) Camii,0,Cami,cami,hayrat,12,1,"Osmangazi ilçesi, Osmangazi Mahallesi, Satı Caddesi’nde yer almaktadır."
+bursa-069,cilt-1,220,Osmangazi̇,Tahtalı (Hatipzade) Mescidi,0,Mescit,cami,hayrat,4,0,"Osmangazi ilçesi, Şehreküstü Mahallesi, Tavukçu Sokak, No: 9/A’da bulunmaktadır."
+bursa-070,cilt-1,220,Osmangazi̇,Tavukçu Mescidi,0,Mescit,cami,hayrat,8,2,"Osmangazi ilçesi, Şehreküstü Mahallesi, Tavukçu Sokak, No: 9/A’da bulunmaktadır."
+bursa-071,cilt-1,224,Osmangazi̇,Hz. Üftâde Camii,0,Cami,cami,hayrat,10,14,"Osmangazi ilçesi, Kavaklı Mahallesi’nde, kendi adıyla anılan Üftade Sokak, No: 10 adresinde yer almaktadır."
+bursa-072,cilt-1,230,Osmangazi̇,Veled-i Enbiya (Enbiyaoğlu) Camii,0,Cami,cami,hayrat,4,1,"Veled-i Enbiya Camii, Osmangazi ilçesi, Reyhan Mahallesi, Reyhan Caddesi, No: 8’de yer almaktadır."
+bursa-073,cilt-1,231,Osmangazi̇,Veled-i Habib Camii,0,Cami,cami,hayrat,10,4,"Osmangazi ilçesi, Alipaşa Mahallesi, İnebey Caddesi’nin Maksem Caddesi ile birleştiği yerdedir."
+bursa-074,cilt-1,232,Osmangazi̇,Veled-i Sarayi Mescidi,0,Mescit,cami,hayrat,0,0,"Osmangazi ilçesi, Şehreküstü Mahallesi, Ahmet Hamdi Tanpınar Caddesi No: 34’te yer almaktadır."
+bursa-075,cilt-1,233,Osmangazi̇,"Veled-i Yaniç Camii, Çeşme ve Haziresi",0,Cami,cami,hayrat,20,9,"“Hacı Musa’nın kızı Hacı Âişe, İbn Yânic Mahallesi’nde bulunan altı ev ve altı bin dirhem değerindeki malı vakfetmiştir."
+bursa-076,cilt-1,236,Osmangazi̇,Veli Şemseddin (Yahni Kapan) Camii ve Haziresi,0,Cami,cami,hayrat,3,1,"Osmangazi ilçesi, Maksem Mahallesi, Öğreten Caddesi üzerinde yer almaktadır."
+bursa-077,cilt-1,237,Osmangazi̇,Veziri (Konuralp-Üç Kurnalı) Camii,0,Cami,cami,hayrat,4,0,"Osmangazi ilçesi, Alipaşa Mahallesi, Veziri Caddesi No: 43 adresinde yer alır."
+bursa-078,cilt-1,238,Osmangazi̇,Yeni Bezzâz (Reyhan) Camii,0,Cami,cami,hayrat,2,3,"Osmangazi ilçesi, Reyhan Mahallesi, İsmail Hakkı Caddesi, No: 3’te yer almaktadır."
+bursa-079,cilt-1,239,Osmangazi̇,Yeni Kaplıca (Gazi Akdemir) Mescidi,0,Mescit,cami,hayrat,6,1,"Osmangazi ilçesi, Gaziakdemir Mahallesi, Yeni Kaplıca Caddesi No: 7’de, Yeni Kaplıca Hamamı ile aynı avlu içerisinde yer almaktadır."
+bursa-080,cilt-1,240,Osmangazi̇,Yer Kapı (Kara Ali Paşa - Bab-ı Zemin) Camii,0,Cami,cami,hayrat,2,3,"Osmangazi ilçesi, Kavaklı Mahallesi, Yerkapı Caddesi, No: 1’de yer almaktadır."
+bursa-081,cilt-1,241,Osmangazi̇,Yiğit Köhne Camii ve Haziresi,0,Cami,cami,hayrat,4,5,"Osmangazi ilçesi, Kayhan Mahallesi, Cumhuriyet Caddesi No: 29’da yer almaktadır."
+bursa-082,cilt-1,244,Osmangazi̇,Zağferanlık Mescidi,0,Mescit,cami,hayrat,4,0,"Osmangazi ilçesi, Reyhan Mahallesi, Bekir Dede Sokak, No: 18’de yer almaktadır."
+bursa-083,cilt-1,,,Emir Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-084,cilt-1,,,Hamza Bey Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-085,cilt-1,,,Camii ve Şadırvanı [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-086,cilt-1,,,Bey Hamamı (bugünkü Aynalı Çarşı) günümüze ulaşmıştır. Ancak imaret [yalnız içindekiler],1,Hamam,hamam,akar,,,
+bursa-087,cilt-1,,,Cariyeler (Saraylılar) Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-088,cilt-1,,,Veled-i Veziri Camii ve Haziresi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-089,cilt-1,,,Darülkurra (Haraççıoğlu) Haziresi [yalnız içindekiler],0,Hazire,modelsiz,hayrat,,,
+bursa-090,cilt-1,,,Ebe Hatun Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-091,cilt-1,,,Hacılar Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-092,cilt-1,,,İzzeddin Bey (Pınarbaşı) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-093,cilt-1,,,Molla Gürani (Yeşil-Güranlı) Mescidi 400 [yalnız içindekiler],1,Mescit,cami,hayrat,,,
+bursa-094,cilt-1,,,Veziri (Konuralp-Üç Kurnalı) Camii 472 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-095,cilt-1,,,Başçı İbrahim Bey Camii ve Haziresi 275 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-096,cilt-1,,,Gülşah Hatun Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-097,cilt-1,,,Sultan II. Murad Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-098,cilt-1,,,Şehzade Mustafa Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-099,cilt-1,,,Cem Sultan Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-100,cilt-1,,,Demirtaş (Timurtaş) Camii Haziresi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-101,cilt-1,,,Üç Kuzular (Kozlar) Camii ve Kabri 443 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-102,cilt-1,,,Hz. Üftâde Tekke Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-103,cilt-1,,,Mükrime Hatun Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-104,cilt-1,,,Ertuğrul Bey Camii ve Kabri [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-105,cilt-1,,,Elmalık Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-106,cilt-1,,,Tayyip-Çapraz) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-107,cilt-1,,,Mecidiye Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-108,cilt-1,,,Hüma Hatun (Hatuniye) Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-109,cilt-1,,,Kara Mustafa Paşa Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-110,cilt-1,,,Hamza Bey Ailesi Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-111,cilt-1,,,Yeni Kaplıca (Gazi Akdemir) Mescidi 477 [yalnız içindekiler],0,Mescit,cami,hayrat,,,
+bursa-112,cilt-1,,,"Camii, Orhan Gazi Camii, Murad Hudâvendigâr Camii ve Ulucami, farklı [yalnız içindekiler]",1,Cami,cami,hayrat,,,
+bursa-113,cilt-1,,,Geyve Han Masjid [yalnız içindekiler],0,Han,han,akar,,,
+bursa-114,cilt-1,,,Şehabettin Paşa Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-115,cilt-1,,,Şehreküstü (Pars Bey) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-116,cilt-1,,,I. Murad Hudâvendigâr Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-117,cilt-1,,,Hamza Bey Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-118,cilt-1,,,Muradiye Çeşmesi [yalnız içindekiler],0,Çeşme,cesme,hayrat,,,
+bursa-119,cilt-1,,,Timurtaş Paşa Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-120,cilt-1,,,Çakır Ağa (Mecnun Dede) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-121,cilt-1,,,Davutpaşa (Batpazarı) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-122,cilt-1,,,Veled-i Enbiya (Enbiyaoğlu) Camii 458 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-123,cilt-1,,,Cıkcık (Girçık- Bekârlar) Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-124,cilt-1,,,Şehzade Alâaddin Ali Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-125,cilt-1,,,Muradiye Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-126,cilt-1,,,Tuzpazarı Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-127,cilt-1,,,Şeker Hoca Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-128,cilt-1,,,Çeşme ve Haziresi [yalnız içindekiler],0,Çeşme,cesme,hayrat,,,
+bursa-129,cilt-1,,,Orhan Bey Hamamı (Aynalı Çarşı) [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-130,cilt-1,,,II. Murad (Muradiye) İmareti [yalnız içindekiler],0,İmaret,imaret,hayrat,,,
+bursa-131,cilt-1,,,I. Murad Hudâvendigâr Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-132,cilt-1,,,Kademeri (Çukur) Camii ve Haziresi 359 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-133,cilt-1,,,I. Murad Hudâvendigâr Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-134,cilt-1,,,Kaygan (Kayhan) Camii ve Haziresi 376 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-135,cilt-1,,,Şirin Hatun Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-136,cilt-1,,,Koza Han Masjid [yalnız içindekiler],0,Han,han,akar,,,
+bursa-137,cilt-1,,,Sivasiler (Tahtalı) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-138,cilt-1,,,Muradiye Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-139,cilt-1,,,Şehzade Mahmut Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-140,cilt-1,,,Ahmet Paşa (Fenârî) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-141,cilt-1,,,Emir Hanı [yalnız içindekiler],0,Han,han,akar,,,
+bursa-142,cilt-1,,,"Azeb Bey Mescidi, Tuz pazarı Camii, Koca Naip Camii ve Bedreddin veya [yalnız içindekiler]",1,Cami,cami,hayrat,,,
+bursa-143,cilt-1,,,Fidan (Mahmudpaşa) Han Masjid [yalnız içindekiler],0,Han,han,akar,,,
+bursa-144,cilt-1,,,Muradiye Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-145,cilt-1,,,Nakkaş Ali Mescidi ve Haziresi [yalnız içindekiler],0,Mescit,cami,hayrat,,,
+bursa-146,cilt-1,,,Orhan Bey Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-147,cilt-1,,,İsmail Hakkı Tekkesi [yalnız içindekiler],0,Tekke,tekke,hayrat,,,
+bursa-148,cilt-1,,,Dâye Hatun (Dâye Kadın Taya Kadın) Camii ve Haziresi [yalnız içindekiler],1,Cami,cami,hayrat,,,
+bursa-149,cilt-1,,,Ali Paşa Camii ve Haziresi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-150,cilt-1,,,I. Murad Hudâvendigâr İmareti [yalnız içindekiler],0,İmaret,imaret,hayrat,,,
+bursa-151,cilt-1,,,Şehzade Ahmet Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-152,cilt-1,,,Gülruh Hatun Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-153,cilt-1,,,"Bey Han, Davut Paşa Han, Koza Han, and Geyve Han. Furthermore, the [yalnız içindekiler]",1,Han,han,akar,,,
+bursa-154,cilt-2,13,Osmangazi̇,Fidan Hanı,0,Han,han,akar,0,1,
+bursa-155,cilt-2,16,Osmangazi̇,Geyve Hanı,0,Han,han,akar,0,1,"Han, Osmangazi ilçesi, Uzun Çarşı yönünde, Demirkapı Çarşısı Süleyman Sokak’ta yer almaktadır."
+bursa-156,cilt-2,18,Osmangazi̇,İpek Hanı,0,Han,han,akar,0,1,"Han, Osmangazi ilçesi Şehreküstü Mahallesi, Ulucami Caddesi No: 77 adresinde yer almaktadır."
+bursa-157,cilt-2,21,Osmangazi̇,İç Koza Hanı,0,Han,han,akar,4,0,
+bursa-158,cilt-2,22,Osmangazi̇,Pirinç Hanı,0,Han,han,akar,10,2,"Osmangazi ilçesinde, Cumhuriyet Caddesi üzerindeki Bilecik Sokak No: 31 adresinde yer alan Pirinç Hanı, Sultan II."
+bursa-159,cilt-2,26,Osmangazi̇,Tahtakale Hanı (Davutpaşa Hanı-Yoğurt Hanı),0,Han,han,akar,0,0,"Osmangazi ilçesindeki Tahtakale Mahallesi’nde yer alan han, Bayezid Paşa tarafından XV."
+bursa-160,cilt-2,27,Osmangazi̇,Bedesteni,1,Çarşı,bedesten,akar,2,3,Gece Mahallesi bulunmaktaydı.
+bursa-161,cilt-2,30,Osmangazi̇,Bali Bey Hanı,0,Han,han,akar,0,0,"Osmangazi ilçesi, Osmangazi Mahallesi, Osmangazi Caddesi No: 1 adresinde yer almaktadır."
+bursa-162,cilt-2,34,Osmangazi̇,Subaşı Medresesi,0,Medrese,medrese,hayrat,8,2,"Medrese, Osmangazi ilçesi, Tahtakale Mahallesi, İnebey Caddesi, İnebey Sokak, No: 5 adresinde yer almaktadır."
+bursa-163,cilt-2,37,Osmangazi̇,Gökdere Medresesi,0,Medrese,medrese,hayrat,0,0,"Medrese, Osmangazi ilçesi, Kayhan Caddesi üzerinde yer almaktadır."
+bursa-164,cilt-2,38,Osmangazi̇,Haraççıoğlu Medresesi,0,Medrese,medrese,hayrat,0,0,"Yapı, Osmangazi ilçesi, Kavaklı Mahallesi, Kavaklı Caddesi, No: 25 adresinde yer almaktadır."
+bursa-165,cilt-2,41,Osmangazi̇,Haraççıoğlu (Dârülkurrâ) Mektebi,0,Mektep,medrese,hayrat,4,3,"Yapı, Osmangazi ilçesi, Kavaklı Mahallesi, Kavaklı Caddesi, No: 39 adresinde yer almaktadır."
+bursa-166,cilt-2,44,Osmangazi̇,Lalaşahinpaşa Medresesi,0,Medrese,medrese,hayrat,0,2,"Osmangazi ilçesi, Hisariçi Ortapazar Caddesi, No."
+bursa-167,cilt-2,45,Osmangazi̇,(Kanberler) Mektebi,0,Mektep,medrese,hayrat,0,3,"Yapı, Osmangazi ilçesi, Ebuishak Mahallesi, Sıdıka Hatun Caddesi üzerinde, Kanberler Parkı içerisinde yer almaktadır."
+bursa-168,cilt-2,47,Osmangazi̇,(Geyikli) Medresesi,0,Medrese,medrese,hayrat,2,1,"Yapı, Osmangazi ilçesi, Muradiye Mahallesi, Beşikçiler Caddesi, No: 2 adresinde yer almaktadır."
+bursa-169,cilt-2,55,Osmangazi̇,Bursa Dullar Evi,0,Konak,ayri_inceleme,hayrat,0,0,"Yapı, Osmangazi ilçesi, Nalbantoğlu Mahallesi sınırlarında, Cumhuriyet Meydanı ile Setbaşı Köprüsü’nü birbirine bağlayan Atatürk Caddesi’nin sol tarafında, 2."
+bursa-170,cilt-2,57,Osmangazi̇,Fransız Kilisesi,0,Kilise,ayri_inceleme,hayrat,0,0,"Osmangazi ilçesi Hocaalizade Mahallesi Rakım Efendi Sokak’ta, Necatibey Kız Meslek Lisesi’nin karşısında yer almaktadır."
+bursa-171,cilt-2,59,Osmangazi̇,İl Kültür ve Turizm Müdürlüğü Konağı,0,Konak,ayri_inceleme,hayrat,0,0,"Konak, Osmangazi ilçesi, Kuruçeşme Mahallesi, Osmangazi Caddesi, No: 18 adresinde yer almaktadır."
+bursa-172,cilt-2,63,Osmangazi̇,Hamamı,1,Hamam,hamam,akar,10,2,"Hamam, Osmangazi ilçesi, Tahtakale Mahallesi, İnebey Caddesi, İnebey Sokak, No: 7 adresinde yer almaktadır."
+bursa-173,cilt-2,64,Osmangazi̇,Eyne Bey (İnebey) Medresesi Çeşmesi,0,Medrese,medrese,hayrat,4,0,"Bursa ili, Osmangazi ilçesi, Tahtakale Mahallesi, İnebey Caddesi, İnebey Sokak, No: 7’de yer almaktadır."
+bursa-174,cilt-2,64,Osmangazi̇,(Bedreddin) Çeşmesi,0,Çeşme,cesme,hayrat,4,0,"Bursa ili, Osmangazi ilçesi, Tahtakale Mahallesi, İnebey Caddesi, İnebey Sokak, No: 7’de yer almaktadır."
+bursa-175,cilt-2,65,Osmangazi̇,Horhor Hamamı,0,Hamam,hamam,akar,0,0,"Hamam, Osmangazi, Kükürtlü Mahallesi, Eski Kaplıca Sokak No: 9 adresinde yer almaktadır."
+bursa-176,cilt-2,66,Osmangazi̇,Hocaalizade Çeşmesi,0,Çeşme,cesme,hayrat,0,0,"Çeşme, Osmangazi ilçesi, Selçukhatun / Hocaalizade Mahallesi, Koca Ali Sokak’ta yer almaktadır."
+bursa-177,cilt-2,66,Osmangazi̇,Mecidiye Camii Çeşmesi,0,Cami,cami,hayrat,0,0,"Çeşme, Osmangazi ilçesi, Selçukhatun / Hocaalizade Mahallesi, Koca Ali Sokak’ta yer almaktadır."
+bursa-178,cilt-2,67,Osmangazi̇,Hatun) Hamamı,0,Hamam,hamam,akar,2,6,"Hamam, Osmangazi ilçesi, Alaaddin Bey Mahallesi, 1."
+bursa-179,cilt-2,69,Osmangazi̇,Paşa) Hamamı,0,Hamam,hamam,akar,4,4,"Hamam, Osmangazi ilçesi, İbrahim Paşa Mahallesi, İbrahimpaşa Caddesi üzerinde, Kız Lisesi’ne çıkan Basak Caddesi güzergâhında konumlanmaktadır."
+bursa-180,cilt-2,72,Osmangazi̇,Nasuh Paşa Hamamı,0,Hamam,hamam,akar,6,10,"Hamam, Osmangazi ilçesi, Hocaalizade Mahallesi, Hamam Sokak No: 28’de yer almaktadır."
+bursa-181,cilt-2,76,Osmangazi̇,Ördekli Hamam,0,Hamam,hamam,akar,0,1,"Hamam, Osmangazi ilçesi, Tayakadın Mahallesi, Abdal Caddesi No: 61’de konumlanmaktadır."
+bursa-182,cilt-2,76,Osmangazi̇,(Eski Yeni Hamam),0,Hamam,hamam,akar,2,24,"Hamam, Osmangazi ilçesi, Tayakadın Mahallesi, Abdal Caddesi No: 61’de konumlanmaktadır."
+bursa-183,cilt-2,82,Osmangazi̇,Dergâhı,0,Tekke,tekke,hayrat,2,4,"Yapı, Bursa ili, Osmangazi ilçesi, Maksem Mahallesi, 5."
+bursa-184,cilt-2,86,Osmangazi̇,Nûmâniye Dergâhı,0,Tekke,tekke,hayrat,24,0,"Osmangazi ilçesi, Aktarhüssam Mahallesi, Tekke Çıkmazı No: 5 adresinde yer almaktadır."
+bursa-185,cilt-2,93,Osmangazi̇,Seyyid Usûl Tekkesi,0,Tekke,tekke,hayrat,0,0,"Tekke, Osmangazi ilçesi, Kuruçeşme Mahallesi, Gelin Sokak No: 1 adresinde yer almaktadır."
+bursa-186,cilt-2,93,Osmangazi̇,ve Haziresi,1,Hazire,modelsiz,hayrat,0,0,"Tekke, Osmangazi ilçesi, Kuruçeşme Mahallesi, Gelin Sokak No: 1 adresinde yer almaktadır."
+bursa-187,cilt-2,98,Osmangazi̇,Hz. Üftâde Tekkesi,0,Tekke,tekke,hayrat,4,4,"Cami ve tekke, Osmangazi ilçesi, Molla Fenari Mahallesi, Derman Caddesi, No: 28 adresinde yer almaktadır."
+bursa-188,cilt-2,105,Osmangazi̇,Akbıyık Sultan (Şemseddin Ahmed) Türbesi,0,Türbe,turbe,hayrat,0,1,"Osmangazi ilçesi, Nalbantoğlu Mahallesi, Akbıyık Caddesi No: 12 adresinde yer almaktadır."
+bursa-189,cilt-2,105,Osmangazi̇,Azeb Bey Türbesi,0,Türbe,turbe,hayrat,0,3,"Osmangazi ilçesi, Nalbantoğlu Mahallesi, Akbıyık Caddesi No: 12 adresinde yer almaktadır."
+bursa-190,cilt-2,108,Osmangazi̇,Gülçiçek Hatun Türbesi,0,Türbe,turbe,hayrat,2,3,"Osmangazi ilçesi, Altıparmak Mahallesi, Çarklı Değirmen Sokak’ta yer almaktadır."
+bursa-191,cilt-2,109,Osmangazi̇,Hanımlar Kızlar Türbesi (Yılanlı Türbe),0,Türbe,turbe,hayrat,0,1,"Osmangazi ilçesi, Muradiye Mahallesi, Kaplıca Caddesi üzerinde yer almaktadır."
+bursa-192,cilt-2,110,Osmangazi̇,Hatice Sultan Türbesi,0,Türbe,turbe,hayrat,0,2,"Osmangazi ilçesi, Kükürtlü Mahallesi, 3."
+bursa-193,cilt-2,111,Osmangazi̇,Karışdıran (Karşıduran) Süleyman Bey Türbesi,0,Türbe,turbe,hayrat,2,1,"Osmangazi ilçesi, Muradiye Mahallesi, Kaplıca Caddesi üzerinde yer almaktadır."
+bursa-194,cilt-2,112,Osmangazi̇,Mehmet Bin Seyit Ali (Şeker Hoca) Türbesi,0,Türbe,turbe,hayrat,2,1,"Osmangazi ilçesi, Nalbantoğlu Mahallesi, Cami Aralığı 2."
+bursa-195,cilt-2,112,Osmangazi̇,Molla Gürani (Yeşil Güranlı) Türbesi,0,Türbe,turbe,hayrat,2,1,"Osmangazi ilçesi, Nalbantoğlu Mahallesi, Cami Aralığı 2."
+bursa-196,cilt-2,113,Osmangazi̇,Okçu Baba Türbesi,0,Türbe,turbe,hayrat,6,1,"Osmangazi ilçesi, Osmangazi Mahallesi, Osmangazi Caddesi No: 16 adresinde yer almaktadır."
+bursa-197,cilt-2,115,Osmangazi̇,Orhan Gazi Türbesi,0,Türbe,turbe,hayrat,2,6,"Osmangazi ilçesi, Osmangazi Mahallesi, Yiğitler Caddesi No: 2 adresinde yer almaktadır."
+bursa-198,cilt-2,118,Osmangazi̇,Osman Gazi Türbesi,0,Türbe,turbe,hayrat,0,5,"Osmangazi ilçesi, Osmangazi Mahallesi, Yiğitler Caddesi No: 2 adresinde yer almaktadır."
+bursa-199,cilt-2,124,Osmangazi̇,Seydi Nasır Türbesi,0,Türbe,turbe,hayrat,0,0,"Osmangazi ilçesi, Mollafenari Mahallesi, Seydinasır Caddesi, No: 95’te yer almaktadır."
+bursa-200,cilt-2,126,Osmangazi̇,Şair (Gedik) Ahmet Paşa Türbesi,0,Türbe,turbe,hayrat,1,0,"Osmangazi ilçesi, Muradiye Mahallesi, Beşikçiler Caddesi, No: 2’de yer almaktadır."
+bursa-201,cilt-2,127,Osmangazi̇,Türbe ve Haziresi,0,Türbe,turbe,hayrat,0,0,"Osmangazi ilçesi, Mollafenari Mahallesi’nde, aynı adla anılan caminin haziresinde yer almaktadır."
+bursa-202,cilt-2,130,Osmangazi̇,Hz. Üftâde Türbesi,0,Türbe,turbe,hayrat,2,1,"Osmangazi ilçesi Kavaklı Mahallesi, Üftâde Sokağı No: 10 adresinde yer almaktadır."
+bursa-203,cilt-2,133,Osmangazi̇,Veled-i Habib Türbesi,0,Türbe,turbe,hayrat,0,0,"Osmangazi ilçesi, Alipaşa Mahallesi, İnebey Caddesi üzerinde yer almaktadır."
+bursa-204,cilt-2,137,Yildirim,Emir Sultan Külliyesi,0,Külliye,kulliye,hayrat,0,0,"Yıldırım ilçesi, Emirsultan Mahallesi, Doyuran Caddesi No:1 adresinde yer almaktadır."
+bursa-205,cilt-2,137,Yildirim,"Bünyesinde pek çok işlevi barındıran Emir Sultan Külliyesi, şehrin sosyal,",1,Külliye,kulliye,hayrat,14,27,"Yıldırım ilçesi, Emirsultan Mahallesi, Doyuran Caddesi No:1 adresinde yer almaktadır."
+bursa-206,cilt-2,159,Yildirim,Külliyesi,1,Külliye,kulliye,hayrat,6,7,"Cami, Yıldırım ilçesi, Umurbey Mahallesi, 5."
+bursa-207,cilt-2,169,Yildirim,Mehmed Külliyesi,0,Külliye,kulliye,hayrat,59,73,"Yıldırım ilçesi, Yeşil Mahallesi, Akyokuş Sokak No: 8 adresinde yer almaktadır."
+bursa-208,cilt-2,229,Yildirim,"Onu, Arap ve Acem krallarının efendisi büyük sultan Süleyman Han bin",1,Han,han,akar,2,0,"Yıldırım ilçesi, Yıldırım Mahallesi, Yardım Sokak No: 8 adresinde yer almaktadır."
+bursa-209,cilt-2,229,Yildirim,Bayezid Han -Allah mülkünü daim kılsın- inşa ettirmiştir. Hicri 809 yılı,1,Han,han,akar,8,10,"Yıldırım ilçesi, Yıldırım Mahallesi, Yardım Sokak No: 8 adresinde yer almaktadır."
+bursa-210,cilt-2,235,Yildirim,Babadağ Camii,0,Cami,cami,hayrat,0,0,"Yıldırım, Hocataşkın Mahallesi, 3."
+bursa-211,cilt-2,235,Yildirim,Beyazıt Paşa (Çatalçeşme) Camii,0,Cami,cami,hayrat,0,0,"Yıldırım, Hocataşkın Mahallesi, 3."
+bursa-212,cilt-2,236,Yildirim,Davut Kadı (Eski-Ortayol) Camii,0,Cami,cami,hayrat,5,0,"Yıldırım, Hacıseyfettin Mahallesi, Karadavut Sokak’ta yer almaktadır."
+bursa-213,cilt-2,237,Yildirim,Hacı Sevindik Camii,0,Cami,cami,hayrat,6,0,"Yıldırım, Meydancık Mahallesi, Sevindik Sokak, No: 3’te yer almaktadır."
+bursa-214,cilt-2,238,Yildirim,Hacı Seyfeddin Camii,0,Cami,cami,hayrat,4,1,
+bursa-215,cilt-2,239,Yildirim,Hoca Taşkın Camii ve Kabri,0,Cami,cami,hayrat,2,1,"Yıldırım, Hoca Taşkın Mahallesi, Köprü Sokak, No: 8’de yer almaktadır."
+bursa-216,cilt-2,240,Yildirim,Hüsamettin Tekkesi (Halil Ağa) Camii,0,Cami,cami,hayrat,0,0,"Yıldırım, Mollaarap Mahallesi, Hüsamettin Tekke Sokak, No: 1’de yer almaktadır."
+bursa-217,cilt-2,241,Yildirim,İbn-i Bezzaz Camii ve Haziresi,0,Cami,cami,hayrat,4,2,"Yıldırım, Hoca Taşkın Mahallesi, İncirli Caddesi, No: 58’de yer almaktadır."
+bursa-218,cilt-2,243,Yildirim,Önü) Camii,0,Cami,cami,hayrat,2,0,"Yıldırım, Kurdoğlu Mahallesi, Namazgâh Caddesi, Kabakçı Sokak, No: 64’te yer almaktadır."
+bursa-219,cilt-2,243,Yildirim,Mesut Makramavi Camii ve Haziresi,0,Cami,cami,hayrat,2,0,"Yıldırım, Kurdoğlu Mahallesi, Namazgâh Caddesi, Kabakçı Sokak, No: 64’te yer almaktadır."
+bursa-220,cilt-2,244,Yildirim,Meydancık Camii,0,Cami,cami,hayrat,5,1,"Yıldırım, Meydancık Mahallesi, Alancık Sokak, No: 18 adresinde yer almaktadır."
+bursa-221,cilt-2,246,Yildirim,(Balabancık) Camii,0,Cami,cami,hayrat,0,5,"Yıldırım, Mollaarap Mahallesi, Balabancık Caddesi, No: 35 adresinde yer almaktadır."
+bursa-222,cilt-2,248,Yildirim,Musa Baba Camii ve Haziresi,0,Cami,cami,hayrat,4,9,"Yıldırım ilçesi, Musababa Mahallesi, Musababa Caddesi, No: 74’te yer almaktadır."
+bursa-223,cilt-2,251,Yildirim,Mücelliddin Ömer Ağa (Resulzade) Camii,0,Cami,cami,hayrat,0,5,"Yıldırım ilçesi, Hacı Seyfettin Mahallesi, 2."
+bursa-224,cilt-2,255,Yildirim,Pir Emir Camii,0,Cami,cami,hayrat,8,4,"Piremir Mahallesi, Okul Sokak’ta yer alan cami, aslen Buharalı olan Pir Emir Mehmed adına inşa edilmiştir."
+bursa-225,cilt-2,257,Yildirim,Selami Dergâhı Camii,0,Cami,cami,hayrat,0,0,"Namazgâh Mahallesi, Türe Sokak üzerinde yer alan dergâh, Celvetiyye tarikatı şeyhlerinden Selâmi Ali Efendi tarafından H."
+bursa-226,cilt-2,258,Yildirim,Selimzade Camii,0,Cami,cami,hayrat,2,1,"Yıldırım ilçesi, Selimzade Mahallesi, Eski Sokak, No: 4’te yer almaktadır."
+bursa-227,cilt-2,259,Yildirim,Setbaşı (Kara Çelebizade) Camii,0,Cami,cami,hayrat,0,0,"Yıldırım, Kurdoğlu Mahallesi, Atatürk Caddesi, No: 1 adresinde yer almaktadır."
+bursa-228,cilt-2,260,Yildirim,Şible Camii,0,Cami,cami,hayrat,6,0,"Yeşil Mahallesi, Şible Sokak, No: 2 adresinde yer alan cami, Yeşil’den Emîr Sultan’a uzanan cadde üzerinde, yolun sağ tarafında konumlanmaktadır."
+bursa-229,cilt-2,261,Yildirim,Tatarlar Camii,0,Cami,cami,hayrat,0,0,"Yıldırım, Selimzade Mahallesi, Selimzade Caddesi, No: 14 adresinde yer alan cami, halk arasında “Tatarlar Mahallesi” olarak da bilinen bölgede konumlanmaktadır."
+bursa-230,cilt-2,262,Yildirim,Vefikiye Camii,0,Cami,cami,hayrat,1,0,"Yıldırım, Mollaarap Mahallesi, Balabancık Caddesi, No: 63 adresinde yer almaktadır."
+bursa-231,cilt-2,263,Yildirim,Yeni Mahalle Camii,0,Cami,cami,hayrat,2,0,
+bursa-232,cilt-2,264,Yildirim,Zeyniler (Hacı Halife) Camii,0,Cami,cami,hayrat,3,8,"Yıldırım ilçesi, Emirsultan Mahallesi, Zeyniler Caddesi, No: 14’te yer almaktadır."
+bursa-233,cilt-2,268,Yildirim,Baba Zâkir Türbesi,0,Türbe,turbe,hayrat,2,1,"Bugün Karamazak Mahallesi olarak bilinen bölgede, apartmanlar arasında kalmış durumda olan Kara Abdürrezzak Kabri, geçmişte ahşap bir türbe iken günümüzde yalnızca açık bir mezar halinde varlığını sür"
+bursa-234,cilt-2,270,Yildirim,Pir Emir (Pir Emir Mehmet) Türbesi,0,Türbe,turbe,hayrat,2,1,"Yıldırım ilçesi, Piremir Mahallesi, mezarlık alanı içerisinde yer almaktadır."
+bursa-235,cilt-2,272,Yildirim,Hançerli Medresesi,0,Medrese,medrese,hayrat,0,0,"Yıldırım ilçesi, Davutkadı Mahallesi, Musababa Caddesi No: 2 adresinde yer almaktadır."
+bursa-236,cilt-2,274,Yildirim,Molla Yegan Medresesi,0,Medrese,medrese,hayrat,0,0,"Yıldırım ilçesi, Yıldırım Mahallesi, Yıldırım Caddesi No:9’da yer almaktadır."
+bursa-237,cilt-2,276,Yildirim,(Şabaniye) Tekkesi,0,Tekke,tekke,hayrat,12,4,"Yıldırım ilçesi, Kurtoğlu Mahallesi, Namazgâh Caddesi, No: 25’te yer almaktadır."
+bursa-238,cilt-2,280,Yildirim,Irgandı Köprüsü,0,Köprü,ayri_inceleme,hayrat,0,2,"Köprü, Yıldırım ilçesi, Kurdoğlu Mahallesi, Gökdere Bulvarı, No: 14 adresinde yer almaktadır."
+bursa-239,cilt-2,282,Yildirim,İncirli Hamamı,0,Hamam,hamam,akar,6,14,"Yıldırım ilçesi, Meydancık Mahallesi, İncirli Caddesi, No: 34 adresinde yer almaktadır."
+bursa-240,cilt-2,285,Yildirim,Molla Arap Çeşmesi,0,Çeşme,cesme,hayrat,4,1,"Yıldırım ilçesi, Mollaarap Mahallesi, Balabancık Caddesi, No:35 adresinde yer alan Mollaarap Camii’nin kuzeydoğu köşesinde, caddeye cepheli konumda bulunan çeşme, cami yapısına sonradan eklenmiş bir u"
+bursa-241,cilt-2,,,İshak Şah (Müftü Önü) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-242,cilt-2,,,"Bölgesi’nde, Orhan Camii ile Ulucami arasında konumlanmaktadır. Tarih [yalnız içindekiler]",1,Cami,cami,hayrat,,,
+bursa-243,cilt-2,,,Çoban Bey Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-244,cilt-2,,,Hanı ve Ulucami gibi kentsel açılım [yalnız içindekiler],0,Han,han,akar,,,
+bursa-245,cilt-2,,,Yıldırım Bayezid Bedesteni [yalnız içindekiler],0,Çarşı,bedesten,akar,,,
+bursa-246,cilt-2,,,Emir Sultan Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-247,cilt-2,,,Karabaş-ı Velî Dergâhı [yalnız içindekiler],0,Tekke,tekke,hayrat,,,
+bursa-248,cilt-2,,,Mahkeme (İbrahim Paşa) Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-249,cilt-2,,,İpek Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-250,cilt-2,,,"Koza Han, günümüzde Bursa Çarşısı içinde en yoğun kullanılan ticaret [yalnız içindekiler]",1,Çarşı,bedesten,akar,,,
+bursa-251,cilt-2,,,"Günümüzde de ticari canlılığını koruyan Koza Han, Orhan Camii, Emir [yalnız içindekiler]",1,Cami,cami,hayrat,,,
+bursa-252,cilt-2,,,Mecidiye Camii Fountain [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-253,cilt-2,,,Emir Sultan Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-254,cilt-2,,,Yeşil Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-255,cilt-2,,,Seyyid Usûl Tekkesi ve Haziresi [yalnız içindekiler],0,Tekke,tekke,hayrat,,,
+bursa-256,cilt-2,,,Fidan Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-257,cilt-2,,,Süleyman Bey Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-258,cilt-2,,,Beşir Ağa Çeşmesi [yalnız içindekiler],0,Çeşme,cesme,hayrat,,,
+bursa-259,cilt-2,,,Bekir Dede Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-260,cilt-2,,,Umur Bey Haziresi [yalnız içindekiler],0,Hazire,modelsiz,hayrat,,,
+bursa-261,cilt-2,,,İl Kültür ve Turizm Müdürlüğü Konağı 116 [yalnız içindekiler],1,Konak,ayri_inceleme,hayrat,,,
+bursa-262,cilt-2,,,Yeşil (Sultaniye) Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-263,cilt-2,,,İbrahim Paşa (Hatice Hatun) Hamamı 133 [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-264,cilt-2,,,Yıldırım Bayezid Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-265,cilt-2,,,Eyne Bey (İnebey) Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-266,cilt-2,,,Geyve Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-267,cilt-2,,,Alaaddin Bey Çeşmesi [yalnız içindekiler],0,Çeşme,cesme,hayrat,,,
+bursa-268,cilt-2,,,Devlet Hatun Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-269,cilt-2,,,Hacı Hüsamettin Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-270,cilt-2,,,Eyne Bey (İnebey) Subaşı Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-271,cilt-2,,,Eyne Bey (İnebey) Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-272,cilt-2,,,Hüsamettin Tekkesi [yalnız içindekiler],0,Tekke,tekke,hayrat,,,
+bursa-273,cilt-2,,,Yıldırım Darüşşifası [yalnız içindekiler],0,Diğer,ayri_inceleme,hayrat,,,
+bursa-274,cilt-2,,,"Koza Hanı’nın doğu duvarından 3,66 [yalnız içindekiler]",0,Han,han,akar,,,
+bursa-275,cilt-2,,,Yıldırım Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-276,cilt-2,,,Abdüllatif Kudsi Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-277,cilt-2,,,Koza Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-278,cilt-2,,,Pirinç Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-279,cilt-2,,,Sitti Hatun (Kanberler) Mektebi [yalnız içindekiler],0,Mektep,medrese,hayrat,,,
+bursa-280,cilt-2,,,Emir Sultan Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-281,cilt-2,,,Yıldırım Bayezid Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-282,cilt-2,,,Yeşil İmareti [yalnız içindekiler],0,İmaret,imaret,hayrat,,,
+bursa-283,cilt-2,,,Koza Hanı [yalnız içindekiler],0,Han,han,akar,,,
+bursa-284,cilt-2,,,Musa Baba Camii and Graveyard [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-285,cilt-2,,,Mesut Makramavi Camii ve Haziresi 485 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-286,cilt-2,,,Şair Ahmet Paşa (Geyikli) Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-287,cilt-2,,,Pir Emir (Pir Emir Mehmet) Türbesi 539 [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-288,cilt-2,,,Abdal Mehmed Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-289,cilt-2,,,Bali Bey Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-290,cilt-2,,,Hafsa Sultan (Bedreddin) Çeşmesi [yalnız içindekiler],0,Çeşme,cesme,hayrat,,,
+bursa-291,cilt-2,,,"Han, klasik Osmanlı han planına uygun [yalnız içindekiler]",0,Han,han,akar,,,
+bursa-292,cilt-2,,,"The Koza Han, which still maintains [yalnız içindekiler]",0,Han,han,akar,,,
+bursa-293,cilt-2,,,Camii Çeşmesi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-294,cilt-2,,,Umur Bey Camii ve Haziresi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-295,cilt-2,,,Tahtakale Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-296,cilt-2,,,Umur Bey Çeşmesi [yalnız içindekiler],0,Çeşme,cesme,hayrat,,,
+bursa-297,cilt-2,,,Umur Bey Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-298,cilt-2,,,Ebû İshak Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-299,cilt-2,,,İç Koza Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-300,cilt-3,18,İzni̇k,"Eşrefzâde Camii,",1,Cami,cami,hayrat,0,0,"Yapı, İznik, Eşrefzâde Mahallesi, Kılıçaslan Caddesi, Eşrefoğlu Sokak No: 2 adresinde yer almaktadır."
+bursa-301,cilt-3,18,İzni̇k,Minaresi ve Haziresi,0,Hazire,modelsiz,hayrat,0,0,"Yapı, İznik, Eşrefzâde Mahallesi, Kılıçaslan Caddesi, Eşrefoğlu Sokak No: 2 adresinde yer almaktadır."
+bursa-302,cilt-3,22,İzni̇k,Hacı Özbek Camii,0,Cami,cami,hayrat,6,3,"İznik, Eşrefzâde Mahallesi, Kılıçaslan Caddesi, Hüseyin Oktay Sokak’ta yer almaktadır."
+bursa-303,cilt-3,24,İzni̇k,Mahmut Çelebi Camii,0,Cami,cami,hayrat,0,0,"İznik, Mahmut Çelebi Mahallesi, Atatürk Caddesi üzerinde yer almaktadır."
+bursa-304,cilt-3,24,İzni̇k,Mescidi),1,Mescit,cami,hayrat,0,6,"İznik, Mahmut Çelebi Mahallesi, Atatürk Caddesi üzerinde yer almaktadır."
+bursa-305,cilt-3,28,İzni̇k,Orhan Gazi (İmaret) Camii,0,Cami,cami,hayrat,9,1,
+bursa-306,cilt-3,29,İzni̇k,Şeyh Kutbüddin Camii,0,Cami,cami,hayrat,0,2,"İznik, Eşrefzâde Mahallesi, Alaaddin Mısri Sokağı’nda yer almaktadır."
+bursa-307,cilt-3,31,İzni̇k,Yakub Bey Camii,0,Cami,cami,hayrat,14,9,"Yapı, İznik ilçesi Yeni Mahalle, Yakup Sokak’ta yer almaktadır."
+bursa-308,cilt-3,32,İzni̇k,Halil Paşa) Camii,0,Cami,cami,hayrat,32,7,"İznik, Yeşil Cami Mahallesi, Yeşil Cami Sokak’ta yer almaktadır."
+bursa-309,cilt-3,40,İzni̇k,Alaaddin-i Mısri Türbesi,0,Türbe,turbe,hayrat,0,0,"İznik’in Eşrefzâde Mahallesi, Alaaddin Mısri Sokağı’nda yer almaktadır."
+bursa-310,cilt-3,40,İzni̇k,Çandarlı Halil Paşa Türbesi,0,Türbe,turbe,hayrat,3,0,"İznik’in Eşrefzâde Mahallesi, Alaaddin Mısri Sokağı’nda yer almaktadır."
+bursa-311,cilt-3,43,İzni̇k,Kırgızlar Türbesi,0,Türbe,turbe,hayrat,2,7,"İznik, Selçuk Mahallesi’nde, surların Yenişehir Kapısı çıkışında yer almaktadır."
+bursa-312,cilt-3,46,İzni̇k,Medresesi,1,Medrese,medrese,hayrat,0,6,
+bursa-313,cilt-3,49,İzni̇k,Büyük (Eski-I. Murad-Meydan-Tekke) Hamamı,0,Hamam,hamam,akar,0,0,"İznik ilçesi, Beyler Mahallesi, Atatürk Caddesi No: 88 adresindedir."
+bursa-314,cilt-3,50,İzni̇k,(II. Murad) Hamamı,0,Hamam,hamam,akar,2,8,"İznik, Mahmut Çelebi Mahallesi, Maltepe Caddesi’nde yer almaktadır."
+bursa-315,cilt-3,53,İzni̇k,Manastırı Kilisesi,0,Kilise,ayri_inceleme,hayrat,0,4,"İznik ilçesi, Yeni Mahalle, Yalçın Sokak’ta yer almaktadır."
+bursa-316,cilt-3,56,İzni̇k,Nilüfer Hatun İmareti,0,İmaret,imaret,hayrat,12,15,"İznik, Eşrefoğlu Mahallesi, Müze Sokak No: 11’de, Yeşil Camii’nin batısında yer almaktadır."
+bursa-317,cilt-3,62,Gemli̇k,Adliye Köyü Camii,0,Cami,cami,hayrat,0,0,"Gemlik ilçesi, Adliye Mahallesi, Kenar Sokak’ta yer almaktadır."
+bursa-318,cilt-3,63,Gemli̇k,Balıkpazarı (Yeni) Camii,0,Cami,cami,hayrat,0,2,"Gemlik ilçesi, Balıkpazarı Mahallesi, Avukat Özgür Aksoy Caddesi üzerinde yer almaktadır."
+bursa-319,cilt-3,67,Gürsu,Orta Camii,0,Cami,cami,hayrat,2,0,"Gürsu ilçesi, İstiklal Mahallesi, Fatih Caddesi, No: 66 adresinde yer almaktadır."
+bursa-320,cilt-3,71,İnegöl,İshak Paşa Külliyesi,0,Külliye,kulliye,hayrat,0,3,"Yapı, İnegöl, Cuma Camii Mahallesi, Ankara Caddesi, No: 13 adresinde yer almaktadır."
+bursa-321,cilt-3,78,İnegöl,Burhaniye Camii,0,Cami,cami,hayrat,0,0,"Yapı, İnegöl, Burhaniye Mahallesi, Yeşil Bursa Caddesi, No: 15 adresinde yer almaktadır."
+bursa-322,cilt-3,78,İnegöl,Hamidiye (Altınbaş) Camii,0,Cami,cami,hayrat,0,1,"Yapı, İnegöl, Burhaniye Mahallesi, Yeşil Bursa Caddesi, No: 15 adresinde yer almaktadır."
+bursa-323,cilt-3,82,İnegöl,İmaret) Camii,0,Cami,cami,hayrat,0,3,"Hançerli Fatma Sultan Camii, (Yıldırım-Yukarı İmaret Camii) İnegöl, Kurşunlu Mahallesi -eski köy yerleşimi- içinde yer almaktadır."
+bursa-324,cilt-3,84,İnegöl,Hürriyet (Sarı) Camii,0,Cami,cami,hayrat,0,4,"Yapı, İnegöl, Mahmudiye Mahallesi, Kasım Efendi Caddesi, No: 135 adresinde yer almaktadır."
+bursa-325,cilt-3,86,İnegöl,Kasım Efendi (Yenice) Camii,0,Cami,cami,hayrat,0,1,"Cami, İnegöl, Sarraflar Çarşısı, Cuma Mahallesi, Kasım Efendi Caddesi üzerinde yer almaktadır."
+bursa-326,cilt-3,87,İnegöl,Kemalpaşa (Boşnak) Camii,0,Cami,cami,hayrat,2,0,"Cami, İnegöl, Kemalpaşa Mahallesi, Cami Çıkmazı, No: 2 adresinde konumlanmaktadır."
+bursa-327,cilt-3,88,İnegöl,Laz-Hacı Hafız (Lazlar) Camii,0,Cami,cami,hayrat,0,0,"İnegöl, Kemalpaşa Mahallesi, Atatürk Bulvarı, No:26’da yer alır."
+bursa-328,cilt-3,88,İnegöl,Osmaniye (Çamaşırlık) Camii,0,Cami,cami,hayrat,0,1,"İnegöl, Kemalpaşa Mahallesi, Atatürk Bulvarı, No:26’da yer alır."
+bursa-329,cilt-3,90,İnegöl,Camii,1,Cami,cami,hayrat,11,6,"Cami, İnegöl, Tahtaköprü Mahallesi, Hüseyin Alp Caddesi üzerinde yer almaktadır."
+bursa-330,cilt-3,96,İnegöl,Sungur Paşa Köyü Türbesi,0,Türbe,turbe,hayrat,0,0,"Yapı, İnegöl, Ortaköy Mahallesi, Kervansaray Caddesi, No: 43 adresinde yer almaktadır."
+bursa-331,cilt-3,99,İnegöl,Şehitler Köyü Çeşmesi ve Hamamı,0,Hamam,hamam,akar,0,1,
+bursa-332,cilt-3,101,Karacabey,Hacı Cemali (Nasrullah) Camii,0,Cami,cami,hayrat,16,12,"Karacabey, Abdullah Paşa Mahallesi, Panayır Caddesi üzerinde yer almaktadır."
+bursa-333,cilt-3,112,Karacabey,Türbesi,0,Türbe,turbe,hayrat,0,0,"Karacabey, Selimiye Mahallesi, İmaret Caddesi, 4."
+bursa-334,cilt-3,112,Karacabey,Issız (Susuz) Han,0,Han,han,akar,0,0,"Karacabey, Selimiye Mahallesi, İmaret Caddesi, 4."
+bursa-335,cilt-3,115,Keles,Yakub Bey Hamamı,0,Hamam,hamam,akar,2,4,"Keles ilçesi, Cuma Mahallesi’nde yer almaktadır."
+bursa-336,cilt-3,117,Kestel,Aksu Köyü Camii,0,Cami,cami,hayrat,0,0,"Cami, Kestel, Aksu Mahallesinde yer almaktadır."
+bursa-337,cilt-3,117,Kestel,ve Haziresi,1,Hazire,modelsiz,hayrat,0,0,"Cami, Kestel, Aksu Mahallesinde yer almaktadır."
+bursa-338,cilt-3,119,Kestel,Geyikli Babasultan Camii,0,Cami,cami,hayrat,2,4,"Hazire, Kestel, Aksu Mahallesinde yer alan caminin bahçesindedir."
+bursa-339,cilt-3,122,Kestel,Şeyh Vanî Mehmet Efendi Camii ve Haziresi,0,Cami,cami,hayrat,0,0,"Kestel, Kale Mahallesi, Cuma Caddesi, No:11 adresinde yer almaktadır."
+bursa-340,cilt-3,125,Kestel,Geyikli Babasultan Türbesi,0,Türbe,turbe,hayrat,2,4,"Kestel, Babasultan Mahallesinde yer alan külliyenin içinde bulunan türbe, Geyikli Baba’nın vefatının ardından Orhan Gazi tarafından inşa ettirilmiştir."
+bursa-341,cilt-3,126,Kestel,Şeyh Vanî Mehmet Efendi Türbesi,0,Türbe,turbe,hayrat,0,0,"Yapı, Kestel, Aksu Mahallesinde yer almaktadır."
+bursa-342,cilt-3,126,Kestel,Han Odası,0,Han,han,akar,0,0,"Yapı, Kestel, Aksu Mahallesinde yer almaktadır."
+bursa-343,cilt-3,127,Kestel,Aksu Köyü Hamamı,0,Hamam,hamam,akar,0,0,"Kestel, Aksu Mahallesinde yer almaktadır."
+bursa-344,cilt-3,128,Kestel,Eski (Vanî Mehmed Şifa) Hamamı,0,Hamam,hamam,akar,0,6,"Kestel, Vanî Mehmed Mahallesi, Cuma Caddesi, No: 24 adresinde yer almaktadır."
+bursa-345,cilt-3,129,Kestel,Geyikli Baba Çeşmesi,0,Çeşme,cesme,hayrat,8,2,"Mudanya ilçesi, Şükrüçavuş Mahallesi, Mustafakemalpaşa Caddesi, No: 35’te yer almaktadır."
+bursa-346,cilt-3,135,Mudanya,Cami-i Atik) Camii,0,Cami,cami,hayrat,10,0,"Mudanya ilçesi, Hasanbey Mahallesi, Halit Paşa Caddesi ile Şadırvan Sokak kesişiminde, No: 5 adresinde yer almaktadır."
+bursa-347,cilt-3,137,Mudanya,Ali Efendi) Camii,0,Cami,cami,hayrat,0,4,"Mudanya ilçesi, Hasanbey Mahallesi, İpar Caddesi, No:21’de bulunmaktadır."
+bursa-348,cilt-3,140,Mudanya,Hasan Mısrî Bey Camii,0,Cami,cami,hayrat,12,1,"Mudanya ilçesi, Hasanbey Mahallesi, 2."
+bursa-349,cilt-3,142,Mudanya,Ömer Bey Camii,0,Cami,cami,hayrat,0,0,"Cami, Mudanya ilçesi, Ömerbey Mahallesi, Halitpaşa Caddesi, No: 72 adresinde yer almaktadır."
+bursa-350,cilt-3,143,Mudanya,Yeni Camii,0,Cami,cami,hayrat,0,0,"Cami, Mudanya ilçesi, Halitpaşa Mahallesi, Fevzi Paşa Caddesi, No: 19 adresinde yer almaktadır."
+bursa-351,cilt-3,144,Mudanya,Halil Ağa Evi,0,Konak,ayri_inceleme,hayrat,0,0,"Yapı, Mudanya ilçesi, Şükrüçavuş Mahallesi, Mustafakemalpaşa Caddesi, 3."
+bursa-352,cilt-3,145,Mudanya,Mudanya Mütareke Evi Müzesi,0,Konak,ayri_inceleme,hayrat,0,0,
+bursa-353,cilt-3,147,Mudanya,Mudanya Polis Evi,0,Konak,ayri_inceleme,hayrat,0,0,"Mudanya ilçesi, Osmanlı padişahı I."
+bursa-354,cilt-3,149,Mustafakemalpaşa,Atariye Camii,0,Cami,cami,hayrat,0,1,"Şimdiki haliyle, şehrin Atariye Mahallesindeki bir cami olmuştur."
+bursa-355,cilt-3,151,Mustafakemalpaşa,Şeyh Müftü Camii,0,Cami,cami,hayrat,0,6,"Mahallesi, Selimiye Camii Sokakta yer almaktadır."
+bursa-356,cilt-3,154,Mustafakemalpaşa,çeşitli vakıflar tahsis etmesi nedeniyle halk arasında “Hamza Bey Zaviyesi”,1,Tekke,tekke,hayrat,2,2,"Türbe, Bursa ili, Mustafakemalpaşa ilçesi, Hamzabey Mahallesi, Korucubaşı Çıkmazında yer almaktadır."
+bursa-357,cilt-3,154,Mustafakemalpaşa,Hamza Bey Türbesi,0,Türbe,turbe,hayrat,4,2,"Türbe, Bursa ili, Mustafakemalpaşa ilçesi, Hamzabey Mahallesi, Korucubaşı Çıkmazında yer almaktadır."
+bursa-358,cilt-3,156,Mustafakemalpaşa,Şeyh Müftü Türbesi,0,Türbe,turbe,hayrat,0,0,"Türbe, Mustafakemalpaşa ilçesi, Şeyhmüftü Mahallesi, Şeyh Müftü Camii avlusunda yer almaktadır."
+bursa-359,cilt-3,158,Nilüfer,Demirci Köyü Camii,0,Cami,cami,hayrat,0,0,"Nilüfer, Demirci Mahallesi, Demirci Caddesi, Duman Sokak’ta yer alır."
+bursa-360,cilt-3,162,Nilüfer,Özlüce Kilisesi Camii,0,Cami,cami,hayrat,2,0,"Nilüfer, Özlüce Mahallesi, Çiçek Caddesi, No: 73 adresinde yer almaktadır."
+bursa-361,cilt-3,164,Nilüfer,Gölyazı Hamamı,0,Hamam,hamam,akar,1,3,"Yapı, Nilüfer ilçesi, Gölyazı Mahallesi, Cumhuriyet Caddesi’nde yer almaktadır."
+bursa-362,cilt-3,172,Orhangazi,Orhan Gazi Camii-Gürle,0,Cami,cami,hayrat,1,0,"Orhan Gazi Camii, Orhangazi ilçesi Gürle Mahallesinde yer almaktadır."
+bursa-363,cilt-3,174,Orhangazi,Gürle Köyü Hamamı,0,Hamam,hamam,akar,0,6,Orhangazi ilçesi Gürle Mahallesinde yer almaktadır.
+bursa-364,cilt-3,177,Yenişehir,Sinan Paşa Külliyesi,0,Külliye,kulliye,hayrat,0,13,"Yenişehir ilçesi, Ulucami Mahallesi’nde yer almaktadır."
+bursa-365,cilt-3,186,Yenişehir,Bali Bey (Çarşı) Camii,0,Cami,cami,hayrat,0,2,"Yenişehir ilçesi Ulucami Mahallesi, İstiklal Caddesi No: 18’de yer almaktadır."
+bursa-366,cilt-3,187,Yenişehir,Çınarlı (Karabaçak-Voyvoda) Camii,0,Cami,cami,hayrat,0,3,"Yenişehir ilçesi Gündoğan Mahallesi, Yağhane Sokak’ta yer almaktadır."
+bursa-367,cilt-3,188,Yenişehir,Ethem Paşa Camii,0,Cami,cami,hayrat,2,3,"Yenişehir ilçesi, Tabakhane Mahallesi, Ethem Paşa Sokak No: 19 adresinde yer almaktadır."
+bursa-368,cilt-3,190,Yenişehir,Hacı Hasan Camii,0,Cami,cami,hayrat,0,0,"Yenişehir ilçesi, Hıdırbali Mahallesi, Ali Haydar Sokak No: 15 adresinde yer almaktadır."
+bursa-369,cilt-3,191,Yenişehir,Murat Paşa (Kumluk) Camii,0,Cami,cami,hayrat,3,2,"Yenişehir ilçesi, Kurtuluş Mahallesi, Bilecik Caddesi No: 1 adresinde yer almaktadır."
+bursa-370,cilt-3,196,Yenişehir,Postinpûş Camii,0,Cami,cami,hayrat,0,0,"Yenişehir ilçesi, Yenigün Mahallesi, Baba Sultan Parkı içerisinde yer almaktadır."
+bursa-371,cilt-3,196,Yenişehir,Zaviyesi),1,Tekke,tekke,hayrat,0,4,"Yenişehir ilçesi, Yenigün Mahallesi, Baba Sultan Parkı içerisinde yer almaktadır."
+bursa-372,cilt-3,198,Yenişehir,Şemakizade Hacı Hüseyin Efendi Camii,0,Cami,cami,hayrat,2,8,"Şemakizade Camii, Yenişehir ilçesi, Hıdırbali Mahallesi, Şeref Sokak ile Garaj Caddesi’nin kesişimi, No: 1 adresinde yer almaktadır."
+bursa-373,cilt-3,200,Yenişehir,Orhan Gazi Hamamı,0,Hamam,hamam,akar,6,4,"Yenişehir ilçesi, Yarhisar Köyü’nde bulunmaktadır."
+bursa-374,cilt-3,202,Yenişehir,Yarhisar Köyü Çeşmesi,0,Çeşme,cesme,hayrat,4,3,"Yenişehir ilçesi, Yarhisar Köyü iç yolu üzerinde yer almaktadır."
+bursa-375,cilt-3,,,Hacı Hüseyin Efendi Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-376,cilt-3,,,Kurşunlu Han [yalnız içindekiler],0,Han,han,akar,,,
+bursa-377,cilt-3,,,Aksu Köyü Camii ve Haziresi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-378,cilt-3,,,İshak Paşa Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-379,cilt-3,,,Süleyman Paşa Medresesi [yalnız içindekiler],0,Medrese,medrese,hayrat,,,
+bursa-380,cilt-3,,,Şeyh Kutbüddin Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-381,cilt-3,,,Yıldırım Bayezid (Cuma) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-382,cilt-3,,,Yakup Çelebi Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-383,cilt-3,,,Özlüce Kilisesi Mosque [yalnız içindekiler],0,Kilise,ayri_inceleme,hayrat,,,
+bursa-384,cilt-3,,,Mamuriyet Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-385,cilt-3,,,Çınarlı (Karabaçak-Voyvoda) Camii 372 [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-386,cilt-3,,,Han Room [yalnız içindekiler],0,Han,han,akar,,,
+bursa-387,cilt-3,,,"Eşrefzâde Camii, Minaresi [yalnız içindekiler]",0,Cami,cami,hayrat,,,
+bursa-388,cilt-3,,,Gölyazı Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-389,cilt-3,,,Çarşı (Çifte-Belediye) Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-390,cilt-3,,,Lala Şahin Paşa Kümbeti [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-391,cilt-3,,,Koca Ali Efendi) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-392,cilt-3,,,Ulu (Hudâvendigâr) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-393,cilt-3,,,Mağribî Halil Ağa Camii) [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-394,cilt-3,,,Sinan Paşa Külliyesi’nde Arasta [yalnız içindekiler],0,Külliye,kulliye,hayrat,,,
+bursa-395,cilt-3,,,Selimiye Camii Minaresi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-396,cilt-3,,,Çandarlı İbrahim Paşa Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-397,cilt-3,,,Tahtaköprü Hamidiye Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-398,cilt-3,,,Lala Şahin Paşa Camii Minaresi [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-399,cilt-3,,,Muradiye Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-400,cilt-3,,,Hacı Hamza (II. Murad) Hamamı [yalnız içindekiler],0,Hamam,hamam,akar,,,
+bursa-401,cilt-3,,,Sinan Paşa Külliyesi’nde İmaret [yalnız içindekiler],0,Külliye,kulliye,hayrat,,,
+bursa-402,cilt-3,,,"Türbesi, İshak Paşa Mezarlığı [yalnız içindekiler]",0,Türbe,turbe,hayrat,,,
+bursa-403,cilt-3,,,Kurşunlu Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-404,cilt-3,,,Sinan Paşa Külliyesi’nde Medrese [yalnız içindekiler],0,Külliye,kulliye,hayrat,,,
+bursa-405,cilt-3,,,İshak Paşa Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-406,cilt-3,,,Bülbül Hatun Türbesi [yalnız içindekiler],0,Türbe,turbe,hayrat,,,
+bursa-407,cilt-3,,,Ayasofya (Orhan) Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-408,cilt-3,,,Şeyh Vanî Mehmet Efendi Camii [yalnız içindekiler],0,Cami,cami,hayrat,,,
+bursa-409,cilt-2,8,Osmangazi,Koza Hanı,,Han,han,akar,3,,
