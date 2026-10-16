@@ -4,7 +4,11 @@
 
 Geçmişi gör. Hikâyesini dinle. İzini bırak.
 
-Figma tasarımlarından geliştirilmiş, web öncelikli kültürel miras uygulaması. İlk demo bölgesi İstanbul / Tophane. Bu sürüm frontend ve yerel mock servis içerir; sunucu, gerçek kullanıcı hesabı veya doğrulanmış ziyaret altyapısı içermez.
+Figma tasarımlarından geliştirilmiş, web öncelikli kültürel miras uygulaması. İlk demo bölgesi Bursa / Hanlar Bölgesi. Bu sürüm frontend ve yerel mock servis içerir; sunucu, gerçek kullanıcı hesabı veya doğrulanmış ziyaret altyapısı içermez.
+
+## 16 Ekim frontend yenilemesi
+
+Güncel inceleme, kararlar ve kalan işler: [Frontend yenileme kontrol listesi](docs/FRONTEND-REFRESH.md). İlk uyarlama Bursa mock verisi ve yeni harita stilini içerir; aşağıdaki eski ekran kapsamı tüm güncel Figma tasarımının tamamlandığı anlamına gelmez. Mirasım ayarlarından deneysel rozet/Bulmaca/Birlikte Gez ekranları açılabilir. Masaüstü anlatımda Panel / Altyazı karşılaştırması vardır.
 
 ## Çalıştırma
 
@@ -37,7 +41,7 @@ npm start
 - Demo yönetim panelinde eser ekleme/düzenleme, hikâye bölüm düzenleme, taslak/yayın durumu ve moderasyon.
 - Geçmişi Gör için klavye destekli karşılaştırma kaydırıcısı ve tarih seçimi. **Gerçek arşiv görselleri henüz yoktur.**
 
-Veriler aynı tarayıcıda `akar-demo-v1` anahtarıyla localStorage'da tutulur. Birden fazla cihaz arasında senkronizasyon yoktur. Mirasım → Demo verilerini sıfırla ile başlangıca dönülür. Fotoğraflar yerel depolama kotasına tabidir; kota hatasında işlem kaydedilmiş gibi gösterilmez.
+Veriler aynı tarayıcıda `akar-demo-bursa-v1` anahtarıyla localStorage'da tutulur. Birden fazla cihaz arasında senkronizasyon yoktur. Mirasım → Demo verilerini sıfırla ile başlangıca dönülür. Fotoğraflar yerel depolama kotasına tabidir; kota hatasında işlem kaydedilmiş gibi gösterilmez.
 
 ## Proje yapısı
 

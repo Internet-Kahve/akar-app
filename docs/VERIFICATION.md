@@ -1,5 +1,30 @@
 # Doğrulama raporu
 
+## 16 Ekim · admin ve harita ikinci adımı
+
+- `npm run typecheck`, `npm run build` başarılı; 12 birim testi geçti.
+- Tam Playwright paketi: 19 başarılı, 1 bilinçli mobil atlama. Son font/panel değişikliğinden sonra ilgili 4 masaüstü/mobil admin + harita testi tekrar geçti.
+- Fotoğraf seçme: geçersiz dosya reddi → gerçek dosya decode/resize → alt metin/inline kaynak/lisans → kapak → cümlede havuzdan seçim → taslak → reload → yayın → ortak görsel güncelleme → keşif kartı/okuma sahnesi → reload. Masaüstü 1440×1000 ve mobil 390×844; yatay taşma yok.
+- Kaynak/lisans/kapak/cümle ilişkileri eksikse yayın engellenir; eksik taslak kaydedilir. Yanlış model parçası engeli domain sınırında test edildi.
+- JSON alan eşlemede konumsuz satır atlanır, hazır kayıt yalnız taslak olur. Kopya engeli ve atomik hata domain testinde doğrulandı. Rota sıralama kaydı reload sonrasında korunur.
+- Gerçek MapLibre ile animasyon açıkken yakınlaştırma, uzaklaştırma ve panel boyut değişimlerinde DOM pin ucu ile haritanın verdiği koordinat arasındaki hata <1,1 CSS px. Bu regresyon testi dış tile ağından bağımsız bir boş stile karşı çalışır.
+- Ayrı canlı kontrol: gerçek OpenFreeMap stili yükleniyor, 6 pin var, fallback yok, tarayıcı sayfa hatası yok. Yerel stil docs kaynağıyla JSON olarak birebir aynı (58 katman).
+- Görsel inceleme: admin yayın sayfası masaüstü/mobil ve yerel yüklenen görsel. Eski üst uygulama kabuğu bu dilimde korunur; tam Figma eşitliği iddia edilmez.
+- 3D render, kayıtlı kamera ve profesyonel ses bağlantısı henüz yok. GLB dosyası/parça metaverisi okuma UI'si mevcut; gerçek Ulucami GLB entegrasyonu ayrıca yapılacak. Yerel depolama kotası geçerlidir.
+- `npm audit` MapLibre için mevcut kritik DOM sanitizer uyarısı bildirdi; major sürüm geçişi kontrol listesinde. Font paketi bu uyarının kaynağı değil.
+
+## 16 Ekim · frontend yenileme ilk adımı
+
+- Tip kontrolü ve üretim build’i geçti.
+- 9 birim testi, 15 masaüstü/mobil Playwright testi geçti; masaüstü anlatım karşılaştırması mobilde bilinçli atlandı.
+- Bursa haritası canlı Chrome kontrolünde yüklendi; fallback kapandı, sayfa hatası veya başarısız ağ isteği görülmedi.
+- MapLibre stil şeması: 58 katman, sıfır doğrulama hatası.
+- Panel / Altyazı geçişinde aktif bölüm ve oynatıcı DOM örneği korundu; 1440×900 ekran görüntüleri incelendi. Sesin işitsel kalitesi ve gerçek GLB/fotoğraf anlatımı henüz doğrulanmadı.
+- Eski İstanbul localStorage kaydı korunurken yeni Bursa ilerlemesinin bağımsız saklandığı test edildi.
+- Deneysel özelliklerin varsayılan gizliliği, ayardan açılıp kapanması ve ekranlara ulaşılması iki boyutta doğrulandı.
+
+Kalan işler ve mevcut sınırlar: [frontend kontrol listesi](FRONTEND-REFRESH.md). Aşağıdaki rapor önceki sürüme aittir.
+
 10 Ekim 2026 · Yerel frontend demosu
 
 ## Sonuç
