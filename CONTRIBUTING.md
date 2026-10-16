@@ -8,10 +8,12 @@ Node sürümü `.nvmrc` içindedir. Repo kökünden `npm ci` ve `npm run dev` ç
 
 ## Değişiklik gönderme
 
+Bu repoda çalışma branch’leri için `tamerakdeniz/` ön eki kullanılır. Commit yazarı ve committer kimliği mevcut Tamer Akdeniz Git ayarlarıdır.
+
 ```sh
 git switch main
 git pull --ff-only
-git switch -c feat/ozellik-adi
+git switch -c tamerakdeniz/ozellik-adi
 # Değişikliği uygula.
 npm run typecheck
 npm test
@@ -20,7 +22,7 @@ npm run build
 npm run test:e2e
 git add <ilgili-dosyalar>
 git commit -m "feat(scope): describe the change"
-git push -u origin feat/ozellik-adi
+git push -u origin tamerakdeniz/ozellik-adi
 ```
 
 PR açıklamasında davranış değişikliğini, nasıl doğrulandığını ve bilinen sınırlarını yaz. Ortak API tipini değiştirdiğinde frontend/backend sözleşmesini de güncelle. Commit kimliğini kendi `git config user.name` ve `user.email` ayarlarınla kullan.

@@ -1,6 +1,6 @@
 # Frontend yenileme · inceleme ve iş listesi
 
-16 Ekim 2026 · Branch: `codex/frontend-refresh`
+16 Ekim 2026 · Branch: `tamerakdeniz/frontend-refresh`
 
 ## Kapsam ve kaynak önceliği
 
