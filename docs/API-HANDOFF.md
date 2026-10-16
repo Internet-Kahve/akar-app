@@ -8,6 +8,14 @@ UI yalnızca `AkarClient.getSnapshot()`, `dispatch(command)` ve `reset()` çağ�
 
 `reset()` yalnızca demo içindir; üretim API'sine otomatik çevrilmemelidir. Frontend iş kuralları güvenlik sınırı değildir. Üretimde puan, rol, onay, cevap kontrolü ve ziyaret doğrulaması sunucuda yapılmalıdır.
 
+## 16 Ekim · mock içerik stüdyosu sözleşmesi
+
+- `HeritageSite.editorVersion: 2`, `sources`, `photos`, `coverPhotoId` ve isteğe bağlı `model` yeni editör kayıtlarını tanımlar. TR/EN metinler, bâni, dönem, adres, vakıf rolü ve ilişkili eser alanları isteğe bağlıdır; eski snapshot'lar açılmaya devam eder.
+- Hikâye cümleleri `photoId` / `sourceId`, isteğe bağlı EN metni, kart görünürlüğü ve model parça vurguları taşır. `publicationIssues()` ve `validateSite()` kapak, kaynak, lisans, alt metin ve cümle bağlantılarını yayın aşamasında kontrol eder; eksik içerik taslak olabilir.
+- `catalog-routes` komutu `Snapshot.catalogRoutes` listesini kaydeder. Katalog rotaları ile kullanıcının `routeIds` rotası ayrıdır; taslak katalog rotaları keşifte gösterilmez.
+- `photo` komutu ortak görseli bütün referanslarında günceller. `import-sites` atomik olarak yalnız taslak ekler; aynı normalize ad + ilçe kaydını atlar ve var olan içeriği değiştirmez.
+- Görsel ve GLB dosyalarının `src` alanı bu yerel demoda data URL'dir. Backend entegrasyonunda upload servisi ve medya kimlikleriyle değiştirilmeli; büyük dosyalar snapshot JSON'una taşınmamalıdır. Yerel kota hatası gerçek bir başarısızlık olarak UI'a döner.
+
 ## Önerilen kaynaklar
 
 | Endpoint                                             | Veri / davranış                                                               |
@@ -49,7 +57,7 @@ Yükleniyor, offline, yetkisiz, bulunamadı, validation, sunucu hatası ve rate-
 
 Ham dosyalar → normalize edilmiş eser → kaynak kayıtları → hikâye bölümleri → editör kontrolü → yayın.
 
-Üretimde ek alanlar: `sourceId`, kaynak URL/kurum/tarih/lisans; `mediaId`, MIME, alt metin, ses transcript'i; `trust`; `updatedAt`; `locale`; `geofence`; medya ilişkileri. Temsili, çıkarım ve doğrulanmış bilgiyi aynı etikette eritmeyin. Mevcut mock `source` bir metindir; gerçek veri aktarımında ayrı Source/Media varlıklarına ayrılmalıdır.
+Üretimde ek alanlar: `sourceId`, kaynak URL/kurum/tarih/lisans; `mediaId`, MIME, alt metin, ses transcript'i; `trust`; `updatedAt`; `locale`; `geofence`; medya ilişkileri. Temsili, çıkarım ve doğrulanmış bilgiyi aynı etikette eritmeyin. Geriye uyumlu `source` özeti korunur; güncel mock ayrı `SiteSource`, `SitePhoto` ve `SiteModel` kayıtlarını da taşır. Üretimde bu ilişkiler kalıcı kaynak/medya kimliklerine çevrilmelidir.
 
 ## Entegrasyon sırası
 
