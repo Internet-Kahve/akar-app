@@ -319,8 +319,8 @@ export function VisitModal({
         <h3>{done ? "Demo ziyareti pasaportunda" : site.name}</h3>
         <p>
           {done
-            ? "Bu eser için tekrar puan verilmez."
-            : "Demo ziyaretini deneyerek pasaport ve puan akışını görebilirsin. Gerçek konum doğrulaması yapılmaz."}
+            ? "Bu eser daha önce ziyaret edildi."
+            : "Demo ziyaretini deneyerek keşif ilerlemeni görebilirsin. Gerçek konum doğrulaması yapılmaz."}
         </p>
         <Tag tone="representative">
           Simülasyon · Fiziksel ziyaret doğrulanmadı

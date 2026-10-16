@@ -11,11 +11,8 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Ulucami");
-  await expect(page.locator(".site-card")).toHaveCount(2);
-  await page
-    .locator(".site-card-main")
-    .filter({ hasText: "Ulucami" })
-    .click();
+  await expect(page.locator(".site-card")).toHaveCount(1);
+  await page.locator(".site-card-main").filter({ hasText: "Ulucami" }).click();
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
@@ -44,7 +41,9 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(page.getByText("İlk iz senin olsun.")).toBeVisible();
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
   await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
-  await expect(page.getByText("115 keşif puanı")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Ulucami Hikâye tamamlandı/ }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Demo yönetim paneli" }).click();
   await page
     .locator(".admin-nav")
@@ -59,9 +58,13 @@ test("discovery, story, memory moderation and persistence form one complete flow
     page.getByText("Avludaki ışığı ve sessizliği hatırlayacağım."),
   ).toBeVisible();
   await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
-  await expect(page.getByText("140 keşif puanı")).toBeVisible();
+  await expect(
+    page.getByText("Avludaki ışığı ve sessizliği hatırlayacağım."),
+  ).toBeVisible();
   await page.reload();
-  await expect(page.getByText("140 keşif puanı")).toBeVisible();
+  await expect(
+    page.getByText("Avludaki ışığı ve sessizliği hatırlayacağım."),
+  ).toBeVisible();
   expect(errors).toEqual([]);
 });
 test("admin adds an artifact and new content is discoverable", async ({
@@ -88,24 +91,20 @@ test("admin adds an artifact and new content is discoverable", async ({
     "Demo Vakıf Kütüphanesi",
   );
 });
-test("quiz explains answers, awards once, history slider and dialogs are keyboard accessible", async ({
+test("deferred features are hidden and history remains keyboard accessible", async ({
   page,
 }) => {
   await page.goto("/#view=detail&site=ulu-cami");
-  await page.getByRole("button", { name: "Bulmaca", exact: true }).click();
-  for (const answer of [
-    "Gelir sağlayan yapı",
-    "Topluma hizmet sunmaya",
-    "Kaynak doğrulaması bekleyen örnek olarak",
-  ]) {
-    await page.getByRole("button", { name: new RegExp(answer) }).click();
-    await page.getByRole("button", { name: "Cevabı kontrol et" }).click();
-    await expect(page.getByText(/Doğru!/)).toBeVisible();
-    await page.getByRole("button", { name: /Sonraki soru|Sonucu gör/ }).click();
-  }
   await expect(
-    page.getByRole("heading", { name: "3 / 3 doğru cevap" }),
+    page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Bulmaca", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Birlikte Gez", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Eser hakkında" }).click();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Geçmişi Gör", exact: true }).click();
@@ -114,7 +113,8 @@ test("quiz explains answers, awards once, history slider and dialogs are keyboar
   await page.keyboard.press("ArrowRight");
   await expect(slider).toHaveValue("51");
   await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
-  await expect(page.getByText("20 keşif puanı")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mirasım" })).toBeVisible();
+  await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
 });
 test("responsive layouts do not overflow and Figma assets load locally", async ({
   page,
@@ -188,10 +188,7 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
   await expect(page.locator(".fallback-note")).toContainText(
     "Şematik konum görünümü",
   );
-  await page
-    .locator(".fallback-pin")
-    .filter({ hasText: "Ulucami" })
-    .click();
+  await page.locator(".fallback-pin").filter({ hasText: "Ulucami" }).click();
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
@@ -199,6 +196,54 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Bursa’da bir başlangıç" }),
   ).toBeVisible();
+});
+
+test("experimental UI can be inspected without enabling it for the main journey", async ({
+  page,
+}) => {
+  await page.goto("/#view=profile");
+  await page.getByLabel("Deneysel arayüzleri göster").check();
+  await expect(page.getByText("Keşif rozetlerin")).toBeVisible();
+  await page.getByRole("button", { name: /Keşfe başla/ }).click();
+  await page.getByRole("button", { name: "Bulmaca", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Birlikte Gez", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("Senkron sesli tur");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
+  await page.getByLabel("Deneysel arayüzleri göster").uncheck();
+  await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
+});
+
+test("desktop narration layouts preserve the active story and player instance", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "Desktop comparison only");
+  await page.goto("/#view=detail&site=ulu-cami");
+  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  const text = await page.locator(".story-text").innerText();
+  await page
+    .locator(".story-panel")
+    .evaluate((el) => el.setAttribute("data-player-check", "same"));
+  await page.getByRole("button", { name: "Altyazı", exact: true }).click();
+  await expect(page.locator(".workspace")).toHaveClass(/story-subtitle/);
+  await expect(page.locator(".story-text")).toHaveText(text);
+  await expect(page.locator(".story-panel")).toHaveAttribute(
+    "data-player-check",
+    "same",
+  );
+  await page.screenshot({
+    path: "test-results/desktop-narration-subtitle.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Panel", exact: true }).click();
+  await expect(page.locator(".story-text")).toHaveText(text);
+  await page.screenshot({
+    path: "test-results/desktop-narration-panel.png",
+    fullPage: true,
+  });
 });
 
 test("map markers stay attached during animated zoom and panel resize", async ({

@@ -20,11 +20,15 @@ export function Profile({
   onSite,
   onAdmin,
   onReset,
+  experimental,
+  onExperimentalChange,
 }: {
   state: Snapshot;
   onSite: (id: string) => void;
   onAdmin: () => void;
   onReset: () => void;
+  experimental: boolean;
+  onExperimentalChange: (enabled: boolean) => void;
 }) {
   const [contrast, setContrast] = useState(
       () =>
@@ -59,11 +63,22 @@ export function Profile({
           <div className="profile-card">
             <div className="avatar large">G</div>
             <h2>{state.name}</h2>
-            <Tag tone="gold">{state.points} keşif puanı</Tag>
             <p className="muted">Demo profili · Bu tarayıcıya özel</p>
           </div>
           <div className="settings card">
             <h3>Deneyimini özelleştir</h3>
+            <label>
+              Deneysel arayüzleri göster
+              <input
+                type="checkbox"
+                checked={experimental}
+                onChange={(event) => onExperimentalChange(event.target.checked)}
+              />
+            </label>
+            <p className="muted">
+              Rozet, Bulmaca ve Birlikte Gez önizlemeleri. Ürün kapsamı henüz
+              kesinleşmedi; çok kullanıcılı bağlantı yoktur.
+            </p>
             <label>
               Yüksek kontrast
               <input
@@ -127,36 +142,35 @@ export function Profile({
               </div>
             ))}
           </div>
-          <div className="card">
-            <div className="row between">
-              <h3>Keşif rozetlerin</h3>
-              <Tag>
-                {badges.filter((b) => b.earned).length} / {badges.length}
-              </Tag>
+          {experimental && (
+            <div className="card">
+              <div className="row between">
+                <h3>Keşif rozetlerin</h3>
+                <Tag>
+                  {badges.filter((b) => b.earned).length} / {badges.length}
+                </Tag>
+              </div>
+              <div className="badges">
+                {badges.map((b) => (
+                  <div key={b.name} className={b.earned ? "earned" : ""}>
+                    <img
+                      src={`/figma/${b.earned ? "718a4" : "b8133"}.svg`}
+                      alt=""
+                    />
+                    <span>{b.name}</span>
+                    <small>{b.earned ? "Kazanıldı" : "Kilitli"}</small>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="badges">
-              {badges.map((b) => (
-                <div key={b.name} className={b.earned ? "earned" : ""}>
-                  <img
-                    src={`/figma/${b.earned ? "718a4" : "b8133"}.svg`}
-                    alt=""
-                  />
-                  <span>{b.name}</span>
-                  <small>{b.earned ? "Kazanıldı" : "Kilitli"}</small>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
           <div className="card">
             <h3>Keşfettiklerim</h3>
             {state.readIds.length === 0 ? (
               <div className="empty-inline">
                 <BookOpen size={26} />
                 <p>İlk hikâyen seni bekliyor.</p>
-                <button
-                  className="text-btn"
-                  onClick={() => onSite("ulu-cami")}
-                >
+                <button className="text-btn" onClick={() => onSite("ulu-cami")}>
                   Keşfe başla <ArrowRight size={15} />
                 </button>
               </div>

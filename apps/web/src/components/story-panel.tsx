@@ -10,7 +10,7 @@ import {
   Check,
   X,
 } from "lucide-react";
-import type { HeritageSite } from "@akar/domain";
+import { trustLabels, type HeritageSite } from "@akar/domain";
 import { Notice, Tag } from "./ui";
 export function StoryPanel({
   site,
@@ -19,6 +19,8 @@ export function StoryPanel({
   onClose,
   onComplete,
   startListening = false,
+  layout,
+  onLayoutChange,
 }: {
   site: HeritageSite;
   index: number;
@@ -26,6 +28,8 @@ export function StoryPanel({
   onClose: () => void;
   onComplete: () => void;
   startListening?: boolean;
+  layout: "panel" | "subtitle";
+  onLayoutChange: (layout: "panel" | "subtitle") => void;
 }) {
   const [listen, setListen] = useState(startListening),
     [playing, setPlaying] = useState(false),
@@ -43,7 +47,7 @@ export function StoryPanel({
       return;
     }
     const utterance = new SpeechSynthesisUtterance(
-      simple ? block.simple : block.text,
+      simple ? block.simple || block.text : block.text,
     );
     utterance.lang = "tr-TR";
     utterance.rate = rate;
@@ -59,6 +63,24 @@ export function StoryPanel({
   }, [playing, block, simple, rate]);
   return (
     <div className="story-panel">
+      <div
+        className="story-layout-switch"
+        role="group"
+        aria-label="Masaüstü anlatım görünümü"
+      >
+        <button
+          aria-pressed={layout === "panel"}
+          onClick={() => onLayoutChange("panel")}
+        >
+          Panel
+        </button>
+        <button
+          aria-pressed={layout === "subtitle"}
+          onClick={() => onLayoutChange("subtitle")}
+        >
+          Altyazı
+        </button>
+      </div>
       <div className="story-top">
         <div className="segmented">
           <button
@@ -115,9 +137,22 @@ export function StoryPanel({
             />
           ))}
         </div>
-        <h2>{block.title}</h2>
-        <p className="story-text">{simple ? block.simple : block.text}</p>
-        <Tag tone="representative">Örnek anlatım · doğrulama bekliyor</Tag>
+        <h2>{block.title || `${index + 1}. cümle`}</h2>
+        <p className="story-text">
+          {simple ? block.simple || block.text : block.text}
+        </p>
+        <Tag tone={block.trust === "verified" ? "success" : "representative"}>
+          {site.editorVersion === 2
+            ? trustLabels[block.trust]
+            : "Örnek anlatım · doğrulama bekliyor"}
+        </Tag>
+        <details className="story-source">
+          <summary>Kaynak bilgisi</summary>
+          <p>
+            {site.sources?.find((s) => s.id === block.sourceId)?.title ||
+              site.source}
+          </p>
+        </details>
         {listen && (
           <Notice>
             Ses, cihazının Türkçe metin okuma özelliğiyle üretilir. Profesyonel

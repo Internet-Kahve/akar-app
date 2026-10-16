@@ -50,12 +50,28 @@ export function Architecture({ kind = "cami" }: { kind?: string }) {
 export function Scene({
   site,
   flow = false,
+  photoId,
   onHotspot,
 }: {
   site: HeritageSite;
   flow?: boolean;
+  photoId?: string;
   onHotspot: (id: string) => void;
 }) {
+  const photo = site.photos?.find(
+    (p) => p.id === (photoId || site.coverPhotoId),
+  );
+  if (photo && !flow)
+    return (
+      <div className="scene">
+        <img className="scene-photo" src={photo.src} alt={photo.alt} />
+        <div className="scene-photo-credit">
+          {photo.title || site.name} · {photo.license}
+          <br />
+          {site.sources?.find((s) => s.id === photo.sourceId)?.title}
+        </div>
+      </div>
+    );
   return (
     <div className={`scene ${flow ? "flow-scene" : ""}`}>
       <div className="scene-top">

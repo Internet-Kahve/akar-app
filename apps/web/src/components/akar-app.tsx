@@ -15,19 +15,19 @@ import {
   BookOpen,
   History,
   MessageSquare,
-  Puzzle,
-  Users,
   X,
   Check,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
   Coffee,
+  Puzzle,
+  Users,
 } from "lucide-react";
 import {
   createMockClient,
   createSeed,
-  routes,
+  routes as seedRoutes,
   type AkarClient,
 } from "@akar/api-client";
 import {
@@ -56,11 +56,11 @@ type View =
 type Overlay =
   | "memory"
   | "quiz"
+  | "together"
   | "visit"
   | "about"
   | "memories"
   | "city"
-  | "together"
   | "reset"
   | null;
 const navigation = [
@@ -71,6 +71,8 @@ const navigation = [
 export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
+    [experimental, setExperimental] = useState(false),
+    [storyLayout, setStoryLayout] = useState<"panel" | "subtitle">("panel"),
     [view, setView] = useState<View>("map"),
     [siteId, setSiteId] = useState("ulu-cami"),
     [query, setQuery] = useState(""),
@@ -155,6 +157,9 @@ export function AkarApp() {
   const published = useMemo(
     () => state.sites.filter((s) => s.status === "published"),
     [state.sites],
+  );
+  const routes = (state.catalogRoutes ?? seedRoutes).filter(
+    (r) => r.status !== "draft",
   );
   const route = routes.find((r) => r.id === routeId);
   const routeSites = (
@@ -331,10 +336,6 @@ export function AkarApp() {
           aria-label="Mirasım profilini aç"
           onClick={() => go("profile")}
         >
-          <span className="point-balance">
-            {state.points}
-            <small>MP</small>
-          </span>
           <span className="avatar">G</span>
         </button>
       </header>
@@ -347,6 +348,8 @@ export function AkarApp() {
           {view === "profile" && (
             <Profile
               state={state}
+              experimental={experimental}
+              onExperimentalChange={setExperimental}
               onSite={selectSite}
               onAdmin={() => go("admin")}
               onReset={() => setOverlay("reset")}
@@ -364,7 +367,7 @@ export function AkarApp() {
             <main
               id="main-content"
               tabIndex={-1}
-              className={`workspace ${collapsed ? "panel-collapsed" : ""}`}
+              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${view === "story" && storyLayout === "subtitle" ? "story-subtitle" : ""}`}
             >
               <aside
                 className="side-panel"
@@ -379,13 +382,15 @@ export function AkarApp() {
                       index={storyIndex}
                       onIndex={setStoryIndex}
                       startListening={listening}
+                      layout={storyLayout}
+                      onLayoutChange={setStoryLayout}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {
                           setToast(
                             state.readIds.includes(site.id)
                               ? "Hikâyeyi yeniden keşfettin."
-                              : "Hikâye tamamlandı. +15 keşif puanı!",
+                              : "Hikâye tamamlandı.",
                           );
                           go("detail", site.id);
                         }
@@ -451,6 +456,11 @@ export function AkarApp() {
                       ) : (
                         <Notice>Bu eserin anlatımı henüz hazırlanmadı.</Notice>
                       )}
+                      {experimental && (
+                        <p className="muted">
+                          Deneysel arayüzler açık · kapsam kararı bekleniyor
+                        </p>
+                      )}
                       <div className="experience-grid">
                         {[
                           {
@@ -463,16 +473,20 @@ export function AkarApp() {
                             label: "İz Bırak",
                             action: () => setOverlay("memory"),
                           },
-                          {
-                            icon: Puzzle,
-                            label: "Bulmaca",
-                            action: () => setOverlay("quiz"),
-                          },
-                          {
-                            icon: Users,
-                            label: "Birlikte Gez",
-                            action: () => setOverlay("together"),
-                          },
+                          ...(experimental
+                            ? [
+                                {
+                                  icon: Puzzle,
+                                  label: "Bulmaca",
+                                  action: () => setOverlay("quiz"),
+                                },
+                                {
+                                  icon: Users,
+                                  label: "Birlikte Gez",
+                                  action: () => setOverlay("together"),
+                                },
+                              ]
+                            : []),
                         ].map(({ icon: Icon, label, action }) => (
                           <button key={label} onClick={action}>
                             <Icon size={21} />
@@ -768,21 +782,25 @@ export function AkarApp() {
                               </button>
                             </div>
                             <div className="filter-row">
-                              {["all", "cami", "cesme", "hamam", "han", "bedesten", "egitim"].map(
-                                (k) => (
-                                  <button
-                                    key={k}
-                                    className={kind === k ? "active" : ""}
-                                    onClick={() => setKind(k)}
-                                  >
-                                    {k === "all"
-                                      ? "Tümü"
-                                      : kindLabels[
-                                          k as keyof typeof kindLabels
-                                        ]}
-                                  </button>
-                                ),
-                              )}
+                              {[
+                                "all",
+                                "cami",
+                                "cesme",
+                                "hamam",
+                                "han",
+                                "bedesten",
+                                "egitim",
+                              ].map((k) => (
+                                <button
+                                  key={k}
+                                  className={kind === k ? "active" : ""}
+                                  onClick={() => setKind(k)}
+                                >
+                                  {k === "all"
+                                    ? "Tümü"
+                                    : kindLabels[k as keyof typeof kindLabels]}
+                                </button>
+                              ))}
                             </div>
                             <p className="results-count">
                               {filtered.length} eser {query && `· “${query}”`}
@@ -816,6 +834,11 @@ export function AkarApp() {
                 {isDetail && site ? (
                   <Scene
                     site={site}
+                    photoId={
+                      view === "story"
+                        ? site.stories[storyIndex]?.photoId
+                        : undefined
+                    }
                     flow={
                       view === "story" &&
                       site.stories[storyIndex]?.id === "akar"
@@ -853,7 +876,7 @@ export function AkarApp() {
           onSubmit={(memory) => commit({ type: "memory", memory })}
         />
       )}
-      {overlay === "quiz" && site && (
+      {experimental && overlay === "quiz" && site && (
         <QuizModal
           completed={state.quizIds.includes(site.id)}
           onClose={() => setOverlay(null)}
@@ -953,7 +976,7 @@ export function AkarApp() {
           </Notice>
         </Modal>
       )}
-      {overlay === "together" && (
+      {experimental && overlay === "together" && (
         <Modal title="Birlikte Gez" onClose={() => setOverlay(null)}>
           <div className="empty-state">
             <Users size={40} />
@@ -976,8 +999,8 @@ export function AkarApp() {
           onClose={() => setOverlay(null)}
         >
           <p>
-            Bu tarayıcıdaki anılar, rota, puanlar ve eklediğin eserler silinerek
-            başlangıç örneklerine dönülecek.
+            Bu tarayıcıdaki anılar, rota, keşif ilerlemesi ve eklediğin eserler
+            silinerek başlangıç örneklerine dönülecek.
           </p>
           <div className="modal-actions">
             <button className="btn secondary" onClick={() => setOverlay(null)}>
@@ -1070,7 +1093,15 @@ function SiteCard({
     <article className="site-card">
       <button className="site-card-main" onClick={onClick}>
         <div className={`site-thumb ${site.kind}`}>
-          <Architecture kind={site.kind} />
+          {site.photos?.find((p) => p.id === site.coverPhotoId) ? (
+            <img
+              className="site-photo"
+              src={site.photos.find((p) => p.id === site.coverPhotoId)!.src}
+              alt={site.photos.find((p) => p.id === site.coverPhotoId)!.alt}
+            />
+          ) : (
+            <Architecture kind={site.kind} />
+          )}
         </div>
         <span>
           <small>
