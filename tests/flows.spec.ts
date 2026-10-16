@@ -67,29 +67,139 @@ test("discovery, story, memory moderation and persistence form one complete flow
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
-test("admin adds an artifact and new content is discoverable", async ({
+test("admin photo wizard publishes complete content and persists shared images", async ({
   page,
-}) => {
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/#view=admin");
-  await page.getByRole("button", { name: "Yeni eser" }).click();
-  await page.getByLabel("Ad", { exact: true }).fill("Demo Vakıf Kütüphanesi");
-  await page
-    .getByLabel("Kısa açıklama")
-    .fill("Yeni eser akışını doğrulayan örnek kayıt.");
-  await page.getByLabel("Kaynak / atıf").fill("Ekip demo verisi");
-  await page
-    .getByRole("combobox", { name: "Durum", exact: true })
-    .selectOption("published");
-  await page.getByRole("button", { name: "Değişiklikleri kaydet" }).click();
+  await page.getByRole("button", { name: "Yeni eser", exact: true }).click();
+  await page.getByRole("button", { name: "Yayınla", exact: true }).click();
   await expect(
-    page.getByRole("cell", { name: "Demo Vakıf Kütüphanesi 0 hikâye bölümü" }),
+    page.getByText("Kapak fotoğrafı seç.", { exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Yayınla ve çık" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "2 Bilgiler" }).click();
+  await page
+    .getByLabel("Ad (TR)", { exact: true })
+    .fill("Demo Vakıf Kütüphanesi");
+  await page
+    .getByLabel("Kısa tanım (TR)")
+    .fill("Yeni eser akışını doğrulayan örnek kayıt.");
+  await page
+    .getByRole("button", { name: "Kapak fotoğrafı seç", exact: true })
+    .click();
+  await page
+    .getByLabel("Fotoğraf dosyası")
+    .setInputFiles({
+      name: "bad.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("invalid"),
+    });
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
+    "JPG, PNG veya WebP",
+  );
+  const photo = await page.evaluate(() => {
+    const c = document.createElement("canvas");
+    c.width = 600;
+    c.height = 400;
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#22566e";
+    ctx.fillRect(0, 0, 600, 400);
+    ctx.fillStyle = "#f5f2ea";
+    ctx.font = "30px sans-serif";
+    ctx.fillText("Demo arşiv görseli", 130, 200);
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  await page
+    .getByLabel("Fotoğraf dosyası")
+    .setInputFiles({
+      name: "demo.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(photo, "base64"),
+    });
+  await expect(page.locator(".upload-preview")).toBeVisible();
+  await page
+    .getByLabel("Alt metin (zorunlu)")
+    .fill("Mavi zeminde demo arşiv başlığı");
+  await page.getByLabel("Başlık (TR)", { exact: true }).fill("Arşiv görseli");
+  await page
+    .getByRole("combobox", { name: "Lisans", exact: true })
+    .selectOption("Kendi çekimim");
+  await page.getByRole("textbox", {name: /^Yeni kaynak başlığı/}).fill("Ekip demo arşivi");
+  await page
+    .getByRole("button", { name: "Fotoğrafı ekle", exact: true })
+    .click();
+  await expect(page.locator(".cover-picker img")).toHaveAttribute(
+    "alt",
+    "Mavi zeminde demo arşiv başlığı",
+  );
+  await page.getByRole("button", { name: "4 Hikâye" }).click();
+  await page.getByRole("button", { name: "Cümle ekle" }).click();
+  await page
+    .getByLabel("Cümle (TR)", { exact: true })
+    .fill("Bu örnek cümle bir fotoğraf ve bir kaynakla birlikte yayınlanır.");
+  await page
+    .getByRole("button", { name: "Fotoğrafı değiştir", exact: true })
+    .click();
+  await page.getByRole("button", { name: /Havuzdan seç/ }).click();
+  await page.locator(".photo-option").click();
+  await page
+    .getByRole("button", { name: "Fotoğrafı ekle", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Taslak kaydet", exact: true })
+    .click();
+  await expect(
+    page.getByText("Taslak bu tarayıcıya kaydedildi."),
+  ).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Demo Vakıf Kütüphanesi düzenle" })
+    .click();
+  await page.getByRole("button", { name: "5 Yayın" }).click();
+  await expect(page.getByText("Türkçe içerik yayın için hazır.")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `test-results/${info.project.name}-admin-publish.png`,
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Yayınla ve çık" }).click();
+  await page
+    .locator(".admin-nav")
+    .getByRole("button", { name: "Kartlar ve fotoğraflar" })
+    .click();
+  await page.locator(".photo-option").click();
+  await page.getByLabel("Alt metin (zorunlu)").fill("Güncellenen ortak görsel");
+  await page.getByRole("button", { name: "Fotoğrafı güncelle" }).click();
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Kütüphane");
-  await expect(page.locator(".site-card-main")).toContainText(
-    "Demo Vakıf Kütüphanesi",
+  await expect(page.locator(".site-card-main img")).toHaveAttribute(
+    "alt",
+    "Güncellenen ortak görsel",
   );
+  await page.locator(".site-card-main").click();
+  await expect(page.locator(".scene-photo")).toHaveAttribute(
+    "alt",
+    "Güncellenen ortak görsel",
+  );
+  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await expect(page.locator(".story-text")).toContainText(
+    "bir fotoğraf ve bir kaynakla",
+  );
+  await page.reload();
+  await expect(page.locator(".scene-photo")).toHaveAttribute(
+    "alt",
+    "Güncellenen ortak görsel",
+  );
+  expect(errors).toEqual([]);
 });
 test("deferred features are hidden and history remains keyboard accessible", async ({
   page,
@@ -244,6 +354,73 @@ test("desktop narration layouts preserve the active story and player instance", 
     path: "test-results/desktop-narration-panel.png",
     fullPage: true,
   });
+});
+
+test("admin imports drafts and persists route stop order", async ({ page }) => {
+  await page.goto("/#view=admin");
+  await page
+    .locator(".admin-nav")
+    .getByRole("button", { name: "İçe aktar" })
+    .click();
+  await page.getByLabel("Envanter dosyası").setInputFiles({
+    name: "inventory.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      JSON.stringify([
+        {
+          ad: "Test Çeşmesi",
+          ilce: "Osmangazi",
+          tur: "Çeşme",
+          enlem: 40.184,
+          boylam: 29.06,
+        },
+        { ad: "Konumsuz eser", ilce: "Osmangazi", tur: "cami" },
+      ]),
+    ),
+  });
+  await page.getByLabel("Envanter kaynağı").fill("Test envanteri");
+  await expect(page.getByText("1 hazır", { exact: true })).toBeVisible();
+  await page
+    .getByRole("button", { name: "Taslak olarak içe aktar (1)" })
+    .click();
+  await expect(
+    page.getByText("1 eser taslak olarak içe aktarıldı."),
+  ).toBeVisible();
+  await page
+    .locator(".admin-nav")
+    .getByRole("button", { name: /Eserler/ })
+    .click();
+  await expect(
+    page.getByRole("row").filter({ hasText: "Test Çeşmesi" }),
+  ).toContainText("Taslak");
+  await page
+    .locator(".admin-nav")
+    .getByRole("button", { name: "Rotalar", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Akar ve Hayrat rotasını düzenle" })
+    .click();
+  const before = await page.locator(".admin-stops strong").allTextContents();
+  await page
+    .getByRole("button", { name: /yukarı taşı/ })
+    .last()
+    .click();
+  await expect(page.locator(".admin-stops strong").first()).not.toHaveText(
+    before[0],
+  );
+  await page.getByRole("button", { name: "Yayınla", exact: true }).click();
+  await expect(page.getByText("Rota kaydedildi.")).toBeVisible();
+  await page.reload();
+  await page
+    .locator(".admin-nav")
+    .getByRole("button", { name: "Rotalar", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Akar ve Hayrat rotasını düzenle" })
+    .click();
+  await expect(page.locator(".admin-stops strong").first()).not.toHaveText(
+    before[0],
+  );
 });
 
 test("map markers stay attached during animated zoom and panel resize", async ({

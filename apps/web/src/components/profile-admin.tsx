@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import type { Command, HeritageSite, Snapshot } from "@akar/domain";
 import { Modal, Notice, Tag } from "./ui";
+import { SiteEditor } from "./admin-site-editor";
+import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -228,7 +230,10 @@ export function Profile({
   );
 }
 export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
-  const [tab, setTab] = useState<"sites" | "memories">("sites"),
+  const [navCollapsed, setNavCollapsed] = useState(false);
+  const [tab, setTab] = useState<
+      "sites" | "memories" | "routes" | "photos" | "import"
+    >("sites"),
     [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
       "pending",
     ),
@@ -255,18 +260,50 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
     });
   }
   return (
-    <main id="main-content" tabIndex={-1} className="admin-page">
-      <aside className="admin-nav">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className={`admin-page ${navCollapsed ? "admin-nav-collapsed" : ""}`}
+    >
+      <button
+        className="admin-nav-toggle"
+        aria-label={
+          navCollapsed ? "Yönetim menüsünü aç" : "Yönetim menüsünü kapat"
+        }
+        aria-expanded={!navCollapsed}
+        onClick={() => setNavCollapsed(!navCollapsed)}
+      >
+        <img src="/figma/b280b.svg" alt="" />
+      </button>
+      <aside className="admin-nav" hidden={navCollapsed}>
         <span className="eyebrow">AKAR · İÇERİK STÜDYOSU</span>
         <button
           className={tab === "sites" ? "active" : ""}
+          disabled={!!editing}
           onClick={() => setTab("sites")}
         >
           <BookOpen size={18} />
           Eserler<Tag>{state.sites.length}</Tag>
         </button>
         <button
+          disabled={!!editing}
+          className={tab === "routes" ? "active" : ""}
+          onClick={() => setTab("routes")}
+        >
+          <MapPin size={18} />
+          Rotalar
+        </button>
+        <button
+          disabled={!!editing}
+          className={tab === "photos" ? "active" : ""}
+          onClick={() => setTab("photos")}
+        >
+          <BookOpen size={18} />
+          Kartlar ve fotoğraflar
+        </button>
+        <button
           className={tab === "memories" ? "active" : ""}
+          disabled={!!editing}
           onClick={() => setTab("memories")}
         >
           <MessageSquare size={18} />
@@ -275,179 +312,193 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
             {state.memories.filter((m) => m.status === "pending").length}
           </Tag>
         </button>
+        <button
+          disabled={!!editing}
+          className={tab === "import" ? "active" : ""}
+          onClick={() => setTab("import")}
+        >
+          <Plus size={18} />
+          İçe aktar
+        </button>
         <Notice>
           Demo paneli. Gerçek yetkilendirme ve sunucuya yayın henüz bağlı değil.
         </Notice>
       </aside>
-      <section className="admin-main">
-        <div className="row between">
-          <div>
-            <small className="eyebrow">İNTERNET KAHVE</small>
-            <h1>{tab === "sites" ? "Eserler" : "Yaşayan hafızayı yönet"}</h1>
+      {editing ? (
+        <SiteEditor
+          key={editing.id}
+          site={editing}
+          sites={state.sites}
+          catalogRoutes={state.catalogRoutes}
+          onClose={() => setEditing(null)}
+          onSave={(site) => commit({ type: "site", site })}
+        />
+      ) : tab === "routes" ? (
+        <RouteAdmin state={state} commit={commit} />
+      ) : tab === "photos" ? (
+        <PhotoAdmin state={state} commit={commit} />
+      ) : tab === "import" ? (
+        <ImportAdmin state={state} commit={commit} />
+      ) : (
+        <section className="admin-main">
+          <div className="row between">
+            <div>
+              <small className="eyebrow">İNTERNET KAHVE</small>
+              <h1>{tab === "sites" ? "Eserler" : "Yaşayan hafızayı yönet"}</h1>
+            </div>
+            {tab === "sites" && (
+              <button className="btn" onClick={newSite}>
+                <Plus size={17} />
+                Yeni eser
+              </button>
+            )}
           </div>
-          {tab === "sites" && (
-            <button className="btn" onClick={newSite}>
-              <Plus size={17} />
-              Yeni eser
-            </button>
-          )}
-        </div>
-        {tab === "sites" ? (
-          <>
-            <input
-              className="admin-search"
-              placeholder="Eser ara…"
-              aria-label="Panelde eser ara"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Eser</th>
-                    <th>Şehir</th>
-                    <th>Dönem</th>
-                    <th>Seviye</th>
-                    <th>Durum</th>
-                    <th>
-                      <span className="sr-only">Düzenle</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {state.sites
-                    .filter((s) =>
-                      s.name
-                        .toLocaleLowerCase("tr")
-                        .includes(query.toLocaleLowerCase("tr")),
-                    )
-                    .map((s) => (
-                      <tr key={s.id}>
-                        <td>
-                          <strong>{s.name}</strong>
-                          <small>{s.stories.length} hikâye bölümü</small>
-                        </td>
-                        <td>{s.city}</td>
-                        <td>{s.year || "—"}</td>
-                        <td>
-                          <Tag>{s.tier}</Tag>
-                        </td>
-                        <td>
-                          <Tag
-                            tone={
-                              s.status === "published" ? "success" : "muted"
+          {tab === "sites" ? (
+            <>
+              <input
+                className="admin-search"
+                placeholder="Eser ara…"
+                aria-label="Panelde eser ara"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Eser</th>
+                      <th>Şehir</th>
+                      <th>Dönem</th>
+                      <th>Seviye</th>
+                      <th>Durum</th>
+                      <th>
+                        <span className="sr-only">Düzenle</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {state.sites
+                      .filter((s) =>
+                        s.name
+                          .toLocaleLowerCase("tr")
+                          .includes(query.toLocaleLowerCase("tr")),
+                      )
+                      .map((s) => (
+                        <tr key={s.id}>
+                          <td>
+                            <strong>{s.name}</strong>
+                            <small>{s.stories.length} hikâye bölümü</small>
+                          </td>
+                          <td>{s.city}</td>
+                          <td>{s.year || "—"}</td>
+                          <td>
+                            <Tag>{s.tier}</Tag>
+                          </td>
+                          <td>
+                            <Tag
+                              tone={
+                                s.status === "published" ? "success" : "muted"
+                              }
+                            >
+                              {s.status === "published" ? "Yayında" : "Taslak"}
+                            </Tag>
+                          </td>
+                          <td>
+                            <button
+                              className="icon-btn"
+                              aria-label={`${s.name} düzenle`}
+                              onClick={() => setEditing(s)}
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="segmented admin-tabs">
+                {(["pending", "approved", "rejected"] as const).map((s) => (
+                  <button
+                    key={s}
+                    className={s === filter ? "active" : ""}
+                    onClick={() => setFilter(s)}
+                  >
+                    {s === "pending"
+                      ? "Bekleyen"
+                      : s === "approved"
+                        ? "Onaylanan"
+                        : "Reddedilen"}{" "}
+                    · {state.memories.filter((m) => m.status === s).length}
+                  </button>
+                ))}
+              </div>
+              {!state.memories.some((m) => m.status === filter) ? (
+                <div className="empty-state">
+                  <Shield size={36} />
+                  <h3>Bu listede katkı yok</h3>
+                  <p>
+                    Eser sayfasındaki İz Bırak ile yeni bir katkı
+                    oluşturabilirsin.
+                  </p>
+                </div>
+              ) : (
+                state.memories
+                  .filter((m) => m.status === filter)
+                  .map((m) => (
+                    <div className="card moderation-card" key={m.id}>
+                      {m.photo && (
+                        <img
+                          className="memory-photo"
+                          src={m.photo}
+                          alt="Ziyaretçi katkısı"
+                        />
+                      )}
+                      <div className="grow">
+                        <small>
+                          {state.sites.find((s) => s.id === m.siteId)?.name} ·{" "}
+                          {m.author}
+                        </small>
+                        <p>{m.text}</p>
+                        <Tag>{m.photo ? "Fotoğraf + anı" : "Anı"}</Tag>
+                        {m.reason && <p className="error">{m.reason}</p>}
+                      </div>
+                      {m.status === "pending" && (
+                        <div className="row">
+                          <button
+                            className="btn"
+                            onClick={() =>
+                              void commit({
+                                type: "moderate",
+                                id: m.id,
+                                status: "approved",
+                              })
                             }
                           >
-                            {s.status === "published" ? "Yayında" : "Taslak"}
-                          </Tag>
-                        </td>
-                        <td>
-                          <button
-                            className="icon-btn"
-                            aria-label={`${s.name} düzenle`}
-                            onClick={() => setEditing(s)}
-                          >
-                            <Pencil size={16} />
+                            <Check size={15} />
+                            Onayla
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="segmented admin-tabs">
-              {(["pending", "approved", "rejected"] as const).map((s) => (
-                <button
-                  key={s}
-                  className={s === filter ? "active" : ""}
-                  onClick={() => setFilter(s)}
-                >
-                  {s === "pending"
-                    ? "Bekleyen"
-                    : s === "approved"
-                      ? "Onaylanan"
-                      : "Reddedilen"}{" "}
-                  · {state.memories.filter((m) => m.status === s).length}
-                </button>
-              ))}
-            </div>
-            {!state.memories.some((m) => m.status === filter) ? (
-              <div className="empty-state">
-                <Shield size={36} />
-                <h3>Bu listede katkı yok</h3>
-                <p>
-                  Eser sayfasındaki İz Bırak ile yeni bir katkı
-                  oluşturabilirsin.
-                </p>
-              </div>
-            ) : (
-              state.memories
-                .filter((m) => m.status === filter)
-                .map((m) => (
-                  <div className="card moderation-card" key={m.id}>
-                    {m.photo && (
-                      <img
-                        className="memory-photo"
-                        src={m.photo}
-                        alt="Ziyaretçi katkısı"
-                      />
-                    )}
-                    <div className="grow">
-                      <small>
-                        {state.sites.find((s) => s.id === m.siteId)?.name} ·{" "}
-                        {m.author}
-                      </small>
-                      <p>{m.text}</p>
-                      <Tag>{m.photo ? "Fotoğraf + anı" : "Anı"}</Tag>
-                      {m.reason && <p className="error">{m.reason}</p>}
+                          <button
+                            className="btn secondary"
+                            onClick={() => {
+                              setReject(m.id);
+                              setReason("");
+                            }}
+                          >
+                            <X size={15} />
+                            Reddet
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {m.status === "pending" && (
-                      <div className="row">
-                        <button
-                          className="btn"
-                          onClick={() =>
-                            void commit({
-                              type: "moderate",
-                              id: m.id,
-                              status: "approved",
-                            })
-                          }
-                        >
-                          <Check size={15} />
-                          Onayla
-                        </button>
-                        <button
-                          className="btn secondary"
-                          onClick={() => {
-                            setReject(m.id);
-                            setReason("");
-                          }}
-                        >
-                          <X size={15} />
-                          Reddet
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))
-            )}
-          </>
-        )}
-      </section>
-      {editing && (
-        <SiteEditor
-          site={editing}
-          onClose={() => setEditing(null)}
-          onSave={async (site) => {
-            const ok = await commit({ type: "site", site });
-            if (ok) setEditing(null);
-            return ok;
-          }}
-        />
+                  ))
+              )}
+            </>
+          )}
+        </section>
       )}
       {reject && (
         <Modal title="Katkıyı reddet" onClose={() => setReject(undefined)}>
@@ -482,239 +533,5 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
         </Modal>
       )}
     </main>
-  );
-}
-function SiteEditor({
-  site,
-  onClose,
-  onSave,
-}: {
-  site: HeritageSite;
-  onClose: () => void;
-  onSave: (s: HeritageSite) => Promise<boolean>;
-}) {
-  const [draft, setDraft] = useState(structuredClone(site)),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  function field<K extends keyof HeritageSite>(key: K, value: HeritageSite[K]) {
-    setDraft({ ...draft, [key]: value });
-  }
-  return (
-    <Modal
-      title={site.name ? "Eseri düzenle" : "Yeni eser"}
-      onClose={onClose}
-      wide
-    >
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setBusy(true);
-          setError("");
-          if (!(await onSave(draft)))
-            setError(
-              "Kaydedilemedi. Alanları ve tarayıcı depolama alanını kontrol et.",
-            );
-          setBusy(false);
-        }}
-      >
-        <div className="form-grid">
-          <label className="field">
-            Ad
-            <input
-              required
-              value={draft.name}
-              onChange={(e) => field("name", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Şehir
-            <input
-              required
-              value={draft.city}
-              onChange={(e) => field("city", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Yapım yılı
-            <input
-              value={draft.year}
-              onChange={(e) => field("year", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Mimar
-            <input
-              value={draft.architect}
-              onChange={(e) => field("architect", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Enlem
-            <input
-              type="number"
-              step="any"
-              required
-              min={-90}
-              max={90}
-              value={draft.coordinates[1]}
-              onChange={(e) =>
-                field("coordinates", [
-                  draft.coordinates[0],
-                  Number(e.target.value),
-                ])
-              }
-            />
-          </label>
-          <label className="field">
-            Boylam
-            <input
-              type="number"
-              step="any"
-              required
-              min={-180}
-              max={180}
-              value={draft.coordinates[0]}
-              onChange={(e) =>
-                field("coordinates", [
-                  Number(e.target.value),
-                  draft.coordinates[1],
-                ])
-              }
-            />
-          </label>
-          <label className="field">
-            Tür
-            <select
-              value={draft.kind}
-              onChange={(e) =>
-                field("kind", e.target.value as HeritageSite["kind"])
-              }
-            >
-              <option value="cami">Cami</option>
-              <option value="cesme">Çeşme</option>
-              <option value="hamam">Hamam</option>
-              <option value="egitim">Eğitim</option>
-            </select>
-          </label>
-          <label className="field">
-            Durum
-            <select
-              value={draft.status}
-              onChange={(e) =>
-                field("status", e.target.value as HeritageSite["status"])
-              }
-            >
-              <option value="draft">Taslak</option>
-              <option value="published">Yayında (demo)</option>
-            </select>
-          </label>
-        </div>
-        <label className="field">
-          Kısa açıklama
-          <textarea
-            required
-            value={draft.description}
-            onChange={(e) => field("description", e.target.value)}
-          />
-        </label>
-        <label className="field">
-          Kaynak / atıf
-          <input
-            required={draft.status === "published"}
-            value={draft.source}
-            onChange={(e) => field("source", e.target.value)}
-          />
-        </label>
-        <details className="story-editor">
-          <summary>Hikâye bölümleri · {draft.stories.length}</summary>
-          {draft.stories.map((story, index) => (
-            <div key={story.id} className="card">
-              <label className="field">
-                Bölüm {index + 1} başlığı
-                <input
-                  value={story.title}
-                  onChange={(e) =>
-                    field(
-                      "stories",
-                      draft.stories.map((s, i) =>
-                        i === index ? { ...s, title: e.target.value } : s,
-                      ),
-                    )
-                  }
-                />
-              </label>
-              <label className="field">
-                Anlatım
-                <textarea
-                  value={story.text}
-                  onChange={(e) =>
-                    field(
-                      "stories",
-                      draft.stories.map((s, i) =>
-                        i === index
-                          ? {
-                              ...s,
-                              text: e.target.value,
-                              simple: e.target.value,
-                            }
-                          : s,
-                      ),
-                    )
-                  }
-                />
-              </label>
-              <button
-                type="button"
-                className="text-btn danger"
-                onClick={() =>
-                  field(
-                    "stories",
-                    draft.stories.filter((_, i) => i !== index),
-                  )
-                }
-              >
-                Bölümü kaldır
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="btn secondary"
-            onClick={() =>
-              field("stories", [
-                ...draft.stories,
-                {
-                  id: crypto.randomUUID(),
-                  title: "Yeni bölüm",
-                  text: "",
-                  simple: "",
-                  trust: "representative",
-                },
-              ])
-            }
-          >
-            <Plus size={16} />
-            Bölüm ekle
-          </button>
-        </details>
-        <Notice>
-          Kaynak girilmesi tarihsel doğruluğu otomatik onaylamaz. Demo
-          içerikleri doğrulama bekler.
-        </Notice>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        <div className="modal-actions">
-          <button type="button" className="btn secondary" onClick={onClose}>
-            Vazgeç
-          </button>
-          <button className="btn" disabled={busy}>
-            {busy ? "Kaydediliyor…" : "Değişiklikleri kaydet"}
-          </button>
-        </div>
-      </form>
-    </Modal>
   );
 }
