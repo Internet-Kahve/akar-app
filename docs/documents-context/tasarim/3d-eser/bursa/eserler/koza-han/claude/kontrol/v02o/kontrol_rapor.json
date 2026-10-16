@@ -1,0 +1,34 @@
+{
+ "ucgen_toplam": 29450,
+ "acik_ya_da_manifold_degil": {},
+ "cakismalar(>=0.3m)": [],
+ "kirmizi_oran_8_yon": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "GECTI": true,
+ "parcalar": {
+  "Avlu_Cephe": 2560,
+  "Avlu_Mescit": 1928,
+  "Avlu_Revak": 4928,
+  "Avlu_Zemin": 12,
+  "Baca": 2184,
+  "Cati": 256,
+  "Cephe_Bati": 2740,
+  "Cephe_Dogu": 2740,
+  "Cephe_Guney": 2224,
+  "Cephe_Kuzey": 1992,
+  "Govde_Dis": 32,
+  "Kubbe_Avlu": 3080,
+  "Portal": 4742,
+  "Silme_Kat": 32
+ },
+ "draw_call": 49,
+ "glb_bayt": 492432
+}
