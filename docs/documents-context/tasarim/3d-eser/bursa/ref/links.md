@@ -10,7 +10,10 @@ Hiçbiri uygulamada, sunumda ya da herkese açık repoda görsel olarak kullanı
 | Ulucami | Miniatürk maketi fotoğrafları · _link_ | foto | bilinmiyor, bazılarında filigran | `ulu-cami/ref-mg2/` | Renk ve cephe |
 | Ulucami | iStock (487067712, 516068010) ve diğer web fotoğrafları · _link_ | foto / illüstrasyon | iStock: lisanslı, "editorial use only", filigranlı | `ulu-cami/ref-img3/` | Sadece göz kontrolü |
 | Ulucami | Ayverdi, *Osmanlı Mimarisinin İlk Devri*, plan 687 (Ürgen PDF s.6'dan) | ölçülü plan (rölöve) | yayın, kaynak göstererek referans | `ref/ulu-cami_plan_ayverdi.png` | Ölçü yazıları düşük çözünürlüklü; asıl kitaptan daha net kopya bulunabilir |
-| Bedesten | | | | | |
+| Bedesten | F. Alkan, "Bursa Bedesteni", III. Uluslararası Osmanlı İzleri Sempozyumu (Trakya Üniv., 2023), s.155–160 | makale (PDF) | yayın, kaynak göstererek | `ref/BURSA_BEDESTENI.pdf` | Almaşık düzeni (3 sıra tuğla + 1 sıra taş), 68 dükkân, 32 depo, 4 kapı |
+| Bedesten | A. Gabriel (aktaran K. Kepecioğlu 1992), Alkan PDF s.12 Şekil 3 | ölçülü plan + kesit (rölöve) | yayın, kaynak göstererek referans | `ref/bedesten_plan_gabriel.png` | Plan ölçek çubuğu 0–20 m, kesit 0–5 m; iç mekân 15 × 56,5 m envanterle tutuyor |
+| Bedesten | Bursa Çarşısı vaziyet planı (EHA 1967, Eyice TDV İA 1992'den), Alkan PDF s.11 Şekil 2 | vaziyet planı | yayın, kaynak göstererek referans | `ref/bedesten_carsi_eha1967.png` | Ölçek 0–75 m; planda kuzey yukarıda (Ulucami güneybatıda) |
+| Bedesten | web fotoğrafları (havadan, Ulucami minaresi tarafından) · _link: tasarım sorumlusu ekleyecek_ | foto | bilinmiyor | `eserler/yildirim-bayezid-bedesteni/ref-img/` | Sadece göz kontrolü |
 
 
 https://www.bursa.bel.tr/yayinlar_pdf_viewer?id=2523#dflip-katalog/1/
