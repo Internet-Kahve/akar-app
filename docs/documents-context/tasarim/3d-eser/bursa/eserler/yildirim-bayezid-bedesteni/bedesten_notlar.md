@@ -2,10 +2,10 @@
 
 Ölçü ve kaynaklar: `eser.md`. Bu dosya model kararlarını ve varsayımları tutar. Sürüm bölümleri tarih sırasıyladır; en günceli en sondadır.
 
-## GÜNCEL DURUM (16 Ekim 2026, v01b · GEOMETRİ DONDURULDU)
-- **Son sürüm:** `claude/build/build_v01b.py` → `claude/blend/bedesten_v01b.blend`, kontrol `claude/kontrol/v01b/` (GECTI: true, 5 532 üçgen, 7 draw call). Henüz .glb yok (v02'de).
-- **Üretim:** `blender -b --python claude/build/build_v01b.py` (Blender 5.2). Dal: `3d/bedesten-v01`.
-- **Sıradaki:** v02 detay turu (pencereler, kapılar, dükkân cephesi, kubbe dilimleri, doku kararı, palet + AO, Draco .glb). Kütle ölçülerine dokunulmaz; yeni ölçüler P’ye `D_` önekiyle.
+## GÜNCEL DURUM (16 Ekim 2026, v02 · doku seçimi bekliyor)
+- **Son sürüm:** `claude/build/build_v02.py` (kütle v01b, dondurulmuş) iki doku seçeneğiyle: `AKAR_DOKU=almasik` ve `AKAR_DOKU=cizgi` → `claude/export/bedesten_v02_<doku>.glb` (≈ 144 KB), kontrol `claude/kontrol/v02_<doku>/` (ikisi de GECTI: true, 13 556 üçgen, 15 draw call). Karşılaştırma: `claude/kontrol/v02_secim/doku_secimi.png`.
+- **Üretim:** `AKAR_DOKU=<almasik|cizgi> blender -b --python claude/build/build_v02.py` (Blender 5.2); dokular `claude/build/doku/doku_uret.py` ile. Dal: `3d/bedesten-v01`.
+- **Sıradaki:** tasarım sorumlusu doku seçeneğini seçer (A almaşık / B düz + saçak çizgisi); seçilen sürüm `bedesten_v02.glb` olur, diğeri silinir.
 - **Ölçülü plan bulundu:** Gabriel planı + enine kesit (`ref/BURSA_BEDESTENI.pdf` PDF s.12, Şekil 3) → `bursa/ref/bedesten_plan_gabriel.png`. Plan ölçek çubuğu 0–20 m (10,15 px/m), kesit 0–5 m (10,2 px/m). Plandan okunan iç mekân 56,8 × 15,3 m; envanterdeki 56,50 × 15,00 m ile 0,3 m içinde tutuyor → ölçek güvenilir.
 - **Vaziyet planı:** Bursa çarşısı (EHA 1967), Şekil 2 → `bursa/ref/bedesten_carsi_eha1967.png`. Kuzey yukarıda (Ulucami güneybatıda, Koza Han güneydoğuda).
 - Okuma görselleri (1 m ızgara): `claude/kontrol/kaynak/plan_1m_grid.png`, `kesit_1m_grid.png`.
@@ -139,3 +139,38 @@ Kütle tasarım sorumlusu tarafından kabul edildi. `build_v01b.py` içindeki k�
 7. Zemin düz kaide; güneydeki ≈ 1,9 m yükselme modellenmez.
 8. İç mekân (ayaklar, mahzenler, şadırvan) modellenmez.
 9. Doku kararı (almaşık karo mı, tek yatay çizgi mi) v02'de verilecek.
+
+## v02 · detay + renk + çıkış (16 Ekim 2026)
+Betik: `claude/build/build_v02.py` (= v01b kütlesi + detay; kütle ölçülerine dokunulmadı, yeni ölçüler P'de `D_` önekli). Doku seçeneği `AKAR_DOKU` ortam değişkeniyle; iki sürüm de üretildi.
+
+### Kontrol (`claude/kontrol/v02_almasik/`, `v02_cizgi/`)
+- 13 556 üçgen (≤ 30 000), 15 draw call (< 50), açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 8 yönde 0 → **GECTI: true** (iki seçenekte de)
+- .glb (Draco): almaşık 144 KB, çizgi 143 KB (≤ 1 MB)
+- Render: `havadan`, `foto_acisi`, `kuzey_orto`, `bati_orto`, `kubbe_yakin`, `dogu_uc` (ref kırpıntısıyla aynı açı), `kuzey_kapi`
+- Seçim görseli: `claude/kontrol/v02_secim/doku_secimi.png` (A / B yan yana + referans fotoğraf)
+
+### Eklenenler
+- `Sacak` (yeni): almaşık gövdenin üstünde tek tuğla bant (8,15 → 8,5 m, 0,10 m taşma). Fotoğrafta var; stil kuralındaki "gövde üstünde tek yatay çizgi".
+- `Pencereler` (yeni): uzun cephelerde göz ekseninde birer (7 + 7), kısa cephelerde dört (y = ±3,2 / ±5,0, P kesit; fotoğrafta doğu ucunda iki çift). Tuğla yuvarlak kemer çerçeve + taş alınlık + parmaklıklı dikdörtgen pencere (doku/pencere.png, Koza Han ile aynı).
+- `Kapilar`: dört kenarın ortasında taş çerçeve (4,4 × 4,7 m) + tuğla kemer bandı + koyu kahve kemerli kapı (3,0 × 4,5 m).
+- `Dukkan_Kapilari` (yeni): dükkân halkasının dış yüzünde tuğla kemerli lacivert kepenkler; uzun kenarda 25 modül (2,82 m), kısa kenarda 11 modül (2,98 m), orta modül kapıya ayrılır → 2 × 24 + 2 × 10 = **68** (W).
+- `Kubbeler`: dilim sayısı 24 → 32 (biçim ve ölçü aynı); kurşun dilim ve levha ekleri dokuyla (`doku/kubbe_dilim.png`, dilim başına bir karo, 5 levha sırası).
+- Palet: gövde #E2B7A4 (eser.md), dükkân halkası krem #E9E3D3, çatı #B9C6CC, kubbe #95AEBA (eser.md), kapı #6B4A3A (eser.md), tuğla bantlar #C6755B, taş #F2F3E5, kepenk lacivert #415072 (_ortak_stil).
+- `A.ao_vertex(samples=32)`; dokulu malzemelerde renk = doku × AO.
+
+### Parça listesi (.glb)
+`Govde`, `Dukkanlar`, `Cati`, `Kubbeler`, `Sacak`, `Pencereler`, `Kapilar`, `Dukkan_Kapilari`.
+
+### Doku seçenekleri
+- **A · almaşık:** gövdenin dört yüzü almaşık karo (3 sıra tuğla + 1 sıra taş, kutu almaşık; 1,2 × 0,6 m; Koza Han karosuyla aynı). Fotoğrafa yakın; `_ortak_stil.md` "doku azdır" kuralına istisna (Koza Han'da da yapıldı).
+- **B · çizgi:** gövde düz pembe-kahve, yalnız saçak bandı. Stil kuralına birebir uyar; fotoğraftaki almaşık okunmaz.
+
+### Yeni VARSAYIM'lar
+- VARSAYIM: dükkân halkası krem düz duvar, kepenkler lacivert (bugünkü modern cepheler yerine Gabriel planındaki dışa açılan tonozlu dükkân düzeni, sade).
+- VARSAYIM: pencere 0,9 × 1,4 m (5,55 → 6,95), tuğla çerçeve 1,6 m, kemer tepesi 7,95 m.
+- VARSAYIM: kapı taş çerçevesi 4,4 × 4,7 m, tuğla bant 3,6 m; güney kapısındaki kelime-i tevhid kitabesi eklenmedi (dükkân çatısının altında yer yok; kapılar fotoğrafta görünmüyor).
+- VARSAYIM: kubbe kurşun ekleri 32 dilim, 5 sıra (fotoğraftan sayım).
+
+### Açık sorular (v02 sonu)
+1. **Doku seçimi:** A (almaşık) mı, B (düz + saçak çizgisi) mi?
+2. Güney kapısı kitabesi (kelime-i tevhid) için yerden fotoğraf gelirse kapı çerçevesi ona göre yeniden çizilebilir.
