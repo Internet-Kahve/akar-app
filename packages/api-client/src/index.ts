@@ -1,6 +1,6 @@
 import { reduceSnapshot, type Command, type Snapshot } from "@akar/domain";
 import { createSeed } from "./seed";
-export { routes, createSeed } from "./seed";
+export { routes, createSeed, demoRegion } from "./seed";
 export interface StorageAdapter {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
@@ -12,7 +12,9 @@ export interface AkarClient {
   dispatch(command: Command): Promise<Snapshot>;
   reset(): Promise<Snapshot>;
 }
-const key = "akar-demo-v1";
+// Keep the previous Istanbul demo untouched in its original storage key.
+export const demoStorageKey = "akar-demo-bursa-v1";
+const key = demoStorageKey;
 function validSnapshot(s: unknown): s is Snapshot {
   if (!s || typeof s !== "object") return false;
   const v = s as Snapshot;

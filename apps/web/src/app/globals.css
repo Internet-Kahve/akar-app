@@ -306,6 +306,7 @@ img {
   display: none;
 }
 .main-stage {
+  grid-column: 2;
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -668,10 +669,34 @@ img {
 .akar {
   background: var(--pin-akar);
 }
+.map-marker {
+  position: absolute;
+  width: 32px;
+  height: 38.4px;
+  transition: none;
+}
 .map-pin {
-  padding: 7px;
+  display: block;
+  width: 32px;
+  height: 38.4px;
+  padding: 0;
+  transition: filter 0.18s;
   filter: drop-shadow(0 3px 3px #141b2b38);
   position: relative;
+}
+.map-pin img {
+  width: 32px;
+  height: 38.4px;
+  object-fit: contain;
+  object-position: bottom;
+}
+.map-pin:not(:disabled):active {
+  transform: none;
+}
+.map-pin::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
 }
 .map-pin img,
 .fallback-pin img {
@@ -2858,9 +2883,7 @@ td small {
     bottom: 109px;
     font-size: 9px;
   }
-  .map-pin {
-    padding: 4px;
-  }
+
   .scene > .architecture {
     width: 290px;
     height: 200px;

@@ -9,22 +9,22 @@ import {
 import { createSeed } from "../../api-client/src/seed";
 test("Turkish search normalizes dotted I and filters by type", () => {
   const state = createSeed();
-  assert.equal(filterSites(state.sites, "KILIC ALI").length, 2);
-  assert.equal(filterSites(state.sites, "çeşme", "cesme").length, 2);
+  assert.equal(filterSites(state.sites, "KOZA HANI").length, 1);
+  assert.equal(filterSites(state.sites, "çeşme", "cesme").length, 1);
   assert.equal(filterSites(state.sites, "", "cami", []).length, 0);
 });
 test("repeat visit, read, and quiz commands never duplicate points", () => {
   let state = createSeed();
   for (let i = 0; i < 3; i++)
     for (const type of ["visit", "read", "quiz"] as const)
-      state = reduceSnapshot(state, { type, siteId: "kilic-ali-pasa" });
+      state = reduceSnapshot(state, { type, siteId: "ulu-cami" });
   assert.equal(state.points, 135);
   assert.equal(state.visitedIds.length, 1);
 });
 test("memory is pending, approval is idempotent, rejection requires a reason", () => {
   const memory: Memory = {
     id: "memory-1",
-    siteId: "kilic-ali-pasa",
+    siteId: "ulu-cami",
     text: "Avluda güzel bir sabah.",
     status: "approved",
     createdAt: "2026-10-10",
@@ -68,15 +68,15 @@ test("updates do not mutate previous snapshots; routes deduplicate and reject un
   const original = createSeed();
   const next = reduceSnapshot(original, {
     type: "save",
-    siteId: "kilic-ali-pasa",
+    siteId: "ulu-cami",
   });
   assert.equal(original.savedIds.length, 0);
   assert.equal(next.savedIds.length, 1);
   const route = reduceSnapshot(next, {
     type: "set-route",
-    siteIds: ["bad", "kilic-ali-pasa", "kilic-ali-pasa"],
+    siteIds: ["bad", "ulu-cami", "ulu-cami"],
   });
-  assert.deepEqual(route.routeIds, ["kilic-ali-pasa"]);
+  assert.deepEqual(route.routeIds, ["ulu-cami"]);
 });
 
 test("photo publications require valid cover, licenses and cue references; drafts remain editable", () => {

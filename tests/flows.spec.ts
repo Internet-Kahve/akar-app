@@ -10,14 +10,14 @@ test("discovery, story, memory moderation and persistence form one complete flow
   ).toBeVisible();
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
-    .fill("Kılıç");
+    .fill("Ulucami");
   await expect(page.locator(".site-card")).toHaveCount(2);
   await page
     .locator(".site-card-main")
-    .filter({ hasText: "Kılıç Ali Paşa Camii" })
+    .filter({ hasText: "Ulucami" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Kılıç Ali Paşa Camii", level: 1 }),
+    page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Eseri kaydet", exact: true }).click();
   await page.getByRole("button", { name: "Rotama ekle", exact: true }).click();
@@ -91,7 +91,7 @@ test("admin adds an artifact and new content is discoverable", async ({
 test("quiz explains answers, awards once, history slider and dialogs are keyboard accessible", async ({
   page,
 }) => {
-  await page.goto("/#view=detail&site=kilic-ali-pasa");
+  await page.goto("/#view=detail&site=ulu-cami");
   await page.getByRole("button", { name: "Bulmaca", exact: true }).click();
   for (const answer of [
     "Gelir sağlayan yapı",
@@ -130,9 +130,9 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
     path: `test-results/${info.project.name}-discovery.png`,
     fullPage: true,
   });
-  await page.goto("/#view=detail&site=kilic-ali-pasa");
+  await page.goto("/#view=detail&site=ulu-cami");
   await expect(
-    page.getByRole("heading", { name: "Kılıç Ali Paşa Camii", level: 1 }),
+    page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -163,10 +163,10 @@ test("route search opens a usable route and selection persists", async ({
   await page.goto("/");
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
-    .fill("Sinan’ın İzinde");
-  await page.getByRole("button", { name: /Sinan’ın İzinde Rota/ }).click();
+    .fill("Akar ve Hayrat");
+  await page.getByRole("button", { name: /Akar ve Hayrat Rota/ }).click();
   await expect(
-    page.getByRole("heading", { name: "Sinan’ın İzinde", level: 1 }),
+    page.getByRole("heading", { name: "Akar ve Hayrat", level: 1 }),
   ).toBeVisible();
   await expect(page.locator(".route-stop-list button")).toHaveCount(2);
   await page
@@ -181,7 +181,7 @@ test("route search opens a usable route and selection persists", async ({
   ).toBeVisible();
 });
 test("map failure keeps the artifact discovery usable", async ({ page }) => {
-  await page.route("https://tile.openstreetmap.org/**", (route) =>
+  await page.route("https://tiles.openfreemap.org/**", (route) =>
     route.abort(),
   );
   await page.goto("/");
@@ -190,13 +190,83 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
   );
   await page
     .locator(".fallback-pin")
-    .filter({ hasText: "Kılıç Ali Paşa Camii" })
+    .filter({ hasText: "Ulucami" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Kılıç Ali Paşa Camii", level: 1 }),
+    page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Oku", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Bir kaptanın izi" }),
+    page.getByRole("heading", { name: "Bursa’da bir başlangıç" }),
+  ).toBeVisible();
+});
+
+test("map markers stay attached during animated zoom and panel resize", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  // Isolate projection/DOM positioning from external tile availability; use real MapLibre.
+  await page.route("**/harita/akar-style.json", (route) =>
+    route.fulfill({
+      json: {
+        version: 8,
+        sources: {},
+        layers: [
+          {
+            id: "background",
+            type: "background",
+            paint: { "background-color": "#F5F2EA" },
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/");
+  await expect(page.locator(".map-marker")).toHaveCount(6);
+  const measure = () =>
+    page.evaluate(async () => {
+      let worst = 0,
+        frames = 0;
+      const until = performance.now() + 700;
+      while (performance.now() < until) {
+        await new Promise(requestAnimationFrame);
+        const canvas = document
+          .querySelector(".map-canvas")!
+          .getBoundingClientRect();
+        for (const el of document.querySelectorAll<HTMLElement>(
+          ".map-marker",
+        )) {
+          const match = el.style.transform.match(
+            /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/,
+          );
+          if (!match) throw new Error("MapLibre marker projection is missing");
+          const rect = el.getBoundingClientRect();
+          worst = Math.max(
+            worst,
+            Math.abs(
+              rect.left + rect.width / 2 - canvas.left - Number(match[1]),
+            ),
+            Math.abs(rect.bottom - canvas.top - Number(match[2])),
+          );
+        }
+        frames++;
+      }
+      return { worst, frames };
+    });
+  const zoom = measure();
+  await page.getByRole("button", { name: "Yakınlaştır", exact: true }).click();
+  const sample = await zoom;
+  expect(sample.frames).toBeGreaterThan(5);
+  expect(sample.worst).toBeLessThan(1.1);
+  const out = measure();
+  await page.getByRole("button", { name: "Uzaklaştır", exact: true }).click();
+  expect((await out).worst).toBeLessThan(1.1);
+  await page.getByRole("button", { name: "Paneli kapat", exact: true }).click();
+  expect((await measure()).worst).toBeLessThan(1.1);
+  await page.getByRole("button", { name: "Paneli aç", exact: true }).click();
+  const pin = page.getByRole("button", { name: "Ulucami haritada aç" });
+  await pin.click();
+  await expect(
+    page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
 });

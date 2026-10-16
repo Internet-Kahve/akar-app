@@ -155,7 +155,7 @@ export function Profile({
                 <p>İlk hikâyen seni bekliyor.</p>
                 <button
                   className="text-btn"
-                  onClick={() => onSite("kilic-ali-pasa")}
+                  onClick={() => onSite("ulu-cami")}
                 >
                   Keşfe başla <ArrowRight size={15} />
                 </button>
@@ -226,12 +226,12 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
     setEditing({
       id: crypto.randomUUID(),
       name: "",
-      city: "İstanbul",
+      city: "Bursa",
       district: "",
       year: "",
       architect: "",
       kind: "cami",
-      coordinates: [28.981, 41.027],
+      coordinates: [29.0619, 40.184],
       minutes: 15,
       description: "",
       source: "",

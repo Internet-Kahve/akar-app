@@ -13,7 +13,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "AKAR · Şehrin hikâyesine karış",
   description:
-    "Geçmişi gör. Hikâyesini dinle. İzini bırak. İstanbul’un kültürel mirasını keşfet.",
+    "Geçmişi gör. Hikâyesini dinle. İzini bırak. Bursa’nın kültürel mirasını keşfet.",
 };
 export default function RootLayout({
   children,

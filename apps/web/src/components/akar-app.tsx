@@ -72,7 +72,7 @@ export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
     [view, setView] = useState<View>("map"),
-    [siteId, setSiteId] = useState("kilic-ali-pasa"),
+    [siteId, setSiteId] = useState("ulu-cami"),
     [query, setQuery] = useState(""),
     [kind, setKind] = useState("all"),
     [saved, setSaved] = useState(false),
@@ -293,7 +293,7 @@ export function AkarApp() {
             </button>
           )}
           <button className="city-chip" onClick={() => setOverlay("city")}>
-            İstanbul
+            Bursa
             <ChevronDown size={13} />
           </button>
         </div>
@@ -319,7 +319,7 @@ export function AkarApp() {
             onClick={() => {
               setStoryIndex(0);
               setListening(false);
-              go("story", "kilic-ali-pasa");
+              go("story", "ulu-cami");
             }}
           >
             <Headphones size={16} />
@@ -643,7 +643,7 @@ export function AkarApp() {
                         <div className="discovery-intro">
                           <div className="eyebrow">
                             <span className="live-dot" />
-                            İSTANBUL’U YENİDEN KEŞFET
+                            BURSA’YI YENİDEN KEŞFET
                           </div>
                           <h1>
                             Şehrin hikâyesine <br />
@@ -768,7 +768,7 @@ export function AkarApp() {
                               </button>
                             </div>
                             <div className="filter-row">
-                              {["all", "cami", "cesme", "hamam", "egitim"].map(
+                              {["all", "cami", "cesme", "hamam", "han", "bedesten", "egitim"].map(
                                 (k) => (
                                   <button
                                     key={k}
@@ -942,13 +942,13 @@ export function AkarApp() {
           >
             <MapPin />
             <span>
-              <strong>İstanbul</strong>
-              <small>Tophane · {published.length} örnek eser</small>
+              <strong>Bursa</strong>
+              <small>Hanlar Bölgesi · {published.length} örnek eser</small>
             </span>
             <Check />
           </button>
           <Notice>
-            İlk demo bölgesi İstanbul. Yeni şehirler sponsor veri paketiyle
+            İlk demo bölgesi Bursa. Yeni şehirler sponsor veri paketiyle
             eklenecek.
           </Notice>
         </Modal>

@@ -1,4 +1,7 @@
 :root {
+  --sehir-bursa-zemin: #22566e;
+  --sehir-konya-aksan: #2f6e71;
+  --sehir-aksan: var(--sehir-bursa-zemin);
   --bg: #f3f5f5;
   --surface: #ffffff;
   --text: #141b2b;
@@ -34,4 +37,8 @@
   --text-muted: #253043;
   --border: #727e8f;
   --primary: #193862;
+}
+
+[data-sehir="konya"] {
+  --sehir-aksan: var(--sehir-konya-aksan);
 }

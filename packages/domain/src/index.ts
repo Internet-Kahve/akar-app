@@ -1,4 +1,5 @@
-export type SiteKind = "cami" | "cesme" | "hamam" | "egitim";
+export type SiteKind =
+  "cami" | "cesme" | "hamam" | "han" | "bedesten" | "egitim";
 export type Trust = "verified" | "inferred" | "representative";
 export interface SiteSource {
   id: string;
@@ -122,6 +123,8 @@ export const kindLabels: Record<SiteKind, string> = {
   cami: "Cami",
   cesme: "Çeşme",
   hamam: "Hamam",
+  han: "Han",
+  bedesten: "Bedesten",
   egitim: "Eğitim",
 };
 export const trustLabels: Record<Trust, string> = {
