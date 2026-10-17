@@ -1,14 +1,27 @@
-# AKAR · Proje çalışma klasörü
+# AKAR · Proje bağlamı ve üretim dosyaları
 
-AKAR’ın proje belgeleri, tasarım varlıkları, kaynak verisi ve 3D üretimi. Güncel demo odağı Bursa: Ulucami–Bedesten hayrat/akar ilişkisi. Uygulama kodu ayrı depodadır; bu klasörden çalıştırılmaz.
+Ürün belgeleri, tasarım referansları, kaynak verisi ve eserlerin 3D üretimi burada tutulur. Güncel ürün odağı Bursa'dır. Uygulama kodu aynı reponun `apps/` ve `packages/` klasörlerindedir.
 
-## Okuma sırası
+## Nereden başlamalı?
 
-1. [Hackathon rehberi](belgeler/hackathon/README.md)
-2. [Tam bağlam](belgeler/AKAR_Tam_Baglam.md): önce §0.5 güncel Bursa kararları
-3. [Frontend/backend notları](belgeler/FRONTEND_BACKEND_NOTLARI.md): veri modeli, panel, yayın kuralları
-4. [Klasör yapısı](KLASOR_YAPISI.md)
+1. [Tam bağlam](AKAR_Tam_Baglam.md): ürün kararları; güncel bölümlerden başlayın.
+2. [Frontend/backend notları](FRONTEND_BACKEND_NOTLARI.md): kapsam, şema ve ekran kuralları.
+3. [Görev dağılımı](GOREV_DAGILIMI_15Ekim.md): 15 Ekim tarihli çalışma planı.
+4. [Hackathon rehberi](hackathon/README.md): başvuru ve yarışma kaynakları.
 
-Veri için `veri/BENIOKU.md`, modelleme için `tasarim/3d-eser/BENIOKU.md` okunur, görev dağılımı için `belgeler/GOREV_DAGILIMI_15Ekim.md`. Eski prototip rehberi ve geliştirme promptları `belgeler/_arsiv/` altındadır.
+## Hangi dosya nerede?
 
-Belgelerde anılan uygulama deposu `Internet-Kahve/akar-app`. Teknoloji yığını ve Figma kaynağı konusunda eski belgelerde çelişkiler var; mevcut uygulama deposu ve ekip kararı esas alınmalıdır.
+| Klasör | İçerik |
+| --- | --- |
+| Kök dizindeki `.md` belgeleri | Ürün bağlamı, teknik notlar, görevler ve prototip dersleri |
+| `design/` | Ekranlar, ikonlar, desenler, harita stili ve eski prototip referansı |
+| `eserler/` | Eser kimliği, ölçüler, referanslar ve 3D üretim dosyaları |
+| `veri/` | Envanter PDF'leri, çıkarılmış metinler, CSV'ler ve ortak Bursa kaynakları |
+| `hackathon/` | Yarışma belgeleri ve başvuru |
+
+- [Klasör kuralları ve ayrıntılı yapı](KLASOR_YAPISI.md)
+- [Veri rehberi](veri/BENIOKU.md)
+- [Eser ve modelleme rehberi](eserler/README.md)
+- [Tasarım rehberi](design/README.md)
+
+Belgelerde kod biçiminde yazılan `eserler/...`, `veri/...`, `design/...` yolları bu klasöre göredir. Tıklanabilir bağlantılar bulundukları dosyaya göredir. Tarihli kararlar, eski promptlar ve arşivler geçmiş durumu anlatabilir; güncel model için eserin kendi klasöründeki notlara bakın.

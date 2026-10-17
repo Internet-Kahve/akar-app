@@ -1,0 +1,16 @@
+# Orhan Bey Hamamı / Aynalı Çarşı
+
+Bu eser ayrı dosyalanır; Orhan Bey Külliyesi ile tarihsel bağı korunur.
+
+- [Eser bilgileri](eser.md)
+- [Model notları](orhan-bey-hamami_notlar.md)
+- Son mevcut teslim: [v02 GLB](claude/export/orhan-bey-hamami_v02.glb)
+- Kaynak sahne: [v02 Blender](claude/blend/orhan-bey-hamami_v02.blend)
+- Üretim: `claude/build/build_hamam_v02.py`
+- Kontroller: `claude/kontrol/hamam_v02/`
+- Dokular ve üreticisi: `claude/build/doku/` (cami üretiminden bağımsız yerel kopya)
+- [Ortak külliye kaydı](../orhan-bey-kulliyesi/eser.md)
+
+Dosyalar 17 Ekim 2026'da ayrıldı; model geometrisi değiştirilmedi, Blender yeniden çalıştırılmadı. `.blend` içindeki eski harici yollar bu taşımada yeniden kaydedilmedi; yeniden üretimde yerel betik ve dokular kullanılmalıdır.
+
+Karşılaştırma betikleri ortak çizimleri `veri/bursa/` altında arar. Eski günlüklerde anılan bazı çizimler mevcut yerel ağaçta bulunmadığından yeniden bindirme için temin edilmeleri gerekir.

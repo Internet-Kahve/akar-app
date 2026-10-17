@@ -10,4 +10,4 @@
 
 - `veri/bursa/bursa_eserler.csv`: Bursa'nın ayrıntılı listesi (408 satır; cilt, sayfa, ilçe, ad, tür, rol, ölçü sayısı, kubbe geçişi, metin uzunluğu, adres). Kitap 385 diyor; tekrarlar temizlenecek.
 - `veri/bursa/bursa_3d_adaylari.md`: 3D aday eserler ve ana hikâye önerisi (Ulucami + Bedesten).
-- Uygulama şeması ve içe aktarma kuralları: `belgeler/FRONTEND_BACKEND_NOTLARI.md`.
+- Uygulama şeması ve içe aktarma kuralları: `FRONTEND_BACKEND_NOTLARI.md`.
