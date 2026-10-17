@@ -2,10 +2,10 @@
 
 Ölçü ve kaynaklar: `eser.md`. Bu dosya model kararlarını ve varsayımları tutar. Sürüm bölümleri tarih sırasıyladır; en günceli en sondadır.
 
-## GÜNCEL DURUM (16 Ekim 2026, v02 · doku seçimi bekliyor)
-- **Son sürüm:** `claude/build/build_v02.py` (kütle v01b, dondurulmuş) iki doku seçeneğiyle: `AKAR_DOKU=almasik` ve `AKAR_DOKU=cizgi` → `claude/export/bedesten_v02_<doku>.glb` (≈ 144 KB), kontrol `claude/kontrol/v02_<doku>/` (ikisi de GECTI: true, 13 556 üçgen, 15 draw call). Karşılaştırma: `claude/kontrol/v02_secim/doku_secimi.png`.
-- **Üretim:** `AKAR_DOKU=<almasik|cizgi> blender -b --python claude/build/build_v02.py` (Blender 5.2); dokular `claude/build/doku/doku_uret.py` ile. Dal: `3d/bedesten-v01`.
-- **Sıradaki:** tasarım sorumlusu doku seçeneğini seçer (A almaşık / B düz + saçak çizgisi); seçilen sürüm `bedesten_v02.glb` olur, diğeri silinir.
+## GÜNCEL DURUM (17 Ekim 2026, v02 · teslim adayı)
+- **Son sürüm:** `claude/build/build_v02.py` (kütle v01b, dondurulmuş; gövde almaşık) → `claude/export/bedesten_v02.glb` (Draco, 144 KB), `claude/blend/bedesten_v02.blend`, kontrol `claude/kontrol/v02/` (GECTI: true, 13 556 üçgen, 15 draw call). Doku kararının kaydı: `claude/kontrol/v02_secim/doku_secimi.png`.
+- **Üretim:** `blender -b --python claude/build/build_v02.py` (Blender 5.2); dokular `claude/build/doku/doku_uret.py` ile. Dal: `3d/bedesten-v01`.
+- **Sıradaki:** B6 teslim (`.glb` → `belgeler` dalı, PR). Açık: güney kapısı kitabesi (yerden fotoğraf gelirse).
 - **Ölçülü plan bulundu:** Gabriel planı + enine kesit (`ref/BURSA_BEDESTENI.pdf` PDF s.12, Şekil 3) → `bursa/ref/bedesten_plan_gabriel.png`. Plan ölçek çubuğu 0–20 m (10,15 px/m), kesit 0–5 m (10,2 px/m). Plandan okunan iç mekân 56,8 × 15,3 m; envanterdeki 56,50 × 15,00 m ile 0,3 m içinde tutuyor → ölçek güvenilir.
 - **Vaziyet planı:** Bursa çarşısı (EHA 1967), Şekil 2 → `bursa/ref/bedesten_carsi_eha1967.png`. Kuzey yukarıda (Ulucami güneybatıda, Koza Han güneydoğuda).
 - Okuma görselleri (1 m ızgara): `claude/kontrol/kaynak/plan_1m_grid.png`, `kesit_1m_grid.png`.
@@ -141,9 +141,9 @@ Kütle tasarım sorumlusu tarafından kabul edildi. `build_v01b.py` içindeki k�
 9. Doku kararı (almaşık karo mı, tek yatay çizgi mi) v02'de verilecek.
 
 ## v02 · detay + renk + çıkış (16 Ekim 2026)
-Betik: `claude/build/build_v02.py` (= v01b kütlesi + detay; kütle ölçülerine dokunulmadı, yeni ölçüler P'de `D_` önekli). Doku seçeneği `AKAR_DOKU` ortam değişkeniyle; iki sürüm de üretildi.
+Betik: `claude/build/build_v02.py` (= v01b kütlesi + detay; kütle ölçülerine dokunulmadı, yeni ölçüler P'de `D_` önekli). İlk turda doku iki seçenekle üretildi (`AKAR_DOKU` ortam değişkeni); karar sonrası betik almaşığa sabitlendi.
 
-### Kontrol (`claude/kontrol/v02_almasik/`, `v02_cizgi/`)
+### Kontrol (`claude/kontrol/v02/`)
 - 13 556 üçgen (≤ 30 000), 15 draw call (< 50), açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 8 yönde 0 → **GECTI: true** (iki seçenekte de)
 - .glb (Draco): almaşık 144 KB, çizgi 143 KB (≤ 1 MB)
 - Render: `havadan`, `foto_acisi`, `kuzey_orto`, `bati_orto`, `kubbe_yakin`, `dogu_uc` (ref kırpıntısıyla aynı açı), `kuzey_kapi`
@@ -172,5 +172,10 @@ Betik: `claude/build/build_v02.py` (= v01b kütlesi + detay; kütle ölçülerin
 - VARSAYIM: kubbe kurşun ekleri 32 dilim, 5 sıra (fotoğraftan sayım).
 
 ### Açık sorular (v02 sonu)
-1. **Doku seçimi:** A (almaşık) mı, B (düz + saçak çizgisi) mi?
+1. ~~Doku seçimi~~ → aşağıda karara bağlandı (A, almaşık).
 2. Güney kapısı kitabesi (kelime-i tevhid) için yerden fotoğraf gelirse kapı çerçevesi ona göre yeniden çizilebilir.
+
+### Karar (tasarım sorumlusu, 17 Ekim 2026)
+- **Doku: A · almaşık karo.** Gövdenin dört yüzü almaşık (3 sıra tuğla + 1 sıra taş, kutu almaşık; 1,2 × 0,6 m karo, Koza Han ile aynı) + saçak tuğla bandı. `_ortak_stil.md` "doku azdır" kuralının bilinçli istisnası (fotoğraftaki cephe karakteri; Koza Han'daki karar ile aynı).
+- B seçeneği (düz renk + tek saçak çizgisi) elendi; çıktıları (`bedesten_v02_cizgi.*`, `kontrol/v02_cizgi/`) silindi. `build_v02.py`'deki `AKAR_DOKU` seçeneği kaldırıldı; çıktı adları `bedesten_v02.*`, kontrol `claude/kontrol/v02/`.
+- Yeniden üretim sonucu değişmedi: 13 556 üçgen, 15 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 0 → **GECTI: true**; `.glb` 144 KB. Yan yana: `yan_yana_foto.png`, `yan_yana_dogu_uc.png`.

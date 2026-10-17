@@ -6,9 +6,9 @@
 #   - Dukkan_Kapilari: dükkân halkasının dış yüzünde tuğla kemerli dükkân açıklıkları (68: uzun kenar 2 × 24, kısa 2 × 10).
 #   - Sacak: almaşık gövdenin üstünde tek tuğla bant (foto; stil "gövde üstünde tek yatay çizgi").
 #   - Kubbeler: 24 → 32 dilim (biçim aynı), dilim ve kurşun levha ekleri dokuyla (doku/kubbe_dilim.png).
-#   - Doku seçeneği ortam değişkeniyle: AKAR_DOKU=almasik (gövde almaşık karo) | cizgi (gövde düz renk, yalnız saçak bandı).
+#   - Gövde almaşık karo (tasarım sorumlusu kararı, A seçeneği; B "düz renk + tek saçak çizgisi" elendi).
 # Çalıştırma:
-#   AKAR_DOKU=almasik blender -b --python docs/documents-context/tasarim/3d-eser/bursa/eserler/yildirim-bayezid-bedesteni/claude/build/build_v02.py
+#   blender -b --python docs/documents-context/tasarim/3d-eser/bursa/eserler/yildirim-bayezid-bedesteni/claude/build/build_v02.py
 # Eksenler: +X = doğu, +Y = kuzey, +Z = yukarı. Orijin = ana salonun ortası.
 # Kaynak kodları: P plan/kesit, E envanter, W Alkan 2023, F fotoğraf, H hesap, T tahmin (VARSAYIM, bedesten_notlar.md'de listeli).
 import sys, os, math, json
@@ -18,14 +18,12 @@ import bpy
 import akar3d as A
 from mathutils import Vector
 
-DOKU_SECIM = os.environ.get("AKAR_DOKU", "almasik")
-assert DOKU_SECIM in ("almasik", "cizgi"), DOKU_SECIM
 SURUM = "v02"
 CLAUDE = os.path.dirname(HERE)
 DOKU = os.path.join(HERE, "doku")
-KONTROL = os.path.join(CLAUDE, "kontrol", f"{SURUM}_{DOKU_SECIM}")
-BLEND = os.path.join(CLAUDE, "blend", f"bedesten_{SURUM}_{DOKU_SECIM}.blend")
-EXPORT = os.path.join(CLAUDE, "export", f"bedesten_{SURUM}_{DOKU_SECIM}.glb")
+KONTROL = os.path.join(CLAUDE, "kontrol", SURUM)
+BLEND = os.path.join(CLAUDE, "blend", f"bedesten_{SURUM}.blend")
+EXPORT = os.path.join(CLAUDE, "export", f"bedesten_{SURUM}.glb")
 
 P = {
     # ---- kütle (v01b'de DONDURULDU; değişmez) ----
@@ -72,7 +70,7 @@ GX, GY = P["salon_ic_x"] / P["kubbe_nx"], P["salon_ic_y"] / P["kubbe_ny"]
 c0 = Vector((0, 0))
 
 M = {k: A.mat(n, hx) for k, n, hx in [
-    ("duvar", "Duvar", "#E2B7A4"),       # eser.md Palet: gövde pembe-kahve (almaşık seçeneğinde doku bağlanır)
+    ("duvar", "Duvar", "#E2B7A4"),       # eser.md Palet: gövde pembe-kahve; almaşık doku bağlanır
     ("dukkan_duvar", "Dukkan_Duvar", "#E9E3D3"),   # T: dükkân halkası krem (_ortak_stil krem taş), gövdeden ayrışsın
     ("cati", "Cati", "#B9C6CC"),         # T: düz kurşun çatı
     ("kubbe", "Kubbe", "#95AEBA"),       # eser.md Palet: kurşun mavi-gri (vurgu 1), dilim dokusu bağlanır
@@ -90,11 +88,10 @@ def doku_bagla(m, dosya):
     nt = m.node_tree; bsdf = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
     tx = nt.nodes.new("ShaderNodeTexImage"); tx.image = bpy.data.images.load(os.path.join(DOKU, dosya), check_existing=True)
     tx.name = "DOKU"; nt.links.new(tx.outputs["Color"], bsdf.inputs["Base Color"])
-DOKULU = [M["kubbe"], M["pencere"]]
-if DOKU_SECIM == "almasik": DOKULU.append(M["duvar"])
+DOKULU = [M["kubbe"], M["pencere"], M["duvar"]]
 doku_bagla(M["kubbe"], "kubbe_dilim.png")
 doku_bagla(M["pencere"], "pencere.png")
-if DOKU_SECIM == "almasik": doku_bagla(M["duvar"], "almasik.png")
+doku_bagla(M["duvar"], "almasik.png")
 
 def R4(hx, hy, cx=0.0, cy=0.0): return A.rect(Vector((cx, cy)), 2 * hx, 2 * hy)
 
@@ -239,7 +236,7 @@ def uv_almasik():
             for li in p.loop_indices:
                 co = o.matrix_world @ me.vertices[me.loops[li].vertex_index].co
                 uvl.data[li].uv = ((co.x * t.x + co.y * t.y) / kw_, co.z / kh_) if t is not None else (co.x / kw_, co.y / kh_)
-if DOKU_SECIM == "almasik": uv_almasik()
+uv_almasik()
 
 # ================= kontrol =================
 os.makedirs(KONTROL, exist_ok=True)
@@ -247,7 +244,6 @@ rapor = A.kontrol_hepsi(KONTROL, "kontrol")
 mk = A.mesh_kontrol()
 rapor["parcalar"] = {k: v["ucgen"] for k, v in mk.items()}
 rapor["draw_call"] = sum(len(o.material_slots) for o in bpy.data.objects if o.type == "MESH" and not o.name.startswith(("REF", "_", "Zemin")))
-rapor["doku"] = DOKU_SECIM
 print("RAPOR", json.dumps(rapor, ensure_ascii=False))
 
 # ================= AO + .glb =================
