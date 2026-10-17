@@ -443,3 +443,35 @@ Betik: `claude/build/build_v05.py`. Kontrol `claude/kontrol/v05/`: 13294 üçgen
 1. **Cami v05 kabul**: teslimde `export/orhan-bey-camii_v05.glb` kullanılır (v02–v04 önceki hâller).
 2. **Hamam v02 kabul**; külhan bacası eklenmez. Teslim: `export/orhan-bey-hamami_v02.glb`.
 3. Sıradaki: Emir Hanı v02 detay turu (B kademe).
+
+## Emir Hanı v02 · detay + renk + çıkış (17 Ekim 2026)
+Betik: `claude/build/build_emir_v02.py` (= Emir Hanı v01 kütlesi + detay; B kademe). Kontrol `claude/kontrol/emir_v02/`: 10194 üçgen, 18 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı 0 → **GECTI: true**; `.glb` 90 KB (`export/emir-hani_v02.glb`). Render: `havadan`, `avlu_ici`, `kuzey_giris`, `kuzey_orto`.
+
+| Parça | İçerik | Kaynak |
+|---|---|---|
+| Dış duvarlar | almaşık doku (cami karosu, 2 tuğla + taş) | E PDF s.108 |
+| `Avlu_Revaklari` | avlunun dört cephesinde kenar başına 9 göz: altta sivri tuğla kemerli koyu dükkân açıklığı, taş kat silmesi (5,0 m), üstte yüksek sivri tuğla kemer, beyaz tonoz içi ve beyaz korkuluk | E (36/38 oda), F Emir-Hani-2…5 |
+| `Dis_Cephe` | üst katta oda başına küçük pencere (alt kat depoları penceresiz); kuzey ortasında almaşık yuvarlak kemerli giriş (3,4 × 4,6) | E, F Emir-Hani-1 |
+| `Sacak` | dışta ve avluda içi boş tuğla saçak halkası | E "kirpi saçak" |
+| `Bacalar` | dış çatı yüzünde oda başına baca | E "ocaklı oda", F |
+| `Sadirvan`, `Agaclar` | avlu ortasında sekizgen fıskiyeli şadırvan; iki stilize çınar | E PDF s.109, _ortak_stil |
+
+### Tur içi düzeltme
+1. Bacalar çatıya 0,4 m gömülüydü (çakışma 0,47) → 0,15 m.
+
+### VARSAYIM'lar
+- VARSAYIM: giriş kuzey cephesinin ortasında (fotoğrafta yön belli değil).
+- VARSAYIM: kenar başına 9 göz, dört kenar eş; güney revaklarındaki kesme taş paye ve yuvarlak almaşık kemerler (E) ayrı işlenmedi.
+- VARSAYIM: baca sayısı dış çatı boyunca eşit aralıklı (≈ 11/kenar); envanterde 38 ocaklı oda.
+- VARSAYIM: şadırvan sekizgen havuz Ø 4,0 m; ağaçlar stilize, yerleri tahmin.
+
+### Açık sorular (Emir Hanı v02 sonu)
+1. Giriş hangi cephede? (Kuzey varsayıldı.)
+2. Güney revaklarında farklı (kesme taş paye, yuvarlak almaşık kemer) düzen işlensin mi?
+3. Kabul edilirse üç yapı teslime hazır: cami v05, hamam v02, Emir Hanı v02 (B6: `.glb` → `belgeler` dalı, PR).
+
+### Kararlar (tasarım sorumlusu, 17 Ekim 2026) · Emir Hanı v02 kabul
+1. **Emir Hanı v02 kabul**; teslim: `export/emir-hani_v02.glb`.
+2. Giriş kuzey cephesinde kalır.
+3. Güney revakları ayrıca işlenmez.
+4. Üç yapı teslime hazır: cami v05, hamam v02, Emir Hanı v02. Sıradaki: B6 teslim (`.glb` → `belgeler` dalı, PR).
