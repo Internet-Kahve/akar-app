@@ -2,10 +2,10 @@
 
 Ölçü ve kaynaklar: `eser.md`. Bu dosya model kararlarını ve varsayımları tutar. Sürüm bölümleri tarih sırasıyladır; en günceli en sondadır.
 
-## GÜNCEL DURUM (17 Ekim 2026, v02 · teslim adayı)
-- **Son sürüm:** `claude/build/build_v02.py` (kütle v01b, dondurulmuş; gövde almaşık) → `claude/export/bedesten_v02.glb` (Draco, 144 KB), `claude/blend/bedesten_v02.blend`, kontrol `claude/kontrol/v02/` (GECTI: true, 13 556 üçgen, 15 draw call). Doku kararının kaydı: `claude/kontrol/v02_secim/doku_secimi.png`.
-- **Üretim:** `blender -b --python claude/build/build_v02.py` (Blender 5.2); dokular `claude/build/doku/doku_uret.py` ile. Dal: `3d/bedesten-v01`.
-- **Sıradaki:** B6 teslim (`.glb` → `belgeler` dalı, PR). Açık: güney kapısı kitabesi (yerden fotoğraf gelirse).
+## GÜNCEL DURUM (17 Ekim 2026, v03 · kabul edildi)
+- **Son sürüm:** `claude/build/build_v03.py` → `claude/export/bedesten_v03.glb` (Draco, 157 KB), `claude/blend/bedesten_v03.blend`, kontrol `claude/kontrol/v03/` (GECTI: true, 14 956 üçgen, 20 draw call). Karşılaştırma: `claude/kontrol/denetim/karsilastirma_v03.png`. v02–v02c önceki hâller olarak duruyor.
+- **Üretim:** `blender -b --python claude/build/build_v03.py` (Blender 5.2); dokular `claude/build/doku/doku_uret.py` ile. Dal: `3d/bedesten-v01`.
+- **Sıradaki:** B6 teslim (`.glb` → `belgeler` dalı, PR). v03 tasarım sorumlusu tarafından kabul edildi (17 Ekim 2026). Belirsizler § v03 sonunda.
 - **Ölçülü plan bulundu:** Gabriel planı + enine kesit (`ref/BURSA_BEDESTENI.pdf` PDF s.12, Şekil 3) → `bursa/ref/bedesten_plan_gabriel.png`. Plan ölçek çubuğu 0–20 m (10,15 px/m), kesit 0–5 m (10,2 px/m). Plandan okunan iç mekân 56,8 × 15,3 m; envanterdeki 56,50 × 15,00 m ile 0,3 m içinde tutuyor → ölçek güvenilir.
 - **Vaziyet planı:** Bursa çarşısı (EHA 1967), Şekil 2 → `bursa/ref/bedesten_carsi_eha1967.png`. Kuzey yukarıda (Ulucami güneybatıda, Koza Han güneydoğuda).
 - Okuma görselleri (1 m ızgara): `claude/kontrol/kaynak/plan_1m_grid.png`, `kesit_1m_grid.png`.
@@ -179,3 +179,77 @@ Betik: `claude/build/build_v02.py` (= v01b kütlesi + detay; kütle ölçülerin
 - **Doku: A · almaşık karo.** Gövdenin dört yüzü almaşık (3 sıra tuğla + 1 sıra taş, kutu almaşık; 1,2 × 0,6 m karo, Koza Han ile aynı) + saçak tuğla bandı. `_ortak_stil.md` "doku azdır" kuralının bilinçli istisnası (fotoğraftaki cephe karakteri; Koza Han'daki karar ile aynı).
 - B seçeneği (düz renk + tek saçak çizgisi) elendi; çıktıları (`bedesten_v02_cizgi.*`, `kontrol/v02_cizgi/`) silindi. `build_v02.py`'deki `AKAR_DOKU` seçeneği kaldırıldı; çıktı adları `bedesten_v02.*`, kontrol `claude/kontrol/v02/`.
 - Yeniden üretim sonucu değişmedi: 13 556 üçgen, 15 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 0 → **GECTI: true**; `.glb` 144 KB. Yan yana: `yan_yana_foto.png`, `yan_yana_dogu_uc.png`.
+
+## Kaynak denetimi + v02b (17 Ekim 2026)
+İstek: modeli kaynaklarla ayrıntılı karşılaştır; 14 kubbeli ana yapı ile çevresindeki ticari yapıların ilişkisini incele; yalnız kaynakların desteklediğini düzelt.
+Kaynaklar: envanter cilt-2 PDF s.27 (kuzeyden çapraz havadan fotoğraf → `ref-img/envanter_c2_s27_kuzeyden.png`), s.28 (tam tepeden drone fotoğrafı → `ref-img/envanter_c2_s28_tepeden.png`), s.29 (metin); `ref-img/` havadan fotoğraflar; Gabriel planı ve kesiti; `eser.md`.
+
+### Envanter s.29 metni (doğrudan)
+- "Bedestenin merkez mekânı iç ölçüler itibarıyla 15,00 × 56,50 metredir."
+- Ticari mekânlar: 32 mahzen ile "bu mahzenlerin önlerinde ve taşıyıcı ayakların çevresinde düzenlenen dükkânlar", hepsi yuvarlak tonozlu → **içerideki ticari birimler** (bedesten içinde).
+- "Her bir kapı, kubbeyle örtülü bir giriş mekânına açılır."
+- "Bedestenin çevresinde bugün 68 dükkân yer almakta, ancak bunların ilk yapı düzenlemesiyle doğrudan bir ilişkisi bulunmamaktadır." → **dışarıdaki dükkânlar**, sonradan.
+
+### Bulgular
+| # | Konu | Sonuç | Dayanak |
+|---|---|---|---|
+| 1 | Kurşun örtülü yüksek kütlenin sınırı | **HATALI (v02) → düzeltildi.** Yüksek almaşık kütle yalnız merkez mekân + duvarları: ≈ 59,5 × 18,0 m. v02'de mahzen bandı da yüksek gövdenin içindeydi (60,0 × 24,4 m). | s.28 tepeden: kurşun dikdörtgen oranı 3,27 (59,5/18 = 3,31; 60/24,4 = 2,46); kubbe çapıyla (7,4 m) ölçek → ≈ 58,7 × 18,0 m; kubbe sıraları kurşun kenarına ≈ 0,6–0,9 m. s.27 çapraz: kubbeler almaşık duvarın hemen arkasında. E iç ölçü + P duvar 1,5 m. |
+| 2 | Mahzen bandı ve dükkânlar | **DOĞRU (alçak bant olarak).** Yüksek kütleyi dört yandan saran koyu, düz, alçak bir çatı bandı var; mahzen bandı (K/G) ve dükkânlar bu bantta. v02b'de alçak `Dukkanlar` kütlesi artık yüksek gövdenin dibinden başlıyor. | s.28: kurşun dikdörtgenin çevresinde kesintisiz koyu düz bant (K/G ≈ 5,7 m, D/B ≈ 2,9 m görünen); s.27 ve ref-img: bu bantın üstünde klima cihazları, uzun cephe pencerelerinin hemen altında. Gabriel kesiti: mahzen ve dükkânlar salon duvarının dışında, ondan alçak. |
+| 3 | Ana yapı ile dükkânlar bitişik mi, arada geçit var mı? | **Bitişik; geçit yalnız dört kapı ekseninde (DOĞRU).** Tepeden fotoğrafta bant boyunca açık sokak/zemin görünmüyor. | Gabriel planı (dükkânlar mahzen bandına ve uç duvarlara sırt verir, geçit yalnız 4 kapıda); s.28 bantın sürekliliği. |
+| 4 | Fotoğraftaki birleşimler: duvar mı, örtü mü? | **Dış kenar: modern eğik çatıların saçağı.** Bantın dışındaki gri/bej eğik çatılar (Kapalıçarşı sokak örtüleri) bantın dış kenarını örtüyor; görünen bant (≈ 65,5 × 29,5 m) Gabriel'deki dış sınırdan (70,4 × 32,8 m) küçük. Bu modern örtüler modele girmedi. | s.28 ve s.27: eğik çatılar bantın üstüne kadar uzanıyor; altlarındaki duvar görünmüyor. |
+| 5 | İç / dış ticari birimlerin ayrımı | **DOĞRU.** İçerideki 32 mahzen ve ayaklar çevresindeki dükkânlar modellenmedi (iç mekân); dışarıdaki 68 dükkân alçak bantın dış yüzünde kepenk olarak var. | E s.29 metni; Gabriel planı. |
+| 6 | Yükseklikler | Yüksek gövde saçağı **8,5 → 10,0 m** (P kesit, salon duvarı). Alçak bant 5,0 m (VARSAYIM, foto). **Çelişki:** Gabriel kesiti alçak bant çatısını 8,7 m gösteriyor; ama uzun cephe pencereleri (P kesit 5,6–7,6 m) bütün fotoğraflarda bantın **üstünde** görünüyor → foto seçildi, belirsiz. | P kesit; s.27, ref-img. |
+| 7 | Kurşun çatı | Alçak kırma; köşelerden mahya çizgileri görünüyor. v02b'de duvar üstünden (10,0) iç mekân kenarına (10,25) kesik piramit (VARSAYIM eğim). | s.28 köşe çizgileri. |
+| 8 | Dört giriş | **BELİRSİZ.** Varlık ve eksen kesin (E: dört cephede kapı, her biri kubbeli giriş mekânına açılır; Gabriel: kenar ortaları). Tepeden fotoğrafta K ve G orta eksende bantın **dış** kısmında küçük kare, sivri örtülü yapılar var (≈ 3 × 3 m); Gabriel'de kubbeli giriş mekânı bantın **iç** kısmında (salona bitişik). ≈ 3 m çelişki → kütle olarak eklenmedi; kapılar alçak bantın dış yüzünde kaldı. D/B girişleri fotoğrafta seçilemiyor. s.27'de kuzey ekseninde modern çatılı bir geçit kapıya uzanıyor. | E s.29; Gabriel; s.28; s.27. |
+| 9 | Pencereler | **DOĞRU.** Uzun cephede göz başına bir, kısa cephede iki çift; yükseklikleri alçak bantın üstünde. | ref-img; s.27; P kesit. |
+
+### v02b değişiklikleri (yalnız kaynak destekli)
+- `govde_x/y`: 60,0 × 24,4 → **59,5 × 18,0 m** (H: E iç ölçü + P duvar; F tepeden foto).
+- `cati_h` (almaşık gövde saçağı): 8,5 → **10,0 m** (P kesit).
+- `Cati`: duvar üstünden (10,0) iç mekân kenarına (10,25) alçak kırma kurşun çatı; kubbe tabanı 10,25, tepe 13,5 aynı.
+- `Dukkanlar` (alçak bant: mahzen bandı + dükkânlar): iç sınırı yüksek gövdenin dibi; dış sınır 70,4 × 32,8 (P), yükseklik 5,0 (VARSAYIM) değişmedi.
+- Pencereler, kapılar, dükkân kepenkleri, saçak bandı, doku ve palet v02 ile aynı. Kontrol: GECTI true, 13 556 üçgen, 15 draw call, .glb 143 KB.
+
+### Değiştirilmeyen belirsizler
+- Kubbeli giriş mekânlarının yeri (bantın içi mi dışı mı) ve yüksekliği → yerden ya da daha yakın havadan fotoğraf gerekli.
+- Alçak bantın gerçek yüksekliği (P 8,7 / foto ≈ 5) ve dış sınırı (modern saçakların altında).
+- D ve B girişlerinin bugünkü bağlantısı.
+
+## v02c · dış dükkân duvarlarına almaşık (17 Ekim 2026)
+İstek (tasarım sorumlusu): en dış duvarlara gerçekle uyumlu doku.
+- `Dukkanlar` (alçak bant) duvarları krem düz renk (#E9E3D3, v02 VARSAYIM) yerine gövdeyle **aynı almaşık karo** (3 sıra tuğla + 1 sıra taş, 1,2 × 0,6 m). Kepenk kemerleri, kapı çerçeveleri ve çatı aynı.
+- Dayanak: Alkan 2023 s.157 "üç sıra tuğla, bir sıra taş almaşık" (yapı geneli); envanter cilt-2 s.56 çarşı sokağı fotoğrafı (`ref-img/envanter_c2_s29_carsi_sokagi.png`): dükkân vitrinlerinin üstünde tuğla kemerli, taş–tuğla örgülü duvar.
+- Belirsiz: sokak fotoğrafının hangi cepheye ait olduğu yazılmamış; fotoğrafta duvar loş ve modern tabelalarla örtülü, örgü düzeni (tuğla sıra sayısı) okunamıyor. Bu yüzden yeni bir karo uydurulmadı, gövde karosu kullanıldı.
+- `Dukkan_Duvar` malzemesi kaldırıldı. Kontrol: GECTI true, 13 556 üçgen, .glb 143 KB. Görsel: `claude/kontrol/denetim/dis_duvar_v02c.png`.
+
+## v03 · İç Bedesten Sokağı, dış halka çatısı, yükseltilmiş girişler (17 Ekim 2026)
+Tasarım sorumlusunun tespiti: ana yapı ile çevresindeki yapı bitişik değil, arada İç Bedesten Sokağı var; dış yapının çatısı düz değil; dış çatının giriş kısımları yükseltilmiş, dört giriş.
+
+### Kontrol edilen kaynaklar
+- Yandex harita 2B (`ref-img/yandex_2b_ic_bedesten_sok.webp`): **İç Bedesten Sok.** ana yapının dört yanını dolaşan kapalı bir halka; dış yapının dışında **Dış Bedesten Sok.** → ana yapı ile dış halka arasında sokak var (**DOĞRULANDI**). Yandex'in 3B ayak izleri kaydırılmış çizildiği için ölçü buradan alınmadı.
+- Envanter s.28 tepeden: dış halka çatısı **kırma** (iç saçaktan ≈ 5,0 m içeride mahya, dört köşede mahya çizgisi); kurşun gövde ile halka saçağı arasında K/G ≈ 5,6 m, D/B ≈ 2,5 m koyu bant (sokak; üstü kısmen hafif örtülü, klima ve sundurmalar). Batı ortasında ≈ 7,5 m genişliğinde ayrı çatı parçası; doğuda da benzer.
+- Envanter s.27 kuzeyden: kuzey ortasında halka çatısından yüksek, kalkanı kuzeye bakan giriş çatısı; önüne cam örtülü çarşı sokağı bağlanıyor.
+- ref-img / tasarım sorumlusunun fotoğrafı: dış halkanın uzun eğik metal çatısı.
+- Envanter s.29: 68 dükkân ilk yapıya ait değil; Gabriel planındaki bitişik dükkân halkası 1958 yangını öncesi düzen → bugünkü durumu göstermiyor.
+
+### Değişiklikler (v02c → v03)
+- `Dukkanlar`: gövdeye bitişik düz halka (70,4 × 32,8 × 5,0 m) yerine **İç Bedesten Sokağı ile ayrılan dış halka**. Sokağa bakan duvar yüzü ±32,85 / ±15,2 m, dış yüz ±41,65 / ±24,0 m (≈ 83,3 × 48,0 m), duvar derinliği 8,8 m, almaşık.
+- Dış halka çatısı: **kırma metal çatı**, saçak 4,5 m, mahya 6,5 m (ortada), 0,6 m saçak taşması, köşelerde mahya. Renk açık gri-bej #C9C3B6.
+- `Girisler` (yeni): dört eksende halkayı enine kesen **yükseltilmiş giriş bölümleri**, 7,5 m geniş, saçak 6,6 m, kalkan tepesi 8,0 m; kalkanlar sokağa ve dışarıya bakar.
+- `Gecitler` (yeni): giriş bölümlerinin iki kalkan yüzünde tuğla kemerli geçit açıklığı (3,0 m).
+- `Ic_Bedesten_Sokagi` (yeni): gövde ile dış halka arasında taş döşeme; genişlik K/G 6,2 m, D/B 3,1 m.
+- `Kapilar`: dört ana kapı dış halkadan **ana yapının duvarına** alındı (E s.29: kapılar bedestenin dört cephesinde).
+- `Dukkan_Kapilari`: dış halkanın dış yüzünde (Dış Bedesten Sok.) ≈ 2,9 m modülle kepenkler; giriş bölümlerinin önü boş. Sayı artık 68'e sabit değil (halka büyüdü).
+- Ana yapı (gövde, kurşun çatı, kubbeler, pencereler, saçak) v02c ile aynı.
+
+### Yeni VARSAYIM'lar
+- VARSAYIM: dış halka çatısı simetrik (mahya ortada) → duvar derinliği 8,8 m; halkanın dış sınırı fotoğraf karesinin dışında kalıyor.
+- VARSAYIM: sokak genişliği = tepeden fotoğraftaki görünen bant + 0,6 m saçak taşması.
+- VARSAYIM: yükseklikler (halka saçağı 4,5, mahya 6,5; giriş 6,6 / 8,0) kaynakta yok, fotoğraflardaki oranlardan tahmin.
+- VARSAYIM: dört girişin genişliği batıdaki ölçümle aynı (7,5 m); kuzey ve güney girişinin genişliği fotoğrafta net değil.
+
+### Belirsiz / modele girmeyen
+- Sokağın üstündeki hafif örtüler, sundurmalar ve klima cihazları (tepeden fotoğrafta koyu bant) → modellenmedi, sokak açık bırakıldı.
+- Dış halkanın sokağa bakan iç yüzünde dükkân açıklıkları olup olmadığı → kaynak yok, düz almaşık bırakıldı.
+- Envanterdeki "kubbeli giriş mekânları": ana yapının içinde mi, giriş bölümlerinde mi? Bu sürümde ayrıca modellenmedi.
+- Güney kapısı kitabesi.
