@@ -1,30 +1,20 @@
-# Güncel sürüm: GPT v15
+# Ulu Cami — güncel sürüm v16
 
-Son düzeltmeler REVIZYON_v15.md; güncel model blend/ulu-cami_gpt_v15.blend ve export/ulu-cami_gpt_v15.glb. Aşağıdaki v01 kayıtları önceki sürüme aittir.
+- `blend/ulu-cami_gpt_v16.blend`: düzenlenebilir sahne, paketlenmiş dokular, genişletilmiş kaide.
+- `export/ulu-cami_gpt_v16.glb`: yalnız bina.
+- `export/ulu-cami_gpt_v16_sunum.glb`: kaideli sunum.
+- `build/build_gpt_v16.py`, `build/akar3d.py`, `build/doku/`: üretim betiği, bağımlılık ve dokular.
+- `kontrol/gpt_v16/`: güncel görseller ve doğrulama raporları.
+- `CEVRE_ENVANTER_NOTLARI.md`: çevre araştırması, kaynak sayfaları ve belirsizlikler.
+- `REVIZYON_v16.md`: son kaide değişikliği.
 
-# Bursa Ulu Cami · GPT v01
+20 kubbe; sekizgen kasnaklar, her kasnakta sekiz pencere; dışa açılan kubbe eteği; içbükey ana kapı; kahverengi kapılar; hafif taş örgüsü. Yanlarda dört, arkada beş geniş pencere grubu bulunur. Arka orta grubun altında pencere yoktur. Kaide yaklaşık %20 genişletildi; çevre yapıları henüz eklenmedi.
 
-15 Ekim 2026. Bursa ortak stilinde dış mekân minyatürü.
+Bina 67.906 üçgen. Açık/non-manifold kenar ve sekiz yönden ters yüz bulgusu yok; >=0,3 m kaba çakışma taraması temiz. 30 bin üçgen başlangıç hedefi aşılmıştır; mobil performans ölçülmedi. Kaide gerçek avlu sınırı değildir. Fotoğrafa dayalı stilize modeldir.
 
-## Dosyalar
-- `blend/ulu-cami_gpt_v01.blend`: düzenlenebilir Blender sahnesi; dokular paketlendi.
-- `export/ulu-cami_gpt_v01.glb`: uygulama için yalnız bina; Draco, 310.752 bayt.
-- `export/ulu-cami_gpt_v01_sunum.glb`: kaideli sunum sürümü.
-- `kontrol/gpt_v01/gpt_v01_hava_kuzeybati.png`: genel görünüş.
-- `kontrol/gpt_v01/`: sekiz yönden ters yüz denetimi, referansla yan yana kuzey görünüşü, kapı/kubbe/doğu yakın görselleri, JSON raporları.
-- `build/build_gpt_v01.py`: yeniden üretim betiği; `akar3d.py` yerel bağımlılığı birlikte bulunur.
+Yeniden üretim: `blender -b --python build/build_gpt_v16.py`. Yerel `akar3d.py` ve üst klasördeki `ref-maket/Miniaturk_Bursa_Ulu_Cami_-_Bursa_Grand_Mosque.jpeg` gereklidir. İlk geometri Claude v02c üretim betiğinden türetilmiş, kullanıcı referanslarıyla geliştirilmiştir.
 
-## Kaynak ve değişiklikler
-Sıfırdan ölçüm iddiası yoktur: projedeki `claude/build/build_v02c.py` parametrik üretim geometrisi temel alındı. 68,7 × 55 m plan, 5 × 4 kubbe dizisi, merkez aksları ve minare yerleri korundu. Kaynaklar: ulu-cami_notlar.md, eser.md, _ortak_stil.md ve Miniatürk maket fotoğrafı.
-GPT sürümünde eser.md stil paleti uygulandı: krem taş, lavanta kubbe, altın alem. Makette görülen üç kademeli portal silmeleri eklendi. Ortak stil tarifindeki çim/taş/pembe elips kaidesi ayrı sunum geometrisi olarak üretildi. Önceki çalışmalar değiştirilmedi.
+Üst klasörde eser.md, ulu-cami_notlar.md, prompt ve tüm referans klasörleri korunur.
 
-## Doğrulama
-Bina: 29.300 üçgen, 18 mesh, 47 malzeme primitive/draw-call tahmini. Açık/non-manifold kenar 0. Sekiz yönde kırmızı ters yüz piksel oranı 0. Kütüphanenin ≥0,3 m çakışma taramasında bulgu yok. Bu tarama matematiksel olarak her küçük kesişmenin yokluğunu garanti etmez. Kaide bu bina bütçesine dahil değildir. Mobil cihaz performansı ölçülmedi.
-
-## Varsayımlar ve sınırlar
-VARSAYIM: Belgelerdeki daha önce kabul edilmiş yükseklik ve kütle oranları korundu; yeni saha ölçümü yapılmadı.
-VARSAYIM: Kaide görsel sunum öğesidir; tarihî avlu planını temsil etmez.
-Mevcut geometriden devralınan 30 üst + 30 alt cephe penceresi, envanterin 32 üst + 26 alt sayısıyla birebir örtüşmez. 140 kasnak penceresi vardır; çatı altında kalan 20 konum atlanır, 42 pencere kısalır. İç mekân modellenmedi. Bu çalışma rölöve/restorasyon modeli değil, belgelerde tarif edilen stilize dış görünüş modelidir.
-
-## Yeniden üretim
-Blender ile `blender -b --python build/build_gpt_v01.py`. Referans karşılaştırması için üst klasördeki ref-maket fotoğrafı gerekir. Üretim kendi gpt çıktılarının üzerine yazar.
+Eski sürümler ve yedekler 17 Ekim 2026'da çalışma klasöründen geri alınabilir arşive taşındı:
+/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/tasarim/3d-eser/bursa/_arsiv/ulu-cami-temizlik-20261017-004239
