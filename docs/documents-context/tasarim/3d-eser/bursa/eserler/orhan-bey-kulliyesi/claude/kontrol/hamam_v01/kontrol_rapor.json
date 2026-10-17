@@ -1,0 +1,28 @@
+{
+ "ucgen_toplam": 1700,
+ "acik_ya_da_manifold_degil": {},
+ "cakismalar(>=0.3m)": [],
+ "kirmizi_oran_8_yon": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "GECTI": true,
+ "parcalar": {
+  "Hamam_Sicaklik": 36,
+  "Hamam_Sogukluk_Erkek": 422,
+  "Hamam_Sogukluk_Kadin": 422,
+  "Kubbe_Iliklik": 410,
+  "Kubbe_Sicaklik": 410
+ },
+ "draw_call": 14,
+ "dis_olcu_m": [
+  37.7,
+  35.3
+ ]
+}

@@ -6,7 +6,8 @@
 - **Son sürüm:** `claude/build/build_v01.py` (cami kütlesi) → `claude/blend/orhan-bey-camii_v01.blend`, kontrol `claude/kontrol/v01/` (GECTI: true, 2 350 üçgen, 30 draw call). .glb henüz yok (v02'de).
 - **Bindirme:** `claude/build/yan_yana.py v01` → `kontrol/v01/bindirme_bati_orto.png`, `bindirme_kuzey_orto.png` (render ile Ayverdi çizimi aynı ölçekte, 35 px/m, zemin hizalı).
 - **Üretim:** `blender -b --python claude/build/build_v01.py` (Blender 5.2). Dal: `3d/orhan-bey-kulliyesi-v01` (Bedesten dalının ucundan; main'de `3d-eser` yok).
-- **Cami kütlesi donduruldu (GEOMETRİ DONDURMA v01, 17 Ekim).** Sıradaki: hamam v01 kütlesi; caminin v02 detayı (kanat çatıları dahil) sonra.
+- **Cami kütlesi donduruldu (GEOMETRİ DONDURMA v01, 17 Ekim).**
+- **Hamam v01 kütlesi hazır:** `claude/build/build_hamam_v01.py` → `claude/blend/orhan-bey-hamami_v01.blend`, kontrol `claude/kontrol/hamam_v01/` (GECTI: true, 1 700 üçgen, 14 draw call). Bindirme: `claude/build/yan_yana_hamam.py`. **Hamam donduruldu (GEOMETRİ DONDURMA hamam v01).** Sıradaki: Emir Hanı v01.
 - Kaynak turu (B1) özeti aşağıda; çizimler `bursa/ref/orhan-*.png`, okumalar `claude/kontrol/kaynak/`.
 
 ## Klasör düzeni
@@ -180,3 +181,63 @@ Kütle tasarım sorumlusu tarafından kabul edildi. `build_v01.py` içindeki cam
 6. Minare kuzeydoğuda, eksen (u 1,3; v 8,3); bugünkü sivri kurşun külah (3,8 m, F).
 7. **Yan kanat basık kurşun kırma çatıları v02 detayında** eklenecek (kütleye girmez).
 8. Hamamda Çetintaş planı, Emir Hanı'nda 45 × 45 m (E).
+
+## Hamam kaynak denetimi (17 Ekim 2026, hamam v01 öncesi)
+Karşılaştırma görseli: `claude/kontrol/kaynak/hamam_kaynak_karsilastirma.png` (hepsi 12 px/m, kuzey yukarı).
+
+### Yön
+- **Çetintaş planında kuzey sağda** (90° dönük): EHA 1967'de sekizgen sıcaklık güneyde, büyük kubbeli odalar kuzeyde; envanterdeki "kuzey girişi" büyük soğuklukta, daha küçük kadınlar soğukluğu doğuda (E: "doğudan bitişik"). Hepsi bu yönle tutuyor.
+- **Ayverdi planında kuzey aşağıda** (180°): oda dizilişi Çetintaş'la aynı (erkek soğukluğu kuzeybatı, kadın soğukluğu kuzeydoğu, sıcaklık güneyde).
+
+### Ölçek çelişkisi (2 m'den fazla)
+| Oda | E (iç) | Çetintaş, çubuk ölçeği (49 px/m) | Oran | Ayverdi planı (41,8 px/m) |
+|---|---|---|---|---|
+| Erkek soğukluğu | 11,95 × 11,86 | 8,6 × 8,9 | ×1,39 / ×1,34 | ≈ 11,4 (−%5) |
+| Kadın soğukluğu | 10,35 × 10,35 | 7,3 × 7,5 | ×1,42 / ×1,38 | |
+→ **Çetintaş yeniden çiziminin ölçek çubuğu ≈ %38 hatalı**; doğru ölçek ≈ 35,5 px/m (E oda ölçülerinden, H). Kalibre edilince Çetintaş dış ölçüsü ≈ 37,7 (D–B) × 35,4 (K–G) m; OSM K–G 34,9 ile tutuyor, D–B 23,3 ile tutmuyor (OSM poligonu yapının yalnız bir kısmını alıyor olabilir).
+- Ayverdi kesiti (46,6 px/m) da kısa: soğukluk içi 10,3 ↔ E 11,95 (×1,16). Ön okuma yükseklikleri (× 1,16 ile): soğukluk duvarı ≈ 8,6, kubbe tepesi ≈ 16,2, aydınlık feneri ≈ 17,2; ılıklık tepesi ≈ 9,2; sıcaklık tepesi ≈ 9,5; halvet ve eyvan damları ≈ 5,6 m.
+- Çetintaş planındaki ince çizgili alanlar (kuzeybatı ve güneydoğu köşeler) yığma değil; sonradan eklenen çarşı/avlu bölümleri.
+
+### Karar soruları
+1. Hamam ölçeği: (a) **Çetintaş planı, envanter oda ölçüleriyle kalibre (×1,38)** (öneri; senin seçtiğin plan, 4 odada ±%3 tutarlı); (b) Ayverdi planı (çubuğu E ile %5 içinde, ama yalnız hamam çekirdeği).
+2. Yükseklikler Ayverdi kesitinden × 1,16 (E soğukluk genişliğiyle kalibre) alınsın mı? (öneri: evet)
+3. İnce çizgili ek alanlar (sonraki çarşı bölümleri) modele girmesin; yalnız yığma hamam (öneri: girmesin, B kademe).
+
+### Hamam kararları (tasarım sorumlusu, 17 Ekim 2026)
+1. Ölçek: **Çetintaş planı, envanter oda ölçüleriyle kalibre (×1,38 → 35,5 px/m)**.
+2. Yükseklikler: **Ayverdi kesiti × 1,16** (E soğukluk genişliğiyle kalibre).
+3. Sonradan eklenen çarşı bölümleri (planda ince çizgili alanlar) modele girmez; yalnız yığma hamam.
+4. Dosya adları yapıya göre: `build_hamam_v01.py`, `kontrol/hamam_v01/`, `blend/orhan-bey-hamami_v01.blend` (cami dosyaları `build_v01.py`, `kontrol/v01/` olarak kalır).
+
+## Hamam v01 · kütle turu (17 Ekim 2026)
+Betik: `claude/build/build_hamam_v01.py` (B kademe; pencere, kapı ve süs yok). Sonuç `claude/kontrol/hamam_v01/`:
+- `kontrol_rapor.json`: 1 700 üçgen, 14 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 8 yönde 0 → **GECTI: true** (ilk denemede)
+- Dış ölçü (yığma kısım): 37,7 (D–B) × 35,3 (K–G) m
+- Render: `havadan` (kuzeydoğudan), `havadan_guneybati`, `dogu_orto`, `kuzey_orto`, `ust_orto` (kare), `kubbe_yakin`
+- Bindirme: `bindirme_ust_orto.png` (Çetintaş planı ×1,38: dört kubbe kesikli dairelerin üstünde, kütle kenarları duvarlarla hizalı), `bindirme_dogu_orto.png` (Ayverdi kesiti ×1,16: erkek soğukluğu duvarı 8,6, kubbe tepesi 16,2, fener 17,2 ve ılıklık kubbesi örtüşüyor)
+
+Parçalar: `Hamam_Sogukluk_Erkek` (kubbe + fener, vurgu 2), `Hamam_Sogukluk_Kadin` (kubbe + fener), `Hamam_Sicaklik` (alçak L kütle: sıcaklık, 4 eyvan + 4 halvet, ılıklık, kadın sıcaklığı ve halvetleri, batıdaki iki tonozlu oda), `Kubbe_Sicaklik`, `Kubbe_Iliklik` (+ `Zemin`, `Zemin_Golge`).
+
+### Tur içi düzeltme
+1. **Üst kamera** (render, model değil): tam tepeden `to_track_quat` görüntüyü 180° çeviriyordu → kamera açısı sabitlendi, render kare yapıldı. Cami `ust_orto.png` de aynı sorundan etkileniyor (yalnız bilgi amaçlı; cami dondurulduğu için betiğe dokunulmadı).
+
+### Bilinen fark
+- Ayverdi kesiti (×1,16) güneyde plandan ≈ 4 m uzun ve sıcaklık kubbesi kesitte ≈ 2 m daha güneyde. İki çizimin kalibrasyonu (×1,38 / ×1,16) birbirini tam tutmuyor; konumlar plandan (P), yükseklikler kesitten (K) alındı.
+
+### Yeni VARSAYIM'lar
+- VARSAYIM: kadınlar soğukluğu duvarı 7,5, kubbe tepesi 14,1 m (kesit yok; erkek soğukluğundan açıklık oranıyla).
+- VARSAYIM: halvet, eyvan ve kadın sıcaklığı küçük kubbeleri v01'de yok; alçak kütle 5,6 m düz dam.
+- VARSAYIM: batıdaki iki uzun tonozlu oda (planda kuzeybatı ucu) alçak kütleyle aynı yükseklikte (5,6 m).
+- VARSAYIM: kubbeler kasnaksız doğrudan duvardan (soğukluklar) ya da alçak pahlı kasnaktan (sıcaklık, ılıklık) çıkıyor; E'deki "3 sıra tuğla + 1 sıra taş kasnak" v02'de doku olarak.
+
+### Açık sorular (hamam v01 sonu)
+1. Küçük halvet/eyvan kubbeleri (8 + 3 adet) v02 detayında eklensin mi? (öneri: B kademe olduğu için hayır, yalnız düz dam)
+2. Kütle kabul edilirse: "GEOMETRİ DONDURMA hamam v01", sonra Emir Hanı v01.
+
+## GEOMETRİ DONDURMA hamam v01 (17 Ekim 2026)
+Hamam kütlesi tasarım sorumlusu tarafından kabul edildi. `build_hamam_v01.py` içindeki kütle ölçüleri bundan sonra değişmez; v02 yalnız detay, renk ve çıkış ekler.
+
+### Kararlar
+1. Plan Çetintaş ×1,38 (E oda ölçüleriyle kalibre), yükseklikler Ayverdi kesiti ×1,16; çarşı ekleri modelde yok.
+2. Erkekler soğukluğu: duvar 8,6, kubbe tepesi 16,2, fener 17,2 m. Kadınlar soğukluğu: duvar 7,5, tepe 14,1 m (VARSAYIM). Alçak kütle 5,6 m; sıcaklık kubbesi 9,5, ılıklık 9,2 m.
+3. **Küçük halvet ve eyvan kubbeleri eklenmez** (v02'de de); alçak kütle düz kurşun dam.
