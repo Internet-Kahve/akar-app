@@ -7,7 +7,8 @@
 - **Bindirme:** `claude/build/yan_yana.py v01` → `kontrol/v01/bindirme_bati_orto.png`, `bindirme_kuzey_orto.png` (render ile Ayverdi çizimi aynı ölçekte, 35 px/m, zemin hizalı).
 - **Üretim:** `blender -b --python claude/build/build_v01.py` (Blender 5.2). Dal: `3d/orhan-bey-kulliyesi-v01` (Bedesten dalının ucundan; main'de `3d-eser` yok).
 - **Cami kütlesi donduruldu (GEOMETRİ DONDURMA v01, 17 Ekim).**
-- **Hamam v01 kütlesi hazır:** `claude/build/build_hamam_v01.py` → `claude/blend/orhan-bey-hamami_v01.blend`, kontrol `claude/kontrol/hamam_v01/` (GECTI: true, 1 700 üçgen, 14 draw call). Bindirme: `claude/build/yan_yana_hamam.py`. **Hamam donduruldu (GEOMETRİ DONDURMA hamam v01).** Sıradaki: Emir Hanı v01.
+- **Hamam v01 kütlesi hazır:** `claude/build/build_hamam_v01.py` → `claude/blend/orhan-bey-hamami_v01.blend`, kontrol `claude/kontrol/hamam_v01/` (GECTI: true, 1 700 üçgen, 14 draw call). Bindirme: `claude/build/yan_yana_hamam.py`. **Hamam donduruldu (GEOMETRİ DONDURMA hamam v01).**
+- **Emir Hanı v01 kütlesi hazır:** `claude/build/build_emir_v01.py` → `claude/blend/emir-hani_v01.blend`, kontrol `claude/kontrol/emir_v01/` (GECTI: true). **Donduruldu (GEOMETRİ DONDURMA Emir Hanı v01).** Sıradaki: cami v02 detay turu.
 - Kaynak turu (B1) özeti aşağıda; çizimler `bursa/ref/orhan-*.png`, okumalar `claude/kontrol/kaynak/`.
 
 ## Klasör düzeni
@@ -241,3 +242,39 @@ Hamam kütlesi tasarım sorumlusu tarafından kabul edildi. `build_hamam_v01.py`
 1. Plan Çetintaş ×1,38 (E oda ölçüleriyle kalibre), yükseklikler Ayverdi kesiti ×1,16; çarşı ekleri modelde yok.
 2. Erkekler soğukluğu: duvar 8,6, kubbe tepesi 16,2, fener 17,2 m. Kadınlar soğukluğu: duvar 7,5, tepe 14,1 m (VARSAYIM). Alçak kütle 5,6 m; sıcaklık kubbesi 9,5, ılıklık 9,2 m.
 3. **Küçük halvet ve eyvan kubbeleri eklenmez** (v02'de de); alçak kütle düz kurşun dam.
+
+## Emir Hanı v01 · kütle turu (17 Ekim 2026)
+Betik: `claude/build/build_emir_v01.py` (B kademe; revak, kapı, baca ve süs yok). **Ölçülü plan ve kesit yok.** Sonuç `claude/kontrol/emir_v01/`:
+- `kontrol_rapor.json`: 52 üçgen, 3 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 8 yönde 0 → **GECTI: true**
+- Render: `havadan`, `kuzey_orto`, `ust_orto` (kare), `avlu_ici`
+- Bindirme: `bindirme_ust_orto.png` (EHA 1967): D–B yönünde çekirdek ≈ 44,8 m, avlu açıklığı ≈ 25,2 m, kanat ≈ 9,5 m model ile tutuyor. K–G yönü döngüsel (EHA dikeyi 45 m kabulüyle ölçeklendi).
+- Yan yana: `yan_yana_avlu.png` (fotoğraf Emir-Hani-4; v01'de revak olmadığı için yalnız kütle ölçeği)
+
+Parçalar: `Emir_Hani` (halka kütle + kurşun kırma çatı, tek kapalı hacim), `Han_Avlu` (avlu döşemesi) (+ `Zemin`, `Zemin_Golge`).
+
+### Ölçüler
+| Ölçü | Değer | Kaynak |
+|---|---|---|
+| Dış ölçü | 45,0 × 45,0 m | E (EHA yatay 45,5 ✓) |
+| Avlu | 25,5 × 25,5 m | H: √650 m² (EHA yatay ≈ 25,2 ✓) |
+| Kanat derinliği | 9,75 m | H |
+| Saçak (iç ve dış) | 9,5 m | T (Koza Han v01 ile aynı: 5,0 + 4,5) |
+| Kırma çatı mahyası | 11,0 m, kanat ortasında | T (F: Emir-Hani-1'de basık kurşun kırma çatı) |
+
+### VARSAYIM'lar
+- VARSAYIM: saçak 9,5 m, mahya 11,0 m (yükseklik kaynağı yok). Fotoğraftan ölçüm için yerden, karşıdan bir dış cephe fotoğrafı gerek.
+- VARSAYIM: zemin düz; girişte sokaktan avluya inen rampa (F: Emir-Hani-1) modellenmez.
+- VARSAYIM: çevredeki dükkân sıraları (EHA'da doğu ve batıda, OSM 57,5 m) modelde yok (B1 kararı: 45 × 45).
+- VARSAYIM: avludaki şadırvan ve çınarlar v02'de (eser.md Zemin ve çevre).
+
+### Açık sorular (Emir Hanı v01 sonu)
+1. Saçak 9,5 m uygun mu? (Fotoğraflarda alt kat kemerleri + üst kat revağı ≈ 9–10 m gösteriyor; ölçülemedi.)
+2. Kütle kabul edilirse: "GEOMETRİ DONDURMA Emir Hanı v01", sonra v02 detay turları (cami A, hamam ve han B).
+
+## GEOMETRİ DONDURMA Emir Hanı v01 (17 Ekim 2026)
+Emir Hanı kütlesi tasarım sorumlusu tarafından kabul edildi. `build_emir_v01.py` içindeki kütle ölçüleri bundan sonra değişmez.
+
+### Kararlar
+1. Dış ölçü 45 × 45 m (E), avlu 25,5 × 25,5 m (H), kanat 9,75 m; dükkân sıraları modelde yok.
+2. **Saçak 9,5 m kalır** (VARSAYIM, Koza Han ile aynı); kurşun kırma çatı mahyası 11,0 m, kanat ortasında.
+3. Üç yapının kütlesi donmuş durumda; sıradaki işler v02 detay turları (önce cami, A kademe).
