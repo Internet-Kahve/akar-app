@@ -1,0 +1,37 @@
+{
+ "ucgen_toplam": 8538,
+ "acik_ya_da_manifold_degil": {},
+ "cakismalar(>=0.3m)": [],
+ "kirmizi_oran_8_yon": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "GECTI": true,
+ "parcalar": {
+  "Cami_Harim": 12,
+  "Cami_Kanat_B": 12,
+  "Cami_Kanat_D": 12,
+  "Cami_Koridor": 12,
+  "Cami_Mihrap": 12,
+  "Cami_SonCemaat": 16,
+  "Cati_Kanatlar": 72,
+  "Cepheler": 5016,
+  "Kaide_Bant": 48,
+  "Kubbe_Ana": 410,
+  "Kubbe_Giris": 410,
+  "Kubbe_Mihrap": 410,
+  "Kubbe_Tabhane_B": 410,
+  "Kubbe_Tabhane_D": 410,
+  "Minare_1": 316,
+  "Revak_SonCemaat": 888,
+  "Sacak": 72
+ },
+ "draw_call": 44,
+ "glb_bayt": 131016
+}

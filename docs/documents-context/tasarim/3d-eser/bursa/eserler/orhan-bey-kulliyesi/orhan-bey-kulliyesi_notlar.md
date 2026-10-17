@@ -8,7 +8,8 @@
 - **Üretim:** `blender -b --python claude/build/build_v01.py` (Blender 5.2). Dal: `3d/orhan-bey-kulliyesi-v01` (Bedesten dalının ucundan; main'de `3d-eser` yok).
 - **Cami kütlesi donduruldu (GEOMETRİ DONDURMA v01, 17 Ekim).**
 - **Hamam v01 kütlesi hazır:** `claude/build/build_hamam_v01.py` → `claude/blend/orhan-bey-hamami_v01.blend`, kontrol `claude/kontrol/hamam_v01/` (GECTI: true, 1 700 üçgen, 14 draw call). Bindirme: `claude/build/yan_yana_hamam.py`. **Hamam donduruldu (GEOMETRİ DONDURMA hamam v01).**
-- **Emir Hanı v01 kütlesi hazır:** `claude/build/build_emir_v01.py` → `claude/blend/emir-hani_v01.blend`, kontrol `claude/kontrol/emir_v01/` (GECTI: true). **Donduruldu (GEOMETRİ DONDURMA Emir Hanı v01).** Sıradaki: cami v02 detay turu.
+- **Emir Hanı v01 kütlesi hazır:** `claude/build/build_emir_v01.py` → `claude/blend/emir-hani_v01.blend`, kontrol `claude/kontrol/emir_v01/` (GECTI: true). **Donduruldu (GEOMETRİ DONDURMA Emir Hanı v01).**
+- **Cami v02 detay hazır:** `claude/build/build_v02.py` → `claude/export/orhan-bey-camii_v02.glb` (Draco, 131 KB), `claude/blend/orhan-bey-camii_v02.blend`, kontrol `claude/kontrol/v02/` (GECTI: true, 8 538 üçgen, 44 draw call). Dokular `claude/build/doku/doku_uret.py`. **Kabul edildi.** Sıradaki: hamam v02, sonra Emir Hanı v02.
 - Kaynak turu (B1) özeti aşağıda; çizimler `bursa/ref/orhan-*.png`, okumalar `claude/kontrol/kaynak/`.
 
 ## Klasör düzeni
@@ -278,3 +279,43 @@ Emir Hanı kütlesi tasarım sorumlusu tarafından kabul edildi. `build_emir_v01
 1. Dış ölçü 45 × 45 m (E), avlu 25,5 × 25,5 m (H), kanat 9,75 m; dükkân sıraları modelde yok.
 2. **Saçak 9,5 m kalır** (VARSAYIM, Koza Han ile aynı); kurşun kırma çatı mahyası 11,0 m, kanat ortasında.
 3. Üç yapının kütlesi donmuş durumda; sıradaki işler v02 detay turları (önce cami, A kademe).
+
+## v02 · cami detay + renk + çıkış (17 Ekim 2026)
+Betik: `claude/build/build_v02.py` (= v01 kütlesi birebir + detay; yeni ölçüler P'de `D_` önekli). Sonuç `claude/kontrol/v02/`:
+- `kontrol_rapor.json`: 8 538 üçgen (≤ 30 000), 44 draw call (< 50), açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 8 yönde 0 → **GECTI: true**
+- `.glb` (Draco): `claude/export/orhan-bey-camii_v02.glb` 131 KB (≤ 1 MB); AO vertex rengine pişirildi
+- Render: `havadan`, `havadan_guneybati`, `foto_acisi`, `foto_acisi_2`, `kuzey_orto`, `bati_orto`, `revak_yakin`, `kubbe_yakin`
+- Bindirme (`yan_yana.py v02`): `bindirme_bati_orto.png` (Ayverdi yan cephesi: sağır kemerler, mihrap bloğu pencereleri, kasnak pencereleri ve ikiz kemer yerinde), `bindirme_kuzey_orto.png`; fotoğrafla: `yan_yana_foto.png`, `yan_yana_foto_2.png`
+
+### Eklenenler
+| Parça | İçerik | Kaynak |
+|---|---|---|
+| `Revak_SonCemaat` | kuzeyde 5 sivri kemer (yanlar üzengi 4,5 / tepe 6,6; orta taç kemer 4,9 / 8,0), tuğla kemer bandı, orta gözde ana kapı (1,8 × 3,4, taş çerçeve); yanlarda tuğla kemerli ikiz sivri kemer | P, O, E, F |
+| `Cepheler` | doğu/batı/güney yüzlerinde sağır sivri kemerler (kanat: 2,6 m, tepe 6,9; mihrap bloğu: 3,2 m, tepe 9,6), içlerinde üstte sivri revzenli, altta dikdörtgen parmaklıklı pencere + tuğla boşaltma kemeri; koridor ucunda küçük üst pencere; doğu yan kapısı (1905); kasnak pencereleri (ana 2/yüz, mihrap 1/yüz, tabhane 1/yüz) | Y, P, F, Budak 2018 |
+| `Kaide_Bant` | 0,8 m taş subasman bandı (son cemaat yeri hariç) | Y |
+| `Sacak` | 0,35 m tuğla saçak bandı (testere dişi saçak yerine tek bant) | E, F |
+| `Cati_Kanatlar` | yan kanat ve koridor üstünde kasnağa doğru 7,55 → 8,3 m yükselen basık kurşun çatı | dondurma kararı 7, F |
+| `Minare_1` | şerefe ve korkuluk taş, gövde tuğla | F |
+| Dokular | almaşık (taş sırası + 2 sıra tuğla, dikey tuğla; karo 2,0 × 0,8 m), kubbe dilimleri (24 dilim × 6 sıra), parmaklıklı pencere | F, E |
+
+### Tur içi düzeltmeler
+1. İkiz kemer gözleri iç kemer levhasıyla kenar paylaşıyordu (manifold olmayan 4 kenar) → göz genişliği 1,8 → 1,7 m.
+2. Çatı halkası normalleri yeniden hesaplandı (8 yönde ≈ 1e-4 kırmızı vardı).
+3. Draw call 54 → 44: cephe ve kasnak pencereleri tek `Cepheler` nesnesinde.
+4. Almaşık karo 1,2 × 0,6 → 2,0 × 0,8 m (ilk hâli cephede ızgara gibi duruyordu; fotoğrafta taş sırası ≈ 0,55 m).
+
+### VARSAYIM'lar
+- VARSAYIM: son cemaat yeri açıklıkları koyu levha (#6B5A55); kütle kapalı, revak içi modellenmez.
+- VARSAYIM: doğu yan kapısının yeri koridor ucu (v 9,6); Budak 2018 yalnız "doğu cephesinde 1905'te açılan kapı" diyor.
+- VARSAYIM: güney cephesindeki iki pencerenin düzeni yan yüzlerle aynı (sağır kemer + üst ve alt pencere).
+
+### Açık sorular (v02 sonu)
+1. **Doğu baklava / batı dama motifleri** (E PDF s.100) ve **minare yıldız motifleri** (E PDF s.103): `eser.md`'de "nasıl" boş; v02'ye eklenmedi. Eklensin mi, nasıl (tek bant mı, tüm cephe mi)?
+2. **Alt pencereler:** fotoğrafta (IMG_8460) sivri kemerli ve daha büyük; Ayverdi yan cephesinde dikdörtgen + boşaltma kemeri. Bugünkü hâl kararı gereği fotoğrafa göre değiştirilsin mi?
+3. **Revak içi rengi:** koyu levha mı kalsın, fotoğraftaki beyaz sıva gibi açık mı olsun?
+4. v02 kabul edilirse: commit, sonra hamam ve Emir Hanı v02 (B kademe, sade).
+
+### v02 kararları (tasarım sorumlusu, 17 Ekim 2026) · cami v02 kabul
+1. Baklava, dama ve minare yıldız motifleri **eklenmez**.
+2. Alt pencereler Ayverdi'deki gibi dikdörtgen + tuğla boşaltma kemeri **kalır**.
+3. Son cemaat yeri açıklıkları koyu levha (#6B5A55) **kalır**.
