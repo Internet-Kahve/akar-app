@@ -52,7 +52,30 @@ def kubbe_dilim(path, W=64, Hh=64):
     d.rectangle([0, Hh - 2, W - 1, Hh - 1], fill=acik)
     im.save(path, optimize=True)
 
+def pencere_sebeke(path, W=128, Hh=192):
+    """Üst pencere ve kasnak pencereleri: beyaz alçı şebeke, koyu altıgen-yuvarlak delikler (E PDF s.101 "alçı şebekeli";
+    F ts_17ekim_b_13, _18). Kemer biçimi geometride; karo dikdörtgen."""
+    im = Image.new("RGB", (W, Hh), (240, 238, 232)); d = ImageDraw.Draw(im)
+    r, dx, dy = 7, 20, 17
+    for j in range(-1, Hh // dy + 2):
+        for i in range(-1, W // dx + 2):
+            x = i * dx + (dx // 2 if j % 2 else 0) + 4; y = j * dy + 6
+            d.ellipse([x - r, y - r, x + r, y + r], fill=(58, 62, 70))
+    d.rectangle([0, 0, W - 1, Hh - 1], outline=(214, 208, 196), width=6)
+    im.save(path, optimize=True)
+
+def pencere_izgara(path, W=128, Hh=192):
+    """Alt pencereler: koyu cam + çapraz (baklava) demir ızgara (F ts_17ekim_b_13, _15)."""
+    im = Image.new("RGB", (W, Hh), (26, 28, 30)); d = ImageDraw.Draw(im)
+    g = (62, 74, 66); a = 32
+    for k in range(-Hh, W + Hh, a):
+        d.line([(k, 0), (k + Hh, Hh)], fill=g, width=3); d.line([(k, Hh), (k + Hh, 0)], fill=g, width=3)
+    d.rectangle([0, 0, W - 1, Hh - 1], outline=(70, 80, 72), width=5)
+    im.save(path, optimize=True)
+
 if __name__ == "__main__":
+    pencere_sebeke(os.path.join(HERE, "pencere_sebeke.png"))
+    pencere_izgara(os.path.join(HERE, "pencere_izgara.png"))
     almasik(os.path.join(HERE, "almasik.png"))
     pencere(os.path.join(HERE, "pencere.png"))
     kubbe_dilim(os.path.join(HERE, "kubbe_dilim.png"))

@@ -31,3 +31,5 @@ https://fotoatlas.net/
 https://www.turkiyenintarihieserleri.com/?oku=1700
 https://www.degito.com/libre/bursa-ulu-camii-ve-cevresinin-mimari-ozellikleri-ve-kulturel-miras-anlami
 https://kulturenvanteri.com/yer/timurtas-pasazade-ahmed-pasa-turbesi-muradiye-kulliyesi/
+
+| Orhan Bey Camii | tasarım sorumlusunun 17 Ekim 2026'da paylaştığı fotoğraflar (tepeden drone, havadan kuzeyden, revak içi, ikiz kemer; bir kısmı Bursa envanteri cilt-1 PDF s.96–99 ile aynı kare; biri Vecteezy filigranlı) | foto | bilinmiyor / filigranlı, yalnız göz kontrolü | `eserler/orhan-bey-kulliyesi/ref-img/ts_17ekim_*.webp` | Son cemaat yeri örtüsü (5 örtü: 3 kubbe + 2 aynalı tonoz), açık revak, toplam 9 dış örtü |

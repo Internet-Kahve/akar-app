@@ -9,7 +9,11 @@
 - **Cami kütlesi donduruldu (GEOMETRİ DONDURMA v01, 17 Ekim).**
 - **Hamam v01 kütlesi hazır:** `claude/build/build_hamam_v01.py` → `claude/blend/orhan-bey-hamami_v01.blend`, kontrol `claude/kontrol/hamam_v01/` (GECTI: true, 1 700 üçgen, 14 draw call). Bindirme: `claude/build/yan_yana_hamam.py`. **Hamam donduruldu (GEOMETRİ DONDURMA hamam v01).**
 - **Emir Hanı v01 kütlesi hazır:** `claude/build/build_emir_v01.py` → `claude/blend/emir-hani_v01.blend`, kontrol `claude/kontrol/emir_v01/` (GECTI: true). **Donduruldu (GEOMETRİ DONDURMA Emir Hanı v01).**
-- **Cami v02 detay hazır:** `claude/build/build_v02.py` → `claude/export/orhan-bey-camii_v02.glb` (Draco, 131 KB), `claude/blend/orhan-bey-camii_v02.blend`, kontrol `claude/kontrol/v02/` (GECTI: true, 8 538 üçgen, 44 draw call). Dokular `claude/build/doku/doku_uret.py`. **Kabul edildi.** Sıradaki: hamam v02, sonra Emir Hanı v02.
+- **Cami v02 detay hazır:** `claude/build/build_v02.py` → `claude/export/orhan-bey-camii_v02.glb` (Draco, 131 KB), `claude/blend/orhan-bey-camii_v02.blend`, kontrol `claude/kontrol/v02/` (GECTI: true, 8 538 üçgen, 44 draw call). Dokular `claude/build/doku/doku_uret.py`. **Kabul edildi.** v02b kusur turu: saçak z-fighting düzeltmesi (`export/orhan-bey-camii_v02b.glb`, 132 KB).
+- **Cami v03 (son cemaat yeri revizyonu) hazır:** `claude/build/build_v03.py` → `claude/export/orhan-bey-camii_v03.glb` (160 KB), kontrol `claude/kontrol/v03/` (GECTI: true, 11182 üçgen, 49 draw call). Teslimde v03 kullanılmalı (kabul edilirse).
+- **Cami v04 (kubbe, kasnak, pencere detayı) hazır:** `claude/build/build_v04.py` → `claude/export/orhan-bey-camii_v04.glb` (172 KB), kontrol `claude/kontrol/v04/` (GECTI: true, 12100 üçgen, 50 draw call).
+- **Cami v05 (kubbe eteği) hazır:** `claude/build/build_v05.py` → `claude/export/orhan-bey-camii_v05.glb` (193 KB), kontrol `claude/kontrol/v05/` (GECTI: true, 13294 üçgen, 49 draw call).
+- **Hamam v02 detay hazır:** `claude/build/build_hamam_v02.py` → `claude/export/orhan-bey-hamami_v02.glb` (Draco, 60 KB), kontrol `claude/kontrol/hamam_v02/` (GECTI: true, 3 204 üçgen, 20 draw call). Sıradaki: hamam v02 göz kontrolü, sonra Emir Hanı v02.
 - Kaynak turu (B1) özeti aşağıda; çizimler `bursa/ref/orhan-*.png`, okumalar `claude/kontrol/kaynak/`.
 
 ## Klasör düzeni
@@ -319,3 +323,123 @@ Betik: `claude/build/build_v02.py` (= v01 kütlesi birebir + detay; yeni ölçü
 1. Baklava, dama ve minare yıldız motifleri **eklenmez**.
 2. Alt pencereler Ayverdi'deki gibi dikdörtgen + tuğla boşaltma kemeri **kalır**.
 3. Son cemaat yeri açıklıkları koyu levha (#6B5A55) **kalır**.
+
+## v02b · cami kusur turu (17 Ekim 2026)
+Betik: `claude/build/build_v02b.py` (= v02 + tek düzeltme; biçim değişmedi). Kontrol `claude/kontrol/v02b/`: 8 658 üçgen, açık/manifold olmayan kenar 0, çakışma 0, kırmızı 0 → **GECTI: true**; `.glb` 132 KB.
+- **Kusur:** `Sacak` bantları dolu prizmaydı; üst yüzleri harim ve mihrap bloğu damıyla aynı düzlemde (10,2 m) → damda kırmızı-gri titreşim (z-fighting). Hamam v02'de fark edildi, camide yakın render'la doğrulandı.
+- **Düzeltme:** bant içi boş kapalı halka (dış 0,18 m taşma, iç 0,05 m), damdan 2 cm yüksek biter. Görsel: `kontrol/v02b/dam_yakin.png`.
+- Kabul edilen v02 dosyaları (`build_v02.py`, `orhan-bey-camii_v02.glb`) olduğu gibi duruyor; teslimde v02b kullanılmalı.
+
+## Hamam v02 · detay + renk + çıkış (17 Ekim 2026)
+Betik: `claude/build/build_hamam_v02.py` (= hamam v01 kütlesi + detay; B kademe, sade). Sonuç `claude/kontrol/hamam_v02/`:
+- `kontrol_rapor.json`: 3 204 üçgen, 20 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 8 yönde 0 → **GECTI: true**
+- `.glb` (Draco): `claude/export/orhan-bey-hamami_v02.glb` 60 KB; AO pişirildi
+- Render: `havadan`, `havadan_guneybati`, `dogu_orto`, `kuzey_orto`, `kuzey_giris`, `sicaklik_yakin`
+
+### Eklenenler
+| Parça | İçerik | Kaynak |
+|---|---|---|
+| `Hamam_Giris` | erkekler soğukluğu kuzey yüzünde, planda ortadaki açıklıkta yuvarlak kemerli kapı (1,6 × 3,2), tuğla + küfeki halkalı kemer, üstünde yuvarlak pencere (Ø 1,1, z 5,0); yan açıklıklarda yuvarlak kemerli pencere | E PDF s.106, P, T |
+| `Sacak` | tuğla saçak halkaları (üç kütle) + soğukluklarda 1,0 m tuğla kasnak bandı | E, cami ile aynı bant |
+| `Fil_Gozleri` | sıcaklık ve ılıklık kubbelerinde 2 halka × 8 koyu nokta (Ø 0,28) | _ortak_stil § 3, Ayverdi kesiti |
+| Dokular | kubbe dilimleri (cami ile aynı karo); duvarlar düz renk | — |
+Fenerlerin malzemesi kubbe → çatı rengi (dilim dokusu fenere taşmasın); biçim aynı.
+
+### Tur içi düzeltmeler
+1. Saçak bandı dolu prizma → içi boş halka (alçak damda z-fighting). Aynı kusur camide → v02b.
+2. Kasnak bandı saçak halkasıyla iç kenar paylaşıyordu (manifold olmayan 8 kenar) → 1 cm ayrıldı.
+
+### VARSAYIM'lar
+- VARSAYIM: kapı 1,6 × 3,2 m, yan pencereler 1,0 m (planda açıklık ≈ 1,4 m; yükseklik kaynağı yok).
+- VARSAYIM: fil gözü düzeni (2 halka × 8); kesitte sayı okunmuyor.
+- VARSAYIM: duvarlar düz renk; E'deki kesme taş için doku yok (B kademe, "doku azdır").
+
+### Açık sorular (hamam v02 sonu)
+1. **Külhan bacası** (_ortak_stil hamam vurgusu): yeri kaynakta yok. Sıcaklığın güneyinde tek baca eklensin mi, eklenmesin mi?
+2. Hamam v02 kabul edilirse: commit, sonra Emir Hanı v02.
+
+## v03 · cami son cemaat yeri revizyonu (17 Ekim 2026, tasarım sorumlusu kararı)
+Dondurulmuş kütlede **tasarım sorumlusunun isteğiyle** değişiklik. Dayanak: tasarım sorumlusunun fotoğrafları (`ref-img/ts_17ekim_1…6`: tepeden drone, havadan kuzeyden, revak içi, ikiz kemer), envanter cilt-1 PDF s.97 ("Beş gözlü son cemaat mahalli, 25.80 × 6.30 m ölçülerindedir ve tamamen kubbelerle örtülüdür"; "Yan mekânlar aynalı tonozlarla"), s.98 (yan cepheler "devşirme kompozit başlıklara oturan ikişer sivri kemerle dışa açılmaktadır"; sofalar "zeminden yaklaşık 90 cm daha yüksek"), s.100 ("küçük kubbeli giriş sahanlığı").
+
+Betik: `claude/build/build_v03.py` (= v02b + son cemaat yeri yeniden). Kontrol `claude/kontrol/v03/`: 11182 üçgen, 49 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı 0 → **GECTI: true**; `.glb` 160 KB.
+
+### Değişenler
+| Konu | v02b | v03 |
+|---|---|---|
+| Son cemaat yeri | kapalı kütle + koyu levhalar | **açık revak**: U biçimli duvar, kemerler Boolean ile oyuldu, kemer içleri beyaz sıva; ön 5 sivri kemer, yanlarda mermer sütunlu ikiz kemer; içte 0,9 m sofa, gözleri ayıran beyaz sivri kemerler (üzengi 4,6, tepe 7,6), beyaz tavan (8,0 m); arka duvarda ana kapı + 4 pencere |
+| Son cemaat yeri örtüsü | kurşun kırma çatı (mahya 11,8) | basık kurşun teras (9,4 → 9,85) + **ortada kasnaklı kubbe** (Ø 4,6, tepe 11,8) + **iki yanda kubbe** (Ø 3,9, tepe 10,9) + **uçlarda dikdörtgen aynalı tonoz** (4,2 × 4,6, üst 10,6) |
+| Giriş kubbesi (koridor) | dışarıda kasnaklı kubbe | **kaldırıldı** (tepeden fotoğrafta yok; E: giriş sahanlığı kubbesi çatı altında); koridor üstü kurşun kırma çatı |
+| Arka duvar | koridor saçağında (7,6) bitiyordu | son cemaat yeri saçağına (9,4) yükseldi (`Cami_KuzeyDuvar_Ust`) |
+| Dış örtü sayısı | 5 kubbe + kırma çatı | **9**: son cemaat yerinde 3 kubbe + 2 aynalı tonoz, ana gövdede 4 sekizgen kasnaklı kubbe |
+
+Yeni parçalar: `Cami_SonCemaat` (oyulmuş revak duvarı), `Revak_Kemerler`, `Revak_Ic` (sofa, tavan, sütunlar), `Revak_Cephe` (kemer bantları, arka duvar kapı/pencereleri), `Kubbe_SonCemaat`, `Cami_KuzeyDuvar_Ust`. Kalkan: `Revak_SonCemaat`, `Kubbe_Giris`.
+Görseller: `foto_revak` (ts_17ekim_2 açısı), `revak_ici` (ts_17ekim_5 açısı, göz boyunca), `havadan_kuzey` (ts_17ekim_3), `ust_orto` (ts_17ekim_6 ile karşılaştırılabilir).
+
+### Tur içi düzeltme
+1. Uç gözlerin kesicisi yan duvarın iç yüzüyle aynı düzlemdeydi → Boolean 50 manifold olmayan kenar + arka yüz verdi. Yan duvar 1,2 → 1,1 m (H, 10 cm).
+
+### VARSAYIM'lar
+- VARSAYIM: revak tavanı düz beyaz levha (8,0 m); gerçekte kubbe ve aynalı tonoz içleri. Workbench ışığında alt yüz koyu gri görünüyor.
+- VARSAYIM: örtü kotları: ortadaki kubbe tepesi 11,8 (Y), yan kubbeler 10,9, aynalı tonoz 10,6 (ön cephe ve fotoğraftan kaba).
+- VARSAYIM: sofa bütün revak içinde 0,9 m; ön kemerler sofa seviyesinden açılıyor; giriş merdiveni yok.
+- VARSAYIM: ikiz kemer sütunu Ø 0,36 m, üzengi 4,0 m; kemer kilit taşı/rozet süsleri yok (motif kararı gereği).
+
+### Açık sorular (v03 sonu)
+1. Revak tavanı: düz beyaz levha mı kalsın, içten görünen kubbe/tonoz çanakları mı eklensin (üçgen artar)?
+2. Ön kemerlerin altına giriş merdiveni ve demir parmaklık eklensin mi?
+3. Avludaki şadırvan (ts_17ekim_3, eser.md "çevre yapı") cami .glb'sine girsin mi?
+
+## v04 · cami kubbe, kasnak ve pencere detayı (17 Ekim 2026)
+Dayanak: tasarım sorumlusunun paylaştığı Yandex 3B model görüntüleri (`ref-img/yandex/yandex_3d_7…10.png`) ve fotoğraflar (`ref-img/ts_17ekim_b_11…21`), envanter cilt-1 PDF s.100–102. kulturenvanteri.com sayfasında mimari ölçü ya da pencere bilgisi yok (yalnız tarihçe; 1905'te doğu kapısının açıldığı).
+
+Betik: `claude/build/build_v04.py` (= v03 + aşağıdakiler). Kontrol `claude/kontrol/v04/`: 12100 üçgen, 50 draw call (sınır ≤ 50), açık/manifold olmayan kenar 0, çakışma 0, kırmızı 0 → **GECTI: true**; `.glb` 172 KB.
+
+### Yandex modeliyle karşılaştırma
+| Konu | Yandex | Bizim model | Sonuç |
+|---|---|---|---|
+| Plan (ters T, mihrap bloğu güneye çıkıntı) | aynı | aynı | uyuyor |
+| Son cemaat yeri örtüsü | uçlarda aynalı tonoz (piramit), 2 yan kubbe, ortada kasnaklı kubbe | v03'ten beri aynı | uyuyor |
+| Ana gövde kubbeleri | 4 kubbe, hepsi **sekizgen kasnak** | v03'te pahlı kare | **v04'te düzgün sekizgen** |
+| Minare | kuzeydoğu, kanatla koridor köşesi | aynı | uyuyor |
+| Mihrap bloğu genişliği | ≈ 0,54 × toplam genişlik (tepeden) | 11,3 / 25,7 = 0,44 (Ayverdi planı) | Yandex ölçülü değil; plan (P) korunur |
+| Kanat ve koridor çatısı | kasnağa doğru yükselen kurşun çatı | aynı | uyuyor |
+| Pencere/kemer | yok (kütle modeli) | — | — |
+
+### Değişenler
+| Konu | v03 | v04 | Kaynak |
+|---|---|---|---|
+| Kasnaklar | pahlı kare (pah 0,30) | **düzgün sekizgen** (pah 0,586) + üstte tuğla testere dişi saçak halkası | E s.100, s.102; Yandex; F |
+| Ana kubbe kasnak pencereleri | 4 yüzde 2'şer = 8 | **7** (kuzey yüzü hariç her yüzde 1) | E s.101 "yedi pencere" |
+| Mihrap kubbesi kasnak pencereleri | 3 | **3** (G, D, B) | E s.102 "kubbede yer alan üç pencere" |
+| Tabhane kasnak pencereleri | 3 | 3 (dış, K, G) | F |
+| Üst pencereler | sivri kemer, parmaklık | **yuvarlak kemer, beyaz alçı şebeke** (koyu yuvarlak delikler) | E s.102; F ts_17ekim_b_13, _18 |
+| Alt pencereler | dikdörtgen + boşaltma kemeri | **sivri kemer, siyah cam + baklava demir ızgara**, üstte tuğla sivri kemer | E s.102 (1905 tadilatı); F ts_17ekim_b_13, _15 |
+| Kasnak pencereleri | sivri | yuvarlak kemer, beyaz şebeke | E s.101 |
+| Alemler | yalnız minare | 4 ana kubbe + son cemaat yeri orta kubbesi | F |
+| Son cemaat yeri gözleri | ≈ 3,9 m eşit | orta 4,7 m, yanlar 3,7 m | tasarım sorumlusu, Yandex |
+| Revak arka duvarı pencereleri | dikdörtgen parmaklık | dikdörtgen, ızgara dokusu | E s.100 "dikdörtgen ... ikişer pencere" |
+
+Pencere sayıları (cephe başına): kanat yan yüzleri 2 üst + 2 alt (+ koridor ucunda 1 küçük üst), mihrap bloğu doğu/batı/güney 2 üst + 2 alt (E s.102 "ikişer pencere"), kanatların güney yüzü 1 + 1, revak arka duvarı kapının iki yanında 2 + 2 (E s.100). Doku: `doku/pencere_sebeke.png`, `doku/pencere_izgara.png` (`doku_uret.py`).
+Draw call 60 → 50: kasnak saçakları ve alemler tek `Kasnak_Detay` nesnesinde; revağın arka duvarı `Cami_Koridor` nesnesine alındı (`Cami_KuzeyDuvar_Ust` kalktı).
+
+### Açık sorular (v04 sonu)
+1. Kasnaklar fotoğraflarda bazı karelerde sarı sıvalı (2019 öncesi), bugün almaşık; bugünkü hâl korundu. Uygun mu?
+2. Tabhane kasnaklarında pencere sayısı fotoğraftan 1/yüz okunuyor; envanterde sayı yok. 3 yüz (dış, K, G) uygun mu?
+3. Revak tavanı (düz beyaz levha) ve merdiven/parmaklık soruları v03'ten açık.
+
+## v05 · cami kubbe eteği (17 Ekim 2026, tasarım sorumlusu)
+Dayanak: `ref-img/ts_17ekim_c_22_kubbe_etegi.webp` (kuzeybatıdan drone): büyük kubbeler alt kısımda birden dışa açılan kurşun etekle kasnağın üstünü örtüyor; kasnakta kahverengi çıkıntı yok.
+Betik: `claude/build/build_v05.py`. Kontrol `claude/kontrol/v05/`: 13294 üçgen, 49 draw call, açık/manifold olmayan kenar 0, çakışma 0, kırmızı 0 → **GECTI: true**; `.glb` 193 KB.
+
+| Konu | v04 | v05 |
+|---|---|---|
+| Büyük 4 kubbe | basık küre, kasnağın içinden çıkıyor | **etekli kubbe**: kasnak üstünde, kasnak köşesinin 0,25 m dışına taşan kurşun etek (dudak 0,12 m); etek içbükey eğriyle kubbe yüksekliğinin %30'u kadar yükselip kubbeye bağlanır |
+| Kasnak üst bandı (4 büyük kubbe) | 0,15 m dışa taşan tuğla saçak halkası | **gömme**: üst 0,3 m duvarla aynı yüzeyde tuğla malzeme, kabartı yok |
+| Son cemaat yeri orta kubbesi | tuğla halka | halka ve bant yok; etekli kubbe |
+| Mihrap kasnak penceresi tepesi | 12,3 | 12,2 (bandın altında) |
+`Kasnak_Detay` artık yalnız alemleri tutuyor. Kasnak üst kapağı eteğin altında kaldığı için ayrı malzeme yok (draw call 53 → 49).
+
+### Kararlar (tasarım sorumlusu, 17 Ekim 2026) · cami v05 ve hamam v02 kabul
+1. **Cami v05 kabul**: teslimde `export/orhan-bey-camii_v05.glb` kullanılır (v02–v04 önceki hâller).
+2. **Hamam v02 kabul**; külhan bacası eklenmez. Teslim: `export/orhan-bey-hamami_v02.glb`.
+3. Sıradaki: Emir Hanı v02 detay turu (B kademe).
