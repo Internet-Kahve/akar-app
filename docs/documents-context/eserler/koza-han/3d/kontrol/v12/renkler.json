@@ -1,0 +1,372 @@
+{
+ "Duvar_Almasik": {
+  "hex": "#CFA986",
+  "hsv": [
+   0.08,
+   0.353,
+   0.812
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Cati_Kursun": {
+  "hex": "#7C858C",
+  "hsv": [
+   0.573,
+   0.114,
+   0.549
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": false
+ },
+ "Sacak": {
+  "hex": "#AEB6BC",
+  "hsv": [
+   0.571,
+   0.074,
+   0.737
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Baca_Kulah": {
+  "hex": "#8E9498",
+  "hsv": [
+   0.567,
+   0.066,
+   0.596
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ },
+ "Ahsap": {
+  "hex": "#7A5134",
+  "hsv": [
+   0.069,
+   0.574,
+   0.478
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ },
+ "Avlu_Zemin": {
+  "hex": "#B3A590",
+  "hsv": [
+   0.1,
+   0.196,
+   0.702
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": false
+ },
+ "Avlu_Halka": {
+  "hex": "#B3A590",
+  "hsv": [
+   0.1,
+   0.196,
+   0.702
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": false
+ },
+ "Kursun": {
+  "hex": "#7C858C",
+  "hsv": [
+   0.573,
+   0.114,
+   0.549
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": false
+ },
+ "Kursun_Dikis": {
+  "hex": "#5E676E",
+  "hsv": [
+   0.573,
+   0.145,
+   0.431
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ },
+ "Mermer_Beyaz": {
+  "hex": "#ECEAE4",
+  "hsv": [
+   0.125,
+   0.034,
+   0.925
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Petek_Sebeke": {
+  "hex": "#ECEAE4",
+  "hsv": [
+   0.125,
+   0.034,
+   0.925
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Merdiven_Korkuluk": {
+  "hex": "#E6D8BA",
+  "hsv": [
+   0.114,
+   0.191,
+   0.902
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Tas_Portal": {
+  "hex": "#D8C6A2",
+  "hsv": [
+   0.111,
+   0.25,
+   0.847
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Tas_Acik": {
+  "hex": "#E6D8BA",
+  "hsv": [
+   0.114,
+   0.191,
+   0.902
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Su": {
+  "hex": "#8CC3C6",
+  "hsv": [
+   0.509,
+   0.293,
+   0.776
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Kapi": {
+  "hex": "#3E4A55",
+  "hsv": [
+   0.58,
+   0.271,
+   0.333
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ },
+ "Tugla": {
+  "hex": "#CC7A52",
+  "hsv": [
+   0.055,
+   0.598,
+   0.8
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Kesme_Tas": {
+  "hex": "#E6D8BA",
+  "hsv": [
+   0.114,
+   0.191,
+   0.902
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Korkuluk_Beyaz": {
+  "hex": "#F1EFEA",
+  "hsv": [
+   0.119,
+   0.029,
+   0.945
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Portal_On": {
+  "hex": "#E2D1AF",
+  "hsv": [
+   0.111,
+   0.226,
+   0.886
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Baca_Tugla": {
+  "hex": "#CC7A52",
+  "hsv": [
+   0.055,
+   0.598,
+   0.8
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Cini_Mavi": {
+  "hex": "#4F9BD0",
+  "hsv": [
+   0.568,
+   0.62,
+   0.816
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Pencere_Izgara": {
+  "hex": "#3E4A55",
+  "hsv": [
+   0.58,
+   0.271,
+   0.333
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ },
+ "Tabela": {
+  "hex": "#ECEAE4",
+  "hsv": [
+   0.125,
+   0.034,
+   0.925
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Siva": {
+  "hex": "#EDE8DC",
+  "hsv": [
+   0.118,
+   0.072,
+   0.929
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Moloz": {
+  "hex": "#CBB49C",
+  "hsv": [
+   0.085,
+   0.232,
+   0.796
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Disli_Tugla": {
+  "hex": "#C68767",
+  "hsv": [
+   0.056,
+   0.48,
+   0.776
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Arnavut": {
+  "hex": "#B3A590",
+  "hsv": [
+   0.1,
+   0.196,
+   0.702
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ },
+ "Cati_Metal": {
+  "hex": "#C3C9CD",
+  "hsv": [
+   0.567,
+   0.049,
+   0.804
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Alem": {
+  "hex": "#C9A13B",
+  "hsv": [
+   0.12,
+   0.706,
+   0.788
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": true
+ },
+ "Cim": {
+  "hex": "#9DB86A",
+  "hsv": [
+   0.224,
+   0.424,
+   0.722
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Kiremit": {
+  "hex": "#C26B43",
+  "hsv": [
+   0.052,
+   0.655,
+   0.761
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": true
+ },
+ "Yaprak_1": {
+  "hex": "#7FA35B",
+  "hsv": [
+   0.25,
+   0.442,
+   0.639
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": false
+ },
+ "Yaprak_2": {
+  "hex": "#93B46A",
+  "hsv": [
+   0.241,
+   0.411,
+   0.706
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": false
+ },
+ "Agac_Govde": {
+  "hex": "#7A634B",
+  "hsv": [
+   0.085,
+   0.385,
+   0.478
+  ],
+  "geniş_yüzey": true,
+  "V_>=_0.72": false
+ },
+ "Yaprak_3": {
+  "hex": "#6E9450",
+  "hsv": [
+   0.26,
+   0.459,
+   0.58
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ },
+ "Agac_Toprak": {
+  "hex": "#A5845F",
+  "hsv": [
+   0.088,
+   0.424,
+   0.647
+  ],
+  "geniş_yüzey": false,
+  "V_>=_0.72": false
+ }
+}

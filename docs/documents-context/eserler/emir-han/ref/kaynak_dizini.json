@@ -1,0 +1,222 @@
+{
+ "aciklama": "ref/ altındaki her dosyanın kaynağı, PDF sayfası ve SHA-256 değeri. Sayfalar PDF dosya sayacıdır (1 tabanlı).",
+ "kayitlar": [
+  {
+   "dosya": "ref/foto/1578509447.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "8b47f45151c57aa9d749303a63913ef724957bfe4b8d5b9586c9de9287c8fb23"
+  },
+  {
+   "dosya": "ref/foto/1578509455.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "0f7c52edd7bbb8f20daef66a6b1726a5065f049ea65d97904bd365f5e3793679"
+  },
+  {
+   "dosya": "ref/foto/1578509463.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "5cd1f5706dc1205324c20c57fa4e2adf0671f9debe004322a87c7cf17e3bff64"
+  },
+  {
+   "dosya": "ref/foto/1578509484.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "31436c60877313c0c0fd01f019b91397771662be7538bf8460571acf55a187aa"
+  },
+  {
+   "dosya": "ref/foto/1578509543.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "87c197fc2ae3e38c939404dbd351fe36bc1b3980fbdbea3923ed9f2d917cc4c9"
+  },
+  {
+   "dosya": "ref/foto/1578509629.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "dcac4e509fdbb5b12f6a174887e8cfff673381877afaf9889cd3e2c25da601d7"
+  },
+  {
+   "dosya": "ref/foto/1578509890.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "35e2155d45fb2af1f6b3993c893dff4be2a1f83f54b52788b7be20f9e3a3c51e"
+  },
+  {
+   "dosya": "ref/foto/1578509947.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "b17c6c0b6314f2ef3dbf28c41e53e6db33cc654c85b078a63ab96de683ee2b26"
+  },
+  {
+   "dosya": "ref/foto/6141e917-f3bd-4ac6-937b-7ddef8394fd3.jpeg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "c196785d97b8ceee11beb27c91921d2b1bb9972f5f3cae27142e74a70f90a6c1"
+  },
+  {
+   "dosya": "ref/foto/685999668f81d.webp",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "797b4e2b3aca8cc250a55c41d7e8ae1093580cc9fbfc13001066671e1b15ae68"
+  },
+  {
+   "dosya": "ref/foto/7112FE8XYrV3WRxQYpR2qYAczost8bkX.jpeg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "b5950050c18ee58592865954cb1dd45a704e5d87071addb8136d1fd2fce081bc"
+  },
+  {
+   "dosya": "ref/foto/Emir-Hani-1.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "4775cb0f8200795fa41b63dd74134c8a408ca14763bee1b396e15b407d821de1"
+  },
+  {
+   "dosya": "ref/foto/Emir-Hani-2.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "65a3a7f676cf26fe1146be33760bfadaf9e57ae31958befa1fc70f7c7be50110"
+  },
+  {
+   "dosya": "ref/foto/Emir-Hani-4.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "2eed1bb598327a3074a936f18ad6c0142dcf5f993d599ad3d7cc4dc85749589b"
+  },
+  {
+   "dosya": "ref/foto/Emir-Hani-5.jpg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "1480b566addb3c88643fc211128d1d727158b26db5f9a1fd266a7dad75b257d4"
+  },
+  {
+   "dosya": "ref/foto/Kqg5B5qWQBv06g3Z4pBFZ7ANGSmQCZWj.jpeg",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "eba938b66ca976c0294d64eba8b0a7eccbfde4060d9d7a0a5498c8ffe84b610b"
+  },
+  {
+   "dosya": "ref/foto/alan-baskanligi_pdf005_foy.png",
+   "kaynak": "veri/bursa/hanlar-bolgesi.pdf",
+   "sayfa": "5",
+   "tur": "E (föy)",
+   "sha256": "ac323c80ce96afc45f031cf6fe1e4fd09c58d6fccea33de3b73689a0e06dce39"
+  },
+  {
+   "dosya": "ref/foto/emirhan-bursa-ulucami2.jpg.webp",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "aaf0b6d96228ccd9da64711abb625f7dec25623b3bbf2e68bd924159d1f81d49"
+  },
+  {
+   "dosya": "ref/foto/emirhan-bursa-ulucami3.jpg.webp",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "bb8be50867e09baf7eabdd1dc7259d9de22d9df278f64a0d27c4a4a86220b732"
+  },
+  {
+   "dosya": "ref/foto/emirhan-bursa-ulucami4.jpg.webp",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "f23df464a8b0360de5974243e40604dfb3ddb7430a6663e9b49b2223f0902ce4"
+  },
+  {
+   "dosya": "ref/foto/emirhan-bursa-ulucami6.jpg.webp",
+   "kaynak": "Web fotoğrafı (önceki çalışmada ref-img; © Caner Cangül işaretliler dahil)",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "daee447a797af7cb6e28eaa5c82e9dd4721f93d5b77b15a284d423c110093c54"
+  },
+  {
+   "dosya": "ref/foto/envanter_c1_pdf108_havadan_ulucami.png",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "sayfa": "108",
+   "tur": "E (sayfa görüntüsü)",
+   "sha256": "da8162b3ab52bc9bf318c34942e73a8dfdff6be2a1e117362a0e0ea26086f966"
+  },
+  {
+   "dosya": "ref/foto/envanter_c1_pdf109_avlu.png",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "sayfa": "109",
+   "tur": "E (sayfa görüntüsü)",
+   "sha256": "cb4861354fa4e030bdd33dbe6bd2a81475036bd19b1d336ca4f39fa149de689f"
+  },
+  {
+   "dosya": "ref/foto/hanlar-bildirisi_pdf005_havadan_2012.png",
+   "kaynak": "veri/bursa/Bursa_Hanlar_Bolgesinde_Yer_Alan_Hanlar.pdf",
+   "sayfa": "5",
+   "tur": "W",
+   "sha256": "7472dfa4d1e1f47bd10562fa7332353d1cad296ec6109e975d347900a5908e56"
+  },
+  {
+   "dosya": "ref/foto/vakif_1983_pdf176_havadan.png",
+   "kaynak": "veri/bursa/turkiyede-vakif-abideleri-ve-eski-eserler-3.pdf (sağ: hava fotoğrafı, 90° dönük)",
+   "sayfa": "176",
+   "tur": "E",
+   "sha256": "608ef6a07a700ac5dc35475e739bf5e2a9ebc1d197f196c5724b380837aa93ce"
+  },
+  {
+   "dosya": "ref/metin/alan_baskanligi.md",
+   "kaynak": "veri/bursa/hanlar-bolgesi.pdf",
+   "sayfa": "5",
+   "tur": "E",
+   "sha256": "9c4538d04e6c5a6e354149a74b73bf7757d20614a287caceefa0dd5bcf4ca305"
+  },
+  {
+   "dosya": "ref/metin/envanter_c1.md",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf (metin: veri/metin)",
+   "sayfa": "108-109",
+   "tur": "E",
+   "sha256": "21a043fa283833631a3b78fb2737bea20d4699046fe3585fe075940eec23f03c"
+  },
+  {
+   "dosya": "ref/metin/hanlar_bildirisi.md",
+   "kaynak": "veri/bursa/Bursa_Hanlar_Bolgesinde_Yer_Alan_Hanlar.pdf",
+   "sayfa": "5-6",
+   "tur": "W",
+   "sha256": "f0f5def09b16a70bc555f12928246ce9346aaab180f91da0c94f703a20cbbcc9"
+  },
+  {
+   "dosya": "ref/metin/vakif_1983.md",
+   "kaynak": "veri/bursa/turkiyede-vakif-abideleri-ve-eski-eserler-3.pdf",
+   "sayfa": "176",
+   "tur": "E",
+   "sha256": "d940ac62f84515a450f7359bc4d67798b846fee51ef87a3744448de806fbea77"
+  },
+  {
+   "dosya": "ref/plan/hanlar-bildirisi_pdf003_bolge_restitusyon.png",
+   "kaynak": "veri/bursa/Bursa_Hanlar_Bolgesinde_Yer_Alan_Hanlar.pdf",
+   "sayfa": "3",
+   "tur": "W (bölge restitüsyonu; ölçülü han planı değil)",
+   "sha256": "284bee4b608a0f93dd8f2c9ad551b9555888099aa606aefedfd9562e247c7eea"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf219_kulliye_vaziyet_ayverdi.png",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024 Çizim 19, Ayverdi temsili vaziyet; kopyası veri/bursa/orhan-kulliyesi_vaziyet_ayverdi.png)",
+   "sayfa": "219",
+   "tur": "P-oran (temsili; dikey basık)",
+   "sha256": "425c7191102776a8e1dc1ff90f8a62bfe0e0da69dcc8f3c609bc6d6f8b55d5e1"
+  }
+ ]
+}

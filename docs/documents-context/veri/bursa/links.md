@@ -20,7 +20,7 @@ Hiçbiri uygulamada, sunumda ya da herkese açık repoda görsel olarak kullanı
 | Orhan Bey Camii | A. Budak, "Onarımın Tarihi Görsellerden Okunması: Bursa Orhan Camisi Örneği", Sanat Tarihi Yıllığı 27 (2018) | makale (PDF) | yayın, kaynak göstererek | `ref/0835045D5107482F82FF52D31AD814E7.pdf` | Arşiv planı ve Gabriel planı (ölçeksiz), onarım geçmişi |
 | Orhan Bey Hamamı | Çetintaş 1946; Ayverdi s.114–115 (Yurt 2024 PDF s.220–223'ten) | ölçülü plan, kesit | yayın, kaynak göstererek referans | `ref/orhan-hamami_*.png` | Çetintaş planı 49 px/m |
 | Orhan Bey Külliyesi | Ayverdi, Resim 73 (Yurt 2024 PDF s.219'dan) | temsili yerleşim | yayın, kaynak göstererek referans | `ref/orhan-kulliyesi_vaziyet_ayverdi.png` | Yok olmuş imaret/zaviye/medrese dahil |
-| Orhan Bey Külliyesi | OpenStreetMap (way 255187109, 1156644734, 1271724730), erişim 17 Ekim 2026 | ayak izi | ODbL | `eserler/orhan-bey-kulliyesi/claude/kontrol/kaynak/osm_ayak-izleri.json` | Yalnız konum ve yön |
+| Orhan Bey Külliyesi | OpenStreetMap (way 255187109, 1156644734, 1271724730), erişim 17 Ekim 2026 | ayak izi | ODbL | `eserler/orhan-bey-kulliyesi/ref/metin/osm_ayak-izleri.json` | Yalnız konum ve yön |
 
 
 https://www.bursa.bel.tr/yayinlar_pdf_viewer?id=2523#dflip-katalog/1/
@@ -40,5 +40,6 @@ http://www.mimarlikdergisi.com/index.cfm?sayfa=mimarlik&DergiSayi=52&RecID=1291
 https://archives.saltresearch.org/handle/123456789/83012
 https://www.kulturportali.gov.tr/medya/fotograf/fotodokuman/5097/bursa
 https://www.turkiyenintarihieserleri.com/?kategori=BURSA%20%C4%B0L%C4%B0%20ESERLER%C4%B0&alt_kategori=Bursa%20Camileri
+https://kureansiklopedi.com/en/detay/koza-han-dc91b
 
 | Orhan Bey Camii | tasarım sorumlusunun 17 Ekim 2026'da paylaştığı fotoğraflar (tepeden drone, havadan kuzeyden, revak içi, ikiz kemer; bir kısmı Bursa envanteri cilt-1 PDF s.96–99 ile aynı kare; biri Vecteezy filigranlı) | foto | bilinmiyor / filigranlı, yalnız göz kontrolü | `eserler/orhan-bey-kulliyesi/ref-img/ts_17ekim_*.webp` | Son cemaat yeri örtüsü (5 örtü: 3 kubbe + 2 aynalı tonoz), açık revak, toplam 9 dış örtü |

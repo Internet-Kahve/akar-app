@@ -43,7 +43,7 @@ documents-context/
 - Ürünün tamamına ilişkin belgeler doğrudan `documents-context/` kökünde, yarışma belgeleri `hackathon/` altında tutulur.
 - Tek esere ait kaynak ve modeller `eserler/<eser>/` altında birlikte kalır. Ortak PDF ve veri kaynakları `veri/bursa/` altında tutulur; eser notundan kaynak gösterilir.
 - `eser.md` kimlik, ölçü ve kaynakların giriş noktasıdır. Model kararları eserin notlarında veya üretim klasörünün README'sinde tutulur.
-- Mevcut `claude/` ve `gpt/` üretim dizinleri korunur. İçlerinde `build/` betikleri, `blend/` kaynak sahneleri, `export/` GLB teslimleri, `kontrol/` render ve raporlar bulunur. Sırf standart olsun diye boş klasör açılmaz.
+- Üretim dizininin adı `3d/` olur (araç adı taşımaz; 19 Ekim 2026 itibarıyla Ulu Cami, Koza Han, Bedesten, Orhan Bey Camii, Orhan Bey Hamamı ve Emir Hanı bu düzende; kalan eserlerdeki `claude/` ve `gpt/` dizinleri sırayla `3d/` olarak adlandırılır). Yalnız son sürüm tutulur; sürüm geçmişi `3d/README.md` içinde yazılı kalır. İçlerinde `build/` betikleri, `blend/` kaynak sahneleri, `export/` GLB teslimleri, `kontrol/` render ve raporlar bulunur. Sırf standart olsun diye boş klasör açılmaz.
 - Ortak modelleme yardımcıları `eserler/_kutuphane/`; tür şablonları `veri/bursa/sablonlar/` altındadır.
 - `design/` arayüz tasarımı içindir. Eski prototip canlı uygulama değildir; referans olarak korunur.
 - CSV'ler doğrulanmadan yayın verisi sayılmaz. Model sürümünün varlığı, doğrulama veya mobil performans testinin geçtiği anlamına gelmez.

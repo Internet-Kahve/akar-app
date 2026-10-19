@@ -59,7 +59,7 @@ Kütle kabul. Notlara "GEOMETRİ DONDURMA vNN" yaz ve bu oturumdaki kararları "
 **B5. Detay + renk + çıkış:**
 ```
 v02 detay turu: pencereler, kapılar, silmeler, eserin karakteristik süslemeleri, son palet ve ao_vertex, export/<eser>_v02.glb.
-Kütleye dokunma. eserler/ulu-cami/prompt/PROMPT_v02.md'yi örnek al. Sonunda kontrol_hepsi ve 4 render. DUR.
+Kütleye dokunma. eserler/_kutuphane/ORNEK_detay_turu_prompt_ulu-cami_v02.md'yi örnek al. Sonunda kontrol_hepsi ve 4 render. DUR.
 ```
 
 **B6. Teslim:** `.glb` → `belgeler` branch'i, PR.

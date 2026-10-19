@@ -1,3 +1,5 @@
+> 19 Ekim 2026: v23 tamamlandı (ayrıntı `3d/README.md`). Kaynak türevleri `ref/foto/`, `ref/plan/`, `ref/metin/` altında, kayıtları `ref/kaynak_dizini.json` içinde. Minare ve saçak rölöve değerleri (P, Kul tezi VGM çizimleri) §1 ve §5 tablolarına işlendi; v23'te uygulandı.
+
 # Cami (ve mescit) · eser şablonu
 Cami ve mescitler için tek şablon. Mescit küçük bir camidir; olmayan bölümleri boş bırak.
 
@@ -42,7 +44,7 @@ Her ölçünün Kaynak sütununa tek harf yaz: P rölöve/ölçülü plan · E e
 | Dış ölçü: doğu–batı (2) | 68,7 | m | P (Ayverdi planı; kitapta yok) | Ayverdi rölöve planı; kitapta yok. MODEL İÇİN P SEÇİLDİ. Plan: veri/bursa/ulu-cami_plan_ayverdi.png. |
 | Dış ölçü: kuzey–güney | 55 | m | E cilt-1 PDF s.25 | Kitap: yaklaşık 55 × 69 m. Model için P seçildi; bu satır kitap ölçüsüdür. |
 | Dış ölçü: kuzey–güney (2) | 55 | m | P (Ayverdi planı; kitapta yok) | Ayverdi rölöve planı; kitapta yok. MODEL İÇİN P SEÇİLDİ. Plan: veri/bursa/ulu-cami_plan_ayverdi.png. |
-| Duvar yüksekliği (saçak altı) |  | m |  | zeminden |
+| Duvar yüksekliği (saçak altı) | 13,58 | m | P (VGM doğu minare rölövesi, ref/plan/kul_pdf196) | Doğu cephe saçak kotu +13,58; çizimde doğu avlusu −2,43. ±0,00 kotu modelde z = 0 (kuzey giriş zemini) kabul edildi; bu bir yorumdur. v23 modelinde uygulandı (v22'de 17,3, maket). |
 | Taban kotu / kaide yüksekliği |  | m |  |  |
 | İbadet alanı | 3500 | m² | E cilt-1 PDF s.25 | PDF s.25: «Yirmi kubbesi ve 3500 m²’lik ibadet bölümü ile dikkat çeken cami» |
 | Son cemaat yeri |  |  |  | var / yok; varsa bölüm 4 |
@@ -125,19 +127,19 @@ Her minare için bir sütun. Tek minareliyse sadece Minare 1.
 | Bölüm | Minare 1 | Minare 2 | Minare 3 |
 |---|---|---|---|
 | Konum (x, y; m) ve hangi köşe | batı (E, PDF s.34: «Ulucami’nin iki minaresinden batıdakinin Yıldırım Bayezid’in tarafından yaptırıldığı bilinmektedir.») | doğu (E, PDF s.34: «Doğudaki minare ise ilk inşa esnasında planlanmış ancak tamamlanmamıştır... “Güdük Minare” olarak adlandırılmıştır. Minarenin ilerleyen zamanlarda Çelebi Sultan Mehmed veyahut Yavuz Sultan Selim döneminde tamamlanmış olduğu tahmin edilmektedir.») |  |
-| Kaide: şekil (kare / çokgen), ölçü (m), yükseklik (m) | mermer kaide (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden») | mermer kaide (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden») |  |
+| Kaide: şekil (kare / çokgen), ölçü (m), yükseklik (m) | mermer kaide (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden»); sekizgen, dış Ø 5,92, h 10,85 (P, Kul PDF 197 Tablo 5.18; çizim ref/plan/kul_pdf195) | mermer kaide (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden»); kare 5,92 × 5,92, h 10,85, kesme taş, duvardan 1 m ayrık (P, Kul PDF 197 Tablo 5.19; PDF 195 metni; ref/plan/kul_pdf196) |  |
 | Kaide bandı / süs |  |  |  |
-| Pabuç (geçiş) yüksekliği | mermer küp (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden») | mermer küp (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden») |  |
-| Gövde: şekil (silindir / çokgen), Ø alt / üst (m) | yuvarlak (silindir) (E, PDF s.34: «yuvarlak gövdeleri ise tuğladan inşa edilmiştir.») | yuvarlak (silindir) (E, PDF s.34: «yuvarlak gövdeleri ise tuğladan inşa edilmiştir.») |  |
+| Pabuç (geçiş) yüksekliği | mermer küp (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden»); 3,37 m, kısa üçgen baklavalı (P, Kul PDF 197 Tablo 5.18) | mermer küp (E, PDF s.34: «Minarelerin kaideleri ve küpleri mermerden»); 3,00 m (P, Kul PDF 197 Tablo 5.19) |  |
+| Gövde: şekil (silindir / çokgen), Ø alt / üst (m) | yuvarlak (silindir) (E, PDF s.34: «yuvarlak gövdeleri ise tuğladan inşa edilmiştir.»); h 21,44, dış Ø 4,68 → 4,12 (P, Kul PDF 197 Tablo 5.18) | yuvarlak (silindir) (E, PDF s.34: «yuvarlak gövdeleri ise tuğladan inşa edilmiştir.»); h 20,72, dış Ø 4,58 (P, Kul PDF 197 Tablo 5.19) |  |
 | Gövde malzemesi / rengi | tuğla (E, PDF s.34: «yuvarlak gövdeleri ise tuğladan inşa edilmiştir.») | tuğla (E, PDF s.34: «yuvarlak gövdeleri ise tuğladan inşa edilmiştir.») |  |
 | Bilezik: adet ve kot (m) |  |  |  |
 | Şerefe altı (mukarnas / kademe), yükseklik | altı sıra stalaktit (E, PDF s.34: «Her iki şerefe de altı sıra stalaktit üzerine oturmaktadır.») | altı sıra stalaktit (E, PDF s.34: «Her iki şerefe de altı sıra stalaktit üzerine oturmaktadır.») |  |
 | Şerefe: sayı, Ø (m), kot (m) | 1 (E, PDF s.34: «Her iki şerefe de») | 1 (E, PDF s.34: «Her iki şerefe de») |  |
-| Korkuluk: yükseklik (m), tür (taş / demir) |  |  |  |
-| Petek: yükseklik (m) |  |  |  |
-| Külah: biçim (konik / soğan), yükseklik (m) | taş (özgün halinde ahşap ve kurşun kaplı) (E, PDF s.34: «Külahlar özgün halinde ahşap ve kurşun kaplıyken, son yangının ardından taştan yapılmıştır.») | taş (özgün halinde ahşap ve kurşun kaplı) (E, PDF s.34: «Külahlar özgün halinde ahşap ve kurşun kaplıyken, son yangının ardından taştan yapılmıştır.») |  |
+| Korkuluk: yükseklik (m), tür (taş / demir) | 1,15 m, beton plaka; şerefe genişliği 1,25 m (P, Kul PDF 197 Tablo 5.18) | 1,15 m, beton plaka (P, Kul PDF 197 Tablo 5.19) |  |
+| Petek: yükseklik (m) | 5,99 m, Ø 3,46 (P, Kul PDF 197 Tablo 5.18; çizimde 599) | 5,99 m, Ø 3,30 (P, Kul PDF 197 Tablo 5.19) |  |
+| Külah: biçim (konik / soğan), yükseklik (m) | taş (özgün halinde ahşap ve kurşun kaplı) (E, PDF s.34: «Külahlar özgün halinde ahşap ve kurşun kaplıyken, son yangının ardından taştan yapılmıştır.»); armudi boğumlu, h 5,82, Ø 4,08 (P, Kul PDF 197 Tablo 5.18) | taş (özgün halinde ahşap ve kurşun kaplı) (E, PDF s.34: «Külahlar özgün halinde ahşap ve kurşun kaplıyken, son yangının ardından taştan yapılmıştır.»); armudi boğumlu, h 5,82, Ø 4,08 (P, Kul PDF 197 Tablo 5.19) |  |
 | Alem: yükseklik (m), biçim | bakır (E, PDF s.36: «bakır alemi yenilenmiştir.») |  |  |
-| Toplam yükseklik (m) |  |  |  |
+| Toplam yükseklik (m) | +47,90 (P, VGM rölövesi, ref/plan/kul_pdf195; Kul PDF 195: «yaklaşık 48 metredir») | +47,89 (P, VGM rölövesi, ref/plan/kul_pdf196) |  |
 | Merdiven geçidi / cepheye bağlantı |  |  |  |
 
 ## 6. İç mekân (modele girmez, hikâye ve metin için)

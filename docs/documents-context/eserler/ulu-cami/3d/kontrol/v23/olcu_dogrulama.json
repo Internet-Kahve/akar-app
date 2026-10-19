@@ -1,0 +1,201 @@
+{
+ "asama": "D",
+ "olcek": 0.786,
+ "degisen": [],
+ "olceklenen_disi_gövde_parcasi": [],
+ "tac_kapi_mukarnas_sira": 11,
+ "tac_kapi_mukarnas_hucre": 88,
+ "alem_sayisi": 20,
+ "kafes_doku": {
+  "Kafes_Beyaz": {
+   "boyut": [
+    64,
+    64
+   ],
+   "alfa_ortalama": 0.717
+  },
+  "Kafes_Beyaz.001": {
+   "boyut": [
+    64,
+    64
+   ],
+   "alfa_ortalama": 0.717
+  }
+ },
+ "kafes_koyu_arka_yuz": 193,
+ "uc_b": {
+  "sadirvan_toplam_boy_zeminden_m": 9.55,
+  "sadirvan_boy_platform_ustunden_m": 9.25,
+  "sadirvan_direk_yaricapi_m": 2.75,
+  "sadirvan_sacak_yaricapi_m": 3.45,
+  "cesme_boy_m": 2.7,
+  "cesme_govde_genislik_m": 1.15,
+  "ic_sadirvan_havuz_dis_cap_m": 6.5,
+  "ic_sadirvan_fiskiye_tepe_m": 2.39
+ },
+ "kaide": {
+  "ayak_izi_x": [
+   -34.49,
+   36.1
+  ],
+  "ayak_izi_y": [
+   -36.8,
+   36.8
+  ],
+  "pay_m": 8.0,
+  "kaide_x": [
+   -42.49,
+   44.1
+  ],
+  "kaide_y": [
+   -44.8,
+   44.8
+  ],
+  "kose_pah_m": 1.5,
+  "kalinlik_m": 0.6,
+  "ust_pah_m": 0.15
+ },
+ "uc_c": {
+  "figur_sayisi": 10,
+  "figur_ucgen": 4192,
+  "agac_ucgen": {
+   "Cevre_Agac_01": 166,
+   "Cevre_Agac_02": 114
+  }
+ },
+ "olcu": {
+  "minare_W_tepe_m": 47.9,
+  "minare_W_hedef_m": 47.9,
+  "minare_W_taban_m": -0.2,
+  "minare_W_kup_alt_ust": [
+   8.7,
+   12.07
+  ],
+  "minare_W_govde_ust_m": 31.44,
+  "minare_W_serefe_tepe_m": 32.59,
+  "minare_W_kulah_tepe_alemsiz_m": 44.4,
+  "minare_E_tepe_m": 47.89,
+  "minare_E_hedef_m": 47.89,
+  "minare_E_taban_m": -0.2,
+  "minare_E_kup_alt_ust": [
+   4.2,
+   7.2
+  ],
+  "minare_E_govde_ust_m": 31.43,
+  "minare_E_serefe_tepe_m": 32.58,
+  "minare_E_kulah_tepe_alemsiz_m": 44.39,
+  "sacak_govde_ust_m": 13.6,
+  "sacak_cephe_ust_m": 13.28,
+  "sacak_hedef_m": 13.58,
+  "kose_kubbe_tepe_m": 19.81,
+  "kose_kubbe_hedef_m": 19.73,
+  "kubbe_tepeleri_m": {
+   "ada_sayisi": 19,
+   "benzersiz_tepe_kotlari": [
+    19.81,
+    21.14,
+    22.87
+   ]
+  },
+  "tac_kapi_ust_m": 12.97,
+  "tac_kapi_basamak_sayisi": 5,
+  "tac_kapi_giris_kotu_m": 0.85
+ },
+ "ortalama_doku_rengi": {
+  "Tas_Orgusu_Hafif": [
+   0.815,
+   0.734,
+   0.602
+  ],
+  "Tas_Orgusu_Nis": [
+   0.754,
+   0.671,
+   0.535
+  ],
+  "Minare_Tugla_Derzi": [
+   0.608,
+   0.441,
+   0.325
+  ]
+ },
+ "minare_kotlari": {
+  "W": {
+   "top": 47.9,
+   "kaide": 10.85,
+   "kup": 3.37,
+   "govde": 19.37,
+   "serefe": 1.15,
+   "petek": 5.99,
+   "kulah": 5.82,
+   "r_alt": 2.34,
+   "r_ust": 2.06,
+   "r_petek": 1.73,
+   "serefe_gen": 1.25,
+   "kaide_a": 3.35,
+   "taban": -4.22,
+   "z_kup0": 8.7,
+   "z_kup1": 12.07,
+   "z_gov1": 31.44,
+   "z_ser1": 32.59,
+   "z_pet1": 38.58,
+   "z_kul1": 44.4
+  },
+  "E": {
+   "top": 47.89,
+   "kaide": 10.85,
+   "kup": 3.0,
+   "govde": 24.23,
+   "serefe": 1.15,
+   "petek": 5.99,
+   "kulah": 5.82,
+   "r_alt": 2.29,
+   "r_ust": 2.29,
+   "r_petek": 1.65,
+   "serefe_gen": 1.35,
+   "kaide_a": 2.96,
+   "taban": -3.14,
+   "z_kup0": 4.2,
+   "z_kup1": 7.2,
+   "z_gov1": 31.43,
+   "z_ser1": 32.58,
+   "z_pet1": 38.57,
+   "z_kul1": 44.39
+  }
+ },
+ "mesh": {},
+ "ucgen": {
+  "Avlu_Mermer_Cesme": 1712,
+  "Avlu_Sadirvan_Bati": 5786,
+  "Avlu_Sadirvan_Dogu": 5786,
+  "Govde": 556,
+  "Ic_Sadirvan_Havuz": 2538,
+  "Ic_Zemin": 12,
+  "Kubbeler_19": 12350,
+  "Minare_1": 7978,
+  "Minare_2": 7230,
+  "Sadirvan_Iskeleti": 5184,
+  "Sadirvan_Kubbe": 650,
+  "Tac_Kapi": 2216
+ },
+ "ucgen_toplam": 91812,
+ "kirmizi_oran_8_yon": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "glb": {
+  "ulu-cami_v23.glb": {
+   "draco": true,
+   "boyut_mb": 1.0
+  },
+  "ulu-cami_v23_sunum.glb": {
+   "draco": true,
+   "boyut_mb": 1.01
+  }
+ }
+}

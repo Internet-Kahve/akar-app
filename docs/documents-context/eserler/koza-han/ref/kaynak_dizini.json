@@ -1,0 +1,656 @@
+{
+ "aciklama": "Koza Han ref/ altındaki dosyaların kaynak kaydı. PDF sayfaları 1 tabanlıdır. 18 Ekim 2026'da 'ref img/', 'ic-koza-hani/', '_kaynak/' ve 'yeni-kaynak/' bu klasörde birleştirildi. 'ref img' kökündeki web fotoğraflarının kaynak URL'si kayıtlı değildir (önceki çalışmadan). Kaynak PDF'ler veri/ altında yerinde durur. Yollar koza-han/ klasörüne göredir.",
+ "kayitlar": [
+  {
+   "output": "ref/plan/canbakis_pdf045_koza-han_plani_demiralp2021.png",
+   "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+   "not": "PDF 45, gömülü görsel (Şekil 3.18, Demiralp 2021)",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "2c06536746330e3844a25169c39d0c5d969bd4a6b0fa6c72a65942ed0bc1028e"
+  },
+  {
+   "output": "ref/plan/guler2020_pdf020_mescit_alt_kat_plani.png",
+   "source": "docs/documents-context/veri/bursa/10.31591-istem.758701-1171631.pdf",
+   "not": "PDF 20, Çizim 8",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "7d95506e9c686c0e64105dc73dd00c973e347694e68d9a0c286b3788a9a56ef2"
+  },
+  {
+   "output": "ref/plan/guler2020_pdf021_mescit_bati_cephesi.png",
+   "source": "docs/documents-context/veri/bursa/10.31591-istem.758701-1171631.pdf",
+   "not": "PDF 21, Çizim 9",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "13bbadf1138aa1a18a46450527a01ed1b175ca9f756cffc6db7fb4790bbd7fbb"
+  },
+  {
+   "output": "ref/plan/guler2020_pdf021_mescit_ust_kat_plani.png",
+   "source": "docs/documents-context/veri/bursa/10.31591-istem.758701-1171631.pdf",
+   "not": "PDF 21, Çizim 10",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "f45aca10896451e568292ff19c371ca3f353a8f5fabeca93bc841ab98fe1dd20"
+  },
+  {
+   "output": "ref/plan/guler2020_pdf022_mescit_AA_kesiti.png",
+   "source": "docs/documents-context/veri/bursa/10.31591-istem.758701-1171631.pdf",
+   "not": "PDF 22, Çizim 11",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "dd689f0f08cc24e57e07c977c6a2ba7b96bc3d286fd9d6a7c5ad3b3d77dc048a"
+  },
+  {
+   "output": "ref/plan/alan-baskanligi_pdf021_vaziyet.jpg",
+   "source": "docs/documents-context/veri/bursa/hanlar-bolgesi.pdf",
+   "not": "PDF 21, gömülü görsel",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "bcd58d6bc589578510b1d722eb27f53f7ca2a782b1e0b3c56991cd2f8432e505"
+  },
+  {
+   "output": "ref/foto/alan-baskanligi_pdf021_portal.jpg",
+   "source": "docs/documents-context/veri/bursa/hanlar-bolgesi.pdf",
+   "not": "PDF 21, gömülü görsel",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "5948bca25d5f5897765d19a82ab7f606a6f9dff412a8105f973d83f0575787cf"
+  },
+  {
+   "output": "ref/foto/alan-baskanligi_pdf021_avlu_mescit.jpg",
+   "source": "docs/documents-context/veri/bursa/hanlar-bolgesi.pdf",
+   "not": "PDF 21, gömülü görsel",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "c2ed461b36d17e5e7939e6283b6aca4b91172560689749a6bc89d4fca203d1d1"
+  },
+  {
+   "output": "ref/foto/canbakis_pdf047_havadan_dik_avlu.jpg",
+   "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+   "not": "PDF 47, gömülü görsel",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "a3d72d7d9110f70860c8b0e1665c5e75911e1584952c6009757daccc737513ee"
+  },
+  {
+   "output": "ref/foto/guler2020_pdf014_mescit_fotograf10.jpg",
+   "source": "docs/documents-context/veri/bursa/10.31591-istem.758701-1171631.pdf",
+   "not": "PDF 14, Fotoğraf 10 (Koza Han mescidi)",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "49d70d8da924556da4551418d0d678405eacb770b46088497ce2601c7e72b1eb"
+  },
+  {
+   "output": "ref/foto/guler2020_pdf014_mescit_pencere_fotograf12.jpg",
+   "source": "docs/documents-context/veri/bursa/10.31591-istem.758701-1171631.pdf",
+   "not": "PDF 14, Fotoğraf 12 (Koza Han mescidi penceresi)",
+   "method": "PDF gömülü görselin özgün baytları",
+   "added": "2026-10-18",
+   "sha256": "85370d8d19719e1dbbfea292c3a2811f5c57fbd4f0cbaa06b2bfd1c0a8e82617"
+  },
+  {
+   "output": "ref/foto/kozahan_arsiv_010_havadan_dik_tum_yapi.jpg",
+   "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ticari Yapılar Klasörü/DJI_20241023132953_0325_D_ODAK-Edit.jpg",
+   "not": "envanter fotoğraf arşivi (2400 px)",
+   "method": "arşiv dosyasının değiştirilmemiş kopyası",
+   "added": "2026-10-18",
+   "sha256": "524896badd131ff22205296b33ac81e3fcd7f0888c8f9298c92b8ba044ff367d"
+  },
+  {
+   "output": "ref/foto/kozahan_arsiv_012_almasik_pencere_detay.jpg",
+   "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ticari Yapılar Klasörü/DJI_20241023135706_0377_D_ODAK-Edit.jpg",
+   "not": "envanter fotoğraf arşivi (2400 px)",
+   "method": "arşiv dosyasının değiştirilmemiş kopyası",
+   "added": "2026-10-18",
+   "sha256": "cea53644a392b2ec9ad8a2f45ceaece72cdfd75de5abfc89b0409a949b19c329"
+  },
+  {
+   "output": "ref/foto/kozahan_arsiv_038_dis_cephe_kozahan_yazili.jpg",
+   "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ticari Yapılar Klasörü/ERD04128 kopya.jpg",
+   "not": "envanter fotoğraf arşivi (2400 px)",
+   "method": "arşiv dosyasının değiştirilmemiş kopyası",
+   "added": "2026-10-18",
+   "sha256": "502d5aa46cf077dd9ede5bc6db5e2482403516dc6b1d0488529711d8b3360ff3"
+  },
+  {
+   "output": "ref/foto/kozahan_arsiv_039_uzun_dis_cephe_cimen.jpg",
+   "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ticari Yapılar Klasörü/ERD04132 kopya.jpg",
+   "not": "envanter fotoğraf arşivi (2400 px)",
+   "method": "arşiv dosyasının değiştirilmemiş kopyası",
+   "added": "2026-10-18",
+   "sha256": "873000fc900661276cb0f9ecce6d1439a53ee0d6910c8fd810ec87c23b79d2b7"
+  },
+  {
+   "output": "ref/foto/kozahan_arsiv_041_revak_kemer.jpg",
+   "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ticari Yapılar Klasörü/ERD04161 kopya.jpg",
+   "not": "envanter fotoğraf arşivi (2400 px)",
+   "method": "arşiv dosyasının değiştirilmemiş kopyası",
+   "added": "2026-10-18",
+   "sha256": "9f248746bc5249b82c87bdcd6bba08e763706ac7c7dc4c368d3352b263a106f9"
+  },
+  {
+   "output": "ref/foto/kozahan_arsiv_042_mescit_avlu.jpg",
+   "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ticari Yapılar Klasörü/ERD04224 kopya.jpg",
+   "not": "envanter fotoğraf arşivi (2400 px)",
+   "method": "arşiv dosyasının değiştirilmemiş kopyası",
+   "added": "2026-10-18",
+   "sha256": "ff76c06ae61b65625d141118568eac34f93ffe1df9353c0a2230c8a675ea8ee2"
+  },
+  {
+   "output": "ref/foto/kozahan_arsiv_043_mescit_merdiven_avlu.jpg",
+   "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ticari Yapılar Klasörü/ERD04226 kopya.jpg",
+   "not": "envanter fotoğraf arşivi (2400 px)",
+   "method": "arşiv dosyasının değiştirilmemiş kopyası",
+   "added": "2026-10-18",
+   "sha256": "053473d5de3447090e09196ff0f6e01216e05bb31a7b64ef9a2227d6cd1174b6"
+  },
+  {
+   "output": "ref/metin/envanter_c2.md",
+   "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-2.pdf",
+   "pdf_pages": "8-12, 21",
+   "method": "pdftotext metin çıkarımı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/envanter_c1_mescit.md",
+   "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "pdf_pages": "194-195",
+   "method": "pdftotext metin çıkarımı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/alan_baskanligi.md",
+   "source": "docs/documents-context/veri/bursa/hanlar-bolgesi.pdf",
+   "pdf_pages": "21",
+   "method": "pdftotext metin çıkarımı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/vakif_1983.md",
+   "source": "docs/documents-context/veri/bursa/turkiyede-vakif-abideleri-ve-eski-eserler-3.pdf",
+   "pdf_pages": "179",
+   "method": "pdftotext metin çıkarımı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/gurhan.md",
+   "source": "docs/documents-context/veri/bursa/Bursa_Hanlar_Bolgesinde_Yer_Alan_Hanlar.pdf",
+   "pdf_pages": "10",
+   "method": "pdftotext metin çıkarımı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/guler2020.md",
+   "source": "docs/documents-context/veri/bursa/10.31591-istem.758701-1171631.pdf",
+   "pdf_pages": "7-9, 14, 20-22",
+   "method": "pdftotext metin çıkarımı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/canbakis.md",
+   "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+   "pdf_pages": "45-49",
+   "method": "pdftotext metin çıkarımı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/alt-birim_ic-koza-hani_eser-kaydi.md",
+   "source": "eserler/koza-han/_kaynak/ic-koza-hani.md (önceki konum)",
+   "method": "değiştirilmeden taşındı + başa uyarı satırı",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/metin/alt-birim_koza-han-mescidi_eser-kaydi.md",
+   "source": "eserler/koza-han/_kaynak/koza-han-mescidi.md (önceki konum)",
+   "method": "değiştirilmeden taşındı + başa uyarı satırı (yanlış sayfa atıfları)",
+   "added": "2026-10-18"
+  },
+  {
+   "output": "ref/plan/tasarim_portal_kose.png",
+   "onceki_konum": "eserler/koza-han/ref img/portal_kose.png",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "6592e94550a68b2f0d37f124b8a6512f63a969ebeb24d2b76ae03178ca15f104"
+  },
+  {
+   "output": "ref/plan/tasarim_portal_orgu.png",
+   "onceki_konum": "eserler/koza-han/ref img/portal_orgu.png",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "992fb32cd79213de571b34aedd71b9c95d076a5b4c27b2c0d8fdf5b843da474d"
+  },
+  {
+   "output": "ref/plan/tasarim_portal_plan_kroki.png",
+   "onceki_konum": "eserler/koza-han/ref img/portal_plan_kroki.png",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "26fdac49a578a8db75004dffad2631c77b313bd2f4cdc6b4b4206f4982ba9db2"
+  },
+  {
+   "output": "ref/maket/model3d_1.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/1.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "d2af474f573ef42248fe1a28bc3a0d647dc2839f927a75c3ce94483fb7e3d45f"
+  },
+  {
+   "output": "ref/maket/model3d_2.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/2.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "7514d5dbed11a0e01a640d8218603b0c81230607565ab24f1e75b5f345d632ab"
+  },
+  {
+   "output": "ref/maket/model3d_3.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/3.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "9dc4a8365517ec983402d49d8e4db46bf6a24c90ef22e04e5530128722881673"
+  },
+  {
+   "output": "ref/maket/model3d_4.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/4.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "d48d6e78385fe33dc8f4d0fb09da0c583bf1391575b216c060a0961774dee3c0"
+  },
+  {
+   "output": "ref/maket/model3d_5.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/5.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "5f1dfd66da383b43b1ba0d3582adb0a49e142584fffbba96d7f96b0aa1b8d6b4"
+  },
+  {
+   "output": "ref/maket/model3d_6.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/6.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "fe61fb7fd281a1f628cd6fe10010e1a33dd90b3fa7863cc27778d98f6debcc03"
+  },
+  {
+   "output": "ref/maket/model3d_7_(1).webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/7 (1).webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "f93b33ce087f3519387084cb72347bc3591adaa263f8ab5af652aa1a3ad3c555"
+  },
+  {
+   "output": "ref/maket/model3d_7.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/7.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "f93b33ce087f3519387084cb72347bc3591adaa263f8ab5af652aa1a3ad3c555"
+  },
+  {
+   "output": "ref/maket/model3d_8.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/8.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "c1d47112f766335dce94b7d3e5e8da129abe28963ec471e30bd72e6be633bc85"
+  },
+  {
+   "output": "ref/maket/model3d_9.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/9.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "a0e6dcd67b77ddaeab562164f26c9f94820a832db7ed40fca5685549a7c501ba"
+  },
+  {
+   "output": "ref/maket/model3d_cati_ref.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/cati_ref.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "c8a91ddf0a8e7ac6f869d7ce525ebc4bd64fb05c4229d02332001b0c270728e9"
+  },
+  {
+   "output": "ref/maket/model3d_w1.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/w1.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "95ba743a03f6a3922bce47f3988557b032ea4eb71e5aa6cb3df8c0b966d766c1"
+  },
+  {
+   "output": "ref/maket/model3d_w2.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/w2.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "d3a9af6fc91c2137480291019752bae4de75d935139b493eda4f94fefb9acc4d"
+  },
+  {
+   "output": "ref/maket/model3d_w3.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/w3.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "2b289103483ede9658e2e61b003840e5bdefc0f9c4be94ce5d101d5a84da27dd"
+  },
+  {
+   "output": "ref/maket/model3d_w4.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/w4.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "207c677da31c5fc4413994b54e4e380790f83bb7b9b64e148c91865c36174366"
+  },
+  {
+   "output": "ref/maket/model3d_w5.webp",
+   "onceki_konum": "eserler/koza-han/ref img/3dmodel/w5.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "696ee3ed808b63344821a108eeeae9350d7991a91c245998f9086a60ff663a7a"
+  },
+  {
+   "output": "ref/foto/avlu2026_bursa-nin-tarihi-haninda-sok-karar-kozahan-avlusu-bosaltiliy",
+   "onceki_konum": "eserler/koza-han/ref img/kozahan-avlu/bursa-nin-tarihi-haninda-sok-karar-kozahan-avlusu-bosaltiliyor-guvenlik-gerekcesiyle-masalar-kaldirildi-3-1770719176.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "b5c8b5c52c80979524c63b65bad2d2d2e015bf0f2d862b26667bdecd24094cd3"
+  },
+  {
+   "output": "ref/foto/avlu2026_images_(1).jpeg",
+   "onceki_konum": "eserler/koza-han/ref img/kozahan-avlu/images (1).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "4e1524fed9da7b56ed31a989ab7d549f7ba01f3f93843a2d0104e38a06bde773"
+  },
+  {
+   "output": "ref/foto/avlu2026_images.jpeg",
+   "onceki_konum": "eserler/koza-han/ref img/kozahan-avlu/images.jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "db7c0438f49f7b803f36d4e9a4c443ab1abecb570d5b397f7a7977e394055fb9"
+  },
+  {
+   "output": "ref/foto/avlu2026_unesco-mirasi-koza-handa-yeni-donem-avlu-cevik-kuvvet-esligi",
+   "onceki_konum": "eserler/koza-han/ref img/kozahan-avlu/unesco-mirasi-koza-handa-yeni-donem-avlu-cevik-kuvvet-esliginde-bosaltildi-1769957_202602101832_20260210183256_1.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "7ceb9ad04acc16946030f7c956fc81420624c94876245cc94844fc5a91da3c06"
+  },
+  {
+   "output": "ref/foto/portal_web_Koza_han_DSCF1631.jpg",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_web_Koza_han_DSCF1631.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "e0fd607e66c078bfadd3b10dbee4688cd61f8ab479a3851ee5d80377b144dff7"
+  },
+  {
+   "output": "ref/foto/portal_web_WhatsApp-Image-2025-12-21-at-06.07.35-768x1024.jpeg.webp",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_web_WhatsApp-Image-2025-12-21-at-06.07.35-768x1024.jpeg.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "20682cc5659ef59076837f023bd79dbb612742eed2bcac7bc33db33e4d13ec1c"
+  },
+  {
+   "output": "ref/foto/portal_web_images_(1).jpeg",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_web_images_(1).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "b31c4fe4d73b94b90e7b2f57fec79f3cdcfd9ac6a95457cc0de4aefca3337251"
+  },
+  {
+   "output": "ref/foto/portal_web_images_(2).jpeg",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_web_images_(2).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "3be70c2c79e6e95b1d411b1fc6347ca94f556bcbec27910050ae32888dda9f72"
+  },
+  {
+   "output": "ref/foto/portal_web_images_(3).jpeg",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_web_images_(3).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "6ef43cd66e16baab12e0b3f9c8f5f7cef7e908e27f9962f1609b821e48a1bcc0"
+  },
+  {
+   "output": "ref/foto/portal_web_images.jpeg",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_web_images.jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "ba7d9bd1e2ae743486b6492237c5ed20c804c3b79523c5d06bebf1deedd1c2a1"
+  },
+  {
+   "output": "ref/foto/AW641764_07-735324.webp",
+   "onceki_konum": "eserler/koza-han/ref img/AW641764_07-735324.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "ca96c987743843d361e2d3b64431cc18160c545621ac45a71773abe25fabb276"
+  },
+  {
+   "output": "ref/foto/BENIOKU.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/BENIOKU.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "680e738fdfdca1cfb979ab4d5da929c00d1f119f5e84aeb5c4c5414e6f8f82f7"
+  },
+  {
+   "output": "ref/foto/Bursa'daki_Koza_Han_içinden_bir_görüntü.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Bursa'daki_Koza_Han_içinden_bir_görüntü.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "42a4d58d6e703e5aeda8e2dd80a5b53ae0a48aefd490efcf3e6994c46d12e276"
+  },
+  {
+   "output": "ref/foto/Bursa_ Koza_Han Avlu (7) kopya.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Bursa_ Koza_Han Avlu (7) kopya.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "58101f28657df72ef77afae720bb833bbc3dcc97b042b60e15d8f81c46cc2e1a"
+  },
+  {
+   "output": "ref/foto/Bursa_Koza_Han_(Silk_Bazaar)_2.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Bursa_Koza_Han_(Silk_Bazaar)_2.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "d436bc86adb48fef9d29e350adcabc6e46e59758de3e428deada1e6bc813a002"
+  },
+  {
+   "output": "ref/foto/Bursa_Koza_Han_South_exterior_in_2006_3029.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Bursa_Koza_Han_South_exterior_in_2006_3029.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "141e5933478cdfbe7e595908a5917c9dc5848487a7c0b17e408eb531c963f9d9"
+  },
+  {
+   "output": "ref/foto/Koza-Han-5.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Koza-Han-5.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "0c54ee6d7eca75cfdfc1214c09978443a65d8fcaadb66f905f3a5a48a7c930f7"
+  },
+  {
+   "output": "ref/foto/Koza_Han_mescidinin_giriş_kapısı.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Koza_Han_mescidinin_giriş_kapısı.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "8c9ce5aa778111821a757d52e95aa6d9765271f4012594dc1b4aab37bd20c7cf"
+  },
+  {
+   "output": "ref/foto/Koza_han_DSCF1631.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Koza_han_DSCF1631.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "d3bb279725af6bbdd742366350163060630a122e41a695a3a43f306821463025"
+  },
+  {
+   "output": "ref/foto/Kozahan Mescid.jpg",
+   "onceki_konum": "eserler/koza-han/ref img/Kozahan Mescid.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "a04699db53a8cae96ccca503225cfdca32e39bb98be63446abf5be1aee9ae0aa"
+  },
+  {
+   "output": "ref/foto/avlu_ust_kat_1.webp",
+   "onceki_konum": "eserler/koza-han/ref img/avlu_ust_kat_1.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "e6cc7ed800719579507d2466ed9f78021332da040f6996c721993ce180ae9796"
+  },
+  {
+   "output": "ref/foto/avlu_ust_kat_2.webp",
+   "onceki_konum": "eserler/koza-han/ref img/avlu_ust_kat_2.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "fe3ff500a6b09bcbf070ccd286d3c5c45c38558de1e7220d79548f7d5907d46e"
+  },
+  {
+   "output": "ref/foto/baca_ref.webp",
+   "onceki_konum": "eserler/koza-han/ref img/baca_ref.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "95fd866b9c3cfc27de7c8fb4e245d74c742556d4f4f356872d4da69335154304"
+  },
+  {
+   "output": "ref/foto/bursa-koza-han-historic-ottoman-600w-2818444543.webp",
+   "onceki_konum": "eserler/koza-han/ref img/bursa-koza-han-historic-ottoman-600w-2818444543.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "60b0d50598de3599f48a0f5162dc3b0ab9eae213bdeddb3ac5c19a25c7d39d2c"
+  },
+  {
+   "output": "ref/foto/bursa-koza-han-historic-ottoman-600w-2818444651.webp",
+   "onceki_konum": "eserler/koza-han/ref img/bursa-koza-han-historic-ottoman-600w-2818444651.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "9f77a89ea7b5abbf9782d41c56926f5c1bfcf6e7704580dc533f2ff53264337f"
+  },
+  {
+   "output": "ref/foto/bursa-koza-han-historic-ottoman-600w-2819057921.webp",
+   "onceki_konum": "eserler/koza-han/ref img/bursa-koza-han-historic-ottoman-600w-2819057921.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "d48a3377b4dc1f56104873a09c37ab94a523835791c7cac81d30e5b8fd0fe213"
+  },
+  {
+   "output": "ref/foto/bursa-koza-han-historic-ottoman-600w-2819058007.webp",
+   "onceki_konum": "eserler/koza-han/ref img/bursa-koza-han-historic-ottoman-600w-2819058007.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "191b50488214600084df6e913ddf65b666d75ff434358a8c4ba08cd69fd7319e"
+  },
+  {
+   "output": "ref/foto/bursa-koza-han-historic-ottoman-600w-2820267017.webp",
+   "onceki_konum": "eserler/koza-han/ref img/bursa-koza-han-historic-ottoman-600w-2820267017.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "6f1501260b8a19e754c390da4756e4f97daac9fbe6d16a0f2e02599bb312ac49"
+  },
+  {
+   "output": "ref/foto/bursa-koza-han-historic-ottoman-600w-2820267211.webp",
+   "onceki_konum": "eserler/koza-han/ref img/bursa-koza-han-historic-ottoman-600w-2820267211.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "2abf3cb55160e05213d35726bddabe645fe2bd6a15bca60e25c9b40e2bf4f581"
+  },
+  {
+   "output": "ref/foto/bursa-koza-han-historic-ottoman-600w-2820267221.webp",
+   "onceki_konum": "eserler/koza-han/ref img/bursa-koza-han-historic-ottoman-600w-2820267221.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "7d90ddddef04437c684a34e23b69bdbd11622c6420d82adfa594a91da8133aa9"
+  },
+  {
+   "output": "ref/foto/havadan_1.webp",
+   "onceki_konum": "eserler/koza-han/ref img/havadan_1.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "4195ca2c3812396ecb14180a0616b3683ca8f2412c13fb1ea79a0e9780f4d7a6"
+  },
+  {
+   "output": "ref/foto/iGNkunFP76dgE5zMteft2x4jKgOYfLYo.webp",
+   "onceki_konum": "eserler/koza-han/ref img/iGNkunFP76dgE5zMteft2x4jKgOYfLYo.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "4d697f5986116748a1d08c3490b307e49b69d2bb7fe09d0b59d0e7afddfca19b"
+  },
+  {
+   "output": "ref/foto/images (1).jpeg",
+   "onceki_konum": "eserler/koza-han/ref img/images (1).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "f0f24d5e82a0cbf1d06eed2ab644857bc3fadcc8d3a4110db7f0bb178ac1f18d"
+  },
+  {
+   "output": "ref/foto/images (2).jpeg",
+   "onceki_konum": "eserler/koza-han/ref img/images (2).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "f956b010de7af61ec8986e8acdcc78368fd9b18ff0c35de61bf9548b35a9b44a"
+  },
+  {
+   "output": "ref/foto/images (3).jpeg",
+   "onceki_konum": "eserler/koza-han/ref img/images (3).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "8ad6c878f849663f243d2080325d1c564902e47e68ebc5448e749367a50b2232"
+  },
+  {
+   "output": "ref/foto/images (4).jpeg",
+   "onceki_konum": "eserler/koza-han/ref img/images (4).jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "6e1b0a5c304966d1cf4dd34932f770a7e0430521d099e7ab6b29ca5691ff73c2"
+  },
+  {
+   "output": "ref/foto/images.jpeg",
+   "onceki_konum": "eserler/koza-han/ref img/images.jpeg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "478e628f18a91fedacba1c5626aa4f68864928b41827cb8282296be8a4a52635"
+  },
+  {
+   "output": "ref/foto/mescit_1.png",
+   "onceki_konum": "eserler/koza-han/ref img/mescit_1.png",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "7692a4438ca3ec45e6e496de89cb6f2303a66c36f37a88d90397914212d7ed55"
+  },
+  {
+   "output": "ref/foto/mescit_2.webp",
+   "onceki_konum": "eserler/koza-han/ref img/mescit_2.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "ef7923d1011b9f16b97eb621ee64720ce90fd8528add5e675e69c8154bc70f60"
+  },
+  {
+   "output": "ref/foto/mescit_3.webp",
+   "onceki_konum": "eserler/koza-han/ref img/mescit_3.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "b9a106397e2fe328b79aa09940ab44e23cec236efe2455848d25102f7c6509e1"
+  },
+  {
+   "output": "ref/foto/mescit_4.webp",
+   "onceki_konum": "eserler/koza-han/ref img/mescit_4.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "b9a106397e2fe328b79aa09940ab44e23cec236efe2455848d25102f7c6509e1"
+  },
+  {
+   "output": "ref/foto/pencere_ref.webp",
+   "onceki_konum": "eserler/koza-han/ref img/pencere_ref.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "314eb03cb96acfe2ba682c4e6898c3a6d581fcb54d45ee2f9c89b31fb8cb4238"
+  },
+  {
+   "output": "ref/foto/portal_on_1.webp",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_on_1.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "c1cd6bfc70260c7f8dd14a7f02ddb0d84de8799b763ded64f6c2c817d780a3b9"
+  },
+  {
+   "output": "ref/foto/portal_on_2.webp",
+   "onceki_konum": "eserler/koza-han/ref img/portal_on_2.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "d9be4a43f431588f8f591fc449aaeca459d08109c1f14825b5b249715e1f06bc"
+  },
+  {
+   "output": "ref/foto/portal_on_3.webp",
+   "onceki_konum": "eserler/koza-han/ref img/portal_on_3.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "c1cd6bfc70260c7f8dd14a7f02ddb0d84de8799b763ded64f6c2c817d780a3b9",
+   "silindi": "2026-10-18: portal_on_1.webp ile bayt bayt aynı kopya olduğu için silindi"
+  },
+  {
+   "output": "ref/foto/portal_on_4.webp",
+   "onceki_konum": "eserler/koza-han/ref/foto/kapı/portal_on_4.webp",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "77fe46cbedc6ef1555e4e2d956ecb9ae627a487ac11d078c399fba3d7e4628df"
+  },
+  {
+   "output": "ref/foto/ic-koza-hani_1.jpg",
+   "onceki_konum": "eserler/koza-han/ic-koza-hani/İç-Koza-Han-1.jpg",
+   "method": "taşındı (SHA-256 doğrulandı)",
+   "sha256": "ed6d0b97b3fdd053c4288817707d21e8037858008be0ba17a10d767cbe473a16"
+  },
+  {
+   "output": "ref/foto/ic-koza_streetview2025_01.png",
+   "source": "Google Street View, Kasım 2025 (kullanıcı ekran görüntüsü)",
+   "onceki_konum": "eserler/koza-han/ref/foto/dış/Screenshot 2026-10-18 at 10.45.32 PM.png",
+   "not": "İç Koza Hanı dış/avlu görünümü",
+   "kaynak_sinifi": "F",
+   "method": "taşındı ve yeniden adlandırıldı",
+   "added": "2026-10-18",
+   "sha256": "561164693c9906a4c7464ef6825628996413b46ad29bf4b3d88a54e480069922"
+  },
+  {
+   "output": "ref/foto/ic-koza_streetview2025_02.png",
+   "source": "Google Street View, Kasım 2025 (kullanıcı ekran görüntüsü)",
+   "onceki_konum": "eserler/koza-han/ref/foto/dış/Screenshot 2026-10-18 at 10.45.47 PM.png",
+   "not": "İç Koza Hanı dış/avlu görünümü",
+   "kaynak_sinifi": "F",
+   "method": "taşındı ve yeniden adlandırıldı",
+   "added": "2026-10-18",
+   "sha256": "3f1a6fb3dd38f2217ce270199d980ae2ad06f0fdabf9550549e3701fa49f55b8"
+  },
+  {
+   "output": "ref/foto/ic-koza_streetview2025_03.png",
+   "source": "Google Street View, Kasım 2025 (kullanıcı ekran görüntüsü)",
+   "onceki_konum": "eserler/koza-han/ref/foto/dış/Screenshot 2026-10-18 at 10.46.07 PM.png",
+   "not": "İç Koza Hanı dış/avlu görünümü",
+   "kaynak_sinifi": "F",
+   "method": "taşındı ve yeniden adlandırıldı",
+   "added": "2026-10-18",
+   "sha256": "0fc9df46e458cf8c2a7305695dd02dda4a06f9043efa63abd573a3d47c2ff616"
+  },
+  {
+   "output": "ref/foto/ic-koza_streetview2025_04.png",
+   "source": "Google Street View, Kasım 2025 (kullanıcı ekran görüntüsü)",
+   "onceki_konum": "eserler/koza-han/ref/foto/dış/Screenshot 2026-10-18 at 10.53.04 PM.png",
+   "not": "İç Koza Hanı dış/avlu görünümü",
+   "kaynak_sinifi": "F",
+   "method": "taşındı ve yeniden adlandırıldı",
+   "added": "2026-10-18",
+   "sha256": "9311cd2f5fc5c1d0a914c2edc2d0037372d9d4fa8f14fba010205445bfdf2082"
+  },
+  {
+   "output": "ref/foto/mescit_kapi_kitabe_1948.png",
+   "source": "kullanıcı fotoğrafı, 18 Ekim 2026",
+   "not": "Mescit kapısı ve üstündeki kitabe levhası (5 satır, 1948 onarım yazısı). Görüntünün altındaki altyazı metni kaynak değildir.",
+   "kaynak_sinifi": "F",
+   "method": "kullanıcı tarafından eklendi",
+   "added": "2026-10-18",
+   "sha256": "90fbc4ff897843a9f55048f9c249837c1f6e8bcd948160b16949eaf912dd249f"
+  }
+ ]
+}

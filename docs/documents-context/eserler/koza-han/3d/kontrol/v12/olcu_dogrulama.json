@@ -1,0 +1,123 @@
+{
+ "dis_olcu_olculen_m": [
+  64.1,
+  72.0
+ ],
+ "dis_olcu_hedef_m": [
+  64.0,
+  72.0
+ ],
+ "avlu_olculen_m": [
+  38.0,
+  46.0
+ ],
+ "avlu_hedef_m": [
+  38.0,
+  46.0
+ ],
+ "kanat_m": 13.05,
+ "kanat_hedef_m": 13.0,
+ "mescit": {
+  "kotlar_m": {
+   "havuz_kenari": 0.78,
+   "uzenge": 2.0,
+   "dosem": 3.5,
+   "sacak_ve_kubbe_eteği": 6.98,
+   "kubbe_tepe": 9.6
+  },
+  "ayak_cemberi_R_m": 3.27,
+  "ayak_sayisi": 8,
+  "govde_yuzden_yuze_m": 6.78,
+  "kubbe_etek_cap_m": 8.1,
+  "kubbe_govde_cap_m": 7.4,
+  "havuz_dis_cap_m": 5.65,
+  "havuz_kenar_sayisi": 16,
+  "merdiven": {
+   "basamak": 6,
+   "rihr_m": 0.25,
+   "yatay_uzunluk_m": 1.73,
+   "sahanlik_m": 1.2,
+   "net_genislik_m": 2.0,
+   "toplam_genislik_m": 2.47
+  },
+  "kapi_yuzu_yonu_derece": 135.0,
+  "kapi_yuzu": "kuzeybati",
+  "mihrap_yuzu": "guneydogu (315 derece, penceresiz)"
+ },
+ "ic_koza": {
+  "dis_cokgen_m": [
+   [
+    32.0,
+    -14.6
+   ],
+   [
+    56.7,
+    -14.6
+   ],
+   [
+    73.2,
+    12.0
+   ],
+   [
+    87.8,
+    26.8
+   ],
+   [
+    87.8,
+    32.3
+   ],
+   [
+    32.0,
+    32.3
+   ]
+  ],
+  "avlu_cokgen_m": [
+   [
+    32.0,
+    -8.0
+   ],
+   [
+    52.0,
+    -8.0
+   ],
+   [
+    60.0,
+    4.0
+   ],
+   [
+    60.0,
+    22.0
+   ],
+   [
+    32.0,
+    22.0
+   ]
+  ],
+  "dis_kutu_m": [
+   55.8,
+   46.9
+  ],
+  "avlu_kutu_m": [
+   28.0,
+   30.0
+  ],
+  "kuzey_kenar_han_kuzeyinin_guneyinde_m": 3.7,
+  "gecit_m": 3.66,
+  "revak_ayak": 18,
+  "ic_ayak": 27,
+  "toplam_ayak": 45,
+  "kemer_acikligi_m": [
+   3.5,
+   4.0
+  ],
+  "kemer_tepe_m": 3.4,
+  "ayak_m": 1.0,
+  "havuz_cap_m": 3.2,
+  "havuz_kaide_cap_m": 4.6,
+  "havuz_yukseklik_m": 0.72
+ },
+ "acik_hacim_yabanci_yuz": {
+  "kapi_gecit": {},
+  "kapi_portal": {}
+ }
+}

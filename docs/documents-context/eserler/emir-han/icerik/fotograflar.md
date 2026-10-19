@@ -1,0 +1,18 @@
+# Emir Hanı · fotoğraflar
+
+19 Ekim 2026. Arşiv fotoğrafları Vakıf Katılım'ın verdiği envanter fotoğraf arşivinden (`veri/bursa-foto/`, 2400 px kopyalar) **kopyalandı**; asıllar yerinde. `Asıl dosya` yolu `docs/documents-context/` köküne göredir; zip adı `veri/bursa-foto/_manifest.csv`'de. Fotoğrafın bu esere ait olduğu gözle kontrol edildi (yöntem: `../../../ICERIK_YONTEMI.md`). Tanınabilir yüz ve plaka yok. Güven sütunu **öneridir**.
+
+Galeri sırası: dış kapak → iç genel → öne çıkan detay → ikinci dış → diğer detaylar. `—` = galeriye girmez, yalnız hikâyede/kartta kullanılır.
+
+| Dosya | Asıl dosya | Galeri sırası | Başlık | Kısa metin | Alt metin | Kaynak | Lisans | Güven | Not |
+|---|---|---|---|---|---|---|---|---|---|
+| `01_havadan-ulucami-ile.jpg` | `veri/bursa-foto/I. ve II. Cilt - Osmangazi/Orhan Bey Külliyesi Klasörü/DJI_20241017120754_0008_D kopya.jpg` | 1 | Emir Hanı ve Ulucami | Han, Ulucami'nin kuzeydoğu köşesinde. | Havadan: ortada ağaçlı avlusuyla Emir Hanı, arkasında iki minareli Ulucami ve şehir. | E cilt-1 PDF s.108, s.109 (fotoğraf: envanter arşivi) | Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -003). Yayın izni yazılı olarak teyit edilmeli. | Doğrulanmış | Hikâye cümlesi: 1, 7. |
+| `02_avlu-sadirvan.jpg` | `veri/bursa-foto/I. ve II. Cilt - Osmangazi/Orhan Bey Külliyesi Klasörü/ERD02236 kopya.jpg` | 2 | Avlu ve şadırvan | Fıskiyeli şadırvanın çevresi bir buluşma yeri. | Mermer fıskiyeli şadırvan, çevresinde masalar, arkada iki katlı taş-tuğla revaklar ve ağaçlar. | E cilt-1 PDF s.109 (fotoğraf: envanter arşivi) | Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -006). Yayın izni yazılı olarak teyit edilmeli. | Doğrulanmış | Hikâye cümlesi: 4, 8. |
+| `03_revak-ayaklar.jpg` | `veri/bursa-foto/I. ve II. Cilt - Osmangazi/Orhan Bey Külliyesi Klasörü/ERD02275 kopya.jpg` | 3 | Revak | Taş ve tuğladan örülmüş geniş ayaklar. | Tonozlu revak, taş-tuğla almaşık kare ayaklar, kırmızı tuğla döşeme. | E cilt-1 PDF s.108 (fotoğraf: envanter arşivi) | Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -009). Yayın izni yazılı olarak teyit edilmeli. | Doğrulanmış | Hikâye cümlesi: 5. |
+| `04_avlu-cinarlar.jpg` | `veri/bursa-foto/I. ve II. Cilt - Osmangazi/Orhan Bey Külliyesi Klasörü/ERD02242 kopya.jpg` | 4 | Avlu | Yaklaşık 650 m²'lik avlu. | Ağaçlarla gölgelenen avlu, taş döşeme ve çevredeki revaklar. | E cilt-1 PDF s.108 (fotoğraf: envanter arşivi) | Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -001). Yayın izni yazılı olarak teyit edilmeli. | Doğrulanmış | Hikâye cümlesi: 2, 3. |
+| `05_revak-dukkanlar.jpg` | `veri/bursa-foto/I. ve II. Cilt - Osmangazi/Orhan Bey Külliyesi Klasörü/ERD02267 kopya.jpg` | 5 | Revak ve dükkânlar | Revakların arkasında dükkânlar sıralanır. | Tonozlu revakta ayak çevresine dizilmiş kilim ve tekstil ürünleri. | E cilt-1 PDF s.108, s.109 (fotoğraf: envanter arşivi) | Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -005). Yayın izni yazılı olarak teyit edilmeli. | Doğrulanmış | Hikâye cümlesi: 6. |
+| `06_ust-kat-revak.jpg` | `veri/bursa-foto/I. ve II. Cilt - Osmangazi/Orhan Bey Külliyesi Klasörü/ERD02258 kopya.jpg` | 6 | Üst kat | Üst kattaki odalar ocaklıydı. | Üst kat revakında masalar, kemerlerin arasından avludaki ağaçlar. | E cilt-1 PDF s.109 (fotoğraf: envanter arşivi) | Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -006). Yayın izni yazılı olarak teyit edilmeli. | Doğrulanmış |  |
+
+## Notlar
+
+- Ticari Yapılar Klasörü'ndeki tuğla revaklı han fotoğrafları (Emir Hanı'na benzeyenler) eser adı olmadığı ve başka hanlara (Fidan, Pirinç) ait olabileceği için kullanılmadı. Seçilenlerin hepsi Orhan Bey Külliyesi Klasörü'nden.

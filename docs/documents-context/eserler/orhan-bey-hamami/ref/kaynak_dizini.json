@@ -1,0 +1,201 @@
+{
+ "aciklama": "ref/ altındaki her dosyanın kaynağı, PDF sayfası ve SHA-256 değeri. Sayfalar PDF dosya sayacıdır (1 tabanlı).",
+ "kayitlar": [
+  {
+   "dosya": "ref/foto/alan-baskanligi_pdf004_foy.png",
+   "kaynak": "veri/bursa/hanlar-bolgesi.pdf",
+   "sayfa": "4",
+   "tur": "E (föy)",
+   "sha256": "d4de91c86e52c5df72c91daa1edcaa82bd05f7d4726829dc72cc6c976386ca99"
+  },
+  {
+   "dosya": "ref/foto/envanter_c1_pdf104_havadan_kubbeler.png",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "sayfa": "104",
+   "tur": "E (sayfa görüntüsü)",
+   "sha256": "1d2ad05d7b2dc8e2cabdf171fa5bbe028810fe6553de3874dac4ad05ff38e891"
+  },
+  {
+   "dosya": "ref/foto/envanter_c1_pdf105_ic_carsi_tepeden.png",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "sayfa": "105",
+   "tur": "E (sayfa görüntüsü)",
+   "sha256": "2e1653145780d7ae73405e1b1af644409d9575c388a7e2497a0ef086f8d2e462"
+  },
+  {
+   "dosya": "ref/foto/envanter_c1_pdf106_girisler.png",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "sayfa": "106",
+   "tur": "E (sayfa görüntüsü)",
+   "sha256": "3c70d88f398192d66ee7146f1284f1eb6ec4008f9f5f62b58ed007c98788ae3a"
+  },
+  {
+   "dosya": "ref/foto/envanter_c1_pdf107_dogu_avlu_kadin_soguklugu.png",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "sayfa": "107",
+   "tur": "E (sayfa görüntüsü)",
+   "sha256": "7414952757f6148f516478d9bb4fac6bf099fc0df508309949ac470db58b1fdb"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf305_cekim_acilari.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "305",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "156622ca75a759bce687c17401767da4ae6ae335648dd731eb343a23726f033c"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf306_giris_rozet_L90-91.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "306",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "3c6a9affb7281f525d329f00f250996735ce99b7deddc02550b7313ab5c1955f"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf307_kubbeler_merdiven_L92-93.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "307",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "c08d55583bb4a2b1fbb6c18f5a0cd5301b87a8587d18bfa0fe955debd5a28347"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf308_merdiven_dogu_L94-95.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "308",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "45eaa189a3edaf58388af3af6ec5732b31fba4e3666b0522545c4ae8714025f3"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf309_kadin_girisi_L96-97.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "309",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "61e6a8196df123996866bc757672e8a58ad8722b54751f7e667f130c294c5a6a"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf310_testere_sacak_L98-99.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "310",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "0cbf24ddea3608a3e9d886afc2504dfc697eb8019d61e29832343d8ff30440af"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf311_dar_sokak_L100-101.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "311",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "27fe37bcc25255ea9511ba6c2c5d0e673394ef0862445dea602d9920ca600dc0"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf312_pencere_L102-103.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "312",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "e4432ae4ca1ccab149668ef0db760b4d159da8995b79132b165c6ef7791a8b3f"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf313_testere_sacak_L104-105.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "313",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "23a78503c2e35c45d65db561fd92acd249ceb2635d3af719708e6ee875dd2834"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf314_pencere_L106-107.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "314",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "47def6c7dc885e8bfb49b4f12ddef35940991b848bab54e3c9c03998cc26ba74"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf315_pencere_L108-109.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "315",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "24c4c1f2bef2b5d74382559f1cef6c39c8781c73fd20158696d43d425e28da94"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf316_kuzeybati_sacak_L110.jpg",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) (110 dpi)",
+   "sayfa": "316",
+   "tur": "W (levha sayfası; yön etiketleri için notlar §3.4)",
+   "sha256": "e7712a36201ea92de186f668587fade2ae4ac50e6b6e1260caca9108ce739663"
+  },
+  {
+   "dosya": "ref/metin/alan_baskanligi.md",
+   "kaynak": "veri/bursa/hanlar-bolgesi.pdf",
+   "sayfa": "4",
+   "tur": "E",
+   "sha256": "722bff5b3598a4d254718a29ced24ae0938f117c998204feb60da1f520085bf9"
+  },
+  {
+   "dosya": "ref/metin/envanter_c1.md",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf (metin: veri/metin/bursa-envanteri-cilt-1.txt)",
+   "sayfa": "104-107",
+   "tur": "E",
+   "sha256": "920a562febd003d98ab75988a5826a54237ca8fec55bdb057b438c085b352dbd"
+  },
+  {
+   "dosya": "ref/metin/vakif_1983.md",
+   "kaynak": "veri/bursa/turkiyede-vakif-abideleri-ve-eski-eserler-3.pdf",
+   "sayfa": "198",
+   "tur": "E",
+   "sha256": "0fc99514f6b73a8ba03037f6146bced84c40244824ab76b72d8ff153b7be4af9"
+  },
+  {
+   "dosya": "ref/metin/yurt2024.md",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf",
+   "sayfa": "76-78, 220-224, 305",
+   "tur": "W",
+   "sha256": "cfeb528456b10954ef5b7183bd014718097444e3ef34f58c5871f6124a350641"
+  },
+  {
+   "dosya": "ref/plan/okuma_hamam_kaynak_karsilastirma.png",
+   "kaynak": "Önceki çalışmanın kaynak karşılaştırma görseli (12 px/m, kuzey yukarı)",
+   "sayfa": "",
+   "tur": "H",
+   "sha256": "5af93bed533db81dc9b9e3c6bac5240ac1b261e4c811256146ba495fe1729c68"
+  },
+  {
+   "dosya": "ref/plan/vakif_1983_pdf198_plan.png",
+   "kaynak": "veri/bursa/turkiyede-vakif-abideleri-ve-eski-eserler-3.pdf (yalnız sol üst plan bu esere ait)",
+   "sayfa": "198",
+   "tur": "P-oran",
+   "sha256": "a57d4bcb302f54eed2d119e77f9cff9d630121681b2b04e3c1991f5ce34b22cc"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf220_plan_ayverdi.png",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) — Çizim 20, Ayverdi 1996 (200 dpi)",
+   "sayfa": "220",
+   "tur": "P (çubuk 41,5 px/m; E oda ölçüleriyle −%3)",
+   "sha256": "05d90862f974f0687b0c8ee655abcea3ebca9d635623fa1963610ad4e7d850ca"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf221_plan_cetintas.png",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) — Çizim 21, Çetintaş 1946 (200 dpi)",
+   "sayfa": "221",
+   "tur": "P-oran (çubuk ≈ %38 hatalı; doğru 35,5 px/m)",
+   "sha256": "b5319aee4982c39436f4e18e35cb8f4b5d8b4519e01965d46f7128f8220e19a9"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf222_plan_cetintas2.png",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) — Çizim 22, Çetintaş 1946 (200 dpi)",
+   "sayfa": "222",
+   "tur": "P-oran",
+   "sha256": "c11ba1947bacfa7169383a1b3ee71b14d1e7671407d1fd533839f4da475ab487"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf223_kesit_ayverdi.png",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) — Çizim 23, Ayverdi kesiti (200 dpi)",
+   "sayfa": "223",
+   "tur": "P (× 1,16 kalibrasyon)",
+   "sha256": "f5dd32c131327ecaabca77d988fcbdd33b30668bc060b6c6b89a095309224c51"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf224_kesit_cetintas.png",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (Yurt 2024) — Çizim 24, Çetintaş kesiti (sayfanın üst kısmı; alttaki türbe planı bu esere ait değil)",
+   "sayfa": "224",
+   "tur": "P-oran",
+   "sha256": "1493460f9a3212a9d71283219aecc6b936a35212ef6c68696d1bbc9839ef795d"
+  }
+ ]
+}

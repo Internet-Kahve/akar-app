@@ -1,0 +1,54 @@
+# Koza Han: 3D üretim klasörü
+
+Güncel sürüm **v12** (19 Ekim 2026; betik `build/build_v12.py`, GLB `export/koza-han_v12.glb` ve `_sunum.glb`, render'lar `kontrol/v12/`). Aşağıdaki «İçerik» bölümü v02o döneminden kalmadır. Bu klasörde yalnızca son sürüm tutulur; önceki sürümler aşağıdaki tabloda kayıtlıdır, ayrıntılı karar metinleri `../koza-han_notlar.md` sonundaki "Geçmiş kayıt" ekinde. Sıradaki tur v03'ün talimatı `../SONNET_REVIZYON_PLANI.md` dosyasında.
+
+## İçerik
+
+- `build/build_v02o.py`: üretim betiği. Bütün ölçüler en üstteki `P` sözlüğünde; her değerin yanında kaynak harfi (E/W/O/F/T/K). Eksenler +X doğu, +Y kuzey, +Z yukarı; orijin ana avlunun ortası.
+- `build/doku/`: doku karoları ve üreticisi `doku_uret.py` (`uv run --no-project --python 3.12 --with pillow python doku_uret.py`). Portal köşeliği `../ref/plan/tasarim_portal_kose.png` çiziminden okunur. v02o şu dokuları kullanır: `almasik`, `kesme_tas`, `korkuluk`, `pencere`, `petek`, `petek_korkuluk`, `baca`, `portal_on_v02m`.
+- `build/araclar/`: `blender_yukle.py <sürüm>` (açık Blender'a yükler; MCP for Blender eklentisi gerekir), `yan_yana.py` (render ile referansı yan yana birleştirir).
+- `blend/koza-han_v02o.blend`, `export/koza-han_v02o.glb` (Draco, 492 KB).
+- `kontrol/v02o/`: render'lar, `kontrol_rapor.json`, referansla yan yana görseller.
+
+Üretim: `blender -b --python 3d/build/build_v02o.py` (Blender 5.2). Betik sonunda kontrol, AO, Draco GLB ve render'ları yazar.
+
+## Sürüm geçmişi
+
+| Sürüm | Değişiklik (16 Ekim 2026) | Üçgen |
+|---|---|---|
+| v01 | Kütle: gövde, revak, çatı, baca, portal, mescit, avlu zemini. Kanat 6,85 m = (OSM dış 59,7 × 51,7 − avlu 46 × 38) / 2 | 7 416 |
+| v01b | Kubbe sırası avlu tarafında, dışa eğimli çatı, portal üstünde 3 kubbe; kütle donduruldu | 7 642 |
+| v02 | Revak kemerleri, avlu cephesi kapıları, dış pencereler, kat silmesi, portal çerçevesi, mescit kemer ve pencereleri, AO | 19 426 |
+| v02b | Üst kat dış pencereleri eşit aralıklı, dikdörtgen, sivri tuğla alınlıklı | 25 122 |
+| v02c | Kanat çatısı üç bant: saçak şeridi + baca, beşik tonoz, kubbe sırası + korkuluk duvarı | 26 060 |
+| v02d | Kubbe/baca düzeni, portal burmalı silme ve mavi çini alan | 28 910 |
+| v02e | Pencere dokusu, almaşık duvar karosu, fotoğraftan renkler | 27 890 |
+| v02f | Avlu üst katı kesme taş ayak ve sivri kemer, beyaz korkuluk; tuğla tonu açıldı | 27 986 |
+| v02g | Avlu kemeri kubbe sayısına eşitlendi | 26 882 |
+| v02h | Portal yüzü fotoğraftaki gibi (halat, kakma, yıldız örgüsü); kubbe/kemer 9 ve 11 | 27 266 |
+| v02i | Bacalar: tuğla gövde, sivri açıklıklar, piramit külah | 28 274 |
+| v02j | Mescit: çan etekli kurşun kubbe, alem, mermer merdiven ve taban, petekli alınlık | 29 098 |
+| v02k | Mescit merdiveni korkuluğu ve merdiven altı boşluğu | 29 138 |
+| v02l | Portal köşeliği tasarım çiziminden; merdiven korkuluğu petek şebeke | 29 138 |
+| v02m | Portal kiremit örgüsü; kapı kemer tepesi 7,8 m | 29 274 |
+| v02n | Yön düzeltmesi: portal kısa kenarda (dış 51,7 × 59,7, avlu 38 × 46); portal kubbeleri | 29 446 |
+| v02o | Portal kütlesi 18 × 4,8 m (tasarım krokisi); UV katman hatası düzeltildi | 29 450 |
+| v03–v11 | Bu tabloya işlenmedi; değişiklikler `build/build_v12.py` dosyasının ilk satırında sürüm sürüm yazılı. | — |
+| v12 | 19 Ekim 2026. Kaide **daire** oldu (Ulu Cami v22 gibi; kullanıcı kararı, genel standarttaki dikdörtgen kaidenin yerine). Revak kemer köşeliklerindeki ince siyah düşey çizgiler giderildi. Daire: han + portal + İç Koza'yı saran en küçük çember + 3 m pay. Merkez (26,84; 0), R 72,0 m, kalınlık 0,6, üst pah 0,15. Cevre_Doseme daire kenarından 1,5 m içeride kesildi. Çizgi nedeni: köşelik paneli ayağa 3 cm gömülüydü, gömülü köşeler AO pişiriminde siyah kalıyordu. Gömülme 2 mm'ye indirildi (han revakı ve İç Koza revakı). | 45 866 |
+
+Her sürümde açık/manifold olmayan kenar 0, ≥ 0,3 m çakışma 0, 8 yönden arka yüz kırmızı oranı 0 (GECTI). v02o: 48 draw call. Mobil performans ölçülmedi.
+
+## Bilinen sınırlar (v02o)
+
+- Kanat 6,85 m ve dış 51,7 × 59,7 m (OSM). Plan ve dik hava fotoğrafı kanadı ≈ 13 m, dışı ≈ 64 × 72 m gösteriyor; düzeltme v03 planının §1 bölümünde.
+- Mescit ölçüleri tahmin (T); kapı kuzey yüzde. Güler 2020 rölövesi ve hava fotoğrafıyla düzeltme v03'te.
+- Avlu zemini düz; çim diski koyu yeşil; tuğla ve kurşun tonları koyu. Genel sahne standardına geçiş v03'te.
+- Üçgen bütçesi 30 000 sınırında; v03 bütçesi planda yeniden tanımlanır.
+
+## v03 çalışma notları (taslak; v03 kabul edilince sürüm geçmişine işlenecek)
+
+- Avlu parke derzi: genel standardın «ana zeminden 1 mm yüksekte derz şeridi» kuralı bu eserde **doku olarak uygulanmıştır** (`build/doku/parke.png`, 0,4 m karo, derz `#A69A86`). Geometrik derz avlu üçgen bütçesini (≤ 2 500) aşırdığı için yapılmadı; kullanıcı kararı (18 Ekim 2026).
+- İç Koza avlusuna ağaç konmadı (plan §4'te isteğe bağlıydı); çınar sayısı 4.
+- İç Koza ekseni han doğu revakındaki bir kemer gözüne hizalandı: kuzey kenar hanın kuzeyinden 3,14 m güneyde (plan ≈ 4,5 ± 3 m; kullanıcı kabulü).
+- `kozahan_arsiv_010` kuzeye göre çekilmemiş (portal fotoğrafın sağ kenarında); karşılaştırma için 90° sola döndürülür, oranlar `kontrol/v03/oran_kontrolu.json` içinde.
+- Mescit merdiveni: 4,94 m sahanlık dahil (ilk denemede sahanlık üstüne eklenmişti), yanlarda yere inen dolu duvar, mescit tarafında kemerli boşluk, iki sıra yuvarlak delikli korkuluk, 4 çift dikme (kaynak: rölöve batı cephesi, üst kat planı, foto 043).

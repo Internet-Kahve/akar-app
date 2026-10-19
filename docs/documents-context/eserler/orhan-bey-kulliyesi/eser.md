@@ -79,6 +79,24 @@ Her yapı kendi şablon dosyasıyla doldurulur (cami.md, medrese.md, hamam.md, t
 | Hangi yapı ana vurgu |  |  |  | tek yapı; diğerleri sade |
 | Modele dahil edilecek yapı sayısı |  |  |  | bütçeye göre; en az cami + bir yapı |
 
+## 4. Orhan Bey Camii · kaynaklı ölçü ve biçim satırları (19 Ekim 2026)
+
+Model kararları ve çelişkilerin değerlendirmesi `orhan-bey-kulliyesi_notlar.md` §1 ve §3'te.
+
+| Alan | Değer | Birim | Kaynak | Not |
+|---|---|---|---|---|
+| Toplam dış ölçü (D–B × K–G) | 25,7 × 33,5 | m | P Ayverdi planı (Yurt 2024 PDF 213) | OSM 27,0 × 35,5 ölçü için kullanılmaz |
+| Son cemaat yeri | 25,80 × 6,30, beş gözlü, tamamen kubbelerle örtülü | m | E cilt-1 PDF 97 | Bugün 3 kubbe + 2 aynalı tonoz (W Yurt PDF 70; F) |
+| Son cemaat yeri duvar örgüsü | üst bölüm bir sıra kesme taş, üç sıra tuğla almaşık | | W Yurt 2024 PDF 72 | «Son cemaat yeri duvar örgüsü ise diğer cephelerden farklı olarak üst bölüm bir sıra kesme taş, üç sıra tuğla almaşık teknikte inşa edilmiştir.» |
+| Saçak | iki sıra kirpi dizili saçak silmeleri | | E Vakıf 1983 PDF 84 | «iki sıra kirpi dizili saçak silmeleri»; E cilt-1 PDF 100 «kirpi saçağa kadar uzanan» |
+| Beden duvarı örgüsü | moloz taş, aralarında yatay ve dikey tuğla | | E cilt-1 PDF 98 | «moloz taş ve aralarına yatay ile dikey olarak yerleştirilen tuğlalarla» |
+| Kasnak örgüsü | iki sıra yatay, bir sıra dikey tuğla ile kasetlenmiş kesme taş | | W Yurt 2024 PDF 72 | 1880–1904 fotoğraflarına göre; bugün sıvasız almaşık (F) |
+| Harim (sofa) kubbesi | sekizgen kasnak, 8 yüzde 7 pencere, güneydeki sağır | adet | W Yurt 2024 PDF 71; E cilt-1 PDF 100–101 | «yedi adet pencere bulunmaktadır ve bunlardan güneydeki sağırdır» |
+| Mihrap kubbesi | sofa kubbesinden daha geniş ve alçak, tromp geçişli; pencere sayısı çelişkili (3 / 4 / 7) | | W Yurt PDF 72 «dört»; E cilt-1 PDF 102 «üç»; E Vakıf PDF 84 «yedi» | Fotoğrafla doğrulanacak |
+| Tabhane kubbeleri | dikdörtgen mekân (≈ 6,05 × 9,10) üstünde kubbe; kasnakta 2 pencere (batıda G + B) | m / adet | E cilt-1 PDF 101; W Yurt PDF 71 | |
+| Yükseklikler | son cemaat saçağı 9,4; harim kasnak 13,5 / tepe 16,5; mihrap 12,7 / 14,4; tabhane 9,1 / 10,5 | m | P/Y Ayverdi yan cephesi (Yurt PDF 217) | Ölçek doğrulandı (notlar Ek) |
+| Şadırvan | cami kuzeyinde, sekizgen planlı; mermer platform; geniş saçak; ahşap çatı ve bezemeli kubbe (2020–23) | | E cilt-1 PDF 103; W Yurt PDF 70, 72; W Budak 2018 (arşiv planı) | Ölçüler F/T (notlar §3.3) |
+
 ## STİL (bu eser için)
 Genel kurallar _ortak_stil.md içinde. Burada sadece bu esere özel seçimler.
 ### Vurgu noktaları

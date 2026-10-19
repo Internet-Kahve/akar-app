@@ -1,6 +1,6 @@
 # Han (kervansaray) · eser şablonu
 
-Modelleme için tek dosya bu `eser.md` dosyasıdır. İç Koza ve Mescit alt birimlerdir; ayrı eser/model olarak üretilmez. Kaynak ayrıntıları `_kaynak/ic-koza-hani.md` ve `_kaynak/koza-han-mescidi.md` içinde tutulur.
+Kimlik, ölçü ve kaynak tablosu (giriş noktası). İç Koza ve Mescit alt birimlerdir; ayrı eser olarak üretilmez, Koza Han modelinde yer alır (İç Koza basit kütle). Alt birimlerin önceki eser formları `ref/metin/alt-birim_ic-koza-hani_eser-kaydi.md` ve `ref/metin/alt-birim_koza-han-mescidi_eser-kaydi.md` içindedir. Model kararları `koza-han_notlar.md`, modelleme talimatı `SONNET_REVIZYON_PLANI.md`.
 
 Hanlar ve kervansaraylar için. Han akar (gelir getiren) yapıdır.
 
@@ -40,6 +40,8 @@ Her ölçünün **Kaynak** sütununa tek harf yaz:
 |---|---|---|---|---|
 | Plan | klasik Osmanlı han planı: avlu etrafında altlı üstlü odalar; doğu cephesine bitişik tek katlı ahır-depo ve ikinci avlu |  | E cilt-2 PDF s.9 | cilt-2 PDF s.9: «Han, klasik Osmanlı han planına uygun şekilde, bir avlu etrafında sıralanmış altlı üstlü odalar ile doğu cephesine bitişik bir ahır-depo bölümünden oluşmaktadır.» Avlunun şekli ve ölçüsü kitap metninde yok (plan görseli denetlenmeli). |
 | Dış ölçü: doğu–batı × kuzey–güney | ≈ 59,7 × 51,7 (OSM ayak izi; yön ≈ 86°) | m | O way/1474611586 | OSM min. döndürülmüş dikdörtgen, alan ≈ 2982 m². Kitapta dış ölçü yok; plan (cilt-2 PDF s.12) okununca P ile değiştirilecek. W: iç avlu ≈ 46 × 38 m ile tutarlı. |
+| Dış ölçü (2): kısa (kuzey/güney cephe) × uzun kenar | ≈ 63,7 × 72,2 | m | H (plan oranı × E avlu) | Demiralp 2021 planı (Canbakış PDF 45, `ref/plan/canbakis_pdf045_koza-han_plani_demiralp2021.png`) avlu 38 × 46 m ile ölçeklendi; dik hava fotoğrafı (`ref/foto/kozahan_arsiv_010_havadan_dik_tum_yapi.jpg`) ≈ 65 × 71,5 verir. OSM satırıyla çelişir; MODEL İÇİN BU SATIR SEÇİLDİ (64,0 × 72,0). Ayrıntı: koza-han_notlar.md §3. |
+| Kanat derinliği (dış duvar → açık avlu) | ≈ 13,0 | m | H | Aynı plan; dört kenarda eşit. Revak 3,40 (föy N19), oda ≈ 5,6, duvarlar ≈ 1,4 + 1,0, ayak ≈ 1,6. |
 | Kat sayısı | Üst katta ipek ticareti yapan işletmeler, alt katta ise çeşitli ürünlerin satışını gerçekleştiren esnaf yer almaktadır. |  | E cilt-2 PDF s.11 | «Üst katta ipek ticareti yapan işletmeler, alt katta ise çeşitli ürünlerin satışını gerçekleştiren esnaf yer almaktadır.» |
 | Kat sayısı (2) | Tek katlı olan ahır yapısı |  | E cilt-2 PDF s.9 | «Tek katlı olan ahır yapısı» |
 | Alt kat yüksekliği |  | m |  |  |
@@ -51,11 +53,13 @@ Her ölçünün **Kaynak** sütununa tek harf yaz:
 | Alan | Değer | Birim | Kaynak | Not / tipik |
 |---|---|---|---|---|
 | Avlu ölçüsü (doğu–batı × kuzey–güney) | yaklaşık 46 × 38 (ana avlu; yönler belirtilmemiş) | m | W | URL: https://alanbaskanligi.bursa.bel.tr/koza-han-yeni-han-han-i-cedid-simkes-han-sirmakes-han-acem-han-beylik-han-yeni-kervansaray/; yer: Koza Han açıklaması; alıntı: «Yaklaşık olarak 46 x38 metre iç ölçülerinde»; erişim: 14 Ekim 2026. TEK KAYNAK. Yaklaşık ifadesi kaynaktan aynen alınmıştır. Ana han avlusudur; dosyada ahır/İç Koza avlusu için verilen E ölçülerinin yerine geçmez. Yönler kaynaktan doğrulanamadı. |
+| Avlu ölçüsü (2) | yaklaşık 46 × 38 iç ölçü; revak ≈ 3,40 m | m | E (Alan Başkanlığı föyü N19, hanlar-bolgesi.pdf PDF 21) | «Yaklaşık olarak 46 x 38 metre iç ölçülerinde dikdörtgen bir avlunun çevresinde iki katlı olarak inşa edilen hanın üst katında 51, alt katında ise 50 oda bulunmakta, odalar her iki katta yaklaşık 3.40 metre genişliğindeki bir revağa açılmaktadır.» `ref/metin/alan_baskanligi.md` |
 | Avlu ortasındaki yapı | mescit (köşk mescit, müstakil) |  | E cilt-2 PDF s.10 | cilt-2 PDF s.10: «Avlunun ortasında daha önce bazı Selçuklu kervansaraylarında gördüğümüz köşk mescit denilen müstakil bir mescit bulunmaktadır.» Yanındaki ahşap ikinci mescit günümüze ulaşmamıştır. |
 | Avlu mescidi: ölçü, kat, kubbe Ø | Sekizgen planlı köşk mescit | m | E cilt-1 PDF s.195 | «Sekizgen planlı yapının bir yüzünde kapı, diğer yüzünde mukarnas kavsaralı alçı mihrap bulunmaktadır.» |
 | Avlu mescidi: ölçü, kat, kubbe Ø (2) | 8 altıgen ayak; yuvarlak kemerler |  | E cilt-1 PDF s.195 | «Mescit kesme taşla inşa edilmiştir ve sekiz adet altıgen ayak üzerinde yükselen yuvarlak kemerlere oturmaktadır.» |
 | Avlu mescidi: ölçü, kat, kubbe Ø (3) | on altıgen şadırvan |  | E cilt-1 PDF s.195 | Envanterin mescit altındaki on altıgen şadırvan anlatısı; tek yapı kapsamında işlenecek. |
 | Avlu mescidi: ölçü, kat, kubbe Ø (4) | kurşun kaplı kubbe |  | E cilt-1 PDF s.195 | «Mescidin kubbesi kurşunla örtülüdür.» |
+| Avlu mescidi: ölçü, kat, kubbe Ø (5) | kotlar 0,78 / 2,00 / 3,50 / 6,98; kubbe tepesi ≈ 9,6; gövde Ø 6,78 (dış), 5,46 (iç); ayak çemberi R ≈ 3,27; havuz Ø ≈ 5,65; merdiven 2,47 m geniş | m | P (Güler 2020, İstem 18/35, PDF 20–22) | Ölçek çubuklu ve kotlu rölöve çizimleri `ref/plan/guler2020_pdf020–022_*`; ölçüm koza-han_notlar.md §3. Çizimde ayaklar beşgen (envanter: altıgen). |
 | Avlu zemini | çay bahçesi olarak kullanılıyor; zemin malzemesi belirtilmemiş |  | E cilt-2 PDF s.11 | cilt-2 PDF s.11: «Hanın avlusu çay bahçesi olarak kullanılmakta ve halk tarafından yoğun ilgi görmektedir.» |
 
 ## 3. Revak ve odalar

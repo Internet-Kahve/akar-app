@@ -29,31 +29,35 @@ Her ölçünün Kaynak sütununa tek harf yaz: P rölöve/ölçülü plan · E e
 
 | Alan | Değer | Birim | Kaynak | Not / tipik |
 |---|---|---|---|---|
-| Dış ölçü (doğu–batı × kuzey–güney) | ≈ 61,5 × 21,4 (OSM ayak izi; yön ≈ 86°) | m | O way/1063228547 | OSM min. döndürülmüş dikdörtgen, alan ≈ 1282 m²; kitapta yok. Etiket yalnız «Bedesten»; Yıldırım Bayezid Bedesteni ile eşleşmesi konumdan (Ulucami yakını) çıkarıldı, doğrulanmalı. |
-| Duvar yüksekliği |  | m |  |  |
-| Toplam yükseklik (kubbe tepesi) |  | m |  |  |
-| Duvar kalınlığı |  | m |  |  |
+| Dış ölçü (doğu–batı × kuzey–güney) | ≈ 61,5 × 21,4 (OSM ayak izi; yön ≈ 86°) | m | O way/1063228547 | OSM min. döndürülmüş dikdörtgen, alan ≈ 1282 m²; yalnız kubbeli yüksek gövdeyi (≈ 59,5 × 18) aşan bir kontur çiziyor, **ölçü için kullanılmaz** (yön için).  Etiket yalnız «Bedesten»; Yıldırım Bayezid Bedesteni ile eşleşmesi konumdan (Ulucami yakını) çıkarıldı, doğrulanmalı. |
+| Dış ölçü (2) | 70,70 × 33,50 (dükkânlar dahil; model) | m | P Gabriel plan + kesit, Ayverdi 1966 | W Ekinci 2025 PDF 95 «35,5 x 71,70» ve Gabriel planı 70,4 × 32,8 ile karşılaştırıldı; bant K/G 7,75, D/B 5,60 (19 Ekim A incelemesi, `bedesten_notlar.md` §3.1). |
+| Merkez mekân (iç) | 56,50 × 15,00 | m | E cilt-2 PDF s.29 | «iç ölçüler itibarıyla 15,00 × 56,50» |
+| Gövde duvarı | 1,50 | m | P Gabriel planı | `ref/plan/gabriel_plan_1m_izgara.png` |
+| Duvar yüksekliği | 10,0 (yüksek gövde saçağı) | m | P Gabriel kesiti | `ref/plan/gabriel_kesit_1m_izgara.png`; 1958 öncesi çizim, gövde 1960'ta korunmuş |
+| Toplam yükseklik (kubbe tepesi) | 14,20 | m | W Ekinci 2025 PDF 96 | «zeminden en yüksek kubbesinin hizasına kadar olan yüksekliği 14,20 metredir». Gabriel kesiti 12,6–13,0 (1960 öncesi kubbeler). |
+| Duvar kalınlığı | 1,50 | m | P Gabriel planı | Dükkân ara duvarları 1960'ta 0,20'ye inceltildi (W Ekinci PDF 102, Ayverdi 1966 s.471) |
 
 ## 2. Kubbe ve ayaklar
 
 | Alan | Değer | Birim | Kaynak | Not / tipik |
 |---|---|---|---|---|
 | Kubbe sayısı ve dizilim | 14 (ana mekânda 6 ayağa oturan 14 kubbe; ayrıca 4 cephedeki her kapı kubbeyle örtülü bir giriş mekânına açılır) | adet | E cilt-2 PDF s.29 | PDF s.29: «Üst örtü sistemi, altı ayağa oturtulmuş 14 kubbeden oluşmaktadır... Bedestene dört cephede yer alan kapılardan girilmektedir. Her bir kapı, kubbeyle örtülü bir giriş mekânına açılır.» |
-| Kubbe Ø |  | m |  |  |
-| Kubbe tepe kotu |  | m |  |  |
+| Kubbe Ø | açıklık 6,50–6,90; dış ≈ 7,4 | m | W Ekinci 2025 PDF 96; P Gabriel kesiti | «Kubbe açıklıkları 6,50-6,90 m arasında değişiklik göstermektedir» |
+| Kubbe tepe kotu | 14,20 | m | W Ekinci 2025 PDF 96 | Bkz. Toplam yükseklik |
 | Ayak sayısı ve boyutu | 6 ayak (boyutu belirtilmemiş) | adet | E cilt-2 PDF s.29 | PDF s.29: «Üst örtü sistemi, altı ayağa oturtulmuş 14 kubbeden oluşmaktadır.» |
-| Kasnak / pencere |  |  |  |  |
-| Kubbe kaplaması |  |  |  | kitapta yok |
+| Kasnak / pencere | kubbe pencereleri yok (kapatıldı) |  | W Ekinci 2025 PDF 96–97 | «Özgün kubbelerde kuzey ve güney yönünde birer pencere olduğu arşiv fotoğraflarında görülmesine rağmen restorasyondan sonra bu pencereler kapatılmıştır» |
+| Kubbe kaplaması | kurşun; 10 kubbe 1960'ta betonarme yeniden yapıldı | | E cilt-2 PDF s.29; W Ekinci 2025 PDF 96, 98, 101 | Özgün kalan dört kubbe batıda (Ekinci PDF 96, 101); PDF 102 dipnot 109 «doğu başta» der, çelişki not edildi |
 
 ## 3. Kapılar ve cephe
 
 | Alan | Değer | Birim | Kaynak | Not / tipik |
 |---|---|---|---|---|
 | Kapı sayısı, yönleri | 4 adet (dört cephede; güney ve batı kapıları metinde ayrıca anılmaktadır) | adet | E cilt-2 PDF s.29 | PDF s.29: «Bedestene giriş, dört cephede yer alan kapılar aracılığıyla sağlanmaktadır. Her bir kapı, kubbeyle örtülü bir giriş mekânına açılmaktadır... Bedestenin güney kapısı üzerinde girift bir şekilde kûfi hatla “kelime-i tevhit” yazılmıştır. Batı kapısının üst kısmında ise boya ile yazılmış “Bedesten” ibaresi yer almaktadır.» |
-| Kapı: genişlik × yükseklik |  | m |  |  |
-| Dış pencere (adet, ölçü) |  |  |  | kitapta yok |
+| Kapı: genişlik × yükseklik | geçit ≈ 3,0 (yükseklik kaynakta yok) | m | P Gabriel planı | Dört kapı cephe ortasında (W Ekinci PDF 97); 1960'ta dördü de kubbeli giriş mekânı (W Ekinci PDF 102) |
+| Dış pencere (adet, ölçü) | uzun cephe 7 (F), kısa cephe 4 | adet | F hava fotoğrafları; W Ekinci PDF 102 | Ayverdi: restorasyonda «her cephede dörder pencere açıldı»; pencere altı ≈ +5,55 (P kesit) |
 | Cephe malzemesi | taş ve tuğla |  | E cilt-2 PDF s.29 | PDF s.29: «Bedestenin inşasında taş ve tuğla malzeme birlikte kullanılmıştır.» |
 | Bitişik dükkân / sokak | içeride doğu-batı yönünde 32 mahzen ve önlerinde yuvarlak tonozlu dükkânlar; çevresinde ilk yapı düzenlemesine ait olmayan 68 dükkân (dört cephesi kuyumcular çarşısı ve Kapalıçarşı ile çevrili) |  | E cilt-2 PDF s.29 | PDF s.29: «Ticari mekânlar, doğu-batı yönünde sıralanmış 32 mahzen ile bu mahzenlerin önlerinde ve taşıyıcı ayakların çevresinde düzenlenen dükkânlardan oluşur. Tüm bu birimlerin üzeri yuvarlak tonozlarla örtülüdür... Bedestenin çevresinde bugün 68 dükkân yer almakta, ancak bunların ilk yapı düzenlemesiyle doğrudan bir ilişkisi bulunmamaktadır.» |
+| Bitişik dükkân / sokak (2) | dış cephede dört yönde 56 dükkân (ort. 4,20 × 2,30), içte K/G 32 mahzen (ort. 2,70 × 2,00); tonozlu | | W Ekinci 2025 PDF 96–97 | «Dış cephede dört yönde 56 dükkân, iç mekânda kuzey ve güney taraflarda karşılıklı 32 mahzen bulunur... Planların hepsinde yapıda 56 dükkân ve 32 mahzen görülmektedir.» 68 dükkân (E) ilk yapıya ait değil. Dağılım 2 × 20 + 2 × 8 (Ayverdi planından sayım, `bedesten_notlar.md` §3). |
 | Bağlı olduğu vakıf | Büyük Cuma Camii’nin yakınına konumlandırılan bedesten, vakfa gelir sağlama amacı taşımanın yanı sıra çarşı dokusunun çekirdeğini oluşturmuştur. |  | E cilt-2 PDF s.29 | «Büyük Cuma Camii’nin yakınına konumlandırılan bedesten, vakfa gelir sağlama amacı taşımanın yanı sıra çarşı dokusunun çekirdeğini oluşturmuştur.» |
 | Bağlı olduğu vakıf (2) | Yıldırım Bayezid tarafından Ulucami’ye gelir sağlamak amacıyla yaptırılan Bedesten |  | E cilt-1 PDF s.11 | «Yıldırım Bayezid tarafından Ulucami’ye gelir sağlamak amacıyla yaptırılan Bedesten» |
 | Bağlı olduğu vakıf (3) | Orhan Gazi Vakfı’na aitken daha sonra Yıldırım Külliyesi’ne tahsis edilmiştir. |  | E cilt-2 PDF s.210 | «Orhan Gazi Vakfı’na aitken daha sonra Yıldırım Külliyesi’ne tahsis edilmiştir.» |
@@ -81,9 +85,9 @@ Stil rengi boşsa tür paleti (_ortak_stil.md) kullanılır. Son sütundaki öne
 
 | Parça | Gerçek renk (kısa) | Stil rengi (hex) | Öneri |
 |---|---|---|---|
-| Gövde | taş ve kırmızı tuğla (E, PDF s.29: «Bedestenin inşasında taş ve tuğla malzeme birlikte kullanılmıştır.»; F, PDF s.29) | #E2B7A4 | pembe-kahve |
-| Kubbeler | kurşun kaplı (E, PDF s.29: «başlangıçta kurşunla örtülmüş»; F, PDF s.29) | #95AEBA | kurşun mavi-gri |
-| Kapılar |  | #6B4A3A | koyu kahve |
+| Gövde | taş ve kırmızı tuğla almaşık (2024 fotoğrafında kutu almaşık; W Alkan «3 tuğla + 1 taş» çelişkili, model F) (E, PDF s.29: «Bedestenin inşasında taş ve tuğla malzeme birlikte kullanılmıştır.»; F, PDF s.29) | almaşık doku, ort. #CFA986 | `_GENEL_SAHNE_STANDARDI.md` §3 |
+| Kubbeler | kurşun kaplı (E, PDF s.29: «başlangıçta kurşunla örtülmüş»; F, PDF s.29) | #AEB6BC | kurşun koyu ton (ek çizgisi #8E979D; v04b) |
+| Kapılar |  | #7A5134 | kapı kahvesi |
 
 ### Zemin ve çevre
 
@@ -127,4 +131,5 @@ Dış cepheyi kuşatan 68 dükkân ve kuyumcular çarşısı: Taş ve tuğla mal
 ## EKSİK ALAN RAPORU VE NOTLAR
 Plan / çizim durumu: bursa-envanteri-cilt-2.pdf içinde Bedesten bölümünde (PDF s.27, PDF s.28, PDF s.29) plan, kesit, cephe çizimi veya ölçek çubuğu yoktur; yalnızca dış ve iç fotoğraflar bulunmaktadır.
 Kaynakta bilgi olmayan ve boş bırakılan bölümler: OSM way id / koordinatlar, planda kuzey yönü, arazi eğimi, dış ölçüler (metinde yalnızca 15,00 × 56,50 m iç merkez mekân ölçüsü verilmiştir), duvar yüksekliği, kubbe tepe kotu, duvar kalınlığı, kubbe çapı, ayakların kesit boyutları, kasnak/pencere detayları ve kapıların genişlik × yükseklik ölçüleri.
-Emin olunmayan / çelişkili bilgiler: Herhangi bir çelişki yoktur; kubbe dizilimi metinde açıkça "2 × 7" şeklinde yazılmadığı (yalnızca "altı ayağa oturtulmuş 14 kubbe" dendiği) için dizilim tahmini eklenmemiştir.
+Emin olunmayan / çelişkili bilgiler (18 Ekim 2026 güncellemesi): 2 × 7 dizilim Ekinci PDF 95 «ikişer hâlde sıralanarak» ve dört planla doğrulandı. Çelişkiler: dükkân sayısı 68 (E, bugün) / 56 (W, bütün planlar; model 56); dış ölçü Gabriel 70,4 × 32,8 (1958 öncesi) / Ekinci 71,70 × 35,5 / model 70,70 × 33,50 (P çizimler, 19 Ekim); kubbe tepesi Gabriel ≈ 12,6–13,0 / Ekinci 14,20 (model W); özgün dört kubbenin yeri (batı / doğu). Ayrıntı `bedesten_notlar.md` §1 ve §3.
+Plan kaynakları (18 Ekim): Ekinci 2025 PDF 97 dört plan (`ref/plan/`), Gabriel plan ve kesiti (`ref/plan/gabriel_*`).

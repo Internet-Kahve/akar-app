@@ -174,6 +174,105 @@ def minare(name, c, H, M, govde_r=1.6, kaide_w=None, kaide_h=None, serefe_oran=0
     g.lathe(c, [(0.12, z), (0.35, z + alem * 0.3), (0.12, z + alem * 0.55), (0.3, z + alem * 0.75), (0, z + alem)], 8, [M["alem"]] * 4)
     return g.obj()
 
+# ---------------- ÖLÇEK FİGÜRLERİ (genel sahne standardı §4; tüm eserler bu seti kullanır) ----------------
+FIGUR_RENKLER = ("#EEE9DF", "#D9D2C5", "#C9C1B3")        # kırık beyaz, açık greige, greige (standart §4)
+FIGUR_POZLAR = ("ayakta", "yuruyen", "oturan", "basamak")
+def _loft(g, halkalar, m, seg=8):
+    """Kapalı hacim: halkalar=[(merkez Vector3, u Vector3, v Vector3)] (u,v yarı eksenler); iki uç kapalı."""
+    rs = [[g.bm.verts.new(c + u * math.cos(2 * math.pi * k / seg) + v * math.sin(2 * math.pi * k / seg)) for k in range(seg)] for c, u, v in halkalar]
+    for a_, b_ in zip(rs[:-1], rs[1:]):
+        for k in range(seg): g.F([a_[k], a_[(k + 1) % seg], b_[(k + 1) % seg], b_[k]], m)
+    g.F(rs[0][::-1], m); g.F(rs[-1], m)
+def _yol_loft(g, noktalar, yaricaplar, m, seg=8, ref=Vector((0, 1, 0))):
+    """Noktalar boyunca yarıçapı değişen kapalı tüp (uzuv). Son halka küçültülür: elsiz yuvarlak uç."""
+    hs = []
+    for i, p in enumerate(noktalar):
+        d = (noktalar[min(i + 1, len(noktalar) - 1)] - noktalar[max(i - 1, 0)]).normalized()
+        r_ = ref if abs(d.dot(ref)) < 0.9 else Vector((1, 0, 0))
+        u = d.cross(r_).normalized(); v = d.cross(u).normalized(); r = yaricaplar[i]
+        hs.append((p, u * r, v * r))
+    _loft(g, hs, m, seg)
+def _elipsoid(g, c, rx, ry, rz, m, seg=8, rings=4):
+    hs = []
+    for k in range(rings + 1):
+        al = -math.pi / 2 + math.pi * k / rings; cz = math.sin(al); rr = max(math.cos(al), 0.12)
+        hs.append((c + Vector((0, 0, rz * cz)), Vector((rx * rr, 0, 0)), Vector((0, ry * rr, 0))))
+    _loft(g, hs, m, seg)
+def _ik(a, b, l1, l2, bend):
+    """İki kemikli uzuv (kalça→ayak bileği, omuz→bilek): ortadaki eklem (diz/dirsek), bend yönüne doğru bükülür."""
+    d = b - a; L = max(min(d.length, (l1 + l2) * 0.999), 1e-4); dn = d.normalized()
+    x = (L * L + l1 * l1 - l2 * l2) / (2 * L); h = math.sqrt(max(l1 * l1 - x * x, 0))
+    bd = bend - dn * bend.dot(dn)
+    bd = bd.normalized() if bd.length > 1e-6 else Vector((0, 1, 0))
+    return a + dn * x + bd * h
+def insan(ad, poz="ayakta", boy=1.75, konum=(0, 0, 0), yon=90.0, kadin=False, cocuk=False, renk=0, adim_yuk=0.25, oval=False):
+    """Mimari maket figürü (yüz/el/parmak yok; tek renk; baş = boy/7,5; omuz 0,25 H). Kapalı manifold, 400–800 üçgen.
+    oval=True: yumuşak gölgelendirilmiş (yuvarlak görünümlü) varyant, üçgen sayısı aynı.
+    poz: ayakta | yuruyen | oturan (taburede, gövde öne eğik) | basamak (adim_yuk kadar yüksek basamağa çıkan).
+    konum: ayak tabanı (dünya, m); yon: bakış yönü derece (0 = +X, 90 = +Y). Ad 'Olcek_Insan_NN', koleksiyon 'Olcek'."""
+    assert poz in FIGUR_POZLAR and not (kadin and poz == "oturan")
+    H = boy; hx, sx = 0.055 * H, 0.125 * H
+    m = mat("Olcek_" + FIGUR_RENKLER[renk % 3][1:], FIGUR_RENKLER[renk % 3], 0.8)
+    V3 = lambda x, y, z: Vector((x * H, y * H, z * H))
+    L1 = L2 = 0.25 * H; A1, A2 = 0.17 * H, 0.15 * H
+    stool = False; elb = {}
+    if poz == "ayakta":
+        P_, S_ = V3(0, 0, .52), V3(0, 0, .82); fl, fr = V3(-.06, 0, .035), V3(.06, 0, .035)
+        wl, wr = V3(-.15, .02, .50), V3(.15, .02, .50)
+    elif poz == "yuruyen":
+        P_, S_ = V3(0, .01, .515), V3(0, .045, .815); fr, fl = V3(.06, .14, .035), V3(-.06, -.14, .075)
+        wl, wr = V3(-.12, .21, .70), V3(.13, .00, .53)
+        elb = {"l": V3(-.13, .075, .65), "r": V3(.13, -.07, .65)}      # ön kol: dirsek aşağıda, ön kol öne-yukarı; arka kol: neredeyse düz, geride
+    elif poz == "oturan":
+        stool = True; P_ = V3(0, -.01, .31); S_ = P_ + V3(0, .178, .228); fl, fr = V3(-.07, .26, .035), V3(.07, .26, .035)
+        wl, wr = V3(-.10, .32, .38), V3(.10, .32, .38)
+    else:
+        rh = adim_yuk; P_, S_ = V3(0, .04, .52) + Vector((0, 0, rh * .45)), V3(0, .085, .815) + Vector((0, 0, rh * .45))
+        fr, fl = V3(.06, .17, .035) + Vector((0, 0, rh)), V3(-.06, -.09, .035)
+        dz = Vector((0, 0, rh * .45))
+        wl, wr = V3(-.14, .07, .52) + dz, V3(.14, .10, .54) + dz
+        elb = {"l": V3(-.14, 0.0, .66) + dz, "r": V3(.14, .0, .66) + dz}      # kollar hafif öne bükük (ön kol öne)
+    hip_l, hip_r = P_ + Vector((-hx, 0, 0)), P_ + Vector((hx, 0, 0)); sh_l, sh_r = S_ + Vector((-sx, 0, 0)), S_ + Vector((sx, 0, 0))
+    fw = Vector((0, 1, 0)); g = G(ad); head_r = H / 7.5 / 2
+    # bacaklar (kalça → diz → ayak bileği), ayak = küçük oval
+    for hp, fa in ((hip_l, fl), (hip_r, fr)):
+        k_ = _ik(hp, fa, L1, L2, fw)
+        r0, r1, r2 = 0.052 * H, 0.040 * H, 0.028 * H
+        _yol_loft(g, [hp, k_, fa], [r0, r1, r2], m, seg=6)
+        _elipsoid(g, fa + Vector((0, 0.045 * H, -0.012 * H)), 0.034 * H, 0.075 * H, 0.025 * H, m, seg=6, rings=2)
+    # kollar (omuz → dirsek → bilek), el yok: yuvarlak uç
+    for ks, sh, wr_ in (("l", sh_l, wl), ("r", sh_r, wr)):
+        e_ = elb[ks] if ks in elb else _ik(sh, wr_, A1, A2, Vector((0, -1.0, -0.25)))      # dirsek geride, ön kol öne doğru kırılır
+        _yol_loft(g, [sh, e_, wr_, wr_ + (wr_ - e_).normalized() * 0.02 * H], [0.034 * H, 0.028 * H, 0.022 * H, 0.012 * H], m, seg=6)
+    # gövde (pelvis → omuz); kadında uzun pardösü: omuzdan dizin altına konik
+    ax = (S_ - P_).normalized(); gen = Vector((1, 0, 0)); dp = Vector((0, 1, 0))
+    ring_ = lambda c, w, d: (c, gen * w * H, dp * d * H)
+    if not kadin:
+        _loft(g, [ring_(P_ + ax * 0.0, .092, .060), ring_(P_ + (S_ - P_) * 0.40, .085, .055), ring_(P_ + (S_ - P_) * 0.80, .115, .066), ring_(S_, .125, .060)], m, seg=8)
+    else:
+        c_sh = S_; hem = Vector((P_.x, P_.y, 0.27 * H))
+        _loft(g, [ring_(hem, .185, .150), ring_(P_ + Vector((0, 0, -0.05 * H)), .130, .105), ring_(P_ + (S_ - P_) * 0.45, .098, .070), ring_(P_ + (S_ - P_) * 0.82, .122, .072), ring_(S_, .125, .062)], m, seg=8)
+        _loft(g, [ring_(S_ + Vector((0, 0, -0.005 * H)), .134, .072), ring_(S_ + Vector((0, 0, -0.050 * H)), .140, .078)], m, seg=8)        # omza inen kısa baş örtüsü eteği (küçük: göğüs kabartması yapmasın)
+    # boyun ve baş (kadında hacim %10 büyük, yuvarlak; baş örtüsü)
+    hs_ = 1.10 if kadin else 1.0
+    hc = S_ + (S_ - P_).normalized() * (0.035 * H + head_r * hs_) + Vector((0, 0.012 * H, 0))      # baş gövde ekseninin devamında (eğik gövdede de bağlı)
+    _yol_loft(g, [S_ + Vector((0, 0, -0.01 * H)), S_ + (hc - S_) * 0.55], [0.046 * H, 0.040 * H], m, seg=6)
+    _elipsoid(g, hc, head_r * 0.92 * hs_, head_r * 1.0 * hs_, head_r * hs_, m, seg=8, rings=4)
+    if kadin: _elipsoid(g, hc + Vector((0, -head_r * 0.18, -head_r * 0.12)), head_r * 1.04 * hs_, head_r * 1.08 * hs_, head_r * 1.0 * hs_, m, seg=8, rings=3)
+    if stool: _loft(g, [(Vector((0, -0.01 * H, 0.0)), Vector((0.16 * H, 0, 0)), Vector((0, 0.16 * H, 0))), (Vector((0, -0.01 * H, 0.27 * H)), Vector((0.19 * H, 0, 0)), Vector((0, 0.19 * H, 0)))], m, seg=8)
+    ob = g.obj()
+    if oval:                                                          # oval sürüm: aynı geometri, yumuşak gölgelendirme (üçgen sayısı değişmez)
+        for p_ in ob.data.polygons: p_.use_smooth = True
+    th = math.radians(yon - 90.0); ct, st = math.cos(th), math.sin(th)
+    for v in ob.data.vertices:
+        x, y = v.co.x, v.co.y; v.co.x = ct * x - st * y + konum[0]; v.co.y = st * x + ct * y + konum[1]; v.co.z += konum[2]
+    ob.data.update()
+    col = bpy.data.collections.get("Olcek") or bpy.data.collections.new("Olcek")
+    if col.name not in bpy.context.scene.collection.children: bpy.context.scene.collection.children.link(col)
+    for c_ in list(ob.users_collection): c_.objects.unlink(ob)
+    col.objects.link(ob)
+    return ob
+
 # ---------------- KONTROLLER (her turun sonunda zorunlu) ----------------
 def mesh_kontrol(objs=None):
     """Açık kenar, manifold olmayan kenar, ters normal sayıları. Hepsi 0 olmalı (zemin hariç)."""
