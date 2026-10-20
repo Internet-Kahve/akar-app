@@ -1,6 +1,6 @@
 # Orhan Bey Hamamı / Aynalı Çarşı: model notları
 
-Kaynaklı kimlik ve ölçü kaydı `eser.md`, üretim sürümleri `3d/README.md`, sıradaki tur `SONNET_REVIZYON_PLANI.md`. Külliye bağlamı ve yerleşim: `../orhan-bey-kulliyesi/orhan-bey-kulliyesi_notlar.md`. Son düzenleme: 19 Ekim 2026.
+Kaynaklı kimlik ve ölçü kaydı `eser.md`, üretim sürümleri `3d/README.md`. Külliye bağlamı ve yerleşim: `../orhan-bey-kulliyesi/orhan-bey-kulliyesi_notlar.md`. Son düzenleme: 19 Ekim 2026.
 
 ## 0. Klasör düzeni
 
@@ -8,31 +8,35 @@ Kaynaklı kimlik ve ölçü kaydı `eser.md`, üretim sürümleri `3d/README.md`
 orhan-bey-hamami/
   eser.md                       kimlik, oda ölçüleri, malzeme (kaynaklı)
   orhan-bey-hamami_notlar.md    bu dosya
-  SONNET_REVIZYON_PLANI.md      v03 iş emri (tur bitince silinir)
   ref/
     plan/   yurt2024_pdf220 (Ayverdi planı), pdf221–222 (Çetintaş planları), pdf223 (Ayverdi kesiti), pdf224 (Çetintaş kesiti),
             vakif_1983_pdf198_plan, okuma_hamam_kaynak_karsilastirma
     foto/   envanter_c1_pdf104–107 (havadan, tepeden, girişler, doğu avlusu), yurt2024_pdf305–316 (Levha 90–110), alan-baskanligi_pdf004_foy
     metin/  envanter_c1, yurt2024, vakif_1983, alan_baskanligi
     kaynak_dizini.json
-  3d/       yalnız son sürüm hamam_v02: blend/, export/, kontrol/hamam_v02/, build/ (build_hamam_v02.py, doku/, araclar/), README.md
+  3d/       yalnız son sürüm hamam_v04: blend/, export/ (kaidesiz + _sunum), kontrol/hamam_v04/, build/ (build_hamam_v04.py, build_hamam_v03.py referans, cevre_v03.py, doku/, araclar/), README.md
 ```
 Eksenler: +X doğu, +Y kuzey. OSM konumu (külliye yerel koordinatı): (81, 72); yalnız konum.
 
 ## 1. Güncel model kararları
 
+Güncel sürüm **hamam_v04** (19 Ekim 2026, kullanıcı onaylı) = hamam_v03 + güney kapısı ayrıntısı (F Levha 90–91, Aydın 2017 foto 33: oval rozet pencere, cam saçak ve ferforje konsollar, camlı kapı, «ESKİ AYNALI ÇARŞI» ve «COVERED BAZAAR» yazıları, fenerler; ayrıntı `3d/README.md` v04 satırı). Ölçülerin tamamı `3d/build/build_hamam_v04.py` başındaki `P` tablosunda (kapı ölçüleri `G_*`), doğrulama `3d/kontrol/hamam_v04/olcu_dogrulama.json`'da.
+
 | # | Konu | Karar | Dayanak | Durum |
 |---|---|---|---|---|
-| 1 | Plan ölçeği | Çetintaş planı × 1,38 (çubuk hatalı; E oda ölçüleriyle kalibre, 35,5 px/m) | E oda ölçüleri; P | v01'den beri; Ayverdi planıyla (−%3) doğrulanacak |
-| 2 | Yükseklikler | Ayverdi kesiti × 1,16 | P; E soğukluk genişliği | v01'den beri |
-| 3 | Yön | Erkek soğukluğu kuzeybatı, kadın soğukluğu kuzeydoğu, sıcaklık güneyde (Ulucami yönü), su deposu/külhan batıda | E PDF 105–107; P | Korunur |
-| 4 | **Büyük kubbeler** | Sekizgen kasnak + kasnak üstü testere dişi saçak + sekizgen düz yüzlü kurşun etek + kubbe + aydınlık feneri | E PDF 106–107 «sekizgen kasnaklı»; F `envanter_c1_pdf104`, `pdf105`, `pdf107` | **v03** (v02: kasnaksız) |
-| 5 | **Kubbe dizilimi** | 12 kubbe + 3–4 tonoz (liste plan §2); küçük kubbelerde konik fener | P Ayverdi planı; W Yurt PDF 77; E PDF 106–107; F tepeden | **v03** (v02: "küçük kubbeler eklenmez" kararı kaldırıldı, kullanıcı 18 Ekim) |
-| 6 | **Kuzey giriş cephesi** | Alınlıklı giriş önü bloğu; yuvarlak kemer (3 tuğla + 1 küfeki); üstte dikine tuğlalı yuvarlak pencere | E PDF 106; F `envanter_c1_pdf106`, Levha 90–91 | **v03** |
-| 7 | Doğu kadınlar girişi ve avlu | Alçak giriş bloğu, tuğla kemerli kapı; Koza Han ile arada döşemeli avlu | F `envanter_c1_pdf107`, Levha 96–97 | **v03 yeni** |
-| 8 | Duvar ve kasnak örgüsü | Duvar: kaba yontu/moloz taş + seyrek tuğla hatıl; kasnak: 3 tuğla + 1 kesme taş; testere dişi saçaklar | E PDF 106; W Yurt PDF 78; E Vakıf PDF 198; F | **v03** |
-| 9 | Çarşı ekleri | 1958 sonrası dükkân sıraları modele girmez; giriş önü bloğu istisna | E PDF 106; tasarım sorumlusu (v01) | Korunur |
-| 10 | Zemin, palet, figür | `../_GENEL_SAHNE_STANDARDI.md` | Kullanıcı (18 Ekim) | **v03** |
+| 1 | Plan | Ayverdi planı 40,1 px/m (çubuk × 1,035); oda iç ölçüleri E ile ±%1. Dış ölçü 31,3 × 34,8 m | P `yurt2024_pdf220`; E oda ölçüleri | v03 (v01–v02: Çetintaş × 1,38) |
+| 2 | Batı ucu | Su deposu şeridinde (X −15,74) biter; Çetintaş'taki külhan odası yok | W Aydın PDF 71 (Ayverdi: külhan bugün dükkân, biçimi bilinmiyor); E «külhan yıkıldı» | v03, kullanıcı |
+| 3 | Yükseklikler | Ayverdi kesiti kendi çubuğuyla (46 px/m): alçak dam 4,9, kare gövde 5,3, erkek saçak 7,6, tepe 14,5, fener 15,2. v01–v02'deki × 1,16 hatalıydı; Aydın Plan 13 taraması düşeyde ≈ 0,87 basık | P `yurt2024_pdf223`; P-oran Çetintaş AB; F kasnak sırası sayımı | v03, kullanıcı |
+| 4 | Kadın soğukluğu kotları | Saçak 8,3 (F: Levha 96, pdf104'te 6 almaşık periyot), tepe 13,2 (T); merkez iç ortadan 0,38 m doğuda (kasnaklar çakışmasın) | F; kesit yok | v03 |
+| 5 | Kubbe dizilimi | 12 kubbe: 2 büyük etekli, ılıklık, sıcaklık, ılıklık halveti, 4 erkek halveti, kadın tarafında 3; eyvan tonozu yok (tepeden fotoğrafta düz dam) | P Ayverdi; F `envanter_c1_pdf105` | v03 |
+| 6 | Büyük kubbeler | Sekizgen almaşık kasnak + 2 sıra testere dişi + sekizgen kurşun etek + kubbe + fener; kasnak pencereleri (kadın 3: E; erkek 3: T) | E PDF 106–107; F Levha 98–99, 110 | v03 |
+| 7 | Küçük ve orta kubbeler | Dilimli kurşun; tepede metal çerçeveli cam külah | W Aydın PDF 70; F pdf104, Levha 95 | v03 |
+| 8 | Kadın tarafı | Üç küçük kubbe kurşun kırma dam üstünde; doğu ve güney kenarında 5,6 m parapet | F pdf104, pdf105, Levha 95 | v03 |
+| 9 | Girişler | Alınlıklı blok **güneyde** (sıcaklığın güney eyvanı üstü, sokak setinde); kuzeyde düz cephede kemerli kapı + yuvarlak pencere; kadınlar girişi kadın soğukluğunun güneyinde. Batı kapısı modellenmedi | §3.4; F Levha 90, 96–97; Flickr; TDV | v03, kullanıcı (araştırma sonrası) |
+| 10 | Duvar, kasnak, saçak | Beden: moloz taş + pembe horasan, hatıl yok; kasnak: 1 kesme taş + 3 tuğla; kare gövdede 1 sıra testere dişi, alçak duvarda tuğla korniş | E PDF 106; F Levha 95, 98, 104–105, 110; TDV «tuğla kirpi saçak» | v03 |
+| 11 | Zemin | Bugünkü iç kot = kuzey ve doğu avlusu (z = 0); güney ve güneybatıda +3,3 m sokak seti, doğu avlusundan 15 basamak | P-oran Çetintaş AB; F Levha 92–94; E «14 basamak» | v03, kullanıcı |
+| 12 | Eklenmeyenler | Çarşı ekleri (1958 sonrası), batı kapısı, fil gözleri (bugün görünmüyor), su deposu tonozu (bugün modern çatı altında), külhan | E; TDV; F pdf105 | v03 |
+| 13 | Palet, kaide, figür | `../_GENEL_SAHNE_STANDARDI.md`; kurşun `#858E94` (cami v06 ile aynı, kullanıcı kararı); daire kaide R 27,5; 6 figür, tek ağaç güneybatıda | Kullanıcı (18–19 Ekim) | v03 |
 
 ## 2. Kaynaklar
 
@@ -41,6 +45,8 @@ Eksenler: +X doğu, +Y kuzey. OSM konumu (külliye yerel koordinatı): (81, 72);
 | Bursa Vakıf Eserleri Envanteri Cilt 1 | PDF 104–107 | `ref/metin/envanter_c1.md`, `ref/foto/envanter_c1_*` | Oda ölçüleri, kubbe ve kasnak tipleri, girişler, malzeme; havadan ve tepeden fotoğraflar |
 | Yurt 2024 (YL tezi) | metin PDF 76–78; çizim 220–224; levha 305–316 | `ref/metin/yurt2024.md`, `ref/plan/yurt2024_*`, `ref/foto/yurt2024_*` | Ayverdi ve Çetintaş plan/kesitleri; kubbe çapları (sıcaklık Ø 5, ılıklık halveti Ø 3,80); süsleme; cephe fotoğrafları |
 | Türkiye'de Vakıf Abideler III (1983) | PDF 198 | `ref/metin/vakif_1983.md`, `ref/plan/vakif_1983_pdf198_plan.png` | 12,00 × 12,00 ve 10,00 × 10,00 soyunmalıklar; «kubbe kasnakları üç sıra tuğla, bir sıra kesme taş» |
+| Aydın 2017 (YL tezi, `veri/bursa/481461.pdf`) | metin PDF 67–74; çizim 87, 95–102; foto 178–180 | `ref/metin/aydin2017.md`, `ref/plan/aydin2017_*`, `ref/foto/aydin2017_*` | Ayverdi/Çetintaş plan ve kesitlerinin daha temiz taraması; Çetintaş AB/CD kesitleri (bugünkü ve restorasyon); kotlu kesit (Plan 13); kubbe çapları; özgün kiremit örtü; vakfiye |
+| Web araştırması (19 Ekim 2026) | — | yalnız bağlantı (fotoğraflar telifli, klasöre kopyalanmadı) | [TDV: Orhan Gazi Külliyesi](https://islamansiklopedisi.org.tr/orhan-gazi-kulliyesi) (güney ve batı kapıları 1958 sonrası, su deposu dükkân, külhan yok, tuğla kirpi saçak); [Flickr orcin70 albümü](https://www.flickr.com/photos/orcin70/albums/72157651736137321/) (güney alınlıklı blok «Kapalıçarşı Girişi», kuzey düz cepheli kapı); [tarihgezisi.com galerisi](https://tarihgezisi.com/hanlar/eski-aynali-carsi-hamam-bursa/) (içeride merdiven); [Kültür Portalı envanter](https://www.kulturportali.gov.tr/turkiye/bursa/kulturenvanteri/orhangazi-hamami) |
 | Alan Başkanlığı föyü N2 | PDF 4 | `ref/metin/alan_baskanligi.md`, `ref/foto/alan-baskanligi_pdf004_foy.png` | Kimlik; giriş yönü çelişkisi (§3.4) |
 
 ## 3. Ölçü analizi (19 Ekim 2026)
@@ -64,7 +70,11 @@ Kare gövde → sekizgen kasnak (3 tuğla + 1 taş almaşık, kasnakta yuvarlak 
 - E PDF 106: «biri kuzeyde, biri güneyde ve diğeri batıda olmak üzere üç girişi ... **Kuzeydeki giriş özgündür**»; özgün girişin üstünde dikine tuğlalı yuvarlak pencere. Ayverdi planında erkek soğukluğunun kapısı kuzey duvarında. Yurt PDF 77 metni de «Erkekler bölümünün kuzey yönündeki girişi» der.
 - Yurt'un fotoğraf levhalarında (PDF 305–306) aynı yuvarlak pencereli giriş «Güney Cephe Giriş» (Levha 90) diye adlandırılmış. Doğu levhaları (Levha 96–97, kadınlar girişi) E ile tutarlı.
 - Alan Başkanlığı föyü: «Yapının batı ve güney kapıları, ilk yapıldığı zamanın kapısı».
-- **Seçim:** E + Ayverdi planı + Yurt metni → yuvarlak pencereli ana giriş **kuzeyde**. Yurt levhalarının "güney/kuzey" etiketleri kullanılırken bu çelişki akılda tutulmalı.
+- ~~Seçim (17–19 Ekim): yuvarlak pencereli ana giriş kuzeyde.~~
+- **Güncel seçim (19 Ekim 2026, web araştırması + kullanıcı onayı):** iki ayrı yuvarlak pencereli giriş var.
+  - **Güney:** alınlıklı, tek başına duran blok (Levha 90, envanter PDF 106 sol foto). Sıcaklığın güney eyvanı üstünde; tepeden fotoğrafta (envanter PDF 105) kuzey–güney sırtlı blok olarak görünüyor. Tabelası «Kapalıçarşı Girişi», içeride 14 basamakla aşağı iniliyor (E İng. metin; tarihgezisi.com IMG_4758, 4762–4763). TDV: güney ve batı kapıları 1958 sonrası açıldı.
+  - **Kuzey (özgün):** Kapalı Çarşı'nın örtülü sokağında, dükkânlar arasında düz cephe; yuvarlak kemerli camlı kapı ve üstünde yuvarlak pencere (Flickr orcin70 albümü, 17001294166). E'nin «kuzeydeki giriş özgündür» tarifi buna; yanındaki fotoğraf güney bloğuna ait.
+  - Modelde (v03 C): alınlıklı blok güneyde, +3,3 m sokak setinin üstünde; kuzeyde erkek soğukluğu duvarında kemerli kapı + yuvarlak pencere. Batı kapısı modellenmedi (biçimi kaynakta yok).
 
 ## Ek: Geçmiş kayıt (17 Ekim 2026, hamam v01–v02)
 

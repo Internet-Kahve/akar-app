@@ -1,0 +1,24 @@
+{
+ "agac_yuz": {
+  "Cevre_Agac_01": [
+   84,
+   22
+  ],
+  "Cevre_Agac_02": [
+   49,
+   8
+  ]
+ },
+ "geometri_degismedi": true,
+ "draw_call": 113,
+ "glb": {
+  "ulu-cami_v25.glb": {
+   "draco": true,
+   "boyut_mb": 7.489
+  },
+  "ulu-cami_v25_sunum.glb": {
+   "draco": true,
+   "boyut_mb": 7.561
+  }
+ }
+}

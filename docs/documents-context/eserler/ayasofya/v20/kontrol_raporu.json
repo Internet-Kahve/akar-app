@@ -1,0 +1,98 @@
+{
+  "source": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model.dae",
+  "instances": 2019,
+  "triangles": 67289,
+  "duplicate_triangles_removed": 67401,
+  "materials": 19,
+  "bounds_m": [
+    [
+      -88.06465148925781,
+      -98.99453735351562,
+      -2.621346573779184e-14
+    ],
+    [
+      73.83662414550781,
+      74.99507904052734,
+      72.81999206542969
+    ]
+  ],
+  "material_sources": {
+    "ID20": {
+      "name": "Color_A03",
+      "texture": null
+    },
+    "ID726": {
+      "name": "Color_004",
+      "texture": null
+    },
+    "ID94": {
+      "name": "material_0",
+      "texture": null
+    },
+    "ID2461": {
+      "name": "Concrete_Block_8x8_Gray1",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Concrete_Block_8x8_Gray1.jpg"
+    },
+    "ID13": {
+      "name": "material",
+      "texture": null
+    },
+    "ID99": {
+      "name": "Color_007",
+      "texture": null
+    },
+    "ID814": {
+      "name": "Concrete_Stamped_Ashlar",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Concrete_Stamped_Ashlar.jpg"
+    },
+    "ID1091": {
+      "name": "Color_D02",
+      "texture": null
+    },
+    "ID1173": {
+      "name": "Concrete_Block_8x8_Gray",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Concrete_Block_8x8_Gray.jpg"
+    },
+    "ID2310": {
+      "name": "Concrete_Block_8x8_Gray3",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Concrete_Block_8x8_Gray3.jpg"
+    },
+    "ID2652": {
+      "name": "Metal_Aluminum_Anodized",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Metal_Aluminum_Anodized.jpg"
+    },
+    "ID3025": {
+      "name": "Concrete_Block_8x8_Gray2",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Concrete_Block_8x8_Gray2.jpg"
+    },
+    "ID3866": {
+      "name": "Concrete_Block_8x8_Gray4",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Concrete_Block_8x8_Gray4.jpg"
+    },
+    "ID4145": {
+      "name": "Concrete_Block_8x8_Gray5",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Concrete_Block_8x8_Gray5.jpg"
+    },
+    "ID6": {
+      "name": "Color_000",
+      "texture": null
+    },
+    "ID38": {
+      "name": "Fencing_Diamond_Mesh1",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Fencing_Diamond_Mesh1.png"
+    },
+    "ID105": {
+      "name": "Fencing_Mesh_Blue2",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Fencing_Mesh_Blue2.png"
+    },
+    "ID124": {
+      "name": "Metal_Embossed",
+      "texture": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ayasofya/v20/source/model/Metal_Embossed.jpg"
+    },
+    "ID187": {
+      "name": "Color_009",
+      "texture": null
+    }
+  },
+  "glb_bytes": 2949460
+}

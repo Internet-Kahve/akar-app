@@ -393,7 +393,7 @@ Yan yana: `kontrol/v02o/yan_yana_portal.png` (ref `portal_on_4.webp`), `yan_yana
 #### Hata düzeltmesi
 - Dokulu karolar (almaşık, kesme taş, korkuluk) pencere/levha kodunun bmesh'te açtığı UV katmanının yanına ikinci bir katmana yazılıyordu; render ve .glb ilk katmanı kullandığı için **v02j–v02n'de mescit gövdesinin kesme taş dokusu görünmüyordu** (portal kütlesinde de). `uv_karolar()` artık etkin katmana yazar.
 
-## Mescit kapısı kitabesi (F: `ref/foto/mescit_kapi_kitabe_1948.png`, kullanıcı fotoğrafı 18 Ekim 2026)
+## Mescit kapısı kitabesi (F: `ref/foto/mescit_kapi_kitabe_1948.png`, Instagram ekran görüntüsü, 18 Ekim 2026; okunur hâli arşivde `DJI_20241023131734_0288_D_ODAK-Edit.jpg`)
 
 Kapının üstündeki mermer levhada beş satır yazı var (satır bölmeleri aynen): «KOZA HANI MESCİDİ / SULTAN BAYEZİD II 1491 DE / YAPTIRMIŞ TÜCCARLARIN / YARDIMI İLE ESKİ ESERLER KURUMU / ONARMIŞTIR . 1948».
 - Mescidi II. Bayezid'in 1491'de yaptırdığı, tüccarların yardımıyla Eski Eserler Kurumu'nun **1948'de onardığı** yazıyor (F: kapı kitabesi). Envanterdeki «1950'li yıllarda Eski Eserleri Sevenler Kurumu» onarımı İç Koza için, bu kitabe ise mescit içindir.

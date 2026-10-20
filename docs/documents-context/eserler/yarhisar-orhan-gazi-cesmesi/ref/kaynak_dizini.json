@@ -1,0 +1,54 @@
+{
+ "aciklama": "ref/ altındaki her dosyanın kaynağı, PDF sayfası ve SHA-256 değeri. Sayfalar PDF dosya sayacıdır (1 tabanlı).",
+ "kayitlar": [
+  {
+   "dosya": "ref/foto/arsiv_cesme_ve_cami.jpg",
+   "kaynak": "Vakıf Katılım envanter fotoğraf arşivi: veri/bursa-foto/III. Cilt - Diğer İlçeler/12-Yenişehir Klasörü/02 ERD09508 kopya.jpg (zip Vakıf Eserleri Envanteri - Bursa Fotoğraf Arşivi-20261014T142853Z-1-014.zip); envanter C3 PDF 202 fotoğrafının aynısı",
+   "sayfa": "",
+   "tur": "F",
+   "sha256": "6d3f6a63f0e9ab3c716630ff395583940f3c54931a761df075f6c47b9f9e03ef"
+  },
+  {
+   "dosya": "ref/foto/envanter_c3_pdf202_sayfa.jpg",
+   "kaynak": "Envanter Cilt 3 (veri/kaynak_pdf/bursa-envanteri-cilt-3.pdf), sayfa görüntüsü (sağ yarı) 150 dpi",
+   "sayfa": "PDF 202",
+   "tur": "F",
+   "sha256": "8d07704612f1cf0f3cb2776e8fc9453c9d587b13826510200d558cc7dd0fb5c1"
+  },
+  {
+   "dosya": "ref/foto/yurt2024_pdf380_levha223_on_cephe.png",
+   "kaynak": "Yurt 2024 tezi (veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf), Levha 223",
+   "sayfa": "PDF 380",
+   "tur": "F",
+   "sha256": "ab8026ea37f9088e2345db4e4f69f1a09d2faffd8df8e4cb71a46f1caaf0ec7d"
+  },
+  {
+   "dosya": "ref/metin/envanter_c3.md",
+   "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-3.pdf (pdftotext)",
+   "sayfa": "PDF 202",
+   "tur": "E",
+   "sha256": "4060333c7dcc45800dbc3f4671a895f7c8550cf7789efde1abf39ed442c721e3"
+  },
+  {
+   "dosya": "ref/metin/yurt2024.md",
+   "kaynak": "veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf (pdftotext)",
+   "sayfa": "PDF 98",
+   "tur": "W",
+   "sha256": "208467c5ea878fbe7b8c517d95e9351479ac111325274954847acdc9f1636d32"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf236_cizim39_on_gorunus_ayaz.png",
+   "kaynak": "Yurt 2024 tezi (veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf), Çizim 39 (Ayaz 2002'den), 300 dpi; ölçek çubuğu yok",
+   "sayfa": "PDF 236",
+   "tur": "P",
+   "sha256": "2636291c6a1a9551ae9ee4472254990daba48a910464127e5c67d12c80488fd9"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf236_cizim40_plan_ayaz.png",
+   "kaynak": "Yurt 2024 tezi (veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf), Çizim 40 (Ayaz 2002'den), 0–2 m ölçek çubuklu, 300 dpi",
+   "sayfa": "PDF 236",
+   "tur": "P",
+   "sha256": "afd2b11be6bc616a9dc8a56caa632f7552a275aa52c988e42cd488e885d44c0e"
+  }
+ ]
+}

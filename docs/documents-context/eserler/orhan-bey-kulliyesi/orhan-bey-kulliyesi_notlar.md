@@ -8,7 +8,6 @@ Bu klasör külliyenin cami bileşenini üretir; Orhan Bey Hamamı / Aynalı Ça
 orhan-bey-kulliyesi/
   eser.md                     külliye kimlik ve kaynak tablosu (cami + hamam + han satırları)
   orhan-bey-kulliyesi_notlar.md   bu dosya (yalnız cami)
-  SONNET_REVIZYON_PLANI.md    v06 iş emri (tur bitince silinir)
   ref/
     foto/     ts_17ekim_* (tasarım sorumlusunun fotoğrafları), web fotoğrafları, envanter_c1_pdf096–100, yurt2024_pdf277–289 (levha sayfaları),
               alan-baskanligi_pdf003_foy, budak2018_pdf004
@@ -17,7 +16,7 @@ orhan-bey-kulliyesi/
     metin/    envanter_c1, yurt2024, vakif_1983, budak2018, alan_baskanligi (+ osm_ayak-izleri.json: yalnız konum)
     maket/    yandex_3d_* (Yandex 3B model görüntüleri; ölçü kaynağı değil)
     kaynak_dizini.json
-  3d/         yalnız son sürüm v05: blend/, export/, kontrol/v05/, build/ (build_v05.py, doku/, araclar/yan_yana.py), README.md
+  3d/         yalnız son sürüm v06: blend/, export/ (zeminsiz GLB + _sunum.glb), kontrol/v06/, build/ (build_v06.py, cevre_v06.py, doku/, araclar/), README.md
 ```
 Eksenler: +X doğu, +Y kuzey; orijin caminin ayak izi kutusunun ortası. Plan okuması (u, v): u doğu kenarından batıya, v kuzey kenarından güneye; X = 12,85 − u, Y = 16,75 − v. Ayverdi ve Acar planlarında kuzey aşağıdadır.
 
@@ -29,15 +28,15 @@ Külliyedeki yerler (OSM yerel koordinat, m; yalnız konum): cami (177, 13), ham
 |---|---|---|---|---|
 | 1 | Plan ve kütle | 25,7 × 33,5 m, ters T (zaviyeli); son cemaat yeri 25,7 × 6,5, 5 göz | P: Ayverdi planı (47,4 px/m); E: C1 PDF 97 «25.80 × 6.30» | v01'den beri doğru, korunur |
 | 2 | Yükseklikler | Son cemaat saçağı 9,4; kanat 7,6; harim/mihrap bloğu 10,2; harim kasnağı 13,5 / tepe 16,5; mihrap kasnağı 12,7 / tepe 14,4; tabhane kasnağı 9,1 / tepe 10,5 | P/Y: Ayverdi yan cephesi (33,2 px/m, uzunluk planla doğrulandı) | Korunur |
-| 3 | **Son cemaat yeri cephesi (katmanlı)** | Alt: düz **kesme taş** ayaklar ve köşe payeleri (tuğla yok). Kemerler taş–tuğla almaşık kemer taşları + tuğla dış bant. Üst (kemer üzengisinden saçağa): **1 sıra kesme taş + 3 sıra tuğla** almaşık. Saçakta **2 sıra kirpi (testere dişi) tuğla**. Köşe ve kemer aralarında tuğla **kurslar** | W: Yurt 2024 PDF 72 «Son cemaat yeri duvar örgüsü ise diğer cephelerden farklı olarak üst bölüm bir sıra kesme taş, üç sıra tuğla almaşık teknikte»; E: Vakıf 1983 PDF 84 «iki sıra kirpi dizili saçak silmeleri», «Tuğla güneş kursları»; F: `ts_17ekim_2_kuzeybati_revak`, `yurt2024_pdf277`, `pdf281` | **v06** (v05: tek tip ızgara doku, tek tuğla bant) |
-| 4 | Revak yan cepheleri | İkiz sivri kemer, devşirme kompozit başlıklı sütun, büyük hafifletme kemeri içinde; kemer alınlığı (tympanon) doğuda iki renkli **baklava**, batıda **dama** | E: C1 PDF 98, PDF 100; Vakıf PDF 84; F: `ts_17ekim_5_ikiz_kemer`, `envanter_c1_pdf098`, `yurt2024_pdf278` | **v06** (alınlık motifi doku olarak; v02'de "motif eklenmez" kararı vardı, kullanıcı 18 Ekim'de cephenin fotoğraftaki gibi kesin tanımlanmasını istedi) |
-| 5 | Ana gövde duvarları | Moloz/kaba yontu taş sıraları arasında **2 sıra yatay tuğla** + taşlar arasında **dikey tuğla** (hücre örgü); her cephede zeminden saçağa iki sivri kemerli silme; saçakta kirpi tuğla | E: C1 PDF 98 «moloz taş ve aralarına yatay ile dikey olarak yerleştirilen tuğlalarla», PDF 100; E: Vakıf PDF 84; F: `IMG_8460`, `IMG_8484`, `ts_17ekim_b_20` | **v06** doku ve saçak (v05: 2,0 × 0,8 ızgara, tek bant saçak) |
-| 6 | **Dört büyük kubbe ile kasnak birleşimi** | Sekizgen kasnak (hücre örgü) → kasnak üstünde tuğla kirpi saçak → kasnak yüzlerinin dışına taşan, **düz yüzlü sekizgen kurşun etek (8 trapez yüz, düz eğim)** → kubbe. Kubbe etekten çıkan **basık kubbe** (yükseklik/yarıçap ≈ 0,6–0,7), kurşun dilimli | F: `ts_17ekim_6_tepeden` (sekizgen etek çizgileri), `ts_17ekim_b_19`, `ts_17ekim_c_22`; P/Y: Ayverdi kesit ve ön cephe; W: Yurt PDF 71–72 | **v06** (v05: dairesel, içbükey çan etek; kirpi saçak kaldırılmıştı) |
-| 7 | Kubbe pencereleri | Harim kasnağı: 8 yüzün 7'sinde pencere, **güney yüzü sağır**. Tabhane kasnakları: **2'şer** (batıda G + B, doğuda G + D). Mihrap kubbesi: 3 (E) — kaynaklar çelişiyor, fotoğrafla doğrulanacak | W: Yurt PDF 71 «yedi adet pencere bulunmaktadır ve bunlardan güneydeki sağırdır», «batıda bulunanın kubbe kasnağında biri güney yönünde diğeri batı yönünde toplam iki pencere»; mihrap: E PDF 102 «üç», Yurt PDF 72 «dört», Vakıf PDF 84 «yedi» | **v06** (v05: harimde kuzey sağır; tabhanede 3) |
-| 8 | **Şadırvan (cami önü)** | Kuzeyde, cami ekseninde; mermer sekizgen platform, 8 ahşap direk ve aralarında ahşap kemerler, geniş sekizgen kurşun saçak, üstünde alçak sıvalı kasnak, kurşun kubbe ve alem; ortada çokgen mermer havuz | E: C1 PDF 103 «ahşap çatısı ve bezemeli kubbesiyle özgün haline kavuşturulmuştur»; W: Yurt PDF 70 «sekizgen planlı bir şadırvan», PDF 72 «geniş bir saçakla örtülmüştür»; W: Budak 2018 (arşiv planında sekizgen şadırvan); F: `ts_17ekim_3_havadan_kuzey`, `ts_17ekim_4_revak_ici`, `envanter_c1_pdf096` | **v06 yeni** (kullanıcı isteği, 19 Ekim) |
+| 3 | **Son cemaat yeri cephesi (katmanlı)** | Alt: düz **kesme taş** ayaklar ve köşe payeleri (tuğla yok). Kemerler taş–tuğla almaşık kemer taşları + tuğla dış bant. Üst (kemer üzengisinden saçağa): **1 sıra kesme taş + 3 sıra tuğla** almaşık. Saçakta **2 sıra kirpi (testere dişi) tuğla**. Köşe ve kemer aralarında tuğla **kurslar** | W: Yurt 2024 PDF 72 «Son cemaat yeri duvar örgüsü ise diğer cephelerden farklı olarak üst bölüm bir sıra kesme taş, üç sıra tuğla almaşık teknikte»; E: Vakıf 1983 PDF 84 «iki sıra kirpi dizili saçak silmeleri», «Tuğla güneş kursları»; F: `ts_17ekim_2_kuzeybati_revak`, `yurt2024_pdf277`, `pdf281` | **v06 uygulandı** (v05: tek tip ızgara doku, tek tuğla bant) |
+| 4 | Revak yan cepheleri | İkiz sivri kemer, devşirme kompozit başlıklı sütun, büyük hafifletme kemeri içinde; kemer alınlığı (tympanon) doğuda iki renkli **baklava**, batıda **dama** | E: C1 PDF 98, PDF 100; Vakıf PDF 84; F: `ts_17ekim_5_ikiz_kemer`, `envanter_c1_pdf098`, `yurt2024_pdf278` | **v06 uygulandı** (alınlık motifi doku olarak; v02'de "motif eklenmez" kararı vardı, kullanıcı 18 Ekim'de cephenin fotoğraftaki gibi kesin tanımlanmasını istedi) |
+| 5 | Ana gövde duvarları | Moloz/kaba yontu taş sıraları arasında **2 sıra yatay tuğla** + taşlar arasında **dikey tuğla** (hücre örgü); her cephede zeminden saçağa iki sivri kemerli silme; saçakta kirpi tuğla | E: C1 PDF 98 «moloz taş ve aralarına yatay ile dikey olarak yerleştirilen tuğlalarla», PDF 100; E: Vakıf PDF 84; F: `IMG_8460`, `IMG_8484`, `ts_17ekim_b_20` | **v06 uygulandı** doku ve saçak (v05: 2,0 × 0,8 ızgara, tek bant saçak) |
+| 6 | **Dört büyük kubbe ile kasnak birleşimi** | Sekizgen kasnak (hücre örgü) → kasnak üstünde tuğla kirpi saçak → kasnak yüzlerinin dışına taşan, **düz yüzlü sekizgen kurşun etek (8 trapez yüz, düz eğim)** → kubbe. Kubbe etekten çıkan **basık kubbe** (yükseklik/yarıçap ≈ 0,6–0,7), kurşun dilimli | F: `ts_17ekim_6_tepeden` (sekizgen etek çizgileri), `ts_17ekim_b_19`, `ts_17ekim_c_22`; P/Y: Ayverdi kesit ve ön cephe; W: Yurt PDF 71–72 | **v06 uygulandı** (v05: dairesel, içbükey çan etek; kirpi saçak kaldırılmıştı) |
+| 7 | Kubbe pencereleri | Harim kasnağı: 8 yüzün 7'sinde pencere, **güney yüzü sağır**. Tabhane kasnakları: **2'şer** (batıda G + B, doğuda G + D). Mihrap kubbesi: 3 (E; kaynaklar 3/4/7 çelişiyor, kullanıcı onayı 19 Ekim) | W: Yurt PDF 71 «yedi adet pencere bulunmaktadır ve bunlardan güneydeki sağırdır», «batıda bulunanın kubbe kasnağında biri güney yönünde diğeri batı yönünde toplam iki pencere»; mihrap: E PDF 102 «üç», Yurt PDF 72 «dört», Vakıf PDF 84 «yedi» | **v06 uygulandı** (v05: harimde kuzey sağır; tabhanede 3) |
+| 8 | **Şadırvan (cami önü)** | Kuzeyde, cami ekseninde; mermer sekizgen platform, 8 ahşap direk ve aralarında ahşap kemerler, geniş sekizgen kurşun saçak, üstünde alçak sıvalı kasnak, kurşun kubbe ve alem; ortada çokgen mermer havuz | E: C1 PDF 103 «ahşap çatısı ve bezemeli kubbesiyle özgün haline kavuşturulmuştur»; W: Yurt PDF 70 «sekizgen planlı bir şadırvan», PDF 72 «geniş bir saçakla örtülmüştür»; W: Budak 2018 (arşiv planında sekizgen şadırvan); F: `ts_17ekim_3_havadan_kuzey`, `ts_17ekim_4_revak_ici`, `envanter_c1_pdf096` | **v06 uygulandı (yeni; kullanıcı isteği, 19 Ekim)** |
 | 9 | Minare | Kuzeydoğu; tuğla çokgen gövde, şerefe altı 2 sıra stalaktit, sivri kurşun külah | E: C1 PDF 103; F | Korunur |
 | 10 | Bugünkü hâl | 2020–23 restorasyonu sonrası: almaşık açık, son cemaat yeri kubbeli (3 kubbe + 2 aynalı tonoz) | Tasarım sorumlusu (B1); E; F | Korunur |
-| 11 | Zemin, palet, figür, çevre | `../_GENEL_SAHNE_STANDARDI.md` | Kullanıcı (18 Ekim) | **v06** |
+| 11 | Zemin, palet, figür, çevre | `../_GENEL_SAHNE_STANDARDI.md` | Kullanıcı (18 Ekim) | **v06 uygulandı** |
 
 ## 2. Kaynaklar
 
@@ -88,6 +87,28 @@ Yükseklik: Ayverdi değerleri (kasnak üstü 13,5, tepe 16,5) ile kubbe yarıç
 - Orta: sekizgen/çokgen beyaz mermer havuz, kenarlarında musluklar, ortada fıskiye sütunu; çevresinde abdest taburesi yeri.
 - Çevre: çim ve taş yollar, büyük çınarlar (fotoğraf `ts_17ekim_3`).
 - Not: caminin doğusunda ayrıca çinili, düz geniş saçaklı bir çeşme yapısı var (`envanter_c1_pdf099`); kaynakta tanımı yok, **modele girmez**. Vakıf 1983'teki «mermer duvarlarda çiniler» notu bu yapıya ya da şadırvanın eski hâline ait olabilir.
+
+### 1.1 v06'da uygulananlar (19 Ekim 2026, kullanıcı onaylı)
+**Mihrap kubbesi kasnak penceresi sayımı.** Kaynaklar çelişiyor; fotoğraflardan yalnız bazı yüzler görülebiliyor.
+
+| Kaynak | Ne diyor / görünen | Sonuç |
+|---|---|---|
+| E C1 PDF 102 | «üç pencere» | 3 |
+| W Yurt PDF 72 | «dört» | 4 |
+| Vakıf PDF 84 | «yedi» | 7 |
+| Ayverdi batı çizimi (`yurt2024_pdf217`) | batı yüzde ortada tek pencere, çaprazlarda yok | 7'yi dışlar; 3 ile 4'ü ayıramaz |
+| `ts_17ekim_b_20`, `yurt2024_pdf289` | güney ve doğu yüzlerde birer pencere | G, D var |
+| `ts_17ekim_c_22`, `b_19` | mihrap kasnağı ağaçlarla kısmen kapalı | kuzey yüz net değil |
+
+Karar (kullanıcı): **3 pencere** (güney, doğu, batı). Mihrap kubbesi oranı: yükseklik/yarıçap 0,244 (< 0,35); kotlar değiştirilmedi (Ayverdi bindirmesi ±0,3 m; kubbe oturma kotu 13,36, tepe 14,4).
+
+**Büyük kubbeler (kasnak üstü / etek dudağı yüzden yüze / oturma Ø / tepe / oran):** harim 13,5 / 11,1 / 8,36 / 16,5 / 0,56; mihrap 12,7 / 11,3 / 8,53 / 14,4 / 0,24; tabhane 9,1 / 6,96 (plan 7,1: harim duvarına girmesin diye 0,38 m dudak) / 5,08 / 10,5 / 0,36. Etek: 8 düz trapez yüz, ≈ 22°.
+
+**Şadırvan ölçüleri (F fotoğraf oranı, T; rölöve yok):** merkez X = 0, son cemaat ön yüzünden 8,5 m kuzeyde (Y ≈ 25,25); platform sekizgen yüzden yüze 8,0, iki basamak 0,15 + 0,15; 8 direk (çevre yarıçapı 3,2, kesit 0,28, kot 0,30 → 3,55); kaş kemer üzengi 2,6 / tepe 3,2; saçak yüzden yüze 9,4, kot 3,65, kalınlık 0,12; kasnak yüzden yüze 4,6, kot 4,5 → 5,3; kubbe Ø 4,4, tepe 7,6; havuz yüzden yüze 2,6, yükseklik 0,9; 8 musluk, 8 tabure. Fotoğrafta saçak dudakta yukarı kıvrılıyor, kubbe çan gibi açılıyor; model düz yüzlü (plan).
+
+**Kullanıcı kararları (ölçü kaynağı yok):** kubbe/çatı kurşun rengi `#858E94` (standart `#C3C9CD` çok açık bulundu); minare 22,4 → 24,0 m, şerefe beyaz mermer, kısa ve ince (şerefe z 20,2–20,9, R 1,25); minare gövdesi Ulu Cami tipi sıralı tuğla; kaide bandı kaldırıldı (duvar zemine iner); doğu yüz: 3 girinti, ortada kapı (1,4 × 2,9), pencere yok; batı yüz: 3 girinti, eşit boy ve aralık, üst/alt pencere düzeni kullanıcı tarifine göre.
+
+Bütçe: 20 130 üçgen, 57 draw call, GLB 335 KB (sunum 340 KB). Düz renkli malzemeler tek `Duz` malzemede toplandı (mermer, su, alem, demir roughness 0,70).
 
 ## Ek: Geçmiş kayıt (17 Ekim 2026, cami v01–v05)
 

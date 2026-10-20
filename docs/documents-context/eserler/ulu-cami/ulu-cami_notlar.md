@@ -30,7 +30,7 @@ Kaynak PDF'ler ve fotoğraf arşivi `veri/` altında yerinde durur. Eski v01–v
 | 6 | Minareler | Batı +47,90 m (sekizgen kaide), doğu +47,89 m (kare kaide); bölüm ölçüleri `eser.md` §5 | P: Kul Tablo 5.18–5.19 | v23 (kaideler kullanıcı kararıyla kısaldı: batı 8,70, doğu 4,20 m) |
 | 7 | Açık (cam fenerli) kubbe | Orta sütun, kuzeyden 2. sıra; altında 16 kenarlı iç şadırvan havuzu | E (C1 PDF 25: "onikigen"), Vakıf 1983 PDF 102 ("onaltı köşeli"); F (foto 092, 105) 16'yı destekler | v23 (iç şadırvan eklendi) |
 | 8 | Avlu su yapıları | İki şadırvan (±15, −39), mermer çeşme (0, −39); çeşme 2,70 m yükseklik × 1,15 m gövde | E (C1 PDF 38–39); yerleşim T; boyutlar F | v17–v20; v23 yeniden kuruldu, ayrıntı §3.7 |
-| 9 | Zemin | Ana #C4BDAF, avlu #B3A590 | Kullanıcı onayı (v22); bütün eserler için standart (`../_GENEL_SAHNE_STANDARDI.md`) | v22 |
+| 9 | Zemin | Ana #C4BDAF, avlu #B3A590; **daire kaide** merkez (0,55; 4,61), R 55,37 m (en küçük çevreleyen çember R 47,37 + 8 m pay), kalınlık 0,6, üst pah 0,15 | Kullanıcı onayı (renkler v22; daire biçimi ve 8 m pay v24, 19 Ekim 2026; genel standartta pay 3 m); standart: `../_GENEL_SAHNE_STANDARDI.md` | v24 |
 | 10 | Renk paleti | `../_GENEL_SAHNE_STANDARDI.md` §3 | Fotoğraflar 001, 002, 007, 009, 016 | v23 (19 kubbe ve minare tuğlası v22 rengi, kullanıcı kararı) |
 
 ## 2. Kaynaklar
@@ -130,7 +130,7 @@ Esas görsel: `ref/foto/envanter_c1_pdf038_orta_mermer_cesme.jpg`; konum için �
 - **İç şadırvan** (P/F foto 105; Vakıf 1983 PDF 102): 16 kenarlı havuz Ø 6,5 (cidar 0,20, h 0,95), 16 pano/musluk/tabure, Ø 9 zemin halkası, 3 çanaklı fıskiye (tepe 2,39). Govde ve Cati'da R 5,45 boşluk; cam fener `#9FB8C0`, alpha 0,40. Merkez yerel (0; −6,4).
 - **Şebekeler:** delikler alpha-cutout (64 px karo), levhanın duvara bakan kapağı koyu `#3E4A55`.
 - **Taç kapı:** mukarnas 8 → 11 sıra (88 hücre); basamak 5, giriş kotu 0,85; kanat `#2F6B55` (F foto 001); fotoğrafta yan niş görünmüyor, yapılmadı.
-- **Kaide:** dikdörtgen, x −42,49…44,10, y −44,80…44,80 (yapı + avlu ayak izine 8 m pay), köşe pahı 1,5, kalınlık 0,6, üst pah 0,15; üst `#C4BDAF`, yan `#A39A8B`; üst kot −0,02 (T).
+- **Kaide (v24):** daire, merkez (0,55; 4,61), R 55,37 m (en küçük çevreleyen çember R 47,37 + 8 m pay; kullanıcı kararı, standart payı 3 m), 96 kenar, kalınlık 0,6, üst pah 0,15; üst `#C4BDAF`, yan `#A39A8B`; üst kot −0,02 (T). Sunum GLB'de orijin daire merkezi. v23'te dikdörtgendi (86,6 × 89,6 m, 1,5 m köşe pahı).
 - **Çevre:** servi (10,8; −24,6) h 14 m `#3F7A5C` (F foto 009: merdivenin sağında); çınar (−9,0; −25,3) h ≈ 11 m, sekizgen tarh R 1,8 (bordür `#D2C3A4`, çim `#9DB86A`) (F foto 009, 094). Plan "servi doğuda" diyordu; foto 009'da kare kaideli batı minare (+X) tarafında, fotoğrafa uyuldu.
 - **Figürler:** 10 `A.insan` (4 kadın, 2 çocuk), 4 192 üçgen; her şadırvanda 1 oturan + 1 ayakta, çeşmede 1, taç kapıya 3 yürüyen, merdivende 1, batı kapısında 1.
 

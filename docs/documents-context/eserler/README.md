@@ -16,4 +16,13 @@ Esere özel referanslar tek `ref/` klasöründe toplanır: `ref/foto/` (fotoğra
 - [Külliye ve cami üretimi](orhan-bey-kulliyesi/eser.md)
 - [Orhan Bey Hamamı / Aynalı Çarşı](orhan-bey-hamami/eser.md)
 - [Emir Hanı](emir-han/eser.md)
+- [Orhan Gazi İmareti (yıkık, temsili)](orhan-gazi-imareti/eser.md)
+- [Orhan Gazi Türbesi](orhan-gazi-turbesi/eser.md)
 - [Yarhisar Orhan Gazi Hamamı — ayrı eser](aday-eserler/orhan-gazi-hamami-yarhisar/eser.md)
+
+## Akar–hayrat bağı için eklenenler (19 Ekim 2026)
+
+- [Orhan Gazi Türbesi](orhan-gazi-turbesi/eser.md): kaynak hazır, `SONNET_REVIZYON_PLANI.md` (v01) var.
+- [Yarhisar Orhan Gazi Çeşmesi](yarhisar-orhan-gazi-cesmesi/eser.md) (Yenişehir): ölçülü çizim ve plan var, `SONNET_REVIZYON_PLANI.md` (v01) var.
+- [Orhan Gazi İmareti](orhan-gazi-imareti/eser.md): yıkık (1936); 3D yok, yalnız hikâye kartı.
+- [II. Bayezid Külliyesi, İstanbul](istanbul-bayezid-kulliyesi/eser.md): Koza Han'ın gelirinin gittiği yer; 3D yok, yalnız hikâye kartı.

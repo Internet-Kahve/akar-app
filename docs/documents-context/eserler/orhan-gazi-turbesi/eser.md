@@ -46,22 +46,22 @@ Her ölçünün Kaynak sütununa tek harf yaz: P rölöve/ölçülü plan · E e
 | Alan | Değer | Birim | Kaynak | Not / tipik |
 |---|---|---|---|---|
 | Örtü tipi | merkezde dört sütun üzerine oturan sivri kemerli pandantifli tek kubbe, çevresi beşik tonozlarla örtülü dehliz |  | E cilt-2 PDF s.116 | PDF s.116: «dört sütun üzerine oturtulmuş küçük bir kubbeyle merkezlenmiştir. Kubbenin çevresi beşik tonozlarla örtülü dehlizli bir düzenleme ile kuşatılmıştır... Sivri kemerlere oturan pandantifli kubbenin» |
-| Kasnak |  |  |  | var / yok; çokgen kenar sayısı, yükseklik |
+| Kasnak | var (kesme taş); pencereli alçak kasnak fotoğrafta görülüyor | | W Yurt 2024 PDF 83; F | Pencere sayısı ve yükseklik fotoğraftan sayılacak (`arsiv_dis_guneybati_havadan.jpg`, `arsiv_havadan_kuzey.jpg`). |
 | Kubbe ya da külah çapı |  | m |  |  |
 | Tepe kotu |  | m |  |  |
 | Geçiş | pandantif (dört sütun üzerindeki sivri kemerlere oturan pandantifler) |  | E cilt-2 PDF s.116 | PDF s.116: «Sivri kemerlere oturan pandantifli kubbenin içi kartuş düzeninde kalem işleriyle süslenmiş, pandantifler ve pencere alınlıkları iri barok motiflerle tezyin edilmiştir.» |
-| Kaplama |  |  |  | kurşun / kiremit / taş |
+| Kaplama | metal (kurşun görünümlü) kubbe | | W Yurt 2024 PDF 83; F | «metal malzeme; kubbede». |
 | Alem |  |  |  |  |
 
 ## 3. Cephe
 
 | Alan | Değer | Birim | Kaynak | Not / tipik |
 |---|---|---|---|---|
-| Kapı: cephe, genişlik × yükseklik | mermer söveli ve dilimli kemerli kapı (ölçüsü belirtilmemiş) | m | E cilt-2 PDF s.116 | PDF s.116: «Mermer söveli ve dilimli kemerli kapıdan girilen yapı» |
+| Kapı: cephe, genişlik × yükseklik | güney cephe, dilimli kemer içinde; iki yanında birer pencere; ölçü planda (P) | m | E cilt-2 PDF s.116; W Yurt 2024 PDF 83; P Yurt PDF 224 | Yurt PDF 83: «Güney cephede dilimli bir kemer ve bunun içerisinde demir korkuluklu giriş mevcuttur». |
 | Kapı kemer tipi | dilimli kemerli, mermer söveli |  | E cilt-2 PDF s.116 | PDF s.116: «Mermer söveli ve dilimli kemerli kapıdan girilen yapı» |
 | Alt pencere (adet, ölçü) | toplam 11 adet (giriş cephesinde 2, diğer üç cephede 3'er adet; yuvarlak kemerli, mermer söveli ve soğuk demir şebekeli) | adet | H cilt-2 PDF s.116 | PDF s.116: «Pencereler yuvarlak kemerli, mermer söveli ve soğuk demir şebekelidir... Yapı, her cephede üçer, giriş cephesinde ise ikişer pencere sayesinde doğal ışık almaktadır.»; Formül: 11 = 2+3×3 |
 | Üst pencere (adet, ölçü) |  |  |  |  |
-| Cephe malzemesi |  |  |  |  |
+| Cephe malzemesi | kesme taş beden duvarı; köşelerde ve girişte pilastr; pencere alınlık ve söveleri mermer; kapı ahşap | | W Yurt 2024 PDF 83 | «kesme taş malzeme; beden duvarlarında, girişteki ve beden duvarlarının köşelerinde yer alan pilastırlarda, kasnakta ve konsollarda». Fotoğraflarda yüzey açık krem boyalı görünüyor (F: `ref/foto/arsiv_dis_guneybati_havadan.jpg`). |
 | Silme / bant |  |  |  |  |
 | Kitabe yeri | Bugünkü yapının kitabesi günümüze ulaşmamıştır. |  | E cilt-2 PDF s.116 | «Bugünkü yapının kitabesi günümüze ulaşmamıştır.» |
 
@@ -116,13 +116,18 @@ Uygulamada vurgu ve kamera hedefi bu adlara bağlı. Standart adlar önerilir; e
 
 | Ad | İçerik | Hikâyede kullanım (kısa cümle, isteğe bağlı) |
 |---|---|---|
-| Govde |  |  |
-| Kasnak |  |  |
-| Kubbe_Kulah | örtü |  |
-| Alem |  |  |
-| Kapi |  |  |
-| Revak | varsa |  |
-| Zemin |  |  |
+| Govde | 16,80 × 16,80 m kare gövde (krem cephe), pencere ve kapı nişleri | Kare planlı türbe binası (E PDF 116) |
+| Kasnak | kubbe kasnağı: metal bant, konsollu korniş (48 konsol) | Kubbeyi taşıyan kasnak |
+| Kubbe | kurşun kaplı kubbe + alem | Türbenin tek kubbesi |
+| Cati_Etek | kasnağın çevresinde dört yöne eğimli, içbükey metal kaplı çatı eteği |  |
+| Giris_Holu | ahşap karkaslı, camlı giriş holü + iki sütunçeli sundurma | Restorasyonda yeniden yapılan giriş holü ve sundurma (E PDF 117) |
+| Kapi | dilimli kemerli mermer söveli türbe kapısı (lünet şebekesi, iki rozet) + hol kapısı (içe açık) | Mermer söveli, dilimli kemerli kapı (E PDF 116) |
+| Pencereler | 11 yuvarlak kemerli pencere: söve, akant kilit taşı, beyaz demir şebeke (gerçek delik) | Üç cephede üçer, girişte iki pencere (E PDF 116) |
+| Pilastr_Silme | köşe pilastrları, subasman, friz silmesi, üç kademeli korniş |  |
+| Cevre_Agac_01 … 04 | 01 çınar (hol önü), 02 manolya (kuzeydoğu), 03 manolya (kuzey), 04 sedir (güneydoğu) |  |
+| Olcek_Insan_01 … 04 | ölçek figürleri: hol eşiğine çıkan kadın, yürüyen erkek, yürüyen kadın ve çocuk |  |
+
+Zemin (`Zemin_Kaide`, `Zemin_Doseme`, `Zemin_Cim`) yalnız `_sunum.glb` içindedir.
 
 ## Claude için talimat
 akar-3d-model skill'ini yükle; eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md ve veri/bursa/sablonlar/_ortak_stil.md dosyalarını oku.
@@ -148,3 +153,16 @@ Plan / çizim durumu: bursa-envanteri-cilt-2.txt (PDF s.115, PDF s.116, PDF s.11
 Kaynakta bilgi olmayan ve boş bırakılan bölümler: OSM way id / koordinatlar, planda kuzey yönü, arazi eğimi, duvar yüksekliği, kubbe çapı, tepe kotu, dış cephe kaplama ve örtü kaplama malzemesi, kapı ve pencere ebatları.
 - E cilt-2 PDF s.116: kaynak/çelişki ayrıca değerlendirilecek; bu not model parametresi değildir.
 - E cilt-2 PDF s.117: kaynak/çelişki ayrıca değerlendirilecek; bu not model parametresi değildir.
+
+
+## Ek kaynaklar (19 Ekim 2026)
+
+| Alan | Değer | Kaynak | Not |
+|---|---|---|---|
+| Plan çizimi | Yavaş 2007'den düzenlenmiş plan, 0–5 m ölçek çubuklu | P Yurt 2024 PDF 224 (`ref/plan/yurt2024_pdf224_plan_yavas.png`) | Ölçek çubuğu ile E 16,80 m dış ölçüsü uyuşmayabilir; **E 16,80 m dış ölçüye göre ölçekle**, farkı notlara yaz. |
+| Fotoğraf anahtar planları | dış (PDF 317) ve iç (PDF 326) fotoğrafların çekim noktaları | Yurt 2024 PDF 317, 326 | Levha 111–151 (PDF 317–339) |
+| Pencere düzeni | kuzey, doğu, batıda üçer; güneyde (giriş) iki pencere + dilimli kemerli kapı; yuvarlak kemerli, demir şebekeli | E cilt-2 PDF s.116; W Yurt 2024 PDF 83 | |
+| İç örtü | dört sütunun taşıdığı pandantif geçişli merkezi kubbe; çevrede yarım beşik tonozlar; sütunlar tuğla, mermer görünümlü boyalı, korint başlıklı | E cilt-2 PDF s.116; W Yurt 2024 PDF 83–84 | |
+| Dış süs | köşe ve giriş pilastrları; kasnak, konsol ve kornişlerde silme; pencere kemerlerinde akant yapraklı kilit taşı | W Yurt 2024 PDF 84 | |
+| Konum (tarihsel) | Hisar içinde, Osman Gazi Türbesi'nin doğusunda | W Aydın 2017 PDF 24 (`ref/metin/aydin2017.md`) | Kaynak: Kepecioğlu, «Orhan Gazi Türbesi», *Bursa Kütüğü* C.IV, 2010, s.13. Tezde türbeye ait başka bilgi, plan ya da fotoğraf yok |
+| Kökeni (bağlam) | Orhan, Hisar'daki Saint Elie manastırını camiye çevirdi; 1337'de Kale'de yeni cami yapılınca bu yapı Osman Gazi'nin türbesi olarak kaldı | W Aydın 2017 PDF 33 (Oğuzoğlu, s.98) | E cilt-2 PDF 115'teki «manastır/cami kökeni» ile uyumlu |

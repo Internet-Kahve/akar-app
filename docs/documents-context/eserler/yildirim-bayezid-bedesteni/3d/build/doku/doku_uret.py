@@ -1,7 +1,7 @@
 # AKAR · Bedesten · v04 doku karoları (düz renkli, stilize; fotoğraf dokusu DEĞİL)
 # v04: renkler genel standarda (_GENEL_SAHNE_STANDARDI.md §3) ve SONNET_REVIZYON_PLANI.md §4–5 bağlandı.
 #   almasik.png   : v04b kutu almaşık, 1 karo = 1,04 × 0,88 m (taş ≈ 0,43 × 0,28, 2 sıra yatay tuğla, dikey tuğla 0,09). F 2024 fotoğrafları, T ölçüler
-#   kubbe_dilim.png: kurşun koyu ton #AEB6BC, dilim ekleri #8E979D (v04b); cati_ek.png aynı
+#   kubbe_dilim.png: v05 eskimiş kurşun #858D93, dilim ekleri #6B7379 (v04b: #AEB6BC çok açıktı); cati_ek.png v04b'deki gibi #AEB6BC
 #   pencere.png   : cam #3E4A55, demir şebeke #36413F, söve #ECEAE4
 # Çalıştırma: python doku_uret.py   (Pillow gerekir; çıktılar bu klasöre ve doku_istatistik.json)
 import os, json, random
@@ -67,9 +67,9 @@ def pencere(path, W=128, Hh=192):
     im.save(path, optimize=True)
 
 def kubbe_dilim(path, W=64, Hh=64):
-    """1 karo = bir dilim (u) × bir kurşun levha sırası (v). Zemin #AEB6BC, dilim kenarı ek çizgisi #8E979D, alt ek açık ton."""
-    im = Image.new("RGB", (W, Hh), hx("#AEB6BC")); d = ImageDraw.Draw(im)      # v04b: palet kurşun koyu tonu (V 0,74 ≥ 0,72)
-    koyu, acik = hx("#8E979D"), hx("#BCC3C8")
+    """1 karo = bir dilim (u) × bir kurşun levha sırası (v). Zemin #858D93, dilim kenarı ek çizgisi #6B7379, alt ek açık ton #959DA3."""
+    im = Image.new("RGB", (W, Hh), hx("#858D93")); d = ImageDraw.Draw(im)      # v05 (kullanıcı, 19 Ekim): eskimiş kurşun; F ekinci2025 pdf084 havadan 2024 fotoğrafında kubbeler koyu gri (v04b #AEB6BC çok açıktı)
+    koyu, acik = hx("#6B7379"), hx("#959DA3")
     d.rectangle([0, 0, 2, Hh - 1], fill=koyu); d.rectangle([W - 3, 0, W - 1, Hh - 1], fill=koyu)
     d.rectangle([0, Hh - 1, W - 1, Hh - 1], fill=acik)
     im.save(path, optimize=True)

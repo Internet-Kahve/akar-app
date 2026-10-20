@@ -1,0 +1,278 @@
+{
+ "aciklama": "Orhan Gazi Türbesi v01 malzeme renkleri. Kural (standart §3): bina_genis malzemelerde HSV V ≥ 0,72. Zemin (§1), bitki (§3) ve figür (§4) renkleri standartta sabit; V kuralı onlara uygulanmaz.",
+ "malzemeler": {
+  "Agac_Govde": {
+   "hex": "#7A634B",
+   "hsv": [
+    30.6,
+    0.385,
+    0.478
+   ],
+   "rough": 0.9,
+   "metal": 0.0,
+   "sinif": "bitki_standart_3"
+  },
+  "Agac_Sedir": {
+   "hex": "#3F7A5C",
+   "hsv": [
+    149.5,
+    0.484,
+    0.478
+   ],
+   "rough": 0.9,
+   "metal": 0.0,
+   "sinif": "bitki_standart_3"
+  },
+  "Agac_Yaprak_Cinar": {
+   "hex": "#7FA35B",
+   "hsv": [
+    90.0,
+    0.442,
+    0.639
+   ],
+   "rough": 0.9,
+   "metal": 0.0,
+   "sinif": "bitki_standart_3"
+  },
+  "Agac_Yaprak_Manolya": {
+   "hex": "#6E9450",
+   "hsv": [
+    93.5,
+    0.459,
+    0.58
+   ],
+   "rough": 0.9,
+   "metal": 0.0,
+   "sinif": "bitki_standart_3"
+  },
+  "Ahsap_Kapi": {
+   "hex": "#7A5134",
+   "hsv": [
+    24.9,
+    0.574,
+    0.478
+   ],
+   "rough": 0.75,
+   "metal": 0.0,
+   "sinif": "bina_detay"
+  },
+  "Ahsap_Koyu": {
+   "hex": "#4E3427",
+   "hsv": [
+    20.0,
+    0.5,
+    0.306
+   ],
+   "rough": 0.75,
+   "metal": 0.0,
+   "sinif": "bina_detay"
+  },
+  "Alem": {
+   "hex": "#C9A13B",
+   "hsv": [
+    43.1,
+    0.706,
+    0.788
+   ],
+   "rough": 0.35,
+   "metal": 0.6,
+   "sinif": "bina_detay"
+  },
+  "Cephe_Krem": {
+   "hex": "#E9DFC6",
+   "hsv": [
+    42.9,
+    0.15,
+    0.914
+   ],
+   "rough": 0.8,
+   "metal": 0.0,
+   "sinif": "bina_genis",
+   "V_>=_0.72": true,
+   "sapma": "standart «Krem sıva» #E8DFCB → #E9DFC6 (S 0,125 → 0,150): pilastr ve silmeler (#ECEAE4) cepheden ayrı okunsun; Levha 121 nötr, arsiv fotoğrafı sıcak krem"
+  },
+  "Hol_Cam": {
+   "hex": "#3E4A55",
+   "hsv": [
+    208.7,
+    0.271,
+    0.333
+   ],
+   "rough": 0.3,
+   "metal": 0.0,
+   "sinif": "bina_detay"
+  },
+  "Kursun": {
+   "hex": "#C3C9CD",
+   "hsv": [
+    204.0,
+    0.049,
+    0.804
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "sinif": "bina_genis",
+   "V_>=_0.72": true
+  },
+  "Mermer": {
+   "hex": "#ECEAE4",
+   "hsv": [
+    45.0,
+    0.034,
+    0.925
+   ],
+   "rough": 0.4,
+   "metal": 0.0,
+   "sinif": "bina_detay"
+  },
+  "Olcek_C9C1B3": {
+   "hex": "#C9C1B3",
+   "hsv": [
+    38.2,
+    0.109,
+    0.788
+   ],
+   "rough": 0.8,
+   "metal": 0.0,
+   "sinif": "figur_standart_4"
+  },
+  "Olcek_D9D2C5": {
+   "hex": "#D9D2C5",
+   "hsv": [
+    39.0,
+    0.092,
+    0.851
+   ],
+   "rough": 0.8,
+   "metal": 0.0,
+   "sinif": "figur_standart_4"
+  },
+  "Olcek_EEE9DF": {
+   "hex": "#EEE9DF",
+   "hsv": [
+    40.0,
+    0.063,
+    0.933
+   ],
+   "rough": 0.8,
+   "metal": 0.0,
+   "sinif": "figur_standart_4"
+  },
+  "Pencere_Bosluk": {
+   "hex": "#3E4A55",
+   "hsv": [
+    208.7,
+    0.271,
+    0.333
+   ],
+   "rough": 0.3,
+   "metal": 0.0,
+   "sinif": "bina_detay"
+  },
+  "Sebeke_Beyaz": {
+   "hex": "#F1EFEA",
+   "hsv": [
+    42.9,
+    0.029,
+    0.945
+   ],
+   "rough": 0.6,
+   "metal": 0.0,
+   "sinif": "bina_detay",
+   "sapma": "standart «Demir şebeke» #36413F yerine beyaz: şebekeler fotoğraflarda beyaz boyalı (Levha 117, 121)"
+  },
+  "Sebeke_Kapi": {
+   "hex": "#F1EFEA",
+   "hsv": [
+    42.9,
+    0.029,
+    0.945
+   ],
+   "rough": 0.6,
+   "metal": 0.0,
+   "sinif": "bina_detay",
+   "sapma": "kapı lüneti şebekesi beyaz (Levha 113)"
+  },
+  "Silme_Beyaz": {
+   "hex": "#ECEAE4",
+   "hsv": [
+    45.0,
+    0.034,
+    0.925
+   ],
+   "rough": 0.7,
+   "metal": 0.0,
+   "sinif": "bina_genis",
+   "V_>=_0.72": true,
+   "sapma": "pilastr, korniş, subasman: standart «Mermer» ana tonu (fotoğrafta beyaza yakın, cepheden açık)"
+  },
+  "Sove_Tas": {
+   "hex": "#D5D6D2",
+   "hsv": [
+    75.0,
+    0.019,
+    0.839
+   ],
+   "rough": 0.6,
+   "metal": 0.0,
+   "sinif": "bina_detay",
+   "sapma": "pencere ve kapı söveleri, kilit taşı: standart «Mermer» gölge tonu (fotoğrafta gri, damarlı)"
+  },
+  "Zemin": {
+   "hex": "#C4BDAF",
+   "hsv": [
+    40.0,
+    0.107,
+    0.769
+   ],
+   "rough": 0.9,
+   "metal": 0.0,
+   "sinif": "zemin_standart_1"
+  },
+  "Zemin_Cim": {
+   "hex": "#9DB86A",
+   "hsv": [
+    80.8,
+    0.424,
+    0.722
+   ],
+   "rough": 0.95,
+   "metal": 0.0,
+   "sinif": "zemin_standart_1"
+  },
+  "Zemin_Doseme": {
+   "hex": "#B3A590",
+   "hsv": [
+    36.0,
+    0.196,
+    0.702
+   ],
+   "rough": 0.85,
+   "metal": 0.0,
+   "sinif": "zemin_standart_1"
+  },
+  "Zemin_Toprak": {
+   "hex": "#A5845F",
+   "hsv": [
+    31.7,
+    0.424,
+    0.647
+   ],
+   "rough": 0.95,
+   "metal": 0.0,
+   "sinif": "zemin_standart_1"
+  },
+  "Zemin_Yan": {
+   "hex": "#A39A8B",
+   "hsv": [
+    37.5,
+    0.147,
+    0.639
+   ],
+   "rough": 0.9,
+   "metal": 0.0,
+   "sinif": "zemin_standart_1"
+  }
+ },
+ "GECTI": true
+}

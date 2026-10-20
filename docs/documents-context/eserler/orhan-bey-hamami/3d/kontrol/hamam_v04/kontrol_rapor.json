@@ -1,0 +1,210 @@
+{
+ "ucgen_toplam": 17742,
+ "acik_ya_da_manifold_degil": {},
+ "cakismalar(>=0.3m)": [],
+ "kirmizi_oran_8_yon": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "GECTI": true,
+ "parcalar": {
+  "Cevre_Agac_01": 166,
+  "Cevre_Doseme": 24,
+  "Hamam_Detay": 5424,
+  "Hamam_Giris": 4488,
+  "Hamam_Giris_Kadin": 296,
+  "Hamam_Sicaklik": 36,
+  "Hamam_Sogukluk_Erkek": 12,
+  "Hamam_Sogukluk_Kadin": 20,
+  "Kubbe_Halvetler": 2576,
+  "Kubbe_Iliklik": 478,
+  "Kubbe_Sicaklik": 506,
+  "Kubbe_Sogukluk_Erkek": 586,
+  "Kubbe_Sogukluk_Kadin": 586,
+  "Olcek_Insan_01": 372,
+  "Olcek_Insan_02": 476,
+  "Olcek_Insan_03": 372,
+  "Olcek_Insan_04": 476,
+  "Olcek_Insan_05": 372,
+  "Olcek_Insan_06": 476
+ },
+ "kubbeler": {
+  "Kubbe_Sogukluk_Erkek": {
+   "merkez_xy_m": [
+    -3.25,
+    9.25
+   ],
+   "kasnak_yuzden_yuze_m": 13.5,
+   "kasnak_ustu_m": 7.6,
+   "etek_dudak_yuzden_yuze_m": 14.0,
+   "oturma_cap_m": 12.6,
+   "oturma_kotu_m": 7.98,
+   "tepe_m": 14.5,
+   "yukseklik_yaricap_orani": 1.03
+  },
+  "Kubbe_Sogukluk_Kadin": {
+   "merkez_xy_m": [
+    9.65,
+    4.3
+   ],
+   "kasnak_yuzden_yuze_m": 11.6,
+   "kasnak_ustu_m": 8.3,
+   "etek_dudak_yuzden_yuze_m": 12.3,
+   "oturma_cap_m": 11.2,
+   "oturma_kotu_m": 8.62,
+   "tepe_m": 13.2,
+   "yukseklik_yaricap_orani": 0.82
+  },
+  "Kubbe_Iliklik": {
+   "merkez_xy_m": [
+    -6.15,
+    -0.85
+   ],
+   "dis_cap_m": 6.8,
+   "kasnak_m": [
+    4.9,
+    5.2
+   ],
+   "tepe_m": 7.9
+  },
+  "Kubbe_Sicaklik": {
+   "merkez_xy_m": [
+    -3.82,
+    -11.27
+   ],
+   "dis_cap_m": 5.5,
+   "kasnak_m": [
+    5.248,
+    5.3
+   ],
+   "tepe_m": 8.0
+  },
+  "Kubbe_Iliklik_Halveti": {
+   "merkez_xy_m": [
+    0.05,
+    -2.24
+   ],
+   "dis_cap_m": 4.0,
+   "kasnak_m": [
+    4.9,
+    5.1000000000000005
+   ],
+   "tepe_m": 6.8
+  },
+  "Kubbe_Halvet_KB": {
+   "merkez_xy_m": [
+    -8.12,
+    -6.83
+   ],
+   "dis_cap_m": 3.7,
+   "kasnak_m": [
+    4.9,
+    5.1000000000000005
+   ],
+   "tepe_m": 6.6
+  },
+  "Kubbe_Halvet_KD": {
+   "merkez_xy_m": [
+    0.72,
+    -6.83
+   ],
+   "dis_cap_m": 3.7,
+   "kasnak_m": [
+    4.9,
+    5.1000000000000005
+   ],
+   "tepe_m": 6.6
+  },
+  "Kubbe_Halvet_GB": {
+   "merkez_xy_m": [
+    -8.1,
+    -15.57
+   ],
+   "dis_cap_m": 3.7,
+   "kasnak_m": [
+    4.9,
+    5.1000000000000005
+   ],
+   "tepe_m": 6.6
+  },
+  "Kubbe_Halvet_GD": {
+   "merkez_xy_m": [
+    0.73,
+    -15.55
+   ],
+   "dis_cap_m": 3.7,
+   "kasnak_m": [
+    4.9,
+    5.1000000000000005
+   ],
+   "tepe_m": 6.6
+  },
+  "Kubbe_Kadin_Iliklik": {
+   "merkez_xy_m": [
+    5.39,
+    -3.82
+   ],
+   "dis_cap_m": 3.8,
+   "kasnak_m": [
+    4.9,
+    5.5
+   ],
+   "tepe_m": 6.9
+  },
+  "Kubbe_Kadin_Halvet_1": {
+   "merkez_xy_m": [
+    5.76,
+    -8.03
+   ],
+   "dis_cap_m": 3.8,
+   "kasnak_m": [
+    4.9,
+    5.5
+   ],
+   "tepe_m": 6.9
+  },
+  "Kubbe_Kadin_Halvet_2": {
+   "merkez_xy_m": [
+    5.76,
+    -12.37
+   ],
+   "dis_cap_m": 3.8,
+   "kasnak_m": [
+    4.9,
+    5.5
+   ],
+   "tepe_m": 6.9
+  }
+ },
+ "draw_call": 39,
+ "kaide": {
+  "bicim": "daire",
+  "merkez_m": [
+   1.41,
+   -3.72
+  ],
+  "yaricap_m": 27.48,
+  "pay_m": 3.0,
+  "kalinlik_m": 0.6,
+  "ust_pah_m": 0.15,
+  "en_kucuk_cember_yaricap_m": 24.48
+ },
+ "sokak_seti": {
+  "kot_m": 3.3,
+  "basamak": 15,
+  "basamak_yuksekligi_m": 0.22,
+  "merdiven_y_m": [
+   -24.15,
+   -19.2
+  ]
+ },
+ "glb_bayt": 252428,
+ "glb_sunum_bayt": 263848,
+ "glb_orijin": "daire kaide merkezi; GLB'de yapı bu noktaya ortalandı"
+}

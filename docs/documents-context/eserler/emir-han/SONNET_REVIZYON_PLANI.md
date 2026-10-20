@@ -19,7 +19,7 @@ Hedef: `3d/build/build_emir_v02.py`'den `build_emir_v03.py` üretmek. Yapılacak
 | Yol | Durum | Not |
 |---|---|---|
 | `SONNET_REVIZYON_PLANI.md` | **OKU (ana)** | Bu dosya |
-| `../_GENEL_SAHNE_STANDARDI.md` | **OKU (ana)** | Zemin (dikdörtgen kaide), ışık, palet, figür, teslim |
+| `../_GENEL_SAHNE_STANDARDI.md` | **OKU (ana)** | Zemin (daire kaide, 19 Ekim), ışık, palet, figür, teslim |
 | `emir-han_notlar.md` | Destek | §1 kararlar, §3 ölçü analizi |
 | `eser.md` | Destek | Kaynaklı ölçüler ve malzeme |
 | `ref/metin/envanter_c1.md`, `vakif_1983.md`, `hanlar_bildirisi.md`, `alan_baskanligi.md` | **KAYNAK** | Metinler |
@@ -53,7 +53,7 @@ Eksenler: +X doğu, +Y kuzey, +Z yukarı; orijin avlu ortası; **z = 0 avlu zemi
 Kaynak: W bildiri PDF 6 «Hanın asıl girişi zemin katın kuzey kanadının ortasından sağlanmakta ve **iki taraftan yirmişer basamaklı merdivenlerle** üst kata çıkış sağlanmaktadır»; E PDF 109 «Alt kattaki mekânlar **penceresizdir**»; E PDF 109 «biri Ulucami avlusundan, diğeri ise Kapalı Çarşı tarafından olmak üzere iki girişi»; F dış fotoğraflar (sokaktan tek kat görünen duvar, girişte içeri inen basamaklar).
 
 - Han çevresindeki sokak ve meydan zemini **+4,0** (T: 20 basamak × 0,20). Dış duvarın görünen yüksekliği ≈ 5,5 (saçak 9,5 − 4,0). Alt kat (mahzenler) toprak altında kalır; bu yüzden penceresizdir.
-- **Kaide:** dikdörtgen, her yönde 8 m pay, üst yüzü **+4,0**; avlu ve iç geçitler +0,0'da. Kaide yan yüzü `#A39A8B`.
+- **Kaide:** daire (standart §1, 19 Ekim): yapıyı ve çevre öğelerini saran en küçük çember + 3 m pay, üst yüzü **+4,0**; avlu ve iç geçitler +0,0'da. Kaide yan yüzü `#A39A8B`.
 - Dış duvar dokusu yalnız +4,0 üstünde görünür; altında kalan yüzler üretilmez (üçgen tasarrufu).
 
 ## 3. KESİN: avlu revakları

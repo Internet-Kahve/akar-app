@@ -2,20 +2,24 @@
 
 Yalnız **son sürüm** tutulur. Eski sürümlerin kararları aşağıdaki tabloda ve `../orhan-bey-kulliyesi_notlar.md` "Ek: Geçmiş kayıt" bölümündedir. Hamam ve Emir Hanı üretimleri kendi klasörlerindedir.
 
-## Güncel sürüm: v05 (17 Ekim 2026)
+## Güncel sürüm: v06 (19 Ekim 2026)
 
 | Dosya | İçerik |
 |---|---|
-| `build/build_v05.py` | Blender üretim betiği; ölçüler en üstte `P` sözlüğünde. Kütüphane: `eserler/_kutuphane/akar3d.py` |
-| `build/doku/` | `almasik.png`, `kubbe_dilim.png`, `pencere*.png` ve üreticisi `doku_uret.py` |
-| `build/araclar/yan_yana.py` | Ortografik render ↔ Ayverdi çizimi bindirmesi (`ref/plan/yurt2024_pdf217_*`, `pdf218_*`) |
-| `blend/orhan-bey-camii_v05.blend` | Sahne |
-| `export/orhan-bey-camii_v05.glb` | Uygulama modeli (Draco, 193 KB) |
-| `kontrol/v05/` | Render'lar ve `kontrol_rapor.json` (13 294 üçgen, 49 draw call, GECTI) |
+| `build/build_v06.py` | Blender üretim betiği; ölçüler en üstte `P` sözlüğünde. Kütüphane: `eserler/_kutuphane/akar3d.py` |
+| `build/cevre_v06.py` | Çınar, bordür ve en küçük çember yardımcıları |
+| `build/doku/` | dokular ve üreticisi `doku_uret.py`; ağaç gövdesi `agac_govde_notr.png` üreticisi `eserler/_kutuphane/agac_doku.py --notr` (Ulu Cami ve Koza Han ağaçlarıyla ortak) |
+| `build/araclar/` | `yan_yana.py` (Ayverdi bindirmesi), `foto_yan_yana.py` (fotoğraf ↔ render) |
+| `blend/orhan-bey-camii_v06.blend` | Sahne |
+| `export/orhan-bey-camii_v06.glb` | Uygulama modeli, zeminsiz (Draco, 262 KB) |
+| `export/orhan-bey-camii_v06_sunum.glb` | Daire kaideli sunum modeli (265 KB) |
+| `kontrol/v06/` | Render'lar, `kontrol_rapor.json`, `olcu_dogrulama.json`, `renkler.json` |
 
-Nesneler: `Cami_Harim`, `Cami_Kanat_B/D`, `Cami_Koridor`, `Cami_Mihrap`, `Cami_SonCemaat`, `Cati_Kanatlar`, `Cepheler`, `Kaide_Bant`, `Kasnak_Detay`, `Kubbe_Ana`, `Kubbe_Mihrap`, `Kubbe_SonCemaat`, `Kubbe_Tabhane_B/D`, `Minare_1`, `Revak_Cephe`, `Revak_Ic`, `Revak_Kemerler`, `Sacak`. Eksenler +X doğu, +Y kuzey.
+Nesneler: `Cami_Govde`, `Cami_Mihrap`, `Cami_SonCemaat`, `Revak_Cephe`, `Revak_Kemerler`, `Kubbe_Ana`, `Kubbe_Mihrap`, `Kubbe_SonCemaat`, `Kubbe_Tabhane_B/D`, `Minare_1`, `Sadirvan`, `Cevre_Doseme`, `Cevre_Agac_01–04` (yalnız taç), `Cevre_Agac_Govde` (4 ağacın gövde ve dalları), `Olcek_Insan_01–08`; sunum GLB'de ayrıca `Zemin_Kaide`. Eksenler +X doğu, +Y kuzey.
 
-**Bilinen sorunlar (v06'da düzeltilecek, bkz. `../SONNET_REVIZYON_PLANI.md`):** son cemaat yeri cephesi tek tip ızgara dokulu (gerçekte alt kesme taş, üst 1 taş + 3 tuğla almaşık, kirpi saçak); büyük kubbelerin eteği daire planlı çan biçimi (gerçekte düz yüzlü sekizgen kurşun etek), kasnak üstü kirpi saçak yok; harim kasnağında sağır yüz yanlış (kuzey değil güney), tabhane kasnak pencereleri 3 (kaynak 2); şadırvan yok; koyu palet, yeşil disk ve pembe gölge.
+**Parça adı değişikliği (v05 → v06):** uygulamanın hikâye ekranı bu adlara bağlı. Aşağıdaki eski adlar v06'da yok, hepsi tek `Cami_Govde` nesnesine birleşti: `Cami_Harim`, `Cami_Kanat_B`, `Cami_Kanat_D`, `Cami_Koridor`, `Cati_Kanatlar`, `Cepheler`, `Sacak`, `Kaide_Bant` (kaldırıldı), `Kasnak_Detay`, `Revak_Ic`. Yeni adlar: `Cami_Govde`, `Revak_Alinlik` (Cami_Govde içinde), `Kurslar` (Cami_Govde içinde), `Sadirvan`, `Cevre_Doseme`, `Cevre_Agac_01–04`, `Olcek_Insan_01–08`, `Zemin_Kaide` (yalnız sunum GLB). Değişmeyen adlar: `Kubbe_Ana`, `Kubbe_Mihrap`, `Kubbe_SonCemaat`, `Kubbe_Tabhane_B/D`, `Cami_SonCemaat`, `Cami_Mihrap`, `Revak_Cephe`, `Revak_Kemerler`, `Minare_1`. Uygulama eski adlardan birini kullanıyorsa `Cami_Govde`'ye ya da ilgili parçaya bağlanmalı.
+
+**Bilinen sorunlar:** şadırvan saçak ve kubbe biçimi düz yüzlü, fotoğraftaki kıvrım yok; ağaç taçları kaba elipsoid; dal uçları tacın içinde biter (çakışma denetiminde `cakismalar_beklenen_agac` olarak ayrı yazılır); kaş kemerlerde oyma yok (kaynakta ölçü yok); mihrap kubbesi oranı 0,24 (Ayverdi kotları korundu); kubbe kurşunu V 0,58 (standart V ≥ 0,72 kuralından bilinçli sapma); `Cami_Govde` eski ayrı parçaların birleşimi (draw call ≤ 60 için).
 
 ## Sürüm geçmişi
 
@@ -27,3 +31,4 @@ Nesneler: `Cami_Harim`, `Cami_Kanat_B/D`, `Cami_Koridor`, `Cami_Mihrap`, `Cami_S
 | v03 | 17 Ekim | Son cemaat yeri | Açık revak; 3 kubbe + 2 aynalı tonoz; 0,9 m sofa; giriş kubbesi kaldırıldı |
 | v04 | 17 Ekim | Kubbe, kasnak, pencere | Düzgün sekizgen kasnak; kasnak pencere sayıları; şebekeli üst pencereler; alemler |
 | v05 | 17 Ekim | Kubbe eteği | Daire planlı içbükey kurşun etek; kasnak üstü bandı gömme. Kabul edildi; 18–19 Ekim denetiminde etek biçimi kaynaklarla çelişti |
+| v06 | 19 Ekim | Cephe giydirmesi, kubbe–kasnak, şadırvan, standart sahne | Katmanlı revak (kesme taş ayaklar, 1 taş + 3 tuğla, kirpi, kurslar); hücre örgü gövde; doğu ve batı yüzde 3 girinti; sekizgen düz etek ve kirpi kasnak; yeni `Sadirvan`; daire kaide, çim alan, 4 çınar, 8 figür; tek `Duz` malzeme; minare uzatıldı, beyaz şerefe. Ağaç gövde ve dallarına tahta/kabuk dokusu (`Agac_Govde_Doku`, karo 0,6 × 1,2 m, nötr doku × `#7A634B`; gövdeler `Cevre_Agac_Govde` nesnesinde, kullanıcı isteği 19 Ekim). 20 130 üçgen, 58 draw call, 262 KB. Sapmalar: tabhane etek dudağı 6,96 m (plan 7,1), kubbe rengi `#858E94`, mihrap oranı 0,24 |

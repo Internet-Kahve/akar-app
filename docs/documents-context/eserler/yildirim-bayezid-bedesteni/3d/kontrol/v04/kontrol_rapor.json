@@ -1,0 +1,64 @@
+{
+ "ucgen_toplam": 23404,
+ "acik_ya_da_manifold_degil": {},
+ "cakismalar(>=0.3m)": [],
+ "kirmizi_oran_8_yon": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "GECTI": true,
+ "parcalar": {
+  "Cati": 44,
+  "Dukkan_Kapilari": 4704,
+  "Dukkanlar": 2752,
+  "Govde": 12,
+  "Kapilar": 1292,
+  "Kubbeler": 8036,
+  "Olcek_Insan_01": 372,
+  "Olcek_Insan_02": 476,
+  "Olcek_Insan_03": 372,
+  "Olcek_Insan_04": 476,
+  "Olcek_Insan_05": 372,
+  "Olcek_Insan_06": 400,
+  "Olcek_Insan_07": 476,
+  "Olcek_Insan_08": 372,
+  "Pencereler": 3168,
+  "Sacak": 80
+ },
+ "butce": {
+  "bina_ucgen": 20088,
+  "bina_sinir": 24000,
+  "figur_ucgen": 3316,
+  "figur_sinir": 6000,
+  "toplam": 23404,
+  "toplam_sinir": 30000,
+  "figur_basina": {
+   "Olcek_Insan_01": 372,
+   "Olcek_Insan_02": 476,
+   "Olcek_Insan_03": 372,
+   "Olcek_Insan_04": 476,
+   "Olcek_Insan_05": 372,
+   "Olcek_Insan_06": 400,
+   "Olcek_Insan_07": 476,
+   "Olcek_Insan_08": 372
+  }
+ },
+ "draw_call": 25,
+ "ao": {
+  "taban": {
+   "varsayilan": 0.7,
+   "Kubbeler": 0.85
+  },
+  "ornek": 32
+ },
+ "glb_bayt": 172028,
+ "draco": "gltf-transform",
+ "glb_sunum_bayt": 183964,
+ "glb_sinir_bayt": 1000000
+}

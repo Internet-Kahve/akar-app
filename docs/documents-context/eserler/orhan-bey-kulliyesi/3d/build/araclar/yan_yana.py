@@ -14,7 +14,7 @@ IS = [("bati_orto", "yurt2024_pdf217_kesit_on-cephe1_ayverdi.png", 33.2, 2001, 2
       ("kuzey_orto", "yurt2024_pdf218_on-cephe2_kuzey_ayverdi.png", 40.0 * 26.9 / 25.7, 1289, 366 + 13.8 * 40.0, (270, 200, 1560, 1300),
        "KUZEY orto ↔ Ayverdi ön cephe (çubuk %4,7 hatalı; plan genişliği 25,7 m ile ölçeklendi)")]
 for rnd, ref, ppm, zy, cx, box, baslik in IS:
-    R = Image.open(os.path.join(K, rnd + ".png")).convert("RGB")
+    R0 = Image.open(os.path.join(K, rnd + ".png")).convert("RGBA"); R = Image.new("RGBA", R0.size, (231, 231, 231, 255)); R.alpha_composite(R0); R = R.convert("RGB")   # v06: saydam render açık gri zemine
     C = Image.open(os.path.join(REF, ref)).convert("L").crop(box)
     s = PPM / ppm; C = C.resize((int(C.width * s), int(C.height * s)), Image.LANCZOS)
     ox, oy = int(ORTA - (cx - box[0]) * s), int(ZEMIN - (zy - box[1]) * s)

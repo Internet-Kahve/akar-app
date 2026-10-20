@@ -1,10 +1,10 @@
 # Orhan Bey Hamamı · Eser hakkında
 
-19 Ekim 2026. Rota eseri. Bölümler: Tarihçe · Mimari · Vakıf ve akar · Kaynaklar. Güven etiketleri önerisidir; son kararı Muhammed verir.
+19 Ekim 2026; 20 Ekim 2026'da her paragraf kitapla yeniden karşılaştırıldı. Rota eseri. Bölümler: Tarihçe · Mimari · Vakıf ve akar · Kaynaklar. Güven etiketleri önerisidir; son kararı Muhammed verir.
 
 ## Tarihçe
 
-Hamamı Orhan Bey, külliyesinin parçası olarak 1340'ta yaptırdı; Ulucami'nin kuzeyinde, Emir Hanı ile Koza Han arasındadır. Orhan Bey, Bıçakçılar, Hallaçlar, Hatuniye Hamamı, Hamam Kahve ve Aynalı Çarşı adlarıyla anıldı. 1584 yangınında Emir Hanı ve Orhan Vakfı'na ait 35 dükkânla birlikte yandı, 1628'den itibaren kahvehane olarak kullanıldı. 1934'te Mimar Sedat Çetintaş yapının hamam olduğunu tespit etti; 1943'te onun başkanlığında kadınlar bölümü ayağa kaldırıldı. 1958 çarşı yangınından sonra iki bölüm birlikte çarşıya dönüştürüldü; yapı 2022–2023'te yeniden onarıldı. `[E cilt-1 PDF s.104, s.105, s.106, s.107]` · **Doğrulanmış**
+Hamamı Orhan Bey, külliyesinin parçası olarak 1340'ta yaptırdı; Ulucami'nin kuzeyinde, Emir Hanı ile Koza Han arasındadır. Orhan Bey, Bıçakçılar, Hallaçlar, Hatuniye Hamamı, Hamam Kahve ve Aynalı Çarşı adlarıyla anıldı. 1584 yangınında Emir Hanı ve Orhan Vakfı'na ait 35 dükkânla birlikte yandı, 1628 tarihli bir kayda göre o dönem kahvehane olarak kullanılıyordu. 1934'te Mimar Sedat Çetintaş yapının hamam olduğunu tespit etti; 1943'te onun başkanlığında kadınlar bölümü ayağa kaldırıldı. 1958 çarşı yangınından sonra iki bölüm birlikte çarşıya dönüştürüldü; yapı 2022–2023'te yeniden onarıldı. `[E cilt-1 PDF s.104, s.105, s.106, s.107]` · **Doğrulanmış**
 
 ## Mimari
 

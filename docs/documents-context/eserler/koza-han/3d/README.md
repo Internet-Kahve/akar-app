@@ -1,6 +1,6 @@
 # Koza Han: 3D üretim klasörü
 
-Güncel sürüm **v12** (19 Ekim 2026; betik `build/build_v12.py`, GLB `export/koza-han_v12.glb` ve `_sunum.glb`, render'lar `kontrol/v12/`). Aşağıdaki «İçerik» bölümü v02o döneminden kalmadır. Bu klasörde yalnızca son sürüm tutulur; önceki sürümler aşağıdaki tabloda kayıtlıdır, ayrıntılı karar metinleri `../koza-han_notlar.md` sonundaki "Geçmiş kayıt" ekinde. Sıradaki tur v03'ün talimatı `../SONNET_REVIZYON_PLANI.md` dosyasında.
+Güncel sürüm **v13** (19 Ekim 2026; betik `build/build_v13.py` + `build/figur_yerlesim_v13.py`, GLB `export/koza-han_v13.glb` ve `_sunum.glb`, render'lar `kontrol/v13/`: varsayılan render listesinin 22 karesi + `kontrol_0…7`, `build/render_v13.py` ile v13 blend'inden alındı; modele dokunmaz: `Blender -b blend/koza-han_v13.blend --python build/render_v13.py [-- ad,ad]`). Üretim: `KOZA_FIGUR=1 blender -b --python build/build_v13.py` (`KOZA_RENDER=havadan,...` ile render listesi daraltılabilir). Ağaç dokuları `build/doku/yaprak_*.png` ve `agac_govde.png`; üreticisi ve UV kuralı `../../_kutuphane/agac_doku.py`. Aşağıdaki «İçerik» bölümü v02o döneminden kalmadır. Bu klasörde yalnızca son sürüm tutulur; önceki sürümler aşağıdaki tabloda kayıtlıdır, ayrıntılı karar metinleri `../koza-han_notlar.md` sonundaki "Geçmiş kayıt" ekinde. Sıradaki tur v03'ün talimatı `../SONNET_REVIZYON_PLANI.md` dosyasında.
 
 ## İçerik
 
@@ -33,8 +33,9 @@ Güncel sürüm **v12** (19 Ekim 2026; betik `build/build_v12.py`, GLB `export/k
 | v02m | Portal kiremit örgüsü; kapı kemer tepesi 7,8 m | 29 274 |
 | v02n | Yön düzeltmesi: portal kısa kenarda (dış 51,7 × 59,7, avlu 38 × 46); portal kubbeleri | 29 446 |
 | v02o | Portal kütlesi 18 × 4,8 m (tasarım krokisi); UV katman hatası düzeltildi | 29 450 |
-| v03–v11 | Bu tabloya işlenmedi; değişiklikler `build/build_v12.py` dosyasının ilk satırında sürüm sürüm yazılı. | — |
-| v12 | 19 Ekim 2026. Kaide **daire** oldu (Ulu Cami v22 gibi; kullanıcı kararı, genel standarttaki dikdörtgen kaidenin yerine). Revak kemer köşeliklerindeki ince siyah düşey çizgiler giderildi. Daire: han + portal + İç Koza'yı saran en küçük çember + 3 m pay. Merkez (26,84; 0), R 72,0 m, kalınlık 0,6, üst pah 0,15. Cevre_Doseme daire kenarından 1,5 m içeride kesildi. Çizgi nedeni: köşelik paneli ayağa 3 cm gömülüydü, gömülü köşeler AO pişiriminde siyah kalıyordu. Gömülme 2 mm'ye indirildi (han revakı ve İç Koza revakı). | 45 866 |
+| v03–v11 | Bu tabloya işlenmedi; değişiklikler `build/build_v13.py` dosyasının ilk satırında sürüm sürüm yazılı. | — |
+| v12 | 19 Ekim 2026. Kaide **oval** oldu (Ulu Cami v22 gibi; kullanıcı kararı, genel standarttaki dikdörtgen kaidenin yerine). Revak kemer köşeliklerindeki ince siyah düşey çizgiler giderildi. Oval: yapı köşelerine (han, portal, İç Koza, çevre ağaçları) 6 m pay konarak hesaplanan en küçük alanlı elips; merkez (18,21; 5,79), yarı eksenler 80,75 × 57,50 m, büyük eksen 17,2° eğik, kalınlık 0,6, üst pah 0,15. Önce R 72 m daire denendi; arkada boşluk, önde sınır bıraktığı için kullanıcı eğik ovali seçti. Cevre_Doseme kaide kenarından 1,5 m içeride kesildi. GLB'lerde orijin = kaide merkezi (yapı dışa aktarımda −18,21; −5,79 kaydırıldı); betik ve blend dünya koordinatları değişmedi. Çizgi nedeni: köşelik paneli ayağa 3 cm gömülüydü, gömülü köşeler AO pişiriminde siyah kalıyordu. Gömülme 2 mm'ye indirildi (han revakı ve İç Koza revakı). | 45 866 |
+| v13 | 19 Ekim 2026. Yalnız ağaç dokusu (kullanıcı isteği): Orhan Bey Camii v06'daki yaprak dokusu (karo 1,3 m, `#7FA35B` `#93B46A` `#6E9450`) `Avlu_Agac` ve `Cevre_Agac_01–08` taçlarına; gövdelere tahta/kabuk dokusu (karo 0,6 × 1,2 m, ortalama `#7A634B`, silindirik eşleme). Doku AO çarpımından sonra bağlanır (doku × AO). Geometri v12 ile aynı (37 nesne, köşe/yüz/malzeme özeti eşit). | 45 866 |
 
 Her sürümde açık/manifold olmayan kenar 0, ≥ 0,3 m çakışma 0, 8 yönden arka yüz kırmızı oranı 0 (GECTI). v02o: 48 draw call. Mobil performans ölçülmedi.
 

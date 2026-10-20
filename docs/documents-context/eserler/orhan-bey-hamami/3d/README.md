@@ -1,21 +1,25 @@
 # Orhan Bey Hamamı · 3d üretim klasörü
 
-Yalnız **son sürüm** tutulur. Eski sürüm kararları aşağıda ve `../orhan-bey-hamami_notlar.md` "Ek: Geçmiş kayıt" bölümündedir.
+Yalnız **son sürüm** tutulur. Eski sürüm kararları aşağıda ve `../orhan-bey-hamami_notlar.md` (§1 güncel kararlar, "Ek: Geçmiş kayıt") içindedir.
 
-## Güncel sürüm: v02 (17 Ekim 2026)
+## Güncel sürüm: v04 (19 Ekim 2026, kullanıcı onaylı; v03 + güney kapısı ayrıntısı)
 
 | Dosya | İçerik |
 |---|---|
-| `build/build_hamam_v02.py` | Blender üretim betiği; ölçüler `P` sözlüğünde (plan birimi × `olcek` 1,38). Kütüphane: `eserler/_kutuphane/akar3d.py` |
-| `build/doku/` | `kubbe_dilim.png` vb. ve `doku_uret.py` (camiden yerel kopya) |
-| `build/araclar/yan_yana_hamam.py` | Render ↔ Çetintaş planı / Ayverdi kesiti bindirmesi. Sabitleri yeni `ref/plan` görsellerine göre yeniden kalibre edilmeli (betikteki not) |
-| `blend/orhan-bey-hamami_v02.blend` | Sahne |
-| `export/orhan-bey-hamami_v02.glb` | Uygulama modeli (Draco, 60 KB) |
-| `kontrol/hamam_v02/` | Render'lar ve `kontrol_rapor.json` (3 204 üçgen, 20 draw call, GECTI) |
+| `build/build_hamam_v04.py` | Blender üretim betiği (v03 betiği + `Hamam_Giris` kapı ayrıntısı; `build_hamam_v03.py` referans kod olarak duruyor); ölçüler `P` sözlüğünde, her satırda kaynak harfi. Kütüphane: `eserler/_kutuphane/akar3d.py` |
+| `build/cevre_v03.py` | Çınar ve en küçük çember (Orhan Bey Camii v06 `cevre_v06.py`'den yerel kopya) |
+| `build/doku/doku_uret_v03.py` | `duvar_moloz.png`, `kasnak_almasik.png`, `kirpi.png`, `kubbe_dilim_v03.png`, `sebeke_alfa.png`, `avlu.png`, `yaprak_notr.png` (`agac_govde_notr.png`: `_kutuphane/agac_doku.py --notr`). Eski `doku_uret.py` ve karoları v02 geçmişi için duruyor |
+| `build/araclar/yan_yana_hamam.py` | Bindirmeler (üst orto ↔ Ayverdi planı, doğu kesit ↔ Ayverdi kesiti ve Plan 13) ve fotoğraf karşılaştırmaları; v03 kalibrasyonu |
+| `blend/orhan-bey-hamami_v04.blend` | Sahne |
+| `export/orhan-bey-hamami_v04.glb` | Uygulama modeli, kaidesiz (yapı + avlu döşemesi + ağaç + figürler), Draco, 252 KB. Orijin = kaide merkezi |
+| `export/orhan-bey-hamami_v04_sunum.glb` | Kaide ve güney sokak setiyle, 264 KB |
+| `kontrol/hamam_v04/` | Render'lar (kapı yakın çekimleri dahil), bindirmeler, fotoğrafla yan yana (`python araclar/yan_yana_hamam.py hamam_v04`), `kontrol_rapor.json` (GECTI), `olcu_dogrulama.json`, `renkler.json` |
 
-Nesneler: `Hamam_Sogukluk_Erkek`, `Hamam_Sogukluk_Kadin`, `Hamam_Sicaklik` (alçak kütle), `Kubbe_Sicaklik`, `Kubbe_Iliklik`, `Hamam_Giris`, `Sacak`, `Fil_Gozleri`.
+Çalıştırma: `/Applications/Blender.app/Contents/MacOS/Blender -b --python docs/documents-context/eserler/orhan-bey-hamami/3d/build/build_hamam_v04.py` (`HAMAM_RENDER=A,B,C` ile render seti seçilir).
 
-**Bilinen sorunlar (v03'te düzeltilecek, bkz. `../SONNET_REVIZYON_PLANI.md`):** büyük kubbeler kasnaksız doğrudan duvardan çıkıyor (gerçekte sekizgen kasnak + sekizgen kurşun etek); halvet, eyvan ve kadın bölümü küçük kubbeleri ve tonozları yok; giriş cephesi kaynaktaki alınlıklı kemerli girişe benzemiyor; duvar dokusu yok; koyu palet, yeşil disk.
+Nesneler: `Hamam_Sogukluk_Erkek`, `Hamam_Sogukluk_Kadin`, `Hamam_Sicaklik` (alçak kütle), `Kubbe_Sogukluk_Erkek`, `Kubbe_Sogukluk_Kadin`, `Kubbe_Iliklik`, `Kubbe_Sicaklik`, `Kubbe_Halvetler` (8 küçük kubbe + kadın tarafı kırma damı ve parapeti), `Hamam_Giris` (güney alınlıklı blok; kapı, saçak, rozet pencere ve tabela yazıları dahil), `Hamam_Giris_Kadin`, `Hamam_Detay` (saçaklar, fenerler ve cam külahlar, pencereler, kuzey kapısı), `Cevre_Doseme`, `Cevre_Agac_01`, `Olcek_Insan_01`–`06`; sunum dosyasında ayrıca `Zemin_Kaide`, `Zemin_Set`.
+
+Bütçe: 17 742 üçgen (v03: 14 742; fark güney kapısı, `Hamam_Giris` 1 488 → 4 488), 39 draw call; kontrol: açık/manifold olmayan kenar 0, çakışma 0, kırmızı oranı 8 yönde 0.
 
 ## Sürüm geçmişi
 
@@ -23,3 +27,5 @@ Nesneler: `Hamam_Sogukluk_Erkek`, `Hamam_Sogukluk_Kadin`, `Hamam_Sicaklik` (alç
 |---|---|---|---|
 | v01 | 17 Ekim | Kütle | Çetintaş planı × 1,38 (E oda ölçüleriyle kalibre), yükseklikler Ayverdi kesiti × 1,16; erkek soğukluğu duvar 8,6 / tepe 16,2 / fener 17,2; kadın 7,5 / 14,1 (T); alçak kütle 5,6; çarşı ekleri hariç. Donduruldu |
 | v02 | 17 Ekim | Detay, renk, GLB | Kuzey giriş (yuvarlak kemer, yuvarlak pencere), saçak bantları, fil gözleri. Kabul edildi; 19 Ekim denetiminde kubbe dizilimi ve giriş cephesi kaynaklarla eksik bulundu |
+| v03 | 19 Ekim | Kütle, kubbe dizilimi, girişler, doku, sahne | Plan Ayverdi (40,1 px/m), batı ucu su deposu şeridinde (külhan odası çıkarıldı). Yükseklikler Ayverdi kesiti kendi çubuğuyla (v01'in × 1,16'sı hatalıydı): alçak dam 4,9, erkek saçak 7,6 / tepe 14,5 / fener 15,2; kadın saçak 8,3 (F) / tepe 13,2 (T). 12 kubbe, eyvan tonozu yok; küçük kubbelerde cam külah; kadın tarafında parapetli kırma dam. Alınlıklı giriş güneyde (web araştırması: tepeden fotoğraf, Flickr, TDV), kuzeyde düz cepheli kapı; +3,3 m güney sokak seti. Moloz / almaşık / kirpi dokuları, daire kaide R 27,5, 6 figür, 1 ağaç |
+| v04 | 19 Ekim | Güney giriş kapısı ayrıntısı (kullanıcı isteği; kullanıcı onayladı; v03 blend, GLB ve kontrol dosyaları silindi) | `build/build_hamam_v04.py` = v03 + yalnız `Hamam_Giris` kapı ayrıntısı (F Levha 90–91, Aydın 2017 foto 33): oval rozet pencere (cam 0,90 × 0,54, radyal tuğla halka, ferforje şebeke), süt beyazı cam saçak (3,7 × 0,95 m, duvarda 3,50 / önde 3,28) + 4 ferforje konsol + kıvrımlı friz, siyah kasalı camlı kapı ve ışınsal tepe camı, «ESKİ AYNALI ÇARŞI» tabelası (altın harf, mesh) ve «↓ COVERED BAZAAR ↓» kırmızı levhası, iki duvar feneri, üzengi taşları, sağda boş metal levha (yazısı okunmuyor). Harfler `Hamam_Giris` içinde, nesne adları değişmedi. 17 742 üçgen (`Hamam_Giris` 1 488 → 4 488), 39 draw call, GLB 252 KB; kontrol GECTI. Render ve karşılaştırmalar `kontrol/hamam_v04/` (yeni: `guney_kapi_yakin`, `guney_rozet_yakin`, `yan_yana_guney_kapi_foto33`, `yan_yana_guney_rozet_L91`) |

@@ -73,5 +73,15 @@
   "D": 4,
   "B": 4
  },
- "asama": "AB"
+ "asama": "ABC",
+ "figur_boylari": {
+  "Olcek_Insan_01": 1.78,
+  "Olcek_Insan_02": 1.68,
+  "Olcek_Insan_03": 1.75,
+  "Olcek_Insan_04": 1.66,
+  "Olcek_Insan_05": 1.8,
+  "Olcek_Insan_06": 1.72,
+  "Olcek_Insan_07": 1.65,
+  "Olcek_Insan_08": 1.7
+ }
 }

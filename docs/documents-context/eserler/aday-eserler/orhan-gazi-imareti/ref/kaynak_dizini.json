@@ -1,0 +1,47 @@
+{
+ "aciklama": "ref/ altındaki her dosyanın kaynağı, PDF sayfası ve SHA-256 değeri. Sayfalar PDF dosya sayacıdır (1 tabanlı).",
+ "kayitlar": [
+  {
+   "dosya": "ref/metin/aydin2017.md",
+   "kaynak": "docs/documents-context/veri/bursa/481461.pdf (Aydın 2017)",
+   "sayfa": "PDF 43–44, 57–58, 73–76, 80",
+   "tur": "W",
+   "sha256": "ddf50feae9d6fd51995f823fc61ac94ab4c80a5468843efc1d67eeccc362d58c"
+  },
+  {
+   "dosya": "ref/metin/envanter_c1.md",
+   "kaynak": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+   "sayfa": "PDF 96–97",
+   "tur": "E",
+   "sha256": "b676a4db578900e0614622007e7d21067b48976f0f5d642987390bfd3ab17f3b"
+  },
+  {
+   "dosya": "ref/metin/yurt2024.md",
+   "kaynak": "docs/documents-context/veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf",
+   "sayfa": "PDF 75–76",
+   "tur": "W",
+   "sha256": "ebc88cd85230810af90f9d51cb3c08d896445a90addfb7d6170a0f7c760d3a21"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf087_plan01_hanlar_vaziyet_ayverdi.jpg",
+   "kaynak": "docs/documents-context/veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 1, Ayverdi",
+   "sayfa": "PDF 87",
+   "tur": "P (İmaret, Zaviye, Medrese etiketli; caminin güneydoğusunda)",
+   "sha256": "9d64f33bcf7e9b06250f47f2e882165bb66accb7e16f5c63985b84c35c1ddf9a"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf219_imaret_zaviye_medrese_temsili_ayverdi.png",
+   "kaynak": "Yurt 2024 tezi (veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf)",
+   "sayfa": "PDF 219",
+   "tur": "P",
+   "sha256": "a80061550a6624e7e2a327eda0d9b0935427b57cbefbd01290cce986810eb090"
+  },
+  {
+   "dosya": "ref/plan/yurt2024_pdf219_kulliye_vaziyet_ayverdi_400dpi.png",
+   "kaynak": "Yurt 2024 tezi (veri/bursa/Orhan_Gazi_Donemi_Mimarisinde_Sultan_Yap.pdf)",
+   "sayfa": "PDF 219",
+   "tur": "P",
+   "sha256": "65237bf7eb5f0c3a9cb8ba9b28321d1ea2321de4a350470fd5cdbdcf1f88eacb"
+  }
+ ]
+}

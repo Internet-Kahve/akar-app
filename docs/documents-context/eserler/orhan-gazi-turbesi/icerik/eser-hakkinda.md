@@ -1,10 +1,12 @@
 # Orhan Gazi Türbesi · Eser hakkında
 
-19 Ekim 2026. 3D modeli olmayan eser: görev dosyasına göre yalnız Eser hakkında ve galeri, hikâye yok. Güven etiketleri önerisidir; son kararı Muhammed verir.
+19 Ekim 2026; 20 Ekim 2026'da her paragraf kitapla yeniden karşılaştırıldı. Görev dosyasına göre «diğer» eser: yalnız Eser hakkında ve galeri, hikâye yok. 3D modeli 20 Ekim 2026 itibarıyla var (`3d/export/orhan-gazi-turbesi_v01.glb`). Güven etiketleri önerisidir; son kararı Muhammed verir.
 
 ## Tarihçe
 
-Türbe, Osmanlı'nın ikinci sultanı ve Bursa'nın fâtihi Orhan Gazi'ye aittir; Hisariçi'nde, bugünkü Osmangazi Meydanı'ndadır. Orhan Gazi, babası Osman Gazi'nin defnedildiği eski manastır yapılarının bulunduğu kompleks içinde, muhtemelen camiye dönüştürülen bölüme defnedildi. 1855 depreminde türbe tamamen yıkıldı ve Sultan Abdülaziz tarafından yeniden yaptırıldı. `[E cilt-2 PDF s.115, s.116, s.117]` · **Doğrulanmış**
+Türbe, Osmanlı'nın ikinci sultanı ve Bursa'nın fâtihi Orhan Gazi'ye aittir; Hisariçi'nde, bugünkü Osmangazi Meydanı'ndadır. Orhan Gazi, babası Osman Gazi'nin defnedildiği eski manastır yapılarının bulunduğu kompleks içine defnedildi. 1855 depreminde türbe tamamen yıkıldı ve Sultan Abdülaziz tarafından yeniden yaptırıldı. `[E cilt-2 PDF s.115, s.116, s.117]` · **Doğrulanmış**
+
+Orhan Gazi'nin bu kompleksin camiye dönüştürülen bölümüne defnedildiği düşünülür. `[E cilt-2 PDF s.115]` · **Tarihsel çıkarım**
 
 ## Mimari
 

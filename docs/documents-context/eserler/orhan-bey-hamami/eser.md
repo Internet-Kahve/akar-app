@@ -40,3 +40,23 @@ Kaynak harfi: P rölöve/ölçekli çizim · E envanter · W tez/makale · O OSM
 | Örtü | kubbe ve tonozların tamamı kurşun; özgünde kalıplı kiremit | E cilt-1 PDF 105, 107 |
 | Aydınlatma | kubbe kasnaklarında pencere, kubbelerde aydınlık fenerleri, sıcaklık ve halvetlerde fil gözü | E cilt-1 PDF 107; W Yurt PDF 77 |
 | Süsleme | sıcaklık kasnağı üstünde tek sıra üçgen diş, halvetlerin üstünde tek sıra kare diş | W Yurt PDF 78 |
+
+## 3. Ek kaynak: Aydın 2017 (19 Ekim 2026)
+
+W Aydın 2017 = Nur Gül Aydın, *Bursa Orhan Gazi Külliyesi*, Uludağ Üniv. YL tezi (`veri/bursa/481461.pdf`; metin `ref/metin/aydin2017.md`). Ölçülerin çoğu Ayverdi ve Çetintaş'tan aktarılmıştır.
+
+| Alan | Değer | Kaynak | Not |
+|---|---|---|---|
+| Kubbe sayısı | 2 büyük, 8 küçük kubbe | W Aydın 2017 PDF 68 (Ayverdi s.113) | |
+| Erkekler soğukluğu | Ø 12,00 kubbe, tromplara oturur; tepe feneri ve kasnak pencerelerinden ışık | W Aydın 2017 PDF 69 (Ayverdi s.115–116) | E 11,95 × 11,86 ile uyumlu |
+| Erkekler ılıklığı | Ø 6,50 kubbe, üçgenli kuşak; bir halvet ve hela | W Aydın 2017 PDF 69 | |
+| Kadınlar bölümü | soğukluk Ø 10,35 (üçgenli kuşak), ılıklık Ø 3,50, iki kubbeli halvet, hela; giriş güneyde, kuzeyde iki pencere, üç kasnak penceresi | W Aydın 2017 PDF 69 | Giriş yönü için notlar §3.4 |
+| Özgün örtü | kubbe, tonoz ve damlar özel kalıplı kiremitle örtülü; sonradan ahşapla örtülmüş | W Aydın 2017 PDF 69 (Çetintaş s.27) | Bugün kurşun görünümlü çimento harç (PDF 70) |
+| Döşeme | soyunma ve yıkanma alanları baştan aşağı mermer (kazıda bulunan parçalardan) | W Aydın 2017 PDF 70 (Çetintaş s.28–29) | Bugün mermer ve kurna yok |
+| Kesit kotları | 12,75 (büyük kubbe iç yüksekliği), 6,88, 4,43, 3,62, 4,14 m | P Aydın 2017 PDF 98 (`ref/plan/aydin2017_pdf098_plan13_kesit_kotlu.jpg`) | Çizer belirsiz: listede Çetintaş, altyazıda Ayverdi. Model kesitiyle karşılaştır |
+| Kazı | 1943'te başladı (Çetintaş); molozda XV. yy çini, XVI. yy tabak-fincan, Yeşil Cami tipi çini, çubuk lüleleri | W Aydın 2017 PDF 67–68 | Hikâye için |
+| Yangın yılı | «1957 yangını» | W Aydın 2017 PDF 67–68 | E PDF 106 «1958»; çelişki |
+| Vakfiye | 1360 (761) vakfiyesinde «Bıçakçılar Hamamı» vakfedilenler arasında; zaviye misafirlerini üç gün hamama götürmek mütevellinin görevi | W Aydın 2017 PDF 73–74 | Akar → hayrat bağı: `../orhan-gazi-imareti/` |
+| Mülkiyet | kadınlar kısmı VGM'de; erkekler kısmı 1943'e kadar Gemlikli Nuri Paşa mirasçılarında, açık artırmayla VGM'ye geçti | W Aydın 2017 PDF 71–72 (Çetintaş s.30) | |
+
+Görseller: Plan 1 vaziyet (PDF 87), Plan 10–17 plan ve kesitler (PDF 95–102), Fotoğraf 33–35 (PDF 178–180). Tümü `ref/kaynak_dizini.json`'da.

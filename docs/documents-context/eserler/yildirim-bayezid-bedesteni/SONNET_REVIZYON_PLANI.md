@@ -28,6 +28,7 @@ A render'ları fotoğraflarla karşılaştırıldı; bant geniş, süslemeler fa
 | Dış kapı | üzengi 3,0, tepe 4,5; 0,5 tuğla–taş dönüşümlü kemer; çerçeve 5,2 (çatının üstüne taşıyordu) | **üzengi 2,2, tepe 3,7**; 0,30 sade kesme taş kemer; çerçeve 4,36, çatı ve silme üstünden kesintisiz geçer | T; F: `ekinci2025_pdf085_kitabe` (kapı üstü düz kesme taş) |
 | Güney kitabesi | 2,4 × 0,6, z 5,15 | **0,70 × 0,28**, z 4,05 | F `pdf085` (bir taş sırası yüksekliğinde), T |
 | Köşe kör bölüm | uzun 5,1, kısa 3,5 | **uzun 4,6, kısa 2,5** | H |
+| Sunum kaidesi | sekizgen, bandın dış yüzünden 8 m pay | **köşeleri yuvarlatılmış dikdörtgen**: 8 m pay, köşe yarıçapı 10 m (elips denendi, beğenilmedi) | kullanıcı kararı 19 Ekim (C) |
 
 Ana gövde (59,5 × 18,0; saçak +10,0; 2 × 7 kubbe) **doğrudur ve korunur**.
 
@@ -179,7 +180,7 @@ Taş, tuğla ve sıva için roughness 0,70; kurşun için 0,55.
 ### 5.2 Zemin
 
 `../_GENEL_SAHNE_STANDARDI.md` §1:
-- dikdörtgen kaide: bandın dış yüzünden 3,5 m taş döşeme şerit (`#B3A590`, derz `#A69A86`, 1,0 × 0,5 karo) — İç Bedesten Sokağı;
+- kaide **elips** (standart §1, 19 Ekim: oran > 1,5): yapıyı saran en küçük elips + 3 m pay, eksenler yapıya paralel; bandın dış yüzünden 3,5 m taş döşeme şerit (`#B3A590`, derz `#A69A86`, 1,0 × 0,5 karo) — İç Bedesten Sokağı;
 - dışında ana zemin `#C4BDAF`, kaide yanları `#A39A8B`;
 - bordür `#D2C3A4` (0,15 yükseklik) şeridin dış kenarında;
 - **çim yok** (çarşı ortamı);

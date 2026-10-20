@@ -144,17 +144,25 @@ Stil rengi boşsa tür paleti (_ortak_stil.md) kullanılır. Son sütundaki öne
 | Çevre yapı (modele girecek mi?) (3) | Cami ile hamam arasındaki Koza Hanı |  | E cilt-1 PDF s.104 |  |
 
 ## Parça adları (.glb)
-Uygulamada vurgu ve kamera hedefi bu adlara bağlı. Standart adlar önerilir; eksik parçayı silebilir, ek parça ekleyebilirsin.
+Uygulamada vurgu ve kamera hedefi bu adlara bağlı. Aşağıdaki adlar `3d/export/orhan-bey-camii_v06.glb` dosyasındaki gerçek nesne adlarıdır (v06, 19 Ekim 2026). Hamam ve Emir Hanı kendi klasörlerindeki modellerdedir, burada yoktur.
 
 | Ad | İçerik | Hikâyede kullanım (kısa cümle, isteğe bağlı) |
 |---|---|---|
-| Cami | cami şablonundan |  |
-| Medrese |  |  |
-| Hamam |  |  |
-| Turbe |  |  |
-| Imaret |  |  |
-| Avlu_Zemin |  |  |
-| Zemin |  |  |
+| Cami_SonCemaat | son cemaat yeri duvarı: iri kesme taş ayaklar, üst duvar 1 taş + 3 tuğla almaşık, oyulmuş 5 sivri göz, yanlarda ikiz sivri kemer |  |
+| Revak_Cephe | revak kemer taşı halkaları, tuğla bantlar, kirpi, arka duvar kapısı ve pencereleri, sofa parmaklığı |  |
+| Revak_Kemerler | gözleri ayıran beyaz sivri kemerler |  |
+| Kubbe_SonCemaat | son cemaat yeri terası, sekizgen kasnaklı orta kubbe, iki yan kubbe, iki aynalı tonoz |  |
+| Cami_Mihrap | mihrap bloğu (güney) kütlesi |  |
+| Kubbe_Mihrap | mihrap kubbesi, sekizgen kasnak ve kirpi saçak |  |
+| Kubbe_Ana | harim kubbesi, 7 pencereli sekizgen kasnak, kirpi saçak |  |
+| Kubbe_Tabhane_D / Kubbe_Tabhane_B | doğu ve batı tabhane kubbeleri, 2 pencereli kasnak, kirpi saçak |  |
+| Cami_Govde | ana gövde: harim, kanatlar, koridor, kanat çatıları, doğu ve batı cephe girintileri, saçaklar, kurslar, revak alınlıkları ve revak içi |  |
+| Minare_1 | kuzeydoğu minaresi: tuğla gövde, beyaz mermer şerefe, külah, alem |  |
+| Sadirvan | sekizgen mermer platformlu ahşap direkli şadırvan, saçak, kasnak, kubbe, havuz, taburler |  |
+| Cevre_Doseme | avlu taş döşemesi, çim alan ve bordürleri |  |
+| Cevre_Agac_01 … Cevre_Agac_04 | çınar ağaçları |  |
+| Olcek_Insan_01 … Olcek_Insan_08 | ölçek figürleri (koleksiyon `Olcek`) |  |
+| Zemin_Kaide | daire kaide, yalnız `_sunum.glb`'de |  |
 
 ## Claude için talimat
 akar-3d-model skill'ini yükle; eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md ve veri/bursa/sablonlar/_ortak_stil.md dosyalarını oku.

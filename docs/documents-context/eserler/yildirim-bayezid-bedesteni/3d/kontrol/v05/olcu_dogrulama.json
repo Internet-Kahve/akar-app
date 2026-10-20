@@ -1,0 +1,87 @@
+{
+ "govde_dis": [
+  59.5,
+  18.0
+ ],
+ "toplam_dis_bant_dahil": [
+  70.7,
+  33.5
+ ],
+ "bant_derinligi": {
+  "kuzey_guney": 7.75,
+  "dogu_bati": 5.6
+ },
+ "bant_cati": {
+  "govde_duvarinda_ust_kot": 5.4,
+  "dis_sacak_ust_kot": 4.7,
+  "sacak_tasmasi": 0.15,
+  "kalinlik": 0.12,
+  "egim_kuzey_guney_yuzde": 8.86,
+  "egim_dogu_bati_yuzde": 12.17
+ },
+ "kapi": {
+  "aciklik": 3.0,
+  "uzengi": 2.2,
+  "tepe": 3.7,
+  "esik": 0.45,
+  "kemer_bandi": 0.3,
+  "basamak": 3
+ },
+ "govde_sacak_kotu": 10.0,
+ "dukkan_vitrin_varyant_dagilimi": {
+  "K": [
+   7,
+   7,
+   6
+  ],
+  "G": [
+   7,
+   6,
+   7
+  ],
+  "D": [
+   2,
+   3,
+   3
+  ],
+  "B": [
+   3,
+   3,
+   2
+  ]
+ },
+ "dukkan_sayisi_cephe": {
+  "kuzey": 20,
+  "guney": 20,
+  "dogu": 8,
+  "bati": 8,
+  "toplam": 56
+ },
+ "dukkan_dizilimi": {
+  "kuzey_guney": "10 + giriş + 10",
+  "dogu_bati": "4 + giriş + 4",
+  "adim": 2.75,
+  "kose_kor_bolum_uzun": 4.6,
+  "kose_kor_bolum_kisa": 2.5
+ },
+ "ana_kubbe_tepe_kotu": 14.2,
+ "ana_kubbe_sayisi": 14,
+ "govde_penceresi_toplam": 22,
+ "kalan_govde_penceresi": {
+  "K": 7,
+  "G": 7,
+  "D": 4,
+  "B": 4
+ },
+ "asama": "ABC",
+ "figur_boylari": {
+  "Olcek_Insan_01": 1.78,
+  "Olcek_Insan_02": 1.68,
+  "Olcek_Insan_03": 1.75,
+  "Olcek_Insan_04": 1.66,
+  "Olcek_Insan_05": 1.8,
+  "Olcek_Insan_06": 1.72,
+  "Olcek_Insan_07": 1.65,
+  "Olcek_Insan_08": 1.7
+ }
+}

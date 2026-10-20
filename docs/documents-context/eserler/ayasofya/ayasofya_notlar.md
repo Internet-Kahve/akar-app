@@ -656,3 +656,12 @@ Ayasofya yöntem pilotu olarak kapandı; demoda ana eser değil. Dersler ve yeni
 tasarım sorumlusu onayıyla silindi: img-ref, img-ref2–5, yandex-ref, v01–v18 render'ları, ara .blend/.glb'ler, build_v12–v18,
 render_v12/13, blueprint13, scene15. Kalan: build_v18b.py (+ osm_parts.json) ile geometri, bake_v19.py ile doku
 yeniden üretilebilir; son dosyalar ayasofya_v18b/v19.blend ve export/ altında. Notlardaki ref numaraları artık arşivde yok.
+
+
+## 29. v20 — ayrıntılı referans uyarlaması (19 Ekim 2026)
+
+Kullanıcının referansa mümkün olduğunca yaklaşma isteğiyle ayrı v20 üretildi. Kaynak DAE ağı ve 11 dokusu doğrudan aktarıldı; üst üste ön/arka yüzler temizlendi. 67.289 üçgen, 19 malzeme, yaklaşık 3,01 MB GLB. Eski v19 değişmedi. v20 tek mesh: eski parça adlarına bağlı cue eşleştirmeleri bu sürümde henüz yok. Üretim, görseller, kaynak kopyası ve doğrulama raporları `v20/` altında; ayrıntılar `v20/README.md`.
+
+## 30. v21 — çatı ve türbe revizyonu (20 Ekim 2026)
+
+`v21/ayasofya_v21.blend` ve `v21/ayasofya_v21.glb` üretildi. Çatı üst yüzeyleri kesilerek örtüşmeler azaltıldı; ana kubbe ve üç türbe yeniden kuruldu; minare şerefe silmeleri eklendi. Referans fotoğraf araştırması ve teknik sınırlar `v21/README.md` içinde. Bu sürüm tüm mimari detaylar için kapanış/onay anlamına gelmez; kaynak payanda ve cephe oranları tamamen yeniden modellenmedi. V19 ve V20 korunur.

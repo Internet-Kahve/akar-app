@@ -11,6 +11,8 @@
 #     kubbe ve bant çatısı kurşun koyu tonu #AEB6BC; dükkân kemerleri sade taş; dış kapı sade kesme taş, çatı hattının altında.
 # Aşama: AKAR_ASAMA = A (kütle) | AB (+giriş, kapı, doku) | ABC (+kaide, döşeme, figür; teslim). Varsayılan ABC.
 # Çalıştırma: python build_v04.py   (bpy modülü ile)  ya da  blender -b --python build_v04.py
+#   Çıktılar (aşama C): blend/bedesten_v04.blend, export/bedesten_v04.glb (zeminsiz, figürlü), export/bedesten_v04_sunum.glb (kaideli),
+#   kontrol/v04/ (render, kontrol_rapor.json, renkler.json, olcu_dogrulama.json). Draco yoksa AKAR_GLTF_TRANSFORM=<gltf-transform yolu>.
 # Eksenler: +X doğu, +Y kuzey, +Z yukarı; orijin salonun ortası. Kaynak harfleri: P rölöve, E envanter, W makale/tez, F fotoğraf, H hesap, T tahmin.
 import sys, os, math, json
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -74,7 +76,7 @@ P = {
     "D_kubbe_dilim": 32, "D_kubbe_sira": 5,
     # ---- zemin (standart §1; plan §5.2) ----
     "serit_w": 3.5,           # plan §5.2: İç Bedesten Sokağı taş döşeme şerit
-    "kaide_pay": 8.0,         # standart §1 (kullanıcı kararı 18 Ekim): bandın dış yüzünden her yönde 8 m
+    "kaide_pay": 8.0, "kaide_r": 10.0, "kaide_seg": 12,   # v04b (kullanıcı kararı 19 Ekim): köşeleri yuvarlatılmış dikdörtgen kaide; bandın dış yüzünden 8 m pay, köşe yarıçapı 10 m (çeyrek daire başına 12 parça)
     "kaide_pah": 1.5, "kaide_kalin": 0.6, "kaide_ust_pah": 0.15,
     "bordur_h": 0.15, "bordur_k": 0.25,
 }
@@ -358,15 +360,20 @@ for k in "KGDB":
 g.obj()
 
 # ================= C: ZEMİN (yalnız sunum), ŞERİT, FİGÜRLER =================
-def sekiz(hx, hy, c):
-    return [Vector(p) for p in ((hx - c, -hy), (hx, -hy + c), (hx, hy - c), (hx - c, hy), (-hx + c, hy), (-hx, hy - c), (-hx, -hy + c), (-hx + c, -hy))]
+def yuvarlak_dik(hx, hy, r, n):
+    """Köşeleri r yarıçaplı çeyrek dairelerle yuvarlatılmış dikdörtgen (saat yönü tersine)."""
+    pts = []
+    for cx, cy, a0 in ((hx - r, hy - r, 0.0), (-hx + r, hy - r, 90.0), (-hx + r, -hy + r, 180.0), (hx - r, -hy + r, 270.0)):
+        for k in range(n + 1):
+            a = math.radians(a0 + 90.0 * k / n); pts.append(Vector((cx + r * math.cos(a), cy + r * math.sin(a))))
+    return pts
 if C_:
-    hk, hy_ = OX + P["kaide_pay"], OY + P["kaide_pay"]; kp = P["kaide_pah"]; kt = P["kaide_kalin"]; up = P["kaide_ust_pah"]
+    hk, hy_ = OX + P["kaide_pay"], OY + P["kaide_pay"]; kr = P["kaide_r"]; kt = P["kaide_kalin"]; up = P["kaide_ust_pah"]
     g = A.G("Zemin")
-    alt = sekiz(hk, hy_, kp); ust = sekiz(hk - up, hy_ - up, kp - up * 0.3)
+    alt = yuvarlak_dik(hk, hy_, kr, P["kaide_seg"]); ust = yuvarlak_dik(hk - up, hy_ - up, kr - up, P["kaide_seg"]); ns = len(alt)
     a0 = [g.V(q, -kt) for q in alt]; a1 = [g.V(q, -up) for q in alt]; u1 = [g.V(q, 0.0) for q in ust]
-    for i in range(8):
-        j = (i + 1) % 8
+    for i in range(ns):
+        j = (i + 1) % ns
         g.F([a0[i], a0[j], a1[j], a1[i]], M["kaide_yan"]); g.F([a1[i], a1[j], u1[j], u1[i]], M["kaide_yan"])
     g.F(u1, M["zemin"]); g.F(a0[::-1], M["kaide_yan"])
     zemin_ob = g.obj()
@@ -496,7 +503,9 @@ def foto2024_kamera():
     return [-100.4, 101.4, 25.6, -34.2, 27.1, 15.0, 70.0]      # 4 kontrol noktasından çözüldü (H): kuzeybatıdan bakış; foto Uludağ + Ulu Cami sarı kasnakları ile güneye bakıyor
 
 CEKIMLER = os.environ.get("AKAR_CEKIM", "havadan,kuzey_orto,tepeden,foto2024,dukkan_yakin,giris_yakin,kuzey_giris,guney_kapi,doku_yakin,sokak").split(",")
-if A_ and not os.environ.get("AKAR_RENDER_YOK"):
+def renderlar():
+    """v04b: render seti teslim kontrollerinden ve AO'dan SONRA alınır (görüntü = teslim edilen model)."""
+    if not A_ or os.environ.get("AKAR_RENDER_YOK"): return
     os.makedirs(KONTROL, exist_ok=True)
     kapsam = 2.0 if C_ else 1.0
     if "havadan" in CEKIMLER: cek("havadan", standart_kamera(), (0, 0, 3), 1800, 1600, orto=92 * (1.28 if C_ else 1.0))
@@ -543,3 +552,81 @@ OLCU = {
 if FIGUR: OLCU["figur_boylari"] = {f"Olcek_Insan_{i:02d}": f[2] for i, f in enumerate(FIGUR, 1)}
 json.dump(OLCU, open(os.path.join(KONTROL, "olcu_dogrulama.json"), "w"), ensure_ascii=False, indent=1)
 print("OLCU", json.dumps(OLCU, ensure_ascii=False))
+
+# ================= TESLİM (genel standart §5; plan §6): kontrol, renkler, AO, GLB, render, blend =================
+import colorsys
+TESLIM = C_ and not os.environ.get("AKAR_TESLIM_YOK")
+if TESLIM:
+    rapor = A.kontrol_hepsi(KONTROL, "kontrol")                # mesh + çakışma + 8 yönden arka yüz (kırmızı oran 0 olmalı)
+    mk = A.mesh_kontrol()
+    figur_u = sum(v["ucgen"] for k, v in mk.items() if k.startswith("Olcek_"))
+    bina_u = sum(v["ucgen"] for k, v in mk.items() if not k.startswith(("Olcek_", "_")))
+    rapor["parcalar"] = {k: v["ucgen"] for k, v in mk.items()}
+    rapor["butce"] = {"bina_ucgen": bina_u, "bina_sinir": 24000, "figur_ucgen": figur_u, "figur_sinir": 6000,
+                      "toplam": bina_u + figur_u, "toplam_sinir": 30000,
+                      "figur_basina": {k: v["ucgen"] for k, v in mk.items() if k.startswith("Olcek_")}}
+    rapor["draw_call"] = sum(len(o.material_slots) for o in bpy.data.objects if o.type == "MESH" and not o.name.startswith(("REF", "_", "Zemin")))
+    # renk denetimi: geniş yüzeylerde V ≥ 0,72. Zemin/kaide/şerit renkleri standart §1'in kendi değerleri (kullanıcı onaylı), ayrı işaretlenir
+    GENIS = {"duvar", "cati", "kubbe", "bant_cati", "tas"}
+    ZEMIN_STD = {"zemin", "kaide_yan", "serit", "derz", "bordur"}
+    renkler = {}
+    def hsv(hx_):
+        r_, g_, b_ = [int(hx_[i:i + 2], 16) / 255 for i in (1, 3, 5)]; return [round(x, 3) for x in colorsys.rgb_to_hsv(r_, g_, b_)]
+    for k, n, hx_, r_, m_ in MALZ:
+        h_ = hsv(hx_)
+        renkler[n] = {"hex": hx_, "hsv": h_, "genis_yuzey": k in GENIS, "zemin_standart_1": k in ZEMIN_STD, "V_>=_0.72": h_[2] >= 0.72}
+    for o in bpy.data.objects:                                   # figür malzemeleri: ad "Olcek_EEE9DF" → hex
+        if o.name.startswith("Olcek_") and o.material_slots:
+            n_ = o.material_slots[0].material.name; hx_ = "#" + n_.split("_")[-1][:6]
+            renkler[n_] = {"hex": hx_, "hsv": hsv(hx_), "figur": True}
+    ist = json.load(open(os.path.join(DOKU, "doku_istatistik.json")))
+    renkler["_almasik_doku_ortalamasi"] = {"rgb": ist["almasik_ortalama_rgb"], "sapma_yuzde": ist["kanal_sapma_yuzde"],
+                                           "V": round(max(ist["almasik_ortalama_rgb"]) / 255, 3)}
+    renkler["_genis_yuzey_V_alti_0_72"] = [n for n, v in renkler.items() if isinstance(v, dict) and v.get("genis_yuzey") and not v.get("V_>=_0.72")]
+    json.dump(renkler, open(os.path.join(KONTROL, "renkler.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
+    # AO (standart §2): taban 0,70; kubbe 0,85. ao_vertex dokulu malzemede Base Color'ı sabit renge bağlar → doku yeniden bağlanır (Koza v12 yöntemi)
+    if os.environ.get("AKAR_AO", "1") == "1":
+        A.ao_vertex(samples=32)
+        AO_TABAN = {"varsayilan": 0.70, "Kubbeler": 0.85}
+        for o in [o for o in bpy.data.objects if o.type == "MESH" and o.data.color_attributes.get("AO")]:
+            tb_ = AO_TABAN.get(o.name, AO_TABAN["varsayilan"])
+            for d_ in o.data.color_attributes["AO"].data:
+                c_ = tb_ + (1 - tb_) * d_.color[0]; d_.color = (c_, c_, c_, 1.0)
+        for m_ in DOKULU:
+            nt = m_.node_tree; tx = nt.nodes.get("DOKU"); mul = next((n for n in nt.nodes if n.type == "MIX" and n.blend_type == 'MULTIPLY'), None)
+            if tx and mul: nt.links.new(tx.outputs["Color"], mul.inputs[6])
+        rapor["ao"] = {"taban": AO_TABAN, "ornek": 32}
+
+    os.makedirs(os.path.dirname(EXPORT), exist_ok=True)
+    rapor["glb_bayt"] = A.disa_aktar(EXPORT, draco=True)       # zeminsiz, figürler dahil
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in bpy.data.objects:
+        if o.type == "MESH" and not o.name.startswith(("REF", "_")): o.select_set(True)
+    kw = dict(filepath=EXPORT_SUNUM, export_format='GLB', use_selection=True, export_apply=True, export_yup=True, export_cameras=False, export_lights=False)
+    try: bpy.ops.export_scene.gltf(export_draco_mesh_compression_enable=True, **kw)
+    except Exception: bpy.ops.export_scene.gltf(**kw)
+    # Draco: Blender'ın exporter'ında Draco kütüphanesi yoksa (pip bpy) gltf-transform ile sıkıştırılır (akar3d.disa_aktar notu)
+    import shutil, subprocess
+    gt = os.environ.get("AKAR_GLTF_TRANSFORM") or shutil.which("gltf-transform")
+    rapor["draco"] = "blender"
+    if gt:
+        for yol in (EXPORT, EXPORT_SUNUM):
+            gec = yol + ".draco.glb"
+            r_ = subprocess.run([gt, "draco", yol, gec], capture_output=True, text=True)
+            if r_.returncode == 0 and os.path.exists(gec) and os.path.getsize(gec) < os.path.getsize(yol):
+                os.replace(gec, yol); rapor["draco"] = "gltf-transform"
+            elif os.path.exists(gec): os.remove(gec)
+    rapor["glb_bayt"] = os.path.getsize(EXPORT)
+    rapor["glb_sunum_bayt"] = os.path.getsize(EXPORT_SUNUM)
+    rapor["glb_sinir_bayt"] = 1_000_000
+    json.dump(rapor, open(os.path.join(KONTROL, "kontrol_rapor.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print("RAPOR", json.dumps(rapor, ensure_ascii=False))
+
+renderlar()
+
+if TESLIM:
+    bpy.ops.file.pack_all()
+    os.makedirs(os.path.dirname(BLEND), exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=BLEND)
+    print("BITTI", BLEND)

@@ -1,0 +1,252 @@
+{
+ "Duvar_Moloz": {
+  "hex": "#C8B49A",
+  "hsv": [
+   0.094,
+   0.23,
+   0.784
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": true
+ },
+ "Duvar_Sokak_Alti": {
+  "hex": "#A39A8B",
+  "hsv": [
+   0.104,
+   0.147,
+   0.639
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": false
+ },
+ "Duvar_Almasik": {
+  "hex": "#CFA986",
+  "hsv": [
+   0.08,
+   0.353,
+   0.812
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": true
+ },
+ "Cati_Kursun": {
+  "hex": "#AEB6BC",
+  "hsv": [
+   0.571,
+   0.074,
+   0.737
+  ],
+  "rough": 0.45,
+  "metal": 0.2,
+  "genis_yuzey": true,
+  "V_>=_0.72": true,
+  "sapma": "Plan §6 #C3C9CD → #AEB6BC: kullanıcı 19 Ekim «görsellere göre uyarla»; fotoğraflarda kurşun koyu gri (Emir-Hani-1, 7112FE8), Ulu Cami v24 Cati ile aynı ton (yan yana uyum)."
+ },
+ "Avlu_Tas": {
+  "hex": "#B3A590",
+  "hsv": [
+   0.1,
+   0.196,
+   0.702
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": false
+ },
+ "Sokak_Tas": {
+  "hex": "#B3A590",
+  "hsv": [
+   0.1,
+   0.196,
+   0.702
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": false
+ },
+ "Tugla": {
+  "hex": "#B06A4A",
+  "hsv": [
+   0.052,
+   0.58,
+   0.69
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": false,
+  "sapma": "Plan §6 #C0683F → #B06A4A (açık #BF7C5C, gölge #985A3E): kullanıcı «görsellere göre uyarla»; fotoğraflarda mat kırmızı-kahve (Emir-Hani-1/4, 685999); Ulu Cami minare #986B4D (V 0,60) ile plan arası. V 0,69 < 0,72: tuğla geniş yüzey değil (kemer bandı, saçak, baca)."
+ },
+ "Revak_Ayak": {
+  "hex": "#D2B693",
+  "hsv": [
+   0.093,
+   0.3,
+   0.824
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": true
+ },
+ "Kesme_Tas": {
+  "hex": "#D3BE98",
+  "hsv": [
+   0.107,
+   0.28,
+   0.827
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": true
+ },
+ "Siva_Tonoz": {
+  "hex": "#E8DFCB",
+  "hsv": [
+   0.115,
+   0.125,
+   0.91
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": true
+ },
+ "Kirpi_Sacak": {
+  "hex": "#B06A4A",
+  "hsv": [
+   0.052,
+   0.58,
+   0.69
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": false,
+  "sapma": "Tugla ile aynı gerekçe."
+ },
+ "Baca_Tugla": {
+  "hex": "#B06A4A",
+  "hsv": [
+   0.052,
+   0.58,
+   0.69
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": false,
+  "sapma": "Tugla ile aynı gerekçe."
+ },
+ "Kapi_Ahsap": {
+  "hex": "#7A5134",
+  "hsv": [
+   0.069,
+   0.574,
+   0.478
+  ],
+  "rough": 0.75,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": false
+ },
+ "Pencere_Cam": {
+  "hex": "#3E4A55",
+  "hsv": [
+   0.58,
+   0.271,
+   0.333
+  ],
+  "rough": 0.3,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": false
+ },
+ "Pencere_Izgara": {
+  "hex": "#3E4A55",
+  "hsv": [
+   0.58,
+   0.271,
+   0.333
+  ],
+  "rough": 0.3,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": false
+ },
+ "Korkuluk_Beyaz": {
+  "hex": "#EDEBE6",
+  "hsv": [
+   0.119,
+   0.03,
+   0.929
+  ],
+  "rough": 0.6,
+  "metal": 0.2,
+  "genis_yuzey": false,
+  "V_>=_0.72": true,
+  "sapma": "Plan §3 demir #36413F → #EDEBE6: bütün avlu fotoğraflarında korkuluk beyaz boyalı (Emir-Hani-2/4/5, 1578509890, 6141e917); kullanıcı «görsellere göre uyarla»."
+ },
+ "Sad_Mermer": {
+  "hex": "#ECEAE4",
+  "hsv": [
+   0.125,
+   0.034,
+   0.925
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "genis_yuzey": true,
+  "V_>=_0.72": true
+ },
+ "Sad_Mermer_Gol": {
+  "hex": "#D5D6D2",
+  "hsv": [
+   0.208,
+   0.019,
+   0.839
+  ],
+  "rough": 0.45,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": true
+ },
+ "Sad_Su": {
+  "hex": "#8CC3C6",
+  "hsv": [
+   0.509,
+   0.293,
+   0.776
+  ],
+  "rough": 0.1,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": true
+ },
+ "Agac": {
+  "hex": "#FFFFFF",
+  "hsv": [
+   0.0,
+   0.0,
+   1.0
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "genis_yuzey": false,
+  "V_>=_0.72": true
+ },
+ "Zemin_Kaide": {
+  "hex": "#C4BDAF",
+  "yan": "#A39A8B",
+  "kaynak": "standart §1"
+ }
+}

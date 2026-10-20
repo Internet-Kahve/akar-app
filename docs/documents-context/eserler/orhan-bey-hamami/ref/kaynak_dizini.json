@@ -9,6 +9,27 @@
    "sha256": "d4de91c86e52c5df72c91daa1edcaa82bd05f7d4726829dc72cc6c976386ca99"
   },
   {
+   "dosya": "ref/foto/aydin2017_pdf178_foto33_giris_yuvarlak_pencereli.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Fotoğraf 33, tezde «Güney Girişi»",
+   "sayfa": "178",
+   "tur": "F (yuvarlak pencereli giriş; E'ye göre kuzey girişi, notlar §3.4)",
+   "sha256": "9ab1185574027ddbd0c34e28405280ca43cfacd6d75dfccced822d403fd20d1c"
+  },
+  {
+   "dosya": "ref/foto/aydin2017_pdf179_foto34_ic_carsi.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Fotoğraf 34, «İçerisi»",
+   "sayfa": "179",
+   "tur": "F",
+   "sha256": "32fe90465b06c164b1937ddd676a09b0074491df70d917615c6851b783cad2cd"
+  },
+  {
+   "dosya": "ref/foto/aydin2017_pdf180_foto35_giris_ic.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Fotoğraf 35, tezde «Kuzey Girişi» (içeri bakış)",
+   "sayfa": "180",
+   "tur": "F (yön etiketi için notlar §3.4)",
+   "sha256": "219c45cf319649af5bcbef2a02a423fce2b86b3a764d965a3187f8e81b25c27d"
+  },
+  {
    "dosya": "ref/foto/envanter_c1_pdf104_havadan_kubbeler.png",
    "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
    "sayfa": "104",
@@ -128,6 +149,13 @@
    "sha256": "722bff5b3598a4d254718a29ced24ae0938f117c998204feb60da1f520085bf9"
   },
   {
+   "dosya": "ref/metin/aydin2017.md",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017)",
+   "sayfa": "34, 67-74",
+   "tur": "W",
+   "sha256": "6c6141ec808f3540bd3aaad7e9d7ffb823eec85c46e63b08b125c770dc28316a"
+  },
+  {
    "dosya": "ref/metin/envanter_c1.md",
    "kaynak": "veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf (metin: veri/metin/bursa-envanteri-cilt-1.txt)",
    "sayfa": "104-107",
@@ -147,6 +175,69 @@
    "sayfa": "76-78, 220-224, 305",
    "tur": "W",
    "sha256": "cfeb528456b10954ef5b7183bd014718097444e3ef34f58c5871f6124a350641"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf087_plan01_hanlar_vaziyet_ayverdi.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 1, Ayverdi",
+   "sayfa": "87",
+   "tur": "P-oran (ölçek çubuğu yok; Orhan Hamamı Emir Hanı ile Koza Han arasında)",
+   "sha256": "9d64f33bcf7e9b06250f47f2e882165bb66accb7e16f5c63985b84c35c1ddf9a"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf095_plan10_ayverdi.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 10, Ayverdi",
+   "sayfa": "95",
+   "tur": "P-oran (yurt2024_pdf220 ile aynı çizim, daha temiz tarama)",
+   "sha256": "5b48bec88f1aefb25f912950bd1f3adbc81c8d538db5297f12357fa235583432"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf096_plan11_cetintas.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 11, Çetintaş",
+   "sayfa": "96",
+   "tur": "P-oran (yurt2024_pdf221 ile aynı çizim)",
+   "sha256": "b085d73deebeb2dd8bed28102ae6f20e8cbb21cbb270b4474fb536a0ad9682eb"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf097_plan12_gunumuz_cetintas.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 12, Çetintaş «günümüz planı»",
+   "sayfa": "97",
+   "tur": "P-oran (yurt2024_pdf222 ile karşılaştır)",
+   "sha256": "c082d24ba20691ed0db5aaec4bb227dae0c5389bdcca70502738db9d548e835d"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf098_plan13_kesit_kotlu.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 13 kesit; liste «S. Çetintaş», sayfa altyazısı «E. H. Ayverdi»",
+   "sayfa": "98",
+   "tur": "P (kot yazılı: 12,75 / 6,88 / 4,43 / 3,62 / 4,14 m; «mevcud zemin» çizgisi)",
+   "sha256": "4f641502b96165adb78396218b5a691accaf9ab3e7581bcb71f4e141957b14dd"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf099_plan14_ab_kesit_bugun_cetintas.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 14, Çetintaş AB kesiti, bugünkü durum",
+   "sayfa": "99",
+   "tur": "P-oran",
+   "sha256": "5512ad77fd7cf387e9ad3b6d95a4df867119025b1bdde6f0d25fb34d0cc9250c"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf100_plan15_ab_kesit_restorasyon_cetintas.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 15, Çetintaş AB kesiti, restorasyon tasarısı",
+   "sayfa": "100",
+   "tur": "P-oran (öneri; özgün durum değil)",
+   "sha256": "0ebff59e6b51bee600445f2ed00557c95877148f371331391ed5afed71aa7c26"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf101_plan16_cd_kesit_bugun_cetintas.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 16, Çetintaş CD kesiti, bugünkü durum",
+   "sayfa": "101",
+   "tur": "P-oran",
+   "sha256": "2c308a2f48e6c4ea027b9cec5155e8b9dfb233903a93e1bf79fbb90a056a2bcd"
+  },
+  {
+   "dosya": "ref/plan/aydin2017_pdf102_plan17_cd_kesit_restorasyon_cetintas.jpg",
+   "kaynak": "veri/bursa/481461.pdf (Aydın 2017, gömülü JPEG özgün çözünürlükte) — Plan 17, Çetintaş CD kesiti, restorasyon tasarısı",
+   "sayfa": "102",
+   "tur": "P-oran (öneri; özgün durum değil)",
+   "sha256": "a30fdf32dcb562500bb01569618b76c4273f1c4eb279b62477aa1c7d014f8439"
   },
   {
    "dosya": "ref/plan/okuma_hamam_kaynak_karsilastirma.png",
