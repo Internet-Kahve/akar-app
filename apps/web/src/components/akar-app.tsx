@@ -32,6 +32,7 @@ import {
   type AkarClient,
 } from "@akar/api-client";
 import {
+  approvedMemories,
   filterSites,
   kindLabels,
   normalize,
@@ -608,14 +609,8 @@ export function AkarApp() {
                         <span>
                           <strong>Yaşayan hafıza</strong>
                           <small>
-                            {
-                              state.memories.filter(
-                                (m) =>
-                                  m.siteId === site.id &&
-                                  m.status === "approved",
-                              ).length
-                            }{" "}
-                            onaylanmış anı
+                            {approvedMemories(state, site.id).length} onaylanmış
+                            anı
                           </small>
                         </span>
                         <ArrowRight size={17} />
@@ -1028,21 +1023,17 @@ export function AkarApp() {
       )}
       {overlay === "memories" && site && (
         <Modal title="Yaşayan hafıza" onClose={() => setOverlay(null)}>
-          {state.memories.filter(
-            (m) => m.siteId === site.id && m.status === "approved",
-          ).length ? (
-            state.memories
-              .filter((m) => m.siteId === site.id && m.status === "approved")
-              .map((m) => (
-                <article className="card memory-public" key={m.id}>
-                  {m.photo && (
-                    <img src={m.photo} alt="Ziyaretçinin eser fotoğrafı" />
-                  )}
-                  <strong>{m.author}</strong>
-                  <p>{m.text}</p>
-                  <Tag tone="success">Demo moderasyonunda onaylandı</Tag>
-                </article>
-              ))
+          {approvedMemories(state, site.id).length ? (
+            approvedMemories(state, site.id).map((m) => (
+              <article className="card memory-public" key={m.id}>
+                {m.photo && (
+                  <img src={m.photo} alt="Ziyaretçinin eser fotoğrafı" />
+                )}
+                <strong>{m.author}</strong>
+                <p>{m.text}</p>
+                <Tag tone="success">Demo moderasyonunda onaylandı</Tag>
+              </article>
+            ))
           ) : (
             <div className="empty-state">
               <MessageSquare size={36} />

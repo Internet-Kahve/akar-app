@@ -256,6 +256,7 @@ export function Profile({
   );
 }
 export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
+  const queue = state.moderationQueue ?? state.memories;
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [tab, setTab] = useState<
       "sites" | "memories" | "routes" | "photos" | "import"
@@ -334,9 +335,7 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
         >
           <MessageSquare size={18} />
           Katkılar
-          <Tag>
-            {state.memories.filter((m) => m.status === "pending").length}
-          </Tag>
+          <Tag>{queue.filter((m) => m.status === "pending").length}</Tag>
         </button>
         <button
           disabled={!!editing}
@@ -458,11 +457,11 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
                       : s === "approved"
                         ? "Onaylanan"
                         : "Reddedilen"}{" "}
-                    · {state.memories.filter((m) => m.status === s).length}
+                    · {queue.filter((m) => m.status === s).length}
                   </button>
                 ))}
               </div>
-              {!state.memories.some((m) => m.status === filter) ? (
+              {!queue.some((m) => m.status === filter) ? (
                 <div className="empty-state">
                   <Shield size={36} />
                   <h3>Bu listede katkı yok</h3>
@@ -472,7 +471,7 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
                   </p>
                 </div>
               ) : (
-                state.memories
+                queue
                   .filter((m) => m.status === filter)
                   .map((m) => (
                     <div className="card moderation-card" key={m.id}>
