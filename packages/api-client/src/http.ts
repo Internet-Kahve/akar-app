@@ -379,6 +379,8 @@ interface Catalog {
   raw: Map<string, SiteDetailDto>;
   routes: HeritageRoute[];
   quizSite: Map<string, string>;
+  stale: Set<string>;
+  routesStale: boolean;
 }
 interface UserState {
   signedIn: boolean;
@@ -517,6 +519,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       return {
         sites: details.map(mapSite),
         raw: new Map(details.map((d) => [d.id, d])),
+        stale: new Set<string>(),
+        routesStale: false,
         ...routes,
       };
     })();
@@ -527,16 +531,31 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   };
   const refreshSite = async (id: string) => {
     const cat = await loadCatalog();
-    const d = await call<SiteDetailDto>(
-      "GET",
-      `/v1/sites/${encodeURIComponent(id)}`,
-    );
+    // Stale until the read succeeds: any failure other than "gone" leaves it to be reloaded.
+    cat.stale.add(id);
+    let d: SiteDetailDto;
+    try {
+      d = await call<SiteDetailDto>(
+        "GET",
+        `/v1/sites/${encodeURIComponent(id)}`,
+      );
+    } catch (e) {
+      if (!(e instanceof ApiError && e.status === 404)) throw e;
+      // Unpublished or removed: the site is gone.
+      cat.raw.delete(id);
+      cat.sites = cat.sites.filter((s) => s.id !== id);
+      cat.stale.delete(id);
+      return;
+    }
     cat.raw.set(id, d);
     cat.sites = cat.sites.map((s) => (s.id === id ? mapSite(d) : s));
+    cat.stale.delete(id);
   };
   const refreshRoutes = async () => {
     const cat = await loadCatalog();
+    cat.routesStale = true;
     Object.assign(cat, await loadRoutes());
+    cat.routesStale = false;
   };
 
   // ── receipts ───────────────────────────────────────────────────────────────
@@ -660,10 +679,23 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       throw e;
     }
   }
+  /** Identity (token) the cached `user` belongs to; a different token never reuses it. */
+  let userKey: string | null = null;
+  async function ensureUser(cat: Catalog, force = false): Promise<UserState> {
+    const key = await token();
+    if (user && !force && userKey === key) return user;
+    user = undefined;
+    const loaded = await loadUser(cat);
+    userKey = await token();
+    return loaded;
+  }
 
   async function build(reloadUser: boolean): Promise<Snapshot> {
     const cat = await loadCatalog();
-    if (reloadUser || !user) user = await loadUser(cat);
+    // Reads that failed after a successful admin write are redone before anything is served.
+    if (cat.routesStale) await refreshRoutes();
+    for (const id of [...cat.stale]) await refreshSite(id);
+    user = await ensureUser(cat, reloadUser);
     const published = new Set(cat.sites.map((s) => s.id));
     const snapshot: Snapshot = {
       version: 1,
@@ -785,12 +817,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       });
     if (site.status === "draft")
       await call("POST", `/v1/admin/sites/${id}/unpublish`);
-    await refreshSite(site.id).catch(async () => {
-      // An unpublished site is no longer readable; drop it from the cache.
-      const c = await loadCatalog();
-      c.raw.delete(site.id);
-      c.sites = c.sites.filter((s) => s.id !== site.id);
-    });
+    await refreshSite(site.id);
   }
 
   async function updateRoutes(routes: HeritageRoute[]) {
@@ -842,7 +869,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
 
   async function run(command: Command): Promise<boolean> {
     const cat = await loadCatalog();
-    if (!user) user = await loadUser(cat);
+    user = await ensureUser(cat);
     if ("siteId" in command && !cat.sites.some((s) => s.id === command.siteId))
       throw new Error("Eser bulunamadı.");
     switch (command.type) {
