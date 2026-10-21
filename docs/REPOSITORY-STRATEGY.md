@@ -8,14 +8,14 @@ Akar bu aşamada **Internet-Kahve/akar-app** reposunda bir monorepo olarak geli�
 | ------------------------ | -------------------------------------------------------------------- | ------------------------------------------------- |
 | `apps/web`               | Next.js frontend, UI, harita, tarayıcı adaptörleri                   | Mevcut                                            |
 | `apps/mobile`            | Expo / React Native, mobil UI ve cihaz API'leri                      | Mobil aşamasında oluşturulacak                    |
-| `services/api`           | Backend, auth, veritabanı, moderasyon, sunucu puan/ziyaret kuralları | Backend ekibi uygulamaya başladığında oluşturacak |
+| `services/api`           | Backend, auth, veritabanı, moderasyon, sunucu puan/ziyaret kuralları | Mevcut: Fastify + Drizzle + PostGIS temeli        |
 | `packages/domain`        | TypeScript veri modelleri, frontend iş kuralları                     | Mevcut                                            |
 | `packages/api-client`    | API arayüzü, mock veri ve ileride HTTP adaptörü                      | Mevcut                                            |
 | `packages/design-tokens` | Ortak renk ve ölçüler                                                | Mevcut                                            |
 | `docs`                   | Ürün, tasarım ve frontend/backend sözleşmeleri                       | Mevcut                                            |
-| `.github/workflows`      | Otomatik doğrulama                                                   | Frontend CI mevcut                                |
+| `.github/workflows`      | Otomatik doğrulama                                                   | Frontend CI ve API CI mevcut                      |
 
-Planlanan klasörler boş servis varmış izlenimi vermek için eklenmez. Backend framework'ünü bu repo düzeni belirlemez. FastAPI seçilirse `services/api` kendi Python bağımlılık dosyalarını kullanır; Node tabanlı backend seçilirse bağımsız paket olarak yapılandırılır. `services/*` bugün npm workspaces'e ekli değildir.
+Planlanan klasörler boş servis varmış izlenimi vermek için eklenmez. Backend Node/TypeScript (Fastify, Zod, Drizzle, PostgreSQL + PostGIS) olarak `services/api` altındadır; `services/*` npm workspaces'e eklidir, böylece `packages/domain` tipleri ve doğrulayıcıları backend'de doğrudan kullanılır. Kurulum: [services/api/README.md](../services/api/README.md).
 
 ## Backend ekibinin başlangıcı
 
