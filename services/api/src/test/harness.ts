@@ -1,5 +1,7 @@
+import { once } from "node:events";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import type { FastifyPluginAsync } from "fastify";
+import type { PoolClient } from "pg";
 import { buildApp, type App, type AppDeps } from "../app.ts";
 import { loadConfig, type Config } from "../config.ts";
 import { createDb } from "../db/client.ts";
@@ -41,6 +43,13 @@ export async function startTestApp(opts: TestAppOptions = {}): Promise<{
   await runMigrations(url);
   const config = loadConfig({ NODE_ENV: "test", DATABASE_URL: url, RECEIPT_SECRET: TEST_RECEIPT_SECRET, ...opts.env });
   const { db, pool } = createDb(url);
+  // `pool.end()` resolves before its connections have closed; stopping the container first kills them
+  // mid-shutdown and the driver reports it as an uncaught error. Track them so `stop` can wait.
+  const open = new Set<PoolClient>();
+  pool.on("connect", (client) => {
+    open.add(client);
+    client.once("end", () => open.delete(client));
+  });
   const jobs = inlineJobs();
   const app = await buildApp(
     {
@@ -59,7 +68,9 @@ export async function startTestApp(opts: TestAppOptions = {}): Promise<{
     jobs,
     stop: async () => {
       await app.close();
+      const closed = [...open].map((client) => once(client, "end"));
       await pool.end();
+      await Promise.all(closed);
       await container.stop();
     },
   };
