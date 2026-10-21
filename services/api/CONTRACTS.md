@@ -26,7 +26,7 @@ Kurallar:
 - Bir modül başka modülün tablosuna **yazmaz**; dışa açılmış servis fonksiyonunu çağırır. Tek istisna: `admin-catalog` içerik tablolarının yazarıdır (catalog/routes yalnız okur).
 - Okuma sorguları yayın kapısını atlamamak koşuluyla başka modülün tablosuna `join` yapabilir (örnek: catalog → `media`).
 - `app.ts`, `server.ts`, `src/db/schema/index.ts`, `drizzle/`, `package.json`, `src/config.ts`, `src/platform/*`, `src/test/harness.ts` ve `CONTRACTS.md` ortak dosyalardır; backend sorumlusu düzenler. Yeni modül, kayıt satırını (`MODULES` listesine eklenecek eklenti) ve bağımlılık ihtiyacını PR açıklamasında belirtir. Kayıtlı modüller: health, catalog, routes, identity, media, admin-catalog (sites, routes-editor, imports), moderation, engagement, settings.
-- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0005` (`0004` modül tabloları, `0005` `map_settings`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
+- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0006` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
 - Modül eklentisi `FastifyPluginAsyncZod` döner ve kendi `routes.ts` dosyasından dışa açılır. Testler eklentiyi `startTestApp({ register: [xxxRoutes] })` ile yükler; modül `MODULES`'a eklendiğinde aynı test değişmeden çalışır.
 
 ### Çalışma zamanı bağımlılıkları (`app.deps`)
@@ -36,7 +36,7 @@ type AppDeps = {
   config: Config;            // src/config.ts (SUPABASE_*, AUTH_*, STORAGE_*, RECEIPT_SECRET, VISIT_RADIUS_M, TRUST_PROXY)
   db: Db;
   auth: AuthVerifier | null; // identity sağlar; null iken her token 401
-  storage: ObjectStorage | null; // src/platform/storage.ts; media sürücüleri sağlar
+  storage: StorageBuckets | null; // src/platform/storage.ts: { uploads, media } (iki ObjectStorage); media sürücüleri sağlar
   jobs: JobQueue | null;     // src/platform/jobs.ts; sunucuda pg-boss, testte inlineJobs() (+ drain())
   geocoderFor: ((city: CityConfig) => Promise<Geocoder>) | null; // admin içe aktarma
 };
@@ -55,7 +55,7 @@ Gerekli bağımlılık `null` ise uç `503 SERVICE_UNAVAILABLE` döner, sahte da
 | `playableQuizzes`, `playableQuiz`, `checkQuizAnswer` | `modules/routes/quizzes.ts` | Cevapsız bulmaca ve sunucuda kontrol |
 | `recordPointEvent`, `pointsOf`, `POINT_ACTIONS` | `modules/engagement/points.ts` | Puan defteri |
 | `idempotent`, `idempotencyKeyOf` | `platform/idempotency.ts` | Tekrar güvenli mutasyon |
-| `expireUploads` | `modules/media/service.ts` | Süresi dolmuş bekleyen yüklemeleri temizler (`server.ts`, 15 dk) |
+| `expireUploads` | `modules/media/service.ts` | Süresi dolmuş yüklemelerin `uploads` kovasındaki nesnelerini temizler (`server.ts`, 15 dk) |
 | `recordAudit` | `platform/audit.ts` | Audit kaydı |
 | `requireUser`, `requireRole` | `platform/auth.ts` | Yetki kontrolü |
 | `PageQuery`, `pageResponse`, `encodeCursor`, `decodeCursor` | `platform/pagination.ts` | Keyset sayfalama |
@@ -165,15 +165,14 @@ interface ObjectStorage {
 }
 ```
 
-Sürücüler: S3 protokolü (Supabase Storage; yerelde `supabase start`, bulutta proje) ve testler için dosya sistemi. JSON'da asla data URL ya da blob yok; istemci medya id'si gönderir. Sınırlar: fotoğraf ≤ 5 MB (JPEG/PNG/WebP), GLB ≤ 5 MB, ses ≤ 5 MB (MP3/M4A); tür dosyanın ilk baytlarından doğrulanır. Yerel `media` kovası `supabase/config.toml` içinde tanımlı.
+Sürücüler: S3 protokolü (Supabase Storage; yerelde `supabase start`, bulutta proje) ve testler için dosya sistemi (`STORAGE_FS_ROOT/<kova>/`). İki kova vardır: herkese kapalı `uploads` (`STORAGE_UPLOAD_BUCKET`, istemcinin imzalı PUT ile yazdığı tek yer) ve herkese açık okunan `media` (`STORAGE_BUCKET`, yalnız sunucu yazar). İkisi aynı ada ayarlanırsa sunucu açılmaz. `uploads` örneğinin `publicUrl`'si hata atar. JSON'da asla data URL ya da blob yok; istemci medya id'si gönderir. Sınırlar: fotoğraf ≤ 5 MB (JPEG/PNG/WebP), GLB ≤ 5 MB, ses ≤ 5 MB (MP3/M4A); tür dosyanın ilk baytlarından doğrulanır. Yerel kovalar `supabase/config.toml` içinde tanımlı; bulutta `uploads` kovası elle, herkese kapalı olarak açılır.
 
 Yükleme akışı:
 
-- `POST /v1/media/uploads` sunucunun ürettiği yükleme anahtarı (`<kind>/<yyyy>/<mm>/<uuid>.<ext>`) için imzalı PUT adresi verir. Bir hesap en çok 10 açık (bekleyen, süresi dolmamış) yükleme tutar; aşılırsa 429 `RATE_LIMITED`. Sınır her rol için geçerlidir.
-- `complete` dosyayı **bir kez** okur (en çok 5 MB + 1 bayt), boyut ve ilk baytları o tampon üzerinde doğrular, doğruladığı baytları yeni bir son anahtara (`<kind>/<yyyy>/<mm>/<mediaId>.<ext>`) yazar ve yükleme anahtarını siler. `media.url`, `media.storageKey` ve `media.bytes` son anahtardan gelir; istemcinin yazma izni olduğu anahtar asla yayınlanmaz. İstemci adresi türetmez, yanıttaki `url`'yi kullanır.
+- `POST /v1/media/uploads` sunucunun ürettiği yükleme anahtarı (`<kind>/<yyyy>/<mm>/<uuid>.<ext>`) için `uploads` kovasına imzalı PUT adresi verir. Bir hesap en çok 10 açık (bekleyen, süresi dolmamış) yükleme tutar; aşılırsa 429 `RATE_LIMITED`. Sınır her rol için geçerlidir.
+- `complete` dosyayı `uploads`'tan **bir kez** okur (en çok 5 MB + 1 bayt), boyut ve ilk baytları o tampon üzerinde doğrular, doğruladığı baytları `media` kovasında yeni bir son anahtara (`<kind>/<yyyy>/<mm>/<mediaId>.<ext>`) yazar ve yükleme anahtarını siler. `media.url`, `media.storageKey` ve `media.bytes` son anahtardan gelir; istemcinin yazma izni olduğu kova asla yayınlanmaz. İstemci adresi türetmez, yanıttaki `url`'yi kullanır.
 - Dosya sistemi sürücüsünün PUT'u yalnız `pending` yüklemede yazar (satır yoksa 404, durum `pending` değilse 409); satır yazma boyunca kilitli olduğundan `complete` ile yarış olmaz.
-- `expireUploads` (`server.ts`, 15 dakikada bir): süresi 5 dakikadan fazla önce dolmuş `pending` yüklemelerin nesnesini siler ve `expired` yapar; birden çok örnekte güvenle çalışır. Hiç dosya gelmemiş bilet de silinir (`delete` olmayan nesneye hata vermez).
-- Yalnız S3: imzalı PUT geri alınamadığından `complete` sonrası 15 dakika içinde silinmiş yükleme anahtarına yeniden yazılabilir. Servis edilen baytları değiştirmez ama kovada sahipsiz nesne bırakır; `expireUploads` bunu süpürmez. Operasyon: yükleme anahtarlarını herkese açık olmayan bir önek/kovaya al ya da S3 yaşam döngüsü kuralıyla kalıntıları sil.
+- `expireUploads` (`server.ts`, 15 dakikada bir): `cleaned_at` boş ve süresi 5 dakikadan fazla önce dolmuş her yüklemenin `uploads` nesnesini siler ve `cleaned_at` yazar; `pending` olanları ayrıca `expired` yapar. Böylece S3 imzalı PUT'u (geri alınamaz) `complete` ya da ret sonrası süresi dolana kadar yeniden kullanılsa bile bırakılan dosya herkese kapalı kalır ve süpürmede silinir. Birden çok örnekte güvenle çalışır (`FOR UPDATE SKIP LOCKED`); `delete` olmayan nesneye hata vermez.
 
 ### İş kuyruğu
 

@@ -166,7 +166,7 @@ Kurulum ve doğrulama (20 Eki):
 - Supabase CLI 2.121.0 (Homebrew). Proje ayarları `services/api/supabase/config.toml` (git'e girer): proje adı `akar`; kullanılmayan servisler kapalı (realtime, edge functions, analytics, vector); 8 konteyner, toplam ~0,7 GB bellek.
 - Giriş: 6 haneli kod, 600 sn (Figma 1:3937). Varsayılan şablon kod yerine bağlantı gönderiyordu; Türkçe şablonlar eklendi (`supabase/templates/otp.html`, `invite.html`).
 - Token: yerelde de bulut gibi ES256 + JWKS (`supabase/signing_keys.json`, git dışı). OTP → token → JWKS doğrulaması uçtan uca denendi.
-- Depolama: herkese açık okunan `media` kovası (5 MiB, JPEG/PNG/WebP/GLB/MP3/M4A). İmzalı S3 yükleme (presigned PUT) ve herkese açık okuma denendi.
+- Depolama: herkese açık okunan `media` kovası ve herkese kapalı `uploads` kovası (ikisi de 5 MiB, JPEG/PNG/WebP/GLB/MP3/M4A; §11.7). İmzalı S3 yükleme (presigned PUT) `uploads`'a, herkese açık okuma `media`'dan denendi.
 - API'nin kendi veritabanı yine `docker-compose.yml`'daki PostGIS (5433); Supabase'in yerel veritabanı (54322) yalnız Auth/Storage içindir. Bulutta ikisi aynı Supabase Postgres olur.
 - Değerler `services/api/.env` içinde (git dışı); adlar `.env.example`'da. `RECEIPT_SECRET` yerelde rastgele üretildi.
 
@@ -193,7 +193,7 @@ Nasıl değiştirilir: aynı ayar; bulutta `supabase config push`.
 Karar: harita için ayrı "hafif" ve detay için ayrı model **yok**; her eserin tek GLB'si olur. Yükleme sınırı 5 MiB olarak kalır. Haritada 3B yükleme yakınlaştırmaya bağlıdır ve elle ayarlanabilir değerler API'den gelir (başlangıç: yakınlaştırma ≥ 16, aynı anda en çok 5 model).
 Neden: `origin/docs` ve 3B branch'lerindeki güncel Bursa çıktıları 0,15–0,7 MB (Ulu Cami v25 0,69; Koza Han v13 0,68; Orhan Bey Camii v06 0,25; Bedesten v05 0,19); `_sunum` sürümleri neredeyse aynı boyutta. İkinci sürüm kazanç sağlamaz. Sınırı aşan yalnız deneme dosyaları var (Ulu Cami GPT `_sunum` 5,52 MB, Ayasofya v22 6,28 MB); bunlar reddedilir.
 Karar veren / tarih: Weissman, 21 Eki.
-Nasıl değiştirilir: boyut sınırı `services/api/src/modules/media/magic.ts` (`model.maxBytes`) ve Supabase `media` kovası sınırı; harita değerleri ayar uç noktasında (P3).
+Nasıl değiştirilir: boyut sınırı `services/api/src/modules/media/magic.ts` (`model.maxBytes`) ve Supabase `media` ile `uploads` kovalarının sınırı; harita değerleri ayar uç noktasında (P3).
 
 **11.3 Demo tohumu ile içe aktarılan taslaklar arasındaki olası kopyalar** ("Bedesteni", "Koza Han Mescidi"): kod değişikliği yok; gerçek yayından önce editör kontrol eder.
 Karar veren / tarih: Weissman, 21 Eki.
@@ -218,5 +218,5 @@ Nasıl değiştirilir: `services/api/src/modules/moderation/service.ts` (`REPORT
 **11.7 Yüklemeler ayrı, herkese kapalı bir kovaya gider.**
 Karar: istemci dosyayı herkese kapalı bir `uploads` kovasına yükler; `complete` doğrulamadan sonra sunucu dosyayı herkese açık `media` kovasına kopyalar. Süresi dolmamış yükleme bağlantısıyla sonradan bırakılan dosya hiçbir zaman herkese açık olmaz; süpürme onu da siler.
 Neden: S3 imzalı PUT bağlantısı geri alınamaz; `complete` sonrası en çok 15 dakika geçerli kalır (güvenlik incelemesi). Temizlik kuralı tek başına artığı ~20 dakika açıkta bırakırdı.
-Karar veren / tarih: Weissman, 21 Eki. Uygulama: ayrı bir PR'da (henüz yapılmadı).
-Nasıl değiştirilir: `supabase/config.toml` kova tanımları ve depolama ayarları (`src/config.ts`).
+Karar veren / tarih: Weissman, 21 Eki. Uygulama: 21 Eki. `media_uploads.cleaned_at` (migration `0006`) süpürmenin her yüklemeyi bir kez temizlemesini sağlar; `STORAGE_UPLOAD_BUCKET` `STORAGE_BUCKET` ile aynıysa sunucu açılmaz. Yerelde denendi: `complete` sonrası aynı imzalı bağlantıyla yeniden yükleme başarılı ama dosya herkese açık okunamadı (400), süpürme sildi, yayındaki medya etkilenmedi.
+Nasıl değiştirilir: `supabase/config.toml` kova tanımları ve depolama ayarları (`STORAGE_BUCKET`, `STORAGE_UPLOAD_BUCKET`; `src/config.ts`). Bulutta `uploads` kovası elle, herkese kapalı açılır.

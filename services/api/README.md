@@ -41,6 +41,8 @@ Tüm değişkenler `.env.example` içinde; `src/config.ts` doğrular.
 | `NOMINATIM_URL` | `https://nominatim.openstreetmap.org` | Coğrafi kodlama (içe aktarma ve `npm run ingest`) |
 | `NOMINATIM_EMAIL` | boş | Nominatim kullanım politikası için iletişim adresi; isteğe bağlı |
 | `OVERPASS_URL` | `https://overpass-api.de/api/interpreter` | OSM toplu eşleşmesi; isteğe bağlı |
+| `STORAGE_BUCKET` | `media` | Herkese açık okunan medya kovası; yalnız sunucu yazar |
+| `STORAGE_UPLOAD_BUCKET` | `uploads` | Herkese kapalı yükleme kovası; istemci imzalı PUT ile buraya yükler, `complete` doğrulanan dosyayı `STORAGE_BUCKET`'a kopyalar. `STORAGE_BUCKET` ile aynı olamaz. Yerelde `supabase start` (çalışan yığında `supabase seed buckets --local`) açar; bulutta elle, herkese kapalı açılmalı |
 
 ### İlk yönetici
 
