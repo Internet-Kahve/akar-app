@@ -409,8 +409,8 @@ test("a rejected token is reported and reads retry as guest; mutations with it f
     ...Object.fromEntries(
       Object.entries(catalogHandlers()).map(([k, h]) => [k, publicRead(h)]),
     ),
+    ...accountHandlers({ "expired-again": { saved: [], points: 0 } }),
     "PUT /v1/me/saved/a": () => unauthorized(),
-    "GET /v1/me": () => unauthorized(),
   });
   const client = createHttpClient({
     baseUrl: "http://api.test",
@@ -463,3 +463,107 @@ test("overlapping dispatches run one at a time: one receipt per subject, both to
   );
   assert.deepEqual(fourth.savedIds, []);
 });
+
+const accountHandlers = (
+  accounts: Record<string, { saved: string[]; points: number }>,
+): Record<string, Handler> => {
+  const of = (c: Call) => accounts[c.headers.authorization?.slice(7) ?? ""]!;
+  return {
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ada" }),
+    "GET /v1/me/passport": (c) => ({
+      points: of(c).points,
+      saved: of(c).saved,
+      read: [],
+      visited: [],
+      quizzesSolved: [],
+    }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "PUT /v1/me/saved/a": () => ({ siteId: "a", saved: true }),
+    "DELETE /v1/me/saved/a": () => ({ siteId: "a", saved: false }),
+  };
+};
+
+test("the user cache follows the token: another account never inherits cached saves", async () => {
+  let tokenValue: string | null = "A";
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({
+      A: { saved: ["a"], points: 50 },
+      B: { saved: [], points: 0 },
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => tokenValue,
+    fetch: api.fetch,
+  });
+  assert.deepEqual((await client.getSnapshot()).savedIds, ["a"]);
+
+  tokenValue = "B";
+  await client.dispatch({ type: "save", siteId: "a" });
+  const write = api.calls.filter((c) => c.path === "/v1/me/saved/a").at(-1);
+  assert.deepEqual(
+    [write?.method, write?.headers.authorization],
+    ["PUT", "Bearer B"],
+  );
+
+  tokenValue = null;
+  const guest = await client.dispatch({ type: "route", siteId: "a" });
+  assert.deepEqual(
+    [guest.savedIds, guest.points, guest.routeIds],
+    [[], 0, ["a"]],
+  );
+});
+
+for (const failure of ["server", "network"] as const) {
+  test(`a failed site re-read after an admin write surfaces and is reloaded later (${failure})`, async () => {
+    let reread: "ok" | "fail" = "ok";
+    const catalog = catalogHandlers();
+    const api = fakeApi({
+      ...catalog,
+      ...accountHandlers({ T: { saved: [], points: 0 } }),
+      "GET /v1/sites/a": (c) => {
+        if (reread === "ok") return catalog["GET /v1/sites/a"]!(c);
+        if (failure === "network") throw new TypeError("offline");
+        return Response.json(
+          {
+            error: {
+              code: "INTERNAL",
+              message: "Hata",
+              fieldErrors: {},
+              requestId: "r",
+            },
+          },
+          { status: 500 },
+        );
+      },
+      "PATCH /v1/admin/sites/a/info": () => ({}),
+    });
+    const client = createHttpClient({
+      baseUrl: "http://api.test",
+      storage: storage(),
+      getToken: () => "T",
+      fetch: api.fetch,
+    });
+    const site = (await client.getSnapshot()).sites.find((s) => s.id === "a")!;
+    reread = "fail";
+    await assert.rejects(
+      client.dispatch({ type: "site", site: { ...site, description: "yeni" } }),
+      (e) =>
+        e instanceof ApiError &&
+        (failure === "network" ? e.status === 0 : e.status === 500),
+    );
+    reread = "ok";
+    const after = await client.getSnapshot();
+    assert.ok(
+      after.sites.some((s) => s.id === "a"),
+      "the site is not dropped",
+    );
+    assert.equal(
+      api.calls.filter((c) => c.path === "/v1/sites/a").length,
+      3,
+      "reloaded by the next read",
+    );
+  });
+}
