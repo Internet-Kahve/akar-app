@@ -4,15 +4,26 @@ Fastify + Zod, Drizzle ORM, PostgreSQL 17 + PostGIS. Sözleşme: [API-HANDOFF](.
 
 ## Çalıştırma
 
-Docker (veya OrbStack) ve repo kökünde `npm ci` gerekir.
+Docker (veya OrbStack), [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) ve repo kökünde `npm ci` gerekir.
+
+Tek komut (repo kökünden):
 
 ```sh
-cd services/api
-cp .env.example .env
-npm run db:up        # PostGIS 127.0.0.1:5433
-npm run db:migrate
-npm run dev          # http://127.0.0.1:4000, Swagger UI: /docs
+npm run api                                          # her şeyi kurar/başlatır, API'yi açar: http://127.0.0.1:4000, Swagger: /docs
+npm run api:token -- --email ben@akar.test --role admin   # e-postasız giriş, token'ı yazar
 ```
+
+`npm run api` = `services/api` içinde `npm run local`: yerel Supabase'i (giriş, dosya, e-posta kutusu) ve API veritabanını başlatır, `.env` yoksa `.env.example`'dan oluşturup boş Supabase/depolama anahtarlarını ve `RECEIPT_SECRET`'ı doldurur (dolu değerlere dokunmaz), migration'ları uygular, veritabanı boşsa demo verisini yükler, sonra `npm run dev`. Tekrar çalıştırmak güvenlidir; çalışan servislere ve mevcut veriye dokunmaz.
+
+| Komut (`services/api`) | İş |
+| --- | --- |
+| `npm run local` | Yukarıdaki kurulum + `npm run dev` |
+| `npm run local:up` | Yalnız kurulum (API'yi açmaz) |
+| `npm run local:down` | Supabase'i ve API veritabanını durdurur; veri kalır |
+| `npm run local:reset` | API veritabanını siler, migration + demo verisiyle baştan kurar (Supabase kullanıcıları kalır; içe aktarılan taslaklar için `npm run ingest -- --city bursa`) |
+| `npm run -s local:token -- --email <e-posta> [--role user\|editor\|moderator\|admin]` | Yalnız yerel Supabase: kod e-postası beklemeden oturum açar, token'ı stdout'a yazar (1 saat). Rol verilirse önce personel daveti yazılır; rol ilk istekte gelir. Örnek: `TOKEN=$(npm run -s local:token -- --email ben@akar.test --role admin)` |
+
+Adresler: e-posta kutusu (Mailpit) http://127.0.0.1:54324, Supabase Studio http://127.0.0.1:54323. Elle test akışları ve otomatik testler: [docs/TESTING.md](../../docs/TESTING.md).
 
 | Komut | İş |
 | --- | --- |

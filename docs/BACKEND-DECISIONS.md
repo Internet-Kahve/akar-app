@@ -220,3 +220,15 @@ Karar: istemci dosyayı herkese kapalı bir `uploads` kovasına yükler; `comple
 Neden: S3 imzalı PUT bağlantısı geri alınamaz; `complete` sonrası en çok 15 dakika geçerli kalır (güvenlik incelemesi). Temizlik kuralı tek başına artığı ~20 dakika açıkta bırakırdı.
 Karar veren / tarih: Weissman, 21 Eki. Uygulama: 21 Eki. `media_uploads.cleaned_at` (migration `0006`) süpürmenin her yüklemeyi bir kez temizlemesini sağlar; `STORAGE_UPLOAD_BUCKET` `STORAGE_BUCKET` ile aynıysa sunucu açılmaz. Yerelde denendi: `complete` sonrası aynı imzalı bağlantıyla yeniden yükleme başarılı ama dosya herkese açık okunamadı (400), süpürme sildi, yayındaki medya etkilenmedi.
 Nasıl değiştirilir: `supabase/config.toml` kova tanımları ve depolama ayarları (`STORAGE_BUCKET`, `STORAGE_UPLOAD_BUCKET`; `src/config.ts`). Bulutta `uploads` kovası elle, herkese kapalı açılır.
+
+**11.8 P5 (entegrasyon + yayına alma) backend tarafında yürütülür.**
+Karar: P5'i (HTTP adaptörü, yayına alma, gerçek içerik yükleme) Weissman ve backend sorumlusu yürütür; plandaki "Weissman + Tamer" yerine. Adaptör arayüz dahil (giriş ekranı, yükleme, oturum durumu) bizde yapılır; Tamer'e başta haber verilir ve her PR'ı Tamer inceler. Çakışmayı azaltmak için PR'lar küçük tutulur (önce `packages/api-client`, sonra arayüz) ve açılmadan hemen önce `main` üzerine alınır.
+Neden: P1–P4 bitti; P5'i beklemeden başlatmak, dondurmadan (6 Kas) önce ekibin gerçek telefonda HTTPS üzerinden test etmesine zaman kazandırır.
+Karar veren / tarih: Weissman, 21 Eki.
+Nasıl değiştirilir: P5'in bir parçası Tamer'e devredilebilir; bu kayıt güncellenir.
+
+**11.9 Çevrimiçi test ortamında giriş, Supabase'in kendi e-postasıyla.**
+Karar: Test ortamında giriş, üretimdekiyle aynı e-posta kodu akışıdır; ayrı bir SMTP hesabı açılmaz, Supabase'in yerleşik e-posta servisi kullanılır. Test eden 4 kişi Supabase organizasyonunun ekibine eklenir (yerleşik servis yalnız ekip üyelerine gönderir). Sabit, şifreli rol hesapları yapılmaz.
+Neden: Ücretsiz, kurulum gerektirmez ve üretimden ayrı bir giriş yolu kodlamayı önler. Sınır: proje başına saatte 2 e-posta; oturumlar uzun sürdüğü için 4 kişilik ekipte yeterli.
+Karar veren / tarih: Weissman, 21 Eki. API sunucusu (Render/Railway vb.) seçimi yayına alma adımına (P5.2) bırakıldı.
+Nasıl değiştirilir: Sınır yetmezse ücretsiz bir SMTP servisi (örn. Resend; alan adı doğrulaması gerekir) Supabase panelinde tanımlanır, kod değişmez.
