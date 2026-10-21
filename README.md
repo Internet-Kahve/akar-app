@@ -29,6 +29,8 @@ npm run build
 npm start
 ```
 
+API'yi yerelde açmak (`npm run api`), rol rol token almak ve bütün testler: [docs/TESTING.md](docs/TESTING.md).
+
 ## Çalışan akışlar
 
 - Türkçe arama, eser türü filtresi, favoriler, harita pinleri ve mobil yerleşim.

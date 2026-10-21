@@ -1,0 +1,104 @@
+# Test rehberi
+
+Projeyi kendi bilgisayarında çalıştırıp test etmek için gereken her şey. Komutlar repo kökünden çalışır (aksi yazılmadıkça).
+
+## Gerekenler
+
+- Node.js ve repo kökünde bir kez `npm ci`
+- Docker Desktop ya da OrbStack (açık olmalı)
+- [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) (macOS: `brew install supabase/tap/supabase`)
+- Uçtan uca testler için Google Chrome
+
+İlk çalıştırmada Docker imajları iner (birkaç GB, birkaç dakika). Sonraki açılışlar saniyeler sürer.
+
+## 1. Uygulamaları açmak
+
+İki terminal:
+
+```sh
+npm run api   # API: http://127.0.0.1:4000 · Swagger: http://127.0.0.1:4000/docs
+npm run dev   # Web uygulaması: http://127.0.0.1:3000
+```
+
+`npm run api` yerel Supabase'i (giriş, dosya depolama, e-posta kutusu) ve API veritabanını başlatır, `services/api/.env` yoksa oluşturur, migration'ları uygular, veritabanı boşsa Bursa demo verisini yükler ve API'yi açar. Tekrar çalıştırmak güvenlidir; mevcut veriye dokunmaz.
+
+Not: web uygulaması şimdilik kendi demo verisini kullanır, API'ye bağlı değildir. API'yi Swagger ya da `curl` ile test et.
+
+| Adres | Ne |
+| --- | --- |
+| http://127.0.0.1:4000/docs | Swagger: bütün uçlar, istek/yanıt şemaları, "Try it out" |
+| http://127.0.0.1:54324 | E-posta kutusu (Mailpit): yerelde gönderilen bütün e-postalar |
+| http://127.0.0.1:54323 | Supabase Studio: kullanıcılar, dosyalar |
+
+## 2. Giriş (token)
+
+Okuma uçları (`GET /v1/sites`, `/v1/routes`, `/v1/cities`, `/v1/map-settings`) giriş istemez. Diğerleri için token al:
+
+```sh
+npm run api:token -- --email ben@akar.test --role admin
+```
+
+Komut e-posta kodu beklemeden oturum açar ve token'ı yazar (1 saat geçerli). Swagger'da sağ üstteki **Authorize** düğmesine yapıştır ya da:
+
+```sh
+TOKEN=$(npm run -s api:token -- --email ben@akar.test --role admin)
+curl http://127.0.0.1:4000/v1/me -H "Authorization: Bearer $TOKEN"
+```
+
+Her rolü ayrı bir adresle dene; `@akar.test` adresleri yalnız yereldir.
+
+| `--role` | Ne yapabilir |
+| --- | --- |
+| `user` (varsayılan) | Kaydet, ilerleme, puan, İz Bırak (anı paylaş), Bildir |
+| `editor` | Eser, rota, kart oluşturma/düzenleme/yayınlama; içe aktarma; 3B model ve ses yükleme |
+| `moderator` | Anıları onaylama/reddetme, bildirilen içerik |
+| `admin` | Hepsi + personel davet/rol, harita ayarları |
+
+Gerçek e-posta koduyla giriş de denenebilir: kod Mailpit'e düşer.
+
+## 3. Elle denenecek akışlar
+
+Gövdeler ve alanlar Swagger'da. Yazma isteklerinde isteğe bağlı `Idempotency-Key` başlığı aynı isteğin iki kez işlenmesini önler.
+
+- **Eser:** editörle `POST /v1/admin/sites` (taslak) → bilgileri, konumu, medyayı doldur → `POST .../publish`. Eksik varsa 422 ve Türkçe liste döner. Yayından önce `GET /v1/sites/:id` misafire 404'tür.
+- **Fotoğraf yükleme (3 adım):** `POST /v1/media/uploads` → yanıttaki `url`'ye dosyayı `PUT` et (yanıttaki `headers` ile) → `POST /v1/media/uploads/:uploadId/complete`. Yayındaki adres `complete` yanıtındaki `url`'dir. Sınır: 5 MB; JPEG/PNG/WebP, GLB, MP3/M4A.
+- **İz Bırak:** kullanıcıyla `POST /v1/memories` → anı `pending` → moderatörle karar → onaylanınca eser sayfasında görünür, yazar 25 puan alır.
+- **Harita ayarları:** `GET /v1/map-settings` herkese açık; `PUT /v1/admin/map-settings` yalnız admin.
+- **Yetki sınırları:** aynı ucu misafir (token yok → 401), yanlış rol (403) ve doğru rolle dene.
+
+## 4. Otomatik testler
+
+| Komut | Ne test eder | Not |
+| --- | --- | --- |
+| `npm run typecheck` | Web uygulaması tip kontrolü | |
+| `npm test` | Ortak paketler (`packages/domain`, `packages/api-client`) | Saniyeler |
+| `npm run test:e2e` | Web uygulamasının kullanıcı akışları, masaüstü ve mobil boyutta (Playwright, `tests/`) | Chrome gerekir; web sunucusunu kendisi açar. Chrome yoksa: `npx playwright install chromium` |
+| `npm run typecheck -w @akar/api` | API tip kontrolü | |
+| `npm test -w @akar/api` | API entegrasyon testleri: her test dosyası kendi geçici PostGIS konteynerini açar | Docker açık olmalı; `npm run api` gerekmez ve yerel veriye dokunmaz |
+
+PR açınca GitHub aynı kontrolleri çalıştırır: web için `typecheck`, `npm test`, `test:e2e` ve `build`; API için tip kontrolü, testler ve `docs/api/openapi.json`'ın güncelliği (API uçlarını değiştirdiysen `npm run openapi -w @akar/api`).
+
+API testlerini yazma kuralları: [services/api/CONTRACTS.md §11](../services/api/CONTRACTS.md).
+
+## 5. Durdurmak ve sıfırlamak
+
+`services/api` klasöründe:
+
+| Komut | Ne yapar |
+| --- | --- |
+| Ctrl-C | API'yi kapatır; Supabase ve veritabanı çalışmaya devam eder |
+| `npm run local:down` | Hepsini durdurur; veri kalır |
+| `npm run local:reset` | API veritabanını siler, migration + demo verisiyle baştan kurar. Supabase kullanıcıları kalır. İçe aktarılan Bursa taslakları da istenirse: `npm run ingest -- --city bursa` |
+
+## 6. Sorun giderme
+
+| Belirti | Çözüm |
+| --- | --- |
+| `Docker çalışmıyor` | Docker Desktop/OrbStack'i aç, tekrar `npm run api` |
+| `Supabase başladı ama Auth/Storage yanıt vermiyor` | `cd services/api && supabase stop`, sonra `npm run api` |
+| `port is already allocated` / 4000, 5433, 54321 kullanımda | O portu kullanan programı kapat (başka bir Postgres ya da Supabase projesi olabilir) |
+| Token ile 401 | Token'ın süresi dolmuştur (1 saat); yenisini al |
+| Rol beklenenden düşük (`user`) | Token'ı `--role` ile al; rol ilk istekte verilir, `GET /v1/me` ile kontrol et |
+| `npm test -w @akar/api` konteyner hatası | Docker açık mı; diskte yer var mı |
+
+Bir hata bulduğunda: ne yaptın, hangi istek/ekran, beklenen ve gelen yanıt (yanıttaki `requestId` ile) — bunları issue'ya yaz.
