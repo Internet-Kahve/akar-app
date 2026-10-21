@@ -54,7 +54,7 @@ tests/                    Masaüstü / mobil uçtan uca testler
 docs/                     Yol haritası, API handoff, kaynak ve kapsam notları
 ```
 
-Bu repo frontend, gelecekteki mobil uygulama ve backend için tek monorepo olarak kullanılacak; yeni repo şu aşamada gerekli değil. Backend ekibi çalışmaya başladığında `services/api` altında kendi uygulamasını ekleyecek.
+Bu repo frontend, gelecekteki mobil uygulama ve backend için tek monorepo olarak kullanılır. Backend `services/api` altındadır; kurulum ve komutlar için [services/api/README.md](services/api/README.md).
 
 Gelecekte `apps/mobile` altında Expo uygulaması aynı domain ve servis paketlerini kullanabilir. Web UI bileşenleri DOM/CSS içerir ve React Native'de doğrudan kullanılamaz. Mobil ekranlar platforma uygun yazılacaktır.
 

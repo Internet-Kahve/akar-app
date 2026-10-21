@@ -38,6 +38,24 @@ UI yalnızca `AkarClient.getSnapshot()`, `dispatch(command)` ve `reset()` çağ�
 
 Mutasyonlarda `Idempotency-Key` önerilir. Toggle yerine PUT/DELETE gibi istenen durumu açıkça ifade eden işlemler kullanılmalı. Demo `Snapshot.points` değeri üretim için güvenilir sayılmaz.
 
+## Uygulanan okuma uçları (P2)
+
+`GET /v1/sites`, `GET /v1/sites/:id`, `GET /v1/cities`, `GET /v1/lookups`, `GET /v1/routes`, `GET /v1/routes/:id`, `GET /v1/routes/:id/bundle` `services/api` içinde çalışır; yalnızca yayındaki içerik döner. Liste yanıtı `{ items, nextCursor }` (keyset imleç, `limit` ≤ 100); bozuk imleç `400 INVALID_CURSOR`, bozuk `bbox`/`near`/`has` `400 VALIDATION_FAILED`. Eser listesi şehir, tür, vakıf rolü kategorisi (`category`), dönem (`period`), içerik (`has=model,audio,history`) ile süzülür, `near` + `sort=distance` ile mesafeye göre sıralanır. Detayda bölümler, kartlar, Geçmişi Gör görselleri ve hikâye cümlesinin kamera açısı/sesi vardır. Rota paketi (`/bundle`) servis worker'ın bir rotayı çevrimdışı önbelleğe alması içindir; bulmaca cevabı hiçbir yanıtta yoktur. Yanıtlar `ETag` + `Cache-Control` taşır. Ayrıntı: [`services/api/README.md`](../services/api/README.md), şema: [`docs/api/openapi.json`](api/openapi.json).
+
+Şema v2 (P1) ile değişenler: `kind` artık `site_types` tablosundaki tür kimliğidir (`cami`, `han`, `turbe`, `kulliye` …; liste genişleyebilir), `district` içe aktarılan kayıtlarda `null` olabilir. Rotada `minutes` ve `distance` saklanmaz, yayındaki durak zincirinden hesaplanır (yürüme 4,5 km/sa + durakların anlatım süresi); yeni alan `distanceMeters`. Bearer token gönderilip doğrulanamazsa `401 UNAUTHENTICATED`. Modül sınırları, roller, hata kodları ve makbuz biçimi: [`services/api/CONTRACTS.md`](../services/api/CONTRACTS.md).
+
+## Uygulanan uçlar: istemciyi etkileyen noktalar
+
+Ayrıntı ve gerekçe: [`services/api/CONTRACTS.md`](../services/api/CONTRACTS.md), [BACKEND-DECISIONS](BACKEND-DECISIONS.md).
+
+- **Harita ayarları.** `GET /v1/map-settings` herkese açıktır (oturum gerekmez, önbellekli): `{ modelMinZoom, maxVisibleModels }`. `modelMinZoom` 0–24 arası sayıdır, 3B modeller bu yakınlaştırmadan itibaren yüklenir; `maxVisibleModels` 0–50 tam sayıdır, haritada aynı anda çizilen en çok model, 0 3B'yi kapatır. Yönetim paneli `PUT /v1/admin/map-settings` ile (yalnız `admin`, aynı gövde, `Idempotency-Key`) değiştirir; uygulamalar en geç bir dakika içinde yeni değeri görür.
+- **Medya yükleme.** `POST /v1/media/uploads` hesap başına en çok 10 açık (bekleyen, süresi dolmamış) yükleme tutar; aşılırsa `429 RATE_LIMITED`. Birini tamamlamak ya da süresinin dolmasını beklemek yer açar. `POST /v1/media/uploads/:id/complete` dosyayı doğrulayıp yeni bir adrese kopyalar; medyanın `url`'si yükleme adresi değil bu son adrestir. İstemci adresi türetmemeli, yanıttaki `url`'yi kullanmalı. Tamamlanmış ya da süresi dolmuş yükleme adresine yeniden PUT yapılamaz (dosya sistemi sürücüsünde `409 CONFLICT`); yükleme sırası: bilet al, PUT, `complete`.
+- **Makbuz bozdurma.** `POST /v1/me/receipts` kalem bazında yeni bir ret nedeni döndürebilir: `revealed` (bu hesabın "Cevabı göster" ile açtığı bulmacanın `quiz.correct` makbuzu). İstemci o makbuzu atmalı ve yeniden denememelidir; puan yazılmaz.
+- **Anılarım.** `GET /v1/me/memories` ve `POST /v1/memories` yanıtındaki `OwnMemory.siteName` artık `string | null`: eser yayında değilse `null` gelir, istemci yedek metin göstermelidir. Yönetim kuyruğundaki `AdminMemory.siteName` metin olarak kalır.
+- **Bildirme.** `POST /v1/memories/:id/report` anıyı artık hemen gizlemez: 201 anının gizlendiği anlamına gelmez. Anı, son onayından sonra 3 farklı kullanıcı bildirene kadar yayında kalır. Aynı kullanıcının tekrarı 200 döner ve sayılmaz; kendi anını bildirmek 403'tür. Kullanıcı başına 24 saatte en çok 5 yeni bildirim kabul edilir, aşılırsa `429 RATE_LIMITED`.
+- **Moderasyon kuyruğu.** `GET /v1/admin/memories?status=pending` onaydan sonra bildirilmiş ama hâlâ yayındaki anıları da döndürür (`status: "approved"`, `reportCount` ≥ 1); panel kuyrukta `approved` öğelere hazır olmalı. `reportCount`, onaydan sonraki farklı bildiren sayısıdır (bekleyen/reddedilen anıda tüm bildirimler). `POST /v1/admin/memories/:id/decision` bu bildirilmiş onaylı anıları da kabul eder: `approved` bildirimleri düşürür (anı yayında kalır, yazara ikinci kez puan yazılmaz), `rejected` anıyı yayından kaldırır ve kesindir. Bildirilmemiş onaylı anı ve reddedilmiş anı hâlâ 409.
+- **Hız sınırı.** Oturum açıkken sınır hesap başınadır, misafirde IP başınadır (dakikada 300). Yük dengeleyici arkasında `TRUST_PROXY` ayarlanmalıdır ([`services/api/README.md`](../services/api/README.md)).
+
 ## Örnek hata sözleşmesi
 
 ```json
