@@ -8,7 +8,7 @@ let app: App;
 let stop: (() => Promise<void>) | undefined;
 
 before(async () => {
-  ({ app, stop } = await startTestApp());
+  ({ app, stop } = await startTestApp({ env: { CORS_ORIGINS: "http://localhost:3000" } }));
 });
 after(() => stop?.());
 
@@ -33,5 +33,18 @@ test("an invalid bearer token is rejected, never downgraded to a guest", async (
     const res = await app.inject({ method: "GET", url: "/v1/sites", headers: { authorization } });
     assert.equal(res.statusCode, 401);
     assert.equal(res.json<ErrorBody>().error.code, "UNAUTHENTICATED");
+  }
+});
+
+test("browser preflight allows the explicit-state methods the web client sends", async () => {
+  for (const method of ["PUT", "PATCH", "DELETE"]) {
+    const res = await app.inject({
+      method: "OPTIONS",
+      url: "/v1/me/saved/x",
+      headers: { origin: "http://localhost:3000", "access-control-request-method": method },
+    });
+    assert.equal(res.statusCode, 204);
+    assert.equal(res.headers["access-control-allow-origin"], "http://localhost:3000");
+    assert.ok(String(res.headers["access-control-allow-methods"]).split(/,\s*/).includes(method), method);
   }
 });

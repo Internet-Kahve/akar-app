@@ -105,7 +105,7 @@ export async function buildApp(deps: AppDeps, opts: { docs?: boolean; register?:
     req.user = user;
   });
   await app.register(helmet);
-  await app.register(cors, { origin: deps.config.CORS_ORIGINS, credentials: true });
+  await app.register(cors, { origin: deps.config.CORS_ORIGINS, credentials: true, methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"] });
   // Signed-in callers are limited per account (the auth hook above has set `req.user`), guests per IP.
   await app.register(rateLimit, { max: 300, timeWindow: "1 minute", keyGenerator: (req) => req.user?.id ?? req.ip });
 
