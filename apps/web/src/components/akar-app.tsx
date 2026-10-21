@@ -25,6 +25,7 @@ import {
   Users,
 } from "lucide-react";
 import {
+  createHttpClient,
   createMockClient,
   createSeed,
   routes as seedRoutes,
@@ -92,11 +93,39 @@ export function AkarApp() {
     try {
       storage = window.localStorage;
     } catch {}
-    client.current = createMockClient(storage);
-    void client.current.getSnapshot().then((s) => {
-      setState(s);
-      setReady(true);
-    });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    client.current = apiUrl
+      ? createHttpClient({
+          baseUrl: apiUrl,
+          ...(storage && { storage }),
+          // Temporary developer token (`npm run api:token`) until sign-in ships.
+          getToken: () => storage?.getItem("akar-api-token") ?? null,
+          onUnauthorized: () => storage?.removeItem("akar-api-token"),
+          locate: () =>
+            new Promise((resolve, reject) =>
+              navigator.geolocation.getCurrentPosition(
+                (p) =>
+                  resolve({
+                    coordinates: [p.coords.longitude, p.coords.latitude],
+                    accuracyM: p.coords.accuracy,
+                  }),
+                () =>
+                  reject(
+                    new Error("Konum alınamadı. Konum iznini kontrol et."),
+                  ),
+              ),
+            ),
+        })
+      : createMockClient(storage);
+    void client.current
+      .getSnapshot()
+      .then((s) => {
+        setState(s);
+        setReady(true);
+      })
+      .catch((e) =>
+        setFault(e instanceof Error ? e.message : "Veriler yüklenemedi."),
+      );
     const readLocation = () => {
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
