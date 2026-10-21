@@ -126,6 +126,13 @@ public = true
 file_size_limit = "5MiB"
 allowed_mime_types = ["image/jpeg", "image/png", "image/webp", "model/gltf-binary", "audio/mpeg", "audio/mp4"]
 
+# Non-public upload bucket. Clients PUT here through API-issued signed links; the API checks each object and copies it
+# into `media`, so nothing in this bucket is ever served.
+[storage.buckets.uploads]
+public = false
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp", "model/gltf-binary", "audio/mpeg", "audio/mp4"]
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { posix } from "node:path";
-import { and, count, desc, eq, getTableColumns, gt, inArray, lt, sql, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns, gt, inArray, isNull, lt, sql, type SQL } from "drizzle-orm";
 import type { FastifyBaseLogger } from "fastify";
 import type { Db } from "../../db/client.ts";
 import { media, mediaUploads, sources } from "../../db/schema/index.ts";
@@ -10,7 +10,7 @@ import type { AuthUser, Role } from "../../platform/auth.ts";
 import type { MutationResult, Tx } from "../../platform/idempotency.ts";
 import type { JobQueue } from "../../platform/jobs.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import type { ObjectStorage } from "../../platform/storage.ts";
+import type { ObjectStorage, StorageBuckets } from "../../platform/storage.ts";
 import { GlbError, readGlbParts } from "./glb.ts";
 import { extensionFor, matchesMagic, MEDIA_LIMITS, mediaTypeOf, megabytes, type MediaKind } from "./magic.ts";
 import { GlbPartsJob, type MediaItem, type MediaMetadata, type RequestUploadInput, type UploadTicket } from "./schemas.ts";
@@ -20,7 +20,10 @@ export const GLB_PARTS_JOB = "media.glb-parts";
 export const UPLOAD_TTL_SEC = 15 * 60;
 /** Open (pending, unexpired) uploads one account may hold at once; the next request waits until one finishes or runs out. */
 export const MAX_OPEN_UPLOADS = 10;
-/** `expireUploads` leaves a pending upload alone this long after its window closed, so a `complete` racing the deadline still finds it. */
+/**
+ * `expireUploads` leaves an upload alone this long after its window closed: a `complete` racing the deadline still
+ * finds it pending, and its signed link, which the storage checks against its own clock, has run out for sure.
+ */
 const EXPIRY_GRACE_MS = 5 * 60 * 1000;
 /** Uploads one `expireUploads` run handles unless told otherwise. */
 const EXPIRE_BATCH = 500;
@@ -117,12 +120,12 @@ export function planUpload(user: AuthUser, input: RequestUploadInput): string {
 }
 
 /**
- * Records the pending upload and returns the signed link; the upload key is `<kind>/<yyyy>/<mm>/<uuid>.<ext>`.
+ * Records the pending upload and returns the signed link into the non-public `uploads` bucket; the upload key is `<kind>/<yyyy>/<mm>/<uuid>.<ext>`.
  * An account holds at most `MAX_OPEN_UPLOADS` open tickets (429), so abandoned ones cannot pile up.
  */
 export async function createUpload(
   tx: Tx,
-  storage: ObjectStorage,
+  uploads: ObjectStorage,
   user: AuthUser,
   input: RequestUploadInput,
   extension: string,
@@ -141,7 +144,7 @@ export async function createUpload(
   const { maxBytes } = MEDIA_LIMITS[input.kind];
   const expiresAt = new Date(now.getTime() + UPLOAD_TTL_SEC * 1000);
 
-  const link = await storage.createUploadUrl(key, { contentType: input.contentType, maxBytes, expiresInSec: UPLOAD_TTL_SEC });
+  const link = await uploads.createUploadUrl(key, { contentType: input.contentType, maxBytes, expiresInSec: UPLOAD_TTL_SEC });
   const uploadId = randomUUID();
   await tx.insert(mediaUploads).values({
     id: uploadId,
@@ -212,7 +215,7 @@ const MISMATCH: Refusal = { status: 415, code: "UNSUPPORTED_MEDIA_TYPE", message
  * bytes read here, and these are the very bytes `completeUpload` publishes.
  */
 async function readChecked(
-  storage: ObjectStorage,
+  uploads: ObjectStorage,
   upload: UploadRow,
   object: { bytes: number; contentType: string },
 ): Promise<Buffer | Refusal> {
@@ -225,12 +228,12 @@ async function readChecked(
   // The object must also be stored under the declared type.
   if (object.bytes === 0 || mediaTypeOf(object.contentType) !== upload.contentType) return MISMATCH;
   // One byte past the cap tells an object that outgrew it since HEAD from one that fits, and keeps memory at the cap.
-  const bytes = await storage.read(upload.storageKey, { start: 0, end: upload.maxBytes });
+  const bytes = await uploads.read(upload.storageKey, { start: 0, end: upload.maxBytes });
   if (bytes.length > upload.maxBytes) return tooLarge;
   return matchesMagic(upload.contentType, bytes) ? bytes : MISMATCH;
 }
 
-export type CompleteContext = { storage: ObjectStorage; jobs: JobQueue | null; user: AuthUser; requestId: string };
+export type CompleteContext = { storage: StorageBuckets; jobs: JobQueue | null; user: AuthUser; requestId: string };
 export type Completion = {
   result: MutationResult<MediaItem | ErrorBody>;
   /** Set when a model row was created: the caller enqueues part extraction once the transaction has committed. */
@@ -239,16 +242,18 @@ export type Completion = {
 
 /**
  * Turns an uploaded object into a `media` row after checking it: the upload is the caller's, still
- * pending and unexpired, and the object exists, fits the size cap and carries the declared type's
- * magic bytes. A refused object is deleted and the upload marked rejected (413/415). Completing a
- * finished upload again returns its media (200).
+ * pending and unexpired, and the object exists in the `uploads` bucket, fits the size cap and carries the
+ * declared type's magic bytes. A refused object is deleted and the upload marked rejected (413/415).
+ * Completing a finished upload again returns its media (200).
  *
- * The checked bytes are published as a copy under a new key and the upload key is deleted: the client
- * can write to the upload key until its link runs out, so serving that key would let it swap the bytes
- * after the checks (and after a moderator approved the photo).
+ * The checked bytes are written to the public `media` bucket under a new key and the upload key is deleted. The
+ * client can still write to the upload key until its link runs out, but that bucket is not public: what lands
+ * there is never served (so it cannot swap the bytes a moderator approved) and `expireUploads` removes it once
+ * the link is dead.
  */
 export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: string, body: MediaMetadata): Promise<Completion> {
   const { storage, user, requestId } = ctx;
+  const { uploads } = storage;
   const [upload] = await tx
     .select()
     .from(mediaUploads)
@@ -268,7 +273,7 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
 
   const now = new Date();
   if (upload.expiresAt <= now) {
-    await storage.delete(upload.storageKey);
+    await uploads.delete(upload.storageKey);
     await tx.update(mediaUploads).set({ status: "expired", updatedAt: now }).where(eq(mediaUploads.id, upload.id));
     return { result: failure(requestId, 409, "CONFLICT", EXPIRED_MESSAGE) };
   }
@@ -277,20 +282,20 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
   const metadata = resolveMetadata(user, upload.kind, body);
   await assertSourceExists(tx, metadata.sourceId);
 
-  const object = await storage.head(upload.storageKey);
+  const object = await uploads.head(upload.storageKey);
   if (!object) throw new AppError(409, "CONFLICT", "Dosya henüz yüklenmedi. Yükleme bitince tekrar dene.");
 
-  const checked = await readChecked(storage, upload, object);
+  const checked = await readChecked(uploads, upload, object);
   if (!Buffer.isBuffer(checked)) {
-    await storage.delete(upload.storageKey);
+    await uploads.delete(upload.storageKey);
     await tx.update(mediaUploads).set({ status: "rejected", rejectReason: checked.message, updatedAt: now }).where(eq(mediaUploads.id, upload.id));
     return { result: failure(requestId, checked.status, checked.code, checked.message) };
   }
 
-  // Published beside the upload key but named by the new media id, which the client has never seen.
+  // Published under the new media id, which the client has never seen, in the same `<kind>/<yyyy>/<mm>/` folder.
   const mediaId = randomUUID();
   const storageKey = posix.join(posix.dirname(upload.storageKey), `${mediaId}${posix.extname(upload.storageKey)}`);
-  await storage.put(storageKey, checked, upload.contentType);
+  await storage.media.put(storageKey, checked, upload.contentType);
 
   const [row] = await tx
     .insert(media)
@@ -298,7 +303,7 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
       id: mediaId,
       kind: upload.kind,
       mime: upload.contentType,
-      url: storage.publicUrl(storageKey),
+      url: storage.media.publicUrl(storageKey),
       ...metadata,
       bytes: checked.length,
       storageKey,
@@ -320,19 +325,19 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
     });
   }
   // Last, so a failure above rolls back with the upload key still in place for a retry.
-  await storage.delete(upload.storageKey);
+  await uploads.delete(upload.storageKey);
   return { result: { status: 201, body: toMediaItem(row) }, modelId: row.kind === "model" ? row.id : undefined };
 }
 
 /**
- * Stores the bytes that arrive on a filesystem-driver upload link, only while the upload behind it is
- * pending: once it is completed (published under another key), rejected or expired, the link changes
- * nothing. The row stays locked through the write, so a `complete` that starts meanwhile waits for
- * these bytes and then checks them, and a write that starts after `complete` is refused.
+ * Stores the bytes that arrive on a filesystem-driver upload link in the `uploads` bucket, only while the
+ * upload behind it is pending: once it is completed (published to the `media` bucket), rejected or expired,
+ * the link changes nothing. The row stays locked through the write, so a `complete` that starts meanwhile
+ * waits for these bytes and then checks them, and a write that starts after `complete` is refused.
  */
 export async function storeUploadedObject(
   db: Db,
-  storage: ObjectStorage,
+  uploads: ObjectStorage,
   grant: { key: string; contentType: string },
   body: Buffer,
 ): Promise<void> {
@@ -344,7 +349,7 @@ export async function storeUploadedObject(
       .for("update");
     if (!upload) throw new AppError(404, "NOT_FOUND", "Yükleme bulunamadı.");
     if (upload.status !== "pending") throw new AppError(409, "CONFLICT", CLOSED_MESSAGE);
-    await storage.put(grant.key, body, grant.contentType);
+    await uploads.put(grant.key, body, grant.contentType);
   });
 }
 
@@ -436,7 +441,7 @@ export async function updateMedia(
  * queue retries it.
  */
 export async function runGlbPartsJob(
-  env: { db: Db; storage: ObjectStorage | null; log: FastifyBaseLogger },
+  env: { db: Db; storage: StorageBuckets | null; log: FastifyBaseLogger },
   data: unknown,
 ): Promise<void> {
   const job = GlbPartsJob.safeParse(data);
@@ -447,7 +452,8 @@ export async function runGlbPartsJob(
   const { mediaId } = job.data;
   const [row] = await env.db.select({ kind: media.kind, storageKey: media.storageKey }).from(media).where(eq(media.id, mediaId));
   if (!row || row.kind !== "model" || !row.storageKey) return;
-  const storage = requireDep(env.storage, "Dosya depolama");
+  // The model was published by `complete`, so it lives in the media bucket.
+  const storage = requireDep(env.storage, "Dosya depolama").media;
   const key = row.storageKey;
 
   try {
@@ -465,29 +471,37 @@ export async function runGlbPartsJob(
 // ── cleanup ──────────────────────────────────────────────────────────────────
 
 /**
- * Cleans up uploads nobody finished: a pending upload whose window closed more than five minutes ago
- * loses its object (a missing one is no error: most abandoned tickets never got a file) and becomes
- * `expired`, which is what `complete` would do on a late call that the client may never make. Handles at
- * most `limit` (default 500) uploads per run, the oldest first, and returns how many it expired.
- * Rows another transaction holds (a `complete` or a PUT in flight, or a second instance running this
- * too) are skipped and stay pending for the next run. A storage failure aborts the run with nothing marked.
+ * Empties the `uploads` bucket of what nobody will use, once an upload's signed link is dead for good (its
+ * window closed more than five minutes ago). A pending upload loses its object (a missing one is no error:
+ * most abandoned tickets never got a file) and becomes `expired`, which is what `complete` would do on a late
+ * call that the client may never make. A completed, rejected or expired upload keeps its status but loses
+ * whatever sits under its upload key: `complete` deleted the key at once, but a presigned PUT cannot be
+ * revoked, so the client may have written to it since, and that object was neither checked nor published.
+ * Either way the upload is marked `cleaned_at`, so each is handled once. Handles at most `limit` (default 500)
+ * uploads per run, the oldest first, and returns how many it cleaned. Rows another transaction holds (a
+ * `complete` or a PUT in flight, or a second instance running this too) are skipped and left for the next run.
+ * A storage failure aborts the run with nothing marked.
  */
-export async function expireUploads(deps: { db: Db; storage: ObjectStorage }, opts: { limit?: number } = {}): Promise<number> {
+export async function expireUploads(deps: { db: Db; storage: StorageBuckets }, opts: { limit?: number } = {}): Promise<number> {
   const { db, storage } = deps;
   const closedBefore = new Date(Date.now() - EXPIRY_GRACE_MS);
   return db.transaction(async (tx) => {
     const stale = await tx
-      .select({ id: mediaUploads.id, storageKey: mediaUploads.storageKey })
+      .select({ id: mediaUploads.id, storageKey: mediaUploads.storageKey, status: mediaUploads.status })
       .from(mediaUploads)
-      .where(and(eq(mediaUploads.status, "pending"), lt(mediaUploads.expiresAt, closedBefore)))
+      .where(and(isNull(mediaUploads.cleanedAt), lt(mediaUploads.expiresAt, closedBefore)))
       .orderBy(mediaUploads.expiresAt)
       .limit(opts.limit ?? EXPIRE_BATCH)
       .for("update", { skipLocked: true });
     if (stale.length === 0) return 0;
-    for (const { storageKey } of stale) await storage.delete(storageKey);
+    for (const { storageKey } of stale) await storage.uploads.delete(storageKey);
+
+    const now = new Date();
+    const unfinished = stale.filter((upload) => upload.status === "pending").map((upload) => upload.id);
+    if (unfinished.length > 0) await tx.update(mediaUploads).set({ status: "expired" }).where(inArray(mediaUploads.id, unfinished));
     await tx
       .update(mediaUploads)
-      .set({ status: "expired", updatedAt: new Date() })
+      .set({ cleanedAt: now, updatedAt: now })
       .where(inArray(mediaUploads.id, stale.map((upload) => upload.id)));
     return stale.length;
   });

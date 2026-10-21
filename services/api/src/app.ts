@@ -16,7 +16,7 @@ import type { Db } from "./db/client.ts";
 import { AppError, registerErrorHandling } from "./errors.ts";
 import type { AuthVerifier } from "./platform/auth.ts";
 import type { JobQueue } from "./platform/jobs.ts";
-import type { ObjectStorage } from "./platform/storage.ts";
+import type { StorageBuckets } from "./platform/storage.ts";
 import type { Geocoder } from "./modules/ingest/geocode.ts";
 import type { CityConfig } from "./modules/ingest/cities.ts";
 import { adminImportRoutes } from "./modules/admin-catalog/imports-routes.ts";
@@ -39,7 +39,7 @@ export type AppDeps = {
   config: Config;
   db: Db;
   auth: AuthVerifier | null;
-  storage: ObjectStorage | null;
+  storage: StorageBuckets | null;
   jobs: JobQueue | null;
   /** Builds the import geocoder for a city and the inventory rows it will locate (network-backed in the server, fake in tests). */
   geocoderFor: ((city: CityConfig, rows: Record<string, string>[]) => Promise<Geocoder>) | null;

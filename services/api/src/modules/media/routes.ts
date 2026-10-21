@@ -36,7 +36,7 @@ const tooLarge = (maxBytes: number) => new AppError(413, "PAYLOAD_TOO_LARGE", `D
 /**
  * `PUT /v1/media/uploads/fs/:token`: the upload target the filesystem driver hands out in place of an
  * S3 presigned URL. The token is the credential, so no sign-in is needed; it pins the object key, the
- * content type and the size cap, and it writes only while the upload behind it is still pending.
+ * content type and the size cap, and it writes into the `uploads` bucket only while the upload behind it is still pending.
  */
 const fsUploadRoutes: FastifyPluginAsyncZod<{ storage: FsStorage }> = async (app, { storage }) => {
   // The body is raw bytes of any type: no JSON or text parsing, one catch-all buffer parser.
@@ -91,7 +91,9 @@ export const mediaRoutes: FastifyPluginAsyncZod = async (app) => {
   const { db, storage, jobs } = app.deps;
 
   await jobs?.work(GLB_PARTS_JOB, (data) => runGlbPartsJob({ db, storage, log: app.log }, data));
-  if (isFsStorage(storage)) await app.register(fsUploadRoutes, { storage });
+  const uploads = storage?.uploads ?? null;
+  // Only the upload bucket takes client PUTs, so only it gets the filesystem link route.
+  if (isFsStorage(uploads)) await app.register(fsUploadRoutes, { storage: uploads });
 
   app.post(
     "/v1/media/uploads",
@@ -119,7 +121,7 @@ export const mediaRoutes: FastifyPluginAsyncZod = async (app) => {
       const store = requireDep(storage, "Dosya depolama");
       const extension = planUpload(user, req.body);
       if (req.body.kind === "model") requireDep(jobs, "İş kuyruğu");
-      const result = await idempotent(db, req, user.id, (tx) => createUpload(tx, store, user, req.body, extension));
+      const result = await idempotent(db, req, user.id, (tx) => createUpload(tx, store.uploads, user, req.body, extension));
       return reply.status(result.status as 201).send(result.body);
     },
   );
