@@ -1,6 +1,13 @@
 import { reduceSnapshot, type Command, type Snapshot } from "@akar/domain";
 import { createSeed } from "./seed";
 export { routes, createSeed, demoRegion } from "./seed";
+export {
+  createHttpClient,
+  ApiError,
+  UnsupportedCommandError,
+  httpStorageKey,
+  type HttpClientOptions,
+} from "./http";
 export interface StorageAdapter {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
