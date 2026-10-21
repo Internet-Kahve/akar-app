@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import type { FastifyBaseLogger } from "fastify";
 import { randomUUID } from "node:crypto";
 import type { Config } from "../../config.ts";
@@ -78,8 +78,20 @@ export async function resolveRole(db: Db, userId: string, email: string | undefi
 export async function claimInvite(db: Db, userId: string, rawEmail: string): Promise<StaffRole | null> {
   const email = normalizeEmail(rawEmail);
 
-  // Almost every signed-in user has no invite: answer them without a transaction or the lock.
-  const [pending] = await db.select({ id: staffInvites.id }).from(staffInvites).where(openInvitesFor(email)).limit(1);
+  // Almost every signed-in user has no invite: answer them without a transaction or the lock. An
+  // invite this user claimed also counts: a concurrent first request may have just claimed it, and
+  // this request must then wait for that grant instead of answering "user".
+  const [pending] = await db
+    .select({ id: staffInvites.id })
+    .from(staffInvites)
+    .where(
+      and(
+        sql`lower(${staffInvites.email}) = ${email}`,
+        isNull(staffInvites.revokedAt),
+        or(isNull(staffInvites.userId), eq(staffInvites.userId, userId)),
+      ),
+    )
+    .limit(1);
   if (!pending) return null;
 
   return db.transaction(async (tx) => {
