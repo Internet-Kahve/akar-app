@@ -222,7 +222,7 @@ Karar veren / tarih: Weissman, 21 Eki. Uygulama: 21 Eki. `media_uploads.cleaned_
 Nasıl değiştirilir: `supabase/config.toml` kova tanımları ve depolama ayarları (`STORAGE_BUCKET`, `STORAGE_UPLOAD_BUCKET`; `src/config.ts`). Bulutta `uploads` kovası elle, herkese kapalı açılır.
 
 **11.8 P5 (entegrasyon + yayına alma) backend tarafında yürütülür.**
-Karar: P5'i (HTTP adaptörü, yayına alma, gerçek içerik yükleme) Weissman ve backend sorumlusu yürütür; plandaki "Weissman + Tamer" yerine. Adaptör arayüz dahil (giriş ekranı, yükleme, oturum durumu) bizde yapılır; Tamer'e başta haber verilir ve her PR'ı Tamer inceler. Çakışmayı azaltmak için PR'lar küçük tutulur (önce `packages/api-client`, sonra arayüz) ve açılmadan hemen önce `main` üzerine alınır.
+Karar: P5'i (HTTP adaptörü, yayına alma, gerçek içerik yükleme) Weissman ve backend sorumlusu yürütür; plandaki "Weissman + Tamer" yerine. Adaptör arayüz dahil (giriş ekranı, yükleme, oturum durumu) bizde yapılır; Tamer'e başta haber verilir ve ön yüze dokunan PR'ları Tamer inceler (kapsam §11.10). Çakışmayı azaltmak için PR'lar küçük tutulur (önce `packages/api-client`, sonra arayüz) ve açılmadan hemen önce `main` üzerine alınır.
 Neden: P1–P4 bitti; P5'i beklemeden başlatmak, dondurmadan (6 Kas) önce ekibin gerçek telefonda HTTPS üzerinden test etmesine zaman kazandırır.
 Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: P5'in bir parçası Tamer'e devredilebilir; bu kayıt güncellenir.
@@ -232,3 +232,9 @@ Karar: Test ortamında giriş, üretimdekiyle aynı e-posta kodu akışıdır; a
 Neden: Ücretsiz, kurulum gerektirmez ve üretimden ayrı bir giriş yolu kodlamayı önler. Sınır: proje başına saatte 2 e-posta; oturumlar uzun sürdüğü için 4 kişilik ekipte yeterli.
 Karar veren / tarih: Weissman, 21 Eki. API sunucusu (Render/Railway vb.) seçimi yayına alma adımına (P5.2) bırakıldı.
 Nasıl değiştirilir: Sınır yetmezse ücretsiz bir SMTP servisi (örn. Resend; alan adı doğrulaması gerekir) Supabase panelinde tanımlanır, kod değişmez.
+
+**11.10 PR incelemesi alana göre: ön yüz Tamer'de, backend bizde.**
+Karar: `apps/web` ya da `packages/*` (`@akar/domain`, `@akar/api-client`; ön yüzün kullandığı ortak kod) dosyalarına dokunan PR'ı Tamer inceler ve onaylar. Yalnız `services/api`, backend belgeleri ve üretilen `docs/api/openapi.json` değişen PR, CI yeşil olunca Weissman'ın kararıyla birleştirilir; Tamer onayı beklenmez. API sözleşmesi değişirse (yeni uç, alan, hata kodu) PR açıklaması ve `docs/API-HANDOFF.md` bunu yazar, Tamer bilgi için etiketlenir.
+Neden: backend Weissman ve backend sorumlusunun, ön yüz Tamer'in alanı. §11.8'deki "her PR'ı Tamer inceler" ifadesi, ön yüz koduna dokunan P5 işi için konmuştu; backend PR'larını bekletmek gereksiz.
+Karar veren / tarih: Weissman, 21 Eki.
+Nasıl değiştirilir: bu kayıt; istenirse `main` için GitHub dal koruması (CODEOWNERS ile `apps/web`, `packages/*` → Tamer) eklenebilir.
