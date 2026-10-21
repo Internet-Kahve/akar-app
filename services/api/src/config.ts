@@ -44,7 +44,10 @@ const Env = z.object({
   STORAGE_S3_REGION: optionalText,
   STORAGE_S3_ACCESS_KEY_ID: optionalText,
   STORAGE_S3_SECRET_ACCESS_KEY: optionalText,
+  /** Public bucket: `complete` publishes checked media into it, and `STORAGE_PUBLIC_BASE_URL` serves it. */
   STORAGE_BUCKET: z.string().default("media"),
+  /** Non-public bucket clients upload into; nothing is served from it, so it must not be `STORAGE_BUCKET`. */
+  STORAGE_UPLOAD_BUCKET: z.string().default("uploads"),
   /** Public read base for stored objects (CDN or storage public URL), no trailing slash. */
   STORAGE_PUBLIC_BASE_URL: optionalUrl,
 

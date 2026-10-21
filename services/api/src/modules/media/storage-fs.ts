@@ -8,8 +8,8 @@ import type { ObjectStorage } from "../../platform/storage.ts";
 export type FsStorageOptions = {
   /** Folder the objects live in; a key maps to a path below it. */
   root: string;
-  /** Base of `publicUrl(key)`: whatever serves `root` over HTTP. */
-  publicBaseUrl: string;
+  /** Base of `publicUrl(key)`: whatever serves `root` over HTTP. Left out for a private bucket, whose `publicUrl` throws. */
+  publicBaseUrl?: string;
   /** Origin clients reach this API at; upload links are `<uploadBaseUrl>/v1/media/uploads/fs/<token>`. */
   uploadBaseUrl: string;
   /** HMAC key of the upload links. */
@@ -20,7 +20,7 @@ export type FsStorageOptions = {
 export type UploadGrant = { key: string; contentType: string; maxBytes: number };
 
 export type FsStorage = ObjectStorage & {
-  /** Marks the driver: `mediaRoutes` serves `PUT /v1/media/uploads/fs/:token` only when storage is this one. */
+  /** Marks the driver: `mediaRoutes` serves `PUT /v1/media/uploads/fs/:token` only when the `uploads` bucket is this one. */
   readonly kind: "fs";
   /** `invalid`: not signed by us or malformed. `expired`: genuine but past its deadline. */
   verifyUploadToken(token: string): { ok: true; grant: UploadGrant } | { ok: false; reason: "invalid" | "expired" };
@@ -43,10 +43,10 @@ const Meta = z.object({ contentType: z.string().min(1) });
 const isMissing = (err: unknown): boolean =>
   err instanceof Error && "code" in err && (err.code === "ENOENT" || err.code === "ENOTDIR");
 
-/** Objects as files below `root`, for tests and offline use; uploads go through a signed API link, as with S3. */
+/** Objects as files below `root`, one instance per bucket, for tests and offline use; uploads go through a signed API link, as with S3. */
 export function createFsStorage(opts: FsStorageOptions): FsStorage {
   const rootDir = resolve(opts.root);
-  const publicBase = opts.publicBaseUrl.replace(/\/+$/, "");
+  const publicBase = opts.publicBaseUrl?.replace(/\/+$/, "");
   const uploadBase = opts.uploadBaseUrl.replace(/\/+$/, "");
   const sign = (payload: string) => createHmac("sha256", opts.signingSecret).update(`${SIGNING_DOMAIN}.${payload}`).digest("base64url");
 
@@ -137,7 +137,10 @@ export function createFsStorage(opts: FsStorageOptions): FsStorage {
       }
     },
 
-    publicUrl: (key) => `${publicBase}/${key}`,
+    publicUrl(key) {
+      if (publicBase === undefined) throw new Error(`This bucket is private: ${key} has no public URL`);
+      return `${publicBase}/${key}`;
+    },
 
     async delete(key) {
       const path = pathOf(key);

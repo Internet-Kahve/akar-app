@@ -16,7 +16,7 @@ export const TEST_RECEIPT_SECRET = "test-receipt-secret-0123456789abcdef01234567
 export type TestAppOptions = {
   /** Default: `testVerifier` (tokens from `authHeader()`); identity tests pass the real verifier. */
   auth?: AppDeps["auth"];
-  /** Default: null (no storage). Media tests pass a filesystem storage. */
+  /** Default: null (no storage). Media tests pass a pair of filesystem storages: `uploads` and `media`. */
   storage?: AppDeps["storage"];
   /** Default: null. Admin import tests pass a deterministic geocoder factory. */
   geocoderFor?: AppDeps["geocoderFor"];

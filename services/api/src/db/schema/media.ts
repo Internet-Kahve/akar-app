@@ -42,8 +42,9 @@ export const uploadStatuses = ["pending", "completed", "rejected", "expired"] as
 export const uploadStatusEnum = pgEnum("media_upload_status", uploadStatuses);
 
 /**
- * Signed upload intent. The client PUTs the file to the signed URL, then calls complete: the
- * server checks size and magic bytes against the declared type before creating the `media` row.
+ * Signed upload intent. The client PUTs the file into the non-public `uploads` bucket through the signed URL, then
+ * calls complete: the server checks size and magic bytes against the declared type and writes the bytes to the
+ * public `media` bucket before creating the `media` row.
  */
 export const mediaUploads = pgTable(
   "media_uploads",
@@ -54,12 +55,15 @@ export const mediaUploads = pgTable(
     /** Declared content type; must match the file's magic bytes on complete. */
     contentType: text("content_type").notNull(),
     maxBytes: integer("max_bytes").notNull(),
+    /** Key in the `uploads` bucket the signed URL writes to; the published object has another key in `media`. */
     storageKey: text("storage_key").notNull().unique("media_uploads_storage_key_uq"),
     status: uploadStatusEnum("status").notNull().default("pending"),
     /** Why the file was refused on complete (Turkish, shown to the uploader). */
     rejectReason: text("reject_reason"),
     mediaId: text("media_id").references(() => media.id),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    /** When `expireUploads` emptied the upload key after its link was dead for good; null until then. */
+    cleanedAt: timestamp("cleaned_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [index("media_uploads_owner_idx").on(t.ownerId, t.createdAt)],

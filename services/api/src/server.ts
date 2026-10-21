@@ -34,11 +34,11 @@ const app = await buildApp({
 if (!auth) app.log.warn("AUTH_JWKS_URL / AUTH_JWT_ISSUER unset: every bearer token is rejected (401)");
 if (!storage) app.log.warn("STORAGE_DRIVER unset: media endpoints answer 503");
 
-// Abandoned upload tickets: their objects are deleted and the rows marked expired.
+// Upload tickets nobody finished are expired, and every upload's key in the non-public bucket is emptied once its link is dead.
 const sweepUploads = storage
   ? setInterval(() => {
       expireUploads({ db, storage }).then(
-        (n) => n > 0 && app.log.info({ expired: n }, "expired abandoned uploads"),
+        (n) => n > 0 && app.log.info({ cleaned: n }, "cleaned up closed uploads"),
         (err: unknown) => app.log.error({ err }, "upload expiry sweep failed"),
       );
     }, 15 * 60_000)

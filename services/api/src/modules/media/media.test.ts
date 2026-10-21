@@ -52,18 +52,18 @@ function glb(gltf: object | string, version = 2): Buffer {
 
 let app: App;
 let jobs: InlineJobQueue;
-let storage: FsStorage;
+let storage: { uploads: FsStorage; media: FsStorage };
 let root: string;
 let stop: (() => Promise<void>) | undefined;
 
 before(async () => {
   root = await mkdtemp(join(tmpdir(), "akar-media-"));
-  storage = createFsStorage({
-    root,
-    publicBaseUrl: "https://cdn.akar.test/media",
-    uploadBaseUrl: "http://api.akar.test",
-    signingSecret: "test-signing-secret-0123456789abcdef",
-  });
+  const links = { uploadBaseUrl: "http://api.akar.test", signingSecret: "test-signing-secret-0123456789abcdef" };
+  // As on the server: clients write to a bucket without a public URL; only the media bucket is served.
+  storage = {
+    uploads: createFsStorage({ ...links, root: join(root, "uploads") }),
+    media: createFsStorage({ ...links, root: join(root, "media"), publicBaseUrl: "https://cdn.akar.test/media" }),
+  };
   ({ app, jobs, stop } = await startTestApp({ register: [mediaRoutes], storage }));
 });
 after(async () => {
@@ -137,7 +137,7 @@ test("a visitor's photo goes signed link → PUT → complete; license and trust
   assert.equal(finished.mediaId, item.id);
   const { storageKey } = await mediaRow(item.id);
   assert.ok(storageKey);
-  assert.deepEqual(await storage.head(storageKey), { bytes: JPEG.length, contentType: "image/jpeg" });
+  assert.deepEqual(await storage.media.head(storageKey), { bytes: JPEG.length, contentType: "image/jpeg" });
 });
 
 test("a visitor cannot choose license or trust and must describe the photo; a refused attempt keeps the upload usable", async () => {
@@ -252,7 +252,7 @@ for (const c of mismatches) {
   test(`${c.name} is refused with 415, its object deleted and the upload marked rejected`, async () => {
     const ticket = await upload(c.user, c.kind, c.type, c.file);
     const { storageKey } = await uploadRow(ticket.uploadId);
-    assert.ok(await storage.head(storageKey), "the object was uploaded");
+    assert.ok(await storage.uploads.head(storageKey), "the object was uploaded");
     const before = await mediaCount();
 
     const res = await complete(c.user, ticket.uploadId, metadataFor(c.user));
@@ -262,7 +262,7 @@ for (const c of mismatches) {
     const row = await uploadRow(ticket.uploadId);
     assert.equal(row.status, "rejected");
     assert.ok(row.rejectReason);
-    assert.equal(await storage.head(storageKey), null);
+    assert.equal(await storage.uploads.head(storageKey), null);
     assert.equal(await mediaCount(), before, "nothing was published");
 
     // A rejected upload is final.
@@ -297,19 +297,19 @@ test("a file over 5 MB is refused up front, and the signed link itself refuses a
   const put = await app.inject({ method: "PUT", url: new URL(ticket.url).pathname, headers: ticket.headers, payload: oversized });
   assert.equal(put.statusCode, 413);
   assert.equal(errorOf(put).code, "PAYLOAD_TOO_LARGE");
-  assert.equal(await storage.head(storageKey), null);
+  assert.equal(await storage.uploads.head(storageKey), null);
 });
 
 test("complete re-checks the stored size, because a presigned S3 PUT cannot cap it", async () => {
   const ticket = (await requestUpload(visitor, { kind: "photo", contentType: "image/png", bytes: 100 })).json<UploadTicket>();
   const { storageKey } = await uploadRow(ticket.uploadId);
-  await storage.put(storageKey, Buffer.concat([PNG, fill(MEDIA_LIMITS.photo.maxBytes)]), "image/png");
+  await storage.uploads.put(storageKey, Buffer.concat([PNG, fill(MEDIA_LIMITS.photo.maxBytes)]), "image/png");
 
   const res = await complete(visitor, ticket.uploadId, { alt: "x" });
   assert.equal(res.statusCode, 413);
   assert.equal(errorOf(res).code, "PAYLOAD_TOO_LARGE");
   assert.equal((await uploadRow(ticket.uploadId)).status, "rejected");
-  assert.equal(await storage.head(storageKey), null);
+  assert.equal(await storage.uploads.head(storageKey), null);
 });
 
 test("completing before the file arrived is a retryable 409, not a rejection", async () => {
@@ -329,10 +329,10 @@ test("an expired, forged, mistyped or over-cap upload link, or one no upload ask
   const put = (path: string, type: string, payload: Buffer) =>
     app.inject({ method: "PUT", url: path, headers: { "content-type": type }, payload });
 
-  const expired = await storage.createUploadUrl(key, { contentType: "image/jpeg", maxBytes: 1000, expiresInSec: -1 });
+  const expired = await storage.uploads.createUploadUrl(key, { contentType: "image/jpeg", maxBytes: 1000, expiresInSec: -1 });
   assert.equal((await put(new URL(expired.url).pathname, "image/jpeg", JPEG)).statusCode, 403);
 
-  const live = await storage.createUploadUrl(key, { contentType: "image/jpeg", maxBytes: 1000, expiresInSec: 60 });
+  const live = await storage.uploads.createUploadUrl(key, { contentType: "image/jpeg", maxBytes: 1000, expiresInSec: 60 });
   const path = new URL(live.url).pathname;
   assert.equal((await put(path, "image/png", JPEG)).statusCode, 415);
   assert.equal((await put(path, "image/jpeg", fill(2000))).statusCode, 413);
@@ -342,9 +342,9 @@ test("an expired, forged, mistyped or over-cap upload link, or one no upload ask
   const otherKey = Buffer.from(JSON.stringify({ k: "photo/2026/10/other.jpg", t: "image/jpeg", m: 1000, e: 4_000_000_000 })).toString("base64url");
   assert.equal((await put(`/v1/media/uploads/fs/${otherKey}.${signature}`, "image/jpeg", JPEG)).statusCode, 403);
 
-  assert.equal(await storage.head(key), null);
+  assert.equal(await storage.uploads.head(key), null);
   assert.equal((await put(path, "image/jpeg", JPEG)).statusCode, 404);
-  assert.equal(await storage.head(key), null);
+  assert.equal(await storage.uploads.head(key), null);
 
   await app.deps.db.insert(mediaUploads).values({
     id: randomUUID(),
@@ -356,7 +356,7 @@ test("an expired, forged, mistyped or over-cap upload link, or one no upload ask
     expiresAt: new Date(Date.now() + 60_000),
   });
   assert.equal((await put(path, "image/jpeg", JPEG)).statusCode, 204);
-  assert.ok(await storage.head(key));
+  assert.ok(await storage.uploads.head(key));
 });
 
 test("completing after the upload's window closed answers 409 and removes the object", async () => {
@@ -367,14 +367,15 @@ test("completing after the upload's window closed answers 409 and removes the ob
   assert.equal(res.statusCode, 409);
   const row = await uploadRow(ticket.uploadId);
   assert.equal(row.status, "expired");
-  assert.equal(await storage.head(row.storageKey), null);
+  assert.equal(await storage.uploads.head(row.storageKey), null);
 });
 
 // ── the bytes that were checked are the bytes that get served ────────────────
 
-test("complete publishes a copy under a new key and removes the upload key the client could still write to", async () => {
+test("complete serves the checked bytes from the public media bucket and leaves nothing under the upload key", async () => {
   const ticket = await upload(visitor, "photo", "image/jpeg", JPEG);
   const { storageKey: uploadKey } = await uploadRow(ticket.uploadId);
+  assert.ok(await storage.uploads.head(uploadKey), "the client's file waits in the upload bucket");
 
   const res = await complete(visitor, ticket.uploadId, { alt: "Han avlusu" });
   assert.equal(res.statusCode, 201, res.body);
@@ -382,30 +383,21 @@ test("complete publishes a copy under a new key and removes the upload key the c
   const { storageKey } = await mediaRow(item.id);
   assert.ok(storageKey);
 
-  assert.notEqual(storageKey, uploadKey);
-  assert.equal(item.url, storage.publicUrl(storageKey));
-  assert.deepEqual(await storage.read(storageKey), JPEG);
-  assert.equal(await storage.head(uploadKey), null);
+  assert.equal(item.url, storage.media.publicUrl(storageKey));
+  assert.deepEqual(await storage.media.read(storageKey), JPEG);
+  assert.equal(await storage.uploads.head(uploadKey), null);
 });
 
-test("after complete the upload link writes nothing, and a write behind the API's back cannot change the served bytes", async () => {
+test("after complete the upload link writes nothing", async () => {
   const ticket = await upload(visitor, "photo", "image/jpeg", JPEG);
   const { storageKey: uploadKey } = await uploadRow(ticket.uploadId);
-  const item = (await complete(visitor, ticket.uploadId, { alt: "Çeşme" })).json<MediaItem>();
-  const { storageKey } = await mediaRow(item.id);
-  assert.ok(storageKey);
+  assert.equal((await complete(visitor, ticket.uploadId, { alt: "Çeşme" })).statusCode, 201);
 
   // The link still has minutes left, but its upload is no longer pending.
   const again = await putTo(ticket, fill(500));
   assert.equal(again.statusCode, 409);
   assert.equal(errorOf(again).code, "CONFLICT");
-  assert.equal(await storage.head(uploadKey), null);
-
-  // What a presigned S3 PUT cannot be stopped from doing: it only reaches the upload key, which nothing serves.
-  await storage.put(uploadKey, fill(500), "image/jpeg");
-  assert.deepEqual(await storage.read(storageKey), JPEG);
-  assert.equal((await mediaRow(item.id)).bytes, JPEG.length);
-  assert.equal((await complete(visitor, ticket.uploadId, { alt: "Çeşme" })).json<MediaItem>().url, item.url);
+  assert.equal(await storage.uploads.head(uploadKey), null);
 });
 
 test("an upload link writes nothing once its upload is rejected or expired", async () => {
@@ -414,7 +406,7 @@ test("an upload link writes nothing once its upload is rejected or expired", asy
     await app.deps.db.update(mediaUploads).set({ status }).where(eq(mediaUploads.id, ticket.uploadId));
 
     assert.equal((await putTo(ticket, JPEG)).statusCode, 409, status);
-    assert.equal(await storage.head((await uploadRow(ticket.uploadId)).storageKey), null, status);
+    assert.equal(await storage.uploads.head((await uploadRow(ticket.uploadId)).storageKey), null, status);
   }
 });
 
@@ -433,12 +425,13 @@ test("a PUT that arrives while complete holds the upload waits for it and is ref
   });
 
   assert.equal((await held.put)?.statusCode, 409);
-  assert.deepEqual(await storage.read(storageKey), JPEG, "the bytes that were checked are untouched");
+  assert.deepEqual(await storage.uploads.read(storageKey), JPEG, "the bytes that were checked are untouched");
 });
 
 test("complete judges the bytes it reads, not a HEAD answer that a later write has outdated", async () => {
   // HEAD keeps describing the JPEG that was uploaded first.
-  const staleHead = { ...storage, head: async () => ({ bytes: JPEG.length, contentType: "image/jpeg" }) };
+  const staleHead = { ...storage.uploads, head: async () => ({ bytes: JPEG.length, contentType: "image/jpeg" }) };
+  const staleStorage = { uploads: staleHead, media: storage.media };
   const swaps = [
     { name: "grown past the cap", file: Buffer.concat([JPEG, fill(MEDIA_LIMITS.photo.maxBytes)]), status: 413 },
     { name: "no longer a JPEG", file: PNG, status: 415 },
@@ -446,14 +439,14 @@ test("complete judges the bytes it reads, not a HEAD answer that a later write h
   for (const swap of swaps) {
     const ticket = await upload(visitor, "photo", "image/jpeg", JPEG);
     const { storageKey } = await uploadRow(ticket.uploadId);
-    await storage.put(storageKey, swap.file, "image/jpeg"); // the write a presigned S3 URL still allows
+    await storage.uploads.put(storageKey, swap.file, "image/jpeg"); // the write a presigned S3 URL still allows
     const { result } = await app.deps.db.transaction((tx) =>
-      completeUpload(tx, { storage: staleHead, jobs: null, user: visitor, requestId: "stale-head" }, ticket.uploadId, { alt: "x" }),
+      completeUpload(tx, { storage: staleStorage, jobs: null, user: visitor, requestId: "stale-head" }, ticket.uploadId, { alt: "x" }),
     );
 
     assert.equal(result.status, swap.status, swap.name);
     assert.equal((await uploadRow(ticket.uploadId)).status, "rejected", swap.name);
-    assert.equal(await storage.head(storageKey), null, swap.name);
+    assert.equal(await storage.uploads.head(storageKey), null, swap.name);
   }
 });
 
@@ -510,7 +503,7 @@ async function ticketClosedAgo(minutesAgo: number, file: Buffer | null): Promise
   return ticket;
 }
 
-test("expireUploads expires pending uploads whose window closed over 5 minutes ago and deletes their objects, nothing else", async () => {
+test("expireUploads expires pending uploads whose window closed over 5 minutes ago and deletes their objects; a finished upload keeps its status and its published copy", async () => {
   const db = app.deps.db;
   await expireUploads({ db, storage }); // leftovers of earlier tests
 
@@ -522,13 +515,13 @@ test("expireUploads expires pending uploads whose window closed over 5 minutes a
   const published = (await complete(sweeper, finished.uploadId, { alt: "Çeşme" })).json<MediaItem>();
   await db.update(mediaUploads).set({ expiresAt: new Date(Date.now() - 2 * 60 * 60_000) }).where(eq(mediaUploads.id, finished.uploadId));
 
-  assert.equal(await expireUploads({ db, storage }), 2);
+  assert.equal(await expireUploads({ db, storage }), 3, "the two abandoned tickets and the finished upload, whose upload key is emptied too");
 
   const statuses = await Promise.all([stale, neverUploaded, justClosed, stillOpen, finished].map(async (t) => (await uploadRow(t.uploadId)).status));
   assert.deepEqual(statuses, ["expired", "expired", "pending", "pending", "completed"]);
-  const stored = async (t: UploadTicket) => (await storage.head((await uploadRow(t.uploadId)).storageKey)) !== null;
+  const stored = async (t: UploadTicket) => (await storage.uploads.head((await uploadRow(t.uploadId)).storageKey)) !== null;
   assert.deepEqual([await stored(stale), await stored(justClosed), await stored(stillOpen)], [false, true, true]);
-  assert.ok(await storage.head((await mediaRow(published.id)).storageKey ?? ""), "the published copy of a completed upload stays");
+  assert.ok(await storage.media.head((await mediaRow(published.id)).storageKey ?? ""), "the published copy of a completed upload stays");
 
   assert.equal((await complete(sweeper, stale.uploadId, { alt: "x" })).statusCode, 409);
   assert.equal(await expireUploads({ db, storage }), 0, "nothing is left to expire");
@@ -559,8 +552,32 @@ test("expireUploads skips an upload that a complete or a PUT is working on", asy
 
   assert.equal(run.swept, 0);
   assert.equal((await uploadRow(busy.uploadId)).status, "pending");
-  assert.ok(await storage.head(storageKey));
+  assert.ok(await storage.uploads.head(storageKey));
   assert.equal(await expireUploads({ db, storage }), 1, "the next run takes it once it is free");
+});
+
+test("a file written to the upload key after complete stays out of the media bucket and is removed once its link is dead", async () => {
+  const db = app.deps.db;
+  await expireUploads({ db, storage });
+  const ticket = await upload(sweeper, "photo", "image/jpeg", JPEG);
+  const { storageKey: uploadKey } = await uploadRow(ticket.uploadId);
+  const item = (await complete(sweeper, ticket.uploadId, { alt: "Çeşme" })).json<MediaItem>();
+
+  // What a presigned S3 PUT cannot be stopped from doing: until its link runs out, the client can still drop a file at the upload key.
+  await storage.uploads.put(uploadKey, fill(500), "image/jpeg");
+  assert.equal(await expireUploads({ db, storage }), 0, "the link may still be live");
+  assert.ok(await storage.uploads.head(uploadKey));
+
+  await db.update(mediaUploads).set({ expiresAt: new Date(Date.now() - 6 * 60_000) }).where(eq(mediaUploads.id, ticket.uploadId));
+  assert.equal(await expireUploads({ db, storage }), 1);
+  assert.equal(await storage.uploads.head(uploadKey), null);
+  assert.equal(await storage.media.head(uploadKey), null, "it never reached the public bucket");
+  assert.equal((await uploadRow(ticket.uploadId)).status, "completed");
+
+  const { storageKey } = await mediaRow(item.id);
+  assert.ok(storageKey);
+  assert.deepEqual(await storage.media.read(storageKey), JPEG, "the published copy is untouched");
+  assert.equal(await expireUploads({ db, storage }), 0, "an upload is swept once");
 });
 
 // ── 3D models ────────────────────────────────────────────────────────────────

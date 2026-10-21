@@ -19,3 +19,10 @@ export interface ObjectStorage {
   publicUrl(key: string): string;
   delete(key: string): Promise<void>;
 }
+
+/**
+ * The two buckets of the media flow. Clients write only to `uploads`, which is not public and serves nothing
+ * (its `publicUrl` throws); once `complete` has checked an object, the server writes its bytes to `media`, the
+ * public bucket every served URL points into.
+ */
+export type StorageBuckets = { uploads: ObjectStorage; media: ObjectStorage };

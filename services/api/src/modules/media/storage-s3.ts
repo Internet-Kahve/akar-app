@@ -16,15 +16,15 @@ export type S3StorageOptions = {
   accessKeyId: string;
   secretAccessKey: string;
   bucket: string;
-  /** Public read base the bucket's objects are served from; `publicUrl(key)` is `<publicBaseUrl>/<key>`. */
-  publicBaseUrl: string;
+  /** Public read base the bucket's objects are served from; `publicUrl(key)` is `<publicBaseUrl>/<key>`. Left out for a private bucket, whose `publicUrl` throws. */
+  publicBaseUrl?: string;
 };
 
 /** A 404 from S3: HEAD answers `NotFound`, GET and DELETE `NoSuchKey`. */
 const isNotFound = (err: unknown): boolean =>
   err instanceof S3ServiceException && (err.name === "NotFound" || err.name === "NoSuchKey" || err.$metadata.httpStatusCode === 404);
 
-/** S3 protocol storage (Supabase Storage, local or cloud). Uploads go straight to the bucket via presigned PUT. */
+/** S3 protocol storage (Supabase Storage, local or cloud), one instance per bucket. Uploads go straight to the bucket via presigned PUT. */
 export function createS3Storage(opts: S3StorageOptions): ObjectStorage {
   const client = new S3Client({
     endpoint: opts.endpoint,
@@ -36,11 +36,11 @@ export function createS3Storage(opts: S3StorageOptions): ObjectStorage {
     responseChecksumValidation: "WHEN_REQUIRED",
   });
   const Bucket = opts.bucket;
-  const publicBase = opts.publicBaseUrl.replace(/\/+$/, "");
+  const publicBase = opts.publicBaseUrl?.replace(/\/+$/, "");
 
   return {
-    // `maxBytes` is not enforceable on a presigned PUT, and the link stays writable until it expires; `complete`
-    // re-checks the stored bytes and publishes a copy under another key.
+    // `maxBytes` is not enforceable on a presigned PUT, and the link stays writable until it expires; `complete` re-checks
+    // the stored bytes and publishes a copy in the public bucket.
     async createUploadUrl(key, { contentType, expiresInSec }) {
       const url = await getSignedUrl(client, new PutObjectCommand({ Bucket, Key: key, ContentType: contentType }), {
         expiresIn: expiresInSec,
@@ -72,7 +72,10 @@ export function createS3Storage(opts: S3StorageOptions): ObjectStorage {
       return Buffer.from(await res.Body.transformToByteArray());
     },
 
-    publicUrl: (key) => `${publicBase}/${key}`,
+    publicUrl(key) {
+      if (publicBase === undefined) throw new Error(`Bucket ${Bucket} is private: ${key} has no public URL`);
+      return `${publicBase}/${key}`;
+    },
 
     /** Idempotent: a missing object is no error, since most abandoned uploads never received a file. */
     async delete(key) {

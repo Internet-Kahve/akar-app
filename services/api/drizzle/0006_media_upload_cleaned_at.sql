@@ -1,0 +1,1 @@
+ALTER TABLE "media_uploads" ADD COLUMN "cleaned_at" timestamp with time zone;
