@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "dev": "npm run dev -w @akar/web",
+    "api": "npm run local -w @akar/api",
+    "api:token": "npm run -s local:token -w @akar/api --",
     "build": "npm run build -w @akar/web",
     "start": "npm run start -w @akar/web",
     "typecheck": "npm run typecheck -w @akar/web",

@@ -114,6 +114,9 @@ export async function buildApp(deps: AppDeps, opts: { docs?: boolean; register?:
       openapi: "3.1.0",
       info: { title: "Akar API", version: "0.1.0" },
       servers: [{ url: "/" }],
+      // Supabase access token. Optional at the spec level: reads work without it, `requireUser`/`requireRole` enforce it.
+      components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } } },
+      security: [{}, { bearerAuth: [] }],
     },
     transform: jsonSchemaTransform,
   });

@@ -5,6 +5,13 @@
     "version": "0.1.0"
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {}
   },
   "paths": {
@@ -24152,6 +24159,12 @@
   "servers": [
     {
       "url": "/"
+    }
+  ],
+  "security": [
+    {},
+    {
+      "bearerAuth": []
     }
   ]
 }
