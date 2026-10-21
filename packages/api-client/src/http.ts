@@ -11,7 +11,12 @@ import {
   type StoryBlock,
   type Trust,
 } from "@akar/domain";
-import type { AkarClient, StorageAdapter } from "./index";
+import type {
+  AkarClient,
+  PlayableQuiz,
+  QuizAnswerResult,
+  StorageAdapter,
+} from "./index";
 
 /** Error body of the API (`CONTRACTS.md` §3) or a transport failure (`status` 0, `code` `NETWORK_ERROR`). */
 export class ApiError extends Error {
@@ -58,10 +63,14 @@ export interface HttpClientOptions {
   /** KVKK consent the user gave for a memory submission (`POST /v1/memories` requires it). `null` = no consent. */
   getMemoryConsent?: () =>
     { textVersion: string } | null | Promise<{ textVersion: string } | null>;
+  /** Photo upload progress: 0..1 while ticket → PUT → complete runs, `null` when it ends (success or failure). */
+  onUploadProgress?: (fraction: number | null) => void;
 }
 
 export const httpStorageKey = "akar-http-v1";
 const CONCURRENCY = 6;
+/** Most site ids one `GET /v1/memories` request may name (`FEED_SITE_IDS_MAX` server-side). */
+const FEED_SITE_IDS_MAX = 100;
 /** Points the server awards per receipt action (CONTRACTS §6); used only to show pending guest points. */
 const receiptPoints: Record<string, number> = {
   "story.complete": 15,
@@ -172,6 +181,32 @@ interface MemoryDto {
   reason: string | null;
   createdAt: string;
   authorName?: string;
+}
+/** `PublicMemory`: the feed carries approved memories only and no status. */
+interface FeedMemoryDto {
+  id: string;
+  siteId: string;
+  text: string;
+  authorName: string;
+  photo: { url: string } | null;
+  createdAt: string;
+}
+interface QuizStateDto {
+  id: string;
+  siteId: string;
+  question: string;
+  options: string[];
+  hint: string | null;
+  hintAvailable: boolean;
+  revealed: boolean;
+  solved: boolean;
+}
+interface QuizSubmitDto {
+  correct: boolean;
+  awarded: number;
+  hint?: string;
+  receipt?: string;
+  explanation?: { text: string };
 }
 interface UploadTicketDto {
   uploadId: string;
@@ -331,6 +366,9 @@ async function toApiError(res: Response): Promise<ApiError> {
   });
 }
 
+const feedToMemory = (m: FeedMemoryDto): Memory =>
+  mapMemory({ ...m, status: "approved", reason: null }, m.authorName);
+
 const networkError = () =>
   new ApiError({
     status: 0,
@@ -353,6 +391,32 @@ function decodeDataUrl(
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return { mime: m[1], bytes };
+}
+
+/** PUT with byte progress; `fetch` cannot report upload progress. */
+function xhrPut(
+  url: string,
+  headers: Record<string, string>,
+  body: Uint8Array<ArrayBuffer>,
+  onProgress: (fraction: number) => void,
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && e.total > 0) onProgress(e.loaded / e.total);
+    };
+    xhr.onerror = () => reject(networkError());
+    xhr.onabort = () => reject(networkError());
+    xhr.onload = () =>
+      resolve(
+        xhr.status >= 200 && xhr.status < 300
+          ? new Response(null, { status: 204 })
+          : new Response(xhr.responseText, { status: xhr.status }),
+      );
+    xhr.send(body);
+  });
 }
 
 async function pool<T, R>(
@@ -378,9 +442,15 @@ interface Catalog {
   sites: HeritageSite[];
   raw: Map<string, SiteDetailDto>;
   routes: HeritageRoute[];
+  /** Quiz id → site id: every quiz of the published routes plus the ones the user solved. */
   quizSite: Map<string, string>;
+  /** Quiz ids of the published routes per site, in route and stop order. */
+  siteQuizzes: Map<string, string[]>;
+  /** Approved memories of everyone, for the published sites. */
+  feed: Memory[];
   stale: Set<string>;
   routesStale: boolean;
+  feedStale: boolean;
 }
 interface UserState {
   signedIn: boolean;
@@ -503,24 +573,45 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const loadRoutes = async () => {
     const dtos = (await call<{ items: RouteDto[] }>("GET", "/v1/routes")).items;
     const quizSite = new Map<string, string>();
+    const siteQuizzes = new Map<string, string[]>();
     for (const r of dtos)
-      for (const s of r.stops) if (s.quizId) quizSite.set(s.quizId, s.site.id);
-    return { routes: dtos.map(mapRoute), quizSite };
+      for (const s of r.stops) {
+        if (!s.quizId || quizSite.has(s.quizId)) continue;
+        quizSite.set(s.quizId, s.site.id);
+        siteQuizzes.set(s.site.id, [
+          ...(siteQuizzes.get(s.site.id) ?? []),
+          s.quizId,
+        ]);
+      }
+    return { routes: dtos.map(mapRoute), quizSite, siteQuizzes };
+  };
+  /** Approved memories of the given sites, all pages; the server takes at most `FEED_SITE_IDS_MAX` ids per request. */
+  const loadFeed = async (siteIds: string[]): Promise<Memory[]> => {
+    const out: Memory[] = [];
+    for (const ids of chunk(siteIds, FEED_SITE_IDS_MAX))
+      for (const m of await pages<FeedMemoryDto>("/v1/memories", {
+        siteIds: ids.join(","),
+      }))
+        out.push(feedToMemory(m));
+    return out;
   };
   const loadCatalog = (): Promise<Catalog> => {
     catalogLoad ??= (async () => {
       const summaries = await pages<SiteSummaryDto>("/v1/sites");
-      const [details, routes] = await Promise.all([
+      const [details, routes, feed] = await Promise.all([
         pool(summaries, CONCURRENCY, (s) =>
           call<SiteDetailDto>("GET", `/v1/sites/${encodeURIComponent(s.id)}`),
         ),
         loadRoutes(),
+        loadFeed(summaries.map((s) => s.id)),
       ]);
       return {
         sites: details.map(mapSite),
         raw: new Map(details.map((d) => [d.id, d])),
+        feed,
         stale: new Set<string>(),
         routesStale: false,
+        feedStale: false,
         ...routes,
       };
     })();
@@ -550,6 +641,12 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     cat.raw.set(id, d);
     cat.sites = cat.sites.map((s) => (s.id === id ? mapSite(d) : s));
     cat.stale.delete(id);
+  };
+  const refreshFeed = async () => {
+    const cat = await loadCatalog();
+    cat.feedStale = true;
+    cat.feed = await loadFeed(cat.sites.map((s) => s.id));
+    cat.feedStale = false;
   };
   const refreshRoutes = async () => {
     const cat = await loadCatalog();
@@ -694,13 +791,18 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     const cat = await loadCatalog();
     // Reads that failed after a successful admin write are redone before anything is served.
     if (cat.routesStale) await refreshRoutes();
+    if (cat.feedStale) await refreshFeed();
     for (const id of [...cat.stale]) await refreshSite(id);
     user = await ensureUser(cat, reloadUser);
     const published = new Set(cat.sites.map((s) => s.id));
+    // Own and moderation-queue entries carry the author's own status and win over the public feed.
+    const memories = new Map(user.memories.map((m) => [m.id, m]));
+    for (const m of cat.feed)
+      if (published.has(m.siteId) && !memories.has(m.id)) memories.set(m.id, m);
     const snapshot: Snapshot = {
       version: 1,
       sites: cat.sites,
-      memories: user.memories,
+      memories: [...memories.values()],
       savedIds: user.savedIds.filter((id) => published.has(id)),
       routeIds: local.route.filter((id) => published.has(id)),
       visitedIds: user.visitedIds,
@@ -724,35 +826,52 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   ): Promise<string> {
     const file = decodeDataUrl(dataUrl);
     if (!file) throw new Error("Fotoğraf geçerli bir dosya değil.");
-    const ticket = await call<UploadTicketDto>("POST", "/v1/media/uploads", {
-      body: { kind: "photo", contentType: file.mime, bytes: file.bytes.length },
-    });
-    let put: Response;
+    const progress = opts.onUploadProgress;
     try {
-      put = await doFetch(new URL(ticket.url, `${base}/`).toString(), {
-        method: "PUT",
-        headers: ticket.headers,
-        body: file.bytes,
-      });
-    } catch {
-      throw networkError();
-    }
-    if (!put.ok) throw await toApiError(put);
-    const media = await call<{ id: string }>(
-      "POST",
-      `/v1/media/uploads/${encodeURIComponent(ticket.uploadId)}/complete`,
-      {
-        // Editors and admins must state licence and trust; visitors send only `alt`.
+      const ticket = await call<UploadTicketDto>("POST", "/v1/media/uploads", {
         body: {
-          alt,
-          ...((role === "editor" || role === "admin") && {
-            license: "Katkı sahibi izniyle",
-            trust: "representative",
-          }),
+          kind: "photo",
+          contentType: file.mime,
+          bytes: file.bytes.length,
         },
-      },
-    );
-    return media.id;
+      });
+      progress?.(0);
+      const url = new URL(ticket.url, `${base}/`).toString();
+      let put: Response;
+      try {
+        if (progress && !opts.fetch && typeof XMLHttpRequest !== "undefined") {
+          put = await xhrPut(url, ticket.headers, file.bytes, progress);
+        } else {
+          put = await doFetch(url, {
+            method: "PUT",
+            headers: ticket.headers,
+            body: file.bytes,
+          });
+        }
+      } catch (e) {
+        throw e instanceof ApiError ? e : networkError();
+      }
+      if (!put.ok) throw await toApiError(put);
+      progress?.(1);
+      const media = await call<{ id: string }>(
+        "POST",
+        `/v1/media/uploads/${encodeURIComponent(ticket.uploadId)}/complete`,
+        {
+          // Editors and admins must state licence and trust; visitors send only `alt`.
+          body: {
+            alt,
+            ...((role === "editor" || role === "admin") && {
+              license: "Katkı sahibi izniyle",
+              trust: "representative",
+            }),
+          },
+        },
+      );
+      progress?.(1);
+      return media.id;
+    } finally {
+      progress?.(null);
+    }
   }
 
   const same = (a: unknown, b: unknown) =>
@@ -937,11 +1056,6 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         storeReceipt(done.receipt, "visit.verified", command.siteId);
         return true;
       }
-      case "quiz":
-        throw new UnsupportedCommandError(
-          "quiz",
-          "Bulmaca cevabı sunucuda kontrol edilir; bu komut seçilen şıkkı taşımadığı için gönderilemez.",
-        );
       case "memory": {
         if (!(await token()))
           throw new Error("Anı eklemek için giriş yapmalısın.");
@@ -982,6 +1096,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
                 : { status: "approved" },
           },
         );
+        // An approved memory joins the public feed.
+        if (command.status === "approved") await refreshFeed();
         return true;
       case "site":
         await updateSite(command.site);
@@ -1029,6 +1145,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     queue = result.catch(() => undefined);
     return result;
   };
+  const quizPath = (quizId: string) =>
+    `/v1/quizzes/${encodeURIComponent(quizId)}`;
   return {
     getSnapshot: () => enqueue(() => build(true)),
     dispatch: (command) =>
@@ -1048,6 +1166,67 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         catalogLoad = undefined;
         user = undefined;
         return build(true);
+      }),
+    getQuizzes: (siteId) =>
+      enqueue(async (): Promise<PlayableQuiz[]> => {
+        const cat = await loadCatalog();
+        const states = await pool(
+          cat.siteQuizzes.get(siteId) ?? [],
+          CONCURRENCY,
+          async (id) => {
+            try {
+              return await call<QuizStateDto>("GET", quizPath(id));
+            } catch (e) {
+              // Unpublished since the routes were read: not playable.
+              if (e instanceof ApiError && e.status === 404) return null;
+              throw e;
+            }
+          },
+        );
+        return states.filter(present).map((q) => ({
+          id: q.id,
+          siteId: q.siteId,
+          question: q.question,
+          options: q.options,
+          hint: q.hintAvailable ? q.hint : null,
+          solved: q.solved,
+          revealed: q.revealed,
+        }));
+      }),
+    answerQuiz: (quizId, choice) =>
+      enqueue(async (): Promise<QuizAnswerResult> => {
+        const cat = await loadCatalog();
+        user = await ensureUser(cat);
+        const res = await call<QuizSubmitDto>(
+          "POST",
+          `${quizPath(quizId)}/submit`,
+          { body: { choice } },
+        );
+        // Only guests get a receipt; its points stay pending until sign-in.
+        storeReceipt(res.receipt, "quiz.correct", quizId);
+        return {
+          correct: res.correct,
+          awarded:
+            res.awarded +
+            (res.receipt ? (receiptPoints["quiz.correct"] ?? 0) : 0),
+          hint: res.hint ?? null,
+          explanation: res.explanation?.text ?? null,
+          // A wrong answer changes no points; a right one is re-read from the server.
+          snapshot: await build(res.correct),
+        };
+      }),
+    revealQuiz: (quizId) =>
+      enqueue(async () => {
+        const cat = await loadCatalog();
+        user = await ensureUser(cat);
+        const res = await call<{ correctOption: string }>(
+          "POST",
+          `${quizPath(quizId)}/reveal`,
+        );
+        return {
+          correctOption: res.correctOption,
+          snapshot: await build(false),
+        };
       }),
   };
 }

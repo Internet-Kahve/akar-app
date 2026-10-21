@@ -69,3 +69,50 @@ test("Bursa demo does not load or overwrite the previous Istanbul demo", async (
     "ulu-cami",
   ]);
 });
+
+test("mock quizzes: wrong answer unlocks the hint, one award per quiz, reveal blocks points, state survives a reload", async () => {
+  const s = storage();
+  const a = createMockClient(s);
+  const quizzes = await a.getQuizzes("ulu-cami");
+  assert.deepEqual(
+    quizzes.map((q) => q.id),
+    ["ulu-cami:quiz-1", "ulu-cami:quiz-2", "ulu-cami:quiz-3"],
+  );
+  assert.ok(quizzes.every((q) => q.hint === null && !q.solved));
+  assert.equal(JSON.stringify(quizzes).includes("correct"), false);
+  const wrong = await a.answerQuiz("ulu-cami:quiz-1", 2);
+  assert.deepEqual([wrong.correct, wrong.awarded], [false, 0]);
+  assert.ok(wrong.hint);
+  const right = await a.answerQuiz("ulu-cami:quiz-1", 0);
+  assert.deepEqual([right.correct, right.awarded], [true, 20]);
+  assert.ok(right.explanation);
+  assert.deepEqual(right.snapshot.quizIds, ["ulu-cami"]);
+  assert.equal((await a.answerQuiz("ulu-cami:quiz-1", 0)).awarded, 0);
+  const revealed = await a.revealQuiz("ulu-cami:quiz-2");
+  assert.equal(revealed.correctOption, "Topluma hizmet sunmaya");
+  assert.equal((await a.answerQuiz("ulu-cami:quiz-2", 1)).awarded, 0);
+  const b = createMockClient(s);
+  const again = await b.getQuizzes("ulu-cami");
+  assert.deepEqual(
+    again.map((q) => [q.solved, q.revealed, q.hint !== null]),
+    [
+      [true, false, true],
+      [true, true, false],
+      [false, false, false],
+    ],
+  );
+  assert.equal((await b.getSnapshot()).points, 20);
+  assert.deepEqual(await b.getQuizzes("missing"), []);
+  await b.reset();
+  assert.ok(
+    (await createMockClient(s).getQuizzes("ulu-cami")).every((q) => !q.solved),
+  );
+});
+
+test("a snapshot saved before quizzes existed still loads", async () => {
+  const s = storage();
+  s.setItem(demoStorageKey, JSON.stringify({ ...createSeed(), points: 40 }));
+  const client = createMockClient(s);
+  assert.equal((await client.getSnapshot()).points, 40);
+  assert.ok((await client.getQuizzes("ulu-cami")).every((q) => !q.solved));
+});

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { X, ArrowLeft, Check, Info } from "lucide-react";
+import { useUploadProgress } from "../lib/upload-progress";
 export function Modal({
   title,
   children,
@@ -79,6 +80,24 @@ export function Notice({ children }: { children: ReactNode }) {
     <div className="notice">
       <Info size={17} />
       <span>{children}</span>
+    </div>
+  );
+}
+export function UploadProgress() {
+  const fraction = useUploadProgress();
+  if (fraction === null) return null;
+  const percent = Math.round(fraction * 100);
+  return (
+    <div
+      className="upload-progress"
+      role="progressbar"
+      aria-label="Fotoğraf yükleniyor"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+    >
+      <span style={{ width: `${percent}%` }} />
+      <small>Fotoğraf yükleniyor · %{percent}</small>
     </div>
   );
 }

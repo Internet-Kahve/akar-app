@@ -83,7 +83,7 @@ function fakeApi(handlers: Record<string, Handler>) {
       headers: Object.fromEntries(
         Object.entries((init?.headers ?? {}) as Record<string, string>),
       ),
-      body: init?.body ? JSON.parse(String(init.body)) : undefined,
+      body: typeof init?.body === "string" ? JSON.parse(init.body) : undefined,
     };
     calls.push(call);
     const handler = handlers[`${call.method} ${url.pathname}`];
@@ -129,6 +129,7 @@ const catalogHandlers = (): Record<string, Handler> => ({
       ],
     }),
   "GET /v1/sites/b": () => detail("b"),
+  "GET /v1/memories": () => ({ items: [], nextCursor: null }),
   "GET /v1/routes": () => ({
     items: [
       {
@@ -567,3 +568,318 @@ for (const failure of ["server", "network"] as const) {
     );
   });
 }
+
+const quizState = (extra = {}) => ({
+  id: "q1",
+  siteId: "b",
+  question: "Soru?",
+  questionEn: null,
+  options: ["A", "B", "C"],
+  optionsEn: null,
+  hint: "İpucu",
+  hintAvailable: false,
+  revealed: false,
+  solved: false,
+  ...extra,
+});
+
+test("quizzes of a site come from the route stops; the hint only after it was unlocked; no answer key anywhere", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/quizzes/q1": () => quizState({ hint: "İpucu" }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const quizzes = await client.getQuizzes("b");
+  assert.deepEqual(quizzes, [
+    {
+      id: "q1",
+      siteId: "b",
+      question: "Soru?",
+      options: ["A", "B", "C"],
+      hint: null,
+      solved: false,
+      revealed: false,
+    },
+  ]);
+  assert.deepEqual(await client.getQuizzes("a"), []);
+  assert.deepEqual(await client.getQuizzes("unknown"), []);
+});
+
+test("a guest's correct answer sends only the choice, stores a receipt and counts as pending points once", async () => {
+  const store = storage();
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "POST /v1/quizzes/q1/submit": (c) =>
+      (c.body as { choice: number }).choice === 1
+        ? {
+            correct: true,
+            awarded: 0,
+            receipt: "v1.q1.sig",
+            explanation: { text: "Çünkü.", sourceId: null, trust: "verified" },
+          }
+        : { correct: false, awarded: 0, hint: "İpucu" },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: store,
+    fetch: api.fetch,
+  });
+  const wrong = await client.answerQuiz("q1", 0);
+  assert.deepEqual(
+    [wrong.correct, wrong.awarded, wrong.hint, wrong.explanation],
+    [false, 0, "İpucu", null],
+  );
+  assert.equal(wrong.snapshot.points, 0);
+  const right = await client.answerQuiz("q1", 1);
+  assert.deepEqual(
+    [right.correct, right.awarded, right.hint, right.explanation],
+    [true, 20, null, "Çünkü."],
+  );
+  assert.equal(right.snapshot.points, 20);
+  assert.deepEqual(right.snapshot.quizIds, ["b"]);
+  const submits = api.calls.filter((c) => c.path.endsWith("/submit"));
+  assert.deepEqual(
+    submits.map((c) => c.body),
+    [{ choice: 0 }, { choice: 1 }],
+  );
+  const saved = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
+  assert.deepEqual(saved.receipts, [
+    { receipt: "v1.q1.sig", action: "quiz.correct", subjectId: "q1" },
+  ]);
+  // A later correct answer carries no receipt (nothing more to earn): no second pending award.
+  api.calls.length = 0;
+  const again = await createHttpClient({
+    baseUrl: "http://api.test",
+    storage: store,
+    fetch: createApiWithoutReceipt(),
+  }).answerQuiz("q1", 1);
+  assert.equal(again.awarded, 0);
+  assert.equal(again.snapshot.points, 20);
+});
+
+function createApiWithoutReceipt(): typeof globalThis.fetch {
+  return fakeApi({
+    ...catalogHandlers(),
+    "POST /v1/quizzes/q1/submit": () => ({ correct: true, awarded: 0 }),
+  }).fetch;
+}
+
+test("a signed-in correct answer reports the server's award and re-reads the passport", async () => {
+  let points = 0;
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ada" }),
+    "GET /v1/me/passport": () => ({
+      points,
+      saved: [],
+      read: [],
+      visited: [],
+      quizzesSolved: points ? ["q1"] : [],
+    }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "POST /v1/quizzes/q1/submit": () => {
+      points = 20;
+      return { correct: true, awarded: 20 };
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+    getToken: () => "tok",
+  });
+  const res = await client.answerQuiz("q1", 2);
+  assert.equal(res.awarded, 20);
+  assert.equal(res.snapshot.points, 20);
+  assert.deepEqual(res.snapshot.quizIds, ["b"]);
+  assert.equal(
+    api.calls.find((c) => c.path.endsWith("/submit"))?.headers.authorization,
+    "Bearer tok",
+  );
+});
+
+test("reveal returns the correct option and keeps the quiz out of pending points", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "POST /v1/quizzes/q1/reveal": () => ({ correctOption: "B" }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const res = await client.revealQuiz("q1");
+  assert.equal(res.correctOption, "B");
+  assert.equal(res.snapshot.points, 0);
+  assert.deepEqual(res.snapshot.quizIds, []);
+});
+
+const feedItem = (id: string, siteId: string, text = "Başkasının anısı") => ({
+  id,
+  siteId,
+  text,
+  authorName: "Veli",
+  photo: null,
+  createdAt: "2026-10-10T10:00:00.000Z",
+});
+
+test("the memory feed is read per 100 sites and all pages, and never overwrites an own entry", async () => {
+  const feedPaths: string[] = [];
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/memories": (c) => {
+      feedPaths.push(c.path);
+      return c.path.includes("cursor=n2")
+        ? { items: [feedItem("m3", "a")], nextCursor: null }
+        : {
+            items: [
+              feedItem("m1", "a"),
+              feedItem("own", "b", "yayındaki hâli"),
+            ],
+            nextCursor: "n2",
+          };
+    },
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ada" }),
+    "GET /v1/me/passport": () => ({
+      points: 0,
+      saved: [],
+      read: [],
+      visited: [],
+      quizzesSolved: [],
+    }),
+    "GET /v1/me/memories": () => ({
+      items: [
+        {
+          id: "own",
+          siteId: "b",
+          text: "benim bekleyen anım",
+          photo: null,
+          status: "pending",
+          reason: null,
+          createdAt: "2026-10-11T10:00:00.000Z",
+        },
+      ],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+    getToken: () => "tok",
+  });
+  const snap = await client.getSnapshot();
+  assert.equal(feedPaths.length, 2);
+  assert.ok(feedPaths[0]?.includes("siteIds=a%2Cb"));
+  assert.deepEqual(
+    snap.memories.map((m) => [m.id, m.status, m.author]).sort(),
+    [
+      ["m1", "approved", "Veli"],
+      ["m3", "approved", "Veli"],
+      ["own", "pending", "Ada"],
+    ],
+  );
+  assert.equal(
+    snap.memories.find((m) => m.id === "own")?.text,
+    "benim bekleyen anım",
+  );
+});
+
+test("a moderation approval re-reads the feed", async () => {
+  let approved = false;
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/memories": () => ({
+      items: approved ? [feedItem("m1", "a")] : [],
+      nextCursor: null,
+    }),
+    "GET /v1/me": () => ({ id: "u", role: "moderator", displayName: "Mod" }),
+    "GET /v1/me/passport": () => ({
+      points: 0,
+      saved: [],
+      read: [],
+      visited: [],
+      quizzesSolved: [],
+    }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "GET /v1/admin/memories": () => ({ items: [], nextCursor: null }),
+    "POST /v1/admin/memories/m1/decision": () => {
+      approved = true;
+      return {};
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+    getToken: () => "tok",
+  });
+  assert.equal((await client.getSnapshot()).memories.length, 0);
+  const snap = await client.dispatch({
+    type: "moderate",
+    id: "m1",
+    status: "approved",
+  });
+  assert.deepEqual(
+    snap.memories.map((m) => m.id),
+    ["m1"],
+  );
+});
+
+test("upload progress runs 0 → 1 and always ends with null, also on failure", async () => {
+  const seen: Array<number | null> = [];
+  let fail = false;
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ada" }),
+    "GET /v1/me/passport": () => ({
+      points: 0,
+      saved: [],
+      read: [],
+      visited: [],
+      quizzesSolved: [],
+    }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "POST /v1/media/uploads": () => ({
+      uploadId: "up1",
+      url: "/v1/media/uploads/up1/content",
+      headers: { "content-type": "image/png" },
+    }),
+    "PUT /v1/media/uploads/up1/content": () =>
+      fail
+        ? Response.json(
+            { error: { code: "INTERNAL", message: "Hata" } },
+            { status: 500 },
+          )
+        : new Response(null, { status: 204 }),
+    "POST /v1/media/uploads/up1/complete": () => ({ id: "media1" }),
+    "POST /v1/memories": () => ({}),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+    getToken: () => "tok",
+    getMemoryConsent: () => ({ textVersion: "v1" }),
+    onUploadProgress: (f) => seen.push(f),
+  });
+  const memory = {
+    id: "x",
+    siteId: "a",
+    text: "Merhaba",
+    status: "pending" as const,
+    createdAt: "2026-10-10",
+    author: "Ada",
+    photo: "data:image/png;base64,iVBORw0KGgo=",
+  };
+  await client.dispatch({ type: "memory", memory });
+  assert.deepEqual(seen, [0, 1, 1, null]);
+  seen.length = 0;
+  fail = true;
+  await assert.rejects(client.dispatch({ type: "memory", memory }), ApiError);
+  assert.deepEqual(seen, [0, null]);
+});
