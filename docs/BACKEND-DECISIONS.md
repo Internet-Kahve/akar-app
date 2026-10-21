@@ -244,3 +244,15 @@ Karar: `GET /v1/memories` herkese açık, önbellekli bir anı akışıdır: yay
 Neden: istemci bugün yalnız kendi anılarını ve moderasyon kuyruğunu çekiyor; eser başına ayrı istek, 84+ eserlik haritada gereksiz yük.
 Karar veren / tarih: Weissman (iş sırası A → B → C), 21 Eki; uç biçimi backend sorumlusunun.
 Nasıl değiştirilir: `services/api/src/modules/moderation/` (`MemoryFeedQuery`, `listMemoryFeed`).
+
+**11.12 Önce arayüz bağlantısı (P5.1b), sonra çevrimiçi test ortamı (P5.2).**
+Karar: Çevrimiçi test ortamı, giriş ekranı ve arayüz bağlantısı (P5.1b) test edilebilir hâle geldikten sonra kurulur. Acele yok.
+Neden: Girişsiz yalnız misafir akışları denenebilir (harita, eser, hikâye, cihazda bulmaca); kaydetme, İz Bırak, puan ve moderasyon giriş ekranını bekler. Ortamı tek seferde, tüm akışlar denenebilir durumdayken kurmak tercih edildi. Bilinen risk: yalnız çevrimiçi ortamda görülen sorunlar (CORS, bulut kovaları, Supabase e-postası, telefonda HTTPS gerektiren konum) daha geç ortaya çıkar.
+Karar veren / tarih: Weissman, 21 Eki.
+Nasıl değiştirilir: ortam (P5.2) istenen anda öne alınabilir; barındırma seçimi o zaman sorulur.
+
+**11.13 Demoda yönetim paneli API kipinde yalnız mevcut kayıtları günceller.**
+Karar: P5.1b'de yönetim paneli API kipinde eser, katalog ve fotoğraf için yalnız mevcut kayıtları günceller; yeni eser, rota ya da kart oluşturma API'ye eklenmez, bu komutlar API kipinde `UnsupportedCommandError` ile anlaşılır bir mesaj gösterir. P5.1b'ye Tamer onay verdi.
+Neden: demo için yeterli; oluşturma uçları ayrı bir API PR'ı ve daha büyük bir ön yüz değişikliği gerektirirdi.
+Karar veren / tarih: Weissman, 21 Eki.
+Nasıl değiştirilir: oluşturma uçları (`POST /v1/admin/sites` vb.) ayrı bir `feat/api-admin-create` PR'ıyla eklenir, sonra panel bağlanır.

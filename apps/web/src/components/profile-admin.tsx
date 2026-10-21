@@ -24,6 +24,7 @@ export function Profile({
   onReset,
   experimental,
   onExperimentalChange,
+  auth,
 }: {
   state: Snapshot;
   onSite: (id: string) => void;
@@ -31,6 +32,8 @@ export function Profile({
   onReset: () => void;
   experimental: boolean;
   onExperimentalChange: (enabled: boolean) => void;
+  /** Present only when connected to the real API; `email` is `null` for a guest. */
+  auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void };
 }) {
   const [contrast, setContrast] = useState(
       () =>
@@ -65,7 +68,28 @@ export function Profile({
           <div className="profile-card">
             <div className="avatar large">G</div>
             <h2>{state.name}</h2>
-            <p className="muted">Demo profili · Bu tarayıcıya özel</p>
+            {auth ? (
+              auth.email ? (
+                <>
+                  <p className="muted account-email">{auth.email}</p>
+                  <button className="text-btn" onClick={auth.onSignOut}>
+                    Çıkış yap
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="muted">
+                    Misafir · Giriş yaparak anı bırakabilir ve ilerlemeni
+                    hesabına bağlayabilirsin
+                  </p>
+                  <button className="btn" onClick={auth.onSignIn}>
+                    Giriş yap
+                  </button>
+                </>
+              )
+            ) : (
+              <p className="muted">Demo profili · Bu tarayıcıya özel</p>
+            )}
           </div>
           <div className="settings card">
             <h3>Deneyimini özelleştir</h3>
@@ -112,10 +136,12 @@ export function Profile({
               Demo yönetim paneli
               <ArrowRight size={15} />
             </button>
-            <button className="text-btn danger" onClick={onReset}>
-              <RotateCcw size={16} />
-              Demo verilerini sıfırla
-            </button>
+            {!auth && (
+              <button className="text-btn danger" onClick={onReset}>
+                <RotateCcw size={16} />
+                Demo verilerini sıfırla
+              </button>
+            )}
           </div>
         </aside>
         <div className="profile-main">

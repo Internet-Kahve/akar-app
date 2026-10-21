@@ -7,7 +7,7 @@ import {
   type SiteSource,
   type Trust,
 } from "@akar/domain";
-import { Modal, Notice } from "./ui";
+import { Modal, Notice, UploadProgress } from "./ui";
 import { preparePhoto } from "../lib/editor-media";
 
 export function PhotoDialog({
@@ -266,6 +266,7 @@ export function PhotoDialog({
               {error}
             </p>
           )}
+          <UploadProgress />
           <div className="modal-actions">
             <button type="button" className="btn secondary" onClick={onClose}>
               İptal

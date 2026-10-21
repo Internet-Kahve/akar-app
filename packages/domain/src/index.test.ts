@@ -13,12 +13,12 @@ test("Turkish search normalizes dotted I and filters by type", () => {
   assert.equal(filterSites(state.sites, "çeşme", "cesme").length, 1);
   assert.equal(filterSites(state.sites, "", "cami", []).length, 0);
 });
-test("repeat visit, read, and quiz commands never duplicate points", () => {
+test("repeat visit and read commands never duplicate points", () => {
   let state = createSeed();
   for (let i = 0; i < 3; i++)
-    for (const type of ["visit", "read", "quiz"] as const)
+    for (const type of ["visit", "read"] as const)
       state = reduceSnapshot(state, { type, siteId: "ulu-cami" });
-  assert.equal(state.points, 135);
+  assert.equal(state.points, 115);
   assert.equal(state.visitedIds.length, 1);
 });
 test("memory is pending, approval is idempotent, rejection requires a reason", () => {

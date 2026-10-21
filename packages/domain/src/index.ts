@@ -106,7 +106,7 @@ export interface Snapshot {
 export type Command =
   | { type: "save"; siteId: string }
   | { type: "route"; siteId: string }
-  | { type: "visit" | "read" | "quiz"; siteId: string }
+  | { type: "visit" | "read"; siteId: string }
   | { type: "set-route"; siteIds: string[] }
   | { type: "memory"; memory: Memory }
   | {
@@ -313,12 +313,6 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
       if (!next.readIds.includes(command.siteId)) {
         next.readIds.push(command.siteId);
         next.points += 15;
-      }
-      break;
-    case "quiz":
-      if (!next.quizIds.includes(command.siteId)) {
-        next.quizIds.push(command.siteId);
-        next.points += 20;
       }
       break;
     case "memory":

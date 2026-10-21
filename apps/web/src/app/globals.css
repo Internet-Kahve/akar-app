@@ -1866,11 +1866,43 @@ input[type="checkbox"] {
   background: var(--verified-bg);
   opacity: 1;
 }
+.quiz-option.wrong {
+  border-color: var(--error);
+  opacity: 1;
+}
 .hint {
   padding: 12px;
   background: var(--inferred-bg);
   border-radius: 8px;
   color: var(--inferred);
+}
+.upload-progress {
+  position: relative;
+  margin: 14px 0 34px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--border);
+}
+.upload-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 0.2s ease;
+}
+.upload-progress > small {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.otp-code {
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+.account-email {
+  overflow-wrap: anywhere;
 }
 .facts > div {
   display: flex;

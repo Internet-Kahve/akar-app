@@ -185,6 +185,48 @@ export const routes: HeritageRoute[] = [
     theme: "Ticaret yapıları",
   },
 ];
+/** Demo quiz questions: the mock serves them for every published site. `correct` never leaves the mock client. */
+export interface DemoQuiz {
+  question: string;
+  options: [string, string, string];
+  correct: 0 | 1 | 2;
+  hint: string;
+  explanation: string;
+}
+export const demoQuizzes: DemoQuiz[] = [
+  {
+    question: "Vakıfta “akar” neyi ifade eder?",
+    options: ["Gelir sağlayan yapı", "Bir mimari süsleme", "Ziyaretçi defteri"],
+    correct: 0,
+    hint: "Hamam ve dükkânların vakıf içindeki işlevini düşün.",
+    explanation:
+      "Örnek hikâyedeki akar, hizmetlerin sürmesini destekleyen gelir sağlayan yapıdır.",
+  },
+  {
+    question: "“Hayrat” hangi amaca hizmet eder?",
+    options: [
+      "Yalnızca ticarete",
+      "Topluma hizmet sunmaya",
+      "Yapıların yüksekliğini ölçmeye",
+    ],
+    correct: 1,
+    hint: "Gelirin nasıl bir faydaya dönüştüğünü düşün.",
+    explanation:
+      "Hayrat, vakfın toplumsal hizmet sunan yapıları için kullanılan kavramdır.",
+  },
+  {
+    question: "Temsili bir tarih anlatımını nasıl okumalıyız?",
+    options: [
+      "Kesin tarihî belge olarak",
+      "Kaynağa gerek duymadan",
+      "Kaynak doğrulaması bekleyen örnek olarak",
+    ],
+    correct: 2,
+    hint: "Hikâyedeki içerik etiketini hatırla.",
+    explanation:
+      "Temsili anlatım, doğrulanmış tarihî belge yerine geçmez. Kaynak ve güven etiketi birlikte değerlendirilir.",
+  },
+];
 export function createSeed(): Snapshot {
   return {
     version: 1,

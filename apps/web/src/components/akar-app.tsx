@@ -44,7 +44,11 @@ import { Architecture, Scene } from "./scene";
 import { StoryPanel } from "./story-panel";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
+import { SignInModal } from "./sign-in-modal";
 import { Modal, Tag, Notice, Back, Motif } from "./ui";
+import { describeError, needsSignIn } from "../lib/errors";
+import { apiUrl, getSupabase } from "../lib/supabase";
+import { setUploadProgress } from "../lib/upload-progress";
 type View =
   | "map"
   | "sites"
@@ -86,21 +90,50 @@ export function AkarApp() {
     [storyIndex, setStoryIndex] = useState(0),
     [listening, setListening] = useState(false),
     [toast, setToast] = useState(""),
-    [fault, setFault] = useState("");
-  const client = useRef<AkarClient | null>(null);
+    [fault, setFault] = useState(""),
+    [loadError, setLoadError] = useState(""),
+    [account, setAccount] = useState<{ id: string; email: string } | null>(
+      null,
+    ),
+    // `null` = closed; the string says why the dialog opened ("" = user asked).
+    [signIn, setSignIn] = useState<string | null>(null);
+  const client = useRef<AkarClient | null>(null),
+    loaded = useRef(false),
+    consent = useRef<{ textVersion: string } | null>(null),
+    accountId = useRef<string | null | undefined>(undefined);
+  const live = !!apiUrl;
+  const load = useCallback(async () => {
+    if (!client.current) return;
+    if (!loaded.current) setLoadError("");
+    try {
+      setState(await client.current.getSnapshot());
+      loaded.current = true;
+      setReady(true);
+    } catch (e) {
+      const message = describeError(e, "Veriler yüklenemedi.");
+      if (loaded.current) setFault(message);
+      else setLoadError(message);
+    }
+  }, []);
   useEffect(() => {
     let storage: Storage | undefined;
     try {
       storage = window.localStorage;
     } catch {}
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const supabase = apiUrl ? getSupabase() : null;
     client.current = apiUrl
       ? createHttpClient({
           baseUrl: apiUrl,
           ...(storage && { storage }),
-          // Temporary developer token (`npm run api:token`) until sign-in ships.
-          getToken: () => storage?.getItem("akar-api-token") ?? null,
-          onUnauthorized: () => storage?.removeItem("akar-api-token"),
+          getToken: async () =>
+            (await supabase?.auth.getSession())?.data.session?.access_token ??
+            null,
+          onUnauthorized: () => {
+            void supabase?.auth.signOut({ scope: "local" });
+            setToast("Oturumun sona erdi. Yeniden giriş yapabilirsin.");
+          },
+          getMemoryConsent: () => consent.current,
+          onUploadProgress: setUploadProgress,
           locate: () =>
             new Promise((resolve, reject) =>
               navigator.geolocation.getCurrentPosition(
@@ -117,15 +150,17 @@ export function AkarApp() {
             ),
         })
       : createMockClient(storage);
-    void client.current
-      .getSnapshot()
-      .then((s) => {
-        setState(s);
-        setReady(true);
-      })
-      .catch((e) =>
-        setFault(e instanceof Error ? e.message : "Veriler yüklenemedi."),
-      );
+    void load();
+    // The first event only reports the stored session; later changes (sign-in,
+    // sign-out, rejected token) re-read the state for the new identity.
+    const subscription = supabase?.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user;
+      setAccount(user ? { id: user.id, email: user.email ?? "" } : null);
+      const previous = accountId.current;
+      accountId.current = user?.id ?? null;
+      if (previous !== undefined && previous !== accountId.current)
+        setTimeout(() => void load(), 0);
+    }).data.subscription;
     const readLocation = () => {
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
@@ -148,8 +183,11 @@ export function AkarApp() {
     };
     readLocation();
     window.addEventListener("hashchange", readLocation);
-    return () => window.removeEventListener("hashchange", readLocation);
-  }, []);
+    return () => {
+      window.removeEventListener("hashchange", readLocation);
+      subscription?.unsubscribe();
+    };
+  }, [load]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 4500);
@@ -164,17 +202,27 @@ export function AkarApp() {
     if (id) p.set("site", id);
     window.location.hash = p.toString();
   }, []);
-  const commit = useCallback(async (command: Command) => {
+  /** Runs a command; resolves to the error message, or `null` on success. */
+  const run = useCallback(async (command: Command) => {
     try {
-      if (!client.current) return false;
-      const next = await client.current.dispatch(command);
-      setState(next);
-      return true;
+      if (!client.current) return "İşlem şu an yapılamıyor.";
+      setState(await client.current.dispatch(command));
+      return null;
     } catch (e) {
-      setFault(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
-      return false;
+      const message = describeError(e, "İşlem tamamlanamadı.");
+      if (needsSignIn(e)) setSignIn(message);
+      else setFault(message);
+      return message;
     }
   }, []);
+  const commit = useCallback(
+    async (command: Command) => (await run(command)) === null,
+    [run],
+  );
+  const signOut = () => {
+    void getSupabase()?.auth.signOut();
+    setToast("Çıkış yaptın.");
+  };
   const site = state.sites.find(
     (s) => s.id === siteId && s.status === "published",
   );
@@ -369,8 +417,19 @@ export function AkarApp() {
         </button>
       </header>
       {!ready ? (
-        <main className="loading" aria-busy="true">
-          Keşif hazırlanıyor…
+        <main className="loading" aria-busy={!loadError}>
+          {loadError ? (
+            <>
+              <p role="alert" className="error">
+                {loadError}
+              </p>
+              <button className="btn" onClick={() => void load()}>
+                Yeniden dene
+              </button>
+            </>
+          ) : (
+            "Keşif hazırlanıyor…"
+          )}
         </main>
       ) : (
         <>
@@ -382,6 +441,15 @@ export function AkarApp() {
               onSite={selectSite}
               onAdmin={() => go("admin")}
               onReset={() => setOverlay("reset")}
+              auth={
+                live
+                  ? {
+                      email: account?.email ?? null,
+                      onSignIn: () => setSignIn(""),
+                      onSignOut: signOut,
+                    }
+                  : undefined
+              }
             />
           )}
           {view === "admin" && <Admin state={state} commit={commit} />}
@@ -901,15 +969,24 @@ export function AkarApp() {
       {overlay === "memory" && site && (
         <MemoryModal
           site={site}
+          live={live}
           onClose={() => setOverlay(null)}
-          onSubmit={(memory) => commit({ type: "memory", memory })}
+          onSubmit={async (memory, accepted) => {
+            consent.current = accepted;
+            try {
+              return await run({ type: "memory", memory });
+            } finally {
+              consent.current = null;
+            }
+          }}
         />
       )}
-      {experimental && overlay === "quiz" && site && (
+      {experimental && overlay === "quiz" && site && client.current && (
         <QuizModal
-          completed={state.quizIds.includes(site.id)}
+          site={site}
+          client={client.current}
           onClose={() => setOverlay(null)}
-          onComplete={() => commit({ type: "quiz", siteId: site.id })}
+          onSnapshot={setState}
         />
       )}
       {overlay === "visit" && site && (
@@ -1042,8 +1119,8 @@ export function AkarApp() {
                   if (client.current) setState(await client.current.reset());
                   setOverlay(null);
                   setToast("Demo başlangıca döndürüldü.");
-                } catch {
-                  setFault("Demo sıfırlanamadı.");
+                } catch (e) {
+                  setFault(describeError(e, "Demo sıfırlanamadı."));
                 }
               }}
             >
@@ -1051,6 +1128,16 @@ export function AkarApp() {
             </button>
           </div>
         </Modal>
+      )}
+      {signIn !== null && (
+        <SignInModal
+          reason={signIn}
+          onClose={() => setSignIn(null)}
+          onSignedIn={() => {
+            setSignIn(null);
+            setToast("Giriş yaptın.");
+          }}
+        />
       )}
       {toast && (
         <div className="toast" role="status">

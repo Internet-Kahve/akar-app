@@ -22,7 +22,17 @@ npm run dev   # Web uygulaması: http://127.0.0.1:3000
 
 `npm run api` yerel Supabase'i (giriş, dosya depolama, e-posta kutusu) ve API veritabanını başlatır, `services/api/.env` yoksa oluşturur, migration'ları uygular, veritabanı boşsa Bursa demo verisini yükler ve API'yi açar. Tekrar çalıştırmak güvenlidir; mevcut veriye dokunmaz.
 
-Not: web uygulaması şimdilik kendi demo verisini kullanır, API'ye bağlı değildir. API'yi Swagger ya da `curl` ile test et.
+`npm run dev` (port 3000) web uygulamasını kendi demo verisiyle açar; API'ye bağlı değildir ve Playwright testleri bunu kullanır. Web'i gerçek API'ye bağlı denemek için `npm run api` açıkken üçüncü bir terminalde:
+
+```sh
+npm run dev:api   # API'ye bağlı web: http://127.0.0.1:3001
+```
+
+Komut yerel Supabase adresini ve anahtarını `supabase status` ile okur, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` değişkenlerini kendisi verir. API'nin `CORS_ORIGINS` değerinde `http://127.0.0.1:3001` olmalıdır (`services/api/.env.example` bunu içerir; eski bir `.env`'in varsa ekle ve `npm run api`'yi yeniden başlat).
+
+**Web'den giriş:** Mirasım sayfasında **Giriş yap** → e-posta adresini yaz → 6 haneli kod http://127.0.0.1:54324 (Mailpit) adresindeki e-postaya düşer → kodu gir. Kaydetme sonrası İz Bırak ya da yönetim işlemleri giriş gerektirdiğinde pencere kendiliğinden açılır. Yönetim/moderasyon için adresi önce yetkilendir: `npm run staff:invite -w @akar/api -- --email ben@example.com --role admin`. İz Bırak'ta KVKK açık rıza metni şimdilik taslaktır (sürüm `taslak-2026-10-21`). Bulmaca (Mirasım → Deneysel arayüzleri göster → eserde **Bulmaca**) API'deki sorularla çalışır; fotoğraflı anıda yükleme çubuğu görünür.
+
+API'yi ayrıca Swagger ya da `curl` ile de test edebilirsin.
 
 | Adres | Ne |
 | --- | --- |
