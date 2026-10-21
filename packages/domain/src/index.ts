@@ -86,7 +86,7 @@ export interface Memory {
   text: string;
   photo?: string;
   status: "pending" | "approved" | "rejected";
-  reason?: string;
+  reason?: string | undefined;
   createdAt: string;
   author: string;
 }
