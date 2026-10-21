@@ -775,40 +775,120 @@ test("the memory feed is read per 100 sites and all pages, and never overwrites 
   const snap = await client.getSnapshot();
   assert.equal(feedPaths.length, 2);
   assert.ok(feedPaths[0]?.includes("siteIds=a%2Cb"));
+  // Own memories stay own; the feed's copy of the same id is not repeated.
   assert.deepEqual(
-    snap.memories.map((m) => [m.id, m.status, m.author]).sort(),
+    snap.memories.map((m) => [m.id, m.status, m.author, m.text]),
+    [["own", "pending", "Ada", "benim bekleyen anım"]],
+  );
+  assert.deepEqual(
+    snap.publicMemories?.map((m) => [m.id, m.status, m.author]).sort(),
     [
       ["m1", "approved", "Veli"],
       ["m3", "approved", "Veli"],
-      ["own", "pending", "Ada"],
     ],
   );
-  assert.equal(
-    snap.memories.find((m) => m.id === "own")?.text,
-    "benim bekleyen anım",
+  assert.equal(snap.moderationQueue, undefined);
+});
+
+const userHandlers = (role: string): Record<string, Handler> => ({
+  "GET /v1/me": () => ({ id: "u", role, displayName: "Ada" }),
+  "GET /v1/me/passport": () => ({
+    points: 0,
+    saved: [],
+    read: [],
+    visited: [],
+    quizzesSolved: [],
+  }),
+  "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+});
+const pendingItem = (id: string, siteId: string) => ({
+  id,
+  siteId,
+  siteName: `Site ${siteId}`,
+  text: "bekleyen",
+  photo: null,
+  status: "pending",
+  reason: null,
+  createdAt: "2026-10-10T10:00:00.000Z",
+  decidedAt: null,
+  authorName: "Veli",
+});
+
+test("other people's memories are never the user's own: guest, signed-in user and moderator queue", async () => {
+  const feed = (): Record<string, Handler> => ({
+    "GET /v1/memories": () => ({
+      items: [feedItem("m1", "a")],
+      nextCursor: null,
+    }),
+  });
+  const guest = await createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: fakeApi({ ...catalogHandlers(), ...feed() }).fetch,
+  }).getSnapshot();
+  assert.deepEqual(guest.memories, []);
+  assert.deepEqual(
+    guest.publicMemories?.map((m) => m.id),
+    ["m1"],
+  );
+  assert.equal(guest.moderationQueue, undefined);
+
+  const asRole = (role: string, extra: Record<string, Handler> = {}) =>
+    createHttpClient({
+      baseUrl: "http://api.test",
+      storage: storage(),
+      fetch: fakeApi({
+        ...catalogHandlers(),
+        ...feed(),
+        ...userHandlers(role),
+        ...extra,
+      }).fetch,
+      getToken: () => "tok",
+    }).getSnapshot();
+  const user = await asRole("user");
+  assert.deepEqual(user.memories, []);
+  assert.deepEqual(
+    user.publicMemories?.map((m) => m.id),
+    ["m1"],
+  );
+  assert.equal(user.moderationQueue, undefined);
+
+  const mod = await asRole("moderator", {
+    "GET /v1/admin/memories": () => ({
+      items: [pendingItem("q1", "b")],
+      nextCursor: null,
+    }),
+  });
+  assert.deepEqual(mod.memories, []);
+  assert.deepEqual(
+    mod.moderationQueue?.map((m) => [m.id, m.status]),
+    [["q1", "pending"]],
+  );
+  assert.deepEqual(
+    mod.publicMemories?.map((m) => m.id),
+    ["m1"],
   );
 });
 
-test("a moderation approval re-reads the feed", async () => {
-  let approved = false;
+test("every moderation decision re-reads the feed: an approval appears, a rejection of a reported memory disappears", async () => {
+  let phase: "empty" | "approved" | "pending" | "rejected" = "empty";
+  let feedReads = 0;
   const api = fakeApi({
     ...catalogHandlers(),
-    "GET /v1/memories": () => ({
-      items: approved ? [feedItem("m1", "a")] : [],
+    ...userHandlers("moderator"),
+    "GET /v1/memories": () => {
+      feedReads++;
+      return {
+        items: phase === "approved" ? [feedItem("m1", "a")] : [],
+        nextCursor: null,
+      };
+    },
+    "GET /v1/admin/memories": () => ({
+      items: phase === "pending" ? [pendingItem("m1", "a")] : [],
       nextCursor: null,
     }),
-    "GET /v1/me": () => ({ id: "u", role: "moderator", displayName: "Mod" }),
-    "GET /v1/me/passport": () => ({
-      points: 0,
-      saved: [],
-      read: [],
-      visited: [],
-      quizzesSolved: [],
-    }),
-    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
-    "GET /v1/admin/memories": () => ({ items: [], nextCursor: null }),
-    "POST /v1/admin/memories/m1/decision": () => {
-      approved = true;
+    "POST /v1/admin/memories/m1/decision": (c) => {
+      phase = (c.body as { status: "approved" | "rejected" }).status;
       return {};
     },
   });
@@ -818,16 +898,39 @@ test("a moderation approval re-reads the feed", async () => {
     fetch: api.fetch,
     getToken: () => "tok",
   });
-  assert.equal((await client.getSnapshot()).memories.length, 0);
-  const snap = await client.dispatch({
+  assert.deepEqual((await client.getSnapshot()).publicMemories, []);
+  assert.equal(feedReads, 1);
+  phase = "pending";
+  const approvedSnap = await client.dispatch({
     type: "moderate",
     id: "m1",
     status: "approved",
   });
+  assert.equal(feedReads, 2);
   assert.deepEqual(
-    snap.memories.map((m) => m.id),
+    approvedSnap.publicMemories?.map((m) => m.id),
     ["m1"],
   );
+  // Reported after approval: it left the feed and sits in the queue again.
+  phase = "pending";
+  assert.deepEqual(
+    (await client.getSnapshot()).moderationQueue?.map((m) => m.id),
+    ["m1"],
+  );
+  const rejectedSnap = await client.dispatch({
+    type: "moderate",
+    id: "m1",
+    status: "rejected",
+    reason: "Uygunsuz içerik",
+  });
+  assert.equal(feedReads, 3);
+  const later = await client.getSnapshot();
+  for (const snap of [rejectedSnap, later]) {
+    assert.deepEqual(snap.publicMemories, []);
+    assert.deepEqual(snap.moderationQueue, []);
+    assert.deepEqual(snap.memories, []);
+  }
+  assert.equal(feedReads, 3);
 });
 
 test("upload progress runs 0 → 1 and always ends with null, also on failure", async () => {

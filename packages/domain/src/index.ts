@@ -93,7 +93,12 @@ export interface Memory {
 export interface Snapshot {
   version: 1;
   sites: HeritageSite[];
+  /** The current user's own memories (every status). */
   memories: Memory[];
+  /** Moderation queue for staff; absent when `memories` is the whole local list (demo). */
+  moderationQueue?: Memory[];
+  /** Approved memories of published sites that are not in `memories`; absent in the demo. */
+  publicMemories?: Memory[];
   savedIds: string[];
   routeIds: string[];
   visitedIds: string[];
@@ -220,6 +225,16 @@ export function publicationIssues(site: HeritageSite): string[] {
 }
 const toggle = (ids: string[], id: string) =>
   ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+/** Approved memories of a site as a visitor sees them: own and public ones, each id once. */
+export function approvedMemories(state: Snapshot, siteId: string): Memory[] {
+  const seen = new Set<string>();
+  return [...state.memories, ...(state.publicMemories ?? [])].filter((m) => {
+    if (m.siteId !== siteId || m.status !== "approved" || seen.has(m.id))
+      return false;
+    seen.add(m.id);
+    return true;
+  });
+}
 export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
   const next = structuredClone(state);
   if (

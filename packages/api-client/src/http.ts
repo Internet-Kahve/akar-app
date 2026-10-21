@@ -461,7 +461,10 @@ interface UserState {
   visitedIds: string[];
   quizIds: string[];
   points: number;
+  /** Own memories only. */
   memories: Memory[];
+  /** Pending memories awaiting a decision; empty unless moderator or admin. */
+  queue: Memory[];
 }
 
 export function createHttpClient(opts: HttpClientOptions): AkarClient {
@@ -724,6 +727,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         quizIds: quizSites,
         points: pendingPoints,
         memories: [],
+        queue: [],
       };
     }
     const [me, passport, own] = await Promise.all([
@@ -736,10 +740,6 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       me.role === "moderator" || me.role === "admin"
         ? await pages<MemoryDto>("/v1/admin/memories", { status: "pending" })
         : [];
-    const memories = new Map<string, Memory>();
-    for (const m of queue)
-      memories.set(m.id, mapMemory(m, m.authorName ?? name));
-    for (const m of own) memories.set(m.id, mapMemory(m, name));
     const solved = await pool(
       passport.quizzesSolved,
       CONCURRENCY,
@@ -763,7 +763,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       visitedIds: union(passport.visited, subjects("visit.verified")),
       quizIds: union(solved, quizSites),
       points: passport.points,
-      memories: [...memories.values()],
+      memories: own.map((m) => mapMemory(m, name)),
+      queue: queue.map((m) => mapMemory(m, m.authorName ?? name)),
     };
   }
   async function loadUser(cat: Catalog): Promise<UserState> {
@@ -795,14 +796,19 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     for (const id of [...cat.stale]) await refreshSite(id);
     user = await ensureUser(cat, reloadUser);
     const published = new Set(cat.sites.map((s) => s.id));
-    // Own and moderation-queue entries carry the author's own status and win over the public feed.
-    const memories = new Map(user.memories.map((m) => [m.id, m]));
-    for (const m of cat.feed)
-      if (published.has(m.siteId) && !memories.has(m.id)) memories.set(m.id, m);
+    // `memories` stays the user's own; the public feed only adds what is not already theirs.
+    const own = new Set(user.memories.map((m) => m.id));
     const snapshot: Snapshot = {
       version: 1,
       sites: cat.sites,
-      memories: [...memories.values()],
+      memories: user.memories,
+      ...(user.signedIn &&
+        (user.role === "moderator" || user.role === "admin") && {
+          moderationQueue: user.queue,
+        }),
+      publicMemories: cat.feed.filter(
+        (m) => published.has(m.siteId) && !own.has(m.id),
+      ),
       savedIds: user.savedIds.filter((id) => published.has(id)),
       routeIds: local.route.filter((id) => published.has(id)),
       visitedIds: user.visitedIds,
@@ -1096,8 +1102,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
                 : { status: "approved" },
           },
         );
-        // An approved memory joins the public feed.
-        if (command.status === "approved") await refreshFeed();
+        // The decision may add a memory to the public feed or take one out of it.
+        await refreshFeed();
         return true;
       case "site":
         await updateSite(command.site);
