@@ -20,6 +20,7 @@ import type { StorageBuckets } from "./platform/storage.ts";
 import type { Geocoder } from "./modules/ingest/geocode.ts";
 import type { CityConfig } from "./modules/ingest/cities.ts";
 import { adminImportRoutes } from "./modules/admin-catalog/imports-routes.ts";
+import { adminReportRoutes } from "./modules/admin-catalog/reports-routes.ts";
 import { adminRouteRoutes } from "./modules/admin-catalog/routes-editor-routes.ts";
 import { adminSiteRoutes } from "./modules/admin-catalog/sites-routes.ts";
 import { catalogRoutes } from "./modules/catalog/routes.ts";
@@ -63,6 +64,7 @@ const MODULES: ModulePlugin[] = [
   adminSiteRoutes,
   adminRouteRoutes,
   adminImportRoutes,
+  adminReportRoutes,
   moderationRoutes,
   engagementRoutes,
   settingsRoutes,

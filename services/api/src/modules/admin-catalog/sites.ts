@@ -544,54 +544,87 @@ export async function getAdminSite(db: Db, id: string): Promise<AdminSiteDetail>
   return toAdminDetail(await requireAggregate(db, id));
 }
 
+/** The panel's list row of a loaded site: identity, place, status and what blocks its publication. */
+function toListItem(a: SiteAggregate): AdminSiteListItem {
+  const { site: s } = a;
+  const issues = publishIssues(a);
+  const cover = s.coverMediaId ? a.media.get(s.coverMediaId) : undefined;
+  return {
+    id: s.id,
+    name: s.name,
+    nameEn: s.nameEn,
+    kind: s.typeId,
+    city: { id: s.cityId, name: s.cityName },
+    district: s.district,
+    status: s.status,
+    tier: s.tier,
+    trust: s.trust,
+    coordinates: s.lng === null || s.lat === null ? null : [s.lng, s.lat],
+    locationSource: s.locationSource,
+    coverImage: cover ? { id: cover.id, url: cover.url, alt: cover.alt } : null,
+    issues,
+    issueCount: issues.length,
+    updatedAt: s.updatedAt.toISOString(),
+  };
+}
+
+/** Sites read per round when a page is filtered after loading. */
+const SCAN_BATCH = 100;
+
+/**
+ * One keyset page (by name, then id) of the sites matching `where`, drafts included. `keep` filters
+ * on what SQL cannot see (the publish issues): batches are read until the page is full or the sites
+ * run out, so a sparse filter still returns full pages.
+ */
+export async function pageAdminSites(
+  db: Db,
+  where: SQL[],
+  page: { cursor?: string | undefined; limit: number },
+  keep?: (item: AdminSiteListItem) => boolean,
+): Promise<{ items: AdminSiteListItem[]; nextCursor: string | null }> {
+  let after = page.cursor ? decodeCursor(page.cursor, ["n", "i"]) : null;
+  // Unfiltered, one row past the page tells whether another page exists; filtered, one extra match does.
+  const batch = keep ? Math.max(page.limit + 1, SCAN_BATCH) : page.limit + 1;
+  const found: { item: AdminSiteListItem; sortName: string }[] = [];
+  let more = false;
+  for (;;) {
+    const rows = await db
+      .select({ id: sites.id, sortName: sites.sortName })
+      .from(sites)
+      .where(and(...where, after ? sql`(${sites.sortName} COLLATE "C", ${sites.id} COLLATE "C") > (${after.n}, ${after.i})` : undefined))
+      .orderBy(sql`${sites.sortName} COLLATE "C"`, sql`${sites.id} COLLATE "C"`)
+      .limit(batch);
+    const wanted = keep ? rows : rows.slice(0, page.limit);
+    const aggregates = await loadSites(db, wanted.map((r) => r.id));
+    for (const r of wanted) {
+      const a = aggregates.get(r.id);
+      if (!a) continue;
+      const item = toListItem(a);
+      if (!keep || keep(item)) found.push({ item, sortName: r.sortName });
+      if (found.length > page.limit) break;
+    }
+    if (!keep) {
+      more = rows.length > page.limit;
+      break;
+    }
+    more = found.length > page.limit;
+    const last = rows.at(-1);
+    if (more || !last || rows.length < batch) break;
+    after = { n: last.sortName, i: last.id };
+  }
+  const items = found.slice(0, page.limit);
+  const last = more ? items.at(-1) : undefined;
+  return { items: items.map((f) => f.item), nextCursor: last ? encodeCursor({ n: last.sortName, i: last.item.id }) : null };
+}
+
 /** Every site, drafts included, by name; each with what blocks its publication. */
-export async function listAdminSites(db: Db, input: AdminListSitesInput): Promise<{ items: AdminSiteListItem[]; nextCursor: string | null }> {
+export function listAdminSites(db: Db, input: AdminListSitesInput): Promise<{ items: AdminSiteListItem[]; nextCursor: string | null }> {
   const where: SQL[] = [];
   if (input.status) where.push(eq(sites.status, input.status));
   if (input.city) where.push(eq(sites.cityId, normalize(input.city)));
   const term = input.query ? normalize(input.query.trim()) : "";
   if (term) where.push(sql`${sites.searchText} LIKE ${`%${term.replace(/[\\%_]/g, "\\$&")}%`}`);
-  if (input.cursor) {
-    const c = decodeCursor(input.cursor, ["n", "i"]);
-    where.push(sql`(${sites.sortName} COLLATE "C", ${sites.id} COLLATE "C") > (${c.n}, ${c.i})`);
-  }
-
-  const rows = await db
-    .select({ id: sites.id, sortName: sites.sortName })
-    .from(sites)
-    .where(and(...where))
-    .orderBy(sql`${sites.sortName} COLLATE "C"`, sql`${sites.id} COLLATE "C"`)
-    .limit(input.limit + 1);
-  const page = rows.slice(0, input.limit);
-  const last = rows.length > input.limit ? page.at(-1) : undefined;
-
-  const aggregates = await loadSites(db, page.map((r) => r.id));
-  const items = page.flatMap((r) => {
-    const a = aggregates.get(r.id);
-    if (!a) return [];
-    const { site: s } = a;
-    const issues = publishIssues(a);
-    const cover = s.coverMediaId ? a.media.get(s.coverMediaId) : undefined;
-    const item: AdminSiteListItem = {
-      id: s.id,
-      name: s.name,
-      nameEn: s.nameEn,
-      kind: s.typeId,
-      city: { id: s.cityId, name: s.cityName },
-      district: s.district,
-      status: s.status,
-      tier: s.tier,
-      trust: s.trust,
-      coordinates: s.lng === null || s.lat === null ? null : [s.lng, s.lat],
-      locationSource: s.locationSource,
-      coverImage: cover ? { id: cover.id, url: cover.url, alt: cover.alt } : null,
-      issues,
-      issueCount: issues.length,
-      updatedAt: s.updatedAt.toISOString(),
-    };
-    return [item];
-  });
-  return { items, nextCursor: last ? encodeCursor({ n: last.sortName, i: last.id }) : null };
+  return pageAdminSites(db, where, input);
 }
 
 // ── reference checks ─────────────────────────────────────────────────────────

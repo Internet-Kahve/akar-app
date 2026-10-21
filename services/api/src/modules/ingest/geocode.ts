@@ -36,6 +36,9 @@ const BARE_HEAD: Record<string, string> = {
   zaviyesi: "zaviye",
 };
 
+/** Bare building-type words ("cami", "han", "turbe" …): a `nameKey` made only of these names no building. */
+export const BUILDING_HEADS: ReadonlySet<string> = new Set(Object.values(BARE_HEAD));
+
 /**
  * Comparable building name: normalized, parentheticals and "ve Haziresi"-style tails dropped,
  * every word in bare form, final d/t folded ("Mehmed" ≈ "Mehmet").

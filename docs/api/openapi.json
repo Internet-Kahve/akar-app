@@ -21674,6 +21674,678 @@
         }
       }
     },
+    "/v1/admin/reports/draft-issues": {
+      "get": {
+        "summary": "Taslakların yayın eksikleri (publicationIssues + tür/konum kuralları), ada göre sayfalanır; ready ile yayına hazır taslaklar",
+        "tags": [
+          "admin-reports"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "description": "Önceki yanıttaki nextCursor"
+          },
+          {
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "description": "Şehir kimliği (slug), örn. bursa"
+          },
+          {
+            "schema": {
+              "default": "blocked",
+              "type": "string",
+              "enum": [
+                "blocked",
+                "ready"
+              ]
+            },
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "description": "blocked: yayın eksiği olan taslaklar (varsayılan); ready: eksiği olmayan, yayınlanabilir taslaklar"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "nameEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "kind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40,
+                                "description": "Yapı türü kimliği (site_types), örn. cami"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Yapı türü (site_types); içe aktarılan taslakta bilinmeyebilir"
+                          },
+                          "city": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "district": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "published"
+                            ]
+                          },
+                          "tier": {
+                            "type": "string",
+                            "enum": [
+                              "Hero",
+                              "Tier 2",
+                              "Tier 1"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          },
+                          "coordinates": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "prefixItems": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ],
+                                "items": false,
+                                "minItems": 2,
+                                "maxItems": 2
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "[boylam, enlem]; konumu bulunamayan taslakta null"
+                          },
+                          "locationSource": {
+                            "description": "Konumun kaynağı: seed, manual, osm, overpass, nominatim, nominatim-address; nominatim-street ve nominatim-neighbourhood yaklaşıktır, yayınlanamaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "coverImage": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  },
+                                  "alt": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "url",
+                                  "alt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "issues": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Yayın kapısının eksikleri (publicationIssues + tür/konum kuralları), Türkçe; boş = yayına hazır"
+                          },
+                          "issueCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "nameEn",
+                          "kind",
+                          "city",
+                          "district",
+                          "status",
+                          "tier",
+                          "trust",
+                          "coordinates",
+                          "locationSource",
+                          "coverImage",
+                          "issues",
+                          "issueCount",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/reports/locations": {
+      "get": {
+        "summary": "Konumu bulunamayan ya da yaklaşık (sokak, mahalle merkezi) taslaklar, ada göre sayfalanır",
+        "tags": [
+          "admin-reports"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "description": "Önceki yanıttaki nextCursor"
+          },
+          {
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "description": "Şehir kimliği (slug), örn. bursa"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "missing",
+                "approximate"
+              ]
+            },
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "description": "missing: konum bulunamadı; approximate: sokak ya da mahalle merkezi; boş: ikisi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "nameEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "kind": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40,
+                                "description": "Yapı türü kimliği (site_types), örn. cami"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Yapı türü (site_types); içe aktarılan taslakta bilinmeyebilir"
+                          },
+                          "city": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "district": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "draft",
+                              "published"
+                            ]
+                          },
+                          "tier": {
+                            "type": "string",
+                            "enum": [
+                              "Hero",
+                              "Tier 2",
+                              "Tier 1"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          },
+                          "coordinates": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "prefixItems": [
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "number"
+                                  }
+                                ],
+                                "items": false,
+                                "minItems": 2,
+                                "maxItems": 2
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "[boylam, enlem]; konumu bulunamayan taslakta null"
+                          },
+                          "locationSource": {
+                            "description": "Konumun kaynağı: seed, manual, osm, overpass, nominatim, nominatim-address; nominatim-street ve nominatim-neighbourhood yaklaşıktır, yayınlanamaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "coverImage": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  },
+                                  "alt": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "url",
+                                  "alt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "issues": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Yayın kapısının eksikleri (publicationIssues + tür/konum kuralları), Türkçe; boş = yayına hazır"
+                          },
+                          "issueCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "nameEn",
+                          "kind",
+                          "city",
+                          "district",
+                          "status",
+                          "tier",
+                          "trust",
+                          "coordinates",
+                          "locationSource",
+                          "coverImage",
+                          "issues",
+                          "issueCount",
+                          "updatedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/reports/duplicates": {
+      "get": {
+        "summary": "Olası kopyalar: aynı şehirde yalın adı aynı olan, en az biri taslak eser grupları; şehir ve anahtara göre sayfalanır",
+        "tags": [
+          "admin-reports"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "description": "Önceki yanıttaki nextCursor"
+          },
+          {
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "description": "Şehir kimliği (slug), örn. bursa"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string",
+                            "description": "Karşılaştırma anahtarı: yalın ad (\"Koza Hanı Mescidi\" ≈ \"Koza Han Mescidi\")"
+                          },
+                          "city": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "sameDistrict": {
+                            "type": "boolean",
+                            "description": "En az iki eser aynı ilçede (tarihi bölge adı ilçeye çevrilir): büyük olasılıkla aynı yapı"
+                          },
+                          "sites": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "district": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "draft",
+                                    "published"
+                                  ]
+                                },
+                                "coordinates": {
+                                  "anyOf": [
+                                    {
+                                      "type": "array",
+                                      "prefixItems": [
+                                        {
+                                          "type": "number"
+                                        },
+                                        {
+                                          "type": "number"
+                                        }
+                                      ],
+                                      "items": false,
+                                      "minItems": 2,
+                                      "maxItems": 2
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "[boylam, enlem]"
+                                },
+                                "locationSource": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "district",
+                                "status",
+                                "coordinates",
+                                "locationSource"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Önce yayındakiler, sonra ada göre"
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "city",
+                          "sameDistrict",
+                          "sites"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/sites/{id}/memories": {
       "get": {
         "summary": "Eserin onaylı anıları, en yeniden eskiye; keyset sayfalama",
