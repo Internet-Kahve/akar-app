@@ -62,7 +62,7 @@ Gövdeler ve alanlar Swagger'da. Yazma isteklerinde isteğe bağlı `Idempotency
 
 - **Eser:** editörle `POST /v1/admin/sites` (taslak) → bilgileri, konumu, medyayı doldur → `POST .../publish`. Eksik varsa 422 ve Türkçe liste döner. Yayından önce `GET /v1/sites/:id` misafire 404'tür.
 - **Fotoğraf yükleme (3 adım):** `POST /v1/media/uploads` → yanıttaki `url`'ye dosyayı `PUT` et (yanıttaki `headers` ile) → `POST /v1/media/uploads/:uploadId/complete`. Yayındaki adres `complete` yanıtındaki `url`'dir. Sınır: 5 MB; JPEG/PNG/WebP, GLB, MP3/M4A.
-- **İz Bırak:** kullanıcıyla `POST /v1/memories` → anı `pending` → moderatörle karar → onaylanınca eser sayfasında görünür, yazar 25 puan alır.
+- **İz Bırak:** kullanıcıyla `POST /v1/memories` → anı `pending` → moderatörle karar → onaylanınca eser sayfasında ve `GET /v1/memories` akışında görünür, yazar 25 puan alır.
 - **Harita ayarları:** `GET /v1/map-settings` herkese açık; `PUT /v1/admin/map-settings` yalnız admin.
 - **Yetki sınırları:** aynı ucu misafir (token yok → 401), yanlış rol (403) ve doğru rolle dene.
 

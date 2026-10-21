@@ -22477,6 +22477,145 @@
       }
     },
     "/v1/memories": {
+      "get": {
+        "summary": "Anı akışı: yayındaki eserlerin onaylı anıları tek listede, en yeniden eskiye; keyset sayfalama",
+        "tags": [
+          "memories"
+        ],
+        "description": "Eser başına ayrı istek gerekmez. siteIds ve city isteğe bağlı daraltır. Yalnız onaylanmış anılar ve yalnız yayındaki eserler; taslak ya da bilinmeyen eser kimliği hata vermez, sonuç getirmez. Yazar yalnız görünen adla gelir.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "description": "Önceki yanıttaki nextCursor"
+          },
+          {
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 10100
+            },
+            "in": "query",
+            "name": "siteIds",
+            "required": false,
+            "description": "Virgülle ayrılmış eser kimlikleri, en çok 100; yayında olmayan ya da bilinmeyen kimlik sonuç getirmez"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "description": "Şehir kimliği (slug), örn. bursa"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "siteId": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "authorName": {
+                            "type": "string",
+                            "description": "Gönderim anındaki görünen ad; kimlik ve e-posta hiçbir yanıtta yer almaz"
+                          },
+                          "photo": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  },
+                                  "alt": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "url",
+                                  "alt"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eklenen fotoğraf; yoksa null"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "siteId",
+                          "text",
+                          "authorName",
+                          "photo",
+                          "createdAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "summary": "İz Bırak: anı gönder (her zaman onay bekler)",
         "tags": [

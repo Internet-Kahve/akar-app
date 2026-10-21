@@ -238,3 +238,9 @@ Karar: `apps/web` ya da `packages/*` (`@akar/domain`, `@akar/api-client`; ön y�
 Neden: backend Weissman ve backend sorumlusunun, ön yüz Tamer'in alanı. §11.8'deki "her PR'ı Tamer inceler" ifadesi, ön yüz koduna dokunan P5 işi için konmuştu; backend PR'larını bekletmek gereksiz.
 Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: bu kayıt; istenirse `main` için GitHub dal koruması (CODEOWNERS ile `apps/web`, `packages/*` → Tamer) eklenebilir.
+
+**11.11 Başkalarının onaylı anıları tek akıştan okunur.**
+Karar: `GET /v1/memories` herkese açık, önbellekli bir anı akışıdır: yayındaki eserlerin onaylı anıları en yeniden eskiye, keyset sayfalama; isteğe bağlı `siteIds` (en çok 100) ve `city` ile daraltılır. Taslak ya da bilinmeyen eser kimliği 404 değil boş sonuç verir (akış, eser başına uçtaki gibi tek kayıt sormaz; boş sonuç taslağın varlığını sızdırmaz). Yeni tablo ya da migration yok; mevcut `memories_status_created_idx` kullanılır. İstemci bağlantısı P5.1b'de yapılır.
+Neden: istemci bugün yalnız kendi anılarını ve moderasyon kuyruğunu çekiyor; eser başına ayrı istek, 84+ eserlik haritada gereksiz yük.
+Karar veren / tarih: Weissman (iş sırası A → B → C), 21 Eki; uç biçimi backend sorumlusunun.
+Nasıl değiştirilir: `services/api/src/modules/moderation/` (`MemoryFeedQuery`, `listMemoryFeed`).

@@ -18,6 +18,7 @@ import type { AdminMemory, OwnMemory, PublicMemory } from "./schemas.ts";
 const SITE = "ulu-cami";
 const OTHER_SITE = "koza-han";
 const DRAFT_SITE = "taslak-han";
+const IZMIR_SITE = "izmir-cami";
 
 const site = (id: string, name: string, over: Partial<HeritageSite> = {}): HeritageSite => ({
   id,
@@ -49,6 +50,7 @@ before(async () => {
       site(SITE, "Ulu Cami", { kind: "cami" }),
       site(OTHER_SITE, "Koza Han"),
       site(DRAFT_SITE, "Taslak Han", { status: "draft" }),
+      site(IZMIR_SITE, "İzmir Camii", { kind: "cami", city: "İzmir", district: "Konak", coordinates: [27.1, 38.4] }),
     ],
     routes: [],
   });
@@ -175,6 +177,43 @@ test("only approved memories are public: pending, rejected, other sites' and dra
     const missing = await call<ErrorBody>("GET", `/v1/sites/${id}/memories`, null);
     assert.equal(missing.res.statusCode, 404, id);
     assert.equal(missing.body.error.code, "NOT_FOUND");
+  }
+});
+
+test("the memory feed carries only approved memories of published sites, narrowed by siteIds and city, and never the author's identity", async () => {
+  const author = actor("user", "ayse@example.com");
+  const ulu = await seedMemory({ status: "approved", authorId: author.id, authorName: "Ayşe K." });
+  const koza = await seedMemory({ status: "approved", siteId: OTHER_SITE });
+  const izmir = await seedMemory({ status: "approved", siteId: IZMIR_SITE });
+  await seedMemory({ status: "pending", authorId: author.id, text: "BEKLEYEN-ANI" });
+  await seedMemory({ status: "rejected", authorId: author.id, text: "REDDEDILEN-ANI", reason: "NEDEN-GIZLI" });
+  await seedMemory({ status: "approved", siteId: DRAFT_SITE, text: "TASLAK-ESER-ANISI" });
+  // Newest first: ulu, then koza, then izmir.
+  for (const [id, at] of [[ulu, "2026-03-03"], [koza, "2026-03-02"], [izmir, "2026-03-01"]]) {
+    await db.execute(sql`update memories set created_at = ${at}::timestamptz where id = ${id}`);
+  }
+
+  const feed = async (query = "") => {
+    const { res, body } = await call<Page<PublicMemory>>("GET", `/v1/memories${query}`, null);
+    assert.equal(res.statusCode, 200, query);
+    assert.doesNotMatch(res.body, /BEKLEYEN|REDDEDILEN|TASLAK-ESER|NEDEN-GIZLI/, query);
+    assert.doesNotMatch(res.body, new RegExp(`${author.id}|ayse@example`), query);
+    return body.items.map((m) => m.id);
+  };
+
+  assert.deepEqual(await feed(), [ulu, koza, izmir]);
+  assert.deepEqual(await feed(`?siteIds=${IZMIR_SITE},${SITE},${SITE}`), [ulu, izmir]);
+  assert.deepEqual(await feed("?city=izmir"), [izmir]);
+  assert.deepEqual(await feed(`?city=bursa&siteIds=${IZMIR_SITE},${OTHER_SITE}`), [koza]);
+  // A draft's id answers like an unknown one: an empty page, not an error that would confirm it exists.
+  assert.deepEqual(await feed(`?siteIds=${DRAFT_SITE}`), []);
+  assert.deepEqual(await feed("?siteIds=yok"), []);
+
+  const tooMany = Array.from({ length: 101 }, (_, i) => `s${i}`).join(",");
+  for (const query of [`?siteIds=${tooMany}`, "?siteIds=,,", `?siteIds=${"x".repeat(101)}`]) {
+    const { res, body } = await call<ErrorBody>("GET", `/v1/memories${query}`, null);
+    assert.equal(res.statusCode, 400, query.slice(0, 40));
+    assert.equal(body.error.code, "VALIDATION_FAILED");
   }
 });
 
@@ -652,6 +691,7 @@ test("pages follow (created_at, id) exactly: no repeat or gap across rows create
   // Public list: newest first, equal instants by id descending.
   for (const limit of [1, 2, 5]) {
     assert.deepEqual(await walk(`/v1/sites/${SITE}/memories`, null, limit), ["mem-e", "mem-d", "mem-c", "mem-b", "mem-a"], `public, limit ${limit}`);
+    assert.deepEqual(await walk("/v1/memories", null, limit), ["mem-e", "mem-d", "mem-c", "mem-b", "mem-a"], `feed, limit ${limit}`);
   }
   // Moderation queue: oldest first, equal instants by id ascending.
   await db.update(memories).set({ status: "pending" });

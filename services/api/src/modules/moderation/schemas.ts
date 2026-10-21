@@ -56,6 +56,27 @@ export const ModerationQuery = PageQuery.extend({
     .describe("Kuyruk durumu; varsayılan pending"),
 });
 
+/** Most site ids one feed request may name. */
+export const FEED_SITE_IDS_MAX = 100;
+
+export const MemoryFeedQuery = PageQuery.extend({
+  siteIds: z
+    .string()
+    .max(FEED_SITE_IDS_MAX * 101)
+    .describe(`Virgülle ayrılmış eser kimlikleri, en çok ${FEED_SITE_IDS_MAX}; yayında olmayan ya da bilinmeyen kimlik sonuç getirmez`)
+    .transform((value, ctx) => {
+      const ids = [...new Set(value.split(",").map((id) => id.trim()).filter(Boolean))];
+      if (!ids.length || ids.length > FEED_SITE_IDS_MAX || ids.some((id) => id.length > 100)) {
+        ctx.addIssue({ code: "custom", message: `1–${FEED_SITE_IDS_MAX} eser kimliği verilmeli, her biri en çok 100 karakter.` });
+        return z.NEVER;
+      }
+      return ids;
+    })
+    .optional(),
+  city: z.string().trim().min(1).max(60).optional().describe("Şehir kimliği (slug), örn. bursa"),
+});
+export type MemoryFeedInput = z.infer<typeof MemoryFeedQuery>;
+
 // ── responses ────────────────────────────────────────────────────────────────
 
 const Photo = z.object({ id: z.string(), url: z.string(), alt: z.string() });

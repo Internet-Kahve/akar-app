@@ -1,3 +1,4 @@
+import { normalize } from "@akar/domain";
 import { and, asc, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import type { Db } from "../../db/client.ts";
@@ -8,7 +9,7 @@ import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
 import { published } from "../catalog/service.ts";
 import { recordPointEvent } from "../engagement/points.ts";
-import type { AdminMemory, CreateMemoryBody, DecisionBody, MemoryStatus, OwnMemory, PublicMemory, ReportResult } from "./schemas.ts";
+import type { AdminMemory, CreateMemoryBody, DecisionBody, MemoryFeedInput, MemoryStatus, OwnMemory, PublicMemory, ReportResult } from "./schemas.ts";
 
 // "İz Bırak" memories and their moderation.
 //
@@ -172,6 +173,16 @@ const toOwn = (r: MemoryRow): OwnMemory => ({
   decidedAt: r.decidedAt?.toISOString() ?? null,
 });
 
+/** The public shape, built field by field: the author is a name only, never an id or e-mail. */
+const toPublic = (r: MemoryRow): PublicMemory => ({
+  id: r.id,
+  siteId: r.siteId,
+  text: r.text,
+  authorName: r.authorName,
+  photo: r.photoId ? { id: r.photoId, url: r.photoUrl ?? "", alt: r.photoAlt ?? "" } : null,
+  createdAt: r.createdAt.toISOString(),
+});
+
 const toAdmin = (r: MemoryRow, stats: ReportStats | undefined): AdminMemory => ({
   ...toOwn(r),
   siteName: r.siteName,
@@ -183,25 +194,24 @@ const toAdmin = (r: MemoryRow, stats: ReportStats | undefined): AdminMemory => (
 
 // ── reads ────────────────────────────────────────────────────────────────────
 
-/**
- * Approved memories of a published site, newest first. A site that is not published is 404.
- * The public shape is built field by field: the author is a name only, never an id or e-mail.
- */
+/** Approved memories of a published site, newest first. A site that is not published is 404. */
 export async function listSiteMemories(db: Db, siteId: string, input: PageInput): Promise<Paged<PublicMemory>> {
   const [site] = await db.select({ id: sites.id }).from(sites).where(and(published, eq(sites.id, siteId)));
   if (!site) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
   const { rows, nextCursor } = await fetchPage(db, input, [eq(memories.siteId, siteId), eq(memories.status, "approved")], "desc");
-  return {
-    items: rows.map((r) => ({
-      id: r.id,
-      siteId: r.siteId,
-      text: r.text,
-      authorName: r.authorName,
-      photo: r.photoId ? { id: r.photoId, url: r.photoUrl ?? "", alt: r.photoAlt ?? "" } : null,
-      createdAt: r.createdAt.toISOString(),
-    })),
-    nextCursor,
-  };
+  return { items: rows.map(toPublic), nextCursor };
+}
+
+/**
+ * Approved memories of published sites in one feed, newest first, optionally narrowed to `siteIds`
+ * and/or a city. Ids of drafts or unknown sites just match nothing, so the answer never tells them apart.
+ */
+export async function listMemoryFeed(db: Db, input: MemoryFeedInput): Promise<Paged<PublicMemory>> {
+  const filters: SQL[] = [published, eq(memories.status, "approved")];
+  if (input.siteIds) filters.push(inArray(memories.siteId, input.siteIds));
+  if (input.city) filters.push(eq(sites.cityId, normalize(input.city)));
+  const { rows, nextCursor } = await fetchPage(db, input, filters, "desc");
+  return { items: rows.map(toPublic), nextCursor };
 }
 
 /** The author's own memories in every status ("Paylaşımlarım"), newest first. */

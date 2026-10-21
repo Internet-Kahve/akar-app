@@ -9,6 +9,7 @@ import {
   AdminMemoryListResponse,
   CreateMemoryBody,
   DecisionBody,
+  MemoryFeedQuery,
   ModerationQuery,
   OwnMemory,
   OwnMemoryListResponse,
@@ -16,9 +17,9 @@ import {
   ReportBody,
   ReportResult,
 } from "./schemas.ts";
-import { createMemory, decideMemory, listModerationQueue, listOwnMemories, listSiteMemories, reportMemory } from "./service.ts";
+import { createMemory, decideMemory, listMemoryFeed, listModerationQueue, listOwnMemories, listSiteMemories, reportMemory } from "./service.ts";
 
-/** The one public, cacheable read. Its own scope: the cache hook must never reach a mutation. */
+/** The public, cacheable reads. Their own scope: the cache hook must never reach a mutation. */
 const publicMemoryReads: FastifyPluginAsyncZod = async (app) => {
   addReadCache(app);
 
@@ -35,6 +36,21 @@ const publicMemoryReads: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => listSiteMemories(app.deps.db, req.params.id, req.query),
+  );
+
+  app.get(
+    "/v1/memories",
+    {
+      schema: {
+        tags: ["memories"],
+        summary: "Anı akışı: yayındaki eserlerin onaylı anıları tek listede, en yeniden eskiye; keyset sayfalama",
+        description:
+          "Eser başına ayrı istek gerekmez. siteIds ve city isteğe bağlı daraltır. Yalnız onaylanmış anılar ve yalnız yayındaki eserler; taslak ya da bilinmeyen eser kimliği hata vermez, sonuç getirmez. Yazar yalnız görünen adla gelir.",
+        querystring: MemoryFeedQuery,
+        response: { 200: PublicMemoryListResponse },
+      },
+    },
+    async (req) => listMemoryFeed(app.deps.db, req.query),
   );
 };
 
