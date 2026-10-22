@@ -976,16 +976,22 @@ test("other people's memories are never the user's own: guest, signed-in user an
   );
   assert.equal(user.moderationQueue, undefined);
 
+  // The panel tabs need every status; the pending list repeats a reported approved memory.
+  const byStatus: Record<string, object[]> = {
+    pending: [pendingItem("q1", "b"), { ...pendingItem("r1", "a"), status: "approved" }],
+    approved: [{ ...pendingItem("r1", "a"), status: "approved" }, { ...pendingItem("a1", "a"), status: "approved" }],
+    rejected: [{ ...pendingItem("x1", "b"), status: "rejected", reason: "Uygunsuz" }],
+  };
   const mod = await asRole("moderator", {
-    "GET /v1/admin/memories": () => ({
-      items: [pendingItem("q1", "b")],
+    "GET /v1/admin/memories": (c) => ({
+      items: byStatus[new URL(c.path, "http://api.test").searchParams.get("status") ?? ""] ?? [],
       nextCursor: null,
     }),
   });
   assert.deepEqual(mod.memories, []);
   assert.deepEqual(
-    mod.moderationQueue?.map((m) => [m.id, m.status]),
-    [["q1", "pending"]],
+    mod.moderationQueue?.map((m) => [m.id, m.status]).sort(),
+    [["a1", "approved"], ["q1", "pending"], ["r1", "approved"], ["x1", "rejected"]],
   );
   assert.deepEqual(
     mod.publicMemories?.map((m) => m.id),

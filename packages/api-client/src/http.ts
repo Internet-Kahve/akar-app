@@ -488,9 +488,11 @@ interface UserState {
   points: number;
   /** Own memories only. */
   memories: Memory[];
-  /** Pending memories awaiting a decision; empty unless moderator or admin. */
+  /** Moderation panel lists (pending, approved, rejected); empty unless moderator or admin. */
   queue: Memory[];
 }
+
+const MODERATION_STATUSES = ["pending", "approved", "rejected"] as const;
 
 export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const base = opts.baseUrl.replace(/\/+$/, "");
@@ -854,9 +856,23 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       pages<MemoryDto>("/v1/me/memories"),
     ]);
     const name = me.displayName ?? "Gezgin";
+    // The panel has "Bekleyen", "Onaylanan" and "Reddedilen" tabs, so all three lists are read. The pending
+    // list also carries reported approved memories, which the approved list repeats: one entry per id.
     const queue =
       me.role === "moderator" || me.role === "admin"
-        ? await pages<MemoryDto>("/v1/admin/memories", { status: "pending" })
+        ? [
+            ...new Map(
+              (
+                await Promise.all(
+                  MODERATION_STATUSES.map((status) =>
+                    pages<MemoryDto>("/v1/admin/memories", { status }),
+                  ),
+                )
+              )
+                .flat()
+                .map((m) => [m.id, m]),
+            ).values(),
+          ]
         : [];
     const solved = await pool(
       passport.quizzesSolved,

@@ -116,8 +116,10 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   const card = moderator.page.locator(".moderation-card").filter({ hasText: text });
   await expect(card.getByText("Fotoğraf + anı")).toBeVisible();
   await card.getByRole("button", { name: "Onayla" }).click();
-  // API mode: the queue holds what still needs a decision, so the approved card leaves it.
+  // It leaves "Bekleyen" and is listed under "Onaylanan" with its photo.
   await expect(card).toBeHidden();
+  await moderator.page.locator(".admin-tabs").getByRole("button", { name: /Onaylanan/ }).click();
+  await expect(card.getByText("Fotoğraf + anı")).toBeVisible();
 
   // 3. A new guest sees the approved memory with its published photo.
   const reader = await guestPage(browser);
