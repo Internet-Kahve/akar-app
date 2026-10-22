@@ -1,8 +1,9 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { addReadCache } from "../../http-cache.ts";
+import { PageQuery } from "../../platform/pagination.ts";
 import { getLookups, listCities } from "./lookups.ts";
-import { CityListResponse, IdParams, ListSitesQuery, LookupsResponse, SiteDetail, SiteListResponse } from "./schemas.ts";
-import { getSiteDetail, listSites } from "./service.ts";
+import { CityListResponse, IdParams, ListSitesQuery, LookupsResponse, SiteDetail, SiteDetailListResponse, SiteListResponse } from "./schemas.ts";
+import { getSiteDetail, listSiteDetails, listSites } from "./service.ts";
 
 export const catalogRoutes: FastifyPluginAsyncZod = async (app) => {
   addReadCache(app);
@@ -31,6 +32,19 @@ export const catalogRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => getSiteDetail(app.deps.db, req.params.id),
+  );
+
+  app.get(
+    "/v1/site-details",
+    {
+      schema: {
+        tags: ["sites"],
+        summary: "Yayındaki eserlerin tam detayı, ada göre keyset sayfalama: istemci kataloğu eser başına istek atmadan yükler",
+        querystring: PageQuery,
+        response: { 200: SiteDetailListResponse },
+      },
+    },
+    async (req) => listSiteDetails(app.deps.db, req.query),
   );
 
   app.get(

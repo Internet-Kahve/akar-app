@@ -3,8 +3,7 @@ import { and, asc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import type { Db } from "../../db/client.ts";
 import { catalogRoutes, cities, historyImages, media, quizzes, routeStops, sites } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
-import type { SiteDetail } from "../catalog/schemas.ts";
-import { getPublishedSummaries, getSiteDetail } from "../catalog/service.ts";
+import { getPublishedSummaries, getSiteDetails } from "../catalog/service.ts";
 import { playableQuiz } from "./quizzes.ts";
 import type { RouteBundle, RouteDto } from "./schemas.ts";
 
@@ -122,16 +121,6 @@ export async function getRoute(db: Db, id: string): Promise<RouteDto> {
   return route;
 }
 
-/** The site's detail, or null once it is no longer published (the catalog's 404); other errors propagate. */
-async function siteDetailOrNull(db: Db, id: string): Promise<SiteDetail | null> {
-  try {
-    return await getSiteDetail(db, id);
-  } catch (err) {
-    if (err instanceof AppError && err.statusCode === 404) return null;
-    throw err;
-  }
-}
-
 /**
  * Everything a service worker needs to pre-cache one published route: the route, its published stop
  * sites in stop order, the playable quiz of each stop (never the answer key) and the deduplicated
@@ -142,9 +131,9 @@ export async function getRouteBundle(db: Db, id: string): Promise<RouteBundle> {
 
   // A site unpublished after the route was read is treated like any unpublished stop: the stop, its
   // quiz and its media drop out of the bundle instead of failing it. (Route totals keep the earlier read.)
-  const details = await Promise.all(route.stops.map((s) => siteDetailOrNull(db, s.site.id)));
-  const stops = route.stops.filter((_, i) => details[i]);
-  const siteDetails = details.flatMap((d) => (d ? [d] : []));
+  const detailById = new Map((await getSiteDetails(db, route.stops.map((s) => s.site.id))).map((d) => [d.id, d]));
+  const stops = route.stops.filter((s) => detailById.has(s.site.id));
+  const siteDetails = stops.flatMap((s) => detailById.get(s.site.id) ?? []);
 
   const quizIds = [...new Set(stops.flatMap((s) => (s.quizId === null ? [] : [s.quizId])))];
   const stopQuizzes = await Promise.all(quizIds.map((quizId) => playableQuiz(db, quizId)));

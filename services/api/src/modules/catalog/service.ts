@@ -275,18 +275,31 @@ async function sourcesByIds(db: Db, ids: string[]): Promise<SourceRow[]> {
   return db.select().from(sources).where(inArray(sources.id, ids));
 }
 
+/** Rows grouped by site id; queries are ordered by (site, position), so every group keeps its order. */
+function bySite<T extends { siteId: string }>(rows: T[]): Map<string, T[]> {
+  const out = new Map<string, T[]>();
+  for (const r of rows) {
+    const group = out.get(r.siteId);
+    if (group) group.push(r);
+    else out.set(r.siteId, [r]);
+  }
+  return out;
+}
+
 /**
- * Everything a client needs to render one published site in a single response: `media` and
- * `sources` are the union of what the site links and what its content references, so no id in the
- * payload needs a second request to resolve. Two query rounds, none per row.
+ * Everything a client needs to render published sites, one detail per id in `ids` order; drafts and
+ * unknown ids are left out. Per site, `media` and `sources` are the union of what the site links and
+ * what its content references, so no id in the payload needs a second request to resolve. Two query
+ * rounds however many sites, none per site or row.
  */
-export async function getSiteDetail(db: Db, id: string): Promise<SiteDetail> {
-  const [[row], [extra], storyRows, sectionRows, cardRows, historyRows, linkedMedia, linkedSources] = await Promise.all([
-    summaryQuery(db)
-      .where(and(published, eq(sites.id, id)))
-      .limit(1),
+export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[]> {
+  const siteIds = distinct(ids);
+  if (!siteIds.length) return [];
+  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, linkedMedia, linkedSources] = await Promise.all([
+    summaryQuery(db).where(and(published, inArray(sites.id, siteIds))),
     db
       .select({
+        id: sites.id,
         descriptionEn: sites.descriptionEn,
         architect: sites.architect,
         patron: sites.patron,
@@ -301,9 +314,9 @@ export async function getSiteDetail(db: Db, id: string): Promise<SiteDetail> {
         updatedAt: sites.updatedAt,
       })
       .from(sites)
-      .where(eq(sites.id, id)),
-    db.select().from(storyBlocks).where(eq(storyBlocks.siteId, id)).orderBy(asc(storyBlocks.position)),
-    db.select().from(siteSections).where(eq(siteSections.siteId, id)).orderBy(asc(siteSections.position)),
+      .where(inArray(sites.id, siteIds)),
+    db.select().from(storyBlocks).where(inArray(storyBlocks.siteId, siteIds)).orderBy(asc(storyBlocks.siteId), asc(storyBlocks.position)),
+    db.select().from(siteSections).where(inArray(siteSections.siteId, siteIds)).orderBy(asc(siteSections.siteId), asc(siteSections.position)),
     db
       .select()
       .from(cards)
@@ -313,136 +326,182 @@ export async function getSiteDetail(db: Db, id: string): Promise<SiteDetail> {
           db
             .select({ id: storyBlocks.cardId })
             .from(storyBlocks)
-            .where(and(eq(storyBlocks.siteId, id), isNotNull(storyBlocks.cardId))),
+            .where(and(inArray(storyBlocks.siteId, siteIds), isNotNull(storyBlocks.cardId))),
         ),
       ),
-    db.select().from(historyImages).where(eq(historyImages.siteId, id)).orderBy(asc(historyImages.position)),
-    db.select({ id: siteMedia.mediaId }).from(siteMedia).where(eq(siteMedia.siteId, id)).orderBy(asc(siteMedia.position)),
-    db.select({ id: siteSources.sourceId }).from(siteSources).where(eq(siteSources.siteId, id)).orderBy(asc(siteSources.position)),
+    db.select().from(historyImages).where(inArray(historyImages.siteId, siteIds)).orderBy(asc(historyImages.siteId), asc(historyImages.position)),
+    db
+      .select({ siteId: siteMedia.siteId, id: siteMedia.mediaId })
+      .from(siteMedia)
+      .where(inArray(siteMedia.siteId, siteIds))
+      .orderBy(asc(siteMedia.siteId), asc(siteMedia.position)),
+    db
+      .select({ siteId: siteSources.siteId, id: siteSources.sourceId })
+      .from(siteSources)
+      .where(inArray(siteSources.siteId, siteIds))
+      .orderBy(asc(siteSources.siteId), asc(siteSources.position)),
   ]);
-  if (!row || !extra) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
 
-  // Cards in the order the story first uses them (several sentences may share one card).
+  const rowById = new Map(rows.map((r) => [r.id, r]));
+  const extraById = new Map(extras.map((e) => [e.id, e]));
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
-  const siteCards = distinct(storyRows.map((b) => b.cardId)).flatMap((cardId) => {
-    const card = cardById.get(cardId);
-    return card ? [card] : [];
+  const [storiesOf, sectionsOf, historyOf, mediaLinksOf, sourceLinksOf] = [
+    bySite(storyRows),
+    bySite(sectionRows),
+    bySite(historyRows),
+    bySite(linkedMedia),
+    bySite(linkedSources),
+  ];
+
+  const parts = siteIds.flatMap((id) => {
+    const row = rowById.get(id);
+    const extra = extraById.get(id);
+    if (!row || !extra) return [];
+    const stories = storiesOf.get(id) ?? [];
+    const sections = sectionsOf.get(id) ?? [];
+    const history = historyOf.get(id) ?? [];
+    // Cards in the order the story first uses them (several sentences may share one card).
+    const siteCards = distinct(stories.map((b) => b.cardId)).flatMap((cardId) => {
+      const card = cardById.get(cardId);
+      return card ? [card] : [];
+    });
+    const mediaIds = distinct([
+      ...(mediaLinksOf.get(id) ?? []).map((m) => m.id),
+      extra.coverMediaId,
+      ...stories.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
+      ...siteCards.map((c) => c.mediaId),
+      ...history.flatMap((h) => [h.mediaId, h.presentMediaId]),
+    ]);
+    const contentSourceIds = distinct([
+      ...(sourceLinksOf.get(id) ?? []).map((s) => s.id),
+      ...stories.map((b) => b.sourceId),
+      ...sections.map((s) => s.sourceId),
+      ...siteCards.map((c) => c.sourceId),
+      ...history.map((h) => h.sourceId),
+    ]);
+    return [{ row, extra, stories, sections, history, siteCards, mediaIds, contentSourceIds }];
   });
 
-  const mediaIds = distinct([
-    ...linkedMedia.map((m) => m.id),
-    extra.coverMediaId,
-    ...storyRows.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
-    ...siteCards.map((c) => c.mediaId),
-    ...historyRows.flatMap((h) => [h.mediaId, h.presentMediaId]),
+  // Sources of the media come back with the media rows, so both lookups run in one round for all sites.
+  const [mediaRows, sourceRows] = await Promise.all([
+    mediaWithSources(db, distinct(parts.flatMap((p) => p.mediaIds))),
+    sourcesByIds(db, distinct(parts.flatMap((p) => p.contentSourceIds))),
   ]);
-  // Sources of the media come back with the media rows, so both lookups run in one round.
-  const contentSourceIds = distinct([
-    ...linkedSources.map((s) => s.id),
-    ...storyRows.map((b) => b.sourceId),
-    ...sectionRows.map((s) => s.sourceId),
-    ...siteCards.map((c) => c.sourceId),
-    ...historyRows.map((h) => h.sourceId),
-  ]);
-  const [mediaRows, sourceRows] = await Promise.all([mediaWithSources(db, mediaIds), sourcesByIds(db, contentSourceIds)]);
-
   const mediaById = new Map(mediaRows.map(({ m }) => [m.id, m]));
-  const siteMediaList = mediaIds.flatMap((mediaId) => {
-    const m = mediaById.get(mediaId);
-    return m ? [m] : [];
-  });
   const sourceById = new Map<string, SourceRow>();
   for (const s of sourceRows) sourceById.set(s.id, s);
   for (const { s } of mediaRows) if (s) sourceById.set(s.id, s);
-  const siteSourceList = distinct([...contentSourceIds, ...siteMediaList.map((m) => m.sourceId)]).flatMap((sourceId) => {
-    const s = sourceById.get(sourceId);
-    return s ? [s] : [];
-  });
 
-  return {
-    ...toSummary(row),
-    descriptionEn: extra.descriptionEn,
-    architect: extra.architect,
-    patron: extra.patron,
-    era: extra.era,
-    address: extra.address,
-    role: extra.role,
-    relatedSiteId: extra.relatedSiteId,
-    sourceSummary: extra.sourceSummary,
-    editorVersion: extra.editorVersion === 2 ? 2 : null,
-    coverMediaId: extra.coverMediaId,
-    openingCamera: extra.openingCamera,
-    updatedAt: extra.updatedAt.toISOString(),
-    stories: storyRows.map((b) => ({
-      id: b.id,
-      title: b.title,
-      text: b.text,
-      textEn: b.textEn,
-      simple: b.simple,
-      trust: b.trust,
-      photoId: b.photoId,
-      sourceId: b.sourceId,
-      showCard: b.showCard,
-      cardId: b.cardId,
-      camera: b.camera,
-      highlights: b.highlights,
-      audioMediaId: b.audioMediaId,
-      audioEnMediaId: b.audioEnMediaId,
-    })),
-    sections: sectionRows.map((s) => ({
-      id: s.id,
-      kind: s.kind,
-      title: s.title,
-      body: s.body,
-      bodyEn: s.bodyEn,
-      trust: s.trust,
-      sourceId: s.sourceId,
-    })),
-    cards: siteCards.map((c) => ({
-      id: c.id,
-      kind: c.kind,
-      title: c.title,
-      titleEn: c.titleEn,
-      body: c.body,
-      bodyEn: c.bodyEn,
-      mediaId: c.mediaId,
-      sourceId: c.sourceId,
-      trust: c.trust,
-    })),
-    historyImages: historyRows.map((h) => ({
-      id: h.id,
-      mediaId: h.mediaId,
-      presentMediaId: h.presentMediaId,
-      caption: h.caption,
-      captionEn: h.captionEn,
-      dateLabel: h.dateLabel,
-      sourceId: h.sourceId,
-      trust: h.trust,
-      camera: h.camera,
-    })),
-    media: siteMediaList.map((m) => ({
-      id: m.id,
-      kind: m.kind,
-      mime: m.mime,
-      url: m.url,
-      alt: m.alt,
-      title: m.title,
-      titleEn: m.titleEn,
-      description: m.description,
-      license: m.license,
-      sourceId: m.sourceId,
-      trust: m.trust,
-      parts: m.parts,
-    })),
-    sources: siteSourceList.map((s) => ({
-      id: s.id,
-      title: s.title,
-      kind: s.kind,
-      author: s.author,
-      year: s.year,
-      page: s.page,
-      url: s.url,
-      trust: s.trust,
-    })),
-  };
+  return parts.map(({ row, extra, stories, sections, history, siteCards, mediaIds, contentSourceIds }) => {
+    const siteMediaList = mediaIds.flatMap((mediaId) => {
+      const m = mediaById.get(mediaId);
+      return m ? [m] : [];
+    });
+    const siteSourceList = distinct([...contentSourceIds, ...siteMediaList.map((m) => m.sourceId)]).flatMap((sourceId) => {
+      const s = sourceById.get(sourceId);
+      return s ? [s] : [];
+    });
+    return {
+      ...toSummary(row),
+      descriptionEn: extra.descriptionEn,
+      architect: extra.architect,
+      patron: extra.patron,
+      era: extra.era,
+      address: extra.address,
+      role: extra.role,
+      relatedSiteId: extra.relatedSiteId,
+      sourceSummary: extra.sourceSummary,
+      editorVersion: extra.editorVersion === 2 ? 2 : null,
+      coverMediaId: extra.coverMediaId,
+      openingCamera: extra.openingCamera,
+      updatedAt: extra.updatedAt.toISOString(),
+      stories: stories.map((b) => ({
+        id: b.id,
+        title: b.title,
+        text: b.text,
+        textEn: b.textEn,
+        simple: b.simple,
+        trust: b.trust,
+        photoId: b.photoId,
+        sourceId: b.sourceId,
+        showCard: b.showCard,
+        cardId: b.cardId,
+        camera: b.camera,
+        highlights: b.highlights,
+        audioMediaId: b.audioMediaId,
+        audioEnMediaId: b.audioEnMediaId,
+      })),
+      sections: sections.map((s) => ({
+        id: s.id,
+        kind: s.kind,
+        title: s.title,
+        body: s.body,
+        bodyEn: s.bodyEn,
+        trust: s.trust,
+        sourceId: s.sourceId,
+      })),
+      cards: siteCards.map((c) => ({
+        id: c.id,
+        kind: c.kind,
+        title: c.title,
+        titleEn: c.titleEn,
+        body: c.body,
+        bodyEn: c.bodyEn,
+        mediaId: c.mediaId,
+        sourceId: c.sourceId,
+        trust: c.trust,
+      })),
+      historyImages: history.map((h) => ({
+        id: h.id,
+        mediaId: h.mediaId,
+        presentMediaId: h.presentMediaId,
+        caption: h.caption,
+        captionEn: h.captionEn,
+        dateLabel: h.dateLabel,
+        sourceId: h.sourceId,
+        trust: h.trust,
+        camera: h.camera,
+      })),
+      media: siteMediaList.map((m) => ({
+        id: m.id,
+        kind: m.kind,
+        mime: m.mime,
+        url: m.url,
+        alt: m.alt,
+        title: m.title,
+        titleEn: m.titleEn,
+        description: m.description,
+        license: m.license,
+        sourceId: m.sourceId,
+        trust: m.trust,
+        parts: m.parts,
+      })),
+      sources: siteSourceList.map((s) => ({
+        id: s.id,
+        title: s.title,
+        kind: s.kind,
+        author: s.author,
+        year: s.year,
+        page: s.page,
+        url: s.url,
+        trust: s.trust,
+      })),
+    };
+  });
+}
+
+/** One published site; drafts and unknown ids are 404 (a draft's existence is not leaked). */
+export async function getSiteDetail(db: Db, id: string): Promise<SiteDetail> {
+  const [detail] = await getSiteDetails(db, [id]);
+  if (!detail) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
+  return detail;
+}
+
+/** Full details of every published site, a page at a time in name order (same keyset as `listSites`). */
+export async function listSiteDetails(
+  db: Db,
+  page: { cursor?: string | undefined; limit: number },
+): Promise<{ items: SiteDetail[]; nextCursor: string | null }> {
+  const { items, nextCursor } = await listSites(db, { cursor: page.cursor, limit: page.limit });
+  return { items: await getSiteDetails(db, items.map((s) => s.id)), nextCursor };
 }

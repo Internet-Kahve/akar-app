@@ -240,6 +240,8 @@ export const SiteDetail = SiteSummary.extend({
 });
 export type SiteDetail = z.infer<typeof SiteDetail>;
 
+export const SiteDetailListResponse = pageResponse(SiteDetail);
+
 export const CityDto = z.object({
   id: z.string(),
   name: z.string(),
