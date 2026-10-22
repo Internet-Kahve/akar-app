@@ -1,9 +1,22 @@
 import { randomUUID } from "node:crypto";
 import { posix } from "node:path";
-import { and, count, desc, eq, getTableColumns, gt, inArray, isNull, lt, sql, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns, gt, inArray, isNotNull, isNull, lt, not, or, sql, type SQL } from "drizzle-orm";
 import type { FastifyBaseLogger } from "fastify";
 import type { Db } from "../../db/client.ts";
-import { media, mediaUploads, sources } from "../../db/schema/index.ts";
+import {
+  auditLog,
+  cards,
+  catalogRoutes,
+  historyImages,
+  media,
+  mediaUploads,
+  memories,
+  siteMedia,
+  sites,
+  sources,
+  staffMembers,
+  storyBlocks,
+} from "../../db/schema/index.ts";
 import { AppError, type ErrorBody } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
 import type { AuthUser, Role } from "../../platform/auth.ts";
@@ -20,6 +33,11 @@ export const GLB_PARTS_JOB = "media.glb-parts";
 export const UPLOAD_TTL_SEC = 15 * 60;
 /** Open (pending, unexpired) uploads one account may hold at once; the next request waits until one finishes or runs out. */
 export const MAX_OPEN_UPLOADS = 10;
+/** Upload tickets a visitor (role `user`) may request per rolling `DAILY_WINDOW_HOURS`; staff are exempt. */
+export const DAILY_UPLOAD_QUOTA = 10;
+const DAILY_WINDOW_HOURS = 24;
+/** A visitor's photo that no content or memory uses is deleted by `sweepUnattachedPhotos` after this long. */
+const UNATTACHED_PHOTO_HOURS = 24;
 /**
  * `expireUploads` leaves an upload alone this long after its window closed: a `complete` racing the deadline still
  * finds it pending, and its signed link, which the storage checks against its own clock, has run out for sure.
@@ -36,6 +54,7 @@ type UploadRow = typeof mediaUploads.$inferSelect;
 const EXPIRED_MESSAGE = "Yükleme süresi doldu. Yeni bir yükleme başlat.";
 const CLOSED_MESSAGE = "Bu yükleme tamamlandı, reddedildi ya da süresi doldu. Yeni bir yükleme başlat.";
 const OPEN_LIMIT_MESSAGE = "Çok fazla açık yüklemen var. Birkaçını tamamla ya da süresinin dolmasını bekle.";
+const DAILY_LIMIT_MESSAGE = `Son ${DAILY_WINDOW_HOURS} saatte en fazla ${DAILY_UPLOAD_QUOTA} fotoğraf yükleyebilirsin. Daha sonra tekrar dene.`;
 const ACCEPTED: Record<MediaKind, string> = {
   photo: "JPEG, PNG ya da WebP fotoğraf",
   model: "GLB 3B model",
@@ -121,7 +140,8 @@ export function planUpload(user: AuthUser, input: RequestUploadInput): string {
 
 /**
  * Records the pending upload and returns the signed link into the non-public `uploads` bucket; the upload key is `<kind>/<yyyy>/<mm>/<uuid>.<ext>`.
- * An account holds at most `MAX_OPEN_UPLOADS` open tickets (429), so abandoned ones cannot pile up.
+ * An account holds at most `MAX_OPEN_UPLOADS` open tickets (429), so abandoned ones cannot pile up; a visitor (role
+ * `user`) also gets at most `DAILY_UPLOAD_QUOTA` tickets per rolling day (429), counted from upload rows, which are kept.
  */
 export async function createUpload(
   tx: Tx,
@@ -138,6 +158,13 @@ export async function createUpload(
     .from(mediaUploads)
     .where(and(eq(mediaUploads.ownerId, user.id), eq(mediaUploads.status, "pending"), gt(mediaUploads.expiresAt, now)));
   if ((open?.n ?? 0) >= MAX_OPEN_UPLOADS) throw new AppError(429, "RATE_LIMITED", OPEN_LIMIT_MESSAGE);
+  if (user.role === "user") {
+    const [today] = await tx
+      .select({ n: count() })
+      .from(mediaUploads)
+      .where(and(eq(mediaUploads.ownerId, user.id), sql`${mediaUploads.createdAt} > now() - ${DAILY_WINDOW_HOURS} * interval '1 hour'`));
+    if ((today?.n ?? 0) >= DAILY_UPLOAD_QUOTA) throw new AppError(429, "RATE_LIMITED", DAILY_LIMIT_MESSAGE);
+  }
 
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
   const key = `${input.kind}/${now.getUTCFullYear()}/${month}/${randomUUID()}.${extension}`;
@@ -505,4 +532,114 @@ export async function expireUploads(deps: { db: Db; storage: StorageBuckets }, o
       .where(inArray(mediaUploads.id, stale.map((upload) => upload.id)));
     return stale.length;
   });
+}
+
+// ── removal ──────────────────────────────────────────────────────────────────
+
+/**
+ * Every column that points at `media.id` from another table. A media row any of them uses is in use and is never
+ * removed here (the foreign keys would refuse it anyway). `media.test.ts` checks this list against the database.
+ */
+export const MEDIA_REFERENCES = [
+  sites.coverMediaId,
+  siteMedia.mediaId,
+  cards.mediaId,
+  storyBlocks.photoId,
+  storyBlocks.audioMediaId,
+  storyBlocks.audioEnMediaId,
+  historyImages.mediaId,
+  historyImages.presentMediaId,
+  catalogRoutes.badgeMediaId,
+  memories.mediaId,
+] as const;
+
+const inUse = or(...MEDIA_REFERENCES.map((column) => sql`exists (select 1 from ${column.table} where ${column} = ${media.id})`))!;
+
+/**
+ * Of the given rows, which nothing references, judged after the caller has locked them. A separate statement on
+ * purpose: under READ COMMITTED it takes a fresh snapshot, so a memory that a transaction holding the row (a
+ * `createMemory`'s FOR SHARE, a foreign-key check) committed while we waited for the lock is seen. Checked in the
+ * same statement as the lock, the `exists` subqueries would read the snapshot from before the wait.
+ */
+async function stillUnused(tx: Tx, ids: string[]): Promise<{ id: string; storageKey: string | null }[]> {
+  if (ids.length === 0) return [];
+  return tx.select({ id: media.id, storageKey: media.storageKey }).from(media).where(and(inArray(media.id, ids), not(inUse)));
+}
+
+/** Deletes the given rows (already locked) and unlinks their uploads; returns the published objects to delete after commit. */
+async function dropMediaRows(tx: Tx, rows: { id: string; storageKey: string | null }[]): Promise<string[]> {
+  if (rows.length === 0) return [];
+  const ids = rows.map((r) => r.id);
+  // The upload rows stay (they count toward the daily quota); only their link to the media goes.
+  await tx.update(mediaUploads).set({ mediaId: null, updatedAt: new Date() }).where(inArray(mediaUploads.mediaId, ids));
+  await tx.delete(media).where(inArray(media.id, ids));
+  return rows.flatMap((r) => (r.storageKey ? [r.storageKey] : []));
+}
+
+/**
+ * Deletes the media rows in `ids` that nothing references any more (see `MEDIA_REFERENCES`), inside the caller's
+ * transaction, and returns the keys of their objects in the `media` bucket. The caller unlinks its own reference
+ * first and passes the keys to `deleteMediaObjects` once the transaction has committed. Locks first, then checks.
+ */
+export async function deleteUnreferencedMedia(tx: Tx, ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+  const locked = await tx.select({ id: media.id }).from(media).where(inArray(media.id, ids)).for("update");
+  return dropMediaRows(tx, await stillUnused(tx, locked.map((r) => r.id)));
+}
+
+/**
+ * Deletes published objects whose rows are already gone. Run it after the commit: a failure here leaves an
+ * orphaned object (logged), never a row pointing at a missing file.
+ */
+export async function deleteMediaObjects(storage: StorageBuckets | null, keys: string[], log: FastifyBaseLogger): Promise<void> {
+  if (!storage) return;
+  for (const key of keys) {
+    try {
+      await storage.media.delete(key);
+    } catch (err) {
+      log.error({ err, key }, "media object delete failed; the object is orphaned");
+    }
+  }
+}
+
+/**
+ * Deletes visitors' photos that nothing uses (an "İz Bırak" upload never attached, or whose memory went) once they
+ * are `UNATTACHED_PHOTO_HOURS` old: the row, its upload link and the published object. Never touched: seed content
+ * (no uploader), uploads of current staff (`staff_members`) and anything an editor or admin uploaded (a `media.create`
+ * audit row), so a revoked editor's library stays. Rows another transaction holds are skipped; the rest are checked
+ * again after locking (see `stillUnused`). Handles at most `limit` (default 500) photos per run and returns how many
+ * rows it deleted. Objects are deleted after the commit; every key is tried, then one error names the failed ones.
+ */
+export async function sweepUnattachedPhotos(deps: { db: Db; storage: StorageBuckets }, opts: { limit?: number } = {}): Promise<number> {
+  const { db, storage } = deps;
+  const swept = await db.transaction(async (tx) => {
+    const candidates = await tx
+      .select({ id: media.id })
+      .from(media)
+      .where(
+        and(
+          eq(media.kind, "photo"),
+          isNotNull(media.uploadedBy),
+          sql`not exists (select 1 from ${staffMembers} where ${staffMembers.userId} = ${media.uploadedBy})`,
+          sql`not exists (select 1 from ${auditLog} where ${auditLog.entityType} = 'media' and ${auditLog.entityId} = ${media.id} and ${auditLog.action} = 'media.create')`,
+          sql`${media.createdAt} < now() - ${UNATTACHED_PHOTO_HOURS} * interval '1 hour'`,
+          not(inUse),
+        ),
+      )
+      .orderBy(media.createdAt)
+      .limit(opts.limit ?? EXPIRE_BATCH)
+      .for("update", { skipLocked: true });
+    const rows = await stillUnused(tx, candidates.map((r) => r.id));
+    return { count: rows.length, keys: await dropMediaRows(tx, rows) };
+  });
+  const failed: string[] = [];
+  for (const key of swept.keys) {
+    try {
+      await storage.media.delete(key);
+    } catch {
+      failed.push(key);
+    }
+  }
+  if (failed.length > 0) throw new Error(`unattached photo sweep: ${failed.length} object(s) left orphaned: ${failed.join(", ")}`);
+  return swept.count;
 }

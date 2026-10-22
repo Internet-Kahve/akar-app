@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { FastifyRequest } from "fastify";
 import type { Db } from "../db/client.ts";
@@ -22,10 +22,24 @@ export function idempotencyKeyOf(req: FastifyRequest): string | undefined {
 }
 
 /**
+ * How long a stored response can be replayed. Clients retry within minutes; past this the key is forgotten, which
+ * also drops the personal data stored responses carry (a deleted memory's text must not live on here, KVKK).
+ */
+export const IDEMPOTENCY_TTL_HOURS = 24;
+
+/** Deletes replay records older than `IDEMPOTENCY_TTL_HOURS` (`server.ts`, every 15 minutes); returns how many. */
+export async function purgeIdempotencyKeys(db: Db, now: Date = new Date()): Promise<number> {
+  const cutoff = new Date(now.getTime() - IDEMPOTENCY_TTL_HOURS * 3_600_000);
+  const gone = await db.delete(idempotencyKeys).where(lt(idempotencyKeys.createdAt, cutoff)).returning({ key: idempotencyKeys.key });
+  return gone.length;
+}
+
+/**
  * Runs a mutation once per (actor, Idempotency-Key). The handler gets the transaction that also
  * records the key, so the write and its replay record commit together. A retry with the same key
  * and body replays the stored response; the same key with a different request is 422.
- * Without a key the handler simply runs in a transaction. Responses ≥ 500 are never stored.
+ * Without a key the handler simply runs in a transaction. Responses ≥ 500 are never stored. Records live
+ * `IDEMPOTENCY_TTL_HOURS` (see `purgeIdempotencyKeys`).
  */
 export async function idempotent<T>(
   db: Db,
@@ -54,7 +68,9 @@ export async function idempotent<T>(
     }
     const result = await run(tx);
     if (result.status < 500) {
-      await tx.insert(idempotencyKeys).values({ actorId, key, requestHash, statusCode: result.status, responseBody: result.body ?? null });
+      // A bodiless answer (204) is stored as JSON `null`: the column is NOT NULL, and a JS null would be SQL NULL.
+      const responseBody = result.body === undefined || result.body === null ? sql`'null'::jsonb` : result.body;
+      await tx.insert(idempotencyKeys).values({ actorId, key, requestHash, statusCode: result.status, responseBody });
     }
     return result;
   });

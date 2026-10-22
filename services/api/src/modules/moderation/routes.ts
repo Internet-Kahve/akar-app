@@ -1,9 +1,13 @@
+import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { z } from "zod";
+import type { AppDeps } from "../../app.ts";
 import { addReadCache } from "../../http-cache.ts";
 import { requireRole, requireUser } from "../../platform/auth.ts";
-import { idempotent } from "../../platform/idempotency.ts";
+import { idempotent, type MutationResult, type Tx } from "../../platform/idempotency.ts";
 import { PageQuery } from "../../platform/pagination.ts";
 import { IdParams } from "../catalog/schemas.ts";
+import { deleteMediaObjects, requireDep } from "../media/service.ts";
 import {
   AdminMemory,
   AdminMemoryListResponse,
@@ -17,7 +21,40 @@ import {
   ReportBody,
   ReportResult,
 } from "./schemas.ts";
-import { createMemory, decideMemory, listMemoryFeed, listModerationQueue, listOwnMemories, listSiteMemories, reportMemory } from "./service.ts";
+import {
+  createMemory,
+  decideMemory,
+  deleteMemory,
+  listMemoryFeed,
+  listModerationQueue,
+  listOwnMemories,
+  listSiteMemories,
+  reportMemory,
+  type Removal,
+} from "./service.ts";
+
+/**
+ * Runs a removal under `idempotent`, then deletes the photo objects it freed, after the commit: a failed delete
+ * leaves an orphaned object, never a row pointing at a missing file. A replay removes nothing again. Refuses with
+ * 503 (rolling back) when a photo object must go but no storage is configured.
+ */
+async function removing<T>(
+  deps: AppDeps,
+  req: FastifyRequest,
+  actorId: string,
+  status: number,
+  run: (tx: Tx) => Promise<Removal<T>>,
+): Promise<MutationResult<T>> {
+  let removed: string[] = [];
+  const result = await idempotent(deps.db, req, actorId, async (tx) => {
+    const { result: body, removedObjects } = await run(tx);
+    if (removedObjects.length > 0) requireDep(deps.storage, "Depolama");
+    removed = removedObjects;
+    return { status, body };
+  });
+  await deleteMediaObjects(deps.storage, removed, req.log);
+  return result;
+}
 
 /** The public, cacheable reads. Their own scope: the cache hook must never reach a mutation. */
 const publicMemoryReads: FastifyPluginAsyncZod = async (app) => {
@@ -65,7 +102,7 @@ export const moderationRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["memories"],
         summary: "İz Bırak: anı gönder (her zaman onay bekler)",
         description:
-          "Eser yayında olmalı; metin 1–280 karakter; kvkkConsent yalnız true olabilir; mediaId varsa kullanıcının kendi yüklediği fotoğraf olmalı. Anı `pending` başlar, moderatör onaylayana kadar yayında görünmez.",
+          "Eser yayında olmalı; metin 1–280 karakter; kvkkConsent yalnız true olabilir; mediaId varsa kullanıcının kendi yüklediği fotoğraf olmalı. Anı `pending` başlar, moderatör onaylayana kadar yayında görünmez. Ziyaretçi (rol `user`) aynı anda en çok 3 bekleyen anı tutar ve 24 saatte en çok 10 anı gönderir (silinenler dahil); aşılırsa 429 `RATE_LIMITED`. Personel muaftır.",
         body: CreateMemoryBody,
         response: { 201: OwnMemory },
       },
@@ -74,7 +111,7 @@ export const moderationRoutes: FastifyPluginAsyncZod = async (app) => {
       const user = req.user!;
       const result = await idempotent(app.deps.db, req, user.id, async (tx) => ({
         status: 201,
-        body: await createMemory(tx, user.id, req.body),
+        body: await createMemory(tx, user, req.body, req.id),
       }));
       reply.statusCode = result.status;
       return result.body;
@@ -93,6 +130,26 @@ export const moderationRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => listOwnMemories(app.deps.db, req.user!.id, req.query),
+  );
+
+  app.delete(
+    "/v1/me/memories/:id",
+    {
+      preHandler: requireUser,
+      schema: {
+        tags: ["memories"],
+        summary: "Sil: kendi anını kalıcı olarak sil (her durumda)",
+        description:
+          "Anı, bildirimleri ve fotoğrafı (kayıt ve dosya) kalıcı olarak silinir (KVKK). Başkasının anısı ya da olmayan id 404. Onaylı anının 25 puanı geri alınır. Silinen anı günlük gönderim sayısından düşmez.",
+        params: IdParams,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      const user = req.user!;
+      await removing(app.deps, req, user.id, 204, (tx) => deleteMemory(tx, user, req.params.id, "own", req.id));
+      return reply.status(204).send(null);
+    },
   );
 
   app.post(
@@ -135,15 +192,35 @@ export const moderationRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req) => listModerationQueue(app.deps.db, req.query),
   );
 
+  app.delete(
+    "/v1/admin/memories/:id",
+    {
+      preHandler: requireRole("admin"),
+      schema: {
+        tags: ["admin-memories"],
+        summary: "Kalıcı sil: herhangi bir anıyı kaydı ve fotoğrafıyla sil (yalnız admin)",
+        description:
+          "Anı, bildirimleri ve fotoğrafı kalıcı olarak silinir; onaylıysa yazarın 25 puanı geri alınır. Olmayan id 404. Audit kaydına metinsiz düşer (`memory.delete`).",
+        params: IdParams,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      const admin = req.user!;
+      await removing(app.deps, req, admin.id, 204, (tx) => deleteMemory(tx, admin, req.params.id, "any", req.id));
+      return reply.status(204).send(null);
+    },
+  );
+
   app.post(
     "/v1/admin/memories/:id/decision",
     {
       preHandler: requireRole("moderator"),
       schema: {
         tags: ["admin-memories"],
-        summary: "Anıyı onayla ya da nedenli reddet",
+        summary: "Anıyı onayla, nedenli reddet ya da yayından kaldır",
         description:
-          "`pending` anı ve onaydan sonra bildirilmiş (`reportCount` > 0) onaylı anı karara bağlanır; bildirilmemiş onaylı anı ya da reddedilen anı 409 verir (ret kesindir). Bildirilmiş onaylı anıda ret anıyı yayından kaldırır; onay bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar. Ret nedeni zorunludur (400). Moderatör kendi anısını karara bağlayamaz (403); admin bağlayabilir. Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
+          "`pending` anı onaylanır ya da reddedilir. Onaylı anı her zaman nedenli retle yayından kaldırılabilir: bildirilmemişse audit `memory.takedown`, bildirilmişse `memory.reject`. Bildirilmiş onaylı anıyı onaylamak bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar; bildirilmemiş onaylı anıyı onaylamak ve reddedilen anıya her karar 409 verir (ret kesindir). Ret nedeni zorunludur (400). Ret ya da kaldırma fotoğrafı (kayıt ve herkese açık dosya) siler, metin kayıtta kalır; anı onaylıydıysa yazarın 25 puanı geri alınır. Moderatör kendi anısını karara bağlayamaz (403); admin bağlayabilir. Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
         params: IdParams,
         body: DecisionBody,
         response: { 200: AdminMemory },
@@ -151,10 +228,7 @@ export const moderationRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const moderator = req.user!;
-      const result = await idempotent(app.deps.db, req, moderator.id, async (tx) => ({
-        status: 200,
-        body: await decideMemory(tx, moderator, req.params.id, req.body, req.id),
-      }));
+      const result = await removing(app.deps, req, moderator.id, 200, (tx) => decideMemory(tx, moderator, req.params.id, req.body, req.id));
       reply.statusCode = result.status;
       return result.body;
     },

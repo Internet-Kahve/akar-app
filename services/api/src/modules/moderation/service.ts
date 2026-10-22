@@ -2,37 +2,49 @@ import { normalize } from "@akar/domain";
 import { and, asc, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import type { Db } from "../../db/client.ts";
-import { media, memories, memoryReports, profiles, sites } from "../../db/schema/index.ts";
+import { auditLog, media, memories, memoryReports, profiles, sites } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
 import type { AuthUser } from "../../platform/auth.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
 import { published } from "../catalog/service.ts";
-import { recordPointEvent } from "../engagement/points.ts";
+import { recordPointEvent, takeBackMemoryPoints } from "../engagement/points.ts";
+import { deleteUnreferencedMedia } from "../media/service.ts";
 import type { AdminMemory, CreateMemoryBody, DecisionBody, MemoryFeedInput, MemoryStatus, OwnMemory, PublicMemory, ReportResult } from "./schemas.ts";
 
 // "İz Bırak" memories and their moderation.
 //
 //   submit ──▶ pending ──approve──▶ approved ──reports from REPORT_HIDE_THRESHOLD users──▶ pending
-//                 └─────reject (reason mandatory)──▶ rejected (final)
+//                 └─────reject (reason mandatory)──▶ rejected (final) ◀──takedown (reason)── approved
 //
 // Only `approved` is public. A report ("Bildir") does not hide a memory by itself: it stays public
 // until REPORT_HIDE_THRESHOLD different users have reported it since its last approval, then goes
 // back to `pending`. Meanwhile it shows up in the moderation queue with its `reportCount`, and a
 // moderator can decide it there: reject (final, takes it down) or approve (dismisses the reports;
-// the memory stays public and counts reports from zero). An approved memory without reports and a
-// rejected one are 409. A moderator can never decide their own memory (403), an admin can; an author can never
+// the memory stays public and counts reports from zero). A moderator may also take down an approved
+// memory nobody reported (a rejection audited as `memory.takedown`); approving it again, and any
+// decision on a rejected memory, is 409. A moderator can never decide their own memory (403), an admin can; an author can never
 // report their own (403). Reports only apply to approved memories (anything else reads as 404, like
 // content that is not public). Each user may file REPORT_QUOTA new reports per rolling
 // REPORT_QUOTA_HOURS hours (429 after that).
-// Reports and decisions lock the memory row first, so racing requests run one after the other.
+// A rejection or takedown deletes the photo (row and public object); the text stays for the record.
+// The author can delete their own memory in any status, an admin any memory: record and photo go for good.
+// Whenever an approved memory is removed, its approval points are taken back once.
+// Visitors (role `user`) hold at most PENDING_QUOTA pending memories and submit at most DAILY_MEMORY_QUOTA
+// per rolling day, counted from the `memory.create` audit rows, so deleting a memory does not give its slot back.
+// Reports, decisions and deletions lock the memory row first, so racing requests run one after the other.
 
 /** Different users whose reports send an approved memory back to `pending`. */
 export const REPORT_HIDE_THRESHOLD = 3;
 /** New reports one user may file per rolling `REPORT_QUOTA_HOURS` hours. */
 const REPORT_QUOTA = 5;
 const REPORT_QUOTA_HOURS = 24;
+/** Pending memories one visitor may have at once. */
+export const PENDING_QUOTA = 3;
+/** Memories one visitor may submit per rolling `DAILY_MEMORY_HOURS` hours, deleted ones included. */
+export const DAILY_MEMORY_QUOTA = 10;
+const DAILY_MEMORY_HOURS = 24;
 
 /** Display name when the author has no profile yet. */
 const DEFAULT_AUTHOR_NAME = "Ziyaretçi";
@@ -235,16 +247,48 @@ export async function listModerationQueue(db: Db, input: PageInput & { status: M
 
 // ── writes (call inside `idempotent`'s transaction) ──────────────────────────
 
-/** Always created `pending`. The site must be published and a photo must be the author's own upload. */
-export async function createMemory(tx: Tx, userId: string, input: CreateMemoryBody): Promise<OwnMemory> {
+/**
+ * Always created `pending`. The site must be published and a photo must be the author's own upload. A visitor
+ * (role `user`; staff are exempt) is held to `PENDING_QUOTA` and `DAILY_MEMORY_QUOTA` (429). Every submission
+ * leaves a text-free `memory.create` audit row: the daily count reads those, which survive a deletion.
+ */
+export async function createMemory(tx: Tx, user: AuthUser, input: CreateMemoryBody, requestId: string): Promise<OwnMemory> {
+  const userId = user.id;
   const [site] = await tx.select({ id: sites.id }).from(sites).where(and(published, eq(sites.id, input.siteId)));
   if (!site) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
 
+  if (user.role === "user") {
+    // One user's submissions are counted one after the other, so a burst cannot slip past either quota.
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`moderation.create:${userId}`}))`);
+    const [pending] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(memories)
+      .where(and(eq(memories.authorId, userId), eq(memories.status, "pending")));
+    if ((pending?.n ?? 0) >= PENDING_QUOTA) {
+      throw new AppError(429, "RATE_LIMITED", `Onay bekleyen en fazla ${PENDING_QUOTA} anın olabilir. Biri karara bağlanınca yenisini gönderebilirsin.`);
+    }
+    const [today] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.actorId, userId),
+          eq(auditLog.action, "memory.create"),
+          sql`${auditLog.at} > now() - ${DAILY_MEMORY_HOURS} * interval '1 hour'`,
+        ),
+      );
+    if ((today?.n ?? 0) >= DAILY_MEMORY_QUOTA) {
+      throw new AppError(429, "RATE_LIMITED", `Son ${DAILY_MEMORY_HOURS} saatte en fazla ${DAILY_MEMORY_QUOTA} anı gönderebilirsin.`);
+    }
+  }
+
   if (input.mediaId !== undefined) {
+    // FOR SHARE: the unattached-photo sweep cannot delete the photo while this memory is being attached to it.
     const [photo] = await tx
       .select({ id: media.id })
       .from(media)
-      .where(and(eq(media.id, input.mediaId), eq(media.kind, "photo"), eq(media.uploadedBy, userId)));
+      .where(and(eq(media.id, input.mediaId), eq(media.kind, "photo"), eq(media.uploadedBy, userId)))
+      .for("share");
     // One answer for "not yours", "not a photo" and "unknown": it must not reveal other users' uploads.
     if (!photo) {
       throw new AppError(400, "VALIDATION_FAILED", "Girdi doğrulanamadı.", { mediaId: ["Fotoğraf bulunamadı ya da sana ait değil."] });
@@ -264,31 +308,54 @@ export async function createMemory(tx: Tx, userId: string, input: CreateMemoryBo
     kvkkConsentAt: new Date(),
     kvkkTextVersion: input.kvkkTextVersion,
   });
+  await recordAudit(tx, {
+    actorId: userId,
+    action: "memory.create",
+    entityType: "memory",
+    entityId: id,
+    after: { status: "pending", siteId: site.id, photo: input.mediaId !== undefined },
+    requestId,
+  });
   return toOwn(await oneMemory(tx, id));
 }
 
+/** Objects in the `media` bucket a removal freed; delete them with `deleteMediaObjects` after the commit. */
+export type Removal<T> = { result: T; removedObjects: string[] };
+
+/** Unlinks the memory's photo and deletes it when nothing else uses it; returns the objects to delete after commit. */
+async function dropPhoto(tx: Tx, memory: { id: string; mediaId: string | null }): Promise<string[]> {
+  if (!memory.mediaId) return [];
+  await tx.update(memories).set({ mediaId: null, updatedAt: new Date() }).where(eq(memories.id, memory.id));
+  return deleteUnreferencedMedia(tx, [memory.mediaId]);
+}
+
 /**
- * Approves or rejects a pending memory and audits it. Approval pays the author 25 points through
- * the ledger, whose unique key makes a second approval of the same memory (after a report) free.
- * Only an admin may decide a memory they wrote.
+ * Approves or rejects a memory and audits it. Approval pays the author 25 points through the ledger, whose
+ * unique key makes a second approval of the same memory (after a report) free. A rejection deletes the photo
+ * and takes the approval points back if they were paid; rejecting an approved memory nobody reported is a
+ * takedown (`memory.takedown`). Only an admin may decide a memory they wrote.
  */
-export async function decideMemory(tx: Tx, moderator: AuthUser, id: string, decision: DecisionBody, requestId: string): Promise<AdminMemory> {
+export async function decideMemory(
+  tx: Tx,
+  moderator: AuthUser,
+  id: string,
+  decision: DecisionBody,
+  requestId: string,
+): Promise<Removal<AdminMemory>> {
   const moderatorId = moderator.id;
   const memory = await lockMemory(tx, id);
   if (memory.authorId === moderatorId && moderator.role !== "admin") {
     throw new AppError(403, "FORBIDDEN", "Kendi anını karara bağlayamazsın.");
   }
-  // An approved memory is decidable only while it carries reports since its approval.
+  // An approved memory can be re-approved only while it carries reports since its approval; it can always be taken down.
   const reported = memory.status === "approved" && ((await reportStats(tx, [id])).get(id)?.count ?? 0) > 0;
-  if (memory.status === "rejected" || (memory.status === "approved" && !reported)) {
-    throw new AppError(
-      409,
-      "CONFLICT",
-      memory.status === "approved"
-        ? "Bu anı zaten onaylı ve bildirilmemiş. Yalnız beklemedeki ya da bildirilmiş anılar karara bağlanabilir."
-        : "Bu anı reddedildi ve karar kesin. Yalnız beklemedeki ya da bildirilmiş anılar karara bağlanabilir.",
-    );
+  if (memory.status === "rejected") {
+    throw new AppError(409, "CONFLICT", "Bu anı reddedildi ve karar kesin. Yalnız beklemedeki ya da yayındaki anılar karara bağlanabilir.");
   }
+  if (memory.status === "approved" && !reported && decision.status === "approved") {
+    throw new AppError(409, "CONFLICT", "Bu anı zaten onaylı ve bildirilmemiş; onaylanacak bir şey yok. Yayından kaldırmak için nedenli ret gönder.");
+  }
+  const takedown = memory.status === "approved" && !reported;
 
   const reason = decision.status === "rejected" ? decision.reason : null;
   const now = new Date();
@@ -299,19 +366,46 @@ export async function decideMemory(tx: Tx, moderator: AuthUser, id: string, deci
     .where(eq(memories.id, id));
   await recordAudit(tx, {
     actorId: moderatorId,
-    action: decision.status === "approved" ? "memory.approve" : "memory.reject",
+    action: decision.status === "approved" ? "memory.approve" : takedown ? "memory.takedown" : "memory.reject",
     entityType: "memory",
     entityId: id,
     before: { status: memory.status, reason: memory.reason },
     after: { status: decision.status, reason },
     requestId,
   });
+  let removedObjects: string[] = [];
   if (decision.status === "approved") {
     await recordPointEvent(tx, { userId: memory.authorId, action: "memory.approved", subjectId: id });
+  } else {
+    await takeBackMemoryPoints(tx, memory.authorId, id);
+    removedObjects = await dropPhoto(tx, memory);
   }
 
   const stats = await reportStats(tx, [id]);
-  return toAdmin(await oneMemory(tx, id), stats.get(id));
+  return { result: toAdmin(await oneMemory(tx, id), stats.get(id)), removedObjects };
+}
+
+/**
+ * Deletes a memory for good (KVKK erasure): the record, its reports and its photo, and takes the approval points
+ * back if they were paid. `own` is the author's delete ("Sil"): somebody else's memory reads as 404, like an
+ * unknown id. `any` is the admin's "Kalıcı sil". Audited as `memory.delete` without the text.
+ */
+export async function deleteMemory(tx: Tx, actor: AuthUser, id: string, scope: "own" | "any", requestId: string): Promise<Removal<null>> {
+  const [memory] = await tx.select().from(memories).where(eq(memories.id, id)).for("update");
+  if (!memory || (scope === "own" && memory.authorId !== actor.id)) throw new AppError(404, "NOT_FOUND", "Anı bulunamadı.");
+
+  await takeBackMemoryPoints(tx, memory.authorId, id);
+  await tx.delete(memories).where(eq(memories.id, id));
+  const removedObjects = memory.mediaId ? await deleteUnreferencedMedia(tx, [memory.mediaId]) : [];
+  await recordAudit(tx, {
+    actorId: actor.id,
+    action: "memory.delete",
+    entityType: "memory",
+    entityId: id,
+    before: { status: memory.status, siteId: memory.siteId, photo: memory.mediaId !== null, byAuthor: memory.authorId === actor.id },
+    requestId,
+  });
+  return { result: null, removedObjects };
 }
 
 /**

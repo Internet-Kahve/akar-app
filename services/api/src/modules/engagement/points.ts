@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "../../db/client.ts";
 import { pointEvents } from "../../db/schema/index.ts";
 import type { Tx } from "../../platform/idempotency.ts";
@@ -9,6 +9,8 @@ export const POINT_ACTIONS = {
   "quiz.correct": 20,
   "visit.verified": 100,
   "memory.approved": 25,
+  /** Takes `memory.approved` back when an approved memory is removed (deleted, taken down, rejected after reports). */
+  "memory.removed": -25,
 } as const;
 export type PointAction = keyof typeof POINT_ACTIONS;
 
@@ -32,6 +34,19 @@ export async function recordPointEvent(
 export async function receiptRedeemed(tx: Tx | Db, receiptId: string): Promise<boolean> {
   const [row] = await tx.select({ id: pointEvents.id }).from(pointEvents).where(eq(pointEvents.receiptId, receiptId)).limit(1);
   return row !== undefined;
+}
+
+/**
+ * Takes back the approval points of a memory that is being removed: only when they were paid, and once
+ * (the ledger's unique key). Call inside the transaction that removes the memory.
+ */
+export async function takeBackMemoryPoints(tx: Tx, authorId: string, memoryId: string): Promise<boolean> {
+  const [paid] = await tx
+    .select({ id: pointEvents.id })
+    .from(pointEvents)
+    .where(and(eq(pointEvents.userId, authorId), eq(pointEvents.action, "memory.approved"), eq(pointEvents.subjectId, memoryId)));
+  if (!paid) return false;
+  return recordPointEvent(tx, { userId: authorId, action: "memory.removed", subjectId: memoryId });
 }
 
 /** Current score, always recomputed from the ledger. */

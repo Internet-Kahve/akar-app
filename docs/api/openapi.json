@@ -23472,7 +23472,7 @@
         "tags": [
           "memories"
         ],
-        "description": "Eser yayında olmalı; metin 1–280 karakter; kvkkConsent yalnız true olabilir; mediaId varsa kullanıcının kendi yüklediği fotoğraf olmalı. Anı `pending` başlar, moderatör onaylayana kadar yayında görünmez.",
+        "description": "Eser yayında olmalı; metin 1–280 karakter; kvkkConsent yalnız true olabilir; mediaId varsa kullanıcının kendi yüklediği fotoğraf olmalı. Anı `pending` başlar, moderatör onaylayana kadar yayında görünmez. Ziyaretçi (rol `user`) aynı anda en çok 3 bekleyen anı tutar ve 24 saatte en çok 10 anı gönderir (silinenler dahil); aşılırsa 429 `RATE_LIMITED`. Personel muaftır.",
         "requestBody": {
           "required": true,
           "content": {
@@ -23780,6 +23780,32 @@
         }
       }
     },
+    "/v1/me/memories/{id}": {
+      "delete": {
+        "summary": "Sil: kendi anını kalıcı olarak sil (her durumda)",
+        "tags": [
+          "memories"
+        ],
+        "description": "Anı, bildirimleri ve fotoğrafı (kayıt ve dosya) kalıcı olarak silinir (KVKK). Başkasının anısı ya da olmayan id 404. Onaylı anının 25 puanı geri alınır. Silinen anı günlük gönderim sayısından düşmez.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/v1/memories/{id}/report": {
       "post": {
         "summary": "Bildir: yayındaki anıyı moderasyona bildir",
@@ -24072,13 +24098,39 @@
         }
       }
     },
-    "/v1/admin/memories/{id}/decision": {
-      "post": {
-        "summary": "Anıyı onayla ya da nedenli reddet",
+    "/v1/admin/memories/{id}": {
+      "delete": {
+        "summary": "Kalıcı sil: herhangi bir anıyı kaydı ve fotoğrafıyla sil (yalnız admin)",
         "tags": [
           "admin-memories"
         ],
-        "description": "`pending` anı ve onaydan sonra bildirilmiş (`reportCount` > 0) onaylı anı karara bağlanır; bildirilmemiş onaylı anı ya da reddedilen anı 409 verir (ret kesindir). Bildirilmiş onaylı anıda ret anıyı yayından kaldırır; onay bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar. Ret nedeni zorunludur (400). Moderatör kendi anısını karara bağlayamaz (403); admin bağlayabilir. Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
+        "description": "Anı, bildirimleri ve fotoğrafı kalıcı olarak silinir; onaylıysa yazarın 25 puanı geri alınır. Olmayan id 404. Audit kaydına metinsiz düşer (`memory.delete`).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/v1/admin/memories/{id}/decision": {
+      "post": {
+        "summary": "Anıyı onayla, nedenli reddet ya da yayından kaldır",
+        "tags": [
+          "admin-memories"
+        ],
+        "description": "`pending` anı onaylanır ya da reddedilir. Onaylı anı her zaman nedenli retle yayından kaldırılabilir: bildirilmemişse audit `memory.takedown`, bildirilmişse `memory.reject`. Bildirilmiş onaylı anıyı onaylamak bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar; bildirilmemiş onaylı anıyı onaylamak ve reddedilen anıya her karar 409 verir (ret kesindir). Ret nedeni zorunludur (400). Ret ya da kaldırma fotoğrafı (kayıt ve herkese açık dosya) siler, metin kayıtta kalır; anı onaylıydıysa yazarın 25 puanı geri alınır. Moderatör kendi anısını karara bağlayamaz (403); admin bağlayabilir. Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
         "requestBody": {
           "required": true,
           "content": {
