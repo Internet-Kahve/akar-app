@@ -1,24 +1,35 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ImagePlus,
   CheckCircle2,
   Lightbulb,
   ArrowRight,
   MapPin,
+  Puzzle,
   ShieldCheck,
   Trophy,
 } from "lucide-react";
-import type { HeritageSite, Memory } from "@akar/domain";
-import { Modal, Notice, Tag } from "./ui";
+import type { AkarClient, PlayableQuiz } from "@akar/api-client";
+import type { HeritageSite, Memory, Snapshot } from "@akar/domain";
+import { describeError } from "../lib/errors";
+import { kvkkConsent } from "../lib/kvkk";
+import { Modal, Notice, Tag, UploadProgress } from "./ui";
 export function MemoryModal({
   site,
+  live,
   onClose,
   onSubmit,
 }: {
   site: HeritageSite;
+  /** Connected to the real API: the memory goes to moderation instead of the local demo. */
+  live: boolean;
   onClose: () => void;
-  onSubmit: (memory: Memory) => Promise<boolean>;
+  /** Resolves to an error message, or `null` once the memory is saved. */
+  onSubmit: (
+    memory: Memory,
+    consent: { textVersion: string },
+  ) => Promise<string | null>;
 }) {
   const [text, setText] = useState(""),
     [photo, setPhoto] = useState<string>(),
@@ -48,8 +59,9 @@ export function MemoryModal({
           <CheckCircle2 size={52} />
           <h3>Hikâyeye sen de katıldın.</h3>
           <p>
-            Anın onay bekliyor. Demo yönetim panelinde onaylandıktan sonra
-            yaşayan hafızada görünecek.
+            {live
+              ? "Anın onay bekliyor. Moderasyon incelemesinden sonra yaşayan hafızada görünecek."
+              : "Anın onay bekliyor. Demo yönetim panelinde onaylandıktan sonra yaşayan hafızada görünecek."}
           </p>
           <Tag>Onay bekliyor</Tag>
           <button className="btn" onClick={onClose}>
@@ -62,20 +74,26 @@ export function MemoryModal({
             e.preventDefault();
             if (!text.trim() || !accepted) return;
             setBusy(true);
-            const ok = await onSubmit({
-              id: crypto.randomUUID(),
-              siteId: site.id,
-              text: text.trim(),
-              photo,
-              status: "pending",
-              createdAt: new Date().toISOString(),
-              author: "Gezgin",
-            });
+            setError("");
+            const failure = await onSubmit(
+              {
+                id: crypto.randomUUID(),
+                siteId: site.id,
+                text: text.trim(),
+                photo,
+                status: "pending",
+                createdAt: new Date().toISOString(),
+                author: "Gezgin",
+              },
+              { textVersion: kvkkConsent.textVersion },
+            );
             setBusy(false);
-            if (ok) setDone(true);
+            if (failure === null) setDone(true);
             else
               setError(
-                "Anın kaydedilemedi. Fotoğrafı küçültüp tekrar deneyebilirsin.",
+                live
+                  ? failure
+                  : "Anın kaydedilemedi. Fotoğrafı küçültüp tekrar deneyebilirsin.",
               );
           }}
         >
@@ -125,8 +143,12 @@ export function MemoryModal({
           </label>
           <p className="character-count">{text.length} / 280</p>
           <Notice>
-            Bu demo paylaşımı yalnızca bu tarayıcıda saklar. Gerçek moderasyon
-            ve yayın backend entegrasyonuyla açılacak.
+            {live
+              ? "Anın moderatör incelemesinden geçtikten sonra yayımlanır."
+              : "Bu demo paylaşımı yalnızca bu tarayıcıda saklar. Gerçek moderasyon ve yayın backend entegrasyonuyla açılacak."}
+          </Notice>
+          <Notice>
+            {kvkkConsent.summary} {kvkkConsent.draftNotice}
           </Notice>
           <label className="checkbox-label">
             <input
@@ -135,9 +157,9 @@ export function MemoryModal({
               checked={accepted}
               onChange={(e) => setAccepted(e.target.checked)}
             />
-            Paylaştığım içeriğin bana ait olduğunu ve demo kapsamında yerel
-            olarak saklanacağını anladım.
+            {kvkkConsent.checkbox}
           </label>
+          <UploadProgress />
           {error && (
             <p role="alert" className="error">
               {error}
@@ -160,70 +182,83 @@ export function MemoryModal({
     </Modal>
   );
 }
-const questions = [
-  {
-    title: "Vakıfta “akar” neyi ifade eder?",
-    options: ["Gelir sağlayan yapı", "Bir mimari süsleme", "Ziyaretçi defteri"],
-    correct: 0,
-    hint: "Hamam ve dükkânların vakıf içindeki işlevini düşün.",
-    explanation:
-      "Örnek hikâyedeki akar, hizmetlerin sürmesini destekleyen gelir sağlayan yapıdır.",
-  },
-  {
-    title: "“Hayrat” hangi amaca hizmet eder?",
-    options: [
-      "Yalnızca ticarete",
-      "Topluma hizmet sunmaya",
-      "Yapıların yüksekliğini ölçmeye",
-    ],
-    correct: 1,
-    hint: "Gelirin nasıl bir faydaya dönüştüğünü düşün.",
-    explanation:
-      "Hayrat, vakfın toplumsal hizmet sunan yapıları için kullanılan kavramdır.",
-  },
-  {
-    title: "Temsili bir tarih anlatımını nasıl okumalıyız?",
-    options: [
-      "Kesin tarihî belge olarak",
-      "Kaynağa gerek duymadan",
-      "Kaynak doğrulaması bekleyen örnek olarak",
-    ],
-    correct: 2,
-    hint: "Hikâyedeki içerik etiketini hatırla.",
-    explanation:
-      "Temsili anlatım, doğrulanmış tarihî belge yerine geçmez. Kaynak ve güven etiketi birlikte değerlendirilir.",
-  },
-];
+type QuizOutcome = { correct: boolean; awarded: number; solvedBefore: boolean };
 export function QuizModal({
+  site,
+  client,
   onClose,
-  onComplete,
-  completed,
+  onSnapshot,
 }: {
+  site: HeritageSite;
+  client: AkarClient;
   onClose: () => void;
-  onComplete: () => Promise<boolean>;
-  completed: boolean;
+  onSnapshot: (snapshot: Snapshot) => void;
 }) {
-  const [index, setIndex] = useState(0),
-    [answer, setAnswer] = useState<number>(),
-    [checked, setChecked] = useState(false),
-    [hint, setHint] = useState(false),
-    [score, setScore] = useState(0),
-    [done, setDone] = useState(false),
-    [busy, setBusy] = useState(false);
-  const [wasCompleted] = useState(completed);
-  const q = questions[index];
+  const [quizzes, setQuizzes] = useState<PlayableQuiz[]>(),
+    [loadError, setLoadError] = useState(""),
+    [attempt, setAttempt] = useState(0),
+    [index, setIndex] = useState(0),
+    [outcomes, setOutcomes] = useState<QuizOutcome[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    setQuizzes(undefined);
+    setLoadError("");
+    client
+      .getQuizzes(site.id)
+      .then((list) => !cancelled && setQuizzes(list))
+      .catch(
+        (e) =>
+          !cancelled &&
+          setLoadError(describeError(e, "Bulmacalar yüklenemedi.")),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [client, site.id, attempt]);
+  const total = quizzes?.length ?? 0,
+    done = !!quizzes && total > 0 && index >= total,
+    correct = outcomes.filter((o) => o.correct).length,
+    points = outcomes.reduce((sum, o) => sum + o.awarded, 0);
   return (
     <Modal title="Küçük bir keşif molası" onClose={onClose}>
-      {done ? (
+      {loadError ? (
+        <>
+          <p role="alert" className="error">
+            {loadError}
+          </p>
+          <div className="modal-actions">
+            <button className="btn" onClick={() => setAttempt(attempt + 1)}>
+              Yeniden dene
+            </button>
+          </div>
+        </>
+      ) : !quizzes ? (
+        <p className="muted" aria-busy="true">
+          Bulmacalar yükleniyor…
+        </p>
+      ) : total === 0 ? (
+        <div className="empty-state">
+          <Puzzle size={30} />
+          <h3>Bu eser için henüz bulmaca yok.</h3>
+          <p>
+            Başka bir eserin hikâyesinde küçük bir keşif molası verebilirsin.
+          </p>
+          <button className="btn secondary" onClick={onClose}>
+            Keşfe dön
+          </button>
+        </div>
+      ) : done ? (
         <div className="success-state">
           <Trophy size={52} />
-          <h3>{score} / 3 doğru cevap</h3>
+          <h3>
+            {correct} / {total} doğru cevap
+          </h3>
           <p>Her cevap, hikâyenin yeni bir parçası.</p>
           <Tag tone="success">
-            {wasCompleted
-              ? "Bu bulmacanın puanı daha önce alındı"
-              : score > 0
-                ? "+20 keşif puanı"
+            {points > 0
+              ? `+${points} keşif puanı`
+              : outcomes.some((o) => o.solvedBefore)
+                ? "Bu bulmacaların puanı daha önce alındı"
                 : "Öğrenmeye devam · Puan kazanılmadı"}
           </Tag>
           <button className="btn" onClick={onClose}>
@@ -231,72 +266,197 @@ export function QuizModal({
           </button>
         </div>
       ) : (
-        <>
-          <div className="row between">
-            <Tag>Bulmaca {index + 1} / 3</Tag>
-            <small className="muted">Evden de çözebilirsin</small>
-          </div>
-          <h3 className="quiz-question">{q.title}</h3>
-          <div className="quiz-options">
-            {q.options.map((option, i) => (
-              <button
-                key={option}
-                disabled={checked}
-                className={`quiz-option ${answer === i ? "selected" : ""} ${checked && q.correct === i ? "correct" : ""}`}
-                aria-pressed={answer === i}
-                onClick={() => setAnswer(i)}
-              >
-                <span>{String.fromCharCode(65 + i)}</span>
-                {option}
-              </button>
-            ))}
-          </div>
-          {!checked ? (
-            <button className="text-btn" onClick={() => setHint(true)}>
-              <Lightbulb size={16} />
-              Bir ipucu al
-            </button>
-          ) : (
-            <Notice>
-              {answer === q.correct ? "Doğru! " : "Birlikte öğrenelim. "}
-              {q.explanation} Kaynak: demo hikâyesi, “Bir yapı, diğerini
-              yaşatır”.
-            </Notice>
-          )}
-          {hint && !checked && <p className="hint">{q.hint}</p>}
-          <div className="modal-actions">
-            <button
-              className="btn"
-              disabled={answer === undefined || busy}
-              onClick={async () => {
-                if (!checked) {
-                  setChecked(true);
-                  if (answer === q.correct) setScore(score + 1);
-                } else if (index < 2) {
-                  setIndex(index + 1);
-                  setAnswer(undefined);
-                  setChecked(false);
-                  setHint(false);
-                } else {
-                  setBusy(true);
-                  if (score > 0) {
-                    if (await onComplete()) setDone(true);
-                  } else setDone(true);
-                  setBusy(false);
-                }
-              }}
-            >
-              {checked
-                ? index === 2
-                  ? "Sonucu gör"
-                  : "Sonraki soru"
-                : "Cevabı kontrol et"}
-              <ArrowRight size={16} />
-            </button>
-          </div>
-        </>
+        <QuizQuestion
+          key={quizzes[index].id}
+          quiz={quizzes[index]}
+          position={`Bulmaca ${index + 1} / ${total}`}
+          last={index === total - 1}
+          client={client}
+          onSnapshot={onSnapshot}
+          onNext={(outcome) => {
+            setOutcomes([...outcomes, outcome]);
+            setIndex(index + 1);
+          }}
+        />
       )}
     </Modal>
+  );
+}
+function QuizQuestion({
+  quiz,
+  position,
+  last,
+  client,
+  onSnapshot,
+  onNext,
+}: {
+  quiz: PlayableQuiz;
+  position: string;
+  last: boolean;
+  client: AkarClient;
+  onSnapshot: (snapshot: Snapshot) => void;
+  onNext: (outcome: QuizOutcome) => void;
+}) {
+  const [choice, setChoice] = useState<number>(),
+    [wrong, setWrong] = useState<number[]>([]),
+    [hint, setHint] = useState(quiz.hint),
+    [phase, setPhase] = useState<"open" | "correct" | "revealed">(
+      quiz.solved ? "correct" : "open",
+    ),
+    [explanation, setExplanation] = useState<string | null>(null),
+    [awarded, setAwarded] = useState(0),
+    [correctOption, setCorrectOption] = useState<string>(),
+    [confirmReveal, setConfirmReveal] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  const noPoints = quiz.revealed && !quiz.solved;
+  async function run(action: () => Promise<void>) {
+    setBusy(true);
+    setError("");
+    try {
+      await action();
+    } catch (e) {
+      setError(describeError(e, "İşlem tamamlanamadı."));
+    }
+    setBusy(false);
+  }
+  const check = () =>
+    run(async () => {
+      if (choice === undefined) return;
+      const result = await client.answerQuiz(quiz.id, choice);
+      onSnapshot(result.snapshot);
+      if (result.correct) {
+        setAwarded(result.awarded);
+        setExplanation(result.explanation);
+        setPhase("correct");
+      } else {
+        setWrong([...wrong, choice]);
+        setChoice(undefined);
+        setHint(result.hint ?? hint);
+      }
+    });
+  const reveal = () =>
+    run(async () => {
+      const result = await client.revealQuiz(quiz.id);
+      onSnapshot(result.snapshot);
+      setCorrectOption(result.correctOption);
+      setConfirmReveal(false);
+      setPhase("revealed");
+    });
+  const closed = phase !== "open";
+  return (
+    <>
+      <div className="row between">
+        <Tag>{position}</Tag>
+        <small className="muted">Evden de çözebilirsin</small>
+      </div>
+      <h3 className="quiz-question">{quiz.question}</h3>
+      <div className="quiz-options">
+        {quiz.options.map((option, i) => (
+          <button
+            key={option}
+            disabled={closed || busy || wrong.includes(i)}
+            className={`quiz-option ${choice === i ? "selected" : ""} ${wrong.includes(i) ? "wrong" : ""} ${option === correctOption ? "correct" : ""}`}
+            aria-pressed={choice === i}
+            onClick={() => setChoice(i)}
+          >
+            <span>{String.fromCharCode(65 + i)}</span>
+            {option}
+          </button>
+        ))}
+      </div>
+      {noPoints && phase === "open" && (
+        <Notice>Bu soruda cevap daha önce gösterildi; puan kazanılmaz.</Notice>
+      )}
+      {phase === "correct" && (
+        <Notice>
+          {quiz.solved
+            ? "Bu soruyu daha önce doğru yanıtlamıştın; puan bir kez verilir."
+            : `Doğru! ${explanation ?? ""}${awarded > 0 ? ` +${awarded} keşif puanı.` : ""}`}
+        </Notice>
+      )}
+      {phase === "revealed" && (
+        <Notice>
+          Doğru cevap: {correctOption}. Birlikte öğrendik; bu sorudan puan
+          kazanılmadı.
+        </Notice>
+      )}
+      {hint && phase === "open" && (
+        <p className="hint">
+          <Lightbulb size={14} /> {hint}
+        </p>
+      )}
+      {wrong.length > 0 && phase === "open" && (
+        <p className="muted">Olmadı, bir daha dene ya da cevabı göster.</p>
+      )}
+      {confirmReveal && phase === "open" && (
+        <Notice>
+          Cevabı gösterirsen bu sorudan puan kazanamazsın. Devam etmek istiyor
+          musun?
+        </Notice>
+      )}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+      <div className="modal-actions">
+        {phase === "open" ? (
+          <>
+            {confirmReveal ? (
+              <>
+                <button
+                  className="btn secondary"
+                  disabled={busy}
+                  onClick={() => setConfirmReveal(false)}
+                >
+                  Vazgeç
+                </button>
+                <button className="btn" disabled={busy} onClick={reveal}>
+                  Yine de göster
+                </button>
+              </>
+            ) : (
+              <>
+                {wrong.length > 0 && (
+                  <button
+                    className="btn secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      noPoints ? void reveal() : setConfirmReveal(true)
+                    }
+                  >
+                    Cevabı göster
+                  </button>
+                )}
+                <button
+                  className="btn"
+                  disabled={choice === undefined || busy}
+                  onClick={check}
+                >
+                  {busy ? "Kontrol ediliyor…" : "Cevabı kontrol et"}
+                  <ArrowRight size={16} />
+                </button>
+              </>
+            )}
+          </>
+        ) : (
+          <button
+            className="btn"
+            onClick={() =>
+              onNext({
+                correct: phase === "correct",
+                awarded,
+                solvedBefore: quiz.solved,
+              })
+            }
+          >
+            {last ? "Sonucu gör" : "Sonraki soru"}
+            <ArrowRight size={16} />
+          </button>
+        )}
+      </div>
+    </>
   );
 }
 export function VisitModal({
@@ -319,8 +479,8 @@ export function VisitModal({
         <h3>{done ? "Demo ziyareti pasaportunda" : site.name}</h3>
         <p>
           {done
-            ? "Bu eser için tekrar puan verilmez."
-            : "Demo ziyaretini deneyerek pasaport ve puan akışını görebilirsin. Gerçek konum doğrulaması yapılmaz."}
+            ? "Bu eser daha önce ziyaret edildi."
+            : "Demo ziyaretini deneyerek keşif ilerlemeni görebilirsin. Gerçek konum doğrulaması yapılmaz."}
         </p>
         <Tag tone="representative">
           Simülasyon · Fiziksel ziyaret doğrulanmadı

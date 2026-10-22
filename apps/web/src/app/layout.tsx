@@ -7,13 +7,15 @@ import "@fontsource/inter/latin-ext-400.css";
 import "@fontsource/inter/latin-ext-500.css";
 import "@fontsource/inter/latin-ext-600.css";
 import "@fontsource/inter/latin-ext-700.css";
+import "@fontsource/cormorant-garamond/latin-600.css";
+import "@fontsource/cormorant-garamond/latin-ext-600.css";
 import "@akar/design-tokens/tokens.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 export const metadata: Metadata = {
   title: "AKAR · Şehrin hikâyesine karış",
   description:
-    "Geçmişi gör. Hikâyesini dinle. İzini bırak. İstanbul’un kültürel mirasını keşfet.",
+    "Geçmişi gör. Hikâyesini dinle. İzini bırak. Bursa’nın kültürel mirasını keşfet.",
 };
 export default function RootLayout({
   children,

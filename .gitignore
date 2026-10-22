@@ -1,11 +1,37 @@
+# Dependencies and generated build output
 node_modules/
 .next/
 out/
+dist/
+.turbo/
+.cache/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local environment and deployment state (keep shareable examples)
 .env*
 !.env.example
-*.tsbuildinfo
+!.env.*.example
+.vercel/
+
+# Test artifacts and coverage
+coverage/
+.nyc_output/
 test-results/
 playwright-report/
+playwright/.cache/
+blob-report/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# Machine-specific files
 .DS_Store
-next-env.d.ts
-/docs/documents-context/veri/vakıf-eserleri-envanteri/
+._*
+Thumbs.db
+Desktop.ini
+.idea/

@@ -4,15 +4,21 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "services/*"
   ],
   "scripts": {
     "dev": "npm run dev -w @akar/web",
+    "dev:api": "bash services/api/scripts/web-api.sh",
+    "api": "npm run local -w @akar/api",
+    "api:token": "npm run -s local:token -w @akar/api --",
     "build": "npm run build -w @akar/web",
     "start": "npm run start -w @akar/web",
     "typecheck": "npm run typecheck -w @akar/web",
     "test": "node --import tsx --test packages/domain/src/*.test.ts packages/api-client/src/*.test.ts",
     "test:e2e": "playwright test",
+    "test:e2e:api": "playwright test -c services/api/e2e",
+    "check": "bash scripts/check.sh",
     "format": "prettier --write apps/web/src packages docs tests"
   },
   "devDependencies": {

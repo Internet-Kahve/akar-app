@@ -15,27 +15,30 @@ import {
   BookOpen,
   History,
   MessageSquare,
-  Puzzle,
-  Users,
   X,
   Check,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
   Coffee,
+  Puzzle,
+  Users,
 } from "lucide-react";
 import {
+  createHttpClient,
   createMockClient,
   createSeed,
-  routes,
+  routes as seedRoutes,
   type AkarClient,
 } from "@akar/api-client";
 import {
+  approvedMemories,
   filterSites,
   kindLabels,
   normalize,
   type Command,
   type HeritageSite,
+  type Role,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
@@ -43,7 +46,12 @@ import { Architecture, Scene } from "./scene";
 import { StoryPanel } from "./story-panel";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
+import { MemoryActions } from "./memory-actions";
+import { SignInModal } from "./sign-in-modal";
 import { Modal, Tag, Notice, Back, Motif } from "./ui";
+import { describeError, needsSignIn } from "../lib/errors";
+import { apiUrl, getSupabase } from "../lib/supabase";
+import { setUploadProgress } from "../lib/upload-progress";
 type View =
   | "map"
   | "sites"
@@ -56,11 +64,11 @@ type View =
 type Overlay =
   | "memory"
   | "quiz"
+  | "together"
   | "visit"
   | "about"
   | "memories"
   | "city"
-  | "together"
   | "reset"
   | null;
 const navigation = [
@@ -71,8 +79,10 @@ const navigation = [
 export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
+    [experimental, setExperimental] = useState(false),
+    [storyLayout, setStoryLayout] = useState<"panel" | "subtitle">("panel"),
     [view, setView] = useState<View>("map"),
-    [siteId, setSiteId] = useState("kilic-ali-pasa"),
+    [siteId, setSiteId] = useState("ulu-cami"),
     [query, setQuery] = useState(""),
     [kind, setKind] = useState("all"),
     [saved, setSaved] = useState(false),
@@ -83,18 +93,78 @@ export function AkarApp() {
     [storyIndex, setStoryIndex] = useState(0),
     [listening, setListening] = useState(false),
     [toast, setToast] = useState(""),
-    [fault, setFault] = useState("");
-  const client = useRef<AkarClient | null>(null);
+    [fault, setFault] = useState(""),
+    [loadError, setLoadError] = useState(""),
+    [account, setAccount] = useState<{ id: string; email: string } | null>(
+      null,
+    ),
+    // `null` = closed; the string says why the dialog opened ("" = user asked).
+    [signIn, setSignIn] = useState<string | null>(null);
+  const client = useRef<AkarClient | null>(null),
+    loaded = useRef(false),
+    consent = useRef<{ textVersion: string } | null>(null),
+    accountId = useRef<string | null | undefined>(undefined);
+  const live = !!apiUrl;
+  const role: Role = state.role ?? (live ? "user" : "admin");
+  const load = useCallback(async () => {
+    if (!client.current) return;
+    if (!loaded.current) setLoadError("");
+    try {
+      setState(await client.current.getSnapshot());
+      loaded.current = true;
+      setReady(true);
+    } catch (e) {
+      const message = describeError(e, "Veriler yüklenemedi.");
+      if (loaded.current) setFault(message);
+      else setLoadError(message);
+    }
+  }, []);
   useEffect(() => {
     let storage: Storage | undefined;
     try {
       storage = window.localStorage;
     } catch {}
-    client.current = createMockClient(storage);
-    void client.current.getSnapshot().then((s) => {
-      setState(s);
-      setReady(true);
-    });
+    const supabase = apiUrl ? getSupabase() : null;
+    client.current = apiUrl
+      ? createHttpClient({
+          baseUrl: apiUrl,
+          ...(storage && { storage }),
+          getToken: async () =>
+            (await supabase?.auth.getSession())?.data.session?.access_token ??
+            null,
+          onUnauthorized: () => {
+            void supabase?.auth.signOut({ scope: "local" });
+            setToast("Oturumun sona erdi. Yeniden giriş yapabilirsin.");
+          },
+          getMemoryConsent: () => consent.current,
+          onUploadProgress: setUploadProgress,
+          locate: () =>
+            new Promise((resolve, reject) =>
+              navigator.geolocation.getCurrentPosition(
+                (p) =>
+                  resolve({
+                    coordinates: [p.coords.longitude, p.coords.latitude],
+                    accuracyM: p.coords.accuracy,
+                  }),
+                () =>
+                  reject(
+                    new Error("Konum alınamadı. Konum iznini kontrol et."),
+                  ),
+              ),
+            ),
+        })
+      : createMockClient(storage);
+    void load();
+    // The first event only reports the stored session; later changes (sign-in,
+    // sign-out, rejected token) re-read the state for the new identity.
+    const subscription = supabase?.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user;
+      setAccount(user ? { id: user.id, email: user.email ?? "" } : null);
+      const previous = accountId.current;
+      accountId.current = user?.id ?? null;
+      if (previous !== undefined && previous !== accountId.current)
+        setTimeout(() => void load(), 0);
+    }).data.subscription;
     const readLocation = () => {
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
@@ -117,8 +187,11 @@ export function AkarApp() {
     };
     readLocation();
     window.addEventListener("hashchange", readLocation);
-    return () => window.removeEventListener("hashchange", readLocation);
-  }, []);
+    return () => {
+      window.removeEventListener("hashchange", readLocation);
+      subscription?.unsubscribe();
+    };
+  }, [load]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 4500);
@@ -133,17 +206,31 @@ export function AkarApp() {
     if (id) p.set("site", id);
     window.location.hash = p.toString();
   }, []);
-  const commit = useCallback(async (command: Command) => {
+  /** Runs a command; resolves to the error message, or `null` on success. */
+  const run = useCallback(async (command: Command) => {
     try {
-      if (!client.current) return false;
-      const next = await client.current.dispatch(command);
-      setState(next);
-      return true;
+      if (!client.current) return "İşlem şu an yapılamıyor.";
+      setState(await client.current.dispatch(command));
+      return null;
     } catch (e) {
-      setFault(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
-      return false;
+      const message = describeError(e, "İşlem tamamlanamadı.");
+      if (needsSignIn(e)) setSignIn(message);
+      else setFault(message);
+      return message;
     }
   }, []);
+  const commit = useCallback(
+    async (command: Command) => (await run(command)) === null,
+    [run],
+  );
+  const loadHealth = useCallback(async () => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    return client.current.getAdminHealth();
+  }, []);
+  const signOut = () => {
+    void getSupabase()?.auth.signOut();
+    setToast("Çıkış yaptın.");
+  };
   const site = state.sites.find(
     (s) => s.id === siteId && s.status === "published",
   );
@@ -155,6 +242,9 @@ export function AkarApp() {
   const published = useMemo(
     () => state.sites.filter((s) => s.status === "published"),
     [state.sites],
+  );
+  const routes = (state.catalogRoutes ?? seedRoutes).filter(
+    (r) => r.status !== "draft",
   );
   const route = routes.find((r) => r.id === routeId);
   const routeSites = (
@@ -293,7 +383,7 @@ export function AkarApp() {
             </button>
           )}
           <button className="city-chip" onClick={() => setOverlay("city")}>
-            İstanbul
+            Bursa
             <ChevronDown size={13} />
           </button>
         </div>
@@ -319,7 +409,7 @@ export function AkarApp() {
             onClick={() => {
               setStoryIndex(0);
               setListening(false);
-              go("story", "kilic-ali-pasa");
+              go("story", "ulu-cami");
             }}
           >
             <Headphones size={16} />
@@ -331,28 +421,54 @@ export function AkarApp() {
           aria-label="Mirasım profilini aç"
           onClick={() => go("profile")}
         >
-          <span className="point-balance">
-            {state.points}
-            <small>MP</small>
-          </span>
           <span className="avatar">G</span>
         </button>
       </header>
       {!ready ? (
-        <main className="loading" aria-busy="true">
-          Keşif hazırlanıyor…
+        <main className="loading" aria-busy={!loadError}>
+          {loadError ? (
+            <>
+              <p role="alert" className="error">
+                {loadError}
+              </p>
+              <button className="btn" onClick={() => void load()}>
+                Yeniden dene
+              </button>
+            </>
+          ) : (
+            "Keşif hazırlanıyor…"
+          )}
         </main>
       ) : (
         <>
           {view === "profile" && (
             <Profile
               state={state}
+              experimental={experimental}
+              onExperimentalChange={setExperimental}
               onSite={selectSite}
               onAdmin={() => go("admin")}
               onReset={() => setOverlay("reset")}
+              commit={commit}
+              auth={
+                live
+                  ? {
+                      email: account?.email ?? null,
+                      onSignIn: () => setSignIn(""),
+                      onSignOut: signOut,
+                    }
+                  : undefined
+              }
             />
           )}
-          {view === "admin" && <Admin state={state} commit={commit} />}
+          {view === "admin" && (
+            <Admin
+              state={state}
+              commit={commit}
+              role={role}
+              loadHealth={loadHealth}
+            />
+          )}
           {view === "history" && site && (
             <HistoryView
               site={site}
@@ -364,7 +480,7 @@ export function AkarApp() {
             <main
               id="main-content"
               tabIndex={-1}
-              className={`workspace ${collapsed ? "panel-collapsed" : ""}`}
+              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${view === "story" && storyLayout === "subtitle" ? "story-subtitle" : ""}`}
             >
               <aside
                 className="side-panel"
@@ -379,13 +495,15 @@ export function AkarApp() {
                       index={storyIndex}
                       onIndex={setStoryIndex}
                       startListening={listening}
+                      layout={storyLayout}
+                      onLayoutChange={setStoryLayout}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {
                           setToast(
                             state.readIds.includes(site.id)
                               ? "Hikâyeyi yeniden keşfettin."
-                              : "Hikâye tamamlandı. +15 keşif puanı!",
+                              : "Hikâye tamamlandı.",
                           );
                           go("detail", site.id);
                         }
@@ -451,6 +569,11 @@ export function AkarApp() {
                       ) : (
                         <Notice>Bu eserin anlatımı henüz hazırlanmadı.</Notice>
                       )}
+                      {experimental && (
+                        <p className="muted">
+                          Deneysel arayüzler açık · kapsam kararı bekleniyor
+                        </p>
+                      )}
                       <div className="experience-grid">
                         {[
                           {
@@ -463,16 +586,20 @@ export function AkarApp() {
                             label: "İz Bırak",
                             action: () => setOverlay("memory"),
                           },
-                          {
-                            icon: Puzzle,
-                            label: "Bulmaca",
-                            action: () => setOverlay("quiz"),
-                          },
-                          {
-                            icon: Users,
-                            label: "Birlikte Gez",
-                            action: () => setOverlay("together"),
-                          },
+                          ...(experimental
+                            ? [
+                                {
+                                  icon: Puzzle,
+                                  label: "Bulmaca",
+                                  action: () => setOverlay("quiz"),
+                                },
+                                {
+                                  icon: Users,
+                                  label: "Birlikte Gez",
+                                  action: () => setOverlay("together"),
+                                },
+                              ]
+                            : []),
                         ].map(({ icon: Icon, label, action }) => (
                           <button key={label} onClick={action}>
                             <Icon size={21} />
@@ -497,14 +624,8 @@ export function AkarApp() {
                         <span>
                           <strong>Yaşayan hafıza</strong>
                           <small>
-                            {
-                              state.memories.filter(
-                                (m) =>
-                                  m.siteId === site.id &&
-                                  m.status === "approved",
-                              ).length
-                            }{" "}
-                            onaylanmış anı
+                            {approvedMemories(state, site.id).length} onaylanmış
+                            anı
                           </small>
                         </span>
                         <ArrowRight size={17} />
@@ -643,7 +764,7 @@ export function AkarApp() {
                         <div className="discovery-intro">
                           <div className="eyebrow">
                             <span className="live-dot" />
-                            İSTANBUL’U YENİDEN KEŞFET
+                            BURSA’YI YENİDEN KEŞFET
                           </div>
                           <h1>
                             Şehrin hikâyesine <br />
@@ -768,21 +889,25 @@ export function AkarApp() {
                               </button>
                             </div>
                             <div className="filter-row">
-                              {["all", "cami", "cesme", "hamam", "egitim"].map(
-                                (k) => (
-                                  <button
-                                    key={k}
-                                    className={kind === k ? "active" : ""}
-                                    onClick={() => setKind(k)}
-                                  >
-                                    {k === "all"
-                                      ? "Tümü"
-                                      : kindLabels[
-                                          k as keyof typeof kindLabels
-                                        ]}
-                                  </button>
-                                ),
-                              )}
+                              {[
+                                "all",
+                                "cami",
+                                "cesme",
+                                "hamam",
+                                "han",
+                                "bedesten",
+                                "egitim",
+                              ].map((k) => (
+                                <button
+                                  key={k}
+                                  className={kind === k ? "active" : ""}
+                                  onClick={() => setKind(k)}
+                                >
+                                  {k === "all"
+                                    ? "Tümü"
+                                    : kindLabels[k as keyof typeof kindLabels]}
+                                </button>
+                              ))}
                             </div>
                             <p className="results-count">
                               {filtered.length} eser {query && `· “${query}”`}
@@ -816,6 +941,11 @@ export function AkarApp() {
                 {isDetail && site ? (
                   <Scene
                     site={site}
+                    photoId={
+                      view === "story"
+                        ? site.stories[storyIndex]?.photoId
+                        : undefined
+                    }
                     flow={
                       view === "story" &&
                       site.stories[storyIndex]?.id === "akar"
@@ -849,15 +979,24 @@ export function AkarApp() {
       {overlay === "memory" && site && (
         <MemoryModal
           site={site}
+          live={live}
           onClose={() => setOverlay(null)}
-          onSubmit={(memory) => commit({ type: "memory", memory })}
+          onSubmit={async (memory, accepted) => {
+            consent.current = accepted;
+            try {
+              return await run({ type: "memory", memory });
+            } finally {
+              consent.current = null;
+            }
+          }}
         />
       )}
-      {overlay === "quiz" && site && (
+      {experimental && overlay === "quiz" && site && client.current && (
         <QuizModal
-          completed={state.quizIds.includes(site.id)}
+          site={site}
+          client={client.current}
           onClose={() => setOverlay(null)}
-          onComplete={() => commit({ type: "quiz", siteId: site.id })}
+          onSnapshot={setState}
         />
       )}
       {overlay === "visit" && site && (
@@ -899,21 +1038,26 @@ export function AkarApp() {
       )}
       {overlay === "memories" && site && (
         <Modal title="Yaşayan hafıza" onClose={() => setOverlay(null)}>
-          {state.memories.filter(
-            (m) => m.siteId === site.id && m.status === "approved",
-          ).length ? (
-            state.memories
-              .filter((m) => m.siteId === site.id && m.status === "approved")
-              .map((m) => (
-                <article className="card memory-public" key={m.id}>
-                  {m.photo && (
-                    <img src={m.photo} alt="Ziyaretçinin eser fotoğrafı" />
-                  )}
-                  <strong>{m.author}</strong>
-                  <p>{m.text}</p>
-                  <Tag tone="success">Demo moderasyonunda onaylandı</Tag>
-                </article>
-              ))
+          {approvedMemories(state, site.id).length ? (
+            approvedMemories(state, site.id).map((m) => (
+              <article className="card memory-public" key={m.id}>
+                {m.photo && (
+                  <img src={m.photo} alt="Ziyaretçinin eser fotoğrafı" />
+                )}
+                <strong>{m.author}</strong>
+                <p>{m.text}</p>
+                <Tag tone="success">Demo moderasyonunda onaylandı</Tag>
+                <div className="memory-actions">
+                  <MemoryActions
+                    memory={m}
+                    siteName={site.name}
+                    role={role}
+                    own={state.memories.some((x) => x.id === m.id)}
+                    commit={commit}
+                  />
+                </div>
+              </article>
+            ))
           ) : (
             <div className="empty-state">
               <MessageSquare size={36} />
@@ -942,18 +1086,18 @@ export function AkarApp() {
           >
             <MapPin />
             <span>
-              <strong>İstanbul</strong>
-              <small>Tophane · {published.length} örnek eser</small>
+              <strong>Bursa</strong>
+              <small>Hanlar Bölgesi · {published.length} örnek eser</small>
             </span>
             <Check />
           </button>
           <Notice>
-            İlk demo bölgesi İstanbul. Yeni şehirler sponsor veri paketiyle
+            İlk demo bölgesi Bursa. Yeni şehirler sponsor veri paketiyle
             eklenecek.
           </Notice>
         </Modal>
       )}
-      {overlay === "together" && (
+      {experimental && overlay === "together" && (
         <Modal title="Birlikte Gez" onClose={() => setOverlay(null)}>
           <div className="empty-state">
             <Users size={40} />
@@ -976,8 +1120,8 @@ export function AkarApp() {
           onClose={() => setOverlay(null)}
         >
           <p>
-            Bu tarayıcıdaki anılar, rota, puanlar ve eklediğin eserler silinerek
-            başlangıç örneklerine dönülecek.
+            Bu tarayıcıdaki anılar, rota, keşif ilerlemesi ve eklediğin eserler
+            silinerek başlangıç örneklerine dönülecek.
           </p>
           <div className="modal-actions">
             <button className="btn secondary" onClick={() => setOverlay(null)}>
@@ -990,8 +1134,8 @@ export function AkarApp() {
                   if (client.current) setState(await client.current.reset());
                   setOverlay(null);
                   setToast("Demo başlangıca döndürüldü.");
-                } catch {
-                  setFault("Demo sıfırlanamadı.");
+                } catch (e) {
+                  setFault(describeError(e, "Demo sıfırlanamadı."));
                 }
               }}
             >
@@ -999,6 +1143,16 @@ export function AkarApp() {
             </button>
           </div>
         </Modal>
+      )}
+      {signIn !== null && (
+        <SignInModal
+          reason={signIn}
+          onClose={() => setSignIn(null)}
+          onSignedIn={() => {
+            setSignIn(null);
+            setToast("Giriş yaptın.");
+          }}
+        />
       )}
       {toast && (
         <div className="toast" role="status">
@@ -1070,7 +1224,15 @@ function SiteCard({
     <article className="site-card">
       <button className="site-card-main" onClick={onClick}>
         <div className={`site-thumb ${site.kind}`}>
-          <Architecture kind={site.kind} />
+          {site.photos?.find((p) => p.id === site.coverPhotoId) ? (
+            <img
+              className="site-photo"
+              src={site.photos.find((p) => p.id === site.coverPhotoId)!.src}
+              alt={site.photos.find((p) => p.id === site.coverPhotoId)!.alt}
+            />
+          ) : (
+            <Architecture kind={site.kind} />
+          )}
         </div>
         <span>
           <small>

@@ -1,0 +1,19 @@
+services:
+  db:
+    image: imresamu/postgis:17-3.5
+    environment:
+      POSTGRES_USER: akar
+      POSTGRES_PASSWORD: akar
+      POSTGRES_DB: akar
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - akar-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U akar -d akar"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  akar-db:

@@ -1,0 +1,35 @@
+import { defineConfig, devices } from "@playwright/test";
+import { fileURLToPath } from "node:url";
+
+/**
+ * Local-only end-to-end run of the demo path against the real API (not part of CI: it needs the local Supabase,
+ * the API on :4000 and Mailpit). Start `npm run api` first; the web app in API mode (:3001) is started if needed.
+ * Run from the repository root: `npm run test:e2e:api`.
+ */
+export default defineConfig({
+  testDir: ".",
+  fullyParallel: false,
+  workers: 1,
+  reporter: "list",
+  timeout: 120_000,
+  expect: { timeout: 15_000 },
+  use: {
+    baseURL: "http://127.0.0.1:3001",
+    // Bundled Chromium (`npx playwright install chromium`), so Google Chrome is not required.
+    trace: "retain-on-failure",
+  },
+  projects: [
+    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1000 } } },
+    {
+      name: "mobile",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
+    },
+  ],
+  webServer: {
+    command: "npm run dev:api",
+    cwd: fileURLToPath(new URL("../../..", import.meta.url)),
+    url: "http://127.0.0.1:3001",
+    reuseExistingServer: true,
+    timeout: 120_000,
+  },
+});

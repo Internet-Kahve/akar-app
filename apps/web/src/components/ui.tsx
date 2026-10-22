@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X, ArrowLeft, Check, Info } from "lucide-react";
+import { useUploadProgress } from "../lib/upload-progress";
 export function Modal({
   title,
   children,
@@ -13,6 +14,7 @@ export function Modal({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
     const previous = document.activeElement as HTMLElement;
     const dialog = ref.current;
@@ -30,10 +32,10 @@ export function Modal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
     >
       <div className="modal-heading">
-        <h2 id="modal-title">{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <button
           className="icon-btn"
           aria-label="Pencereyi kapat"
@@ -79,6 +81,24 @@ export function Notice({ children }: { children: ReactNode }) {
     <div className="notice">
       <Info size={17} />
       <span>{children}</span>
+    </div>
+  );
+}
+export function UploadProgress() {
+  const fraction = useUploadProgress();
+  if (fraction === null) return null;
+  const percent = Math.round(fraction * 100);
+  return (
+    <div
+      className="upload-progress"
+      role="progressbar"
+      aria-label="Fotoğraf yükleniyor"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+    >
+      <span style={{ width: `${percent}%` }} />
+      <small>Fotoğraf yükleniyor · %{percent}</small>
     </div>
   );
 }

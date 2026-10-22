@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { demoRegion } from "@akar/api-client";
+import { colors } from "@akar/design-tokens";
 import type { HeritageSite } from "@akar/domain";
 import type { Map as MapType, Marker as MarkerType } from "maplibre-gl";
 import {
@@ -15,6 +17,8 @@ const pins = {
   cami: "e269f.svg",
   cesme: "d42c6.svg",
   hamam: "29586.svg",
+  han: "c4a6c.svg",
+  bedesten: "c4a6c.svg",
   egitim: "65acc.svg",
 };
 export function HeritageMap({
@@ -47,31 +51,11 @@ export function HeritageMap({
         try {
           const m = new lib.Map({
             container: container.current,
-            center: [28.981, 41.027],
-            zoom: 15.3,
+            center: demoRegion.center,
+            zoom: 16,
             pitch: 0,
             attributionControl: { compact: true },
-            style: {
-              version: 8,
-              sources: {
-                osm: {
-                  type: "raster",
-                  tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-                  tileSize: 256,
-                  attribution:
-                    '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors',
-                  maxzoom: 19,
-                },
-              },
-              layers: [
-                {
-                  id: "osm",
-                  type: "raster",
-                  source: "osm",
-                  paint: { "raster-saturation": -0.65, "raster-opacity": 0.88 },
-                },
-              ],
-            },
+            style: "/harita/akar-style.json",
           });
           map.current = m;
           m.on("load", () => {
@@ -103,7 +87,13 @@ export function HeritageMap({
       if (cancelled) return;
       markers.current.forEach((marker) => marker.remove());
       markers.current = sites.map((site) => {
+        // MapLibre owns the outer transform; button interaction styles must not animate it.
+        const anchor = document.createElement("div");
+        anchor.className = "map-marker";
+        anchor.setAttribute("role", "presentation");
+        anchor.dataset.siteId = site.id;
         const el = document.createElement("button");
+        el.type = "button";
         el.className = `map-pin ${site.id === selectedId ? "selected" : ""}`;
         el.setAttribute("aria-label", `${site.name} haritada aç`);
         const img = document.createElement("img");
@@ -121,7 +111,8 @@ export function HeritageMap({
           el.append(number);
         }
         el.onclick = () => selectRef.current(site.id);
-        return new lib.Marker({ element: el, anchor: "bottom" })
+        anchor.append(el);
+        return new lib.Marker({ element: anchor, anchor: "bottom" })
           .setLngLat(site.coordinates)
           .addTo(m);
       });
@@ -146,7 +137,7 @@ export function HeritageMap({
           type: "line",
           source: "route",
           paint: {
-            "line-color": "#25477B",
+            "line-color": colors.cityBursa,
             "line-width": 3,
             "line-dasharray": [2, 2],
           },
@@ -167,8 +158,10 @@ export function HeritageMap({
       });
   }, [selectedId, loaded, sites]);
   useEffect(() => {
-    const timeout = setTimeout(() => map.current?.resize(), 250);
-    return () => clearTimeout(timeout);
+    if (!container.current) return;
+    const observer = new ResizeObserver(() => map.current?.resize());
+    observer.observe(container.current);
+    return () => observer.disconnect();
   }, [collapsed]);
   function locate() {
     if (!navigator.geolocation) {
@@ -181,11 +174,11 @@ export function HeritageMap({
           center: [p.coords.longitude, p.coords.latitude],
           zoom: 15,
         });
-        setLocationError("Konumuna gidildi. Eserler İstanbul demo bölgesinde.");
+        setLocationError("Konumuna gidildi. Eserler Bursa demo bölgesinde.");
       },
       () =>
         setLocationError(
-          "Konum alınamadı. İstanbul demo bölgesinde keşfe devam edebilirsin.",
+          "Konum alınamadı. Bursa demo bölgesinde keşfe devam edebilirsin.",
         ),
       { timeout: 8000 },
     );
@@ -195,12 +188,12 @@ export function HeritageMap({
       <div
         ref={container}
         className="map-canvas"
-        aria-label="İstanbul eser haritası"
+        aria-label="Bursa eser haritası"
       />
       {(!loaded || failed) && (
         <div className="map-fallback">
           <div className="fallback-grid" />
-          <span className="water-label">İSTANBUL BOĞAZI</span>
+          <span className="water-label">HANLAR BÖLGESİ</span>
           <div className="fallback-note">
             <MapPin size={16} />
             {failed
@@ -229,7 +222,7 @@ export function HeritageMap({
       )}
       <div className="map-location">
         <span className="live-dot" />
-        İstanbul <span>/</span> Tophane <TagText />
+        Bursa <span>/</span> Hanlar Bölgesi <TagText />
       </div>
       <div className="map-tools">
         <button
@@ -273,8 +266,8 @@ export function HeritageMap({
         aria-label="Demo bölgesine dön"
         onClick={() => {
           map.current?.easeTo({
-            center: [28.981, 41.027],
-            zoom: 15.3,
+            center: demoRegion.center,
+            zoom: 16,
             bearing: 0,
             pitch: 0,
           });

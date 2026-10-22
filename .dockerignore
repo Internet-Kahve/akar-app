@@ -1,0 +1,13 @@
+# Allowlist: only what services/api/Dockerfile copies reaches the build context (no .env, node_modules, 3D assets).
+*
+!package.json
+!package-lock.json
+!packages/domain/
+!packages/api-client/
+!services/api/package.json
+!services/api/drizzle/
+!services/api/src/
+**/node_modules
+**/*.test.ts
+services/api/src/test/
+services/api/src/dev/

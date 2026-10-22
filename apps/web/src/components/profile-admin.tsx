@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookOpen,
   MapPin,
@@ -12,19 +12,39 @@ import {
   Shield,
   RotateCcw,
 } from "lucide-react";
-import type { Command, HeritageSite, Snapshot } from "@akar/domain";
+import {
+  memoryPermissions,
+  type Command,
+  type HeritageSite,
+  type Role,
+  type Snapshot,
+} from "@akar/domain";
+import type { AdminHealth } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
+import { SiteEditor } from "./admin-site-editor";
+import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
+import { MemoryActions } from "./memory-actions";
+import { AdminHealthAlert } from "./admin-health";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
   onSite,
   onAdmin,
   onReset,
+  experimental,
+  onExperimentalChange,
+  auth,
+  commit,
 }: {
   state: Snapshot;
   onSite: (id: string) => void;
   onAdmin: () => void;
   onReset: () => void;
+  experimental: boolean;
+  onExperimentalChange: (enabled: boolean) => void;
+  commit: Commit;
+  /** Present only when connected to the real API; `email` is `null` for a guest. */
+  auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void };
 }) {
   const [contrast, setContrast] = useState(
       () =>
@@ -59,11 +79,43 @@ export function Profile({
           <div className="profile-card">
             <div className="avatar large">G</div>
             <h2>{state.name}</h2>
-            <Tag tone="gold">{state.points} keşif puanı</Tag>
-            <p className="muted">Demo profili · Bu tarayıcıya özel</p>
+            {auth ? (
+              auth.email ? (
+                <>
+                  <p className="muted account-email">{auth.email}</p>
+                  <button className="text-btn" onClick={auth.onSignOut}>
+                    Çıkış yap
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="muted">
+                    Misafir · Giriş yaparak anı bırakabilir ve ilerlemeni
+                    hesabına bağlayabilirsin
+                  </p>
+                  <button className="btn" onClick={auth.onSignIn}>
+                    Giriş yap
+                  </button>
+                </>
+              )
+            ) : (
+              <p className="muted">Demo profili · Bu tarayıcıya özel</p>
+            )}
           </div>
           <div className="settings card">
             <h3>Deneyimini özelleştir</h3>
+            <label>
+              Deneysel arayüzleri göster
+              <input
+                type="checkbox"
+                checked={experimental}
+                onChange={(event) => onExperimentalChange(event.target.checked)}
+              />
+            </label>
+            <p className="muted">
+              Rozet, Bulmaca ve Birlikte Gez önizlemeleri. Ürün kapsamı henüz
+              kesinleşmedi; çok kullanıcılı bağlantı yoktur.
+            </p>
             <label>
               Yüksek kontrast
               <input
@@ -95,10 +147,12 @@ export function Profile({
               Demo yönetim paneli
               <ArrowRight size={15} />
             </button>
-            <button className="text-btn danger" onClick={onReset}>
-              <RotateCcw size={16} />
-              Demo verilerini sıfırla
-            </button>
+            {!auth && (
+              <button className="text-btn danger" onClick={onReset}>
+                <RotateCcw size={16} />
+                Demo verilerini sıfırla
+              </button>
+            )}
           </div>
         </aside>
         <div className="profile-main">
@@ -127,36 +181,35 @@ export function Profile({
               </div>
             ))}
           </div>
-          <div className="card">
-            <div className="row between">
-              <h3>Keşif rozetlerin</h3>
-              <Tag>
-                {badges.filter((b) => b.earned).length} / {badges.length}
-              </Tag>
+          {experimental && (
+            <div className="card">
+              <div className="row between">
+                <h3>Keşif rozetlerin</h3>
+                <Tag>
+                  {badges.filter((b) => b.earned).length} / {badges.length}
+                </Tag>
+              </div>
+              <div className="badges">
+                {badges.map((b) => (
+                  <div key={b.name} className={b.earned ? "earned" : ""}>
+                    <img
+                      src={`/figma/${b.earned ? "718a4" : "b8133"}.svg`}
+                      alt=""
+                    />
+                    <span>{b.name}</span>
+                    <small>{b.earned ? "Kazanıldı" : "Kilitli"}</small>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="badges">
-              {badges.map((b) => (
-                <div key={b.name} className={b.earned ? "earned" : ""}>
-                  <img
-                    src={`/figma/${b.earned ? "718a4" : "b8133"}.svg`}
-                    alt=""
-                  />
-                  <span>{b.name}</span>
-                  <small>{b.earned ? "Kazanıldı" : "Kilitli"}</small>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
           <div className="card">
             <h3>Keşfettiklerim</h3>
             {state.readIds.length === 0 ? (
               <div className="empty-inline">
                 <BookOpen size={26} />
                 <p>İlk hikâyen seni bekliyor.</p>
-                <button
-                  className="text-btn"
-                  onClick={() => onSite("kilic-ali-pasa")}
-                >
+                <button className="text-btn" onClick={() => onSite("ulu-cami")}>
                   Keşfe başla <ArrowRight size={15} />
                 </button>
               </div>
@@ -196,6 +249,19 @@ export function Profile({
                     </strong>
                     <p>{m.text}</p>
                     {m.reason && <small className="error">{m.reason}</small>}
+                    <div className="memory-actions">
+                      {/* Paylaşımlarım is the author's own list: only "Sil", whatever the role. */}
+                      <MemoryActions
+                        memory={m}
+                        siteName={
+                          state.sites.find((s) => s.id === m.siteId)?.name ??
+                          "Eser"
+                        }
+                        role="user"
+                        own
+                        commit={commit}
+                      />
+                    </div>
                   </div>
                   <Tag tone={m.status === "approved" ? "success" : "muted"}>
                     {m.status === "pending"
@@ -213,25 +279,59 @@ export function Profile({
     </main>
   );
 }
-export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
-  const [tab, setTab] = useState<"sites" | "memories">("sites"),
+export function Admin({
+  state,
+  commit,
+  role,
+  loadHealth,
+}: {
+  state: Snapshot;
+  commit: Commit;
+  role: Role;
+  loadHealth: () => Promise<AdminHealth>;
+}) {
+  const queue = state.moderationQueue ?? state.memories;
+  const ownIds = new Set(state.memories.map((m) => m.id));
+  const [navCollapsed, setNavCollapsed] = useState(false);
+  const [tab, setTab] = useState<
+      "sites" | "memories" | "routes" | "photos" | "import"
+    >("sites"),
     [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
       "pending",
     ),
     [query, setQuery] = useState(""),
     [editing, setEditing] = useState<HeritageSite | null>(null),
     [reject, setReject] = useState<string>(),
-    [reason, setReason] = useState("");
+    [reason, setReason] = useState(""),
+    [health, setHealth] = useState<AdminHealth | null>(null),
+    [healthFailed, setHealthFailed] = useState(false);
+  const seesHealth = role === "moderator" || role === "admin";
+  // Re-read after every state change: a decision or deletion changes the pending count.
+  useEffect(() => {
+    if (!seesHealth) return;
+    let cancelled = false;
+    loadHealth().then(
+      (h) => {
+        if (cancelled) return;
+        setHealth(h);
+        setHealthFailed(false);
+      },
+      () => !cancelled && setHealthFailed(true),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [seesHealth, loadHealth, state]);
   function newSite() {
     setEditing({
       id: crypto.randomUUID(),
       name: "",
-      city: "İstanbul",
+      city: "Bursa",
       district: "",
       year: "",
       architect: "",
       kind: "cami",
-      coordinates: [28.981, 41.027],
+      coordinates: [29.0619, 40.184],
       minutes: 15,
       description: "",
       source: "",
@@ -241,200 +341,290 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
     });
   }
   return (
-    <main id="main-content" tabIndex={-1} className="admin-page">
-      <aside className="admin-nav">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className={`admin-page ${navCollapsed ? "admin-nav-collapsed" : ""}`}
+    >
+      <button
+        className="admin-nav-toggle"
+        aria-label={
+          navCollapsed ? "Yönetim menüsünü aç" : "Yönetim menüsünü kapat"
+        }
+        aria-expanded={!navCollapsed}
+        onClick={() => setNavCollapsed(!navCollapsed)}
+      >
+        <img src="/figma/b280b.svg" alt="" />
+      </button>
+      <aside className="admin-nav" hidden={navCollapsed}>
         <span className="eyebrow">AKAR · İÇERİK STÜDYOSU</span>
         <button
           className={tab === "sites" ? "active" : ""}
+          disabled={!!editing}
           onClick={() => setTab("sites")}
         >
           <BookOpen size={18} />
           Eserler<Tag>{state.sites.length}</Tag>
         </button>
         <button
+          disabled={!!editing}
+          className={tab === "routes" ? "active" : ""}
+          onClick={() => setTab("routes")}
+        >
+          <MapPin size={18} />
+          Rotalar
+        </button>
+        <button
+          disabled={!!editing}
+          className={tab === "photos" ? "active" : ""}
+          onClick={() => setTab("photos")}
+        >
+          <BookOpen size={18} />
+          Kartlar ve fotoğraflar
+        </button>
+        <button
           className={tab === "memories" ? "active" : ""}
+          disabled={!!editing}
           onClick={() => setTab("memories")}
         >
           <MessageSquare size={18} />
           Katkılar
-          <Tag>
-            {state.memories.filter((m) => m.status === "pending").length}
-          </Tag>
+          <Tag>{queue.filter((m) => m.status === "pending").length}</Tag>
+        </button>
+        <button
+          disabled={!!editing}
+          className={tab === "import" ? "active" : ""}
+          onClick={() => setTab("import")}
+        >
+          <Plus size={18} />
+          İçe aktar
         </button>
         <Notice>
           Demo paneli. Gerçek yetkilendirme ve sunucuya yayın henüz bağlı değil.
         </Notice>
       </aside>
-      <section className="admin-main">
-        <div className="row between">
-          <div>
-            <small className="eyebrow">İNTERNET KAHVE</small>
-            <h1>{tab === "sites" ? "Eserler" : "Yaşayan hafızayı yönet"}</h1>
-          </div>
-          {tab === "sites" && (
-            <button className="btn" onClick={newSite}>
-              <Plus size={17} />
-              Yeni eser
-            </button>
-          )}
-        </div>
-        {tab === "sites" ? (
-          <>
-            <input
-              className="admin-search"
-              placeholder="Eser ara…"
-              aria-label="Panelde eser ara"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Eser</th>
-                    <th>Şehir</th>
-                    <th>Dönem</th>
-                    <th>Seviye</th>
-                    <th>Durum</th>
-                    <th>
-                      <span className="sr-only">Düzenle</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {state.sites
-                    .filter((s) =>
-                      s.name
-                        .toLocaleLowerCase("tr")
-                        .includes(query.toLocaleLowerCase("tr")),
-                    )
-                    .map((s) => (
-                      <tr key={s.id}>
-                        <td>
-                          <strong>{s.name}</strong>
-                          <small>{s.stories.length} hikâye bölümü</small>
-                        </td>
-                        <td>{s.city}</td>
-                        <td>{s.year || "—"}</td>
-                        <td>
-                          <Tag>{s.tier}</Tag>
-                        </td>
-                        <td>
-                          <Tag
-                            tone={
-                              s.status === "published" ? "success" : "muted"
-                            }
-                          >
-                            {s.status === "published" ? "Yayında" : "Taslak"}
-                          </Tag>
-                        </td>
-                        <td>
-                          <button
-                            className="icon-btn"
-                            aria-label={`${s.name} düzenle`}
-                            onClick={() => setEditing(s)}
-                          >
-                            <Pencil size={16} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="segmented admin-tabs">
-              {(["pending", "approved", "rejected"] as const).map((s) => (
-                <button
-                  key={s}
-                  className={s === filter ? "active" : ""}
-                  onClick={() => setFilter(s)}
-                >
-                  {s === "pending"
-                    ? "Bekleyen"
-                    : s === "approved"
-                      ? "Onaylanan"
-                      : "Reddedilen"}{" "}
-                  · {state.memories.filter((m) => m.status === s).length}
-                </button>
-              ))}
-            </div>
-            {!state.memories.some((m) => m.status === filter) ? (
-              <div className="empty-state">
-                <Shield size={36} />
-                <h3>Bu listede katkı yok</h3>
-                <p>
-                  Eser sayfasındaki İz Bırak ile yeni bir katkı
-                  oluşturabilirsin.
-                </p>
-              </div>
-            ) : (
-              state.memories
-                .filter((m) => m.status === filter)
-                .map((m) => (
-                  <div className="card moderation-card" key={m.id}>
-                    {m.photo && (
-                      <img
-                        className="memory-photo"
-                        src={m.photo}
-                        alt="Ziyaretçi katkısı"
-                      />
-                    )}
-                    <div className="grow">
-                      <small>
-                        {state.sites.find((s) => s.id === m.siteId)?.name} ·{" "}
-                        {m.author}
-                      </small>
-                      <p>{m.text}</p>
-                      <Tag>{m.photo ? "Fotoğraf + anı" : "Anı"}</Tag>
-                      {m.reason && <p className="error">{m.reason}</p>}
-                    </div>
-                    {m.status === "pending" && (
-                      <div className="row">
-                        <button
-                          className="btn"
-                          onClick={() =>
-                            void commit({
-                              type: "moderate",
-                              id: m.id,
-                              status: "approved",
-                            })
-                          }
-                        >
-                          <Check size={15} />
-                          Onayla
-                        </button>
-                        <button
-                          className="btn secondary"
-                          onClick={() => {
-                            setReject(m.id);
-                            setReason("");
-                          }}
-                        >
-                          <X size={15} />
-                          Reddet
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))
-            )}
-          </>
+      <div className="admin-body">
+        {seesHealth && (
+          <AdminHealthAlert
+            health={health}
+            failed={healthFailed}
+            onPending={
+              editing
+                ? undefined
+                : () => {
+                    setTab("memories");
+                    setFilter("pending");
+                  }
+            }
+          />
         )}
-      </section>
-      {editing && (
-        <SiteEditor
-          site={editing}
-          onClose={() => setEditing(null)}
-          onSave={async (site) => {
-            const ok = await commit({ type: "site", site });
-            if (ok) setEditing(null);
-            return ok;
-          }}
-        />
-      )}
+        {editing ? (
+          <SiteEditor
+            key={editing.id}
+            site={editing}
+            sites={state.sites}
+            catalogRoutes={state.catalogRoutes}
+            onClose={() => setEditing(null)}
+            onSave={(site) => commit({ type: "site", site })}
+          />
+        ) : tab === "routes" ? (
+          <RouteAdmin state={state} commit={commit} />
+        ) : tab === "photos" ? (
+          <PhotoAdmin state={state} commit={commit} />
+        ) : tab === "import" ? (
+          <ImportAdmin state={state} commit={commit} />
+        ) : (
+          <section className="admin-main">
+            <div className="row between">
+              <div>
+                <small className="eyebrow">İNTERNET KAHVE</small>
+                <h1>
+                  {tab === "sites" ? "Eserler" : "Yaşayan hafızayı yönet"}
+                </h1>
+              </div>
+              {tab === "sites" && (
+                <button className="btn" onClick={newSite}>
+                  <Plus size={17} />
+                  Yeni eser
+                </button>
+              )}
+            </div>
+            {tab === "sites" ? (
+              <>
+                <input
+                  className="admin-search"
+                  placeholder="Eser ara…"
+                  aria-label="Panelde eser ara"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Eser</th>
+                        <th>Şehir</th>
+                        <th>Dönem</th>
+                        <th>Seviye</th>
+                        <th>Durum</th>
+                        <th>
+                          <span className="sr-only">Düzenle</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {state.sites
+                        .filter((s) =>
+                          s.name
+                            .toLocaleLowerCase("tr")
+                            .includes(query.toLocaleLowerCase("tr")),
+                        )
+                        .map((s) => (
+                          <tr key={s.id}>
+                            <td>
+                              <strong>{s.name}</strong>
+                              <small>{s.stories.length} hikâye bölümü</small>
+                            </td>
+                            <td>{s.city}</td>
+                            <td>{s.year || "—"}</td>
+                            <td>
+                              <Tag>{s.tier}</Tag>
+                            </td>
+                            <td>
+                              <Tag
+                                tone={
+                                  s.status === "published" ? "success" : "muted"
+                                }
+                              >
+                                {s.status === "published"
+                                  ? "Yayında"
+                                  : "Taslak"}
+                              </Tag>
+                            </td>
+                            <td>
+                              <button
+                                className="icon-btn"
+                                aria-label={`${s.name} düzenle`}
+                                onClick={() => setEditing(s)}
+                              >
+                                <Pencil size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="segmented admin-tabs">
+                  {(["pending", "approved", "rejected"] as const).map((s) => (
+                    <button
+                      key={s}
+                      className={s === filter ? "active" : ""}
+                      onClick={() => setFilter(s)}
+                    >
+                      {s === "pending"
+                        ? "Bekleyen"
+                        : s === "approved"
+                          ? "Onaylanan"
+                          : "Reddedilen"}{" "}
+                      · {queue.filter((m) => m.status === s).length}
+                    </button>
+                  ))}
+                </div>
+                {!queue.some((m) => m.status === filter) ? (
+                  <div className="empty-state">
+                    <Shield size={36} />
+                    <h3>Bu listede katkı yok</h3>
+                    <p>
+                      Eser sayfasındaki İz Bırak ile yeni bir katkı
+                      oluşturabilirsin.
+                    </p>
+                  </div>
+                ) : (
+                  queue
+                    .filter((m) => m.status === filter)
+                    .map((m) => {
+                      const own = ownIds.has(m.id);
+                      const can = memoryPermissions(role, m.status, own);
+                      return (
+                        <div className="card moderation-card" key={m.id}>
+                          {m.photo && (
+                            <img
+                              className="memory-photo"
+                              src={m.photo}
+                              alt="Ziyaretçi katkısı"
+                            />
+                          )}
+                          <div className="grow">
+                            <small>
+                              {state.sites.find((s) => s.id === m.siteId)?.name}{" "}
+                              · {m.author}
+                            </small>
+                            <p>{m.text}</p>
+                            <Tag>
+                              {m.photo ? "Fotoğraf + anı" : "Sadece anı"}
+                            </Tag>
+                            {m.reason && <p className="error">{m.reason}</p>}
+                          </div>
+                          <div className="moderation-actions">
+                            <div className="row">
+                              {can.decide && (
+                                <>
+                                  <button
+                                    className="btn"
+                                    onClick={() =>
+                                      void commit({
+                                        type: "moderate",
+                                        id: m.id,
+                                        status: "approved",
+                                      })
+                                    }
+                                  >
+                                    <Check size={15} />
+                                    Onayla
+                                  </button>
+                                  <button
+                                    className="btn secondary"
+                                    onClick={() => {
+                                      setReject(m.id);
+                                      setReason("");
+                                    }}
+                                  >
+                                    <X size={15} />
+                                    Reddet
+                                  </button>
+                                </>
+                              )}
+                              <MemoryActions
+                                variant="button"
+                                memory={m}
+                                siteName={
+                                  state.sites.find((s) => s.id === m.siteId)
+                                    ?.name ?? "Eser"
+                                }
+                                role={role}
+                                own={own}
+                                commit={commit}
+                              />
+                            </div>
+                            {can.takedown && (
+                              <small>
+                                Yayından kaldırırken ret nedeni seçmek zorunlu
+                              </small>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </>
+            )}
+          </section>
+        )}
+      </div>
       {reject && (
         <Modal title="Katkıyı reddet" onClose={() => setReject(undefined)}>
           <label className="field">
@@ -468,239 +658,5 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
         </Modal>
       )}
     </main>
-  );
-}
-function SiteEditor({
-  site,
-  onClose,
-  onSave,
-}: {
-  site: HeritageSite;
-  onClose: () => void;
-  onSave: (s: HeritageSite) => Promise<boolean>;
-}) {
-  const [draft, setDraft] = useState(structuredClone(site)),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  function field<K extends keyof HeritageSite>(key: K, value: HeritageSite[K]) {
-    setDraft({ ...draft, [key]: value });
-  }
-  return (
-    <Modal
-      title={site.name ? "Eseri düzenle" : "Yeni eser"}
-      onClose={onClose}
-      wide
-    >
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setBusy(true);
-          setError("");
-          if (!(await onSave(draft)))
-            setError(
-              "Kaydedilemedi. Alanları ve tarayıcı depolama alanını kontrol et.",
-            );
-          setBusy(false);
-        }}
-      >
-        <div className="form-grid">
-          <label className="field">
-            Ad
-            <input
-              required
-              value={draft.name}
-              onChange={(e) => field("name", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Şehir
-            <input
-              required
-              value={draft.city}
-              onChange={(e) => field("city", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Yapım yılı
-            <input
-              value={draft.year}
-              onChange={(e) => field("year", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Mimar
-            <input
-              value={draft.architect}
-              onChange={(e) => field("architect", e.target.value)}
-            />
-          </label>
-          <label className="field">
-            Enlem
-            <input
-              type="number"
-              step="any"
-              required
-              min={-90}
-              max={90}
-              value={draft.coordinates[1]}
-              onChange={(e) =>
-                field("coordinates", [
-                  draft.coordinates[0],
-                  Number(e.target.value),
-                ])
-              }
-            />
-          </label>
-          <label className="field">
-            Boylam
-            <input
-              type="number"
-              step="any"
-              required
-              min={-180}
-              max={180}
-              value={draft.coordinates[0]}
-              onChange={(e) =>
-                field("coordinates", [
-                  Number(e.target.value),
-                  draft.coordinates[1],
-                ])
-              }
-            />
-          </label>
-          <label className="field">
-            Tür
-            <select
-              value={draft.kind}
-              onChange={(e) =>
-                field("kind", e.target.value as HeritageSite["kind"])
-              }
-            >
-              <option value="cami">Cami</option>
-              <option value="cesme">Çeşme</option>
-              <option value="hamam">Hamam</option>
-              <option value="egitim">Eğitim</option>
-            </select>
-          </label>
-          <label className="field">
-            Durum
-            <select
-              value={draft.status}
-              onChange={(e) =>
-                field("status", e.target.value as HeritageSite["status"])
-              }
-            >
-              <option value="draft">Taslak</option>
-              <option value="published">Yayında (demo)</option>
-            </select>
-          </label>
-        </div>
-        <label className="field">
-          Kısa açıklama
-          <textarea
-            required
-            value={draft.description}
-            onChange={(e) => field("description", e.target.value)}
-          />
-        </label>
-        <label className="field">
-          Kaynak / atıf
-          <input
-            required={draft.status === "published"}
-            value={draft.source}
-            onChange={(e) => field("source", e.target.value)}
-          />
-        </label>
-        <details className="story-editor">
-          <summary>Hikâye bölümleri · {draft.stories.length}</summary>
-          {draft.stories.map((story, index) => (
-            <div key={story.id} className="card">
-              <label className="field">
-                Bölüm {index + 1} başlığı
-                <input
-                  value={story.title}
-                  onChange={(e) =>
-                    field(
-                      "stories",
-                      draft.stories.map((s, i) =>
-                        i === index ? { ...s, title: e.target.value } : s,
-                      ),
-                    )
-                  }
-                />
-              </label>
-              <label className="field">
-                Anlatım
-                <textarea
-                  value={story.text}
-                  onChange={(e) =>
-                    field(
-                      "stories",
-                      draft.stories.map((s, i) =>
-                        i === index
-                          ? {
-                              ...s,
-                              text: e.target.value,
-                              simple: e.target.value,
-                            }
-                          : s,
-                      ),
-                    )
-                  }
-                />
-              </label>
-              <button
-                type="button"
-                className="text-btn danger"
-                onClick={() =>
-                  field(
-                    "stories",
-                    draft.stories.filter((_, i) => i !== index),
-                  )
-                }
-              >
-                Bölümü kaldır
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="btn secondary"
-            onClick={() =>
-              field("stories", [
-                ...draft.stories,
-                {
-                  id: crypto.randomUUID(),
-                  title: "Yeni bölüm",
-                  text: "",
-                  simple: "",
-                  trust: "representative",
-                },
-              ])
-            }
-          >
-            <Plus size={16} />
-            Bölüm ekle
-          </button>
-        </details>
-        <Notice>
-          Kaynak girilmesi tarihsel doğruluğu otomatik onaylamaz. Demo
-          içerikleri doğrulama bekler.
-        </Notice>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        <div className="modal-actions">
-          <button type="button" className="btn secondary" onClick={onClose}>
-            Vazgeç
-          </button>
-          <button className="btn" disabled={busy}>
-            {busy ? "Kaydediliyor…" : "Değişiklikleri kaydet"}
-          </button>
-        </div>
-      </form>
-    </Modal>
   );
 }

@@ -2,7 +2,7 @@
 import {
   ArrowRight,
   Landmark,
-  Droplets,
+  Store,
   Wrench,
   Sun,
   Users,
@@ -50,25 +50,41 @@ export function Architecture({ kind = "cami" }: { kind?: string }) {
 export function Scene({
   site,
   flow = false,
+  photoId,
   onHotspot,
 }: {
   site: HeritageSite;
   flow?: boolean;
+  photoId?: string;
   onHotspot: (id: string) => void;
 }) {
+  const photo = site.photos?.find(
+    (p) => p.id === (photoId || site.coverPhotoId),
+  );
+  if (photo && !flow)
+    return (
+      <div className="scene">
+        <img className="scene-photo" src={photo.src} alt={photo.alt} />
+        <div className="scene-photo-credit">
+          {photo.title || site.name} · {photo.license}
+          <br />
+          {site.sources?.find((s) => s.id === photo.sourceId)?.title}
+        </div>
+      </div>
+    );
   return (
     <div className={`scene ${flow ? "flow-scene" : ""}`}>
       <div className="scene-top">
         <span className="tag">ETKİLEŞİMLİ KEŞİF</span>
         <span className="tag representative">
-          Temsili görünüm · 3D model bekleniyor
+          Temsili görünüm · 3D henüz bağlanmadı
         </span>
       </div>
       {flow ? (
         <div className="flow">
           <div className="flow-node">
-            <Droplets size={36} />
-            <h3>Hamam</h3>
+            <Store size={36} />
+            <h3>Bedesten</h3>
             <span>Akar · gelir sağlayan</span>
           </div>
           <div className="flow-connector">
@@ -77,7 +93,7 @@ export function Scene({
           </div>
           <div className="flow-node">
             <Landmark size={36} />
-            <h3>Cami</h3>
+            <h3>Ulucami</h3>
             <span>Hayrat · hizmet sunan</span>
           </div>
           <div className="flow-uses">
@@ -95,7 +111,7 @@ export function Scene({
             </span>
           </div>
           <p>
-            Genel vakıf işleyişinin temsili anlatımıdır.
+            Bedesten → Ulucami demo anlatımıdır.
             <br />
             Bu esere ait gelir ilişkileri kaynak doğrulaması bekliyor.
           </p>

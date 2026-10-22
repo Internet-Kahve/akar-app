@@ -1,5 +1,7 @@
 # Tasarım ve içerik notları
 
+> Bu sayfadaki `3:*` eşlemeleri 10 Ekim sürümüne aittir. 16 Ekim güncel kaynak önceliği, `55:*` ekran eşlemesi ve açık işler [FRONTEND-REFRESH.md](FRONTEND-REFRESH.md) içindedir.
+
 ## İncelenen kaynaklar
 
 - Figma: `Bd3m8xYrCiVK6440POHN39`, Page `0:1`.
