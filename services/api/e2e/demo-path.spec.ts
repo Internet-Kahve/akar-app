@@ -127,7 +127,8 @@ test("guest writes a photo memory, signs in when sending, a moderator approves i
   await expect(memory).toBeVisible();
   const photo = memory.getByRole("img", { name: "Ziyaretçinin eser fotoğrafı" });
   await expect(photo).toHaveAttribute("src", /\/object\/public\/media\//);
-  expect(await photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+  // The src is set when the card renders; the browser fetches the file afterwards.
+  await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
 
   expect(errors).toEqual([]);
   await Promise.all([visitor.context.close(), moderator.context.close(), reader.context.close()]);
