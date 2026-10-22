@@ -52,9 +52,22 @@ Ayrıntılı ölçü/karar geçmişi: `eserler/ayasofya/ayasofya_notlar.md` (§1
 
 ## 4. Teknik hedefler (doğrulandı)
 
-- Bütçe: Normal ≤ 40k üçgen; 25k Redmi'de 60 FPS. Hafif ayrı sadeleştirme gerekmiyor.
-- Dosya: ≤ 1 MB hedef. Draco iyi ama 2K dokuyla çözme ≈1 sn; doku küçükse sorun yok.
-- Draw call: parça adları (cue) için nesneler ayrı; 29 draw call sorun değil.
+- **Bütçe (22 Ekim 2026, tek geçerli değer):** uygulama GLB'si (`<eser>_vN.glb`, yalnız yapı) için **≤ 40 000 üçgen, ≤ 60 draw call, ≤ 1 MB**. Draw call = GLB'deki mesh primitive sayısı (birden çok malzemeli parça, malzeme başına bir çizim). `_sunum.glb` uygulamada kullanılmadığı için bütçeye girmez. Şablonlardaki eski «≤ 30 000 / ≤ 50» değeri geçersiz. 25k üçgen Redmi 9T'de ~60 FPS; Hafif ayrı sadeleştirme gerekmiyor.
+- **İstisna: Ulu Cami.** Ana eser; 20 kubbe, iki minare, avlu yapıları ve iç şadırvan. v26 değerleri tavandır: 87 280 üçgen, 91 draw call, 0,83 MB. Sonraki sürümlerde artırılmaz. Redmi testinde ortalama FPS 50'nin altında kalırsa sadeleştirilir.
+- Durum (22 Ekim 2026, uygulama GLB'leri):
+
+  | Model | Üçgen | Draw call | Dosya |
+  |---|---|---|---|
+  | Ulu Cami v26 (istisna) | 87 280 | 91 | 0,83 MB |
+  | Koza Han v14 | 38 624 | 56 | 0,85 MB |
+  | Bedesten v06 | 20 088 | 17 | 0,17 MB |
+  | Orhan Bey Camii v07 | 16 014 | 58 | 0,27 MB |
+  | Orhan Bey Hamamı v05 | 15 008 | 46 | 0,21 MB |
+  | Emir Hanı v05 | 13 588 | 28 | 0,14 MB |
+  | Orhan Gazi Türbesi v02 | 8 282 | 19 | 0,26 MB |
+
+- Dosya: Draco iyi ama 2K dokuyla çözme ≈1 sn; doku küçükse sorun yok.
+- Draw call: parça adları (cue) için nesneler ayrı tutulur; sınıra yaklaşınca aynı malzemeli küçük parçalar birleştirilir (ör. Orhan Bey Camii v06'da `Cami_Govde`).
 - Parça adlandırma: `Kubbe_Ana`, `Kubbe_Yarim_*`, `Kubbe_Kucuk_*`, `Minare_N`, `Payanda_*`, `Turbe_*` …
   Uygulama dokunma/vurgu bu adlara bağlı.
 - Palet: Ayasofya paleti Bursa'da kullanılmaz; Bursa paleti `bursa/sablonlar/_ortak_stil.md` ve eser.md "Stil rengi" sütunudur.

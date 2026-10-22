@@ -1,6 +1,6 @@
 # İçerik hazırlama yöntemi (`eserler/*/icerik/`)
 
-19 Ekim 2026. Görev: `GOREV_DAGILIMI_15Ekim.md` → «Talha (içerik)». Bu dosya her eserin `icerik/` klasöründeki seçimlerin **neye göre** yapıldığını anlatır. Eser bazındaki ayrıntılar ve çelişkiler her dosyanın «Notlar» ve «Kaynak notu» bölümlerinde.
+19 Ekim 2026. Görev: `GOREV_DAGILIMI_15Ekim.md` → «Talha (içerik)» (dosya 20 Ekim'de kaldırıldı; git geçmişinde, commit `1f977c9`). Bu dosya her eserin `icerik/` klasöründeki seçimlerin **neye göre** yapıldığını anlatır. Eser bazındaki ayrıntılar ve çelişkiler her dosyanın «Notlar» ve «Kaynak notu» bölümlerinde.
 
 **20 Ekim 2026 kontrol turu:** Bütün cümleler kitapla, bütün fotoğraflar gözle yeniden kontrol edildi. Düzeltilenler: Koza Han'daki iki Pirinç Han fotoğrafı çıkarıldı (§5.2); vurgu adları güncel modellere taşındı (§6); hamam giriş yönü modelle ve notlarla uyumlu hale getirildi; Bedesten ve Emir Hanı'ndaki iki «ilk bedesten» cümlesi birbirini tamamlayacak şekilde yazıldı (§3); Ulucami, Bedesten ve Emir Hanı açı tablolarındaki yönler OSM'ye göre düzeltildi (§7); lisans notu güncellendi (§5.8); Koza Han kitabesindeki Instagram ekran görüntüsü arşiv fotoğrafıyla değiştirildi (§5.1).
 
@@ -9,28 +9,29 @@
 | Eser | Klasör | Tür | Hikâye | Eser hakkında | Fotoğraf |
 |---|---|---|---|---|---|
 | Ulucami | `ulu-cami/` | hero | 12 cümle | ~340 kelime | 12 + 1 akar + 1 sonraki durak |
-| Yıldırım Bayezid Bedesteni | `yildirim-bayezid-bedesteni/` | hero | 10 cümle | ~260 kelime | 7 |
+| Yıldırım Bayezid Bedesteni | `yildirim-bayezid-bedesteni/` | hero | 11 cümle | ~260 kelime | 7 + 1 sonraki durak |
 | Koza Han | `koza-han/` | hero | 12 cümle | ~300 kelime | 10 |
 | Orhan Bey Camii | `orhan-bey-kulliyesi/` | rota | 8 cümle | ~175 kelime | 8 + 2 (yalnız hikâye) |
 | Orhan Bey Hamamı | `orhan-bey-hamami/` | rota | 8 cümle | ~190 kelime | 5 |
 | Emir Hanı | `emir-han/` | rota | 8 cümle | ~210 kelime | 6 |
-| Orhan Gazi Türbesi | `orhan-gazi-turbesi/` | diğer (3D v01 var) | yok (görev dosyası: «hikâye yok») | ~95 kelime | 5 |
+| Orhan Gazi Türbesi | `orhan-gazi-turbesi/` | diğer (3D v02 var) | yok (görev dosyası: «hikâye yok») | ~95 kelime | 5 |
 
 **Yapılmayanlar:**
 - **`ayasofya/`:** Klasördeki notlar Sinan minarelerinden ve İstanbul'daki yapıdan söz ediyor; Bursa vakıf envanterinde değil. İçerik hazırlanmadı. Bu bir İznik Ayasofya çalışmasıysa söylemen yeterli; o zaman envanter Cilt 3 metni gerekir (`veri/metin/` altında yok).
 - **`aday-eserler/` (27 eser):** Henüz eser klasörü düzenine alınmadılar; görev sırasına göre en son («kalan eserler», yalnız Eser hakkında + 3–5 fotoğraf). İstenirse aynı yöntemle yapılır.
-- **Rota sırası:** Kesinleşmediği için «sonraki durak» cümlesi yalnız Ulucami'de var (Koza Han). Diğerlerinde kapanış cümlesi «bugün» bilgisidir.
+- **Rota sırası (22 Ekim 2026):** Hanlar Bölgesi Vakıf Yürüyüşü 4 durak: Ulucami → Bedesten → Koza Hanı → Orhan Bey Camii. «Sonraki durak» cümleleri: Ulucami 12 (Bedesten), Bedesten 11 (Koza Han), Koza Han 12 (Orhan Bey Camii, son durak). Orhan Bey Camii son durak olduğu için kapanış cümlesi «bugün» bilgisi. Rota dışındaki eserlerde (Hamam, Emir Hanı, Türbe) sonraki durak yok.
 
 ## 2. Kaynak
 
 - **Öncelik:** Bursa Vakıf Eserleri Envanteri (Vakıf Katılım'ın verdiği kaynak). Metin `veri/metin/bursa-envanteri-cilt-1.txt` / `-cilt-2.txt` içinden okundu; sayfa = **PDF sayfası** (`\f` ile ayrılmış sıra + 1). Kod: `E cilt-1 PDF s.25`.
 - **Başka kaynak** yalnız envanterde olmayan bir bilgi için kullanıldı ve `W` kodlu ayrı paragrafta durur. Şu an tek örnek: Koza Han'da Bursa Alan Başkanlığı envanter föyü N19 (oda sayıları, avlu ölçüsü).
 - **Kaynağı olmayan cümle yazılmadı.** Örneğin Ulucami'deki «dördüncü padişah» cümlesi çıkarıldı.
-- **Kitap kendi içinde çelişiyorsa** sayı ya da yıl verilmedi, çelişki «Kaynak notu»na yazıldı. Örnekler:
-  - Ulucami havuzu: onikigen / on altı kenarlı
-  - Koza Han açılışı: 30 Eylül 1491 / Ekim 1491 / 1505
-  - Orhan Gazi Türbesi yeniden yapımı: 1863 / 1868
-  - Hamam soğukluğu: iki ölçü
+- **Kitap kendi içinde çelişiyorsa** (22 Ekim 2026'da netleşti):
+  - **Eserin kendi maddesi bilgiyi açıkça veriyorsa o kullanılır;** başka eserlerin maddelerinde geçen farklı değerler «Kaynak notu»na yazılır. Örnek: Koza Han açılışı. Kendi maddesi (C2 s.8) «30 Eylül 1491»; Koza Han Mescidi maddesi (C1 s.194) «1491 yılı, Ekim ayında», Orhan Bey Hamamı maddesi (C1 s.104) geçerken «1505». Metinde 30 Eylül 1491.
+  - **Aynı eserin maddesi kendi içinde farklı değer veriyorsa** sayı ya da yıl verilmez, iki değer «Kaynak notu»na yazılır. Örnekler:
+    - Ulucami havuzu: s.25 onikigen / s.33 on altı kenarlı
+    - Orhan Gazi Türbesi yeniden yapımı: s.116 1863 / s.117 1868
+  - **Önce çelişki mi diye bakılır:** Türkçe cümle belirsizse aynı sayfadaki İngilizce çeviri okunur. Örnek: hamamda «6.60 × 6.45 m ölçülerindeki kare planlı soğukluk» Türkçede soğukluğa bağlanıyor gibi; İngilizcesi («the square tepidarium measuring 6.60 × 6.45 m») ölçünün ılıklığa ait olduğunu söylüyor. Çelişki yok: soğukluk 11,95 × 11,86, ılıklık 6,60 × 6,45.
 - **Kopyalama yok:** Kitap cümleleri kendi cümlelerimizle anlatıldı. Kısa alıntılar yalnız «Notlar» bölümünde, «…» içinde ve sayfasıyla.
 - **Her kaynak kodu metinle karşılaştırıldı:** Yazılan her bilgi için ilgili sayfada anahtar kelime aratıldı ve PDF sayfası doğrulandı.
 
@@ -92,13 +93,15 @@
 ## 6. Vurgu (3D)
 
 - **Ad kaynağı:** Vurgu adları `eser.md`'deki «Parça adları» tablosundan değil, **modelin kendisinden** alındı (`3d/export/*.glb` içindeki nesne adları). Tablo ile model uyuşmuyor (ör. tabloda `Kubbeler`, modelde `Kubbeler_19`). Uygulamadaki vurgu ve kamera hedefi modeldeki adlara bağlı.
-- **Kontrol edilen modeller (20 Ekim 2026):**
-  - `ulu-cami_v25.glb`
-  - `bedesten_v05.glb`
-  - `koza-han_v13.glb`
-  - `orhan-bey-camii_v06.glb`
-  - `orhan-bey-hamami_v04.glb`
-  - `emir-hani_v03.glb`
+- **Kontrol edilen modeller (22 Ekim 2026; bütün vurgu adları modelde var):**
+  - `ulu-cami_v26.glb`
+  - `bedesten_v06.glb`
+  - `koza-han_v14.glb`
+  - `orhan-bey-camii_v07.glb`
+  - `orhan-bey-hamami_v05.glb`
+  - `emir-hani_v05.glb`
+- 20 Ekim turunda v25 / v05 / v13 / v06 / v04 / v03 kontrol edilmişti; sonraki sürümler renk ve ışığı değiştirdi (Emir Hanı v05'te ayrıca üst kat revak ayakları düzeldi), parça adları aynı kaldı.
+- **Açı hedefi `Merkez`:** modelde nesne olarak yok; frontend hesaplar (`FRONTEND_BACKEND_NOTLARI.md` §9). Açı tablolarında kullanılabilir.
 - **Bu turda değişenler:** Bedesten `Ic_Bedesten_Sokagi` v04'te kalktı (cümle 7'nin vurgusu boş; cümle 10 `Kapilar` → `Dukkanlar`). Orhan Camii v06'da `Sadirvan` eklendi (cümle 8). Hamam `Hamam_Giris` v03'ten beri güneydeki alınlıklı blok; kuzey kapısı `Hamam_Detay` içinde.
 - **Yeni .glb gelince:** `hikaye.md` tablolarındaki Vurgu sütunu ve açı hedefleri modeldeki adlarla yeniden karşılaştırılmalı (GLB'nin JSON bölümündeki `nodes[].name`). Sonnet'e `eser.md` tablosunu modeldeki adlarla güncellemesi söylenmeli.
 - **Boş bırakılan vurgu:** Cümleye karşılık gelen bir model parçası yoksa vurgu boş bırakıldı. Bu üç durumda olur:
@@ -125,6 +128,6 @@
 2. ~~**Fotoğraf lisansı**~~ Çözüldü: arşiv ve envanter proje için verildi (20 Ekim 2026).
 3. ~~**Koza Han kitabesi**~~ Çözüldü: Instagram ekran görüntüsü çıkarıldı, yerine arşivden kitabesi okunan mescit fotoğrafı kondu (20 Ekim 2026).
 4. **Ayasofya klasörü:** Hangi yapı ve içerik gerekiyor mu?
-5. **Rota sırası:** Kesinleşince «sonraki durak» cümleleri eklenir.
+5. ~~**Rota sırası:** Kesinleşince «sonraki durak» cümleleri eklenir.~~ Çözüldü (22 Ekim 2026): 4 durak, bkz. §1.
 6. **Modellerin yeni sürümleri:** 20 Ekim 2026'da kontrol edildi (§6); sonraki sürümlerde tekrar.
 7. **İngilizce çeviri:** Türkçe onaylandıktan sonra yapılacak (görev dosyası).

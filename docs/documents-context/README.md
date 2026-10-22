@@ -6,14 +6,14 @@
 
 1. [Tam bağlam](AKAR_Tam_Baglam.md): ürün kararları; güncel bölümlerden başlayın.
 2. [Frontend/backend notları](FRONTEND_BACKEND_NOTLARI.md): kapsam, şema ve ekran kuralları.
-3. [Görev dağılımı](GOREV_DAGILIMI_15Ekim.md): 15 Ekim tarihli çalışma planı.
+3. [İçerik yöntemi](ICERIK_YONTEMI.md): eser hikâyeleri, fotoğraf seçimi ve kaynak kuralları.
 4. [Hackathon rehberi](hackathon/README.md): başvuru ve yarışma kaynakları.
 
 ## Hangi dosya nerede?
 
 | Klasör | İçerik |
 | --- | --- |
-| Kök dizindeki `.md` belgeleri | Ürün bağlamı, teknik notlar, görevler ve prototip dersleri |
+| Kök dizindeki `.md` belgeleri | Ürün bağlamı, teknik notlar, içerik yöntemi ve prototip dersleri |
 | `design/` | Ekranlar, ikonlar, desenler, harita stili ve eski prototip referansı |
 | `eserler/` | Eser kimliği, ölçüler, referanslar ve 3D üretim dosyaları |
 | `veri/` | Envanter PDF'leri, çıkarılmış metinler, CSV'ler ve ortak Bursa kaynakları |

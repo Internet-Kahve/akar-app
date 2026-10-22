@@ -1,6 +1,6 @@
 # AKAR · Proje bağlam belgesi
 
-*Sürüm: 11 Ekim 2026, güncellemeler 13 Ekim (bkz. §0.5) ve 15 Ekim 2026 (bkz. §0.6). Bu belge, AKAR projesinin kapsamını, kararlarını, gerekçelerini ve açık konularını tek yerde toplar. Bilinmeyen ya da doğrulanmamış bilgiler açıkça işaretlenmiştir.*
+*Sürüm: 11 Ekim 2026, güncellemeler 13 Ekim (bkz. §0.5), 15 Ekim (bkz. §0.6) ve 22 Ekim 2026 (bkz. §0.7). Bu belge, AKAR projesinin kapsamını, kararlarını, gerekçelerini ve açık konularını tek yerde toplar. Bilinmeyen ya da doğrulanmamış bilgiler açıkça işaretlenmiştir.*
 
 ---
 
@@ -11,6 +11,21 @@
 - İçerik ilkesi: tarihî bilgi uydurulmaz; emin olunmayan her şey "doğrulanmalı" diye işaretlenir. Projenin ayırt edici değeri güvenilirliktir.
 - Kapsam disiplini: yeni her öneri "final demosuna yetişir mi?" sorusundan geçer. Kapsam şişmesi en büyük risktir.
 - Ekip dışına çıkacak belgeler sade ve doğrudan yazılır.
+
+---
+
+## 0.7 · 22 Ekim güncellemesi (önce bunu oku)
+
+Bu bölüm §0.6'nın ve aşağıdaki bölümlerin önündedir. Uygulama ayrıntıları: `FRONTEND_BACKEND_NOTLARI.md` §0.2 ve §12. Figma: `akar-yeni`.
+
+- **Geçmişi Gör kesinleşti.** Büyük eski fotoğraf + tarih sıralı şerit + «Nereden çekildi?» haritası (çekim noktası ve görüş konisi) + **«Kamerayı aç»**. Bugünkü eşi olan fotoğrafta kaydırıcı. Kamerada eski fotoğraf yarı saydam; çekince «İz Bırak olarak gönder». **«Tozu sil» yok.** Kamera yalnız telefonda; masaüstünde yok.
+- **Yönlendirme yok:** bildirim, «yerindesin» uyarısı, yön oku yok. Kullanıcı haritada noktayı ve açıyı görür, oraya kendisi gider.
+- **İç mekânda kamera açık;** açılışta saygı notu (namaz vakitleri, yüz çekme, flaş). «Cami içinde görev yok» kuralı bulmaca içindir.
+- **Eski fotoğraflar geldi:** Foto Atlas'tan Bursa'da 236 kullanılabilir fotoğraf (İÜ Nadir Eserler izniyle +67). 56'sı 17 vakıf eserine bağlandı; Ulucami 18, Koza Hanı 2, Orhan Gazi Camii 2 (biri doğrulanacak). Klasör: `veri/fotoatlas/` (`BENIOKU.md`).
+- **Yaşayan hafıza tek giriş:** Hikâye sonrasında «İz Bırak» kutusu «Yaşayan hafıza» oldu; İz Bırak hafıza sayfasından açılır. Kameradan gelen izler «aynı açı» etiketi taşır ve bugünkü eş olabilir. **Tüm izler** sayfası (şehir / eser seçili) eklendi.
+- **Panel:** Eser düzenle › Geçmişi Gör yeni alanlarla (fotoğrafçı, tarih aralığı, kaynak + arşiv no + link, aracı, lisans, otomatik kaynak satırı, düzenlenebilir konum/yön, iç mekân). Toplu içe aktarma ekranı eklenmedi.
+- **Örnek rota 4 durak oldu:** Hanlar Bölgesi Vakıf Yürüyüşü: Ulucami (1399, Yıldırım Bayezid) → Bedesten (14. yy, Yıldırım Bayezid) → Koza Hanı (1491, II. Bayezid) → Orhan Bey Camii (1339–40, Orhan Bey). Tarih ve adlar envanterden (C1 s.19, s.96; C2 s.8, s.29). Mesafe ~0,5 km (OSM merkezleri arası 361 m + yürüme payı); süre ~10 dk = yürüme + dört hikâyenin sesi. Süre ve mesafe hesaptır, envanterde yok. Figma buna göre güncellendi (durak listelerine ve haritalara 4. satır/yıldız henüz eklenmedi).
+- **Rol ayrımı:** UX/UI ve içerik tarafı `docs/documents-context/` içinde çalışır; `apps/` ve `packages/` frontend ve backend'indir. Veri paketleri frontend'e `veri/.../cikti/` üzerinden verilir.
 
 ---
 
@@ -40,13 +55,13 @@ Bu bölüm §0.5'in ve aşağıdaki bölümlerin önündedir. Uygulama ayrıntı
 - **Üst kontroller** (✕, seçici, tam ekran) anlatım oynarken 3 sn dokunulmazsa kaybolur; tek dokunuş ya da anlatımın bitmesi geri getirir. İlerleme çubuğu hep görünür.
 - **Panelde** her cümle tek satır: Cümle · Fotoğraf · Kart · Açı · Vurgu. Fotoğraf bilgisi (başlık, kısa metin, kaynak, lisans, güven) bir kez girilir; **Kart** açık olan fotoğraflar 3D anlatımda kart olarak çıkar. 3D'si olmayan eserde sadece Cümle · Fotoğraf.
 - **Yayın kuralı:** her cümlede fotoğraf zorunlu (3D'li eserde de). Her fotoğrafta kaynak ve lisans zorunlu.
-- **Fotoğraflar:** Vakıf Eserleri Envanteri'nden (Bursa fotoğraf arşivi, `veri/bursa-foto/`). Uygulamada kullanım izni Vakıf Katılım'dan yazılı alınmalı.
+- **Fotoğraflar:** Vakıf Eserleri Envanteri'nden (Bursa fotoğraf arşivi, `veri/bursa-foto/`). 20 Ekim: envanter tamamen izinli; kitapların metni ve görselleri ile fotoğraf arşivi proje için verildi, uygulamada kullanılabilir. Lisans alanı: «Proje için verildi; kullanılabilir», künye: «Fotoğraf: Bursa Vakıf Eserleri Envanteri». Eski fotoğraflar (Geçmişi Gör) ayrı kaynaktan, Foto Atlas'tan gelir; izinleri kurum kurum (bkz. §15 madde 13).
 - **Ekranlar:** ekip Figma dosyası `akar-app` (Bd3m8…) ve PNG kopyaları `design/ekranlar-15ekim/` (21 ekran). Yayındaki kodla farkları: `design/karsilastirma/` 14–19.
 
 **3D veri hattı ve durum (15 Ekim).**
 - 32 Bursa eseri için `eserler/<eser>/eser.md` hazır: ölçüler kaynak kodlu (P plan, E envanter, H hesap, W web, O OSM, M maket, F fotoğraf, T tahmin; boş hücre = tür varsayılanı + VARSAYIM), Palet (stil rengi) ve Vurgu tabloları dolu. Çelişki kararları `veri/bursa/KARARLAR_14Ekim.md`; denetim raporları `veri/bursa/denetim/` (62 W URL'si açıldı, alıntılar kaynakta bulundu).
-- Model durumu (20 Ekim): GLB teslimleri `eserler/<eser>/3d/export/` altında: Ulucami v25, Bedesten v05, Koza Han v13, Orhan Bey Camii v06, Orhan Bey Hamamı v04, Emir Hanı v03, Orhan Gazi Türbesi v01. Güncel sürüm her eserin `3d/README.md` dosyasında. Ortak stil: `veri/bursa/sablonlar/_ortak_stil.md`.
-- Görev dağılımı: `GOREV_DAGILIMI_15Ekim.md`.
+- Model durumu (22 Ekim): GLB teslimleri `eserler/<eser>/3d/export/` altında: Ulucami v26, Bedesten v06, Koza Han v14, Orhan Bey Camii v07, Orhan Bey Hamamı v05, Emir Hanı v05, Orhan Gazi Türbesi v02. Güncel sürüm her eserin `3d/README.md` dosyasında. Ortak stil: `veri/bursa/sablonlar/_ortak_stil.md`.
+- Görev dağılımı: `GOREV_DAGILIMI_15Ekim.md` (20 Ekim'de kaldırıldı; git geçmişinde, commit `1f977c9`).
 
 ---
 
@@ -148,7 +163,7 @@ Bu bölüm aşağıdaki bazı bölümlerin yerini alır. Çelişki varsa burası
 2. Kart açılır, kullanıcı **"Hikâyeyi başlat · X dk"** butonuna basar.
 3. Anlatım cümle cümle ilerler (**Dinle** ya da **Oku**). Her cümlenin bir fotoğrafı var; 3D'si olan eserde her cümle 3D sahnede kamerayı, vurguyu ya da modele bağlı kartı da değiştirir.
 4. Hikâyenin sonunda akar akışı gösterilir: Bedesten'den Ulucami'ye akan altın bir çizgi.
-5. **Hikâye sonrası** ekranında seçenekler: Geçmişi Gör, İz Bırak ve (rotadaysa) Sonraki durak. (Bulmaca beklemede, §0.6.) Ayrıca "Eser hakkında" uzun metni.
+5. **Hikâye sonrası** ekranında seçenekler: Geçmişi Gör, Yaşayan hafıza (izler + İz Bırak; 22 Ekim) ve (rotadaysa) Sonraki durak. (Bulmaca beklemede, §0.6.) Ayrıca "Eser hakkında" uzun metni.
 
 ### Projenin farkı (jüriye böyle anlatılacak)
 - Parçaların benzerleri var; "hiçbir alternatifi yok" **denmeyecek**.
@@ -187,9 +202,9 @@ Bu bölüm aşağıdaki bazı bölümlerin yerini alır. Çelişki varsa burası
 |---|---|
 | **İnteraktif anlatım** | Cue listesi. Her cümle bir sahne durumu tarif eder: fotoğraf, kamera, vurgu, kart, akar akışı, gravür. İki görünüm (15 Ekim): **Fotoğraf** her eserde, **3D** modeli olan eserde. Kartlar three.js CSS2DRenderer ile modeldeki noktalara bağlı. |
 | **Dinle / Oku** | Aynı arayüz. Dinle'de ses çalar, sahneler kendiliğinden ilerler. Oku'da ses yok; kaydırınca, Boşluk'a ya da ↓'ye basınca aynı sahneler oynar. Oku erişilebilirlik için de önemli. |
-| **Geçmişi Gör** | Gravür ↔ bugün kaydırıcısı. Yerindeyken kamera üstüne yarı saydam gravür bindirilir, kullanıcı aynı açıdan fotoğraf çeker. "Tozu sil" ile eski görüntüyü parmakla açma fikri de var. "Tam AR" **denmeyecek**. |
+| **Geçmişi Gör** | 22 Ekim: büyük eski fotoğraf, tarih sıralı şerit ve «Nereden çekildi?» haritası (çekim noktası + görüş konisi). Bugünkü eşi varsa eski ↔ bugün kaydırıcısı. «Kamerayı aç»: kamera üstüne eski fotoğraf yarı saydam bindirilir, kullanıcı aynı açıdan çeker ve İz Bırak olarak gönderebilir. Kamera yalnız telefonda. «Tozu sil» **yok**. "AR" / "Tam AR" **denmeyecek**. |
 | **Bulmaca** | **15 Ekim: şimdilik yapılmayacak, değişebilir (§0.6).** Esere bakarak bir detay bulunur; doğru cevap hikâyenin devamını ya da gizli durağı açar. İki kademeli ipucu, esnek cevap, evden karşılık. Cami içinde görev yok. |
-| **İz Bırak** | Fotoğraf + kısa anı. Durum: beklemede → onaylandı / reddedildi. Onaylananlar eserin "Yaşayan hafıza" bölümünde görünür. |
+| **İz Bırak** | Fotoğraf + kısa anı. Durum: beklemede → onaylandı / reddedildi. Onaylananlar eserin "Yaşayan hafıza" bölümünde görünür. 22 Ekim: giriş «Yaşayan hafıza»dan (herkesin izleri → + İz Bırak). Kameradan gelen fotoğraf «aynı açı» etiketi taşır, onaylanınca Geçmişi Gör'de bugünkü eş olabilir. «Tüm izler» sayfası şehir / eser seçimiyle. |
 | **Vakıf (akar) akışı** | Bedestenin gelirinin Ulucami'nin bakımına, aydınlatmasına ve görevlilerine akışı (kalemler kaynak kontrolünden sonra netleşir). Eğitim amaçlı; gerçek para ya da bağış yok. |
 | **Rotalar** | Varsayılan serbest keşif. "Rota öner" ile hazır rotalar; 1-2-3 numaralı duraklar, altın çizgi, ilerleme çubuğu. **Rota oluşturucu ("Bana rota oluştur": süre + ilgi alanı) kapsamda.** |
 | **Rozet / yapboz** | Keşfedilen eserlerle tek bir ödül sistemi. **15 Ekim: kapsamda olup olmadığı kararı bekliyor.** |
@@ -272,7 +287,7 @@ Rehberli grup yürüyüşleri (vakıf veya belediye ortaklığı), daha fazla ş
 | akar | bakır #9A5B2E | hamam, han, bedesten, arasta, dükkân |
 
 - Pin gövdesinde kırmızı, mor ve altın kullanılmaz.
-- **Pin biçimi:** sivri kemer, 40×48. İçinde beyaz tür ikonu.
+- **Pin biçimi:** sivri kemer, haritada 32×38 px; seçili 40×48 (1,25×). İçinde beyaz tür ikonu, 16–18 px (Figma «5 · Ölçüler ve bileşenler», 22 Ekim).
 - **Pin durumları:**
   - Seçili: 1,25× büyük, altın halka
   - Tamamlandı: altın ✓
@@ -324,7 +339,7 @@ Rehberli grup yürüyüşleri (vakıf veya belediye ortaklığı), daha fazla ş
 - Önceki sürüm dosyaları arşivlenmiştir; kullanılmaz.
 - **Güncel çalışma dosyası (20 Ekim):** `akar-yeni` (https://www.figma.com/design/HGTgq5vRXVqhVO9TcR9wBe/akar-yeni). Yukarıdaki `akar-app` bağlantısı önceki sürümdür; iki dosya arasında fark varsa `akar-yeni` esas alınır. Backend planı da bu dosyaya göre hazırlandı.
 - **MCP kotası:** Ücretli (Pro) hesapta çalışılıyor; eski «Starter, ayda ~6 çağrı» notu geçersiz. Yine de 121 ekranı tek tek görsel okumak yerine önce metin dökümü alınır.
-- **Sayfa düzeni:** Kapak · 00 Tasarım Sistemi · Kullanıcı akışları · Demo yolu · 📱 Mobil (390×844, 45 ekran) · 🖥 Masaüstü (1440×900, 27 ekran) · 🛠 Yönetim paneli (5 ekran).
+- **Sayfa düzeni (22 Ekim, `akar-yeni`):** tek sayfa, bölümler: Kapak · Kullanıcı akışları · Demo yolu · 00 Tasarım Sistemi (10 panel) · 📱 Mobil (390×844) · 🖥 Masaüstü (1440×900) · 🛠 Yönetim paneli · Eski sürümler (22 Ekim) · Geçmişi Gör · alternatifler (22 Ekim). Toplam 121 ekran (60 mobil, 47 masaüstü, 14 panel; 20 Ekim sayımı).
 - Bölüm sırası akışa göre: Açılış ve keşif → Rotalar → Eser ve anlatım → Etkileşim → Hesap ve bilgi → Ortak parçalar.
 - **Adlandırma:** "WF · / B ·" mobil, "D ·" masaüstü, "WF · Panel /" yönetim paneli. Her ekranın altında "Not / <ad>" metni var.
 - Değişken koleksiyonları: "AKAR · Renkler" ve "AKAR · Ölçüler".
@@ -336,7 +351,7 @@ Rehberli grup yürüyüşleri (vakıf veya belediye ortaklığı), daha fazla ş
 3. ~~Mobildeki B · Anlatım ekranlarının sol üstüne ✕ eklenmeli.~~ 15 Ekim'de yapıldı (üst bölüm yeniden düzenlendi).
 4. ~~"Tam ekran 3D" butonu silinebilir.~~ Yapıldı: kaldırıldı.
 
-**Eksik tasarımlar:** odak halkası (focus ring), devre dışı buton durumu, logo, uygulama ikonu, splash, rozet görselleri ve adları.
+**Eksik tasarımlar:** logo, uygulama ikonu, splash, rozet görselleri ve adları. (Odak halkası ve devre dışı buton durumu Figma «00 · Tasarım Sistemi › 8 · Erişilebilirlik durumları» panelinde çizili.)
 
 ---
 Beylere Not:
@@ -391,19 +406,19 @@ Bu akış şartnamenin üç maddesini karşılıyor: moderasyon, girdi doğrulam
 ## 9. 3D
 
 **Hero model:** Ulucami + Bedesten (ana hikâye), ardından Koza Hanı. Sıra: Ulucami → Bedesten → Koza Hanı.
-- Her eser ayrı .glb; bütçe eser başına ≤ 40.000 üçgen (25.000 üçgen Redmi 9T'de ~60 FPS).
+- Her eser ayrı .glb; bütçe eser başına ≤ 40.000 üçgen, ≤ 60 draw call, ≤ 1 MB (25.000 üçgen Redmi 9T'de ~60 FPS). **İstisna: Ulu Cami** (v26: 87 280 üçgen, 91 draw call; bu değerler tavan). Ayrıntı: `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md` §4.
 - Modeller Blender'da Python betikleriyle üretilir; yöntem ve dersler `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md` içinde.
 - Ayasofya pilotu (12–13 Ekim) yöntem denemesiydi, demoda ana eser değil.
 - Tüm modeller **temsili**dir; ölçüler envanter kitabı, plan ve OSM ayak izinden türetilir, kaynağı `eser.md` dosyalarında tutulur.
 
 **Parça adları ve noktalar:**
 - Parça adları .glb ile kod arasında **birebir** aynı olmalı (vurgu ve kamera hedefi listesi bunlardan oluşur). Eser başına adlar `eserler/<eser>/` altında (`eser.md` parça adları bölümü) tutulur.
-- Boş noktalar (Empty): kart noktaları (`Kart_*`; 15 Ekim'den sonra zorunlu değil, kart cümlenin vurgu parçasına bağlanır, bkz. FRONTEND notları §10.6), akar akışı yolu (`Akar_0 … Akar_n`) ve **Merkez**.
-- **Merkez:** Kamera bu noktanın etrafında döner. Prototipte kameranın yanlış noktanın etrafında dönmesi hatası böyle çözüldü (bkz. `PROTOTIP_DERSLERI.md`).
+- Boş noktalar (Empty) modellerde yok (22 Ekim kontrolü). Kart noktası (`Kart_*`) gerekmez: kart cümlenin vurgu parçasına bağlanır (FRONTEND notları §10.6). Akar akışı yolu (`Akar_0 … Akar_n`) da hiçbir modelde yok; çizginin modelde mi, haritada iki eserin konumu arasında mı çizileceği açık.
+- **Merkez:** Kamera bu noktanın etrafında döner. Prototipte kameranın yanlış noktanın etrafında dönmesi hatası böyle çözüldü (bkz. `PROTOTIP_DERSLERI.md`). 22 Ekim: modelde boş nesne olarak tutulmaz; `Merkez` ayrılmış addır, frontend uygulama GLB'sinin sınır kutusunun yatay ortasını zemin seviyesinde alır (FRONTEND notları §9).
 
 **Yandex 3D Türkiye'den alınan dersler:**
 - Modeller elle yapılır, Yandex'te model başına en fazla 15.000 poligon; AKAR bütçesi ≤ 40.000 üçgen (§0.5).
-- Işık dokuya pişirilir (light baking).
+- Işık dokuya pişirilir (light baking). AKAR'da (22 Ekim kararı): ortam gölgesi (AO) köşe rengine pişirilir, güneşi uygulama hesaplar, gerçek zamanlı gölge yok. Tam pişirme (güneş de modele) Redmi testinde FPS düşük çıkarsa yapılır. Ayrıntı: `FRONTEND_BACKEND_NOTLARI.md` §9.
 - Tanıtıcı öğeler (minare, kubbe, kemer) bilerek biraz abartılır.
 
 **Performans bulgusu**
@@ -448,8 +463,8 @@ Bu akış şartnamenin üç maddesini karşılıyor: moderasyon, girdi doğrulam
 
 Güven etiketleri cümle bazında panelde atanır; yalnız cümle 1 kesinleşmiştir (Doğrulanmış). Kaynak: Bursa Vakıf Eserleri Envanteri, Cilt 1, s. 37. Sonraki durak cümlesi: "Az ileride Koza Hanı var. 1491'de II. Bayezid tarafından yaptırıldı."
 
-### Örnek rota: Hanlar Bölgesi Vakıf Yürüyüşü (3 durak · ~40 dk · 1,2 km)
-Ulucami (1399) → Koza Hanı (1491) → Orhan Gazi Camii (1339). Rota kesin değil.
+### Örnek rota: Hanlar Bölgesi Vakıf Yürüyüşü (4 durak · ~10 dk · ~0,5 km; 22 Ekim)
+Ulucami (1399, Yıldırım Bayezid) → Bedesten (14. yy, Yıldırım Bayezid) → Koza Hanı (1491, II. Bayezid) → Orhan Bey Camii (1339–40, Orhan Bey). Aşağıdaki bulmaca tablosu 3 duraklı eski hâlden kalmadır; bulmaca ertelendi.
 
 | Durak | Rol | Bulmaca fikirleri (**hepsi taslak, doğrulanmadı**) |
 |---|---|---|
@@ -465,7 +480,6 @@ Ulucami (1399) → Koza Hanı (1491) → Orhan Gazi Camii (1339). Rota kesin de�
 - Dokununca açılan yapı parçaları diyagramı (kubbe, minare, şerefe, revak)
 - 1580 → 1732 → 1826 zaman şeridi
 - Terim kartları (akar, hayrat, vakfiye, mütevelli)
-- "Tozu sil" ile gravür açma
 - Kıyı çizgisi SVG animasyonu
 - Kısa onboarding
 
@@ -520,7 +534,7 @@ Diğer hackathon çalışmalarında görülen aşırı optimize yaklaşımlar de
 - Camilerde oyunlaştırma dili sade olacak, cami içinde görev olmayacak. "Ele geçirildi" değil "keşfedildi".
 - Yıldırım Bayezid'in kendi döneminden gerçek portresi yok; portre görseli "Temsili" etiketli olur.
 - Ulucami'nin mimarı kesin bilinmiyor; kesinmiş gibi yazılmaz.
-- Kamera üstüne gravür bindirmeye "tam AR" denmez.
+- Kamera üstüne eski fotoğraf bindirmeye "AR" / "tam AR" denmez; düğmenin adı «Kamerayı aç».
 - Rotaya vakıf eseri olmayan yapılar girerse "çevredeki tarihî yapılar" diye ayrılır.
 - Tarihler ve yapıtlar kitapla doğrulanmadan metne girmez; her cümlede kaynak ve sayfa gösterilir.
 - Çekimlerde ibadet saatlerine ve fotoğraftaki insanların mahremiyetine saygı (yüzler bulanıklaştırılmalı).
@@ -557,16 +571,20 @@ Harita → Ulucami → fotoğraflı anlatım, sonra 3D'ye geçiş (kartlar, kubb
 4. Masaüstü anlatım: sol panel mi, altyazı modu mu?
 5. Atlayarak sona gelen "tamamlandı" sayılsın mı?
 6. Gerçek görünüm (fotoğraftan 3D) eklenecek mi; eklenirse hangi yöntemle?
-7. Saha günü: üç durağın (Ulucami, Koza Hanı, Orhan Gazi Camii) fotoğrafları, eski fotoğraf açıları, bulmaca cevaplarının doğrulanması.
-8. Gravür kaynakları ve lisansları (Wikimedia Commons vb.).
-9. Tasarım sistemi eksikleri: odak halkası, devre dışı durum, logo, uygulama ikonu, splash, rozet görselleri.
+7. Saha günü: dört durağın (Ulucami, Bedesten, Koza Hanı, Orhan Bey Camii) fotoğrafları, eski fotoğraf açıları, bulmaca cevaplarının doğrulanması.
+8. Eski görseller: Foto Atlas'tan 236 kullanılabilir Bursa fotoğrafı alındı ve eserlere bağlandı (22 Ekim, `veri/fotoatlas/`). Gravürler ayrıca aranacak; aynı alanlarla (çizer, tarih, kaynak, lisans) eklenecek.
+9. Tasarım sistemi eksikleri: logo, uygulama ikonu, splash, rozet görselleri (odak halkası ve devre dışı durum Figma'da çizili).
 10. Belgeler: lisans tablosu, KVKK metni, README.
 11. Figma: eğitim planı onayı ya da ücretli plan kararı.
-12. Kod geliştirme promptları hazır (ayrı dosya: `AKAR_Claude_Promptlari.md`).
-13. Vakıf Katılım'dan envanter fotoğraflarının uygulamada kullanım izni (yazılı).
-14. Rozetler kapsamda mı?
-15. Bulmaca ve Birlikte Gez'in yerine ne gelecek?
-16. Panelde "Kartlar" menüsünün adı "Fotoğraflar" olsun mu? (Kart artık cümlenin fotoğrafı.)
+12. Kod geliştirme promptları (`veri/_arsiv/AKAR_Claude_Promptlari.md`; 22 Ekim'de `_arsiv` ile kaldırıldı, git geçmişinde, commit `ef36c58`). 22 Ekim: oradaki §8 Geçmişi Gör promptu eskidi («Tozu sil», sekmeler); geçerli tarif `FRONTEND_BACKEND_NOTLARI.md` §12.
+13. Tüm izler sayfasının girişi (Keşif mi Profil mi).
+14. Orhan Bey Camii (Foto Atlas'ta «Orhan Gazi Camii») fotoğrafı 25056 doğrulanacak; Koza Hanı ve Orhan Bey Camii için saha çekimi.
+15. I. Murad Hüdavendigâr Külliyesi koordinatı (`veri/fotoatlas/eser_konum.csv`); Osman Gazi Türbesi ayrı eser mi?
+16. Eşleştirme raporundaki 62 «olası» öneri ve otomatik alt metinler (içerik sorumlusu).
+17. ~~Vakıf Katılım'dan envanter fotoğraflarının uygulamada kullanım izni (yazılı).~~ Çözüldü (20 Ekim): envanter (metin, görseller, fotoğraf arşivi) proje için verildi. Foto Atlas tarafında Foto Atlas (Caner Cangül), Mazhar Yüce Doruk Koleksiyonu ve İÜ Nadir Eserler Kütüphanesi izin verdi, Dumbarton Oaks reddetti; 5 kurumdan cevap bekleniyor (28 Ekim'de hatırlatma). Bir görsel yalnız `durum` alanı `kullanilabilir` / `kullanilabilir-yas` ise kullanılır: `veri/fotoatlas/IZIN_DURUMU.md`.
+18. Rozetler kapsamda mı?
+19. Bulmaca ve Birlikte Gez'in yerine ne gelecek?
+20. Panelde "Kartlar" menüsünün adı "Fotoğraflar" olsun mu? (Kart artık cümlenin fotoğrafı.)
 
 ---
 
@@ -583,9 +601,9 @@ Harita → Ulucami → fotoğraflı anlatım, sonra 3D'ye geçiş (kartlar, kubb
 | `kilic-ali-pasa-model.zip` | .glb + .blend + Blender betiği + önizleme |
 | `AKAR_ikonlar_svg.zip`, `AKAR_ikon_seti.png` | 22 özel ikon |
 | `tokens.css` | Tasarım token'ları |
-| `GOREV_DAGILIMI_15Ekim.md` | Kim ne yapacak (ChatGPT, içerik, 3D) |
+| `GOREV_DAGILIMI_15Ekim.md` | Kim ne yapacak (ChatGPT, içerik, 3D). 20 Ekim'de kaldırıldı; git geçmişinde (`1f977c9`) |
 | `PROTOTIP_DERSLERI.md` | Prototipten çıkan kamera, çizim ve anlatım motoru dersleri |
-| `AKAR_Claude_Promptlari.md` | Kod geliştirme promptları |
+| `AKAR_Claude_Promptlari.md` | Kod geliştirme promptları. 22 Ekim'de kaldırıldı; git geçmişinde (`ef36c58`) |
 
 ---
 

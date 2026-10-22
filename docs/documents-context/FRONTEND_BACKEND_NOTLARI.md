@@ -1,6 +1,20 @@
 # AKAR · Frontend ve backend notları
 
-*13 Ekim 2026, güncelleme 15 Ekim 2026 (bkz. §0 ve §10). Ekip için. Figma: `akar-app` (https://www.figma.com/design/Bd3m8xYrCiVK6440POHN39/akar-app). 15 Ekim ekranları bu Figma dosyasına da eklendi; PNG kopyaları: `design/ekranlar-15ekim/`. Bu not ile çelişen eski bir belge varsa bu not geçerlidir.*
+*13 Ekim 2026, güncelleme 15 Ekim 2026 (bkz. §0 ve §10). Ekip için. Figma: `akar-yeni` (https://www.figma.com/design/HGTgq5vRXVqhVO9TcR9wBe/akar-yeni; 20 Ekim'den beri esas dosya). Önceki dosya `akar-app` (https://www.figma.com/design/Bd3m8xYrCiVK6440POHN39/akar-app); 15 Ekim ekranları oraya eklenmişti; PNG kopyaları: `design/ekranlar-15ekim/`. Bu not ile çelişen eski bir belge varsa bu not geçerlidir. Güncelleme 22 Ekim 2026: bkz. §0.2 ve §12.*
+
+## 0.2 · 22 Ekim: kısaca ne değişti (önce bunu oku)
+
+Ayrıntı: §12. Figma: `akar-yeni` (https://www.figma.com/design/HGTgq5vRXVqhVO9TcR9wBe/akar-yeni). Mobil ve masaüstü bölümlerinde ilgili satırlara yerleştirildi; değiştirilen eski ekranlar «Eski sürümler (22 Ekim)» bölümünde duruyor.
+
+- **Geçmişi Gör yeniden tasarlandı** (§12.1–12.2). Üstteki «Karşılaştır / Kamerayla eşleştir» sekmeleri kalktı. Ekranda büyük eski fotoğraf, tarih sıralı şerit ve «Nereden çekildi?» haritası var; tek eylem **«Kamerayı aç»**. **«Tozu sil» modu yok**; eski promptlarda geçiyorsa geçersizdir.
+- **Kamera yalnız telefonda.** Masaüstünde kamera düğmesi ve QR penceresi yok; bilgi kartında tek satır uyarı var.
+- **Eski fotoğraf verisi hazır:** Foto Atlas'tan Bursa'da 236 kullanılabilir fotoğraf; 56'sı 17 esere bağlandı. Paket `veri/fotoatlas/cikti/`; rehber `veri/fotoatlas/BENIOKU.md` (§12.4).
+- **Hikâye sonrası:** «İz Bırak» kutusu **«Yaşayan hafıza»** oldu (mobilde «Hafıza · 12 iz»). İz Bırak, hafıza sayfasının içinden açılır (§12.3).
+- **Yaşayan hafıza** masaüstü ve mobilde yeniden düzenlendi; **Tüm izler** (şehir / eser seçili) eklendi.
+- **Panel › Eser düzenle › Geçmişi Gör** yeni alanlarla çizildi: kaynak tek arşive bağlı değil, konum ve yön düzenlenebilir (§12.5).
+- **Eksik eş ekranlar eklendi:** masaüstü Bana rota oluştur, Rota önerisi, Rota aktif / Vardın, Rota tamamlandı, Aydınlatma metni (KVKK); mobil Akar akışı (§12.7).
+- **Metin:** «Gravürü bugünle karşılaştır» → «Eski fotoğrafı bugünle karşılaştır»; filtrede «Eski fotoğraf var». Kamera düğmesinin adı her yerde «Kamerayı aç».
+- Panelde Eser düzenle ekranlarında üst üste binen fazla «Uygulamada önizle» düğmesi kaldırıldı; sağ üstte Önizle · Taslak kaydet · Yayınla.
 
 ## 0. 15 Ekim: kesin kapsam ve fotoğraf/3D görünümü (önce bunu oku)
 
@@ -29,7 +43,7 @@
 
 - **Şehir Bursa.** İstanbul/Karaköy (Kılıç Ali Paşa) örneği bırakıldı. Neden: Vakıf Katılım'ın envanter kitapları geldi ve en çok veri Bursa'da.
 - **Ana hikâye:** Ulucami (hayrat) + Bedesten (akar). Kitapta yazıyor: Bedesten, Yıldırım Bayezid tarafından Ulucami'ye gelir sağlamak için yaptırıldı (Bursa Envanteri, Cilt 1). Sonra Koza Hanı.
-- **Örnek rota:** Hanlar Bölgesi Vakıf Yürüyüşü: Ulucami → Koza Hanı → Orhan Gazi Camii. Durak listesi kesin değil, Bedesten'in eklenmesi düşünülüyor.
+- **Örnek rota:** Hanlar Bölgesi Vakıf Yürüyüşü: Ulucami → Koza Hanı → Orhan Gazi Camii. Durak listesi kesin değil, Bedesten'in eklenmesi düşünülüyor. **22 Ekim: 4 durak oldu** — Ulucami → Bedesten → Koza Hanı → Orhan Bey Camii (Tam Bağlam §0.7).
 - **Veri:** Bursa 385 eser (3 cilt), Konya 289 (2 cilt), Hatay 117 (1 cilt). Kütahya 141 eser bilgi notunda geçiyor ama kitabı henüz yok. İzmir/Manisa hazırlanıyor.
 - **Ayasofya 3D pilotu kapandı** (yöntem denemesiydi, demoda ana eser değil). Dersler: `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md`.
 - **Yönetim paneli tek akış oldu.** Yeni eser adım adım ekleniyor, 3D önizleme hep sağda (bkz. §3).
@@ -51,16 +65,16 @@ Metin alanları dil anahtarlı: `{ tr: "...", en: "..." }`. Her tarihî cümleni
 | `hikaye_cumle` | hikaye_id, sira, metin{tr,en}, guven, **kaynak: `cumle_kaynak` (en az 1, zorunlu)**, ses{tr,en} (dosya + süre), **gorsel_id (zorunlu, 15 Ekim)**, **kart_goster (bool, varsayılan false)**, aci_id (boş olabilir), vurgu[] (parça adları), akar_akisi (bool), gravur_id | Bu tablo "cue" listesidir. `kart_id` kalktı: kart artık cümlenin fotoğrafıdır, `kart_goster` açıksa 3D'de kart olarak çıkar |
 | `kamera_aci` | model_id, ad ("Açı_03"), azimut, egim, mesafe, hedef (parça adı ya da "Merkez"), kucuk_resim | Panelde "Açıyı kaydet" ile oluşur |
 | ~~`kart`~~ | 15 Ekim: kaldırıldı. Başlık, kısa metin, kaynak ve güven `gorsel` tablosunda | Kart = cümlenin fotoğrafı (bkz. `hikaye_cumle.kart_goster`) |
-| `gorsel` | sahibi_eser_id, dosya, alt_metin{tr,en} (**zorunlu**), baslik{tr,en}, kisa_metin{tr,en}, **lisans (zorunlu)**, **kaynak_id (zorunlu)**, guven | Kapak, cümle fotoğrafı, gravür, eski fotoğraf. Bilgisi bir kez girilir; aynı fotoğraf eserin başka cümlesinde de seçilebilir ("Havuzdan seç") |
+| `gorsel` | sahibi_eser_id, dosya, alt_metin{tr,en} (**zorunlu**), baslik{tr,en}, kisa_metin{tr,en}, tur (`fotograf`/`gravur`), **fotografci** (bilinmiyorsa boş + `fotografci_bilinmiyor`), tarih_en_erken, tarih_en_gec, **kaynak_id (zorunlu)** + arsiv_no + baglanti, araci + araci_baglanti (isteğe bağlı, ör. Foto Atlas), **lisans (zorunlu)**, duzenlenebilir (ND lisansta false), guven, fotoatlas_id (varsa) | Kapak, cümle fotoğrafı, gravür, eski fotoğraf. Bilgisi bir kez girilir; aynı fotoğraf eserin başka cümlesinde de seçilebilir ("Havuzdan seç"). 22 Ekim: **kaynak satırı alanlardan üretilir**, elle yazılmaz: «Fotoğraf: <fotoğrafçı> · <kurum> (<arşiv no>) · <aracı> aracılığıyla» |
 | `rota`, `rota_durak` | rota: il, ad{tr,en}, kisa{tr,en}, gorsel_id, tema[], zorluk, rozet, durum · durak: rota_id, sira, eser_id | Süre ve mesafe kayıt edilmez, hesaplanır |
 | `bulmaca` (**beklemede**, §0) | rota_durak_id ya da eser_id, soru{tr,en}, secenekler[3], dogru, aciklama, kaynak_id | Durak başına 1 soru |
-| `gecmisi_gor` | eser_id, eski_gorsel_id, tarih, kaynak_id, lisans, hizalama (kamera_aci gibi) | |
-| `katki` | eser_id, kullanici, metin, gorsel, durum (`beklemede`/`onaylandi`/`reddedildi`), red_sebebi | RLS: beklemede kayıt herkese kapalı |
+| `gecmisi_gor` | eser_id, eski_gorsel_id, sira, cekim_noktasi (lat, lng; boş olabilir), yon (derece, 0 = kuzey), gorus_acisi, konum_kaynagi (`kaynak`/`elle`), ic_mekan (bool), bugunku_es_gorsel_id (boş olabilir), eslesme (`kesin`/`elle`) | 22 Ekim (§12). Bir eski görsel birden çok esere bağlanabilir (ör. 1862 panoraması: Ulucami + Koza Hanı). Tarih, kaynak ve lisans `gorsel`'den gelir. Bugünkü eş seçilmemişse onaylanan en yeni «aynı açı» katkısı kullanılır |
+| `katki` | eser_id, kullanici, metin, gorsel, durum (`beklemede`/`onaylandi`/`reddedildi`), red_sebebi, ayni_aci_gecmisi_gor_id (22 Ekim; kamerada eski fotoğrafla hizalanıp çekildiyse) | RLS: beklemede kayıt herkese kapalı. Onaylanan «aynı açı» fotoğrafı panelde bugünkü eş olarak seçilebilir |
 
 ## 2. Backend kuralları (doğrulama)
 
 1. **Kaynaksız cümle yayınlanamaz.** Cümlenin `cumle_kaynak` kaydı yoksa eser "Yayınla" yapılamaz. Aynı kural «Eser hakkında» paragrafları için de geçerli.
-2. **Modelde olmayan parça yayını durdurur.** Cümledeki `vurgu[]` ya da açının `hedef` adı, modelin `parcalar[]` listesinde yoksa o cümle hatalı sayılır.
+2. **Modelde olmayan parça yayını durdurur.** Cümledeki `vurgu[]` ya da açının `hedef` adı, modelin `parcalar[]` listesinde yoksa o cümle hatalı sayılır. `Merkez` ayrılmış addır, listede olmasa da her modelde geçerlidir (§9).
 3. **Model güncellenince** yeni parça listesi okunur. Kaybolan adlar varsa ilgili cümleler işaretlenir ("model değişti, kontrol et").
 4. **Eksik İngilizce engel değil**, sadece uyarı. TR ile yayınlanabilir.
 5. **İçe aktarma:** gelen her kayıt `taslak` + `tier1` olur, hiçbiri otomatik yayınlanmaz. Var olan eserle eşleşme ad + ilçe ile yapılır; eşleşirse sadece boş alanlar doldurulur.
@@ -69,6 +83,9 @@ Metin alanları dil anahtarlı: `{ tr: "...", en: "..." }`. Her tarihî cümleni
 8. **Her cümlede fotoğraf zorunlu** (15 Ekim). 3D modeli olan eserde de: fotoğraf görünümünde o cümle boş kalmasın.
 9. **Fotoğrafta kaynak ve lisans zorunlu**, alt metin zorunlu (kural 6). Eksikse eser yayınlanamaz.
 10. `kart_goster`, `aci_id` ve `vurgu[]` yalnız modeli olan eserde anlamlıdır. Model yoksa panel bu alanları göstermez, backend de boş kabul eder.
+11. **Geçmişi Gör görselinde** kaynak satırı, lisans ve alt metin zorunlu (kural 9). Foto Atlas kökenli görsellerde sadece `durum` = `kullanilabilir` / `kullanilabilir-yas` olanlar alınır; durumu düşen görsel yayından kalkar (22 Ekim).
+12. `duzenlenebilir = false` (ND lisans) olan görsel kırpılmaz; «ekranı doldur» kapalı (`object-fit: contain`).
+13. Kameradan gelen katkı (`ayni_aci_gecmisi_gor_id` dolu) da moderasyondan geçer; yüz içeren fotoğraf reddedilir (kural 7).
 
 ## 3. Yönetim paneli akışı (Figma → "🛠 Yönetim paneli")
 
@@ -95,7 +112,7 @@ Metin alanları dil anahtarlı: `{ tr: "...", en: "..." }`. Her tarihî cümleni
 
 **2 · Ortak ekranlar:** Kartlar (tüm fotoğraflar eser eser gruplu, nerede kullanıldığı yazılı; kart = fotoğraf olduğu için adının "Fotoğraflar" olması öneriliyor, karar açık). 20 Ekim: Figma'da ekran bu modele göre düzenlendi: ad şimdilik «Kartlar», liste kartı kapalı olanlar dahil bütün fotoğrafları gösterir, üstte «Tümü · Kart olarak kullanılanlar · Lisans eksik» filtresi, her satırda «● Kart / ○ Kart değil» ve kullanıldığı cümleler, ayrıntı panelinde alt metin, kaynak, lisans ve güven etiketi. Ayrı «Kart_*» kaydı ve «birden çok eserde kullanılır» ibaresi kalktı · Rota düzenle (duraklar sürüklenir, süre ve mesafe otomatik, durak eserlerinin Geçmişi Gör kayıtları sayılır; bulmaca ertelendi) · İçe aktar (dosya → alan eşleme → doğrulama → taslak olarak içe al) · Katkı moderasyonu.
 
-**3 · Eser düzenleme (20 Ekim):** Listeden yayındaki esere tıklayınca açılır. Sekmeler yeni eser adımlarıyla aynı sırada: Model · Bilgiler · Kaynaklar · Eser hakkında · Fotoğraflar · Hikâye · Geçmişi Gör · Yayın. Model, Bilgiler, Kaynaklar, Hikâye ve Yayın adım ekranlarının aynısıdır. Ek sekmeler: **Eser hakkında** (paragraf + güven + kaynak/sayfa), **Fotoğraflar** (eserin fotoğraf havuzu, galeri sırası, kapak), **Geçmişi Gör** (eski görsel, tarih, lisans, bugünkü eş; esere bağlı). Model sekmesinde sürüm listesi, Normal/Hafif dosya, parça farkı uyarısı ve harita yerleşimi (yön, ölçek). Yayındaki eserde değişiklikler «Yayınla»ya kadar taslakta durur.
+**3 · Eser düzenleme (20 Ekim):** Listeden yayındaki esere tıklayınca açılır. Sekmeler yeni eser adımlarıyla aynı sırada: Model · Bilgiler · Kaynaklar · Eser hakkında · Fotoğraflar · Hikâye · Geçmişi Gör · Yayın. Model, Bilgiler, Kaynaklar, Hikâye ve Yayın adım ekranlarının aynısıdır. Ek sekmeler: **Eser hakkında** (paragraf + güven + kaynak/sayfa), **Fotoğraflar** (eserin fotoğraf havuzu, galeri sırası, kapak), **Geçmişi Gör** (22 Ekim'de yeniden çizildi: kaynak alanları, konum/yön haritası, iç mekân; §12.5). Model sekmesinde sürüm listesi, Normal/Hafif dosya, parça farkı uyarısı ve harita yerleşimi (yön, ölçek). Yayındaki eserde değişiklikler «Yayınla»ya kadar taslakta durur.
 
 **4 · Diğer ekranlar (20 Ekim):** Rotalar listesi → Rota düzenle (rota bilgileri: görsel, şehir, zorluk, tema; duraklar; süre ve mesafe otomatik; Bulmaca ertelendi) · Kaynaklar (ortak liste) · Kullanıcılar ve roller (davet) · Katkı moderasyonu → ret nedeni penceresi (sabit liste + Diğer, zorunlu).
 
@@ -107,7 +124,7 @@ Sol menü: Eserler · Rotalar · Kartlar · Katkılar · İçe aktar · Kaynakla
 - Oynatıcıya giden liste **çözülmüş tam durum** listesidir: her cümle için sahne = önceki cümlenin sahnesi + bu cümlenin dolu alanları. Veritabanında açı boş olabilir, oynatıcıda asla boş değildir. Fotoğraf her cümlede dolu gelir (§2 kural 8); 3D'de kart yalnız `kart_goster` açık cümlede görünür. Böylece ileri/geri atlamak ya da ortadan başlamak sorunsuz çalışır.
 - `sahne.uygula(durum)`: kamera (azimut, eğim, mesafe, hedef) 0,8 sn geçiş; `prefers-reduced-motion` açıksa anında.
 - Açı kaydı (panel): OrbitControls'tan azimut, eğim, mesafe ve hedef alınır; canvas'tan ~96 px küçük resim alınır.
-- Vurgu: parça adıyla mesh bulunur, rengi altına kaydırılır ya da dış çizgi (outline) alır. `emissive` kullanılmaz, modeller ışıksız malzemeyle geliyor (bkz. §9).
+- Vurgu: parça adıyla nesne bulunur, malzemesi klonlanıp altın `emissive` ile parlatılır ya da rengi altına kaydırılır; gerekirse dış çizgi (outline) alır (bkz. §9).
 - Ses: cümle başına ayrı dosya. Başlangıç saniyeleri ses sürelerinden otomatik hesaplanır; altyazı metinden gelir.
 
 ## 5. Medya ve yedekleme (ses, metin, görsel)
@@ -144,11 +161,11 @@ Sol menü: Eserler · Rotalar · Kartlar · Katkılar · İçe aktar · Kaynakla
 
 ## 7. 3D
 
-- Bütçe: Normal ≤ 40k üçgen, dosya ≤ 1 MB (Draco). Redmi 9T'de 25k üçgen her ayarda ~60 FPS ölçüldü.
-- Renk düz malzemeden (palet), ışık hafif AO. Büyük tek atlas mobilde bulanık çıktı, kullanılmıyor.
+- Bütçe: Normal ≤ 40k üçgen, ≤ 60 draw call, dosya ≤ 1 MB (Draco). İstisna Ulucami: 87k üçgen, 91 draw call. Redmi 9T'de 25k üçgen her ayarda ~60 FPS ölçüldü; yedi model birlikte ~199k üçgen.
+- Renk düz malzemeden (palet). Ortam gölgesi (AO) köşe rengine pişirilmiş; güneşi uygulama hesaplar, gerçek zamanlı gölge yok (§9, 22 Ekim kararı). Büyük tek atlas mobilde bulanık çıktı, kullanılmıyor.
 - Parça adları uygulamanın vurgu ve kamera hedefi listesidir; .glb'deki adlarla birebir aynı olmalı (ör. `Kubbeler_19`, `Sadirvan_Kubbe`, `Minare_1`).
 - Kademe: Normal → Hafif (ilk 2 sn FPS < 25 ise sessizce) → Görsel (WebGL yoksa ya da hata).
-- Durum (20 Ekim): Ulucami v25, Bedesten v05, Koza Han v13, Orhan Bey Camii v06, Orhan Bey Hamamı v04, Emir Hanı v03, Orhan Gazi Türbesi v01 hazır (`eserler/<eser>/3d/export/`). Yöntem: `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md`.
+- Durum (22 Ekim): Ulucami v26, Bedesten v06, Koza Han v14, Orhan Bey Camii v07, Orhan Bey Hamamı v05, Emir Hanı v05, Orhan Gazi Türbesi v02 hazır (`eserler/<eser>/3d/export/`). Güncel sürüm her eserin `3d/README.md` dosyasında. Yöntem: `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md`.
 
 ## 8. Hareket ve etkileşim (küçük ama önemli)
 
@@ -228,7 +245,7 @@ Uygulamanın "akışkan" hissi bu ayrıntılardan gelir. Hepsi `prefers-reduced-
 - **Kodda şu an OSM raster karo kullanılıyor; bu stil dosyasına geçilmeli.**
 
 **3D (`eserler/`)**
-- Uygulamanın kullanacağı dosyalar sadece `.glb`'ler (20 Ekim düzeni: `eserler/<eser>/3d/export/<eser>_vN.glb` uygulama dosyası; `<eser>_vN_sunum.glb` kaide, zemin, ağaç ve figürlü sunum kopyası, uygulamada kullanılmaz. Uygulama dosyasında **çevre (`Cevre_*`) ve insan figürü (`Olcek_Insan_*`) yok**, yalnız yapı (20 Ekim 2026; kural: `eserler/_GENEL_SAHNE_STANDARDI.md` §5.5). Ör. `ulu-cami_v25.glb`. Parça adları iki dosyada aynı ve hikâyelerdeki Vurgu adlarıyla eşleşiyor, 20 Ekim'de 6 eserde kontrol edildi). `.blend` ve `_kutuphane/` modelleme içindir, frontend'e girmez.
+- Uygulamanın kullanacağı dosyalar sadece `.glb`'ler (20 Ekim düzeni: `eserler/<eser>/3d/export/<eser>_vN.glb` uygulama dosyası; `<eser>_vN_sunum.glb` kaide, zemin, ağaç ve figürlü sunum kopyası, uygulamada kullanılmaz. Uygulama dosyasında **çevre (`Cevre_*`) ve insan figürü (`Olcek_Insan_*`) yok**, yalnız yapı (20 Ekim 2026; kural: `eserler/_GENEL_SAHNE_STANDARDI.md` §5.5). Ör. `ulu-cami_v26.glb`. Parça adları iki dosyada aynı ve hikâyelerdeki Vurgu adlarıyla eşleşiyor, 22 Ekim'de 6 eserde kontrol edildi). `.blend` ve `_kutuphane/` modelleme içindir, frontend'e girmez.
 - Ayasofya pilot modelidir: demoda gösterilmez ama three.js görüntüleyiciyi kurmak ve parça adlarıyla vurgu denemek için kullanılabilir. Bursa modelleri gelince aynı kod çalışır.
 - Yükleme (Draco sıkıştırmalı):
   ```js
@@ -237,20 +254,54 @@ Uygulamanın "akışkan" hissi bu ayrıntılardan gelir. Hepsi `prefers-reduced-
   const draco = new DRACOLoader().setDecoderPath("/draco/"); // three/examples/jsm/libs/draco/gltf/ → public/draco/
   const loader = new GLTFLoader().setDRACOLoader(draco);
   const gltf = await loader.loadAsync(url);
-  const parcalar = [];
-  gltf.scene.traverse(o => { if (o.isMesh) parcalar.push(o.name); }); // panelin "Vurgu" listesi bu
+  // panelin "Vurgu" listesi: GLB'deki nesne (node) adları
+  const parcalar = gltf.parser.json.nodes.filter(n => n.mesh !== undefined).map(n => n.name);
   ```
+  Mesh adlarından toplanmaz: parçaların çoğu birden çok malzemeli (Ulucami'de 26 parçanın 20'si) ve three.js bunları parça adını taşıyan bir `Group` + altında ayrı ayrı adlandırılmış mesh'ler olarak yükler; bazı mesh adları da `.001` ekli (`Cami_Mihrap.001`). Parçayı bulmak için `gltf.scene.getObjectByName(ad)` kullanılır; dönen nesne grup olabilir, işlem altındaki bütün mesh'lere `traverse` ile uygulanır.
 - Ölçek metre, yukarı ekseni Y (glTF standardı). Bursa modellerinde kural: orijin yapının zemin ortası (Ayasofya pilotunda kontrol edilmedi). Haritaya koyarken `model.yon_derece` ile döndürülür.
+- **Merkez (kameranın döndüğü nokta, 22 Ekim):** Modellerde `Merkez` adlı boş nesne yok; `Merkez` ayrılmış bir addır ve frontend modeli yükleyince hesaplar: uygulama GLB'sinin sınır kutusunun **yatay ortası, kutunun tabanında**. Yükseklik olarak taban seçildi, çünkü kutunun ortası minareyle büyük ölçüde kayıyor (Ulucami'de kutu 48 m, gövde ~20 m). OrbitControls hedefi, açısı «Merkez» olan cümlelerin hedefi ve kartın son yedek noktası (§10.6) budur. Modelde ileride `Merkez` adlı bir nesne olursa onun konumu kullanılır.
+  ```js
+  const kutu = new THREE.Box3().setFromObject(gltf.scene);
+  const merkez = gltf.scene.getObjectByName("Merkez")?.getWorldPosition(new THREE.Vector3())
+    ?? new THREE.Vector3((kutu.min.x + kutu.max.x) / 2, kutu.min.y, (kutu.min.z + kutu.max.z) / 2);
+  controls.target.copy(merkez);
+  ```
+  Kontrol için güncel uygulama GLB'lerinde çıkan değerler (metre, glTF ekseni: x doğu, y yukarı, z güney):
+
+  | GLB | Merkez (x, y, z) | Kutu (x × y × z) |
+  |---|---|---|
+  | `ulu-cami_v26.glb` | 0,81 · −0,20 · −1,69 | 70,6 × 48,1 × 70,2 |
+  | `bedesten_v06.glb` | 0 · 0 · 0 | 72,5 × 14,2 × 35,3 |
+  | `koza-han_v14.glb` | 9,54 · 0 · 3,19 | 120,3 × 13,1 × 78,0 (İç Koza dahil) |
+  | `orhan-bey-camii_v07.glb` | 0 · 0 · 0,91 | 26,2 × 28,6 × 46,9 |
+  | `orhan-bey-hamami_v05.glb` | −1,42 · 0 · −1,98 | 31,6 × 15,2 × 36,2 |
+  | `emir-hani_v05.glb` | 0 · 0 · −2,03 | 46,6 × 12,0 × 54,6 |
+  | `orhan-gazi-turbesi_v02.glb` | 0 · 0 · 2,20 | 17,5 × 15,5 × 21,9 |
+
+  Yeni sürümde değerler değişebilir; kod her zaman yüklenen dosyadan hesaplar. Merkez yalnız uygulama GLB'sinden hesaplanır (`_sunum.glb`'nin orijini kaide merkezidir, uygulamada kullanılmaz).
 - Kademe: önce `_vN.glb`; ilk 2 sn FPS < 25 ise varsa Hafif sürüme geç (şimdilik üretilmiyor, panelde isteğe bağlı); WebGL yoksa ya da hata olursa kapak görseli (Görsel kademe).
-- Vurgu: modeller ışıksız (unlit) malzemeyle çıkıyor (`KHR_materials_unlit`). three.js bunu `MeshBasicMaterial` olarak yükler, bu malzemede `emissive` yoktur. Bu yüzden vurgu iki yoldan biriyle yapılır:
-  - Renk: malzeme klonlanır, rengi altına doğru kaydırılır; vurgu bitince eski malzemeye dönülür.
+- **Işık (22 Ekim kararı):** Modeller ışık alan malzemeyle gelir (renk + pürüzlülük + metallik; `KHR_materials_unlit` **yok**). three.js bunları `MeshStandardMaterial` olarak yükler. Pişirilen yalnız ortam gölgesidir (AO): her köşenin rengine (`COLOR_0`, gri, en koyu ≥ 0,80) yazılı, GLTFLoader bunu kendiliğinden uygular; web'de AO ya da gölge hesaplanmaz. Güneşi uygulama verir: bir gökyüzü ışığı + bir güneş (+ isteğe bağlı karşıdan dolgu), **gölge kapalı**. Başlangıç değerleri Redmi test sayfasının «yeni palet» ayarı (`design/test-redmi9t/index.html` → `ISIKLAR.yeni`):
+  ```js
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xeef0f4, 2.3));
+  const gunes = new THREE.DirectionalLight(0xffffff, 1.3); gunes.position.set(-0.5, 1, 0.7); scene.add(gunes);
+  const dolgu = new THREE.DirectionalLight(0xfff4e6, 0.5); dolgu.position.set(0.7, 0.55, -0.8); scene.add(dolgu);
+  // renderer.shadowMap.enabled = false (varsayılan); castShadow kullanılmaz
+  ```
+  Neden tam pişirme değil: güneş modele pişirilirse model dönünce ışık da onunla döner ve haritanın güneşiyle uyuşmaz; kurşunun metalik parlaklığı da kaybolur. Gölgesiz iki üç ışığın maliyeti düşük. Redmi 9T'de «10 sn test» ile ölçülecek; ortalama 50 FPS'in altında kalırsa tam pişirmeye (güneş köşe rengine, `unlit` malzeme, yeni model sürümleri) geçilir.
+- Vurgu: malzemeler parçalar arasında **paylaşılır**; vurgulanan parçanın malzemesi önce klonlanır, yoksa aynı malzemeyi kullanan bütün parçalar parlar. İki yol:
+  - Parlatma (önerilen): klonlanan malzemede `emissive` altına ayarlanır; vurgu bitince eski malzemeye dönülür.
     ```js
     const ALTIN = new THREE.Color("#C9A13B");
-    const eski = mesh.material;
-    mesh.material = eski.clone();
-    mesh.material.color.lerp(ALTIN, 0.5);   // nabız için 0.3 ↔ 0.6 arası canlandırılabilir
-    // bitince: mesh.material.dispose(); mesh.material = eski;
+    gltf.scene.getObjectByName(parca).traverse(mesh => {
+      if (!mesh.isMesh) return;
+      mesh.userData.eski = mesh.material;
+      mesh.material = mesh.material.clone();
+      mesh.material.emissive.copy(ALTIN);
+      mesh.material.emissiveIntensity = 0.45;   // nabız için 0.3 ↔ 0.6 arası canlandırılabilir
+    });
+    // bitince her mesh'te: mesh.material.dispose(); mesh.material = mesh.userData.eski;
     ```
+    Renk kaydırma da çalışır: `mesh.material.color.lerp(ALTIN, 0.5)`.
   - Dış çizgi: `OutlinePass` (postprocessing) ya da parçanın biraz büyütülmüş, ters yüzlü (`side: THREE.BackSide`) altın kopyası. Postprocessing telefonda pahalı; önce renk yolunu deneyin.
 - Performans: gerçek zamanlı gölge yok, sadece değişince çiz (render on demand), `pixelRatio` ≤ 1,5, sahne kapanınca `dispose`.
 
@@ -290,7 +341,7 @@ Seçici bir `role="radiogroup"`: iki öğe `role="radio"`, ←/→ ile geçiş.
 | Galeri | y 72, yükseklik 478, kenar 16, kare arası 8, köşe 16 | — |
 | Alt kart | y 566 (galerinin 16 px altı). İçerik değişmedi | — |
 | Dinle · 4 dk | Kartta, birincil (dolu `#25477B`) | `Headphones` + metin |
-| Oku | Kartta, ikincil | `Book` + metin |
+| Oku | Kartta, ikincil | `BookOpen` + metin (Figma katmanı `ikon: lucide/book-open`) |
 | Sonraki durak: Koza Hanı → | Kartta, çerçeveli, tam genişlik | İkon yok (→ metnin parçası) |
 
 - **Galeri düzeni** Google Haritalar'daki gibi tekrar eder: büyük (262×478) → üst üste iki küçük (180×235) → büyük → … Yatay kaydırılır (`scroll-snap`). Sağda bir sonraki sütunun ucu görünür, devamı olduğu anlaşılır.
@@ -353,15 +404,22 @@ Seçici bir `role="radiogroup"`: iki öğe `role="radio"`, ←/→ ile geçiş.
 
 ## 11. Açık işler ve doğrulanacaklar
 
-- Rota durakları kesinleşmeli (Bedesten eklenecek mi?).
+- ~~Rota durakları kesinleşmeli (Bedesten eklenecek mi?).~~ 22 Ekim: Ulucami → Bedesten → Koza Hanı → Orhan Bey Camii.
 - Envanterdeki adreslerden geocoding; konumu bulunamayanlar elle düzeltilecek.
-- `veri/bursa/bursa_eserler.csv` 408 satır, kitap 385 diyor: tekrarlar temizlenecek.
+- `veri/bursa/bursa_eserler.csv` 408 satır, kitap 385 diyor. Ad + ilçe aynı olan yalnız 2 satır var (22 Ekim kontrolü); kalan farkın nedeni (alt birimler? ayrı sayılan yapılar?) kontrol edilecek.
 - Vakıf Katılım'dan seçili eserlerin orijinal fotoğrafları ve kitapların görsel kimlik dosyaları istenecek.
 - Ulucami/Bedesten 3D referans modelleri (3D Warehouse / Sketchfab) aranacak; lisans notu `veri/bursa/links.md`.
 - İngilizce metinler ve sesler.
 - Kararlar: mobil alt menü, logo (bkz. `design/karsilastirma/KARSILASTIRMA.md`). Bulmaca biçimi kararı Bulmaca beklemeye alındığı için ertelendi (§0).
-- Vakıf Katılım'dan envanter fotoğraflarının uygulamada kullanım izni yazılı alınmalı; lisans alanı buna göre doldurulur.
+- ~~Vakıf Katılım'dan envanter fotoğraflarının uygulamada kullanım izni yazılı alınmalı.~~ Çözüldü (20 Ekim): envanter tamamen izinli (metin, görseller, `veri/bursa-foto/` arşivi). Lisans alanı: «Proje için verildi; kullanılabilir». Foto Atlas tarafında Foto Atlas (Caner Cangül), Mazhar Yüce Doruk Koleksiyonu ve İÜ Nadir Eserler Kütüphanesi izin verdi, Dumbarton Oaks reddetti; 5 kurumdan cevap bekleniyor (28 Ekim'de hatırlatma). Bir görsel yalnız `durum` alanı `kullanilabilir` / `kullanilabilir-yas` ise kullanılır: `veri/fotoatlas/IZIN_DURUMU.md`.
 - Panelde "Kartlar" menüsünün adı: "Fotoğraflar" olsun mu?
+- 22 Ekim, Geçmişi Gör:
+  - **Tüm izler** sayfasının girişi: Keşif mi Profil mi?
+  - Orhan Gazi Camii için tek yakın eski fotoğraf (25056, İÜ) **doğrulanacak**; Koza Hanı'nın da 2 fotoğrafı var. Saha çekimi ve envanter fotoğraflarıyla desteklenmeli.
+  - I. Murad Hüdavendigâr Külliyesi'nin koordinatı yok (6 fotoğraf bekliyor): `veri/fotoatlas/eser_konum.csv`'ye girilecek.
+  - Osman Gazi Türbesi'nin eser klasörü yok; ayrı eser mi olacak, Orhan Gazi Türbesi'yle mi gösterilecek?
+  - Akar akışı şeması (Hamam → Cami) ile cümle (Bedesten) uyuşmuyor.
+  - Eşleştirme raporundaki 62 «olası» öneriye içerik sorumlusu karar verecek (`veri/fotoatlas/eslesme_raporu.md`).
 - Rozetler kapsamda mı? (§0)
 - Bulmaca ve Birlikte Gez'in yerine ne gelecek?
 - 20 Ekim, Figma karşılaştırmasından çıkan veri modeli kararları:
@@ -369,3 +427,73 @@ Seçici bir `role="radiogroup"`: iki öğe `role="radio"`, ←/→ ile geçiş.
   - **Bir cümlenin birden çok kaynağı olabilir.** Figma Kaynak detayı 3–4 kaynak gösteriyor; `hikaye_cumle.kaynak_id` tek. En az bir kaynak zorunlu kalacak şekilde çoka çok bağ.
   - **Akar bağı** (`akar_bagi`) kaynak, güven etiketi ve akış kalemleri (bakım, aydınlatma, görevliler) taşımalı; Figma'da bu kalemler Akar akışı ve Rota tamamlandı ekranlarında var.
   - Yayın kuralları (§2) Tier 1 / Tier 2 / Hero'ya göre ayrı çalışır: Tier 1'in hikâyesi ve cümle fotoğrafı yoktur.
+
+## 12. Geçmişi Gör, Yaşayan hafıza ve kamera (22 Ekim)
+
+Figma `akar-yeni`. Ekranların altında kısa notlar var; bu bölüm onların toplu hâli.
+
+### 12.1 Ekranlar
+
+**Mobil (Geçmişi Gör satırı):**
+| Ekran | Ne gösterir |
+|---|---|
+| A1 · harita kapalı | Varsayılan. Büyük eski fotoğraf, künye (başlık, tarih · fotoğrafçı, kaynak satırı), «Eski fotoğraflar» şeridi, altta «Nereden çekildi?» sayfası kapalı (↑) |
+| A2 · harita açık | Sayfa yukarı kayar: fotoğraf küçülür, harita + lejant + «Kamerayı aç» |
+| A1b · eşi var | Bugünkü eşi olan fotoğrafta kaydırıcı (eski \| bugün) |
+| D · Kamera | Arka kamera + eski fotoğraf yarı saydam; saydamlık kaydırıcısı, deklanşör, Galeri |
+| D2 · Çekildi | Kaydırıcı / Yan yana kıyas; **İz Bırak olarak gönder**, Paylaş, Tekrar çek |
+| Eski görüntü yok | Eserin eski fotoğrafı yoksa (ör. Orhan Gazi Camii): «Uzaktan görünüyor» listesi + eski fotoğraf paylaşma |
+| Çekim yeri bilinmiyor | Konumsuz fotoğraf: harita yerine bilgi; kamera yine açılır |
+| Kamera / izin yok | Tekrar dene, Galeriden seç, Geçmişi Gör'e dön |
+| Kamera / iç mekân notu | İç mekân fotoğrafında kamera açılırken bir kez: namaz vakitleri, yüz çekme, flaş kullanma |
+
+**Masaüstü (Katkı satırı başı):** W · harita kapalı, W · harita açık, W · eşi var (kaydırıcı), W · eski görüntü yok, W · çekim yeri bilinmiyor. Düzen: solda büyük fotoğraf (‹ › ile önceki/sonraki), sağda bilgi kartı, altta şerit. «Nereden çekildi?» kartın içinde açılır.
+
+### 12.2 Davranış
+
+- **Şerit** tarih sırasıyla; etiketler hazır gelir: «1862», «1875–85», «1930'lar», «1945 öncesi», «Tarih bilinmiyor». Seçilen küçük resim koyu çerçeveli; ana fotoğraf ve harita ona göre değişir.
+- **«Nereden çekildi?» haritası:** seçili fotoğrafın çekim noktası + görüş konisi (yön ± görüş açısı / 2; yön 0 = kuzey, saat yönünde). Bu eserin diğer fotoğrafları eserin pin renginde, bölgedeki başka eski fotoğraflar siyah nokta. Noktaya dokununca o fotoğraf seçilir. Aynı noktadaki fotoğraflar tek noktada toplanır («4 fotoğraf»). İzin verildiyse kullanıcının kendi mavi noktası. **Bildirim, «yerindesin» uyarısı ya da yön oku yok:** kullanıcı noktayı görür, oraya kendisi gider.
+- **Kaydırıcı** sadece bugünkü eşi olan fotoğrafta; sürüklenir, klavyede ← → (`role="slider"`). Varsayılan eşi panel seçer; seçilmemişse onaylanan en yeni «aynı açı» katkısı. Bugünkü fotoğrafın sahibi künyeye eklenir («Bugünkü fotoğraf: Zeynep A. (ziyaretçi)»).
+- **«Kamerayı aç»** eşi olsa da olmasa da görünür. Kamerada eski fotoğraf iki parmakla büyütülüp kaydırılır (eski objektiflerin açısı farklı). Kamera izni ve HTTPS şart; reddedilirse «izin yok» ekranı. Buna **«AR» denmez**.
+- **Çekim sonrası** ana eylem «İz Bırak olarak gönder»: fotoğraf hazır yüklü, «aynı açı» etiketli İz Bırak formu açılır; kullanıcı sadece anısını yazar. Paylaş: Web Share API, yoksa indir; paylaşılan görsele kaynak satırı yazılır.
+- **İç mekân** (`icMekan`): kamera açık kalır; açılışta saygı notu gösterilir. («Cami içinde görev yok» kuralı bulmaca içindir, fotoğraf çekmeyi kapsamaz.)
+- **ND lisans** (`duzenlenebilir: false`): kırpma yok, «ekranı doldur» kapalı. Kaydırıcı ve bindirme görüntüyü değiştirmediği için serbest.
+- **Masaüstünde kamera yok.** Bilgi kartında: «Yerindeysen telefonundan açıp eski fotoğrafı kamerada hizalayabilirsin.» Ziyaretçi fotoğrafları ve kaydırıcı masaüstünde de görünür. (Final sunumu için uygulama adresine giden QR sunum slaytına konur; uygulamada ekran gerekmez.)
+
+### 12.3 Yaşayan hafıza ve İz Bırak
+
+- **Tek giriş:** Hikâye sonrası «Yaşayan hafıza · 12 iz» (mobilde «Hafıza · 12 iz») → herkesin onaylı izleri → **+ İz Bırak** → form → «Gönderildi» → «Yaşayan hafızaya git» → kendi izi «İnceleniyor» olarak görünür. İz bırakmayan da başkalarının izlerini görür.
+- **Masaüstü revize:** «Eser hakkında» düzeni (geri yolu «‹ Ulucami», yol «Eserler › Ulucami › Yaşayan hafıza», serif başlık, içerik sütunu, sağda kart). Tek sütun akış; fotoğraflı izde fotoğraf solda. Filtreler: En yeni · Fotoğraflı · **Aynı açıdan çekilenler** · Benim izlerim. Sağ kart: «Senin de bir anın var mı?» + İz Bırak, kendi izi «İnceleniyor», «Bu eserde» bağlantıları. Alt başlıkta «Bursa'daki tüm izler (27) ›».
+- **Mobil revize:** aynı mantık; kendi izi küçük kutuda, «Aynı açıdan» filtresi, tüm izler bağlantısı; + İz Bırak altta sabit.
+- **Tüm izler** (masaüstü + mobil): Şehir ve Eser seçici (arama + eser başına iz sayısı); her izde eser etiketi; İz Bırak önce eser seçtirir. **Giriş yeri kararı açık** (Keşif mi Profil mi); şimdilik eserin hafıza sayfasından.
+- «1930'lar ile aynı açı» etiketi kameradan gelen izlerde görünür; onaylanınca panelde bugünkü eş olarak seçilebilir.
+
+### 12.4 Veri: Foto Atlas paketi
+
+- Kaynak: `veri/fotoatlas/` (rehber: `BENIOKU.md`, izinler: `IZIN_DURUMU.md`). Uygulama Foto Atlas'a **canlı bağlanmaz**, `cdn.fotoatlas.net`'ten görsel çekmez.
+- **Frontend'in tek girdisi:** `veri/fotoatlas/cikti/gecmisi-gor.json` + `cikti/gorseller/` (`fa-<id>.webp` 1600 px, `fa-<id>_k.webp` 400 px). Kendi `public/` ya da Storage yolunuza kopyalayın; JSON elle düzenlenmez, `gecmisi_gor_uret.py` üretir. Alanların listesi: `veri/fotoatlas/BENIOKU.md`.
+- Her görselde `kaynakSatiri` gösterilir (İÜ Yıldız Albümleri fotoğraflarında NEKYA + demirbaş numarasıyla). `fotoAtlasId` saklanır (Kültür Envanteri'ne geçişte eşleştirme).
+- Şu an bağlı eserler: Ulucami 18 · Yeşil Külliyesi 7 · Orhan Gazi Türbesi 5 · Osman Gazi Türbesi, Yıldırım Bayezid, Muradiye, Eski Kaplıca, Yeni Kaplıca, Nilüfer Hatun İmareti 4'er · Koza Hanı, Orhan Gazi Camii, Irgandı Köprüsü 2'şer · Pirinç Hanı, Kayhan Camii, Emir Sultan, Şehadet Camii, Eşrefzade Camii 1'er.
+- Rota önerisi: Ulucami **14239** (ilk açılan) · **65828** (kaydırıcı/kamera, sokak seviyesi) · **15226** (iç mekân); Koza Hanı **64741**; Orhan Gazi Camii **25056** (doğrulanacak).
+- Gravürler eklenirse aynı alanlarla (çizer, tarih, kaynak, lisans) `gorsel` tablosuna girer; ekran «Eski fotoğraf» der ama türü `gravur` olabilir.
+
+### 12.5 Panel · Eser düzenle › Geçmişi Gör
+
+- **Sol:** eski fotoğraflar listesi, sürükleyerek sıralama (ilk satır uygulamada ilk açılan). Satırda tarih, fotoğrafçı · kaynak · lisans, «Eş: var/yok». İzin bekleyenler en altta gri, kilitli (uygulamada görünmez). «+ Eski fotoğraf ekle».
+- **Seçili fotoğraf:** görsel + Değiştir · alt metin (zorunlu) · fotoğrafçı (+ «bilinmiyor») · tarih en erken / en geç (gösterim kuralı yanında) · kaynak: kurum / arşiv, arşiv no, tür · kaynak linki · **aracı** (isteğe bağlı, ör. Foto Atlas) + aracı linki · lisans (zorunlu; ND ve «Lisans bilinmiyor → yayınlanamaz» notu) · **kaynak satırı önizlemesi (otomatik)** · bugünkü eş (eserin fotoğrafları ya da onaylı İz Bırak katkısı).
+- **Sağ:** çekim noktası ve yön haritası; pin sürüklenir, beyaz tutamakla yön çevrilir; yön ve görüş açısı alanları; «Kaynağa dön». Değiştirilince etiket «Foto Atlas'tan» → «elle düzeltildi». **İç mekân anahtarı** (kamera açılışında saygı notu). Altında uygulama önizlemesi ve yayın uyarıları.
+- **Toplu içe aktarma ve eşleştirme ekranı yok.** Foto Atlas eşleştirmesi bir kez betikle yapıldı; sonraki tek tek eklemeler bu sekmeden.
+
+### 12.6 Metin kuralları
+
+- Düğme: «Kamerayı aç» (mobil). Masaüstünde kamera düğmesi yok.
+- «Gravür» yalnız gravürü anlatan yerlerde; genel ifadeler «eski fotoğraf» / «eski hâlini gör».
+- Kamera bindirmesine «AR» / «tam AR» denmez.
+- Ziyaretçi fotoğrafının sahibi her yerde yazılır («Bugün · Zeynep A.»).
+
+### 12.7 Bu güncellemede eklenen eş ekranlar
+
+- **Masaüstü** (mobildeki içerik sol panele taşındı): Bana rota oluştur, Rota önerisi (rota büyük haritada), Rota aktif / Vardın (şerit haritanın üst ortasında), Rota tamamlandı, Aydınlatma metni (KVKK).
+- **Mobil:** Anlatım / Akar akışı (şema 3D alanında, cümle «Bedesten bir akardı…», güven «Tarihsel çıkarım»).
+- Zaten eşi olanlar: Geçmişi Gör eşi yok (masaüstünde ana ekranın içinde), mobilde Sonuç yok / İnternet yok («Bileşen · Durum ekranları»), Konum izni ↔ Konum modu seçimi.
+- Bilinen tutarsızlık: Akar akışı şeması «Hamam → Cami» diyor, cümle Bedesten'i anlatıyor (masaüstü ve mobil).
