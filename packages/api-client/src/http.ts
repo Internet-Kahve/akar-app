@@ -19,6 +19,7 @@ import type {
   QuizAnswerResult,
   StorageAdapter,
 } from "./index";
+import { demoRegion } from "./seed";
 
 /** Error body of the API (`CONTRACTS.md` §3) or a transport failure (`status` 0, `code` `NETWORK_ERROR`). */
 export class ApiError extends Error {
@@ -151,6 +152,15 @@ interface SiteDetailDto {
   historyImages: Array<{ mediaId: string; presentMediaId: string | null }>;
   media: MediaDto[];
   sources: SiteSource[];
+}
+/** `AdminSiteDetail`: the public detail plus status; a draft may lack type and location. */
+interface AdminSiteDetailDto extends Omit<
+  SiteDetailDto,
+  "kind" | "coordinates"
+> {
+  kind: string | null;
+  coordinates: [number, number] | null;
+  status: "draft" | "published";
 }
 interface RouteDto {
   id: string;
@@ -301,6 +311,19 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     }),
   };
 }
+
+/** Panel view of an admin detail. A draft without a type shows "cami"; one without a location shows `placeholder` (decision log §11.23). */
+const mapAdminSite = (
+  d: AdminSiteDetailDto,
+  placeholder: [number, number],
+): HeritageSite => ({
+  ...mapSite({
+    ...d,
+    kind: d.kind ?? "cami",
+    coordinates: d.coordinates ?? placeholder,
+  }),
+  status: d.status,
+});
 
 const mapRoute = (r: RouteDto): HeritageRoute => ({
   id: r.id,
@@ -680,6 +703,79 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     cat.routesStale = false;
   };
 
+  // ── drafts (editor and admin only; per identity) ───────────────────────────
+  let drafts:
+    | {
+        key: string | null;
+        raw: Map<string, AdminSiteDetailDto>;
+        /** Re-read after a failed refresh, before anything is served. */
+        stale: Set<string>;
+      }
+    | undefined;
+  /** Where a draft without a location is shown; kept per id so a save compares against what the editor saw. */
+  const placeholders = new Map<string, [number, number]>();
+  const placeholderOf = (
+    cat: Catalog,
+    d: AdminSiteDetailDto,
+  ): [number, number] => {
+    let p = placeholders.get(d.id);
+    if (!p) {
+      // Centre of the city's published sites; the demo region when the city has none.
+      const peers = cat.sites.filter((s) => s.city === d.city.name);
+      const mean = (axis: 0 | 1) =>
+        peers.reduce((n, s) => n + s.coordinates[axis], 0) / peers.length;
+      p = peers.length ? [mean(0), mean(1)] : demoRegion.center;
+      placeholders.set(d.id, p);
+    }
+    return p;
+  };
+  async function ensureDrafts(
+    u: UserState,
+  ): Promise<Map<string, AdminSiteDetailDto>> {
+    if (!u.signedIn || (u.role !== "editor" && u.role !== "admin")) {
+      drafts = undefined;
+      return new Map();
+    }
+    const key = await token();
+    if (!drafts || drafts.key !== key) {
+      const items = await pages<AdminSiteDetailDto>("/v1/admin/site-details", {
+        status: "draft",
+      });
+      drafts = {
+        key,
+        raw: new Map(items.map((d) => [d.id, d])),
+        stale: new Set(),
+      };
+    }
+    for (const id of [...drafts.stale]) await refreshAdminSite(id);
+    return drafts.raw;
+  }
+  /** Re-reads one site after a panel write and files it under published or drafts. */
+  async function refreshAdminSite(id: string) {
+    const cat = await loadCatalog();
+    drafts?.stale.add(id);
+    const d = await call<AdminSiteDetailDto>(
+      "GET",
+      `/v1/admin/sites/${encodeURIComponent(id)}`,
+    );
+    if (d.status === "published") {
+      // A published site always has type and location (database CHECK).
+      const pub = d as SiteDetailDto;
+      const site = mapSite(pub);
+      cat.raw.set(id, pub);
+      cat.sites = cat.sites.some((s) => s.id === id)
+        ? cat.sites.map((s) => (s.id === id ? site : s))
+        : [...cat.sites, site];
+      drafts?.raw.delete(id);
+    } else {
+      cat.raw.delete(id);
+      cat.sites = cat.sites.filter((s) => s.id !== id);
+      drafts?.raw.set(id, d);
+    }
+    cat.stale.delete(id);
+    drafts?.stale.delete(id);
+  }
+
   // ── receipts ───────────────────────────────────────────────────────────────
   /** Redeems stored guest receipts. Every item the server answers is dropped (accepted or rejected, `revealed` included); only a failed request keeps them. */
   async function redeemReceipts() {
@@ -817,12 +913,18 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     if (cat.feedStale) await refreshFeed();
     for (const id of [...cat.stale]) await refreshSite(id);
     user = await ensureUser(cat, reloadUser);
+    const draftRaw = await ensureDrafts(user);
     const published = new Set(cat.sites.map((s) => s.id));
     // `memories` stays the user's own; the public feed only adds what is not already theirs.
     const own = new Set(user.memories.map((m) => m.id));
     const snapshot: Snapshot = {
       version: 1,
-      sites: cat.sites,
+      sites: [
+        ...cat.sites,
+        ...[...draftRaw.values()].map((d) =>
+          mapAdminSite(d, placeholderOf(cat, d)),
+        ),
+      ],
       memories: user.memories,
       role: user.role,
       ...(user.signedIn &&
@@ -909,13 +1011,19 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   async function updateSite(site: HeritageSite) {
     validateSite(site);
     const cat = await loadCatalog();
-    const raw = cat.raw.get(site.id);
-    if (!raw)
+    const draftRaw = user ? await ensureDrafts(user) : new Map();
+    const pub = cat.raw.get(site.id);
+    const draft = pub ? undefined : draftRaw.get(site.id);
+    if (!pub && !draft)
       throw new UnsupportedCommandError(
         "site",
         "Yeni eser oluşturmak için şehir bilgisi gerekir; bu işlem şimdilik API üzerinden yapılamıyor.",
       );
-    const cur = mapSite(raw);
+    // What the editor was shown: a draft's missing location is the placeholder (§11.23).
+    const shownAt: [number, number] = pub
+      ? pub.coordinates
+      : (draft!.coordinates ?? placeholderOf(cat, draft!));
+    const cur = pub ? mapSite(pub) : mapAdminSite(draft!, shownAt);
     const locked = [
       "stories",
       "photos",
@@ -935,7 +1043,9 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     };
     field("name", site.name, cur.name);
     field("nameEn", site.nameEn ?? null, cur.nameEn ?? null);
-    field("typeId", site.kind, cur.kind);
+    // A draft without a type shows "cami"; its type is sent on every save (§11.23).
+    if (draft?.kind === null) info.typeId = site.kind;
+    else field("typeId", site.kind, cur.kind);
     field("year", site.year, cur.year);
     field("architect", site.architect, cur.architect);
     field("patron", site.patron ?? null, cur.patron ?? null);
@@ -957,15 +1067,24 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     field("district", site.district || null, cur.district || null);
     field("tier", site.tier, cur.tier);
     const id = encodeURIComponent(site.id);
-    if (Object.keys(info).length)
-      await call("PATCH", `/v1/admin/sites/${id}/info`, { body: info });
-    if (!same(site.coordinates, cur.coordinates))
-      await call("PUT", `/v1/admin/sites/${id}/location`, {
-        body: { coordinates: site.coordinates },
-      });
-    if (site.status === "draft")
-      await call("POST", `/v1/admin/sites/${id}/unpublish`);
-    await refreshSite(site.id);
+    try {
+      if (Object.keys(info).length)
+        await call("PATCH", `/v1/admin/sites/${id}/info`, { body: info });
+      // An unmoved placeholder is no location: the server keeps refusing to publish it.
+      if (!same(site.coordinates, shownAt))
+        await call("PUT", `/v1/admin/sites/${id}/location`, {
+          body: { coordinates: site.coordinates },
+        });
+      if (site.status === "published" && !pub)
+        await call("POST", `/v1/admin/sites/${id}/publish`);
+      if (site.status === "draft" && pub)
+        await call("POST", `/v1/admin/sites/${id}/unpublish`);
+    } catch (e) {
+      // Earlier steps may have been saved (e.g. info before a refused publish): show them.
+      await refreshAdminSite(site.id).catch(() => undefined);
+      throw e;
+    }
+    await refreshAdminSite(site.id);
   }
 
   async function updateRoutes(routes: HeritageRoute[]) {
@@ -1203,6 +1322,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         });
         catalogLoad = undefined;
         user = undefined;
+        drafts = undefined;
         return build(true);
       }),
     getQuizzes: (siteId) =>
