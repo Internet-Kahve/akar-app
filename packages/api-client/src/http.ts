@@ -13,6 +13,7 @@ import {
   type Trust,
 } from "@akar/domain";
 import type {
+  AdminHealth,
   AkarClient,
   PlayableQuiz,
   QuizAnswerResult,
@@ -1265,5 +1266,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           snapshot: await build(false),
         };
       }),
+    // Live state, not queued behind commands: the panel re-reads it after each one.
+    getAdminHealth: () =>
+      call<AdminHealth>("GET", "/v1/admin/health", { cache: "no-store" }),
   };
 }

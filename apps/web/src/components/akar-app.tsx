@@ -223,6 +223,10 @@ export function AkarApp() {
     async (command: Command) => (await run(command)) === null,
     [run],
   );
+  const loadHealth = useCallback(async () => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    return client.current.getAdminHealth();
+  }, []);
   const signOut = () => {
     void getSupabase()?.auth.signOut();
     setToast("Çıkış yaptın.");
@@ -458,7 +462,12 @@ export function AkarApp() {
             />
           )}
           {view === "admin" && (
-            <Admin state={state} commit={commit} role={role} />
+            <Admin
+              state={state}
+              commit={commit}
+              role={role}
+              loadHealth={loadHealth}
+            />
           )}
           {view === "history" && site && (
             <HistoryView
