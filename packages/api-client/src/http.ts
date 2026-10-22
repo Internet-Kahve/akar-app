@@ -600,13 +600,10 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   };
   const loadCatalog = (): Promise<Catalog> => {
     catalogLoad ??= (async () => {
-      const summaries = await pages<SiteSummaryDto>("/v1/sites");
-      const [details, routes, feed] = await Promise.all([
-        pool(summaries, CONCURRENCY, (s) =>
-          call<SiteDetailDto>("GET", `/v1/sites/${encodeURIComponent(s.id)}`),
-        ),
+      const details = await pages<SiteDetailDto>("/v1/site-details");
+      const [routes, feed] = await Promise.all([
         loadRoutes(),
-        loadFeed(summaries.map((s) => s.id)),
+        loadFeed(details.map((d) => d.id)),
       ]);
       return {
         sites: details.map(mapSite),

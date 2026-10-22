@@ -84,7 +84,7 @@ Gövdeler ve alanlar Swagger'da. Yazma isteklerinde isteğe bağlı `Idempotency
 | `npm test` | Ortak paketler (`packages/domain`, `packages/api-client`) | Saniyeler |
 | `npm run test:e2e` | Web uygulamasının kullanıcı akışları, masaüstü ve mobil boyutta (Playwright, `tests/`) | Chrome gerekir; web sunucusunu kendisi açar. Chrome yoksa: `npx playwright install chromium` |
 | `npm run test:e2e:api` | Demo yolu gerçek API'yle (`services/api/e2e/`): misafir fotoğraflı anı yazar, gönderirken e-posta koduyla giriş yapar (kod Mailpit'ten okunur), moderatör panelde onaylar, yeni bir misafir anıyı fotoğrafıyla görür; misafir bulmacada yanlış cevap sonrası doğruyu bulur. Masaüstü ve mobil boyut | Yalnız yerel, CI'da çalışmaz: önce `npm run api`; API kipindeki web'i (3001) gerekirse kendisi açar. Yerel veritabanına `e2e-*@akar.test` kullanıcıları ve onaylı anılar yazar. Bulmaca testi, yayındaki bir rota durağında bulmaca yoksa atlanır |
-| `npm run test:e2e:api -- --project desktop -g quiz` | Tek proje ya da tek test | Bilinen sorun: API kipinde bir sayfa açılışı ~90 API isteği yapar (her yayındaki eser için ayrı ayrıntı isteği); misafir sınırı IP başına dakikada 300 olduğundan aynı dakikada 4. açılış 429 alır. Tüm takım bu yüzden şimdilik tek seferde geçmez; testler tek tek geçer |
+| `npm run test:e2e:api -- --project desktop -g quiz` | Tek proje ya da tek test | |
 | `npm run typecheck -w @akar/api` | API tip kontrolü | |
 | `npm test -w @akar/api` | API entegrasyon testleri: her test dosyası kendi geçici PostGIS konteynerini açar | Docker açık olmalı; `npm run api` gerekmez ve yerel veriye dokunmaz |
 

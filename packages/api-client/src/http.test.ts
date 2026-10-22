@@ -94,40 +94,42 @@ function fakeApi(handlers: Record<string, Handler>) {
   return { calls, fetch };
 }
 
+const siteA = () =>
+  detail("a", {
+    coverMediaId: "cover",
+    stories: [
+      {
+        id: "s1",
+        title: "t",
+        text: "x",
+        textEn: null,
+        simple: "y",
+        trust: "verified",
+        photoId: "cover",
+        sourceId: null,
+        showCard: null,
+        highlights: [],
+      },
+    ],
+    cards: [{ mediaId: "card-img" }],
+    historyImages: [{ mediaId: "old", presentMediaId: "new" }],
+    media: [
+      media("cover", "photo"),
+      media("card-img", "photo"),
+      media("old", "photo"),
+      media("new", "photo"),
+      media("extra", "photo"),
+      media("glb", "model", { title: "Model", parts: ["kubbe"] }),
+      media("voice", "audio"),
+    ],
+  });
+
 const catalogHandlers = (): Record<string, Handler> => ({
-  "GET /v1/sites": (c) =>
+  "GET /v1/site-details": (c) =>
     c.path.includes("cursor=p2")
-      ? { items: [{ id: "b" }], nextCursor: null }
-      : { items: [{ id: "a" }], nextCursor: "p2" },
-  "GET /v1/sites/a": () =>
-    detail("a", {
-      coverMediaId: "cover",
-      stories: [
-        {
-          id: "s1",
-          title: "t",
-          text: "x",
-          textEn: null,
-          simple: "y",
-          trust: "verified",
-          photoId: "cover",
-          sourceId: null,
-          showCard: null,
-          highlights: [],
-        },
-      ],
-      cards: [{ mediaId: "card-img" }],
-      historyImages: [{ mediaId: "old", presentMediaId: "new" }],
-      media: [
-        media("cover", "photo"),
-        media("card-img", "photo"),
-        media("old", "photo"),
-        media("new", "photo"),
-        media("extra", "photo"),
-        media("glb", "model", { title: "Model", parts: ["kubbe"] }),
-        media("voice", "audio"),
-      ],
-    }),
+      ? { items: [detail("b")], nextCursor: null }
+      : { items: [siteA()], nextCursor: "p2" },
+  "GET /v1/sites/a": () => siteA(),
   "GET /v1/sites/b": () => detail("b"),
   "GET /v1/memories": () => ({ items: [], nextCursor: null }),
   "GET /v1/routes": () => ({
@@ -149,7 +151,7 @@ const catalogHandlers = (): Record<string, Handler> => ({
   }),
 });
 
-test("snapshot maps site DTOs: coordinates order, photos without card/history media, model, route order, paging", async () => {
+test("snapshot maps site DTOs: coordinates order, photos without card/history media, model, route order, paging, no request per site", async () => {
   const api = fakeApi(catalogHandlers());
   const client = createHttpClient({
     baseUrl: "http://api.test",
@@ -173,6 +175,10 @@ test("snapshot maps site DTOs: coordinates order, photos without card/history me
   assert.equal(a.district, "");
   assert.equal(a.stories[0]?.photoId, "cover");
   assert.deepEqual(snap.catalogRoutes?.[0]?.siteIds, ["b", "a"]);
+  assert.ok(
+    !api.calls.some((c) => c.path.startsWith("/v1/sites/")),
+    "the catalog loads in bulk",
+  );
   const guest = api.calls.find((c) => c.path === "/v1/routes");
   assert.equal(guest?.headers.authorization, undefined);
   assert.match(guest?.headers["x-device-id"] ?? "", /^[0-9a-f-]{36}$/);
@@ -563,7 +569,7 @@ for (const failure of ["server", "network"] as const) {
     );
     assert.equal(
       api.calls.filter((c) => c.path === "/v1/sites/a").length,
-      3,
+      2,
       "reloaded by the next read",
     );
   });
