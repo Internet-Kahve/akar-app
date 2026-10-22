@@ -6,6 +6,8 @@ Fastify + Zod, Drizzle ORM, PostgreSQL 17 + PostGIS. Sözleşme: [API-HANDOFF](.
 
 Docker (veya OrbStack), [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) ve repo kökünde `npm ci` gerekir.
 
+API Node.js 24+ ister: TypeScript kaynağını Node doğrudan çalıştırır (tip silme); derleme adımı yoktur. Bu yüzden `tsconfig.json` yalnız silinebilen TypeScript'e izin verir (`erasableSyntaxOnly`: `enum`, `namespace`, kurucu parametre alanı yok).
+
 Tek komut (repo kökünden):
 
 ```sh
@@ -29,6 +31,8 @@ Adresler: e-posta kutusu (Mailpit) http://127.0.0.1:54324, Supabase Studio http:
 | --- | --- |
 | `npm test` | Testcontainers ile gerçek PostGIS üzerinde entegrasyon testleri |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm start` | Sunucuyu izlemesiz, düz `node` ile açar (üretimdeki gibi); `npm run dev` değişiklikte yeniden başlar |
+| `npm run db:migrate` | Bekleyen migration'ları uygular (`DATABASE_URL`); sunucu migration çalıştırmaz |
 | `npm run db:generate -- --name <ad>` | `src/db/schema/` değişikliğinden SQL migration üretir (`drizzle/`); yalnız backend sorumlusu çalıştırır |
 | `npm run db:seed` | Bursa demo verisini yükler (idempotent) |
 | `npm run staff:invite -- --email <e-posta> --role <editor\|moderator\|admin>` | HTTP ve Supabase olmadan personel daveti yazar (ilk yöneticiyi başlatmak için); ayrıntı aşağıda |
@@ -71,6 +75,54 @@ Komut yalnız `DATABASE_URL`'ye bağlanır; Supabase'i çağırmaz ve e-posta g�
 | `PUT /v1/admin/map-settings` | Yalnız `admin`; aynı gövde, `Idempotency-Key` kabul eder, audit `map-settings.update`. Uygulamalar en geç bir dakika içinde görür |
 
 Tablo `map_settings` (tek satır), migration `drizzle/0005_map_settings.sql`; `npm run db:migrate` uygular.
+
+## Yayına alma
+
+API tek bir Docker imajıdır; barındırma sağlayıcısından bağımsızdır. İmaj repo kökünden kurulur (ortak `@akar/domain` paketi gerekir); kök `.dockerignore` yalnız API'nin dosyalarını içeri alır.
+
+```sh
+docker build -f services/api/Dockerfile -t akar-api .
+docker run --env-file <ortam-dosyası> akar-api node src/db/migrate.ts   # migration (sunucudan ayrı)
+docker run --env-file <ortam-dosyası> -p 4000:4000 akar-api             # sunucu
+```
+
+İmaj `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=4000` ile gelir (sağlayıcı `PORT` verirse o geçerlidir) ve root olmayan kullanıcıyla çalışır. `SIGTERM`'de bağlantıları kapatıp çıkar. Sağlık denetimi: canlılık `GET /health`, hazır olma `GET /ready` (veritabanı).
+
+**Üretimde eksik ayarla açılmaz.** `NODE_ENV=production` iken `src/config.ts` (`productionIssues`) şunları ister, eksiklerin hepsini tek mesajda listeler ve süreç 1 ile çıkar: `AUTH_JWKS_URL`, `AUTH_JWT_ISSUER`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STORAGE_PUBLIC_BASE_URL`, `RECEIPT_SECRET`, `STORAGE_DRIVER=s3` (konteyner diski dağıtımlar arasında kalmaz) ve tam köken biçiminde `CORS_ORIGINS` (`https://akar.vercel.app`; sonda `/`, yol ya da `*` olmaz). S3 anahtarları açılışta `storageFromConfig` ile denetlenir. Geliştirmede bu ayarlar eksik kalabilir; ilgili uçlar 401/503 döner.
+
+### Hesap gerektiren adımlar (sırayla)
+
+Hesapları Weissman açar; gizli değerler yalnız sağlayıcı ayarlarına yazılır, sohbete ya da repoya yazılmaz. `<ref>` Supabase proje kimliği, `<api>` API'nin HTTPS adresi, `<web>` Vercel adresi.
+
+1. **Supabase bulut projesi** (AB bölgesi). Proje → Settings → JWT Keys: imzalama anahtarı asimetrik (ES256/RS256) olmalı. Kontrol: `curl https://<ref>.supabase.co/auth/v1/.well-known/jwks.json` en az bir anahtar döner; boşsa JWT signing keys'e geçilir.
+2. **Ayarları gönder.** `services/api` içinde `supabase login`, `supabase link --project-ref <ref>`, önce `supabase config diff`, sonra `supabase config push` (e-posta kodu, Türkçe şablonlar, oturum süresi). Ardından panelde:
+   - Authentication → URL Configuration: Site URL `<web>`, Redirect URLs `<web>` (`config.toml` yerel adresleri taşır; push onları yazar).
+   - Settings → Data API: **kapat** (ya da Exposed schemas'tan `public`'i çıkar). Bulutta API tabloları Supabase'in `public` şemasında durur; Data API açıkken herkese açık anon anahtarla okunabilir/yazılabilir. API Data API'yi kullanmaz, web yalnız giriş için Supabase'e bağlanır. Kontrol: `curl "https://<ref>.supabase.co/rest/v1/quiz_answers?select=*" -H "apikey: <anon>"` satır döndürmemeli.
+3. **Kovalar.** `supabase seed buckets --linked`: `config.toml`'daki `media` (herkese açık) ve `uploads` (**herkese kapalı**) kovalarını boyut ve tür sınırlarıyla açar. Panelde Storage'da `uploads`'ın "Public" olmadığını gör. Storage → S3 Connection: erişim anahtarı oluştur; uç `https://<ref>.supabase.co/storage/v1/s3`, bölge aynı sayfada.
+4. **Migration.** Bağlantı: proje → Connect → **Session pooler** (port 5432; IPv4). Transaction pooler (6543) kullanılmaz: iş kuyruğu (pg-boss) oturum ister. Dizeye `?sslmode=require&uselibpqcompat=true` eklenir (şifreli bağlantı; `pg` düz `sslmode=require`'ı sertifika doğrulaması sayar ve Supabase'in kendi CA'sında düşer). Sonra repo kökünden: `DATABASE_URL='<dize>' npm run db:migrate -w @akar/api` (ya da imajla `node src/db/migrate.ts`). PostGIS uzantısını ilk migration açar.
+5. **Veri.** `DATABASE_URL='<dize>' npm run db:seed -w @akar/api` (6 demo eseri, rotalar, bulmacalar; tekrar çalıştırmak demo içeriğini başa döndürür), sonra `DATABASE_URL='<dize>' npm run ingest -w @akar/api -- --city bursa` (243 taslak; yerel `.cache/` önbelleği ağ isteğini azaltır). İlk yönetici: `DATABASE_URL='<dize>' npm run staff:invite -w @akar/api -- --email <adres> --role admin`. Komut satırındaki `DATABASE_URL`, `.env`'deki yerel değerin önüne geçer.
+6. **API sunucusu.** Sağlayıcıda imaj `services/api/Dockerfile` ile, kök dizin bağlamıyla kurulur. Dağıtım öncesi komut (varsa): `node src/db/migrate.ts`. Ortam:
+
+   | Değişken | Değer |
+   | --- | --- |
+   | `DATABASE_URL` | 4. adımdaki session pooler dizesi |
+   | `CORS_ORIGINS` | `<web>` (birden çoksa virgülle; Vercel önizleme adresleri ayrı ayrı eklenmedikçe çalışmaz) |
+   | `TRUST_PROXY` | Sağlayıcının önündeki vekil sayısı; tek yük dengeleyicide `1` |
+   | `SUPABASE_URL` | `https://<ref>.supabase.co` |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Settings → API Keys, service_role / secret (yalnız sunucu) |
+   | `AUTH_JWKS_URL` | `https://<ref>.supabase.co/auth/v1/.well-known/jwks.json` |
+   | `AUTH_JWT_ISSUER` | `https://<ref>.supabase.co/auth/v1` |
+   | `STORAGE_DRIVER` | `s3` |
+   | `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_ACCESS_KEY_ID`, `STORAGE_S3_SECRET_ACCESS_KEY` | 3. adımdaki S3 bağlantısı |
+   | `STORAGE_PUBLIC_BASE_URL` | `https://<ref>.supabase.co/storage/v1/object/public/media` |
+   | `RECEIPT_SECRET` | Yeni üretilir, yereldekinden farklı: `openssl rand -base64 48` |
+   | `NOMINATIM_EMAIL` | İsteğe bağlı (panelden içe aktarma) |
+
+   Sağlık denetimi yolu `/ready`. Açılış logunda `Invalid production environment` görülürse listelenen değişkenler eksiktir.
+7. **Web (Vercel).** Ortam: `NEXT_PUBLIC_API_URL=<api>`, `NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co`, `NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon / publishable anahtar>`. Değişince yeniden dağıtılır (değerler derlemeye gömülür).
+8. **Test edenler** (§11.9 karar kaydı): 4 kişi Supabase organizasyonunun ekibine eklenir; yerleşik e-posta yalnız onlara gönderir (saatte 2 e-posta). Yetkili hesaplar 5. adımdaki `staff:invite` ya da panelden davetle.
+
+Doğrulama: [docs/TESTING.md §7](../../docs/TESTING.md#7-çevrimiçi-test-ortamı).
 
 ## Okuma API'si (P2)
 

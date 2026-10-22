@@ -256,3 +256,10 @@ Karar: P5.1b'de yönetim paneli API kipinde eser, katalog ve fotoğraf için yal
 Neden: demo için yeterli; oluşturma uçları ayrı bir API PR'ı ve daha büyük bir ön yüz değişikliği gerektirirdi.
 Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: oluşturma uçları (`POST /v1/admin/sites` vb.) ayrı bir `feat/api-admin-create` PR'ıyla eklenir, sonra panel bağlanır.
+
+**11.15 Hesaplar açılmadan, sağlayıcıdan bağımsız yayına alma hazırlığı (P5.2 ön işi).**
+Karar: Barındırma seçimi ve bulut hesapları beklenmeden API yayına hazırlanır: tek Docker imajı (`services/api/Dockerfile`, kök `.dockerignore` yalnız API dosyalarını alır), sunucudan ayrı migration komutu (`node src/db/migrate.ts`, yerelde `npm run db:migrate`), üretimde eksik ayarla açılmama (`productionIssues`), hesap gerektiren adımların listesi (`services/api/README.md` "Yayına alma", `docs/TESTING.md` §7). Hesap açılmaz.
+Teknik seçimler: Derleme adımı yok; Node 24 TypeScript kaynağını tip silmeyle doğrudan çalıştırır, `tsx` yalnız geliştirmede (`dev`, testler, `ingest`, `db:seed`) kalır. Bu yüzden API `tsconfig.json`'da `erasableSyntaxOnly` açık. Ortak paketlerde `"type": "module"` olmadığından Node her dosyada ESM'i kendisi algılar ve uyarır; uyarı imajda ve `start`/`db:migrate` betiklerinde `--disable-warning=MODULE_TYPELESS_PACKAGE_JSON` ile kapatıldı (paketlere `"type": "module"` eklemek ön yüz incelemesi gerektirir, §11.10). Üretimde `fs` depolama reddedilir (konteyner diski kalıcı değil). CI imajı kurar ve eksik ortamla açılmayı reddettiğini denetler.
+Bulut için bilinen riskler (hesap açılınca doğrulanır): Supabase'te API tabloları `public` şemasında olduğundan Data API kapatılmalı (aksi halde anon anahtarla erişilebilir; README adım 2). Bağlantı session pooler üzerinden; `pg` havuzu (en çok 10) ve pg-boss bağlantıları ücretsiz katmanın havuz sınırına yaklaşabilir.
+Karar veren / tarih: Weissman, 22 Eki ("host-neutral deploy prep before accounts exist").
+Nasıl değiştirilir: sağlayıcı seçilince (P5.2) gerekirse sağlayıcıya özel ayar dosyası eklenir; imaj ve komutlar değişmez.

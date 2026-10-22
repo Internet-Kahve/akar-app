@@ -83,10 +83,13 @@ Gövdeler ve alanlar Swagger'da. Yazma isteklerinde isteğe bağlı `Idempotency
 | `npm run typecheck` | Web uygulaması tip kontrolü | |
 | `npm test` | Ortak paketler (`packages/domain`, `packages/api-client`) | Saniyeler |
 | `npm run test:e2e` | Web uygulamasının kullanıcı akışları, masaüstü ve mobil boyutta (Playwright, `tests/`) | Chrome gerekir; web sunucusunu kendisi açar. Chrome yoksa: `npx playwright install chromium` |
+| `npm run test:e2e:api` | Demo yolu gerçek API'yle (`services/api/e2e/`): misafir fotoğraflı anı yazar, gönderirken e-posta koduyla giriş yapar (kod Mailpit'ten okunur), moderatör panelde onaylar, yeni bir misafir anıyı fotoğrafıyla görür; misafir bulmacada yanlış cevap sonrası doğruyu bulur. Masaüstü ve mobil boyut | Yalnız yerel, CI'da çalışmaz: önce `npm run api`; API kipindeki web'i (3001) gerekirse kendisi açar. Yerel veritabanına `e2e-*@akar.test` kullanıcıları ve onaylı anılar yazar. Bulmaca testi, yayındaki bir rota durağında bulmaca yoksa atlanır |
+| `npm run test:e2e:api -- --project desktop -g quiz` | Tek proje ya da tek test | Bilinen sorun: API kipinde bir sayfa açılışı ~90 API isteği yapar (her yayındaki eser için ayrı ayrıntı isteği); misafir sınırı IP başına dakikada 300 olduğundan aynı dakikada 4. açılış 429 alır. Tüm takım bu yüzden şimdilik tek seferde geçmez; testler tek tek geçer |
 | `npm run typecheck -w @akar/api` | API tip kontrolü | |
 | `npm test -w @akar/api` | API entegrasyon testleri: her test dosyası kendi geçici PostGIS konteynerini açar | Docker açık olmalı; `npm run api` gerekmez ve yerel veriye dokunmaz |
 
 PR açınca GitHub aynı kontrolleri çalıştırır: web için `typecheck`, `npm test`, `test:e2e` ve `build`; API için tip kontrolü, testler ve `docs/api/openapi.json`'ın güncelliği (API uçlarını değiştirdiysen `npm run openapi -w @akar/api`).
+`docker build` imajı ve eksik üretim ortamıyla açılmayı reddetmesi de API CI'ında denetlenir.
 
 API testlerini yazma kuralları: [services/api/CONTRACTS.md §11](../services/api/CONTRACTS.md).
 
@@ -110,5 +113,37 @@ API testlerini yazma kuralları: [services/api/CONTRACTS.md §11](../services/ap
 | Token ile 401 | Token'ın süresi dolmuştur (1 saat); yenisini al |
 | Rol beklenenden düşük (`user`) | Token'ı `--role` ile al; rol ilk istekte verilir, `GET /v1/me` ile kontrol et |
 | `npm test -w @akar/api` konteyner hatası | Docker açık mı; diskte yer var mı |
+| Üretim imajı `Invalid production environment` ile kapanıyor | Listelenen değişkenler eksik ya da `CORS_ORIGINS` tam köken değil (sonda `/` olmaz); [services/api/README.md "Yayına alma"](../services/api/README.md#yayına-alma) |
 
 Bir hata bulduğunda: ne yaptın, hangi istek/ekran, beklenen ve gelen yanıt (yanıttaki `requestId` ile) — bunları issue'ya yaz.
+
+## 7. Çevrimiçi test ortamı
+
+Kurulum adımları (Supabase bulut projesi, ayarlar, kovalar, migration, veri, API sunucusu, Vercel): [services/api/README.md "Yayına alma"](../services/api/README.md#yayına-alma). Hesapları Weissman açar.
+
+**Hesap açmadan önce imajı yerelde dene.** `npm run api` açıkken (Supabase ve veritabanı yerelde), `services/api` içinde:
+
+```sh
+docker build -f Dockerfile -t akar-api ../..
+docker run --rm --network host --env-file .env -e HOST=0.0.0.0 -e PORT=4010 akar-api node src/db/migrate.ts
+docker run --rm --network host --env-file .env -e HOST=0.0.0.0 -e PORT=4010 akar-api
+curl http://127.0.0.1:4010/ready
+```
+
+`--network host` konteynerin `127.0.0.1` adreslerini (veritabanı 5433, Supabase 54321) Mac'tekilerle aynı yapar; imzalı yükleme adresleri de Mac'ten açılır (OrbStack'te hazır; Docker Desktop'ta Settings → Resources → Network → "Enable host networking"). İmaj `NODE_ENV=production` ile çalıştığından eksik ayar açılışta listelenir.
+
+**Ortam kurulduktan sonra denenecekler** (telefonda ve masaüstünde, `<web>` adresinde):
+
+| Kontrol | Beklenen |
+| --- | --- |
+| `curl <api>/ready` | `{"status":"ok"}` |
+| `curl -i <api>/v1/sites?limit=1 -H "Origin: <web>"` | 200 ve `access-control-allow-origin: <web>` |
+| `curl "https://<ref>.supabase.co/rest/v1/quiz_answers?select=*" -H "apikey: <anon>"` | Satır dönmez (Data API kapalı) |
+| Harita ve eser listesi | Yayındaki eserler (tohum + editörün yayınladıkları) görünür; taslaklar görünmez |
+| Giriş | Mirasım → Giriş yap → kod e-postası gelir (yalnız ekipteki 4 adrese, saatte 2 e-posta) |
+| İz Bırak (fotoğraflı) | Yükleme çubuğu ilerler, anı "onay bekliyor"; yönetici panelinde onaylanınca misafir de görür |
+| Fotoğraf adresi | `complete` sonrası adres `…/object/public/media/…`; `uploads` kovasındaki dosya herkese açık adresle açılmaz (400/404) |
+| Bulmaca | Yanlışta tekrar/göster, doğruda açıklama |
+| Yetki | Kullanıcı hesabı yönetim uçlarında 403 alır |
+
+Hata kaydında yanıttaki `requestId`'yi yaz; API logunda aynı kimlikle aranır.
