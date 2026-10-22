@@ -308,3 +308,10 @@ Karar: `GET /v1/admin/site-details` (`editor` ve `admin`, `no-store`) taslaklar 
 Neden: panel API kipinde yalnız yayındaki eserleri (`GET /v1/site-details`) görüyordu; taslakları listeleyip yayınlayamıyordu. Taslakları tek tek `GET /v1/admin/sites/:id` ile okumak 243 taslak için yaklaşık 240 istek olurdu; toplu uçla sayfa başına 100 eserle 3 istek yeter.
 Karar veren / tarih: Weissman, 22 Eki.
 Nasıl değiştirilir: bu kayıt; sayfa sınırı `PageQuery`'dedir (`services/api/src/platform/pagination.ts`), uç `services/api/src/modules/admin-catalog/sites-routes.ts` içindedir.
+
+**11.23 Panelde konumu ya da türü olmayan taslak.**
+Karar: Panel API kipinde editör ve admin'e taslakları da gösterir (§11.22). Konumu olmayan taslak, şehrin yayındaki eserlerinin ortasında gösterilir (şehirde yayında eser yoksa demo bölgesinin merkezi); editör iğneyi taşıyıp kaydedince konum elle girilmiş sayılır (`PUT .../location`), taşımadan kaydederse konum gönderilmez ve sunucu yayını reddetmeye devam eder. Türü olmayan taslak "cami" görünür ve o taslak her kaydedildiğinde seçili tür gönderilir; editör kaydetmeden önce türü kontrol etmelidir. Yayındaki eseri taslağa almak onu panelden düşürmez, taslak olarak kalır.
+Neden: arayüz değişmeden (alan, uyarı ya da ayrı "konum düzelt" ekranı eklemeden) taslakların tamamını panelde göstermek. Konumu olmayan 50 kadar, türü olmayan 7 kadar taslak vardı; gizlemek editörün onları hiç görmemesi demekti.
+Bilinen sınır: tohum ve SQL ile yayınlanmış bazı eserler bugünkü yayın kapısını geçmez; panelde taslağa alınırlarsa eksikler tamamlanmadan yeniden yayınlanamazlar. Hikâye, fotoğraf ve kaynak düzenleme API kipinde henüz yok, bu yüzden içe aktarılan taslakların çoğu panelden henüz yayınlanamaz.
+Karar veren / tarih: Weissman, 22 Eki.
+Nasıl değiştirilir: `packages/api-client/src/http.ts` (`mapAdminSite`, `placeholderOf`, `updateSite`) ve bu kayıt.

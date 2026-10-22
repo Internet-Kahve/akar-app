@@ -131,6 +131,8 @@ const catalogHandlers = (): Record<string, Handler> => ({
       : { items: [siteA()], nextCursor: "p2" },
   "GET /v1/sites/a": () => siteA(),
   "GET /v1/sites/b": () => detail("b"),
+  "GET /v1/admin/site-details": () => ({ items: [], nextCursor: null }),
+  "GET /v1/admin/sites/a": () => ({ ...siteA(), status: "published" }),
   "GET /v1/memories": () => ({ items: [], nextCursor: null }),
   "GET /v1/routes": () => ({
     items: [
@@ -473,10 +475,11 @@ test("overlapping dispatches run one at a time: one receipt per subject, both to
 
 const accountHandlers = (
   accounts: Record<string, { saved: string[]; points: number }>,
+  role = "user",
 ): Record<string, Handler> => {
   const of = (c: Call) => accounts[c.headers.authorization?.slice(7) ?? ""]!;
   return {
-    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ada" }),
+    "GET /v1/me": () => ({ id: "u", role, displayName: "Ada" }),
     "GET /v1/me/passport": (c) => ({
       points: of(c).points,
       saved: of(c).saved,
@@ -529,9 +532,9 @@ for (const failure of ["server", "network"] as const) {
     const catalog = catalogHandlers();
     const api = fakeApi({
       ...catalog,
-      ...accountHandlers({ T: { saved: [], points: 0 } }),
-      "GET /v1/sites/a": (c) => {
-        if (reread === "ok") return catalog["GET /v1/sites/a"]!(c);
+      ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+      "GET /v1/admin/sites/a": (c) => {
+        if (reread === "ok") return catalog["GET /v1/admin/sites/a"]!(c);
         if (failure === "network") throw new TypeError("offline");
         return Response.json(
           {
@@ -568,12 +571,126 @@ for (const failure of ["server", "network"] as const) {
       "the site is not dropped",
     );
     assert.equal(
-      api.calls.filter((c) => c.path === "/v1/sites/a").length,
+      api.calls.filter((c) => c.path === "/v1/admin/sites/a").length,
       2,
       "reloaded by the next read",
     );
   });
 }
+
+test("editors see drafts at the city centre; an unmoved placeholder sends no location, a missing type is always sent; publish and unpublish move the site", async () => {
+  // "a" and "b" are Bursa's published sites, both at (29.06, 40.18): their centre is the placeholder.
+  const drafts: Record<string, Record<string, unknown>> = {
+    d1: { ...detail("d1"), kind: null, coordinates: null, status: "draft" },
+    d2: { ...detail("d2", { coordinates: [29.1, 40.2] }), status: "draft" },
+  };
+  const writes: Call[] = [];
+  const write = (c: Call) => {
+    writes.push(c);
+    return {};
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/admin/site-details": (c) => {
+      assert.ok(c.path.includes("status=draft"));
+      return { items: Object.values(drafts), nextCursor: null };
+    },
+    "GET /v1/admin/sites/d1": () => drafts.d1,
+    "GET /v1/admin/sites/d2": () => drafts.d2,
+    "PATCH /v1/admin/sites/d1/info": write,
+    "PUT /v1/admin/sites/d1/location": write,
+    "POST /v1/admin/sites/d2/publish": (c) => {
+      drafts.d2 = { ...drafts.d2, status: "published" };
+      return write(c);
+    },
+    "POST /v1/admin/sites/d2/unpublish": (c) => {
+      drafts.d2 = { ...drafts.d2, status: "draft" };
+      return write(c);
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const snap = await client.getSnapshot();
+  const d1 = snap.sites.find((s) => s.id === "d1")!;
+  assert.deepEqual(
+    [d1.status, d1.kind, d1.coordinates],
+    ["draft", "cami", [29.06, 40.18]],
+  );
+
+  // Unmoved pin, type left at the shown "cami": no location, but the type goes out.
+  await client.dispatch({ type: "site", site: { ...d1, year: "1400" } });
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path, c.body]),
+    [["PATCH", "/v1/admin/sites/d1/info", { typeId: "cami", year: "1400" }]],
+  );
+  writes.length = 0;
+  await client.dispatch({
+    type: "site",
+    site: { ...d1, coordinates: [29.07, 40.19] },
+  });
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path, c.body]),
+    [
+      ["PATCH", "/v1/admin/sites/d1/info", { typeId: "cami" }],
+      ["PUT", "/v1/admin/sites/d1/location", { coordinates: [29.07, 40.19] }],
+    ],
+  );
+
+  writes.length = 0;
+  const d2 = snap.sites.find((s) => s.id === "d2")!;
+  const published = await client.dispatch({
+    type: "site",
+    site: { ...d2, status: "published" },
+  });
+  assert.deepEqual(
+    writes.map((c) => c.path),
+    ["/v1/admin/sites/d2/publish"],
+  );
+  assert.equal(published.sites.find((s) => s.id === "d2")?.status, "published");
+
+  writes.length = 0;
+  const unpublished = await client.dispatch({
+    type: "site",
+    site: { ...published.sites.find((s) => s.id === "d2")!, status: "draft" },
+  });
+  assert.deepEqual(
+    writes.map((c) => c.path),
+    ["/v1/admin/sites/d2/unpublish"],
+  );
+  assert.equal(
+    unpublished.sites
+      .filter((s) => s.id === "d2")
+      .map((s) => s.status)
+      .join(),
+    "draft",
+    "an unpublished site stays in the panel once, as a draft",
+  );
+});
+
+test("users and moderators never request drafts", async () => {
+  for (const role of ["user", "moderator"]) {
+    const api = fakeApi({
+      ...catalogHandlers(),
+      ...accountHandlers({ T: { saved: [], points: 0 } }, role),
+      "GET /v1/admin/memories": () => ({ items: [], nextCursor: null }),
+    });
+    await createHttpClient({
+      baseUrl: "http://api.test",
+      storage: storage(),
+      getToken: () => "T",
+      fetch: api.fetch,
+    }).getSnapshot();
+    assert.ok(
+      !api.calls.some((c) => c.path.startsWith("/v1/admin/site")),
+      role,
+    );
+  }
+});
 
 const quizState = (extra = {}) => ({
   id: "q1",
