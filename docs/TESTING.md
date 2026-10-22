@@ -87,6 +87,7 @@ Gövdeler ve alanlar Swagger'da. Yazma isteklerinde isteğe bağlı `Idempotency
 | `npm run test:e2e:api -- --project desktop -g quiz` | Tek proje ya da tek test | |
 | `npm run typecheck -w @akar/api` | API tip kontrolü | |
 | `npm test -w @akar/api` | API entegrasyon testleri: her test dosyası kendi geçici PostGIS konteynerini açar | Docker açık olmalı; `npm run api` gerekmez ve yerel veriye dokunmaz |
+| `npm run check` | PR öncesi hepsi bir arada: yukarıdaki tip kontrolleri ve testler (e2e hariç) + `docs/api/openapi.json` güncelliği | Docker açık olmalı; e2e için `npm run check -- --e2e` |
 
 PR açınca GitHub aynı kontrolleri çalıştırır: web için `typecheck`, `npm test`, `test:e2e` ve `build`; API için tip kontrolü, testler ve `docs/api/openapi.json`'ın güncelliği (API uçlarını değiştirdiysen `npm run openapi -w @akar/api`).
 `docker build` imajı ve eksik üretim ortamıyla açılmayı reddetmesi de API CI'ında denetlenir.
