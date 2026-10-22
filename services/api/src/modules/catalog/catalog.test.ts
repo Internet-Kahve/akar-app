@@ -449,6 +449,28 @@ test("detail returns sections, cards and archive images, and every media and sou
   assert.equal(bare.body.openingCamera, null);
 });
 
+test("detail pages hold every published site once, each equal to its own detail even when sites share media", async () => {
+  const all = (await get<Page>("/v1/sites?limit=100")).body.items;
+  const singles = await Promise.all(all.map(async (s) => (await get<SiteDetail>(`/v1/sites/${s.id}`)).body));
+
+  // One page with every site (iznik-han and han-a share a medium), then small pages across the keyset.
+  const full = await get<{ items: SiteDetail[]; nextCursor: string | null }>("/v1/site-details?limit=100");
+  assert.equal(full.body.nextCursor, null);
+  assert.deepEqual(full.body.items, singles);
+
+  const paged: SiteDetail[] = [];
+  let cursor: string | null = null;
+  for (let guard = 0; guard < 20 && (guard === 0 || cursor); guard++) {
+    const page: { body: { items: SiteDetail[]; nextCursor: string | null } } = await get(
+      `/v1/site-details?limit=3${cursor ? `&cursor=${cursor}` : ""}`,
+    );
+    paged.push(...page.body.items);
+    cursor = page.body.nextCursor;
+  }
+  assert.deepEqual(paged, singles);
+  assert.ok(!paged.some((s) => s.id === "taslak"));
+});
+
 test("loading the same catalog twice creates no duplicates", async () => {
   await loadCatalog(app.deps.db, { sites, routes: [route("sirali", ["iznik-han", "carsi-hamami", "han-a", "taslak"])] });
   const list = await get<Page>("/v1/sites?limit=100");

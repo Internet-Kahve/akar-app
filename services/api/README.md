@@ -132,6 +132,7 @@ Doğrulama: [docs/TESTING.md §7](../../docs/TESTING.md#7-çevrimiçi-test-ortam
 | --- | --- |
 | `GET /v1/sites?query=&kind=&city=&bbox=&category=&period=&has=&near=&sort=&cursor=&limit=` | `{ items, nextCursor }`. `limit` 1–100 (varsayılan 20). `kind` tür kimliği (`site_types`), `category` vakıf rolü kategorisi (`dini`/`su`/`egitim`/`akar`), `period` dönem kimliği, `has=model,audio,history` (3D / ses / gravür; hepsi sağlanmalı), `bbox=minLng,minLat,maxLng,maxLat`, `near=boylam,enlem` + `sort=name\|distance` |
 | `GET /v1/sites/:id` | Özet + `stories` (kart, açı, TR/EN ses), `sections`, `cards`, `historyImages`, `openingCamera`; `media` ve `sources` detayın andığı her şeyi içerir |
+| `GET /v1/site-details?cursor=&limit=` | Yayındaki eserlerin `GET /v1/sites/:id` ile aynı tam detayı, ada göre keyset sayfalama (`limit` 1–100, varsayılan 20); istemci kataloğu eser başına istek atmadan yükler. Sayfa başına sabit sayıda sorgu |
 | `GET /v1/cities` | Şehirler ve yayındaki eser/rota sayıları |
 | `GET /v1/lookups` | Filtre çipleri için tür, kategori ve dönem listeleri |
 | `GET /v1/routes?city=`, `GET /v1/routes/:id` | Rotalar: şehir, rozet (`url` dahil), hesaplanan süre/mesafe, sıralı duraklar (`quizId`, `historyImageId`) |

@@ -49,7 +49,7 @@ Gerekli bağımlılık `null` ise uç `503 SERVICE_UNAVAILABLE` döner, sahte da
 | Fonksiyon | Dosya | İş |
 | --- | --- | --- |
 | `siteDedupeKey`, `slugify`, `siteSearchText`, `siteSortName` | `modules/catalog/service.ts` | Yinelenme anahtarı, kimlik parçası, arama/sıralama alanları |
-| `getPublishedSummaries` | `modules/catalog/service.ts` | Yalnız yayındaki eser özetleri |
+| `getPublishedSummaries`, `getSiteDetails` | `modules/catalog/service.ts` | Yalnız yayındaki eser özetleri; yayındaki eserlerin tam detayı toplu (sabit sorgu sayısı, taslak atlanır) |
 | `listSiteTypeAliases`, `existingSiteKeys`, `insertDraftSites` | `modules/catalog/drafts.ts` | İçe aktarma taslakları |
 | `planImport`, `commitImport`, `formatReport`, `parseCsv` | `modules/ingest/` | İçe aktarma deneme/onay (panel uçları da bunu kullanır) |
 | `playableQuizzes`, `playableQuiz`, `checkQuizAnswer` | `modules/routes/quizzes.ts` | Cevapsız bulmaca ve sunucuda kontrol |
