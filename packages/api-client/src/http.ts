@@ -4,6 +4,7 @@ import {
   type HeritageRoute,
   type HeritageSite,
   type Memory,
+  type Role,
   type SiteKind,
   type SitePhoto,
   type SiteSource,
@@ -162,7 +163,7 @@ interface RouteDto {
 }
 interface MeDto {
   id: string;
-  role: "user" | "editor" | "moderator" | "admin";
+  role: Role;
   displayName: string | null;
 }
 interface PassportDto {
@@ -520,7 +521,11 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   async function send(
     method: string,
     path: string,
-    init: { query?: Record<string, string | number>; body?: unknown } = {},
+    init: {
+      query?: Record<string, string | number>;
+      body?: unknown;
+      cache?: RequestCache;
+    } = {},
   ): Promise<Response> {
     const auth = await token();
     const headers: Record<string, string> = { accept: "application/json" };
@@ -536,6 +541,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       res = await doFetch(`${base}${path}${qs}`, {
         method,
         headers,
+        ...(init.cache && { cache: init.cache }),
         ...(init.body !== undefined && { body: JSON.stringify(init.body) }),
       });
     } catch {
@@ -553,17 +559,26 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const call = async <T>(
     method: string,
     path: string,
-    init?: { query?: Record<string, string | number>; body?: unknown },
+    init?: {
+      query?: Record<string, string | number>;
+      body?: unknown;
+      cache?: RequestCache;
+    },
   ): Promise<T> => {
     const res = await send(method, path, init);
     return (res.status === 204 ? undefined : await res.json()) as T;
   };
-  const pages = async <T>(path: string, query: Record<string, string> = {}) => {
+  const pages = async <T>(
+    path: string,
+    query: Record<string, string> = {},
+    cache?: RequestCache,
+  ) => {
     const out: T[] = [];
     let cursor: string | null = null;
     do {
       const page: Page<T> = await call("GET", path, {
         query: { ...query, limit: 100, ...(cursor && { cursor }) },
+        ...(cache && { cache }),
       });
       out.push(...page.items);
       cursor = page.nextCursor;
@@ -589,12 +604,17 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     return { routes: dtos.map(mapRoute), quizSite, siteQuizzes };
   };
   /** Approved memories of the given sites, all pages; the server takes at most `FEED_SITE_IDS_MAX` ids per request. */
-  const loadFeed = async (siteIds: string[]): Promise<Memory[]> => {
+  const loadFeed = async (
+    siteIds: string[],
+    cache?: RequestCache,
+  ): Promise<Memory[]> => {
     const out: Memory[] = [];
     for (const ids of chunk(siteIds, FEED_SITE_IDS_MAX))
-      for (const m of await pages<FeedMemoryDto>("/v1/memories", {
-        siteIds: ids.join(","),
-      }))
+      for (const m of await pages<FeedMemoryDto>(
+        "/v1/memories",
+        { siteIds: ids.join(",") },
+        cache,
+      ))
         out.push(feedToMemory(m));
     return out;
   };
@@ -645,7 +665,11 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const refreshFeed = async () => {
     const cat = await loadCatalog();
     cat.feedStale = true;
-    cat.feed = await loadFeed(cat.sites.map((s) => s.id));
+    // Revalidate: the feed is publicly cached (`max-age=60`) and this runs right after a write.
+    cat.feed = await loadFeed(
+      cat.sites.map((s) => s.id),
+      "no-cache",
+    );
     cat.feedStale = false;
   };
   const refreshRoutes = async () => {
@@ -799,6 +823,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       version: 1,
       sites: cat.sites,
       memories: user.memories,
+      role: user.role,
       ...(user.signedIn &&
         (user.role === "moderator" || user.role === "admin") && {
           moderationQueue: user.queue,
@@ -1100,6 +1125,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           },
         );
         // The decision may add a memory to the public feed or take one out of it.
+        await refreshFeed();
+        return true;
+      case "delete-memory":
+      case "admin-delete-memory":
+        await call(
+          "DELETE",
+          `${command.type === "delete-memory" ? "/v1/me/memories" : "/v1/admin/memories"}/${encodeURIComponent(command.id)}`,
+        );
+        // The memory leaves the public feed; the points are re-read with the user.
         await refreshFeed();
         return true;
       case "site":

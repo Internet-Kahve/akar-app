@@ -12,10 +12,17 @@ import {
   Shield,
   RotateCcw,
 } from "lucide-react";
-import type { Command, HeritageSite, Snapshot } from "@akar/domain";
+import {
+  memoryPermissions,
+  type Command,
+  type HeritageSite,
+  type Role,
+  type Snapshot,
+} from "@akar/domain";
 import { Modal, Notice, Tag } from "./ui";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
+import { MemoryActions } from "./memory-actions";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -25,6 +32,7 @@ export function Profile({
   experimental,
   onExperimentalChange,
   auth,
+  commit,
 }: {
   state: Snapshot;
   onSite: (id: string) => void;
@@ -32,6 +40,7 @@ export function Profile({
   onReset: () => void;
   experimental: boolean;
   onExperimentalChange: (enabled: boolean) => void;
+  commit: Commit;
   /** Present only when connected to the real API; `email` is `null` for a guest. */
   auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void };
 }) {
@@ -238,6 +247,19 @@ export function Profile({
                     </strong>
                     <p>{m.text}</p>
                     {m.reason && <small className="error">{m.reason}</small>}
+                    <div className="memory-actions">
+                      {/* Paylaşımlarım is the author's own list: only "Sil", whatever the role. */}
+                      <MemoryActions
+                        memory={m}
+                        siteName={
+                          state.sites.find((s) => s.id === m.siteId)?.name ??
+                          "Eser"
+                        }
+                        role="user"
+                        own
+                        commit={commit}
+                      />
+                    </div>
                   </div>
                   <Tag tone={m.status === "approved" ? "success" : "muted"}>
                     {m.status === "pending"
@@ -255,8 +277,17 @@ export function Profile({
     </main>
   );
 }
-export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
+export function Admin({
+  state,
+  commit,
+  role,
+}: {
+  state: Snapshot;
+  commit: Commit;
+  role: Role;
+}) {
   const queue = state.moderationQueue ?? state.memories;
+  const ownIds = new Set(state.memories.map((m) => m.id));
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [tab, setTab] = useState<
       "sites" | "memories" | "routes" | "photos" | "import"
@@ -473,53 +504,77 @@ export function Admin({ state, commit }: { state: Snapshot; commit: Commit }) {
               ) : (
                 queue
                   .filter((m) => m.status === filter)
-                  .map((m) => (
-                    <div className="card moderation-card" key={m.id}>
-                      {m.photo && (
-                        <img
-                          className="memory-photo"
-                          src={m.photo}
-                          alt="Ziyaretçi katkısı"
-                        />
-                      )}
-                      <div className="grow">
-                        <small>
-                          {state.sites.find((s) => s.id === m.siteId)?.name} ·{" "}
-                          {m.author}
-                        </small>
-                        <p>{m.text}</p>
-                        <Tag>{m.photo ? "Fotoğraf + anı" : "Anı"}</Tag>
-                        {m.reason && <p className="error">{m.reason}</p>}
-                      </div>
-                      {m.status === "pending" && (
-                        <div className="row">
-                          <button
-                            className="btn"
-                            onClick={() =>
-                              void commit({
-                                type: "moderate",
-                                id: m.id,
-                                status: "approved",
-                              })
-                            }
-                          >
-                            <Check size={15} />
-                            Onayla
-                          </button>
-                          <button
-                            className="btn secondary"
-                            onClick={() => {
-                              setReject(m.id);
-                              setReason("");
-                            }}
-                          >
-                            <X size={15} />
-                            Reddet
-                          </button>
+                  .map((m) => {
+                    const own = ownIds.has(m.id);
+                    const can = memoryPermissions(role, m.status, own);
+                    return (
+                      <div className="card moderation-card" key={m.id}>
+                        {m.photo && (
+                          <img
+                            className="memory-photo"
+                            src={m.photo}
+                            alt="Ziyaretçi katkısı"
+                          />
+                        )}
+                        <div className="grow">
+                          <small>
+                            {state.sites.find((s) => s.id === m.siteId)?.name} ·{" "}
+                            {m.author}
+                          </small>
+                          <p>{m.text}</p>
+                          <Tag>{m.photo ? "Fotoğraf + anı" : "Sadece anı"}</Tag>
+                          {m.reason && <p className="error">{m.reason}</p>}
                         </div>
-                      )}
-                    </div>
-                  ))
+                        <div className="moderation-actions">
+                          <div className="row">
+                            {can.decide && (
+                              <>
+                                <button
+                                  className="btn"
+                                  onClick={() =>
+                                    void commit({
+                                      type: "moderate",
+                                      id: m.id,
+                                      status: "approved",
+                                    })
+                                  }
+                                >
+                                  <Check size={15} />
+                                  Onayla
+                                </button>
+                                <button
+                                  className="btn secondary"
+                                  onClick={() => {
+                                    setReject(m.id);
+                                    setReason("");
+                                  }}
+                                >
+                                  <X size={15} />
+                                  Reddet
+                                </button>
+                              </>
+                            )}
+                            <MemoryActions
+                              variant="button"
+                              memory={m}
+                              siteName={
+                                state.sites.find((s) => s.id === m.siteId)
+                                  ?.name ?? "Eser"
+                              }
+                              role={role}
+                              own={own}
+                              commit={commit}
+                            />
+                          </div>
+                          {can.takedown && (
+                            <small>
+                              Yayından kaldırırken ret nedeni seçmek zorunlu
+                            </small>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
               )}
             </>
           )}

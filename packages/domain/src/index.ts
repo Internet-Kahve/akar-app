@@ -80,6 +80,9 @@ export interface HeritageRoute {
   nameEn?: string;
   status?: "draft" | "published";
 }
+export type Role = "user" | "editor" | "moderator" | "admin";
+/** Points an approved memory earns and loses again when it is removed; the API's `memory.approved` ledger value. */
+export const MEMORY_POINTS = 25;
 export interface Memory {
   id: string;
   siteId: string;
@@ -107,6 +110,8 @@ export interface Snapshot {
   points: number;
   name: string;
   catalogRoutes?: HeritageRoute[];
+  /** Role of the signed-in user (`user` for a guest); absent in the demo, where the visitor runs the whole panel. */
+  role?: Role;
 }
 export type Command =
   | { type: "save"; siteId: string }
@@ -114,6 +119,8 @@ export type Command =
   | { type: "visit" | "read"; siteId: string }
   | { type: "set-route"; siteIds: string[] }
   | { type: "memory"; memory: Memory }
+  | { type: "delete-memory"; id: string }
+  | { type: "admin-delete-memory"; id: string }
   | {
       type: "moderate";
       id: string;
@@ -235,6 +242,28 @@ export function approvedMemories(state: Snapshot, siteId: string): Memory[] {
     return true;
   });
 }
+/**
+ * What a user may do with one memory in the UI. The server enforces the same rules (§11.17, §11.18);
+ * the UI only hides what would fail.
+ */
+export function memoryPermissions(
+  role: Role,
+  status: Memory["status"],
+  own: boolean,
+) {
+  // A moderator never decides their own memory (403); an admin may.
+  const decides = role === "admin" || (role === "moderator" && !own);
+  return {
+    /** "Sil": the author deletes their own memory in any status. */
+    remove: own,
+    /** Approve or reject a pending memory. */
+    decide: decides && status === "pending",
+    /** "Yayından kaldır": reject a published memory with a reason. */
+    takedown: decides && status === "approved",
+    /** "Kalıcı sil": an admin deletes somebody else's published memory; own memories use "Sil". */
+    purge: role === "admin" && !own && status === "approved",
+  };
+}
 export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
   const next = structuredClone(state);
   if (
@@ -345,12 +374,30 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
     case "moderate": {
       const memory = next.memories.find((m) => m.id === command.id);
       if (!memory) throw new Error("Katkı bulunamadı.");
-      if (memory.status !== "pending") break;
-      if (command.status === "rejected" && !command.reason?.trim())
+      // Rejecting an approved memory is a takedown; any other decision on a decided memory changes nothing.
+      const takedown =
+        memory.status === "approved" && command.status === "rejected";
+      if (memory.status !== "pending" && !takedown) break;
+      const reason = command.reason?.trim();
+      if (command.status === "rejected" && !reason)
         throw new Error("Ret nedeni zorunludur.");
+      if (takedown) next.points = Math.max(0, next.points - MEMORY_POINTS);
       memory.status = command.status;
-      memory.reason = command.reason;
-      if (command.status === "approved") next.points += 25;
+      memory.reason = command.status === "rejected" ? reason : undefined;
+      if (command.status === "approved") next.points += MEMORY_POINTS;
+      // A rejection or takedown deletes the photo; the text stays for the record.
+      else delete memory.photo;
+      break;
+    }
+    case "delete-memory":
+    case "admin-delete-memory": {
+      // The demo has one local list, so the author's and the admin's delete are the same.
+      const at = next.memories.findIndex((m) => m.id === command.id);
+      const memory = next.memories[at];
+      if (!memory) throw new Error("Anı bulunamadı.");
+      if (memory.status === "approved")
+        next.points = Math.max(0, next.points - MEMORY_POINTS);
+      next.memories.splice(at, 1);
       break;
     }
     case "site":

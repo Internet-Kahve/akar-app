@@ -238,6 +238,7 @@ Karar: `apps/web` ya da `packages/*` (`@akar/domain`, `@akar/api-client`; ön y�
 Neden: backend Weissman ve backend sorumlusunun, ön yüz Tamer'in alanı. §11.8'deki "her PR'ı Tamer inceler" ifadesi, ön yüz koduna dokunan P5 işi için konmuştu; backend PR'larını bekletmek gereksiz.
 Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: bu kayıt; istenirse `main` için GitHub dal koruması (CODEOWNERS ile `apps/web`, `packages/*` → Tamer) eklenebilir.
+§11.20 ile güncellendi.
 
 **11.11 Başkalarının onaylı anıları tek akıştan okunur.**
 Karar: `GET /v1/memories` herkese açık, önbellekli bir anı akışıdır: yayındaki eserlerin onaylı anıları en yeniden eskiye, keyset sayfalama; isteğe bağlı `siteIds` (en çok 100) ve `city` ile daraltılır. Taslak ya da bilinmeyen eser kimliği 404 değil boş sonuç verir (akış, eser başına uçtaki gibi tek kayıt sormaz; boş sonuç taslağın varlığını sızdırmaz). Yeni tablo ya da migration yok; mevcut `memories_status_created_idx` kullanılır. İstemci bağlantısı P5.1b'de yapılır.
@@ -289,3 +290,9 @@ Karar: Yalnız `user` rolü için (personel muaf): aynı anda en çok 3 bekleyen
 Neden: `createMemory` sınırsızdı ve açık yükleme sınırı (10) yalnız açık biletleri sayıyordu; tek hesap dakikada yüzlerce 5 MB fotoğraf tamamlayıp Supabase Free depolamasını (1 GB) dakikalar içinde doldurabilirdi, anıya bağlanmayan fotoğraflar hiç temizlenmiyordu.
 Karar veren / tarih: Weissman, 22 Eki.
 Nasıl değiştirilir: sabitler `moderation/service.ts` (`PENDING_QUOTA`, `DAILY_MEMORY_QUOTA`) ve `media/service.ts` (`DAILY_UPLOAD_QUOTA`, `UNATTACHED_PHOTO_HOURS`).
+
+**11.20 PR incelemesi: Tamer'e her zaman bilgi, küçük ön yüz işlerinde onay Weissman'ın kararıyla atlanabilir.**
+Karar: `apps/web`/`packages/*` PR'ında geliştirici PR açmadan önce Weissman'a sorar: Tamer onayı mı, yalnız bilgi mi. Küçük/temel değişikliklerde Weissman onayı atlayabilir; her durumda Tamer PR'a inceleyici olarak eklenir ve açıklamada etiketlenir; "yalnız bilgi" PR'ında açıklama onay beklenmediğini yazar, birleştirmeye Weissman karar verir. §11.10'u bu kadarıyla değiştirir.
+Neden: küçük ön yüz işleri Tamer'i beklemesin, Tamer yine her şeyden haberdar olsun.
+Karar veren / tarih: Weissman, 22 Eki.
+Nasıl değiştirilir: bu kayıt; GitHub dal koruması şu an yok.
