@@ -1,7 +1,8 @@
 #!/bin/bash
-# AKAR · Redmi 9T test sayfasını yerel ağda sunar (telefon bilgisayarla aynı Wi-Fi'de olmalı).
+# AKAR · Redmi 9T prototipini (index.html) ve performans testini (test.html) yerel ağda sunar (telefon bilgisayarla aynı Wi-Fi'de olmalı).
 # Kullanım:  bash docs/documents-context/design/test-redmi9t/sunucu.sh [port]
-# Yalnız test sayfası, harita stili ve 14 GLB (7 normal + 7 sunum) paylaşılır; repodaki başka dosyalar paylaşılmaz.
+# Yalnız bu klasörün sayfaları, harita stili, 14 GLB (7 normal + 7 sunum) ve hazirla.py'nin ürettiği veri.json + küçültülmüş
+# eser fotoğrafları paylaşılır; repodaki başka dosyalar paylaşılmaz.
 set -e
 cd "$(dirname "$0")"
 DC="$(cd ../.. && pwd)"                      # docs/documents-context
@@ -13,7 +14,9 @@ if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 mkdir "$TMP/modeller"
-ln -s "$PWD/index.html" "$TMP/index.html"
+for f in index.html test.html app.js app.css; do ln -s "$PWD/$f" "$TMP/$f"; done
+echo "İçerik hazırlanıyor (ilk çalıştırmada fotoğraflar küçültülür)…"
+python3 "$PWD/hazirla.py" "$TMP"
 ln -s "$DC/design/harita/akar-style.json" "$TMP/akar-style.json"
 for yol in \
   ulu-cami/3d/export/ulu-cami_v26 \
@@ -21,7 +24,7 @@ for yol in \
   koza-han/3d/export/koza-han_v14 \
   orhan-bey-kulliyesi/3d/export/orhan-bey-camii_v07 \
   orhan-bey-hamami/3d/export/orhan-bey-hamami_v05 \
-  emir-han/3d/export/emir-hani_v04 \
+  emir-han/3d/export/emir-hani_v05 \
   orhan-gazi-turbesi/3d/export/orhan-gazi-turbesi_v02; do
   for ek in "" "_sunum"; do
     f="$DC/eserler/$yol$ek.glb"
@@ -30,7 +33,7 @@ for yol in \
 done
 IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo 'BILGISAYAR_IP')"
 echo
-echo "Telefonda aç:   http://$IP:$PORT"
+echo "Telefonda aç:   http://$IP:$PORT        (performans testi: /test.html)"
 echo "Bu bilgisayarda: http://localhost:$PORT"
 echo "(durdurmak için Ctrl+C)"
 echo
