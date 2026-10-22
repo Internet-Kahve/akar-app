@@ -8,6 +8,7 @@ import {
   createCard,
   createSite,
   getAdminSite,
+  listAdminSiteDetails,
   listAdminSites,
   listCards,
   publishSite,
@@ -29,6 +30,7 @@ import {
   AdminCardListResponse,
   AdminListSitesQuery,
   AdminSiteDetail,
+  AdminSiteDetailListResponse,
   AdminSiteListResponse,
   CreateCardBody,
   CreateSiteBody,
@@ -83,6 +85,21 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => listAdminSites(app.deps.db, req.query),
+  );
+
+  app.get(
+    "/v1/admin/site-details",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary:
+          "Panel eser listesinin toplu tam görünümü: /v1/admin/sites ile aynı süzgeç, sıra ve imleç; her öğe GET /v1/admin/sites/:id gövdesiyle aynıdır (sayfa başına sabit sorgu)",
+        querystring: AdminListSitesQuery,
+        response: { 200: AdminSiteDetailListResponse },
+      },
+    },
+    async (req) => listAdminSiteDetails(app.deps.db, req.query),
   );
 
   app.get(

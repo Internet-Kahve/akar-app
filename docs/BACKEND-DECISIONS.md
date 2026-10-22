@@ -302,3 +302,9 @@ Karar: `GET /v1/admin/health` (moderatör ve admin, `no-store`). `pendingStale`:
 Neden: Supabase Free depolaması 1 GB; fotoğraflar anı onaylanınca kalıcıdır ve bekleyen anılar moderasyon olmadan birikebilir. Depolama dolunca yüklemeler durur; bunu panelde önceden görmek gerekir. Depolama kotası ve fatura kararı admin'in işidir, bu yüzden moderatör yalnız bekleyen uyarısını görür.
 Karar veren / tarih: Weissman, 22 Eki.
 Nasıl değiştirilir: `STORAGE_QUOTA_MB` ortam değişkeni ve bu kayıt; eşikler `services/api/src/modules/admin-health/service.ts` (`PENDING_STALE_HOURS`, `STORAGE_WARN_PERCENT`, `STORAGE_CRITICAL_PERCENT`).
+
+**11.22 Yönetim paneli taslakları toplu okur: `GET /v1/admin/site-details`.**
+Karar: `GET /v1/admin/site-details` (`editor` ve `admin`, `no-store`) taslaklar dahil eserlerin düzenlenebilir tam görünümünü (`AdminSiteDetail`) toplu verir, `{ items, nextCursor }`, `limit` 1–100 (varsayılan 20). Süzgeçler (`status`, `city`, `query`), sıra (ad, sonra kimlik) ve imleç `GET /v1/admin/sites` ile aynıdır: iki uçta aynı sayfa aynı kimlikleri taşır. Her öğe `GET /v1/admin/sites/:id` gövdesine eşittir; ikisi de aynı toplu yükleyiciyi kullanır (`getAdminSites`), sayfa başına sorgu sayısı sabittir.
+Neden: panel API kipinde yalnız yayındaki eserleri (`GET /v1/site-details`) görüyordu; taslakları listeleyip yayınlayamıyordu. Taslakları tek tek `GET /v1/admin/sites/:id` ile okumak 243 taslak için yaklaşık 240 istek olurdu; toplu uçla sayfa başına 100 eserle 3 istek yeter.
+Karar veren / tarih: Weissman, 22 Eki.
+Nasıl değiştirilir: bu kayıt; sayfa sınırı `PageQuery`'dedir (`services/api/src/platform/pagination.ts`), uç `services/api/src/modules/admin-catalog/sites-routes.ts` içindedir.
