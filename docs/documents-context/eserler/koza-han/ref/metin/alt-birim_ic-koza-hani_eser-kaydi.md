@@ -150,7 +150,7 @@ Tur başına tek konu. Kütle kabul edilince dondur, sonra detay ve stil.
 Stil bölümündeki vurgu ve doku yerleri dışında ekstra süs ekleme.
 Kaynaklar çelişiyorsa yan yana göster ve sor.
 ## Kontrol (Claude doldurur, sen bakarsın)
-Toplam üçgen ≤ 30 000, draw call ≤ 50 (B kademesi hedefi ≤ 15 000)
+Ayrı bütçesi yok: Koza Han uygulama GLB'sinin parçası; toplam ≤ 40 000 üçgen, ≤ 60 draw call, ≤ 1 MB (`eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md` §4)
 Açık kenar yok, backface (kırmızı) oranı 0, çakışma yok
 Kuzey ortografik + havadan + vurgu parçasına yakın render, referans fotoğrafla yan yana
 Ana vurgu (seviye 1) ilk bakışta okunuyor; ikincil vurgular onu bastırmıyor

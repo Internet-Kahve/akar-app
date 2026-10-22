@@ -130,7 +130,7 @@ Uygulamada vurgu ve kamera hedefi bu adlara bağlı. Standart adlar önerilir; e
 6. Kaynaklar çelişiyorsa yan yana göster ve sor.
 
 ## Kontrol (Claude doldurur, sen bakarsın)
-- [ ] Toplam üçgen ≤ 30 000, draw call ≤ 50 (B kademesi hedefi ≤ 15 000)
+- [ ] Uygulama GLB'si: toplam üçgen ≤ 40 000, draw call ≤ 60, dosya ≤ 1 MB (B kademesi hedefi ≤ 15 000; bütçe: `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md` §4)
 - [ ] Açık kenar yok, backface (kırmızı) oranı 0, çakışma yok
 - [ ] Kuzey ortografik + havadan + vurgu parçasına yakın render, referans fotoğrafla yan yana
 - [ ] Ana vurgu (seviye 1) ilk bakışta okunuyor; ikincil vurgular onu bastırmıyor

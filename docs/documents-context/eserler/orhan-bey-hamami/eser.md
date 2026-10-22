@@ -56,7 +56,7 @@ W Aydın 2017 = Nur Gül Aydın, *Bursa Orhan Gazi Külliyesi*, Uludağ Üniv. Y
 | Kesit kotları | 12,75 (büyük kubbe iç yüksekliği), 6,88, 4,43, 3,62, 4,14 m | P Aydın 2017 PDF 98 (`ref/plan/aydin2017_pdf098_plan13_kesit_kotlu.jpg`) | Çizer belirsiz: listede Çetintaş, altyazıda Ayverdi. Model kesitiyle karşılaştır |
 | Kazı | 1943'te başladı (Çetintaş); molozda XV. yy çini, XVI. yy tabak-fincan, Yeşil Cami tipi çini, çubuk lüleleri | W Aydın 2017 PDF 67–68 | Hikâye için |
 | Yangın yılı | «1957 yangını» | W Aydın 2017 PDF 67–68 | E PDF 106 «1958»; çelişki |
-| Vakfiye | 1360 (761) vakfiyesinde «Bıçakçılar Hamamı» vakfedilenler arasında; zaviye misafirlerini üç gün hamama götürmek mütevellinin görevi | W Aydın 2017 PDF 73–74 | Akar → hayrat bağı: `../orhan-gazi-imareti/` |
+| Vakfiye | 1360 (761) vakfiyesinde «Bıçakçılar Hamamı» vakfedilenler arasında; zaviye misafirlerini üç gün hamama götürmek mütevellinin görevi | W Aydın 2017 PDF 73–74 | Akar → hayrat bağı: `../aday-eserler/orhan-gazi-imareti/` |
 | Mülkiyet | kadınlar kısmı VGM'de; erkekler kısmı 1943'e kadar Gemlikli Nuri Paşa mirasçılarında, açık artırmayla VGM'ye geçti | W Aydın 2017 PDF 71–72 (Çetintaş s.30) | |
 
 Görseller: Plan 1 vaziyet (PDF 87), Plan 10–17 plan ve kesitler (PDF 95–102), Fotoğraf 33–35 (PDF 178–180). Tümü `ref/kaynak_dizini.json`'da.

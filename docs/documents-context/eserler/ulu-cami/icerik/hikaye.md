@@ -17,7 +17,7 @@ Hero eser: 12 cümle (~1,5–2 dk). Her cümle tek bilgi, en fazla ~20 kelime.
 | 9 | Ahşap minber, çivi ve tutkal kullanılmadan birbirine geçen parçalarla yapılmıştır. | 05_minber.jpg | evet | — | E cilt-1 PDF s.27 | Doğrulanmış |
 | 10 | Caminin arsası Orhan Vakfı'na aitti; Yıldırım Bayezid vakfa karşılığında başka bir arazi verdi. | 09_kubbeler-minare.jpg | hayır | — | E cilt-1 PDF s.25, s.33 | Doğrulanmış |
 | 11 | Yıldırım Bayezid, Ulucami'ye gelir sağlamak için yakınına Bedesten'i de yaptırdı. | 13_akar-bedesten-tepeden.jpg | evet | — | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |
-| 12 | Sonraki durak, Ulucami ile Orhan Camii arasındaki Koza Han. | 14_sonraki-durak-koza-han.jpg | evet | — | E cilt-2 PDF s.8 | Doğrulanmış |
+| 12 | Sonraki durak, Ulucami'ye gelir sağlayan Bedesten. | 14_sonraki-durak-bedesten.jpg | evet | — | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |
 
 ## Notlar
 
@@ -25,12 +25,12 @@ Hero eser: 12 cümle (~1,5–2 dk). Her cümle tek bilgi, en fazla ~20 kelime.
 - **Cümle 3:** Kitap mimar için Ali Neccâr, Hacı İvaz ve Konyalı Hacı Alâaddin adlarını «düşünülmektedir» diye verir. Hikâyede yalnız «bilinmiyor» bilgisi kullanıldı; adlar `eser-hakkinda.md`'de "Tarihsel çıkarım" paragrafında.
 - **Cümle 6 (20 Ekim 2026'da yeniden yazıldı):** Eski cümle «Ortadaki kubbenin üstü açıktır» idi. Tepeden fotoğrafta (`04`) orta kubbenin tepesi bugün camlı, kaburgalı bir örtüyle kapalı görünüyor. Kitap özgün tasarımı anlatıyor («şadırvan kubbesinin üstü açık bırakılarak», s.31; «kubbenin merkezinin açık bırakılması», s.33); Evliya Çelebi'nin zamanında da üstü pirinç tel ağla örtülüymüş (s.33). Cümle bu yüzden tasarım anlatımına («açık bırakıldı») çevrildi. Bugünkü cam örtü için envanterde kaynak yok, cümleye girmedi.
 - **Cümle 7:** Havuzun kenar sayısı kitapta iki farklı yazılmış (PDF s.25 «onikigen», PDF s.33 «on altı kenarlı»). Bu yüzden cümlede sayı verilmedi.
-- **Cümle 12:** Mesafe ya da yürüme süresi için kaynak yok, yazılmadı. Fotoğraf 20 Ekim 2026'da avlu şadırvanından Koza Han'a çevrildi: doğudan havadan çekilmiş karede önde Orhan Camii, ortada Koza Han, arkada Ulucami görünüyor, yani cümlenin anlattığı konum. Kart başlığı «Koza Han, havadan» (fotoğraf Koza Han'ın kendi galerisinde de `09_havadan-aks.jpg` adıyla var). Kart "evet": model Koza Han'ı göstermiyor.
+- **Cümle 12 (22 Ekim 2026):** Rota 4 durak oldu (Ulucami → Bedesten → Koza Hanı → Orhan Bey Camii); sonraki durak artık Bedesten. Eski cümle «Sonraki durak, Ulucami ile Orhan Camii arasındaki Koza Han.» Bedesten'in sonraki durak cümlesine taşındı. Mesafe ya da yürüme süresi için kaynak yok, yazılmadı. Fotoğraf `14_sonraki-durak-bedesten.jpg` = Bedesten'in kapak fotoğrafı (`yildirim-bayezid-bedesteni/icerik/foto/01_dis-havadan-ulucami-ile.jpg`); kart başlığı «Yıldırım Bayezid Bedesteni». Kart "evet": model Bedesten'i göstermiyor.
 - **Tam_Baglam §10'daki eski cümleler:**
   - "Osmanlı'nın dördüncü padişahıdır": envanterde bulunamadı, çıkarıldı.
   - "Bedestenin geliri Ulucami'nin bakımına ayrılırdı": kitap «Ulucami'ye gelir sağlamak amacıyla» diyor; «bakım» ayrıntısı yok, cümle 11 kitaptaki ifadeye göre yeniden yazıldı.
   - "Ortadaki şadırvanın kubbesi açıktır": cümle 6 ve 7 olarak kaynağıyla bölündü.
-- **Vurgu adları** doğrudan `3d/export/ulu-cami_v22.glb` içindeki nesne adlarından alındı; üçü de (`Tac_Kapi`, `Kubbeler_19`, `Sadirvan_Kubbe`) güncel `ulu-cami_v25.glb`'de var (20 Ekim 2026) (`eser.md` tablosundaki `Kubbeler` modelde `Kubbeler_19` olarak geçiyor; açık orta kubbe ayrı nesne: `Sadirvan_Kubbe`). İç mekân cümlelerinde (8, 9) model parçası yok; kart fotoğrafı gösterir. Cümle 10 (arsa) için anlamlı bir parça olmadığından vurgu boş.
+- **Vurgu adları** doğrudan `3d/export/ulu-cami_v22.glb` içindeki nesne adlarından alındı; üçü de (`Tac_Kapi`, `Kubbeler_19`, `Sadirvan_Kubbe`) güncel `ulu-cami_v26.glb`'de var (22 Ekim 2026) (`eser.md` tablosundaki `Kubbeler` modelde `Kubbeler_19` olarak geçiyor; açık orta kubbe ayrı nesne: `Sadirvan_Kubbe`). İç mekân cümlelerinde (8, 9) model parçası yok; kart fotoğrafı gösterir. Cümle 10 (arsa) için anlamlı bir parça olmadığından vurgu boş.
 
 ## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
 
@@ -48,6 +48,6 @@ Görev dosyasında `hikaye.md` tablosunda Açı sütunu yok; açı panelde model
 | 8–9 | — | (6'da kalır) | | | İç mekân kartları |
 | 10 | Merkez | 135° (güneydoğu) | 35° | bütün yapı | Arsa / vakıf: yapının tamamı |
 | 11 | Merkez | 10° (kuzey) | 35° | bütün yapı | Bedesten'e bakan kuzey cephe; kart Bedesten'i gösterir |
-| 12 | Merkez | 0° | 30° | 1'e dönüş | Kapanış; kart Koza Han'ı gösterir |
+| 12 | Merkez | (11'de kalır) | | | Kapanış; Bedesten'e bakan kuzey cephe, kart Bedesten'i gösterir |
 
 Yönler OSM merkezlerinden (`veri/bursa/osm_secilen.csv`, 20 Ekim 2026): Bedesten, Ulucami'nin yaklaşık 140 m kuzeyinde (biraz doğuya kayık); Koza Han yaklaşık 160 m doğu-kuzeydoğusunda. Eski tablodaki «Bedesten doğuda» tahmini yanlıştı. Hikâye metninde yön bilgisi verilmez.

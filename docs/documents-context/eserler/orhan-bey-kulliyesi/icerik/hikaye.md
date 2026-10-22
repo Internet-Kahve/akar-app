@@ -1,6 +1,6 @@
 # Orhan Bey Camii · hikâye
 
-19 Ekim 2026. Kaynak önceliği: Bursa Vakıf Eserleri Envanteri (Vakıf Katılım'ın sağladığı kaynak). `E cilt-N PDF s.X` = envanter kitabının **PDF sayfası**. Güven sütunu **öneridir**; son kararı Muhammed verir. Vurgu adları `3d/export/orhan-bey-camii_v06.glb` içindeki nesne adlarıdır (20 Ekim 2026'da güncellendi). Seçim kuralları: `../../../ICERIK_YONTEMI.md`.
+19 Ekim 2026. Kaynak önceliği: Bursa Vakıf Eserleri Envanteri (Vakıf Katılım'ın sağladığı kaynak). `E cilt-N PDF s.X` = envanter kitabının **PDF sayfası**. Güven sütunu **öneridir**; son kararı Muhammed verir. Vurgu adları `3d/export/orhan-bey-camii_v07.glb` içindeki nesne adlarıdır (22 Ekim 2026'da kontrol edildi). Seçim kuralları: `../../../ICERIK_YONTEMI.md`.
 
 Rota eseri: 8 cümle (~1 dk). Klasör adı `orhan-bey-kulliyesi`; içerik caminindir. Hamam ve Emir Hanı kendi klasörlerinde.
 
@@ -21,7 +21,7 @@ Rota eseri: 8 cümle (~1 dk). Klasör adı `orhan-bey-kulliyesi`; içerik camini
 - **Cümle 5:** Cümle kapısı üzerindeki onarım kitabesi H. 740 / 1339-40 ile H. 820 / 1417 tarihlerini verir (C1 s.97). Kart fotoğrafı kapıyı gösterir.
 - **Cümle 7:** Kitap «selatin camileri» der; cümlede «sultan camileri» olarak sadeleştirildi. «Muhteşem» gibi övgüler alınmadı.
 - **Cümle 8:** Şadırvan v06'da modele eklendi (`Sadirvan`); vurgu bu parçaya bağlandı. Fotoğraf modelin de gösterdiği dış görünüş olduğu için kart «hayır» yapıldı (20 Ekim 2026).
-- **Vurgu adları** `orhan-bey-camii_v06.glb`'den: `Kubbe_Ana`, `Cami_SonCemaat`, `Revak_Kemerler`, `Cami_Mihrap`, `Sadirvan`. İlk dördü v05'teki adlarla aynı.
+- **Vurgu adları** `orhan-bey-camii_v06.glb`'den (v07'de aynı, 22 Ekim 2026): `Kubbe_Ana`, `Cami_SonCemaat`, `Revak_Kemerler`, `Cami_Mihrap`, `Sadirvan`. İlk dördü v05'teki adlarla aynı.
 
 ## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
 

@@ -20,5 +20,5 @@ Hamam bir akardır: Nisan 1360 tarihli vakfiyeyle Bıçakçılar Hamamı (Orhan 
 
 ## Kaynak notu (panele girmez)
 
-- Erkekler soğukluğu için kitapta iki ölçü var: PDF s.106 önce «11.95 × 11.86 m ölçülerindeki soğukluk», sonra «6.60 × 6.45 m ölçülerindeki kare planlı soğukluk» (özgün plan anlatımı). Metinde 11,95 × 11,86 kullanıldı; 3D ölçüleri `eser.md`'den.
+- Erkekler soğukluğu 11,95 × 11,86 m (PDF s.106). Aynı sayfadaki «Orijinal planında ılıklık bölümüne geçiş, 6.60 × 6.45 m ölçülerindeki kare planlı soğukluk bölümünün güney duvarındaki bir kapıdan sağlanmaktaydı» cümlesi Türkçede ölçüyü soğukluğa bağlıyor gibi, ama İngilizcesi ölçünün ılıklığa ait olduğunu açıkça söylüyor: «a door on the south wall of the frigidarium provided access to the square tepidarium measuring 6.60 × 6.45 m». Çelişki yok (22 Ekim 2026'da düzeltildi; önceki not bunu iki soğukluk ölçüsü sanmıştı). `eser.md` ve model de 6,60 × 6,45'i ılıklık olarak kullanıyor.
 - PDF s.104 Koza Han'ın 1505'te yapıldığını yazıyor; Koza Han maddesi (C2 s.8) 1491 der. Bu bilgi metne alınmadı.

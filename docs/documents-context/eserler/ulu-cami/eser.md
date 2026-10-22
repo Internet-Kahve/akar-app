@@ -1,4 +1,4 @@
-> 19 Ekim 2026: v23 tamamlandı (ayrıntı `3d/README.md`). Kaynak türevleri `ref/foto/`, `ref/plan/`, `ref/metin/` altında, kayıtları `ref/kaynak_dizini.json` içinde. Minare ve saçak rölöve değerleri (P, Kul tezi VGM çizimleri) §1 ve §5 tablolarına işlendi; v23'te uygulandı.
+> 19 Ekim 2026: v23 tamamlandı; güncel sürüm v26 (22 Ekim 2026, ayrıntı `3d/README.md`). Kaynak türevleri `ref/foto/`, `ref/plan/`, `ref/metin/` altında, kayıtları `ref/kaynak_dizini.json` içinde. Minare ve saçak rölöve değerleri (P, Kul tezi VGM çizimleri) §1 ve §5 tablolarına işlendi; v23'te uygulandı.
 
 # Cami (ve mescit) · eser şablonu
 Cami ve mescitler için tek şablon. Mescit küçük bir camidir; olmayan bölümleri boş bırak.
@@ -235,7 +235,7 @@ Tur başına tek konu. Kütle kabul edilince dondur, sonra detay ve stil.
 Stil bölümündeki vurgu ve doku yerleri dışında ekstra süs ekleme.
 Kaynaklar çelişiyorsa yan yana göster ve sor.
 ## Kontrol (Claude doldurur, sen bakarsın)
-Toplam üçgen ≤ 30 000, draw call ≤ 50 (B kademesi hedefi ≤ 15 000)
+Uygulama GLB'si: toplam üçgen ≤ 40 000, draw call ≤ 60, dosya ≤ 1 MB; **Ulu Cami istisnası** (22 Ekim 2026): v26 değerleri tavan, 87 280 üçgen, 91 draw call, 0,83 MB; artırılmaz (`eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md` §4)
 Açık kenar yok, backface (kırmızı) oranı 0, çakışma yok
 Kuzey ortografik + havadan + vurgu parçasına yakın render, referans fotoğrafla yan yana
 Ana vurgu (seviye 1) ilk bakışta okunuyor; ikincil vurgular onu bastırmıyor

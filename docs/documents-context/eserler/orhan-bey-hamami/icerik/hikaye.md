@@ -1,6 +1,6 @@
 # Orhan Bey Hamamı · hikâye
 
-19 Ekim 2026. Kaynak önceliği: Bursa Vakıf Eserleri Envanteri (Vakıf Katılım'ın sağladığı kaynak). `E cilt-N PDF s.X` = envanter kitabının **PDF sayfası**. Güven sütunu **öneridir**; son kararı Muhammed verir. Vurgu adları `3d/export/orhan-bey-hamami_v04.glb` içindeki nesne adlarıdır (20 Ekim 2026'da güncellendi). Seçim kuralları: `../../../ICERIK_YONTEMI.md`.
+19 Ekim 2026. Kaynak önceliği: Bursa Vakıf Eserleri Envanteri (Vakıf Katılım'ın sağladığı kaynak). `E cilt-N PDF s.X` = envanter kitabının **PDF sayfası**. Güven sütunu **öneridir**; son kararı Muhammed verir. Vurgu adları `3d/export/orhan-bey-hamami_v05.glb` içindeki nesne adlarıdır (22 Ekim 2026'da kontrol edildi). Seçim kuralları: `../../../ICERIK_YONTEMI.md`.
 
 20 Ekim 2026 düzeltmesi: Giriş yönü (cümle 1, 4, 6 ve açı tablosu) modelin v03 kararına ve `orhan-bey-hamami_notlar.md` §3.4'e göre düzeltildi; ayrıntı Notlar'da.
 
@@ -24,7 +24,7 @@ Rota eseri: 8 cümle (~1 dk).
 - **Cümle 4:** Fotoğrafta «Eski Aynalı Çarşı» tabelalı giriş görünüyor. Bu girişin yönü kesin değil (bkz. aşağı); başlıkta yön verilmedi.
 - **Cümle 6 (20 Ekim 2026'da yeniden yazıldı):** Eski cümle «Özgün kuzey girişinin üstünde, dikine tuğlalarla örülmüş yuvarlak bir pencere var» idi ve `03_giris-kemer.jpg` ile eşleşmişti. Ama 03'te yuvarlak pencere görünmüyor; yuvarlak pencere yalnız 01'de (güney bloğu) var. Kitap s.106 bu iki fotoğrafı kuzey girişini anlatan metnin yanında basıyor, yönlerini yazmıyor. Kuzeydeki özgün kapı notlara göre Kapalıçarşı'nın örtülü sokağında; arşivde fotoğrafı yok. Bu yüzden cümle, kitaptaki kesin bilgiye (üç giriş, yalnız kuzeydeki özgün) indirildi ve genel tepeden fotoğrafla eşlendi. Kuzey kapısı modelde `Hamam_Detay` içinde, ayrı adı yok; vurgu boş.
 - **Giriş yönü:** Ayrıntı `orhan-bey-hamami_notlar.md` §3.4. Güneydeki alınlıklı blok 1958 sonrası açılan girişlerden (TDV); envanterin «kuzeydeki giriş özgündür» tarifi ayrı, düz cepheli kuzey kapısına ait.
-- **Vurgu adları** `orhan-bey-hamami_v04.glb`'den: `Hamam_Giris`, `Hamam_Sogukluk_Erkek`, `Hamam_Sogukluk_Kadin`, `Kubbe_Sicaklik`. Adlar v02 ile aynı, ama `Hamam_Giris` v02'de kuzeydeydi, v03'ten beri güneydeki alınlıklı blok.
+- **Vurgu adları** `orhan-bey-hamami_v04.glb`'den (v05'te aynı, 22 Ekim 2026): `Hamam_Giris`, `Hamam_Sogukluk_Erkek`, `Hamam_Sogukluk_Kadin`, `Kubbe_Sicaklik`. Adlar v02 ile aynı, ama `Hamam_Giris` v02'de kuzeydeydi, v03'ten beri güneydeki alınlıklı blok.
 
 ## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
 

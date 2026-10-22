@@ -1,6 +1,6 @@
 # Emir Hanı · hikâye
 
-19 Ekim 2026. Kaynak önceliği: Bursa Vakıf Eserleri Envanteri (Vakıf Katılım'ın sağladığı kaynak). `E cilt-N PDF s.X` = envanter kitabının **PDF sayfası**. Güven sütunu **öneridir**; son kararı Muhammed verir. Vurgu adları `3d/export/emir-hani_v03.glb` içindeki nesne adlarıdır (20 Ekim 2026'da kontrol edildi). Seçim kuralları: `../../../ICERIK_YONTEMI.md`.
+19 Ekim 2026. Kaynak önceliği: Bursa Vakıf Eserleri Envanteri (Vakıf Katılım'ın sağladığı kaynak). `E cilt-N PDF s.X` = envanter kitabının **PDF sayfası**. Güven sütunu **öneridir**; son kararı Muhammed verir. Vurgu adları `3d/export/emir-hani_v05.glb` içindeki nesne adlarıdır (22 Ekim 2026'da kontrol edildi). Seçim kuralları: `../../../ICERIK_YONTEMI.md`.
 
 Rota eseri: 8 cümle (~1 dk).
 
@@ -21,7 +21,7 @@ Rota eseri: 8 cümle (~1 dk).
 - **Cümle 3:** C1 s.108 «Bursa'nın ilk bedesteni olarak kabul edilen yapı Emir Hanı'dır. Yıldırım Bayezid döneminde inşa edilen yeni bedestenin ardından yapı "Eski Bedesten" olarak adlandırılmıştır.» İkinci yarı 20 Ekim 2026'da eklendi: aynı rotada Bedesten «Osmanlı'da bedesten olarak inşa edilen ilk yapı» diye anılıyor (C2 s.29); iki «ilk bedesten» çelişki gibi duyulmasın. Ad bilgisi kitapta açık (Doğrulanmış); vakfiyedeki «Eski Bedesten»in bu han olduğu ise çıkarım ve `eser-hakkinda.md`'de ayrı paragrafta kalıyor.
 - **Cümle 7:** Kart fotoğrafı Ulucami'yi gösterir; model Ulucami'yi göstermiyor.
 - **Ölçü:** Hikâyede ölçü verilmedi. Envanter «yaklaşık 45 × 45 m» (s.108) der; 3D modelde Vakıf 1983'e göre 46 × 50 m kullanılıyor (`emir-han_notlar.md`).
-- **Vurgu adları** ilk olarak `emir-hani_v02.glb`'den alındı; dördü de (`Emir_Hani`, `Han_Avlu`, `Avlu_Revaklari`, `Sadirvan`) güncel `emir-hani_v03.glb`'de var (20 Ekim 2026).
+- **Vurgu adları** ilk olarak `emir-hani_v02.glb`'den alındı; dördü de (`Emir_Hani`, `Han_Avlu`, `Avlu_Revaklari`, `Sadirvan`) güncel `emir-hani_v05.glb`'de var (22 Ekim 2026).
 
 ## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
 
