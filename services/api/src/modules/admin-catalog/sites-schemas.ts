@@ -87,6 +87,8 @@ export const AdminSiteDetail = SiteDetail.extend({
 });
 export type AdminSiteDetail = z.infer<typeof AdminSiteDetail>;
 
+export const AdminSiteDetailListResponse = pageResponse(AdminSiteDetail);
+
 // ── site: step bodies ────────────────────────────────────────────────────────
 
 /** Adım 2 (Bilgiler). Nullable alanlar `null` ile temizlenir; boş metin de temizler. */

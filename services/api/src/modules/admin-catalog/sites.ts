@@ -540,8 +540,16 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
   };
 }
 
+/** Sites with the given ids, drafts included, as the editable view; ids that name no site are left out. A fixed number of queries. */
+export async function getAdminSites(db: Db, ids: string[]): Promise<Map<string, AdminSiteDetail>> {
+  const aggregates = await loadSites(db, ids);
+  return new Map([...aggregates].map(([id, a]) => [id, toAdminDetail(a)]));
+}
+
 export async function getAdminSite(db: Db, id: string): Promise<AdminSiteDetail> {
-  return toAdminDetail(await requireAggregate(db, id));
+  const site = (await getAdminSites(db, [id])).get(id);
+  if (!site) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
+  return site;
 }
 
 /** The panel's list row of a loaded site: identity, place, status and what blocks its publication. */
@@ -572,20 +580,21 @@ function toListItem(a: SiteAggregate): AdminSiteListItem {
 const SCAN_BATCH = 100;
 
 /**
- * One keyset page (by name, then id) of the sites matching `where`, drafts included. `keep` filters
- * on what SQL cannot see (the publish issues): batches are read until the page is full or the sites
- * run out, so a sparse filter still returns full pages.
+ * One keyset page (by name, then id) of the sites matching `where`, drafts included, each shaped by
+ * `shape`. `keep` filters on what SQL cannot see (the publish issues): batches are read until the
+ * page is full or the sites run out, so a sparse filter still returns full pages.
  */
-export async function pageAdminSites(
+async function pageSites<T extends { id: string }>(
   db: Db,
   where: SQL[],
   page: { cursor?: string | undefined; limit: number },
-  keep?: (item: AdminSiteListItem) => boolean,
-): Promise<{ items: AdminSiteListItem[]; nextCursor: string | null }> {
+  shape: (a: SiteAggregate) => T,
+  keep?: (item: T) => boolean,
+): Promise<{ items: T[]; nextCursor: string | null }> {
   let after = page.cursor ? decodeCursor(page.cursor, ["n", "i"]) : null;
   // Unfiltered, one row past the page tells whether another page exists; filtered, one extra match does.
   const batch = keep ? Math.max(page.limit + 1, SCAN_BATCH) : page.limit + 1;
-  const found: { item: AdminSiteListItem; sortName: string }[] = [];
+  const found: { item: T; sortName: string }[] = [];
   let more = false;
   for (;;) {
     const rows = await db
@@ -599,7 +608,7 @@ export async function pageAdminSites(
     for (const r of wanted) {
       const a = aggregates.get(r.id);
       if (!a) continue;
-      const item = toListItem(a);
+      const item = shape(a);
       if (!keep || keep(item)) found.push({ item, sortName: r.sortName });
       if (found.length > page.limit) break;
     }
@@ -617,14 +626,34 @@ export async function pageAdminSites(
   return { items: items.map((f) => f.item), nextCursor: last ? encodeCursor({ n: last.sortName, i: last.item.id }) : null };
 }
 
-/** Every site, drafts included, by name; each with what blocks its publication. */
-export function listAdminSites(db: Db, input: AdminListSitesInput): Promise<{ items: AdminSiteListItem[]; nextCursor: string | null }> {
+/** A page of the panel's list rows (see `pageSites`). */
+export function pageAdminSites(
+  db: Db,
+  where: SQL[],
+  page: { cursor?: string | undefined; limit: number },
+  keep?: (item: AdminSiteListItem) => boolean,
+): Promise<{ items: AdminSiteListItem[]; nextCursor: string | null }> {
+  return pageSites(db, where, page, toListItem, keep);
+}
+
+/** The filters `GET /v1/admin/sites` and `GET /v1/admin/site-details` share. */
+function adminSiteFilters(input: AdminListSitesInput): SQL[] {
   const where: SQL[] = [];
   if (input.status) where.push(eq(sites.status, input.status));
   if (input.city) where.push(eq(sites.cityId, normalize(input.city)));
   const term = input.query ? normalize(input.query.trim()) : "";
   if (term) where.push(sql`${sites.searchText} LIKE ${`%${term.replace(/[\\%_]/g, "\\$&")}%`}`);
-  return pageAdminSites(db, where, input);
+  return where;
+}
+
+/** Every site, drafts included, by name; each with what blocks its publication. */
+export function listAdminSites(db: Db, input: AdminListSitesInput): Promise<{ items: AdminSiteListItem[]; nextCursor: string | null }> {
+  return pageSites(db, adminSiteFilters(input), input, toListItem);
+}
+
+/** The same pages as `listAdminSites`, each site as `getAdminSite` returns it. */
+export function listAdminSiteDetails(db: Db, input: AdminListSitesInput): Promise<{ items: AdminSiteDetail[]; nextCursor: string | null }> {
+  return pageSites(db, adminSiteFilters(input), input, toAdminDetail);
 }
 
 // ── reference checks ─────────────────────────────────────────────────────────
