@@ -1,0 +1,2295 @@
+{
+ "_aciklama": "veri/fotoatlas/gecmisi_gor_uret.py üretir; elle düzenleme. Kaynak: Foto Atlas (tum.json), sadece kullanılabilir kayıtlar. Her fotoğrafta kaynakSatiri gösterilmeli; duzenlenebilir=false (ND) ise kırpma / ekranı doldur yok. altMetinTaslak=true olanlar elden geçirilmeli.",
+ "uretildi": "2026-10-22",
+ "eserler": {
+  "ulu-cami": {
+   "ad": "Ulucami",
+   "konum": [
+    40.1838059,
+    29.0618995
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 49845,
+     "gorsel": "gorseller/fa-49845.webp",
+     "kucuk": "gorseller/fa-49845_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1235,
+     "baslik": "Bursa Ulu Cami ve Çevresi Genel Görünümü",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi Genel Görünümü, 1862",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1862,
+      "enGec": 1862,
+      "etiket": "1862"
+     },
+     "fotografci": "Alfred de Moustier",
+     "kaynakSatiri": "Fotoğraf: Alfred de Moustier · Getty Research Institute Digital Collections (96.R.14 (PP9_007)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (PP9_007)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12084_7i0",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-genel-gorunumu/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.181107,
+      "lng": 29.059174
+     },
+     "yon": 40,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 378
+    },
+    {
+     "fotoAtlasId": 41844,
+     "gorsel": "gorseller/fa-41844.webp",
+     "kucuk": "gorseller/fa-41844_k.webp",
+     "genislik": 1166,
+     "yukseklik": 1600,
+     "baslik": "Bursa Ulu Cami İçinden Görünüm",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami İçinden Görünüm, 1865–75",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1865,
+      "enGec": 1875,
+      "etiket": "1865–75"
+     },
+     "fotografci": "Pascal Sébah",
+     "kaynakSatiri": "Fotoğraf: Pascal Sébah · Getty Research Institute Digital Collections (2002.R.42*) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "2002.R.42*",
+     "asilArsivUrl": "http://hdl.handle.net/10020/2002r42",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-icinden-gorunum-4/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": null,
+     "yon": null,
+     "gorusAcisi": 60,
+     "icMekan": true,
+     "eslesme": "elle",
+     "eserMesafesiM": null
+    },
+    {
+     "fotoAtlasId": 34618,
+     "gorsel": "gorseller/fa-34618.webp",
+     "kucuk": "gorseller/fa-34618_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1195,
+     "baslik": "Yeşil Cami’den Bursa Görünümü",
+     "altMetin": "Eski fotoğraf: Yeşil Cami’den Bursa Görünümü, 1870–90",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1870,
+      "enGec": 1890,
+      "etiket": "1870–90"
+     },
+     "fotografci": "Guillaume Berggren",
+     "kaynakSatiri": "Fotoğraf: Guillaume Berggren · Getty Research Institute Digital Collections (96.R.14 (F2.148)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (F2.148)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12749_6j0",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-camiden-bursa-gorunumu/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.182499,
+      "lng": 29.074305
+     },
+     "yon": 287,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 1062
+    },
+    {
+     "fotoAtlasId": 14239,
+     "gorsel": "gorseller/fa-14239.webp",
+     "kucuk": "gorseller/fa-14239_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1269,
+     "baslik": "Bursa Ulu Cami ve Çevresi",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi, 1875–86",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1886,
+      "etiket": "1875–86"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-2/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186768,
+      "lng": 29.058846
+     },
+     "yon": 143,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 419
+    },
+    {
+     "fotoAtlasId": 14276,
+     "gorsel": "gorseller/fa-14276.webp",
+     "kucuk": "gorseller/fa-14276_k.webp",
+     "genislik": 1274,
+     "yukseklik": 1600,
+     "baslik": "Bursa Ulu Cami Minberi",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami Minberi, 1875–85",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1885,
+      "etiket": "1875–85"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-minberi/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.183834,
+      "lng": 29.061832
+     },
+     "yon": 183,
+     "gorusAcisi": 60,
+     "icMekan": true,
+     "eslesme": "kesin",
+     "eserMesafesiM": 7
+    },
+    {
+     "fotoAtlasId": 14286,
+     "gorsel": "gorseller/fa-14286.webp",
+     "kucuk": "gorseller/fa-14286_k.webp",
+     "genislik": 1258,
+     "yukseklik": 1600,
+     "baslik": "Bursa Ulu Cami Mihrabı",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami Mihrabı, 1875–84",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1884,
+      "etiket": "1875–84"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-mihrabi/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.1838,
+      "lng": 29.06192
+     },
+     "yon": 177,
+     "gorusAcisi": 60,
+     "icMekan": true,
+     "eslesme": "kesin",
+     "eserMesafesiM": 2
+    },
+    {
+     "fotoAtlasId": 14290,
+     "gorsel": "gorseller/fa-14290.webp",
+     "kucuk": "gorseller/fa-14290_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1307,
+     "baslik": "Bursa Ulu Cami",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami, 1875–85",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1885,
+      "etiket": "1875–85"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.184002,
+      "lng": 29.061808
+     },
+     "yon": 1,
+     "gorusAcisi": 60,
+     "icMekan": true,
+     "eslesme": "kesin",
+     "eserMesafesiM": 23
+    },
+    {
+     "fotoAtlasId": 13048,
+     "gorsel": "gorseller/fa-13048.webp",
+     "kucuk": "gorseller/fa-13048_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1267,
+     "baslik": "Bursa Ulu Cami ve Çevresi",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi, 1890–1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1900,
+      "etiket": "1890–1900"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A26)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A26)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14d1175",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.185436,
+      "lng": 29.058092
+     },
+     "yon": 108,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 370
+    },
+    {
+     "fotoAtlasId": 15211,
+     "gorsel": "gorseller/fa-15211.webp",
+     "kucuk": "gorseller/fa-15211_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1259,
+     "baslik": "Bursa Ulu Cami ve Çevresi",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi, 1890–1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1900,
+      "etiket": "1890–1900"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A21)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A21)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14d0900",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-3/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186802,
+      "lng": 29.058792
+     },
+     "yon": 135,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 424
+    },
+    {
+     "fotoAtlasId": 15226,
+     "gorsel": "gorseller/fa-15226.webp",
+     "kucuk": "gorseller/fa-15226_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1249,
+     "baslik": "Bursa Ulu Cami İçinden Görünüm",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami İçinden Görünüm, 1890–1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1900,
+      "etiket": "1890–1900"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A21)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A21)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14d0900",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-icinden-gorunum/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.184124,
+      "lng": 29.061863
+     },
+     "yon": 178,
+     "gorusAcisi": 60,
+     "icMekan": true,
+     "eslesme": "kesin",
+     "eserMesafesiM": 35
+    },
+    {
+     "fotoAtlasId": 69125,
+     "gorsel": "gorseller/fa-69125.webp",
+     "kucuk": "gorseller/fa-69125_k.webp",
+     "genislik": 1534,
+     "yukseklik": 1600,
+     "baslik": "Ulu Camii Avlusu",
+     "altMetin": "Eski fotoğraf: Ulu Camii Avlusu, 1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1900,
+      "enGec": null,
+      "etiket": "1900"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Bursa Eski Eserleri Sevenler Kurumu Arşivi · Foto Atlas aracılığıyla",
+     "asilKaynak": "Bursa Eski Eserleri Sevenler Kurumu Arşivi",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/ulu-camii-avlusu/",
+     "lisans": "Kamu malı (yaş: 1955 öncesi, fotoğrafçı bilinmiyor)",
+     "lisansNotu": "Fotoğrafçı bilinmiyor, 1900 veya öncesi: yayından itibaren 70 yıl dolmuş",
+     "duzenlenebilir": true,
+     "cekimNoktasi": null,
+     "yon": 272,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "elle",
+     "eserMesafesiM": null
+    },
+    {
+     "fotoAtlasId": 65824,
+     "gorsel": "gorseller/fa-65824.webp",
+     "kucuk": "gorseller/fa-65824_k.webp",
+     "genislik": 1119,
+     "yukseklik": 780,
+     "baslik": "Bakırcılar Çarşısından Ulu Camii",
+     "altMetin": "Eski fotoğraf: Bakırcılar Çarşısından Ulu Camii, 1930'lar",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1930,
+      "enGec": 1939,
+      "etiket": "1930'lar"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bakircilar-carsisindan-ulu-camii/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.18489,
+      "lng": 29.060831
+     },
+     "yon": 151,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 151
+    },
+    {
+     "fotoAtlasId": 65141,
+     "gorsel": "gorseller/fa-65141.webp",
+     "kucuk": "gorseller/fa-65141_k.webp",
+     "genislik": 604,
+     "yukseklik": 388,
+     "baslik": "Üftade’den Bakış",
+     "altMetin": "Eski fotoğraf: Üftade’den Bakış, 1935–39",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1935,
+      "enGec": 1939,
+      "etiket": "1935–39"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/uftadeden-bakis/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.183313,
+      "lng": 29.058094
+     },
+     "yon": 79,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 327
+    },
+    {
+     "fotoAtlasId": 65534,
+     "gorsel": "gorseller/fa-65534.webp",
+     "kucuk": "gorseller/fa-65534_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1215,
+     "baslik": "Atatürk Caddesi ve Ulu Camii, İsmet İnönü Ziyareti.",
+     "altMetin": "Eski fotoğraf: Atatürk Caddesi ve Ulu Camii, İsmet İnönü Ziyareti., 1947",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1947,
+      "enGec": null,
+      "etiket": "1947"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/ataturk-caddesi-ve-ulu-camii-ismet-inonu-ziyareti/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.183508,
+      "lng": 29.063387
+     },
+     "yon": 290,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 130
+    },
+    {
+     "fotoAtlasId": 65828,
+     "gorsel": "gorseller/fa-65828.webp",
+     "kucuk": "gorseller/fa-65828_k.webp",
+     "genislik": 1521,
+     "yukseklik": 1028,
+     "baslik": "Atatürk Caddesi ve Ulu Camii",
+     "altMetin": "Eski fotoğraf: Atatürk Caddesi ve Ulu Camii, 1970–89",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1970,
+      "enGec": 1989,
+      "etiket": "1970–89"
+     },
+     "fotografci": "Mazhar Yüce Doruk",
+     "kaynakSatiri": "Fotoğraf: Mazhar Yüce Doruk · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/ataturk-caddesi-ve-ulu-camii-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.183337,
+      "lng": 29.063839
+     },
+     "yon": 300,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 173
+    },
+    {
+     "fotoAtlasId": 65438,
+     "gorsel": "gorseller/fa-65438.webp",
+     "kucuk": "gorseller/fa-65438_k.webp",
+     "genislik": 890,
+     "yukseklik": 1348,
+     "baslik": "Tophane Yamaçlarından Ulu Camii",
+     "altMetin": "Eski fotoğraf: Tophane Yamaçlarından Ulu Camii, 1989",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1989,
+      "enGec": null,
+      "etiket": "1989"
+     },
+     "fotografci": "Mazhar Yüce Doruk",
+     "kaynakSatiri": "Fotoğraf: Mazhar Yüce Doruk · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/tophane-yamaclarindan-ulu-camii/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.187204,
+      "lng": 29.058311
+     },
+     "yon": 150,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 485
+    },
+    {
+     "fotoAtlasId": 25044,
+     "gorsel": "gorseller/fa-25044.webp",
+     "kucuk": "gorseller/fa-25044_k.webp",
+     "genislik": 1161,
+     "yukseklik": 970,
+     "baslik": "Bursa Ulu Cami İç Görünümü",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami İç Görünümü, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/18 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/18",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0018.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ic-gorunumu/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": null,
+     "yon": null,
+     "gorusAcisi": 60,
+     "icMekan": true,
+     "eslesme": "elle",
+     "eserMesafesiM": null
+    },
+    {
+     "fotoAtlasId": 66080,
+     "gorsel": "gorseller/fa-66080.webp",
+     "kucuk": "gorseller/fa-66080_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1003,
+     "baslik": "Okçu Baba Türbesinden Ulu Camii ve Bursa Genel Görünüş",
+     "altMetin": "Eski fotoğraf: Okçu Baba Türbesinden Ulu Camii ve Bursa Genel Görünüş, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/okcu-baba-turbesinden-ulu-camii-ve-bursa-genel-gorunus/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186263,
+      "lng": 29.058457
+     },
+     "yon": 135,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 400
+    }
+   ]
+  },
+  "koza-han": {
+   "ad": "Koza Hanı",
+   "konum": [
+    40.1844464,
+    29.0632519
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 49845,
+     "gorsel": "gorseller/fa-49845.webp",
+     "kucuk": "gorseller/fa-49845_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1235,
+     "baslik": "Bursa Ulu Cami ve Çevresi Genel Görünümü",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi Genel Görünümü, 1862",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1862,
+      "enGec": 1862,
+      "etiket": "1862"
+     },
+     "fotografci": "Alfred de Moustier",
+     "kaynakSatiri": "Fotoğraf: Alfred de Moustier · Getty Research Institute Digital Collections (96.R.14 (PP9_007)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (PP9_007)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12084_7i0",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-genel-gorunumu/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.181107,
+      "lng": 29.059174
+     },
+     "yon": 40,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 507
+    },
+    {
+     "fotoAtlasId": 64741,
+     "gorsel": "gorseller/fa-64741.webp",
+     "kucuk": "gorseller/fa-64741_k.webp",
+     "genislik": 1178,
+     "yukseklik": 1600,
+     "baslik": "Kozahan",
+     "altMetin": "Eski fotoğraf: Kozahan, 1945 öncesi",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": 1945,
+      "etiket": "1945 öncesi"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/kozahan/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.18417,
+      "lng": 29.063733
+     },
+     "yon": 270,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 51
+    }
+   ]
+  },
+  "orhan-bey-kulliyesi": {
+   "ad": "Orhan Bey Külliyesi (Orhan Gazi Camii)",
+   "konum": [
+    40.1839745,
+    29.0641131
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 15211,
+     "gorsel": "gorseller/fa-15211.webp",
+     "kucuk": "gorseller/fa-15211_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1259,
+     "baslik": "Bursa Ulu Cami ve Çevresi",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi, 1890–1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1900,
+      "etiket": "1890–1900"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A21)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A21)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14d0900",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-3/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186802,
+      "lng": 29.058792
+     },
+     "yon": 135,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 550
+    },
+    {
+     "fotoAtlasId": 25056,
+     "gorsel": "gorseller/fa-25056.webp",
+     "kucuk": "gorseller/fa-25056_k.webp",
+     "genislik": 1131,
+     "yukseklik": 979,
+     "baslik": "Bursa’da Belediye Dairesi",
+     "altMetin": "Eski fotoğraf: Bursa’da Belediye Dairesi, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/21 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/21",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0021.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-belediye-dairesi/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.183681,
+      "lng": 29.064123
+     },
+     "yon": 31,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "elle",
+     "eserMesafesiM": 33
+    }
+   ]
+  },
+  "orhan-gazi-turbesi": {
+   "ad": "Orhan Gazi Türbesi",
+   "konum": [
+    40.1867711,
+    29.0576941
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 34618,
+     "gorsel": "gorseller/fa-34618.webp",
+     "kucuk": "gorseller/fa-34618_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1195,
+     "baslik": "Yeşil Cami’den Bursa Görünümü",
+     "altMetin": "Eski fotoğraf: Yeşil Cami’den Bursa Görünümü, 1870–90",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1870,
+      "enGec": 1890,
+      "etiket": "1870–90"
+     },
+     "fotografci": "Guillaume Berggren",
+     "kaynakSatiri": "Fotoğraf: Guillaume Berggren · Getty Research Institute Digital Collections (96.R.14 (F2.148)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (F2.148)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12749_6j0",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-camiden-bursa-gorunumu/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.182499,
+      "lng": 29.074305
+     },
+     "yon": 287,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 1486
+    },
+    {
+     "fotoAtlasId": 423,
+     "gorsel": "gorseller/fa-423.webp",
+     "kucuk": "gorseller/fa-423_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1213,
+     "baslik": "Osman ve Orhan Gazi Türbeleri",
+     "altMetin": "Eski fotoğraf: Osman ve Orhan Gazi Türbeleri, 1890'lar",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1899,
+      "etiket": "1890'lar"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14 (F2.039)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (F2.039)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12580_0uu",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/osman-ve-orhan-gazi-turbeleri/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186504,
+      "lng": 29.056658
+     },
+     "yon": 83,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 93
+    },
+    {
+     "fotoAtlasId": 13053,
+     "gorsel": "gorseller/fa-13053.webp",
+     "kucuk": "gorseller/fa-13053_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1247,
+     "baslik": "Osman ve Orhan Gazi Türbeleri",
+     "altMetin": "Eski fotoğraf: Osman ve Orhan Gazi Türbeleri, 1890–1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1900,
+      "etiket": "1890–1900"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A26)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A26)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14d1175",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/osman-ve-orhan-gazi-turbeleri-2/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186516,
+      "lng": 29.056658
+     },
+     "yon": 73,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 92
+    },
+    {
+     "fotoAtlasId": 65257,
+     "gorsel": "gorseller/fa-65257.webp",
+     "kucuk": "gorseller/fa-65257_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1095,
+     "baslik": "Orhan Gazi Türbesi",
+     "altMetin": "Eski fotoğraf: Orhan Gazi Türbesi, 1894",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1894,
+      "enGec": 1894,
+      "etiket": "1894"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/orhan-gazi-turbesi-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186281,
+      "lng": 29.057502
+     },
+     "yon": 10,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 57
+    },
+    {
+     "fotoAtlasId": 65262,
+     "gorsel": "gorseller/fa-65262.webp",
+     "kucuk": "gorseller/fa-65262_k.webp",
+     "genislik": 604,
+     "yukseklik": 379,
+     "baslik": "Tophane Saat Kulesinden Bursa’ya Bakış",
+     "altMetin": "Eski fotoğraf: Tophane Saat Kulesinden Bursa’ya Bakış, 1935–40",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1935,
+      "enGec": 1940,
+      "etiket": "1935–40"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/tophane-saat-kulesinden-bursaya-bakis/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.187505,
+      "lng": 29.057587
+     },
+     "yon": 190,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 82
+    }
+   ]
+  },
+  "osman-gazi-turbesi": {
+   "ad": "Osman Gazi Türbesi",
+   "konum": [
+    40.186775,
+    29.057323
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 423,
+     "gorsel": "gorseller/fa-423.webp",
+     "kucuk": "gorseller/fa-423_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1213,
+     "baslik": "Osman ve Orhan Gazi Türbeleri",
+     "altMetin": "Eski fotoğraf: Osman ve Orhan Gazi Türbeleri, 1890'lar",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1899,
+      "etiket": "1890'lar"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14 (F2.039)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (F2.039)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12580_0uu",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/osman-ve-orhan-gazi-turbeleri/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186504,
+      "lng": 29.056658
+     },
+     "yon": 83,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 64
+    },
+    {
+     "fotoAtlasId": 13053,
+     "gorsel": "gorseller/fa-13053.webp",
+     "kucuk": "gorseller/fa-13053_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1247,
+     "baslik": "Osman ve Orhan Gazi Türbeleri",
+     "altMetin": "Eski fotoğraf: Osman ve Orhan Gazi Türbeleri, 1890–1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1900,
+      "etiket": "1890–1900"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A26)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A26)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14d1175",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/osman-ve-orhan-gazi-turbeleri-2/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186516,
+      "lng": 29.056658
+     },
+     "yon": 73,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 63
+    },
+    {
+     "fotoAtlasId": 65262,
+     "gorsel": "gorseller/fa-65262.webp",
+     "kucuk": "gorseller/fa-65262_k.webp",
+     "genislik": 604,
+     "yukseklik": 379,
+     "baslik": "Tophane Saat Kulesinden Bursa’ya Bakış",
+     "altMetin": "Eski fotoğraf: Tophane Saat Kulesinden Bursa’ya Bakış, 1935–40",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1935,
+      "enGec": 1940,
+      "etiket": "1935–40"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/tophane-saat-kulesinden-bursaya-bakis/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.187505,
+      "lng": 29.057587
+     },
+     "yon": 190,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 84
+    },
+    {
+     "fotoAtlasId": 65267,
+     "gorsel": "gorseller/fa-65267.webp",
+     "kucuk": "gorseller/fa-65267_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1187,
+     "baslik": "Kurtuluş Savaşı Şehitleri Anıtı ve Osmangazi Türbesi",
+     "altMetin": "Eski fotoğraf: Kurtuluş Savaşı Şehitleri Anıtı ve Osmangazi Türbesi, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Mazhar Yüce Doruk",
+     "kaynakSatiri": "Fotoğraf: Mazhar Yüce Doruk · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/kurtulus-savasi-sehitleri-aniti-ve-osmangazi-turbesi/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186596,
+      "lng": 29.057453
+     },
+     "yon": 340,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 23
+    }
+   ]
+  },
+  "pirinc-hani": {
+   "ad": "Pirinç Hanı",
+   "konum": [
+    40.1857239,
+    29.0602794
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 14239,
+     "gorsel": "gorseller/fa-14239.webp",
+     "kucuk": "gorseller/fa-14239_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1269,
+     "baslik": "Bursa Ulu Cami ve Çevresi",
+     "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi, 1875–86",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1886,
+      "etiket": "1875–86"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-2/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186768,
+      "lng": 29.058846
+     },
+     "yon": 143,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 168
+    }
+   ]
+  },
+  "kaygan-camii": {
+   "ad": "Kayhan Camii",
+   "konum": [
+    40.1836932,
+    29.070452
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 34618,
+     "gorsel": "gorseller/fa-34618.webp",
+     "kucuk": "gorseller/fa-34618_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1195,
+     "baslik": "Yeşil Cami’den Bursa Görünümü",
+     "altMetin": "Eski fotoğraf: Yeşil Cami’den Bursa Görünümü, 1870–90",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1870,
+      "enGec": 1890,
+      "etiket": "1870–90"
+     },
+     "fotografci": "Guillaume Berggren",
+     "kaynakSatiri": "Fotoğraf: Guillaume Berggren · Getty Research Institute Digital Collections (96.R.14 (F2.148)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (F2.148)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12749_6j0",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-camiden-bursa-gorunumu/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.182499,
+      "lng": 29.074305
+     },
+     "yon": 287,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 353
+    }
+   ]
+  },
+  "emir-sultan-kulliyesi": {
+   "ad": "Emir Sultan Külliyesi",
+   "konum": [
+    40.1811084,
+    29.0810381
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 25048,
+     "gorsel": "gorseller/fa-25048.webp",
+     "kucuk": "gorseller/fa-25048_k.webp",
+     "genislik": 1105,
+     "yukseklik": 865,
+     "baslik": "Emir Sultan Camii ve Türbesi",
+     "altMetin": "Eski fotoğraf: Emir Sultan Camii ve Türbesi, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/19 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/19",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0019.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/emir-sultan-camii-ve-turbesi/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.182098,
+      "lng": 29.080217
+     },
+     "yon": 132,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 130
+    }
+   ]
+  },
+  "yesil-celebi-mehmed-kulliyesi": {
+   "ad": "Yeşil Külliyesi (Çelebi Mehmed)",
+   "konum": [
+    40.182205,
+    29.074647
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 34618,
+     "gorsel": "gorseller/fa-34618.webp",
+     "kucuk": "gorseller/fa-34618_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1195,
+     "baslik": "Yeşil Cami’den Bursa Görünümü",
+     "altMetin": "Eski fotoğraf: Yeşil Cami’den Bursa Görünümü, 1870–90",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1870,
+      "enGec": 1890,
+      "etiket": "1870–90"
+     },
+     "fotografci": "Guillaume Berggren",
+     "kaynakSatiri": "Fotoğraf: Guillaume Berggren · Getty Research Institute Digital Collections (96.R.14 (F2.148)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (F2.148)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12749_6j0",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-camiden-bursa-gorunumu/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.182499,
+      "lng": 29.074305
+     },
+     "yon": 287,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 44
+    },
+    {
+     "fotoAtlasId": 14200,
+     "gorsel": "gorseller/fa-14200.webp",
+     "kucuk": "gorseller/fa-14200_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1165,
+     "baslik": "Emirsultan Civarından Bursa Görünümü",
+     "altMetin": "Eski fotoğraf: Emirsultan Civarından Bursa Görünümü, 1875–85",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1885,
+      "etiket": "1875–85"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/emirsultan-civarindan-bursa-gorunumu/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.180981,
+      "lng": 29.078922
+     },
+     "yon": 315,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 387
+    },
+    {
+     "fotoAtlasId": 66084,
+     "gorsel": "gorseller/fa-66084.webp",
+     "kucuk": "gorseller/fa-66084_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1059,
+     "baslik": "Atatürk Caddesinden Yeşil Türbe",
+     "altMetin": "Eski fotoğraf: Atatürk Caddesinden Yeşil Türbe, 1940'lar",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1940,
+      "enGec": 1949,
+      "etiket": "1940'lar"
+     },
+     "fotografci": "İhsan Celal Antel",
+     "kaynakSatiri": "Fotoğraf: İhsan Celal Antel · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/ataturk-caddesinden-yesil-turbe/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.183257,
+      "lng": 29.064647
+     },
+     "yon": 100,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 856
+    },
+    {
+     "fotoAtlasId": 65936,
+     "gorsel": "gorseller/fa-65936.webp",
+     "kucuk": "gorseller/fa-65936_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1066,
+     "baslik": "Yeşil Türbe ve Yeşil Camii Havadan Çekim",
+     "altMetin": "Eski fotoğraf: Yeşil Türbe ve Yeşil Camii Havadan Çekim, 1950'ler",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1950,
+      "enGec": 1959,
+      "etiket": "1950'ler"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-turbe-ve-yesil-camii-havadan-cekim/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.180924,
+      "lng": 29.07402
+     },
+     "yon": 49,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 152
+    },
+    {
+     "fotoAtlasId": 65942,
+     "gorsel": "gorseller/fa-65942.webp",
+     "kucuk": "gorseller/fa-65942_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1066,
+     "baslik": "Yeşil Camii Havadan Çekim",
+     "altMetin": "Eski fotoğraf: Yeşil Camii Havadan Çekim, 1950'ler",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1950,
+      "enGec": 1959,
+      "etiket": "1950'ler"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-camii-havadan-cekim/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.181178,
+      "lng": 29.073697
+     },
+     "yon": 30,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 140
+    },
+    {
+     "fotoAtlasId": 65292,
+     "gorsel": "gorseller/fa-65292.webp",
+     "kucuk": "gorseller/fa-65292_k.webp",
+     "genislik": 1600,
+     "yukseklik": 900,
+     "baslik": "Işıklardan Bursa’ya Bakış",
+     "altMetin": "Eski fotoğraf: Işıklardan Bursa’ya Bakış, 1980",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1980,
+      "enGec": null,
+      "etiket": "1980"
+     },
+     "fotografci": "Mazhar Yüce Doruk",
+     "kaynakSatiri": "Fotoğraf: Mazhar Yüce Doruk · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/isiklardan-bursaya-bakis/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.177914,
+      "lng": 29.079588
+     },
+     "yon": 315,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 634
+    },
+    {
+     "fotoAtlasId": 65158,
+     "gorsel": "gorseller/fa-65158.webp",
+     "kucuk": "gorseller/fa-65158_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1062,
+     "baslik": "Yeşil Camii Şadırvanı",
+     "altMetin": "Eski fotoğraf: Yeşil Camii Şadırvanı, 1987",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1987,
+      "enGec": null,
+      "etiket": "1987"
+     },
+     "fotografci": "Mazhar Yüce Doruk",
+     "kaynakSatiri": "Fotoğraf: Mazhar Yüce Doruk · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-camii-sadirvani-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.182454,
+      "lng": 29.074466
+     },
+     "yon": 0,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 32
+    }
+   ]
+  },
+  "yildirim-bayezid-kulliyesi": {
+   "ad": "Yıldırım Bayezid Külliyesi",
+   "konum": [
+    40.187507,
+    29.082427
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 14267,
+     "gorsel": "gorseller/fa-14267.webp",
+     "kucuk": "gorseller/fa-14267_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1184,
+     "baslik": "Yıldırım Bayezid Camii",
+     "altMetin": "Eski fotoğraf: Yıldırım Bayezid Camii, 1875–85",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1885,
+      "etiket": "1875–85"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yildirim-bayezid-camii/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.18956,
+      "lng": 29.079344
+     },
+     "yon": 140,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 347
+    },
+    {
+     "fotoAtlasId": 14272,
+     "gorsel": "gorseller/fa-14272.webp",
+     "kucuk": "gorseller/fa-14272_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1259,
+     "baslik": "Yıldırım Bayezid Camii Mihrap ve Minberi",
+     "altMetin": "Eski fotoğraf: Yıldırım Bayezid Camii Mihrap ve Minberi, 1875–85",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1885,
+      "etiket": "1875–85"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/yildirim-bayezid-camii-mihrap-ve-minberi/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.187435,
+      "lng": 29.082466
+     },
+     "yon": 177,
+     "gorusAcisi": 60,
+     "icMekan": true,
+     "eslesme": "kesin",
+     "eserMesafesiM": 9
+    },
+    {
+     "fotoAtlasId": 25024,
+     "gorsel": "gorseller/fa-25024.webp",
+     "kucuk": "gorseller/fa-25024_k.webp",
+     "genislik": 1127,
+     "yukseklik": 865,
+     "baslik": "Sultan Yıldırım Bayezid İmareti ve Camii",
+     "altMetin": "Eski fotoğraf: Sultan Yıldırım Bayezid İmareti ve Camii, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/13 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/13",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0013.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/sultan-yildirim-bayezid-imareti-ve-camii/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.187469,
+      "lng": 29.081101
+     },
+     "yon": 78,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 113
+    },
+    {
+     "fotoAtlasId": 25028,
+     "gorsel": "gorseller/fa-25028.webp",
+     "kucuk": "gorseller/fa-25028_k.webp",
+     "genislik": 1125,
+     "yukseklik": 865,
+     "baslik": "Sultan Yıldırım Bayezid Camii",
+     "altMetin": "Eski fotoğraf: Sultan Yıldırım Bayezid Camii, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/14 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/14",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0014.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/sultan-yildirim-bayezid-camii-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.187462,
+      "lng": 29.081505
+     },
+     "yon": 88,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 78
+    }
+   ]
+  },
+  "muradiye-kulliyesi": {
+   "ad": "Muradiye Külliyesi (II. Murad)",
+   "konum": [
+    40.191063,
+    29.046501
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 49840,
+     "gorsel": "gorseller/fa-49840.webp",
+     "kucuk": "gorseller/fa-49840_k.webp",
+     "genislik": 1556,
+     "yukseklik": 1209,
+     "baslik": "Bursa Muradiye Külliyesi’ne Doğru Genel Görünüm",
+     "altMetin": "Eski fotoğraf: Bursa Muradiye Külliyesi’ne Doğru Genel Görünüm, 1862",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1862,
+      "enGec": 1862,
+      "etiket": "1862"
+     },
+     "fotografci": "Alfred de Moustier",
+     "kaynakSatiri": "Fotoğraf: Alfred de Moustier · Getty Research Institute Digital Collections (96.R.14 (PP9_005)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (PP9_005)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_6e9bb19a84517e3c922e420a905c474d",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-muradiye-kulliyesine-dogru-genel-gorunum/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.1852,
+      "lng": 29.04887
+     },
+     "yon": 343,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 681
+    },
+    {
+     "fotoAtlasId": 11015,
+     "gorsel": "gorseller/fa-11015.webp",
+     "kucuk": "gorseller/fa-11015_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1226,
+     "baslik": "Muradiye Külliyesi Türbeleri",
+     "altMetin": "Eski fotoğraf: Muradiye Külliyesi Türbeleri, 1870–80",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1870,
+      "enGec": 1880,
+      "etiket": "1870–80"
+     },
+     "fotografci": "Guillaume Berggren",
+     "kaynakSatiri": "Fotoğraf: Guillaume Berggren · Getty Research Institute Digital Collections (96.R.14 (F2.145)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (F2.145)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12746_hua",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/muradiye-kulliyesi-turbeleri/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.190708,
+      "lng": 29.046057
+     },
+     "yon": 267,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 54
+    },
+    {
+     "fotoAtlasId": 34602,
+     "gorsel": "gorseller/fa-34602.webp",
+     "kucuk": "gorseller/fa-34602_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1251,
+     "baslik": "Bursa Muradiye Camii",
+     "altMetin": "Eski fotoğraf: Bursa Muradiye Camii, 1870–90",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1870,
+      "enGec": 1890,
+      "etiket": "1870–90"
+     },
+     "fotografci": "Guillaume Berggren",
+     "kaynakSatiri": "Fotoğraf: Guillaume Berggren · Getty Research Institute Digital Collections (96.R.14 (C26.6b)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14 (C26.6b)",
+     "asilArsivUrl": "\t\thttp://hdl.handle.net/10020/96r14_ref8196_zb6",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-muradiye-camii/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.191368,
+      "lng": 29.046797
+     },
+     "yon": 255,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 42
+    },
+    {
+     "fotoAtlasId": 65796,
+     "gorsel": "gorseller/fa-65796.webp",
+     "kucuk": "gorseller/fa-65796_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1074,
+     "baslik": "Muradiye / Türbeler Girişi",
+     "altMetin": "Eski fotoğraf: Muradiye / Türbeler Girişi, 1990",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1990,
+      "enGec": null,
+      "etiket": "1990"
+     },
+     "fotografci": "Mazhar Yüce Doruk",
+     "kaynakSatiri": "Fotoğraf: Mazhar Yüce Doruk · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/muradiye-turbeler-girisi/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.191204,
+      "lng": 29.0459
+     },
+     "yon": 100,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 53
+    }
+   ]
+  },
+  "irgandi-koprusu": {
+   "ad": "Irgandı Köprüsü",
+   "konum": [
+    40.181925,
+    29.070849
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 69128,
+     "gorsel": "gorseller/fa-69128.webp",
+     "kucuk": "gorseller/fa-69128_k.webp",
+     "genislik": 1373,
+     "yukseklik": 955,
+     "baslik": "Irgandı Köprüsü",
+     "altMetin": "Eski fotoğraf: Irgandı Köprüsü, 1949",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1949,
+      "enGec": null,
+      "etiket": "1949"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Bursa Eski Eserleri Sevenler Kurumu Arşivi · Foto Atlas aracılığıyla",
+     "asilKaynak": "Bursa Eski Eserleri Sevenler Kurumu Arşivi",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/irgandi-koprusu-4/",
+     "lisans": "Kamu malı (yaş: 1955 öncesi, fotoğrafçı bilinmiyor)",
+     "lisansNotu": "Fotoğrafçı bilinmiyor, 1949 veya öncesi: yayından itibaren 70 yıl dolmuş",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.181069,
+      "lng": 29.06959
+     },
+     "yon": 30,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 143
+    },
+    {
+     "fotoAtlasId": 25064,
+     "gorsel": "gorseller/fa-25064.webp",
+     "kucuk": "gorseller/fa-25064_k.webp",
+     "genislik": 1093,
+     "yukseklik": 951,
+     "baslik": "Bursa’da Irgandı Köprüsü",
+     "altMetin": "Eski fotoğraf: Bursa’da Irgandı Köprüsü, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/23 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/23",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0023.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-irgandi-koprusu/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.181602,
+      "lng": 29.070419
+     },
+     "yon": 45,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 51
+    }
+   ]
+  },
+  "sehadet-camii": {
+   "ad": "Şehadet Camii",
+   "konum": [
+    40.186318,
+    29.055982
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 14251,
+     "gorsel": "gorseller/fa-14251.webp",
+     "kucuk": "gorseller/fa-14251_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1252,
+     "baslik": "Şehadet Camii",
+     "altMetin": "Eski fotoğraf: Şehadet Camii, 1875–85",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1885,
+      "etiket": "1875–85"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/sehadet-camii/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.186573,
+      "lng": 29.05694
+     },
+     "yon": 260,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 86
+    }
+   ]
+  },
+  "eski-kaplica": {
+   "ad": "Eski Kaplıca",
+   "konum": [
+    40.202237,
+    29.023851
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 14294,
+     "gorsel": "gorseller/fa-14294.webp",
+     "kucuk": "gorseller/fa-14294_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1249,
+     "baslik": "Eski Kaplıca",
+     "altMetin": "Eski fotoğraf: Eski Kaplıca, 1875–85",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1875,
+      "enGec": 1885,
+      "etiket": "1875–85"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A28)",
+     "asilArsivUrl": "Constantinople: musée, types; Scutari, Brousse",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/eski-kaplica/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.202381,
+      "lng": 29.023329
+     },
+     "yon": 1,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 47
+    },
+    {
+     "fotoAtlasId": 65287,
+     "gorsel": "gorseller/fa-65287.webp",
+     "kucuk": "gorseller/fa-65287_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1066,
+     "baslik": "Eski Kaplıca",
+     "altMetin": "Eski fotoğraf: Eski Kaplıca, 1991",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1991,
+      "enGec": null,
+      "etiket": "1991"
+     },
+     "fotografci": "Mazhar Yüce Doruk",
+     "kaynakSatiri": "Fotoğraf: Mazhar Yüce Doruk · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+     "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+     "asilArsivId": null,
+     "asilArsivUrl": null,
+     "fotoAtlasUrl": "https://fotoatlas.net/image/eski-kaplica-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.202103,
+      "lng": 29.023073
+     },
+     "yon": 43,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 68
+    },
+    {
+     "fotoAtlasId": 25068,
+     "gorsel": "gorseller/fa-25068.webp",
+     "kucuk": "gorseller/fa-25068_k.webp",
+     "genislik": 1125,
+     "yukseklik": 942,
+     "baslik": "Bursa’da Eski Kaplıca",
+     "altMetin": "Eski fotoğraf: Bursa’da Eski Kaplıca, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/24 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/24",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0024.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-eski-kaplica/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.202335,
+      "lng": 29.023853
+     },
+     "yon": 274,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 11
+    },
+    {
+     "fotoAtlasId": 25072,
+     "gorsel": "gorseller/fa-25072.webp",
+     "kucuk": "gorseller/fa-25072_k.webp",
+     "genislik": 1107,
+     "yukseklik": 916,
+     "baslik": "Bursa’da Eski Kaplıca",
+     "altMetin": "Eski fotoğraf: Bursa’da Eski Kaplıca, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/25 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/25",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0025.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-eski-kaplica-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.202705,
+      "lng": 29.022968
+     },
+     "yon": 123,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 91
+    }
+   ]
+  },
+  "yeni-kaplica": {
+   "ad": "Yeni Kaplıca",
+   "konum": [
+    40.198909,
+    29.038605
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 13043,
+     "gorsel": "gorseller/fa-13043.webp",
+     "kucuk": "gorseller/fa-13043_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1277,
+     "baslik": "Bursa Yeni Kaplıca",
+     "altMetin": "Eski fotoğraf: Bursa Yeni Kaplıca, 1890–1900",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1890,
+      "enGec": 1900,
+      "etiket": "1890–1900"
+     },
+     "fotografci": "Sébah&Joaillier",
+     "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A26)) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Getty Research Institute Digital Collections",
+     "asilArsivId": "96.R.14(A26)",
+     "asilArsivUrl": "http://hdl.handle.net/10020/96r14d1175",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-yeni-kaplica/",
+     "lisans": "CC0 1.0 Public Domain",
+     "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.197132,
+      "lng": 29.03849
+     },
+     "yon": 351,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 197
+    },
+    {
+     "fotoAtlasId": 25076,
+     "gorsel": "gorseller/fa-25076.webp",
+     "kucuk": "gorseller/fa-25076_k.webp",
+     "genislik": 1123,
+     "yukseklik": 885,
+     "baslik": "Bursa’da Yeni Kaplıca",
+     "altMetin": "Eski fotoğraf: Bursa’da Yeni Kaplıca, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/26 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/26",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0026.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-yeni-kaplica-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.199333,
+      "lng": 29.037521
+     },
+     "yon": 110,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 103
+    },
+    {
+     "fotoAtlasId": 25080,
+     "gorsel": "gorseller/fa-25080.webp",
+     "kucuk": "gorseller/fa-25080_k.webp",
+     "genislik": 1134,
+     "yukseklik": 942,
+     "baslik": "Bursa’da Yeni Kaplıca",
+     "altMetin": "Eski fotoğraf: Bursa’da Yeni Kaplıca, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/27 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/27",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0027.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-yeni-kaplica/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.198318,
+      "lng": 29.038364
+     },
+     "yon": 351,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 69
+    },
+    {
+     "fotoAtlasId": 25084,
+     "gorsel": "gorseller/fa-25084.webp",
+     "kucuk": "gorseller/fa-25084_k.webp",
+     "genislik": 1118,
+     "yukseklik": 911,
+     "baslik": "Bursa’da Kara Mustafa Paşa Kaplıcası ve Yeni Kaplıca",
+     "altMetin": "Eski fotoğraf: Bursa’da Kara Mustafa Paşa Kaplıcası ve Yeni Kaplıca, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/28 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90758/28",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0028.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-kara-mustafa-pasa-kaplicasi-ve-yeni-kaplica/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.199402,
+      "lng": 29.037457
+     },
+     "yon": 115,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 112
+    }
+   ]
+  },
+  "nilufer-hatun-imareti": {
+   "ad": "Nilüfer Hatun İmareti",
+   "konum": [
+    40.43027,
+    29.725793
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 58829,
+     "gorsel": "gorseller/fa-58829.webp",
+     "kucuk": "gorseller/fa-58829_k.webp",
+     "genislik": 1600,
+     "yukseklik": 1166,
+     "baslik": "Nilüfer Hatun İmareti",
+     "altMetin": "Eski fotoğraf: Nilüfer Hatun İmareti, 1910",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": 1910,
+      "enGec": 1910,
+      "etiket": "1910"
+     },
+     "fotografci": "Fotoğrafçı Bilinmiyor",
+     "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Austrian National Library ( 108803-B POR MAG) · Foto Atlas aracılığıyla",
+     "asilKaynak": "Austrian National Library",
+     "asilArsivId": "108803-B POR MAG",
+     "asilArsivUrl": "https://onb.digital/result/10E9BEAF",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/nilufer-hatun-imareti-5/",
+     "lisans": "Kamu malı (yaş: 1955 öncesi, fotoğrafçı bilinmiyor)",
+     "lisansNotu": "Fotoğrafçı bilinmiyor, 1910 veya öncesi: yayından itibaren 70 yıl dolmuş",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.431011,
+      "lng": 29.726299
+     },
+     "yon": 206,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 93
+    },
+    {
+     "fotoAtlasId": 25345,
+     "gorsel": "gorseller/fa-25345.webp",
+     "kucuk": "gorseller/fa-25345_k.webp",
+     "genislik": 1136,
+     "yukseklik": 868,
+     "baslik": "Nilüfer Hatun İmareti",
+     "altMetin": "Eski fotoğraf: Nilüfer Hatun İmareti, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90759/6 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90759/6",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90759---0006.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/nilufer-hatun-imareti/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.430344,
+      "lng": 29.726692
+     },
+     "yon": 260,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 76
+    },
+    {
+     "fotoAtlasId": 25350,
+     "gorsel": "gorseller/fa-25350.webp",
+     "kucuk": "gorseller/fa-25350_k.webp",
+     "genislik": 1026,
+     "yukseklik": 758,
+     "baslik": "Nilüfer Hatun İmareti",
+     "altMetin": "Eski fotoğraf: Nilüfer Hatun İmareti, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90759/7 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90759/7",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90759---0007.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/nilufer-hatun-imareti-2/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.430572,
+      "lng": 29.726332
+     },
+     "yon": 225,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 57
+    },
+    {
+     "fotoAtlasId": 25356,
+     "gorsel": "gorseller/fa-25356.webp",
+     "kucuk": "gorseller/fa-25356_k.webp",
+     "genislik": 1132,
+     "yukseklik": 817,
+     "baslik": "Nilüfer Hatun İmareti",
+     "altMetin": "Eski fotoğraf: Nilüfer Hatun İmareti, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90759/8 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90759/8",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90759---0008.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/nilufer-hatun-imareti-3/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.430244,
+      "lng": 29.726955
+     },
+     "yon": 265,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 98
+    }
+   ]
+  },
+  "esrefzade-camii": {
+   "ad": "Eşrefzade Camii",
+   "konum": [
+    40.429808,
+    29.723432
+   ],
+   "fotograflar": [
+    {
+     "fotoAtlasId": 25368,
+     "gorsel": "gorseller/fa-25368.webp",
+     "kucuk": "gorseller/fa-25368_k.webp",
+     "genislik": 973,
+     "yukseklik": 775,
+     "baslik": "Eşrefzade Camii",
+     "altMetin": "Eski fotoğraf: Eşrefzade Camii, Tarih bilinmiyor",
+     "altMetinTaslak": true,
+     "tarih": {
+      "enErken": null,
+      "enGec": null,
+      "etiket": "Tarih bilinmiyor"
+     },
+     "fotografci": "Kaymakam Ahmed",
+     "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90759/11 · Foto Atlas aracılığıyla",
+     "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+     "asilArsivId": "NEKYA90759/11",
+     "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90759---0011.jpg",
+     "fotoAtlasUrl": "https://fotoatlas.net/image/esrefzade-camii/",
+     "lisans": "Yazılı izin",
+     "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+     "duzenlenebilir": true,
+     "cekimNoktasi": {
+      "lat": 40.429985,
+      "lng": 29.723131
+     },
+     "yon": 93,
+     "gorusAcisi": 60,
+     "icMekan": false,
+     "eslesme": "kesin",
+     "eserMesafesiM": 32
+    }
+   ]
+  }
+ }
+}
