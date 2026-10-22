@@ -1,0 +1,162 @@
+{
+ "eser": "bedesten",
+ "dir": "yildirim-bayezid-bedesteni",
+ "base": "bedesten",
+ "from": "v05",
+ "to": "v06",
+ "ymin": 0,
+ "ymax": 14.200654983520508,
+ "duz": [],
+ "nodes": [
+  "Cati",
+  "Dukkan_Kapilari",
+  "Dukkanlar",
+  "Govde",
+  "Kapilar",
+  "Kubbeler",
+  "Pencereler",
+  "Sacak"
+ ],
+ "materials": {
+  "Cati": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Bant_Cati": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/yildirim-bayezid-bedesteni/3d/build/doku_palet_v2/Bant_Cati_palet_v2.png",
+   "lead": true
+  },
+  "Tas": {
+   "hex": "#E6D8BA",
+   "alpha": 1,
+   "lin": [
+    0.7912979403326302,
+    0.6866853124353135,
+    0.4910208498478356,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Duvar": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/yildirim-bayezid-bedesteni/3d/build/doku_palet_v2/Duvar_palet_v2.png",
+   "lead": false
+  },
+  "Dukkan_Vitrin": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/yildirim-bayezid-bedesteni/3d/build/doku_palet_v2/Dukkan_Vitrin_palet_v2.png",
+   "lead": false
+  },
+  "Kapi": {
+   "hex": "#7A5134",
+   "alpha": 1,
+   "lin": [
+    0.1946178304415758,
+    0.0822827071298148,
+    0.03433980680868217,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kitabe": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kubbe": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/yildirim-bayezid-bedesteni/3d/build/doku_palet_v2/Kubbe_palet_v2.png",
+   "lead": true
+  },
+  "Tugla": {
+   "hex": "#CF7F55",
+   "alpha": 1,
+   "lin": [
+    0.6239603916750761,
+    0.21223075741405523,
+    0.09084171118340768,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Pencere": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/yildirim-bayezid-bedesteni/3d/build/doku_palet_v2/Pencere_palet_v2.png",
+   "lead": false
+  }
+ }
+}

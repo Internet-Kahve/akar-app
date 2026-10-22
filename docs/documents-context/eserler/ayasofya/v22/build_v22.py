@@ -53,18 +53,18 @@ high=[]
 for x0,x1 in [(-20.1,-11.52),(10.92,19.5)]:
  for y0,y1 in [(-37.64,-19.16),(17.8,36.28)]:high.append(((x0,y0,22.15),(x1,y1,41.5)))
 ys=[(-17.84-13.55)/2,(-9.26-4.97)/2,(3.61+7.9)/2,(12.19+16.48)/2]
-west=[((-75.2,y-2.16,-.1),(-41.20,y+2.16,26)) for y in ys]
+west=[((-75.2,y-2.16,-.1),(-55.345,y+2.16,26)) for y in ys]
 gallery=[]
 for x0,x1 in [(-11.52,10.92),(-38.58,-20.1),(19.5,37.98)]:
  for y0,y1 in [(-37.64,-19.16),(17.8,36.28)]:gallery.append(((x0,y0,18.76),(x1,y1,25.55)))
-roofboxes=gallery+[((-66,-34,6),(-41.2,32.7,24))]
+roofboxes=gallery+[((-55.345,-37.64,17.5),(-41.219,36.282,24))]
 report={'clipped_objects':{},'new_high_buttresses':4,'new_flying_buttresses':4,'gallery_roof_bays':8}
 for ob in list(parts):
  if ob.name not in ['V22_Tarihi_Cepheler','V22_Kesisimleri_Kesilmis_Catilar']:continue
  me=ob.data;me.calc_loop_triangles();layer=me.uv_layers.active;verts=[];faces=[];uvs=[];indices=[];changed=0
  for t in me.loop_triangles:
-  mid=me.polygons[t.polygon_index].material_index;name=me.materials[mid].name;poly=[(me.vertices[v].co.copy(),layer.data[l].uv.copy() if layer else Vector((0,0))) for v,l in zip(t.vertices,t.loops)]
-  polys=[poly];boxes=[((a[0]-.02,a[1]-(.65 if a[1]<0 else .02),a[2]),(b[0]+.02,b[1]+(.65 if b[1]>0 else .02),b[2])) for a,b in high]+west+(roofboxes if name=='Color_004' else [])
+  mid=me.polygons[t.polygon_index].material_index;name=me.materials[mid].name.split('.')[0];poly=[(me.vertices[v].co.copy(),layer.data[l].uv.copy() if layer else Vector((0,0))) for v,l in zip(t.vertices,t.loops)]
+  polys=[poly];boxes=[((a[0]-.02,a[1]-(.65 if a[1]<0 else .02),a[2]),(b[0]+.02,b[1]+(.65 if b[1]>0 else .02),b[2])) for a,b in high]+west+(roofboxes if name=='Color_004' else [((a[0],max(a[1],23) if a[1]>0 else a[1],19.0),(b[0],b[1] if b[1]>0 else min(b[1],-24),24.2)) for a,b in gallery] if name=='material_0' else [])
   for lo,hi in boxes:
    polys=[q for p in polys for q in subtract(p,lo,hi)]
    if not polys:break
@@ -85,7 +85,7 @@ def extrude_profile(name,profile,axis,low,high,m):
 # Four continuous upper buttresses, with shallow roof slope and rounded crown.
 for num,(lo,hi) in enumerate(high):
  x0,y0,z0=lo;x1,y1,_=hi;side=1 if y0>0 else -1;inner=y0 if side>0 else y1;outer=y1 if side>0 else y0;cx=(x0+x1)/2
- top_inner=39.5 if num<2 else 40.0;top_outer=37.05 if side>0 else 37.35
+ top_inner=41.25 if num<2 else 41.35;top_outer=38.0 if side>0 else 38.2
  profile=[(inner,z0),(outer,z0),(outer,top_outer),(inner,top_inner)]
  extrude_profile(f'V22_Yuksek_Payanda_{num+1}',profile,'x',x0,x1,wall)
  roof=[(x,y,z+.10) for x in (x0-.10,x1+.10) for y,z in [(inner,top_inner),(outer,top_outer)]]
@@ -101,41 +101,79 @@ for num,(lo,hi) in enumerate(high):
  for z in (28.7,33.0):
   box('V22_Payanda_Mazgal',(cx,outer+side*.018,z),(.38,.035,.85),dark)
 # Gallery upper envelope: a continuous roof shell, not intersecting spheres and slabs.
+boundary_source=json.loads((P.parent/'v21/base_geometry.json').read_text())
 for idx,(lo,hi) in enumerate(gallery):
  x0,y0,z0=lo;x1,y1,_=hi;side=1 if y0>0 else -1;inner=y0 if side>0 else y1;outer=y1 if side>0 else y0
- centers=[-6.3,5.7] if idx<2 else [(x0+x1)/2];rad=5.22 if idx<2 else (x1-x0)/2;peak=4.62 if idx<2 else 5.73;base=19.23
- def height(x,t):
-  barrel=max(base+peak*math.sqrt(max(0,1-((x-c)/rad)**2)) for c in centers)
-  slope=24.0+(base-24.0)*t
-  return max(slope,barrel)
- NX=96;NY=40;vs=[];fs=[]
+ segments=[]
+ for f,mi in zip(boundary_source['faces'],boundary_source['material_indices']):
+  if boundary_source['materials'][mi]!='Color_004':continue
+  vv=[boundary_source['vertices'][k] for k in f]
+  for aa,bb in zip(vv,vv[1:]+vv[:1]):
+   if abs(aa[1]-outer)<.005 and abs(bb[1]-outer)<.005 and abs(aa[0]-bb[0])>.0001 and min(aa[2],bb[2])>18 and max(aa[2],bb[2])<25.6 and min(aa[0],bb[0])<=x1 and max(aa[0],bb[0])>=x0:
+    segments.append((aa,bb))
+ def front_height(x):
+  zz=[18.768]
+  for a,b in segments:
+   if min(a[0],b[0])-.0001<=x<=max(a[0],b[0])+.0001:
+    t=(x-a[0])/(b[0]-a[0]);zz.append(a[2]+(b[2]-a[2])*t)
+  return max(zz)
+ def height(x,t):return 24.0*(1-t)+front_height(x)*t+.30*math.sin(math.pi*t)
+ xs=sorted(set([round(x0+(x1-x0)*i/96,5) for i in range(97)]+[round(v[0],5) for pair in segments for v in pair if x0<v[0]<x1]));NX=len(xs)-1;NY=40;vs=[];fs=[]
  for j in range(NY+1):
   t=j/NY;y=inner+(outer-inner)*t
-  for i in range(NX+1):x=x0+(x1-x0)*i/NX;vs.append((x,y,height(x,t)))
+  for x in xs:vs.append((x,y,height(x,t)))
  for j in range(NY):
   for i in range(NX):a=j*(NX+1)+i;fs.append((a,a+1,a+NX+2,a+NX+1))
  mesh(f'V22_Galeri_Butun_Cati_{idx+1}',vs,fs,[lead],smooth=True)
+ # Close hidden side/rear returns down to the retained wall shoulder.
+ for edge in [[vs[i] for i in range(NX+1)],[vs[j*(NX+1)] for j in range(NY+1)],[vs[j*(NX+1)+NX] for j in range(NY+1)]]:
+  nn=len(edge);vv=edge+[(x,y,18.768) for x,y,z in edge];ff=[(i,i+1,i+nn+1,i+nn) for i in range(nn-1)];mesh('V22_Galeri_Yan_Kapanis',vv,ff,[wall])
  # At front follow the existing arched facade edge; vertical closure is thin roof flashing.
  edge=[vs[NY*(NX+1)+i] for i in range(NX+1)];v=edge+[(x,y,z-.12) for x,y,z in edge];f=[(i,i+1,i+NX+2,i+NX+1) for i in range(NX)];mesh('V22_Galeri_Sacak',v,f,[lead])
+ closure_v=[];closure_f=[]
+ for a,b in zip(edge,edge[1:]):
+  if max(a[2],b[2])>19.3:continue
+  k=len(closure_v);closure_v.extend([(a[0],a[1],a[2]-.1),(b[0],b[1],b[2]-.1),(b[0],b[1],17.55),(a[0],a[1],17.55)]);closure_f.append((k,k+1,k+2,k+3))
+ mesh('V22_Galeri_Kose_Duvar_Kapanis',closure_v,closure_f,[wall])
  for i in range(1,14):
   x=x0+(x1-x0)*i/14;pts=[(x,inner+(outer-inner)*j/NY,height(x,j/NY)+.025) for j in range(NY+1)];line('V22_Galeri_Kursun_Derz',pts,.017)
+# Close the low exedra eaves against the adjoining gallery roof shoulder.
+from collections import Counter
+edge_counts=Counter();edge_points={}
+for face,mi in zip(boundary_source['faces'],boundary_source['material_indices']):
+ if boundary_source['materials'][mi]!='Color_004':continue
+ vv=[boundary_source['vertices'][k] for k in face]
+ for a,b in zip(vv,vv[1:]+vv[:1]):
+  key=tuple(sorted((tuple(round(c,5) for c in a),tuple(round(c,5) for c in b))));edge_counts[key]+=1;edge_points[key]=(a,b)
+eave_v=[];eave_f=[]
+for key,count in edge_counts.items():
+ a,b=edge_points[key]
+ if count!=1 or not all(abs(v[2]-24.9639)<.002 and 18<abs(v[0])<39 for v in (a,b)):continue
+ k=len(eave_v);eave_v.extend([a,b,(b[0],b[1],23.95),(a[0],a[1],23.95)]);eave_f.append((k,k+1,k+2,k+3))
+mesh('V22_Eksedra_Sacak_Kapanis',eave_v,eave_f,[wall]);report['exedra_eave_panels']=len(eave_f)
+
 # Narthex continuous lead roof and four narrower flying buttresses.
-roofverts=[(x,y,15.28+(x+65)*(7.98/23.8)) for x in (-65,-41.2) for y in (-34,32.7)]
-mesh('V22_Narteks_Cati',roofverts,[(0,2,3,1)],[lead])
-for y in [i*1.25-33 for i in range(53)]:line('V22_Narteks_Derz',[(-65,y,15.31),(-41.2,y,23.29)],.019)
+def panel(name,coords):
+ return mesh(name,coords,[(0,1,2,3)],[lead])
+panel('V22_Narteks_Ust_Cati',[(-55.344,-37.639,17.554),(-48.744,-37.639,20.408),(-48.744,36.281,20.408),(-55.344,36.281,17.554)])
+panel('V22_Narteks_Ust_Merkez',[(-48.744,-17.839,20.408),(-42.144,-17.839,23.262),(-42.144,16.481,23.262),(-48.744,16.481,20.408)])
+for ya,yb in [(-37.639,-17.839),(16.481,36.281)]:
+ panel('V22_Narteks_Yan_Cati',[(-48.744,ya,20.408),(-41.22,ya,20.408),(-41.22,yb,20.408),(-48.744,yb,20.408)])
+# The outer narthex is low; it must not obscure the upper western windows.
+panel('V22_Dis_Narteks_Cati',[(-64.558,-33.16,6.95),(-55.344,-33.16,6.95),(-55.344,33.18,6.95),(-64.558,33.18,6.95)])
+for y in [i*1.25-36.7 for i in range(59)]:
+ line('V22_Narteks_Derz',[(-55.344,y,17.58),(-48.744,y,20.434)],.017)
+ if -17.839<y<16.481:line('V22_Narteks_Derz',[(-48.744,y,20.434),(-42.144,y,23.288)],.017)
 for i,y in enumerate(ys):
- width=[2.4,2.15,2.25,2.55][i];a=-70;b=-43;topa=20.0;topb=25.5
- # Upper curved arch band: both faces and soffit are part of one watertight profile.
- lower=[(a+(b-a)*t,10+12.5*t+5.2*math.sin(math.pi*t)) for t in [j/48 for j in range(49)]]
+ width=[2.4,2.15,2.25,2.55][i];a=-70;b=-55.344;topa=14.0;topb=17.554
+ lower=[(a+(b-a)*t,6.93+5.1*math.sin(math.pi*t)) for t in [j/48 for j in range(49)]]
  profile=[(a,topa),(b,topb)]+list(reversed(lower))
  extrude_profile(f'V22_Ucan_Payanda_Kemer_{i+1}',profile,'y',y-width/2,y+width/2,masonry)
  box(f'V22_Ucan_Payanda_Dis_Ayak_{i+1}',(-72.6,y,topa/2),(5.2,width,topa),masonry)
- box(f'V22_Ucan_Payanda_Ic_Ayak_{i+1}',(-42.1,y,topb/2),(1.8,width,topb),wall)
- mesh('V22_Ucan_Payanda_Kapak',[(x,yy,z+.08) for x,z in [(a,topa),(b,topb)] for yy in (y-width/2-.08,y+width/2+.08)],[(0,2,3,1)],[lead])
- # Source wall strips removed with the old wide supports are repaired behind the new arch.
- box('V22_Narteks_Duvar_Tamami',(-64.72,y,7.64),(.35,4.33,15.28),brick)
- for j in range(1,14):
-  t=j/14;x=a+(b-a)*t;z=topa+(topb-topa)*t+.10;line('V22_Ucan_Payanda_Derz',[(x,y-width/2,z),(x,y+width/2,z)],.018)
+ box(f'V22_Ucan_Payanda_Ic_Ayak_{i+1}',(-55.85,y,topb/2),(1.0,width,topb),wall)
+ panel('V22_Ucan_Payanda_Kapak',[(a,y-width/2-.08,topa+.08),(b,y-width/2-.08,topb+.08),(b,y+width/2+.08,topb+.08),(a,y+width/2+.08,topa+.08)])
+ for j in range(1,10):
+  t=j/10;x=a+(b-a)*t;z=topa+(topb-topa)*t+.10;line('V22_Ucan_Payanda_Derz',[(x,y-width/2,z),(x,y+width/2,z)],.018)
 # Convert added lead details, preserve named edit groups, then restore project yaw.
 for o in list(parts):
  if o.type=='CURVE':
@@ -143,6 +181,16 @@ for o in list(parts):
 for o in parts:
  o.data.transform(R.inverted());o.matrix_world=Matrix.Identity(4)
  bm=bmesh.new();bm.from_mesh(o.data);bmesh.ops.triangulate(bm,faces=list(bm.faces));bmesh.ops.delete(bm,geom=[f for f in bm.faces if f.calc_area()<1e-6],context='FACES');bm.to_mesh(o.data);bm.free();o.data.update()
+# Batch repeated details into semantic meshes to avoid hundreds of draw calls.
+from collections import defaultdict
+groups=defaultdict(list)
+for o in parts:groups[o.name.split('.')[0]].append(o)
+for key,group in groups.items():
+ if len(group)<2:continue
+ bpy.ops.object.select_all(action='DESELECT')
+ for o in group:o.select_set(True)
+ bpy.context.view_layer.objects.active=group[0];bpy.ops.object.join();bpy.context.object.name=key
+parts=[o for o in bpy.data.objects if o.type=='MESH' and o.name.startswith('V22_')]
 bpy.ops.object.select_all(action='DESELECT')
 for o in parts:o.select_set(True)
 bpy.context.view_layer.objects.active=parts[0]

@@ -1,0 +1,18 @@
+{
+  "v21": {
+    "bytes": 5088424,
+    "meshes": 354,
+    "primitives": 371,
+    "materials": 23,
+    "embedded_images": 11,
+    "triangles": 138033
+  },
+  "v22": {
+    "bytes": 6836944,
+    "meshes": 90,
+    "primitives": 107,
+    "materials": 28,
+    "embedded_images": 11,
+    "triangles": 221091
+  }
+}

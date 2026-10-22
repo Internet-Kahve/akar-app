@@ -11,3 +11,5 @@
 - `veri/bursa/bursa_eserler.csv`: Bursa'nın ayrıntılı listesi (408 satır; cilt, sayfa, ilçe, ad, tür, rol, ölçü sayısı, kubbe geçişi, metin uzunluğu, adres). Kitap 385 diyor; tekrarlar temizlenecek.
 - `veri/bursa/bursa_3d_adaylari.md`: 3D aday eserler ve ana hikâye önerisi (Ulucami + Bedesten).
 - Uygulama şeması ve içe aktarma kuralları: `FRONTEND_BACKEND_NOTLARI.md`.
+
+- `veri/fotoatlas/`: Foto Atlas'tan alınan 10.214 eski fotoğraf kaydı (konum, yön, kaynak, lisans, izin durumu). Önce `fotoatlas/IZIN_DURUMU.md` dosyasını oku; sadece `durum` alanı `kullanilabilir` / `kullanilabilir-yas` olanlar kullanılır. (21 Ekim 2026)

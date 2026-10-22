@@ -665,3 +665,8 @@ Kullanıcının referansa mümkün olduğunca yaklaşma isteğiyle ayrı v20 ür
 ## 30. v21 — çatı ve türbe revizyonu (20 Ekim 2026)
 
 `v21/ayasofya_v21.blend` ve `v21/ayasofya_v21.glb` üretildi. Çatı üst yüzeyleri kesilerek örtüşmeler azaltıldı; ana kubbe ve üç türbe yeniden kuruldu; minare şerefe silmeleri eklendi. Referans fotoğraf araştırması ve teknik sınırlar `v21/README.md` içinde. Bu sürüm tüm mimari detaylar için kapanış/onay anlamına gelmez; kaynak payanda ve cephe oranları tamamen yeniden modellenmedi. V19 ve V20 korunur.
+
+
+## 31. v22 — payanda, galeri ve narteks birleşimleri (20 Ekim 2026)
+
+Dört yüksek payanda, dört kemerli batı desteği ve altı galeri çatı yüzeyi yeniden kuruldu. İç/dış narteks çatı kotları ayrıldı; galeri yanları, köşeleri ve eksedra saçakları kapatıldı. Türkçe, İngilizce ve Yunanca kaynak kaydı `v22/REFERANSLAR.md` içinde. GLB yeniden içe aktarımı: 90 mesh, 221.091 üçgen, sıfır geçersiz koordinat ve sıfır dejenere üçgen. Sekiz yeni destek geometrik kapanış testini; altı galeri ön kenarı, köşe duvarı uçları hariç 1 mm toleranslı eşleşme testini geçti. Detay gruplama V21’in 371 primitive sayısını 107’ye indirdi; ancak üçgen/dosya yükü arttı ve telefonda FPS testi yapılmadı. Dosyalar ve kapsam sınırları `v22/README.md` içinde. Eski sürümler korunur.

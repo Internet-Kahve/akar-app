@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AKAR · Redmi 9T testi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+:root{
+  --bg:#F3F5F5; --surface:#FFFFFF; --text:#141B2B; --muted:#4A5466; --border:#DAE1E2;
+  --primary:#25477B; --on-primary:#FFFFFF; --primary-light:#E6ECF5;
+  --pin-dini:#2E7D32; --pin-akar:#9A5B2E; --good:#1E6B4A; --warn:#8A5A00; --bad:#B3261E;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overscroll-behavior:none}
+body{font:14px/1.4 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg);-webkit-text-size-adjust:100%}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+#map{position:fixed;inset:0}
+.hud{position:fixed;left:8px;top:calc(8px + var(--sat));z-index:5;display:grid;gap:6px;max-width:calc(100vw - 16px)}
+.chip{background:rgba(255,255,255,.94);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(20,27,43,.15)}
+.chip b{font-variant-numeric:tabular-nums}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:9px 14px;font-weight:600;min-height:40px}
+.btn.pri{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+.btn:disabled{opacity:.5}
+.dock{position:fixed;left:8px;right:8px;bottom:calc(8px + var(--sab));z-index:5;display:flex;gap:6px;justify-content:space-between;pointer-events:none}
+.dock>*{pointer-events:auto}
+.helpbg{position:fixed;inset:0;z-index:40;background:rgba(20,27,43,.45);display:grid;place-items:center;padding:16px}
+.help{max-width:420px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(20,27,43,.3)}
+.help ol{margin:6px 0 10px;padding-left:20px}
+/* görüntüleyici */
+#viewer{position:fixed;inset:0;z-index:20;background:#E9EDEE;display:none;grid-template-rows:auto minmax(0,1fr) auto}
+#viewer.on{display:grid}
+.vtop{display:flex;gap:8px;align-items:center;padding:calc(8px + var(--sat)) 10px 8px;background:var(--surface);border-bottom:1px solid var(--border)}
+.vtop h2{margin:0;font-size:16px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:8px 12px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--on-primary)}
+#stage{position:relative;min-height:0}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.load{position:absolute;inset:0;display:grid;place-items:center;background:rgba(233,237,238,.85);font-weight:600;text-align:center;padding:20px}
+.fpsbig{position:absolute;right:10px;top:10px;background:rgba(20,27,43,.82);color:#fff;border-radius:12px;padding:6px 10px;font:600 15px/1.2 ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;text-align:right}
+.vbot{background:var(--surface);border-top:1px solid var(--border);padding:8px 10px calc(8px + var(--sab));display:grid;gap:8px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 10px;font-size:12px;color:var(--muted)}
+.stats b{display:block;color:var(--text);font-size:14px;font-variant-numeric:tabular-nums}
+.verdict{font-weight:600;border-radius:10px;padding:8px 10px;background:var(--primary-light)}
+.verdict.good{background:#E3F2EA;color:var(--good)} .verdict.warn{background:#FBEFD6;color:var(--warn)} .verdict.bad{background:#FBE9E7;color:var(--bad)}
+/* sonuçlar */
+#res{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;grid-template-rows:auto minmax(0,1fr) auto}
+#res.on{display:grid}
+.rtop{padding:calc(10px + var(--sat)) 12px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--surface);border-bottom:1px solid var(--border)}
+.rbody{overflow:auto;padding:10px 12px}
+table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 6px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:600}
+textarea{width:100%;height:120px;margin-top:10px;font:12px ui-monospace,Menlo,monospace;border:1px solid var(--border);border-radius:10px;padding:8px}
+.rbot{padding:10px 12px calc(10px + var(--sab));background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px}
+.dev{font-size:12px;color:var(--muted);margin:0 0 10px;word-break:break-word}
+.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{margin-bottom:calc(52px + var(--sab))}
+.maplibregl-ctrl-top-right{margin-top:calc(8px + var(--sat))}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Harita"></div>
+
+<div class="hud">
+  <div class="chip">Harita FPS <b id="mapfps">—</b></div>
+  <div class="row"><button class="btn sm" id="tilt" aria-pressed="true">Eğik harita</button><button class="btn sm" id="hepsi">Tümü</button><button class="btn sm pri" id="yapilar" aria-pressed="true">Yapılar: açık</button><select id="isik" class="btn sm" aria-label="Yapı ışığı"><option value="yeni" selected>Işık: yeni palet</option><option value="yumusak">Işık: yumuşak (eski palet)</option><option value="acik">Işık: açık</option><option value="canli">Işık: canlı</option><option value="koyu">Işık: koyu</option></select></div>
+  <div class="chip" id="yapibilgi">Yapılar yükleniyor… <b id="yn">0</b>/7</div>
+</div>
+<div class="dock">
+  <span class="chip" style="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + var(--sab));font-size:11px;opacity:.8">sürüm 21.10 · yeni palet</span>
+  <button class="btn" id="help">Nasıl test edilir?</button>
+  <button class="btn pri" id="resbtn">Sonuçlar (<span id="rcount">0</span>)</button>
+</div>
+
+<div class="helpbg" id="helpcard" hidden><div class="help">
+  <b>Redmi 9T testi</b>
+  <ol>
+    <li>Yapılar haritada gerçek yerlerinde ve ölçeğinde çizili (yakınlaşınca görünür; 7 yapı birlikte ~197 bin üçgen). Haritayı kaydır, yakınlaştır, «Eğik harita» ile yatır ve «Harita FPS»e bak. «Yapılar: kapalı» ile yapısız FPS'i karşılaştır.</li>
+    <li>Kümelere (sayılı daireler) dokunursan yakınlaşır, pinler ayrılır. Bir pine dokun: model açılır. Parmakla döndür, iki parmakla yakınlaştır.</li>
+    <li>«10 sn test»e bas. Kamera 10 saniye döner, ortalama ve en düşük FPS yazılır.</li>
+    <li>Aynı modeli <b>Yapı</b> (uygulama dosyası) ve <b>Sunum</b> ile dene. Piksel oranını 1 / 1,5 / tam arasında değiştir.</li>
+    <li>«Sonuçlar» → «Kopyala»: yazıyı bana gönder.</li>
+  </ol>
+  <button class="btn pri" id="helpclose">Tamam</button>
+</div></div>
+
+<div id="viewer" role="dialog" aria-label="Model görüntüleyici">
+  <div class="vtop">
+    <h2 id="vtitle">—</h2>
+    <span class="seg" role="group" aria-label="Dosya"><button id="v-yapi" aria-pressed="true">Yapı</button><button id="v-sunum" aria-pressed="false">Sunum</button></span>
+    <button class="btn" id="vclose" aria-label="Kapat">✕</button>
+  </div>
+  <div id="stage"><div class="load" id="loadmsg">Yükleniyor…</div><div class="fpsbig" id="fpsbig">— FPS</div></div>
+  <div class="vbot">
+    <div class="stats">
+      <div>Üçgen<b id="s-tri">—</b></div><div>Draw call<b id="s-calls">—</b></div><div>Parça · malzeme<b id="s-parts">—</b></div>
+      <div>GLB boyutu<b id="s-size">—</b></div><div>İndirme + çözme<b id="s-load">—</b></div><div>FPS ort · en düşük<b id="s-fps">—</b></div>
+    </div>
+    <div class="verdict" id="verdict" hidden></div>
+    <div class="row">
+      <button class="btn pri" id="testbtn">10 sn test</button>
+      <label class="row" style="gap:4px">Piksel
+        <select id="pr" class="btn" style="padding:8px"><option value="1">1</option><option value="1.5" selected>1,5</option><option value="dev">tam</option></select></label>
+      <label class="row" style="gap:4px"><input type="checkbox" id="aa" checked> Kenar yumuşatma</label>
+    </div>
+  </div>
+</div>
+
+<div id="res">
+  <div class="rtop"><b>Test sonuçları</b><button class="btn" id="resclose">Kapat</button></div>
+  <div class="rbody">
+    <p class="dev" id="dev"></p>
+    <div style="overflow-x:auto"><table><thead><tr><th>Model</th><th>Dosya</th><th>Üçgen</th><th>Çağrı</th><th>KB</th><th>Yük ms</th><th>Ort FPS</th><th>%1 düşük</th><th>En düşük</th><th>Px</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <textarea id="copybox" readonly aria-label="Kopyalanacak metin"></textarea>
+  </div>
+  <div class="rbot"><button class="btn pri" id="copy">Kopyala</button><button class="btn" id="clear">Temizle</button></div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const $ = (s) => document.querySelector(s);
+const fmt = (n) => Math.round(n).toLocaleString('tr-TR');
+
+/* Konumlar: OSM merkezleri (veri/bursa/osm_secilen.csv); Orhan Bey Camii, Emir Hanı ve Hamam için OSM way merkezi (yalnız konum). */
+const MODELS = [
+  { id:'ulu-cami', yaw:-6, ikon:'cami',   ad:'Ulucami',               kisa:'Ulucami',   rol:'dini', lat:40.183929, lon:29.061759, dosya:'ulu-cami_v26' },
+  { id:'bedesten', yaw:4, ikon:'han',   ad:'Yıldırım Bayezid Bedesteni', kisa:'Bedesten', rol:'akar', lat:40.185173, lon:29.062054, dosya:'bedesten_v06' },
+  { id:'koza-han', yaw:4, ikon:'han',   ad:'Koza Han',              kisa:'Koza Han',  rol:'akar', lat:40.184411, lon:29.063496, dosya:'koza-han_v14' },
+  { id:'orhan-camii', yaw:13, ikon:'cami',ad:'Orhan Bey Camii',       kisa:'Orhan Camii', rol:'dini', lat:40.1839745, lon:29.0641131, dosya:'orhan-bey-camii_v07' },
+  { id:'hamam', yaw:6, ikon:'hamam',      ad:'Orhan Bey Hamamı',      kisa:'Hamam',     rol:'akar', lat:40.184466, lon:29.062931, dosya:'orhan-bey-hamami_v05' },
+  { id:'emir-han', yaw:7, ikon:'han',   ad:'Emir Hanı',             kisa:'Emir Hanı', rol:'akar', lat:40.184602, lon:29.061711, dosya:'emir-hani_v04' },
+  { id:'turbe', yaw:2, ikon:'turbe',      ad:'Orhan Gazi Türbesi',    kisa:'Türbe',     rol:'dini', lat:40.186786, lon:29.057715, dosya:'orhan-gazi-turbesi_v02' }
+];
+
+/* ---------- harita ---------- */
+const FALLBACK = { version:8, sources:{ osm:{ type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256, attribution:'© OpenStreetMap' } }, layers:[{ id:'osm', type:'raster', source:'osm' }] };
+let style = 'akar-style.json';
+let stilYok = false;
+try { const r = await fetch('akar-style.json'); if (!r.ok) throw 0; style = await r.json(); } catch { style = FALLBACK; stilYok = true; }
+const map = new maplibregl.Map({ container:'map', style, center:[29.0620, 40.1846], zoom:16.3, pitch:50, bearing:-22, minZoom:5, maxZoom:19, maxPitch:60, attributionControl:{ compact:true } });
+map.addControl(new maplibregl.NavigationControl({ showCompass:true }), 'top-right');
+
+/* AKAR pinleri: kemerli pin + ikon, vakıf rolü rengi (design/harita/akar-harita-onizleme.html ile aynı SVG'ler, küme ve etiket katmanları da aynı) */
+const PINS = {"cami": {"svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"50\" viewBox=\"0 0 40 50\"><path d=\"M20 48c-1.2 0-2-1-3-2.4C11 37.6 3 29.8 3 19.5 3 10 10.6 2.5 20 2.5S37 10 37 19.5c0 10.3-8 18.1-14 26.1-1 1.4-1.8 2.4-3 2.4z\" fill=\"#2E7D32\" stroke=\"#FFFFFF\" stroke-width=\"3\"/><g transform=\"translate(8 7.5)\"> <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M3 21V15H15V21H3ZM8 21V18.5C8 17.5 8.33333 16.6667 9 16C9.66667 16.6667 10 17.5 10 18.5V21H8Z\" fill=\"#FFFFFF\"/> <path d=\"M4 14C4 12.9391 4.52678 11.9217 5.46447 11.1716C6.40215 10.4214 7.67392 10 9 10C10.3261 10 11.5979 10.4214 12.5355 11.1716C13.4732 11.9217 14 12.9391 14 14H4Z\" fill=\"#FFFFFF\"/> <path d=\"M17.5 21V9H19.5V21H17.5Z\" fill=\"#FFFFFF\"/> <path d=\"M16.75 11H20.25V12H16.75V11Z\" fill=\"#FFFFFF\"/> <path d=\"M17.5 8L18.5 3L19.5 8H17.5Z\" fill=\"#FFFFFF\"/>  </g></svg>", "renk": "#2E7D32"}, "han": {"svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"50\" viewBox=\"0 0 40 50\"><path d=\"M20 48c-1.2 0-2-1-3-2.4C11 37.6 3 29.8 3 19.5 3 10 10.6 2.5 20 2.5S37 10 37 19.5c0 10.3-8 18.1-14 26.1-1 1.4-1.8 2.4-3 2.4z\" fill=\"#9A5B2E\" stroke=\"#FFFFFF\" stroke-width=\"3\"/><g transform=\"translate(8 7.5)\"> <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M2 21V6H22V21H2ZM6 12.5V10.5C6 9.83333 6.41667 9.25 7.25 8.75C8.08333 9.25 8.5 9.83333 8.5 10.5V12.5H6ZM15.5 12.5V10.5C15.5 9.83333 15.9167 9.25 16.75 8.75C17.5833 9.25 18 9.83333 18 10.5V12.5H15.5ZM5.5 21V17.5C5.5 16.5 6.08333 15.6667 7.25 15C8.41667 15.6667 9 16.5 9 17.5V21H5.5ZM15 21V17.5C15 16.5 15.5833 15.6667 16.75 15C17.9167 15.6667 18.5 16.5 18.5 17.5V21H15Z\" fill=\"#FFFFFF\"/>  </g></svg>", "renk": "#9A5B2E"}, "hamam": {"svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"50\" viewBox=\"0 0 40 50\"><path d=\"M20 48c-1.2 0-2-1-3-2.4C11 37.6 3 29.8 3 19.5 3 10 10.6 2.5 20 2.5S37 10 37 19.5c0 10.3-8 18.1-14 26.1-1 1.4-1.8 2.4-3 2.4z\" fill=\"#9A5B2E\" stroke=\"#FFFFFF\" stroke-width=\"3\"/><g transform=\"translate(8 7.5)\"> <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M2 21V15H22V21H2ZM5 21V18.5C5 17.5 5.33333 16.6667 6 16C6.66667 16.6667 7 17.5 7 18.5V21H5Z\" fill=\"#FFFFFF\"/> <path d=\"M3 14C3 13.337 3.31607 12.7011 3.87868 12.2322C4.44129 11.7634 5.20435 11.5 6 11.5C6.79565 11.5 7.55871 11.7634 8.12132 12.2322C8.68393 12.7011 9 13.337 9 14H3Z\" fill=\"#FFFFFF\"/> <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M10 14C10 12.8065 10.5795 11.6619 11.6109 10.818C12.6424 9.97411 14.0413 9.5 15.5 9.5C16.9587 9.5 18.3576 9.97411 19.3891 10.818C20.4205 11.6619 21 12.8065 21 14H10ZM13.75 12.2C13.75 12.3989 13.671 12.5897 13.5303 12.7303C13.3897 12.871 13.1989 12.95 13 12.95C12.8011 12.95 12.6103 12.871 12.4697 12.7303C12.329 12.5897 12.25 12.3989 12.25 12.2C12.25 12.0011 12.329 11.8103 12.4697 11.6697C12.6103 11.529 12.8011 11.45 13 11.45C13.1989 11.45 13.3897 11.529 13.5303 11.6697C13.671 11.8103 13.75 12.0011 13.75 12.2ZM16.25 11C16.25 11.1989 16.171 11.3897 16.0303 11.5303C15.8897 11.671 15.6989 11.75 15.5 11.75C15.3011 11.75 15.1103 11.671 14.9697 11.5303C14.829 11.3897 14.75 11.1989 14.75 11C14.75 10.8011 14.829 10.6103 14.9697 10.4697C15.1103 10.329 15.3011 10.25 15.5 10.25C15.6989 10.25 15.8897 10.329 16.0303 10.4697C16.171 10.6103 16.25 10.8011 16.25 11ZM18.75 12.2C18.75 12.3989 18.671 12.5897 18.5303 12.7303C18.3897 12.871 18.1989 12.95 18 12.95C17.8011 12.95 17.6103 12.871 17.4697 12.7303C17.329 12.5897 17.25 12.3989 17.25 12.2C17.25 12.0011 17.329 11.8103 17.4697 11.6697C17.6103 11.529 17.8011 11.45 18 11.45C18.1989 11.45 18.3897 11.529 18.5303 11.6697C18.671 11.8103 18.75 12.0011 18.75 12.2Z\" fill=\"#FFFFFF\"/>  </g></svg>", "renk": "#9A5B2E"}, "turbe": {"svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"50\" viewBox=\"0 0 40 50\"><path d=\"M20 48c-1.2 0-2-1-3-2.4C11 37.6 3 29.8 3 19.5 3 10 10.6 2.5 20 2.5S37 10 37 19.5c0 10.3-8 18.1-14 26.1-1 1.4-1.8 2.4-3 2.4z\" fill=\"#2E7D32\" stroke=\"#FFFFFF\" stroke-width=\"3\"/><g transform=\"translate(8 7.5)\"> <path d=\"M6.5 10C6.5 6.5 9 5 12 3.5C15 5 17.5 6.5 17.5 10H6.5Z\" fill=\"#FFFFFF\"/> <path d=\"M3 11H21V12.5H3V11Z\" fill=\"#FFFFFF\"/> <path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M5 13.5H19C17.6667 13.5 17 14.1667 17 15.5V21H7V15.5C7 14.1667 6.33333 13.5 5 13.5ZM10.5 21V18C10.5 17 11 16.1667 12 15.5C13 16.1667 13.5 17 13.5 18V21H10.5Z\" fill=\"#FFFFFF\"/>  </g></svg>", "renk": "#2E7D32"}};
+const RENK = { cami:'#2E7D32', turbe:'#2E7D32', han:'#9A5B2E', hamam:'#9A5B2E' };
+const svgImg = (svg) => new Promise((r) => { const i = new Image(80, 100); i.onload = () => r(i); i.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('width="40" height="50"', 'width="80" height="100"')); });
+async function pinleriKur() {
+  if (map.getSource('eserler')) return;
+  for (const [k, p] of Object.entries(PINS)) if (!map.hasImage('pin-' + k)) map.addImage('pin-' + k, await svgImg(p.svg), { pixelRatio:2 });
+  const glyph = !!map.getStyle().glyphs;
+  map.addSource('eserler', { type:'geojson', cluster:true, clusterRadius:40, clusterMaxZoom:15, data:{ type:'FeatureCollection', features:MODELS.map((m) => ({ type:'Feature', geometry:{ type:'Point', coordinates:[m.lon, m.lat] }, properties:{ id:m.id, ad:m.kisa, ikon:m.ikon, renk:RENK[m.ikon] } })) } });
+  map.addLayer({ id:'kume', type:'circle', source:'eserler', filter:['has','point_count'], paint:{ 'circle-color':'#25477B', 'circle-radius':18, 'circle-stroke-color':'#C9A13B', 'circle-stroke-width':3 } });
+  if (glyph) map.addLayer({ id:'kume-sayi', type:'symbol', source:'eserler', filter:['has','point_count'], layout:{ 'text-field':['get','point_count_abbreviated'], 'text-font':['Noto Sans Bold'], 'text-size':14, 'text-allow-overlap':true }, paint:{ 'text-color':'#fff' } });
+  map.addLayer({ id:'pin', type:'symbol', source:'eserler', filter:['!', ['has','point_count']], layout: Object.assign({ 'icon-image':['concat','pin-',['get','ikon']], 'icon-anchor':'bottom', 'icon-allow-overlap':true }, glyph ? { 'text-field':['step',['zoom'],'',15.5,['get','ad']], 'text-font':['Noto Sans Bold'], 'text-size':13, 'text-anchor':'top', 'text-offset':[0,0.3], 'text-optional':true } : {}), paint:{ 'text-color':['get','renk'], 'text-halo-color':'#fff', 'text-halo-width':2 } });
+}
+map.on('style.load', pinleriKur);
+/* parmak için geniş dokunma alanı: pinin gövdesi ve biraz çevresi */
+map.on('click', (e) => {
+  const kutu = [[e.point.x - 26, e.point.y - 20], [e.point.x + 26, e.point.y + 46]];
+  const kume = map.queryRenderedFeatures(kutu, { layers:['kume'] })[0];
+  if (kume) { map.getSource('eserler').getClusterExpansionZoom(kume.properties.cluster_id).then((z) => map.easeTo({ center:kume.geometry.coordinates, zoom:z })); return; }
+  const f = map.queryRenderedFeatures(kutu, { layers:['pin'] })[0];
+  if (f) openViewer(MODELS.find((m) => m.id === f.properties.id));
+});
+window.akarMap = map; window.akarModeller = MODELS; // yalnız otomatik sınama için
+
+if (stilYok) document.querySelector('.hud').insertAdjacentHTML('beforeend', '<div class="chip" style="color:var(--bad)">AKAR harita stili yüklenemedi, OSM yedeği</div>');
+
+/* harita FPS: yalnız hareket ederken ölçülür */
+const mapTimes = [];
+map.on('render', () => { const t = performance.now(); mapTimes.push(t); while (mapTimes.length && t - mapTimes[0] > 1000) mapTimes.shift(); });
+setInterval(() => { const t = performance.now(); const n = mapTimes.filter((x) => t - x < 1000).length; $('#mapfps').textContent = n > 3 ? n : '—'; }, 500);
+$('#tilt').addEventListener('click', (e) => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', on); e.currentTarget.classList.toggle('pri', on); map.easeTo({ pitch:on ? 55 : 0, duration:600 }); });
+$('#tilt').classList.add('pri');
+$('#hepsi').addEventListener('click', () => map.fitBounds([[29.0568, 40.1832], [29.0650, 40.1872]], { padding:{ top:110, bottom:90, left:28, right:28 }, pitch:0, bearing:0, duration:700 }));
+
+/* ---------- yardım ---------- */
+const helpcard = $('#helpcard');
+const seen = (() => { try { return localStorage.getItem('akar.redmi.help'); } catch { return null; } })();
+helpcard.hidden = !!seen;
+$('#help').addEventListener('click', () => { helpcard.hidden = !helpcard.hidden; });
+$('#helpclose').addEventListener('click', () => { helpcard.hidden = true; try { localStorage.setItem('akar.redmi.help', '1'); } catch {} });
+
+/* ---------- görüntüleyici ---------- */
+const state = { model:null, variant:'yapi', pr:'1.5', aa:true, results:[] };
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
+const loader = new GLTFLoader().setDRACOLoader(draco);
+let renderer, scene, camera, controls, root, raf = 0, token = 0;
+let frameTimes = [], test = null, lastInfo = null;
+
+function pixelRatio() { return state.pr === 'dev' ? window.devicePixelRatio : Math.min(+state.pr, window.devicePixelRatio); }
+function makeRenderer() {
+  const stage = $('#stage');
+  renderer = new THREE.WebGLRenderer({ antialias:state.aa, powerPreference:'high-performance' });
+  renderer.setPixelRatio(pixelRatio());
+  renderer.setClearColor(0xE9EDEE);
+  stage.insertBefore(renderer.domElement, stage.firstChild);
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI * 0.495;
+  resize();
+}
+function destroyRenderer() {
+  if (!renderer) return;
+  controls && controls.dispose();
+  renderer.dispose(); try { renderer.forceContextLoss(); } catch {}
+  renderer.domElement.remove(); renderer = null; controls = null;
+}
+function resize() {
+  if (!renderer) return;
+  const s = $('#stage'), w = s.clientWidth, h = s.clientHeight;
+  renderer.setPixelRatio(pixelRatio()); renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(h, 1); camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe($('#stage'));
+window.addEventListener('orientationchange', () => setTimeout(resize, 300));
+
+function disposeScene() {
+  if (!scene) return;
+  scene.traverse((o) => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { Object.values(m).forEach((v) => v && v.isTexture && v.dispose()); m.dispose(); });
+  });
+  scene = null; root = null;
+}
+
+async function openViewer(m, variant = 'yapi') {
+  const my = ++token;
+  state.model = m; state.variant = variant;
+  $('#viewer').classList.add('on'); $('#vtitle').textContent = m.ad;
+  $('#v-yapi').setAttribute('aria-pressed', variant === 'yapi'); $('#v-sunum').setAttribute('aria-pressed', variant === 'sunum');
+  $('#loadmsg').style.display = 'grid'; $('#loadmsg').textContent = 'İndiriliyor…';
+  ['#s-tri','#s-calls','#s-parts','#s-size','#s-load','#s-fps'].forEach((s) => ($(s).textContent = '—'));
+  $('#verdict').hidden = true; $('#testbtn').disabled = true; $('#testbtn').textContent = '10 sn test'; test = null;
+  cancelAnimationFrame(raf); disposeScene(); destroyRenderer();
+
+  scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8f98a6, 1.1));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(0.6, 1, 0.8); scene.add(sun);
+  camera = new THREE.PerspectiveCamera(40, 1, 0.1, 5000);
+  makeRenderer();
+
+  const url = `modeller/${m.dosya}${variant === 'sunum' ? '_sunum' : ''}.glb`;
+  try {
+    const t0 = performance.now();
+    const resp = await fetch(url); if (!resp.ok) throw new Error(url + ' ' + resp.status);
+    const buf = await resp.arrayBuffer(); const t1 = performance.now();
+    $('#loadmsg').textContent = 'Çözülüyor (Draco)…';
+    const gltf = await new Promise((res, rej) => loader.parse(buf, '', res, rej)); const t2 = performance.now();
+    if (my !== token) return;
+    root = gltf.scene; scene.add(root);
+    const box = new THREE.Box3().setFromObject(root), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    root.position.sub(c);
+    const d = size.length();
+    camera.near = d / 500; camera.far = d * 20; camera.position.set(d * 0.8, d * 0.55, d * 0.95); camera.updateProjectionMatrix();
+    controls.target.set(0, 0, 0); controls.minDistance = d * 0.15; controls.maxDistance = d * 3; controls.update();
+    let tri = 0, parts = 0; const mats = new Set();
+    root.traverse((o) => { if (o.isMesh) { parts++; const g = o.geometry; tri += (g.index ? g.index.count : g.attributes.position.count) / 3; (Array.isArray(o.material) ? o.material : [o.material]).forEach((x) => mats.add(x)); } });
+    lastInfo = { tri, parts, mats:mats.size, kb:buf.byteLength / 1024, loadMs:t2 - t0, fetchMs:t1 - t0, decodeMs:t2 - t1 };
+    $('#s-tri').textContent = fmt(tri); $('#s-parts').textContent = `${parts} · ${mats.size}`;
+    $('#s-size').textContent = fmt(lastInfo.kb) + ' KB'; $('#s-load').textContent = `${fmt(t1 - t0)} + ${fmt(t2 - t1)} ms`;
+    $('#loadmsg').style.display = 'none'; $('#testbtn').disabled = false;
+    frameTimes = []; prev = 0; loop();
+  } catch (err) {
+    if (my !== token) return;
+    $('#loadmsg').textContent = 'Açılamadı: ' + (err && err.message || err);
+  }
+}
+
+let prev = 0;
+function loop(t = 0) {
+  raf = requestAnimationFrame(loop);
+  if (!renderer || !root) return;
+  const dt = prev ? t - prev : 0; prev = t;
+  controls.update();
+  renderer.render(scene, camera);
+  if (dt > 0) {
+    frameTimes.push(dt); if (frameTimes.length > 60) frameTimes.shift();
+    if (test) { test.d.push(dt); if (t - test.t0 >= 10000) finishTest(); }
+  }
+  $('#s-calls').textContent = renderer.info.render.calls;
+  loop.n = (loop.n || 0) + 1;
+  if (loop.n % 15 === 0) {
+    const avg = frameTimes.reduce((a, b) => a + b, 0) / Math.max(frameTimes.length, 1);
+    $('#fpsbig').textContent = (avg ? Math.round(1000 / avg) : '—') + ' FPS';
+  }
+}
+
+function stats(d) {
+  const x = d.slice(10).sort((a, b) => a - b); // ilk kareler gölgelendirici derlemesi içerir
+  const mean = x.reduce((a, b) => a + b, 0) / x.length;
+  return { avg:1000 / mean, p1:1000 / x[Math.min(x.length - 1, Math.floor(x.length * 0.99))], min:1000 / x[x.length - 1], n:x.length };
+}
+$('#testbtn').addEventListener('click', () => {
+  if (test || !root) return;
+  test = { t0:performance.now(), d:[] }; controls.autoRotate = true; controls.autoRotateSpeed = 8;
+  $('#testbtn').disabled = true; $('#testbtn').textContent = 'Ölçülüyor… 10 sn'; $('#verdict').hidden = true;
+});
+function finishTest() {
+  const s = stats(test.d); test = null; controls.autoRotate = false;
+  $('#testbtn').disabled = false; $('#testbtn').textContent = '10 sn test';
+  $('#s-fps').textContent = `${Math.round(s.avg)} · ${Math.round(s.min)}`;
+  const v = $('#verdict'); v.hidden = false;
+  v.className = 'verdict ' + (s.avg >= 50 ? 'good' : s.avg >= 25 ? 'warn' : 'bad');
+  v.textContent = s.avg >= 50 ? `İyi: ort ${Math.round(s.avg)} FPS, en düşük ${Math.round(s.min)}.` : s.avg >= 25 ? `Sınırda: ort ${Math.round(s.avg)} FPS. Kalite düşürmek (piksel 1, kenar yumuşatma kapalı) dene.` : `Zayıf: ort ${Math.round(s.avg)} FPS (25 altı). Uygulamada Hafif sürüme düşerdi.`;
+  state.results.push({ ad:state.model.ad, dosya:state.model.dosya + (state.variant === 'sunum' ? '_sunum' : ''), variant:state.variant, tri:lastInfo.tri, calls:renderer.info.render.calls, kb:lastInfo.kb, loadMs:lastInfo.loadMs, avg:s.avg, p1:s.p1, min:s.min, pr:state.pr + (state.aa ? ' +AA' : '') });
+  renderResults();
+}
+$('#v-yapi').addEventListener('click', () => state.variant !== 'yapi' && openViewer(state.model, 'yapi'));
+$('#v-sunum').addEventListener('click', () => state.variant !== 'sunum' && openViewer(state.model, 'sunum'));
+$('#vclose').addEventListener('click', () => { token++; cancelAnimationFrame(raf); disposeScene(); destroyRenderer(); $('#viewer').classList.remove('on'); });
+$('#pr').addEventListener('change', (e) => { state.pr = e.target.value; resize(); });
+$('#aa').addEventListener('change', (e) => { state.aa = e.target.checked; if (renderer) { destroyRenderer(); makeRenderer(); } });
+
+/* ---------- sonuçlar ---------- */
+function deviceText() {
+  let gpu = '—';
+  try { const c = document.createElement('canvas').getContext('webgl'); const e = c.getExtension('WEBGL_debug_renderer_info'); gpu = e ? c.getParameter(e.UNMASKED_RENDERER_WEBGL) : c.getParameter(c.RENDERER); } catch {}
+  return `Cihaz: ${navigator.userAgent.replace(/\s+/g, ' ').slice(0, 120)}\nEkran: ${screen.width}x${screen.height} dpr ${window.devicePixelRatio} · GPU: ${gpu}`;
+}
+function renderResults() {
+  $('#rcount').textContent = state.results.length;
+  $('#dev').textContent = deviceText();
+  $('#rows').innerHTML = state.results.map((r) => `<tr><td>${r.ad}</td><td>${r.variant === 'sunum' ? 'sunum' : 'yapı'}</td><td>${fmt(r.tri)}</td><td>${r.calls}</td><td>${fmt(r.kb)}</td><td>${fmt(r.loadMs)}</td><td><b>${Math.round(r.avg)}</b></td><td>${Math.round(r.p1)}</td><td>${Math.round(r.min)}</td><td>${r.pr}</td></tr>`).join('') || '<tr><td colspan="10">Henüz ölçüm yok. Bir model aç, «10 sn test»e bas.</td></tr>';
+  $('#copybox').value = `AKAR Redmi 9T testi · ${new Date().toLocaleString('tr-TR')}\n${deviceText()}\nHarita FPS (son görülen): ${$('#mapfps').textContent}\n\nModel | dosya | üçgen | çağrı | KB | yük ms | ort FPS | %1 düşük | en düşük | piksel\n` + state.results.map((r) => [r.ad, r.variant, Math.round(r.tri), r.calls, Math.round(r.kb), Math.round(r.loadMs), Math.round(r.avg), Math.round(r.p1), Math.round(r.min), r.pr].join(' | ')).join('\n');
+}
+$('#resbtn').addEventListener('click', () => { renderResults(); $('#res').classList.add('on'); });
+$('#resclose').addEventListener('click', () => $('#res').classList.remove('on'));
+$('#clear').addEventListener('click', () => { state.results = []; renderResults(); });
+$('#copy').addEventListener('click', async () => {
+  const box = $('#copybox'), txt = box.value; let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch {}
+  if (!ok) { box.removeAttribute('readonly'); box.focus(); box.select(); try { ok = document.execCommand('copy'); } catch {} box.setAttribute('readonly', ''); }
+  $('#copy').textContent = ok ? 'Kopyalandı ✓' : 'Metni seçip kopyala'; setTimeout(() => ($('#copy').textContent = 'Kopyala'), 2000);
+});
+
+/* ---------- yapılar haritada ----------
+   Her model gerçek konumuna ve 1 birim = 1 m ölçeğine yerleştirilir (MapLibre özel katmanı + three.js, aynı GL bağlamı).
+   Modellerin orijinleri farklı olduğundan yapı kutusunun yatay merkezi OSM merkezine oturtulur, taban zemine (y = 0) konur.
+   yaw: yapının kuzeye göre dönüşü (derece, saat yönü; eksi = saat yönünün tersi). Ulucami, Bedesten, Koza Han ve türbe için OSM yon_derece'den (açı doğuya göre saat yönünün tersi, 90°'ye indirgenmiş), diğerleri harita bina izine bakılarak. Yapı normal GLB'dir (çevre ve figür yok). */
+const YAPI_MINZOOM = 14.5;
+/* Görünüm ön ayarları. hemi/sun/dolgu: ışık şiddeti (three r160'ta π kat zayıf hesaplanır), pastel: malzeme rengini beyaza çekme (0–1), ao: köşelere pişirilmiş koyu AO'nun gücü (0 = kapalı, 1 = olduğu gibi). Yandex tarzı yumuşak ve açık görünüm için pastel yüksek, ao düşük. */
+const ISIKLAR = { yeni:{ hemi:2.3, sun:1.3, dolgu:0.5, pastel:0, ao:1 }, koyu:{ hemi:1.15, sun:1.5, dolgu:0, pastel:0, ao:1 }, yumusak:{ hemi:2.5, sun:1.1, dolgu:0.5, pastel:0.2, ao:0.45 }, acik:{ hemi:2.8, sun:1.3, dolgu:0.5, pastel:0.12, ao:0.3 }, canli:{ hemi:2.3, sun:1.4, dolgu:0.6, pastel:0.1, ao:0.5 } };
+let ISIK = ISIKLAR.yeni;
+const yapiKatman = {
+  id:'yapilar', type:'custom', renderingMode:'3d', items:[], aktif:true, bekleyen:0,
+  onAdd(m, gl) {
+    this.map = m; this.camera = new THREE.Camera();
+    this.renderer = new THREE.WebGLRenderer({ canvas:m.getCanvas(), context:gl, antialias:true });
+    this.renderer.autoClear = false;
+    this.bekleyen = MODELS.length;
+    MODELS.forEach((mod) => this.yukle(mod));
+  },
+  async yukle(mod) {
+    try {
+      const buf = await (await fetch(`modeller/${mod.dosya}.glb`)).arrayBuffer();
+      const gltf = await new Promise((res, rej) => loader.parse(buf, '', res, rej));
+      const box = new THREE.Box3().setFromObject(gltf.scene), c = box.getCenter(new THREE.Vector3());
+      const grup = new THREE.Group(); gltf.scene.position.set(-c.x, -box.min.y, -c.z); grup.add(gltf.scene);
+      grup.rotation.y = -THREE.MathUtils.degToRad(mod.yaw || 0);          // saat yönü dönüş
+      const scene = new THREE.Scene(); scene.add(grup);
+      // açık renkli harita üzerinde koyu kalmasın: güçlü gökyüzü ışığı, açık yer rengi, ana güneş + karşı yönden dolgu ışığı
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xeef0f4, 2.6); scene.add(hemi);
+      const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(-0.5, 1, 0.7); scene.add(sun);
+      const dolgu = new THREE.DirectionalLight(0xfff4e6, 0.5); dolgu.position.set(0.7, 0.55, -0.8); scene.add(dolgu);
+      const mats = new Set(), geos = [];
+      gltf.scene.traverse((o) => { if (!o.isMesh) return; (Array.isArray(o.material) ? o.material : [o.material]).forEach((x) => { if (!x.userData.c0) x.userData.c0 = x.color.clone(); mats.add(x); }); const c = o.geometry.attributes.color; if (c && !o.geometry.userData.c0) { o.geometry.userData.c0 = c.array.slice(); geos.push(o.geometry); } });
+      const mc = maplibregl.MercatorCoordinate.fromLngLat([mod.lon, mod.lat], 0), k = mc.meterInMercatorCoordinateUnits();
+      const l = new THREE.Matrix4().makeTranslation(mc.x, mc.y, mc.z).scale(new THREE.Vector3(k, -k, k)).multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+      let tri = 0; gltf.scene.traverse((o) => { if (o.isMesh) { const g = o.geometry; tri += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+      this.items.push({ id:mod.id, scene, l, tri, grup, hemi, sun, dolgu, mats:[...mats], geos });
+      isikUygula(ISIK, this.items[this.items.length - 1]);
+    } catch (e) { console.warn('yapı yüklenemedi', mod.id, e); yapiBilgiGuncelle(mod.id + ': ' + (e && e.message || e)); }
+    this.bekleyen--; yapiBilgiGuncelle(); this.map.triggerRepaint();
+  },
+  render(gl, matrix) {
+    if (!this.aktif || this.map.getZoom() < YAPI_MINZOOM) return;
+    try {
+      const proj = new THREE.Matrix4().fromArray(matrix);
+      this.renderer.resetState();
+      for (const it of this.items) { this.camera.projectionMatrix.copy(proj).multiply(it.l); this.renderer.render(it.scene, this.camera); }
+    } catch (e) { if (!this.hata) { this.hata = true; yapiBilgiGuncelle('çizim: ' + (e && e.message || e)); } }
+  }
+};
+function isikUygula(p, it) {
+  const beyaz = new THREE.Color(1, 1, 1);
+  it.hemi.intensity = p.hemi; it.sun.intensity = p.sun; it.dolgu.intensity = p.dolgu;
+  it.mats.forEach((m) => { m.color.copy(m.userData.c0).lerp(beyaz, p.pastel); });
+  it.geos.forEach((g) => { const a = g.attributes.color, o = g.userData.c0; if (!(a.array instanceof Float32Array)) return; for (let i = 0; i < o.length; i++) a.array[i] = (i % a.itemSize === 3) ? o[i] : 1 - (1 - o[i]) * p.ao; a.needsUpdate = true; });
+}
+function isikDegistir(ad) { ISIK = typeof ad === 'string' ? ISIKLAR[ad] : ad; yapiKatman.items.forEach((it) => isikUygula(ISIK, it)); map.triggerRepaint(); }
+window.akarIsik = isikDegistir;
+$('#isik').addEventListener('change', (e) => isikDegistir(e.target.value));
+function yapiBilgiGuncelle(hata) {
+  const k = yapiKatman, el = $('#yapibilgi'), z = map.getZoom();
+  if (hata) k.hataMetni = (k.hataMetni ? k.hataMetni + ' | ' : '') + hata;
+  if (k.hataMetni) { el.style.color = 'var(--bad)'; el.textContent = 'Yapı hatası: ' + k.hataMetni; return; }
+  if (k.bekleyen > 0) { el.textContent = `Yapılar yükleniyor… ${k.items.length}/${MODELS.length}`; return; }
+  const tri = fmt(k.items.reduce((a, i) => a + i.tri, 0));
+  el.textContent = `${k.items.length} yapı · ${tri} üçgen · zoom ${z.toFixed(1)}` + (k.aktif ? (z < YAPI_MINZOOM ? ' · yakınlaş' : '') : ' · kapalı');
+}
+map.on('zoomend', () => yapiBilgiGuncelle());
+function yapilariKur() {
+  if (map.getLayer('yapilar')) return;
+  yapiKatman.items = []; yapiKatman.aktif = $('#yapilar').getAttribute('aria-pressed') === 'true';
+  map.addLayer(yapiKatman, map.getLayer('kume') ? 'kume' : undefined);
+  yapiGorunum();
+}
+function yapiGorunum() { // yapılar açıkken stilin 3D bina katmanı gizlenir: aynı binalar iki kez çizilmesin
+  if (map.getLayer('building_3d')) map.setLayoutProperty('building_3d', 'visibility', yapiKatman.aktif ? 'none' : 'visible');
+}
+map.on('style.load', yapilariKur);
+$('#yapilar').addEventListener('click', (e) => {
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+  e.currentTarget.setAttribute('aria-pressed', on); e.currentTarget.classList.toggle('pri', on); e.currentTarget.textContent = 'Yapılar: ' + (on ? 'açık' : 'kapalı');
+  yapiKatman.aktif = on; yapiGorunum(); yapiBilgiGuncelle(); map.triggerRepaint();
+});
+window.akarYapi = yapiKatman;
+
+renderResults();
+</script>
+</body>
+</html>

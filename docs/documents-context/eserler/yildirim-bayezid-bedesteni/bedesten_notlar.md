@@ -16,7 +16,7 @@ yildirim-bayezid-bedesteni/
                               (ölçekli Gabriel çizimlerinin önceki okuma görselleri; özgünleri ağaçta yok); alan-baskanligi vaziyet
     metin/                    ekinci2025, envanter_c2, vakif_1983, alan_baskanligi metin çıkarımları
     kaynak_dizini.json        ref/ altındaki her dosyanın kaynağı, sayfası, SHA-256 değeri
-  3d/                         üretim: yalnız son sürüm v03 (blend/, export/, kontrol/v03/), build/ (build_v03.py, doku/), README.md
+  3d/                         üretim: yalnız son sürüm v05 (blend/, export/, kontrol/v05/), build/ (build_v05.py, doku/), README.md
 ```
 Eksenler: +X doğu, +Y kuzey; orijin ana salonun ortası. Uzun eksen doğu–batı (OSM yönü ≈ 86°; yalnız yön için).
 

@@ -1,0 +1,168 @@
+{
+ "eser": "orhan-hamam",
+ "eski": "v04",
+ "yeni": "v05",
+ "geometri": {
+  "mesh": 11,
+  "kose_esit": 4,
+  "ucgen_esit": 10,
+  "bbox_esit_1mm": 11,
+  "max_bbox_sapma_mm": 0.162,
+  "farklar": [
+   {
+    "mesh": "Hamam_Detay",
+    "vOld": 10120,
+    "vNew": 10106,
+    "tOld": 5424,
+    "tNew": 5424,
+    "bboxMm": 0
+   },
+   {
+    "mesh": "Hamam_Giris",
+    "vOld": 8778,
+    "vNew": 9398,
+    "tOld": 4484,
+    "tNew": 4488,
+    "bboxMm": 0.162
+   },
+   {
+    "mesh": "Kubbe_Halvetler",
+    "vOld": 4900,
+    "vNew": 4804,
+    "tOld": 2576,
+    "tNew": 2576,
+    "bboxMm": 0
+   },
+   {
+    "mesh": "Kubbe_Iliklik",
+    "vOld": 912,
+    "vNew": 884,
+    "tOld": 478,
+    "tNew": 478,
+    "bboxMm": 0
+   },
+   {
+    "mesh": "Kubbe_Sicaklik",
+    "vOld": 958,
+    "vNew": 942,
+    "tOld": 506,
+    "tNew": 506,
+    "bboxMm": 0
+   },
+   {
+    "mesh": "Kubbe_Sogukluk_Erkek",
+    "vOld": 1144,
+    "vNew": 1122,
+    "tOld": 586,
+    "tNew": 586,
+    "bboxMm": 0
+   },
+   {
+    "mesh": "Kubbe_Sogukluk_Kadin",
+    "vOld": 1153,
+    "vNew": 1118,
+    "tOld": 586,
+    "tNew": 586,
+    "bboxMm": 0
+   }
+  ]
+ },
+ "kose_rengi_uygulama_glb": {
+  "eski": {
+   "min": 0.014,
+   "ort": 0.439
+  },
+  "yeni": {
+   "min": 0.807,
+   "ort": 0.882,
+   "max": 1,
+   "max_gri_sapma": 0
+  },
+  "mesh_basina_ihlal_gri": [],
+  "mesh_basina_ihlal_min": []
+ },
+ "kose_rengi_sunum_yapi": {
+  "eski": {
+   "min": 0.014,
+   "ort": 0.439
+  },
+  "yeni": {
+   "min": 0.807,
+   "ort": 0.883,
+   "max_gri_sapma": 0
+  }
+ },
+ "kursun": {
+  "eski": [
+   {
+    "ad": "Kubbe",
+    "baseColor": "#FFFFFF",
+    "doku_dominant": "#858E94",
+    "etkin": "#828B91"
+   }
+  ],
+  "yeni": [
+   {
+    "ad": "Kubbe",
+    "baseColor": "#BCC2C6",
+    "doku_dominant": "#FFFFFF",
+    "etkin": "#B6BCC0"
+   }
+  ]
+ },
+ "tugla": {
+  "eski": [],
+  "yeni": [
+   {
+    "ad": "Tugla",
+    "baseColor": "#CF7F55"
+   }
+  ]
+ },
+ "buyuk_yuzey_V_080_alti_istisnasiz": [],
+ "buyuk_yuzey_V_080_alti_istisna_roller_dahil": [
+  {
+   "ad": "Kubbe",
+   "baseColor": "#BCC2C6",
+   "doku": true,
+   "kaba": 0.45,
+   "metal": 0.2,
+   "alan_yuzde": 37.85,
+   "doku_ort": "#F7F7F8",
+   "doku_dominant": "#FFFFFF",
+   "doku_opak": 1,
+   "etkin": "#B6BCC0",
+   "V": 0.753
+  }
+ ],
+ "istisna_roller": "pencere, kapi, koyu ahsap, demir, vitrin/izgara ve kurşun (kurşun V≥0,80 ölçütü dışı: kullanıcı kararı 21 Ekim)",
+ "V_060_alti": [
+  {
+   "ad": "Ahsap_Kapi",
+   "baseColor": "#7A5134",
+   "doku": false,
+   "kaba": 0.75,
+   "metal": 0,
+   "alan_yuzde": 0.62,
+   "V": 0.478
+  },
+  {
+   "ad": "Pencere",
+   "baseColor": "#5A6672",
+   "doku": false,
+   "kaba": 0.3,
+   "metal": 0,
+   "alan_yuzde": 0.9,
+   "V": 0.447
+  },
+  {
+   "ad": "Demir",
+   "baseColor": "#4B5654",
+   "doku": false,
+   "kaba": 0.6,
+   "metal": 0.3,
+   "alan_yuzde": 0.23,
+   "V": 0.337
+  }
+ ]
+}

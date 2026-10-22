@@ -4,17 +4,17 @@ Yalnız **son sürüm** tutulur. Eski sürümlerin değerleri ve kararları aşa
 
 ## Güncel sürüm: v05 (19 Ekim 2026)
 
-Betik `build/build_v05.py`, sahne `blend/bedesten_v05.blend`, uygulama modelleri `export/bedesten_v05.glb` (zeminsiz, figürlü) ve `export/bedesten_v05_sunum.glb` (kaideli), render'lar `kontrol/v05/`. Aşağıdaki dosya tablosu ve «Bilinen sorunlar» v03 dönemindendir; v04'te giderildi.
+Betik `build/build_v05.py`, sahne `blend/bedesten_v05.blend`, uygulama modelleri `export/bedesten_v05.glb` (zeminsiz, yalnız yapı: figürler 20 Ekim 2026'da çıkarıldı, bkz. `_GENEL_SAHNE_STANDARDI.md` §5.5) ve `export/bedesten_v05_sunum.glb` (kaideli, figürlü), render'lar `kontrol/v05/`. Aşağıdaki dosya tablosu ve «Bilinen sorunlar» v03 dönemindendir; v04'te giderildi.
 
-### v03 dönemi kaydı
+### Dosyalar (v03 döneminin kaydı güncellendi; eski sürüm dosyaları silindi)
 
 | Dosya | İçerik |
 |---|---|
-| `build/build_v03.py` | Blender üretim betiği; bütün ölçüler en üstte `P` sözlüğünde, kaynak harfiyle. Kütüphane: `eserler/_kutuphane/akar3d.py` |
+| `build/build_v05.py` | Blender üretim betiği (v03'ten türedi, v03 ve v04 dosyaları 20 Ekim 2026'da silindi); bütün ölçüler en üstte `P` sözlüğünde, kaynak harfiyle. Kütüphane: `eserler/_kutuphane/akar3d.py` |
 | `build/doku/` | `almasik.png`, `kubbe_dilim.png`, `pencere.png` ve bunları üreten `doku_uret.py` |
-| `blend/bedesten_v03.blend` | Sahne |
-| `export/bedesten_v03.glb` | Uygulama modeli (Draco) |
-| `kontrol/v03/` | Render'lar, `kontrol_rapor.json` (mesh + arka yüz denetimi), `karsilastirma_v03.png`, `yan_yana_envanter_bindirme.png` |
+| `blend/bedesten_v05.blend` | Sahne — **silindi** (21 Ekim 2026; yerine v06) |
+| `export/bedesten_v05.glb`, `_sunum.glb` | Uygulama modeli (yalnız yapı, Draco) ve sunum (kaide, figür) — **silindi** (21 Ekim 2026; yerine v06) |
+| `kontrol/v05/` | Render'lar ve kontrol raporları (v03 ve v04 `kontrol/` klasörleri silindi) — **silindi** (21 Ekim 2026; yerine v06) |
 
 Nesneler: `Govde`, `Kubbeler`, `Cati`, `Sacak`, `Pencereler`, `Kapilar`, `Dukkanlar`, `Dukkan_Kapilari`, `Girisler`, `Gecitler`, `Ic_Bedesten_Sokagi`. Üçgen: 14 956. Eksenler +X doğu, +Y kuzey; orijin salonun ortası.
 
@@ -32,3 +32,4 @@ Nesneler: `Govde`, `Kubbeler`, `Cati`, `Sacak`, `Pencereler`, `Kapilar`, `Dukkan
 | v03 | 17 Ekim | Sokak ve halka | Açık İç Bedesten Sokağı, ayrı dış halka (83,3 × 48), yükseltilmiş beşik çatılı girişler. 18 Ekim denetiminde kaynaklarla çeliştiği görüldü |
 | v04 | 18–19 Ekim | Bitişik bant, 56 dükkân, standart palet | Ayrıntı `build/build_v05.py` başlığındaki v04 notlarında; kaide yuvarlatılmış dikdörtgen (8 m pay, köşe R 10) |
 | v05 | 19 Ekim | Oval kaide, koyu kubbe (kullanıcı kararı) | Kaide yumuşak köşeli oval (süperelips n = 3), taş şeridin köşesinden 5 m pay, yarı eksenler 55,25 × 31,81 m; n = 2 elips de denendi, uçlarda fazla boşluk bıraktı. Kubbe #858D93 (ek #6B7379; F ekinci2025 pdf084 havadan 2024), gövde çatısı #9AA2A8 (v04: #AEB6BC ve #C3C9CD, çok açıktı). Bant çatısı #AEB6BC kaldı (fotoğrafta açık metal). Kubbe V 0,58 < 0,72: standart §3 «eskimiş kurşun» satırı, kullanıcı onaylı |
+| v06 | 21 Ekim | Ortak palet ve yumuşak pişirme | Yalnız renk ve pişirilmiş ışık (21 Ekim 2026, ortak palet; `_GENEL_SAHNE_STANDARDI.md` §3): kurşun #BCC2C6 (kullanıcı kararı; önce #D6DADD, sonra #C3C9CD denendi; kurşun için V ≥ 0,80 ölçütü dışı), renk malzemede, köşe rengi gri AO (en koyu ≥ 0,80). Geometri aynı; yöntem `_kutuphane/palet_v2/`. Kontrol: `kontrol/v06/`. Blend eski sürümün orijinalinden `build/build_*.py` ile üretildi, GLB'ler bu blend'den dışa aktarıldı (Blender Draco; sıfır alanlı üçgenler Draco'da atılır, kabul). | — |

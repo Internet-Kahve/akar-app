@@ -62,7 +62,7 @@ v02 detay turu: pencereler, kapılar, silmeler, eserin karakteristik süslemeler
 Kütleye dokunma. eserler/_kutuphane/ORNEK_detay_turu_prompt_ulu-cami_v02.md'yi örnek al. Sonunda kontrol_hepsi ve 4 render. DUR.
 ```
 
-**B6. Teslim:** `.glb` → `belgeler` branch'i, PR.
+**B6. Teslim:** önce `export/<eser>_<surum>.glb` üzerinde `glb_temizle.mjs` çalıştır (uygulama GLB'sinde `Cevre_*` ve `Olcek_Insan_*` kalmamalı; `_sunum.glb`'ye dokunma, bkz. `_GENEL_SAHNE_STANDARDI.md` §5.5). Sonra `.glb` → `belgeler` branch'i, PR.
 
 ---
 

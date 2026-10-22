@@ -31,7 +31,7 @@ Bu bölüm §0.5'in ve aşağıdaki bölümlerin önündedir. Uygulama ayrıntı
 
 **Şimdilik yapılmayacak:** **Bulmaca** ve **Birlikte Gez**. Değişebilirler; yerlerine başka özellikler gelebilir. Figma'daki ekranları yer tutucudur.
 
-**Karar bekliyor:** Rozetler.
+**Karar bekliyor:** Rozetler. Bulmaca, Birlikte Gez ve rozet/puan ekranları Figma'da tasarımı hazır olarak durur; öncelikleri sonra konuşulacak (20 Ekim). Ayrıntı: `FRONTEND_BACKEND_NOTLARI.md` §0.
 
 **Fotoğraf + 3D görünümü.** Her eserin 3D modeli olmayabilir. Bu yüzden:
 - **Eser detayında** önce fotoğraflar görünür (Google Haritalar'daki gibi: büyük, üst üste iki küçük, büyük… yatay kayar). 3D'si olan eserde sağ üstte **Fotoğraf | 3D** seçicisi var.
@@ -45,7 +45,7 @@ Bu bölüm §0.5'in ve aşağıdaki bölümlerin önündedir. Uygulama ayrıntı
 
 **3D veri hattı ve durum (15 Ekim).**
 - 32 Bursa eseri için `eserler/<eser>/eser.md` hazır: ölçüler kaynak kodlu (P plan, E envanter, H hesap, W web, O OSM, M maket, F fotoğraf, T tahmin; boş hücre = tür varsayılanı + VARSAYIM), Palet (stil rengi) ve Vurgu tabloları dolu. Çelişki kararları `veri/bursa/KARARLAR_14Ekim.md`; denetim raporları `veri/bursa/denetim/` (62 W URL'si açıldı, alıntılar kaynakta bulundu).
-- Model durumu: **Ulucami v02c** hazır (`eserler/ulu-cami/claude/export/`); Bedesten ve Koza Hanı sırada. Ortak stil: `veri/bursa/sablonlar/_ortak_stil.md`.
+- Model durumu (20 Ekim): GLB teslimleri `eserler/<eser>/3d/export/` altında: Ulucami v25, Bedesten v05, Koza Han v13, Orhan Bey Camii v06, Orhan Bey Hamamı v04, Emir Hanı v03, Orhan Gazi Türbesi v01. Güncel sürüm her eserin `3d/README.md` dosyasında. Ortak stil: `veri/bursa/sablonlar/_ortak_stil.md`.
 - Görev dağılımı: `GOREV_DAGILIMI_15Ekim.md`.
 
 ---
@@ -120,7 +120,7 @@ Bu bölüm aşağıdaki bazı bölümlerin yerini alır. Çelişki varsa burası
    - Bu yön sonra silindi.
    - Şimdiki yön **"Çini" paleti:** lacivert ana renk, altın sadece süs, soğuk açık gri zemin (bkz. bölüm 7).
 8. **Finale kaldıktan sonra (9–11 Ekim):**
-   - Figma'da yaklaşık 77 ekran (45 mobil, 27 masaüstü, 5 panel), tasarım sistemi ve 22 özel ikon hazırlandı.
+   - Figma'da yaklaşık 77 ekran (45 mobil, 27 masaüstü, 5 panel), tasarım sistemi ve 22 özel ikon hazırlandı. (20 Ekim itibarıyla `akar-yeni` dosyasında 121 ekran var: 14 panel, 47 masaüstü, 60 mobil.)
    - UX kararları kesinleşti, giriş sistemi seçildi.
 
 ---
@@ -322,8 +322,8 @@ Rehberli grup yürüyüşleri (vakıf veya belediye ortaklığı), daha fazla ş
 - Güncel dosya: `https://www.figma.com/design/Bd3m8xYrCiVK6440POHN39/akar-app` (13 Ekim'de değişti).
 - 15 Ekim fotoğraf/3D ekranları bu dosyaya eklendi. PNG kopyaları `design/ekranlar-15ekim/` altında.
 - Önceki sürüm dosyaları arşivlenmiştir; kullanılmaz.
-- **MCP kotası:** Starter planda ayda yaklaşık 6 çağrı; bu ayın kotası büyük ihtimalle bitti.
-- Figma planı: Starter. Eğitim planı ya da ücretli plan kararı açık (bkz. §15).
+- **Güncel çalışma dosyası (20 Ekim):** `akar-yeni` (https://www.figma.com/design/HGTgq5vRXVqhVO9TcR9wBe/akar-yeni). Yukarıdaki `akar-app` bağlantısı önceki sürümdür; iki dosya arasında fark varsa `akar-yeni` esas alınır. Backend planı da bu dosyaya göre hazırlandı.
+- **MCP kotası:** Ücretli (Pro) hesapta çalışılıyor; eski «Starter, ayda ~6 çağrı» notu geçersiz. Yine de 121 ekranı tek tek görsel okumak yerine önce metin dökümü alınır.
 - **Sayfa düzeni:** Kapak · 00 Tasarım Sistemi · Kullanıcı akışları · Demo yolu · 📱 Mobil (390×844, 45 ekran) · 🖥 Masaüstü (1440×900, 27 ekran) · 🛠 Yönetim paneli (5 ekran).
 - Bölüm sırası akışa göre: Açılış ve keşif → Rotalar → Eser ve anlatım → Etkileşim → Hesap ve bilgi → Ortak parçalar.
 - **Adlandırma:** "WF · / B ·" mobil, "D ·" masaüstü, "WF · Panel /" yönetim paneli. Her ekranın altında "Not / <ad>" metni var.
@@ -331,10 +331,10 @@ Rehberli grup yürüyüşleri (vakıf veya belediye ortaklığı), daha fazla ş
 - **Bileşenler:** ikon/* (22), Süsleme, Pusula, Harita pini (Durum × İkon), Harita lejantı, Panel sekmesi (Açık/Kapalı).
 
 **Figma'da elle yapılacak küçük düzeltmeler**
-1. "D · Anlatım / Oku": ✕ butonu "Kaydırarak oku" yazısına çok yakın; yazı "Kaydırarak" diye kısaltılmalı.
-2. "D · E-posta kodu": arka plan düz lacivert. Karartma katmanının altına "D · Keşif / Ana" ekranının kopyası konmalı.
+1. ~~"D · Anlatım / Oku": ✕ butonu "Kaydırarak oku" yazısına çok yakın.~~ Yapıldı: "Kaydırarak oku" kaldırıldı (Figma masaüstü bölüm notu).
+2. ~~"D · E-posta kodu": arka plan düz lacivert.~~ Yapıldı: kod ekranının arkasında harita var.
 3. ~~Mobildeki B · Anlatım ekranlarının sol üstüne ✕ eklenmeli.~~ 15 Ekim'de yapıldı (üst bölüm yeniden düzenlendi).
-4. "Tam ekran 3D" butonu panel sekmesiyle aynı işi yapıyor, silinebilir.
+4. ~~"Tam ekran 3D" butonu silinebilir.~~ Yapıldı: kaldırıldı.
 
 **Eksik tasarımlar:** odak halkası (focus ring), devre dışı buton durumu, logo, uygulama ikonu, splash, rozet görselleri ve adları.
 
@@ -436,7 +436,9 @@ Bu akış şartnamenin üç maddesini karşılıyor: moderasyon, girdi doğrulam
 
 ## 10. Örnek içerik
 
-### Ulucami anlatımı (Figma'daki örnek; finalden önce kitapla tek tek kontrol edilecek)
+### Ulucami anlatımı (ESKİ ÖRNEK, geçersiz)
+
+> **20 Ekim:** Aşağıdaki cümleler ilk Figma örneğidir ve kitapla kontrol edilince değiştirildi (ör. «dördüncü padişah» envanterde yok, «bakımına ayrılırdı» kitapta yok, şadırvan kubbesi bugün kapalı). Güncel 12 cümle, kaynakları ve güven etiketleri: `eserler/ulu-cami/icerik/hikaye.md`. Figma'daki içerik (cümleler, sayılar, kaynaklar) temsilidir; gerçek içerik `eserler/*/icerik/` dosyalarından gelir.
 1. "Ulucami, 1399'da Yıldırım Bayezid tarafından yaptırıldı." · Doğrulanmış
 2. "Yaptıran Yıldırım Bayezid, Osmanlı'nın dördüncü padişahıdır." 
 3. "Mimarının kim olduğu kesin olarak bilinmiyor."
@@ -524,7 +526,7 @@ Diğer hackathon çalışmalarında görülen aşırı optimize yaklaşımlar de
 - Çekimlerde ibadet saatlerine ve fotoğraftaki insanların mahremiyetine saygı (yüzler bulanıklaştırılmalı).
 
 ### En büyük risk: kapsam
-- Yaklaşık 77 ekran var, 4 hafta kaldı.
+- Figma'da 121 ekran var (20 Ekim), finale ~2,5 hafta kaldı. Bulmaca ve Birlikte Gez ekranları ertelendi, kapsam dışı.
 - Frontend tek kişide (ürün ve frontend sorumlusu); harita ve 3D tasarım sorumlusunda.
 - Birinciliği az ama kusursuz çalışan ürün getirir.
 - İlk ekip toplantısında **"Finalde kesin çalışacak 5 şey"** listesi çıkarılmalı. Demo yolu omurga olsun; Birlikte Gez, rota oluşturucu ve rozetler ikinci sırada.

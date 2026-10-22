@@ -19,6 +19,10 @@
 
 **Kesin değil, karar bekliyor:** Rozetler (rozet bildirimi dahil).
 
+**Figma'da tasarımı hazır, şimdilik öncelik değil (20 Ekim):** Bulmaca (doğru/yanlış dahil), Birlikte Gez ve Odaya katıl, rozet bildirimi ve puan gösterimi (Profil, Giriş isteği, Rota tamamlandı), Hikâye sonrasındaki Bulmaca ve Birlikte Gez kutuları, panelde Rota düzenle'deki bulmaca satırı. Bunlar Figma'da çizili olarak durur; kodlanmaz, önceliği ekipçe konuşulunca açılır. Figma ile bu belge arasında çelişki sayılmaz.
+
+**Figma'daki örnek içerik temsilidir:** cümleler, tarihler, eser ve rota sayıları, süreler, kaynak adları. Gerçek içerik `eserler/*/icerik/` dosyalarından gelir.
+
 **Fotoğraf + 3D görünümü (yeni).** Her eserin 3D modeli olmayacak. Bu yüzden anlatım her eserde fotoğrafla çalışır, modeli olan eserde üstüne 3D görünüm eklenir. İkisi aynı cümle listesini kullanır. Panelde her cümleye bir fotoğraf bağlanır; fotoğrafın bilgisi 3D'de kart olarak da kullanılır. Ayrıntı, ölçüler ve ikonlar: §10.
 
 ## 0.1 13 Ekim: kısaca ne değişti
@@ -37,23 +41,25 @@ Metin alanları dil anahtarlı: `{ tr: "...", en: "..." }`. Her tarihî cümleni
 
 | Tablo | Önemli alanlar | Not |
 |---|---|---|
-| `eser` | slug, il, ilce, ad{tr,en}, tur, rol (`hayrat`/`akar`), yapim_yili (metin: "1399"), yaptiran, mimar, donem, adres, konum (lat, lng), kisa_tanim{tr,en}, kapak_gorsel_id, seviye (`tier1`/`tier2`/`hero`), durum (`taslak`/`yayinda`) | Konum envanterde yok, adresten geocoding ile bulunacak |
+| `eser` | slug, il, ilce, ad{tr,en}, tur, rol (`hayrat`/`akar`), yapim_yili (metin: "1399"), yaptiran, mimar, donem, adres, konum (lat, lng), kisa_tanim{tr,en}, kapak_gorsel_id, seviye (`tier1`/`tier2`/`hero`), durum (`taslak`/`yayinda`), konum_kaynagi (`osm`/`adres`/`elle`), ilgi_etiketleri[] (Bana rota oluştur), erisilebilirlik[] (ör. merdivensiz giriş), ziyaret_notu{tr,en} | Konum envanterde yok, adresten geocoding ile bulunacak; bulunamayan panelde elle yerleştirilir. Etiketler türden bağımsız (20 Ekim) |
 | `akar_bagi` | kaynak_eser_id → hedef_eser_id, aciklama, kaynak_id | Ör. Bedesten → Ulucami "gelir sağlar". Çoka çok |
-| `model` | eser_id, dosya (Storage yolu, sürümlü), boyut, ucgen, parcalar[] (.glb'den okunan ad listesi), guven, acilis_acisi_id, yon_derece (haritada kuzeye göre dönüş), olcek (1 = metre) | Bir eserin birden çok sürümü olabilir; eski sürüm silinmez |
-| `kaynak` | tur (`kitap`/`belge`/`arsiv_foto`/`web`), baslik, yayinci, yil, sayfa, baglanti/dosya, guven | Ortak liste. `eser_kaynak` ile esere bağlanır |
+| `model` | eser_id, dosya (Storage yolu, sürümlü), dosya_hafif (isteğe bağlı, zayıf cihaz), boyut, ucgen, parcalar[] (.glb'den okunan ad listesi), guven, acilis_acisi_id, yon_derece (haritada kuzeye göre dönüş), olcek (1 = metre) | Bir eserin birden çok sürümü olabilir; eski sürüm silinmez |
+| `kaynak` | tur (`kitap`/`belge`/`arsiv_foto`/`web`), baslik, yayinci, yil, sayfa_turu (`pdf`/`kitap`), baglanti/dosya, kullanim_izni, guven | Ortak liste. `eser_kaynak` ile esere bağlanır. **Sayfa burada değil** (20 Ekim): aynı kitap farklı cümlelerde farklı sayfayla anılır |
+| `cumle_kaynak`, `paragraf_kaynak` | cumle_id / paragraf_id, kaynak_id, sayfa | 20 Ekim. Cümle ve paragrafın kaynağı + sayfası. Kaynak eserin `eser_kaynak` listesinden seçilir. Bir cümleye birden çok kaynak bağlanabilir (Kaynak detayı ekranı); en az biri zorunlu |
+| `eser_paragraf` | eser_id, bolum (`tarihce`/`mimari`/`vakif_akar`), sira, metin{tr,en}, guven | 20 Ekim. «Eser hakkında» ekranının içeriği; kaynak `paragraf_kaynak` ile |
 | `hikaye` | eser_id (1'e 1), durum | Her eserin tek hikâyesi var |
-| `hikaye_cumle` | hikaye_id, sira, metin{tr,en}, guven, **kaynak_id (zorunlu)**, ses{tr,en} (dosya + süre), **gorsel_id (zorunlu, 15 Ekim)**, **kart_goster (bool, varsayılan false)**, aci_id (boş olabilir), vurgu[] (parça adları), akar_akisi (bool), gravur_id | Bu tablo "cue" listesidir. `kart_id` kalktı: kart artık cümlenin fotoğrafıdır, `kart_goster` açıksa 3D'de kart olarak çıkar |
+| `hikaye_cumle` | hikaye_id, sira, metin{tr,en}, guven, **kaynak: `cumle_kaynak` (en az 1, zorunlu)**, ses{tr,en} (dosya + süre), **gorsel_id (zorunlu, 15 Ekim)**, **kart_goster (bool, varsayılan false)**, aci_id (boş olabilir), vurgu[] (parça adları), akar_akisi (bool), gravur_id | Bu tablo "cue" listesidir. `kart_id` kalktı: kart artık cümlenin fotoğrafıdır, `kart_goster` açıksa 3D'de kart olarak çıkar |
 | `kamera_aci` | model_id, ad ("Açı_03"), azimut, egim, mesafe, hedef (parça adı ya da "Merkez"), kucuk_resim | Panelde "Açıyı kaydet" ile oluşur |
 | ~~`kart`~~ | 15 Ekim: kaldırıldı. Başlık, kısa metin, kaynak ve güven `gorsel` tablosunda | Kart = cümlenin fotoğrafı (bkz. `hikaye_cumle.kart_goster`) |
 | `gorsel` | sahibi_eser_id, dosya, alt_metin{tr,en} (**zorunlu**), baslik{tr,en}, kisa_metin{tr,en}, **lisans (zorunlu)**, **kaynak_id (zorunlu)**, guven | Kapak, cümle fotoğrafı, gravür, eski fotoğraf. Bilgisi bir kez girilir; aynı fotoğraf eserin başka cümlesinde de seçilebilir ("Havuzdan seç") |
-| `rota`, `rota_durak` | rota: il, ad{tr,en}, kisa{tr,en}, rozet, durum · durak: rota_id, sira, eser_id | Süre ve mesafe kayıt edilmez, hesaplanır |
+| `rota`, `rota_durak` | rota: il, ad{tr,en}, kisa{tr,en}, gorsel_id, tema[], zorluk, rozet, durum · durak: rota_id, sira, eser_id | Süre ve mesafe kayıt edilmez, hesaplanır |
 | `bulmaca` (**beklemede**, §0) | rota_durak_id ya da eser_id, soru{tr,en}, secenekler[3], dogru, aciklama, kaynak_id | Durak başına 1 soru |
 | `gecmisi_gor` | eser_id, eski_gorsel_id, tarih, kaynak_id, lisans, hizalama (kamera_aci gibi) | |
 | `katki` | eser_id, kullanici, metin, gorsel, durum (`beklemede`/`onaylandi`/`reddedildi`), red_sebebi | RLS: beklemede kayıt herkese kapalı |
 
 ## 2. Backend kuralları (doğrulama)
 
-1. **Kaynaksız cümle yayınlanamaz.** `hikaye_cumle.kaynak_id` boşsa eser "Yayınla" yapılamaz.
+1. **Kaynaksız cümle yayınlanamaz.** Cümlenin `cumle_kaynak` kaydı yoksa eser "Yayınla" yapılamaz. Aynı kural «Eser hakkında» paragrafları için de geçerli.
 2. **Modelde olmayan parça yayını durdurur.** Cümledeki `vurgu[]` ya da açının `hedef` adı, modelin `parcalar[]` listesinde yoksa o cümle hatalı sayılır.
 3. **Model güncellenince** yeni parça listesi okunur. Kaybolan adlar varsa ilgili cümleler işaretlenir ("model değişti, kontrol et").
 4. **Eksik İngilizce engel değil**, sadece uyarı. TR ile yayınlanabilir.
@@ -66,13 +72,15 @@ Metin alanları dil anahtarlı: `{ tr: "...", en: "..." }`. Her tarihî cümleni
 
 ## 3. Yönetim paneli akışı (Figma → "🛠 Yönetim paneli")
 
+**0 · Giriş (20 Ekim):** Şifre yok. Google ile devam et ya da e-posta kodu (6 hane, 10 dk). Kayıt yok; panel kullanıcılarını Yönetici davet eder. Roller: **Yönetici** (her şey) · **Editör** (içerik ve yayın) · **Moderatör** (yalnız katkılar). Tablo: `panel_kullanici` (kullanici_id, rol, davet_eden, durum `davet`/`aktif`).
+
 **1 · Eser ekleme akışı:** Giriş → Eser listesi → **+ Yeni eser** →
 
 | Adım | Ne yapılıyor |
 |---|---|
 | 1 Model | .glb yüklenir, önizleme sağda açılır ve her adımda orada kalır. Parça adları okunur. 3D yoksa "Fotoğrafla devam et". |
 | 2 Bilgiler | Ad TR/EN, tarih, yaptıran, mimar, il/ilçe, tür, hayrat/akar, akar bağı, adres, tanım, kapak + alt metin. İçe aktarılan eserde dolu gelir. |
-| 3 Kaynaklar | Eserin kaynakları bir kez girilir. Cümleler kaynağı bu listeden seçer. |
+| 3 Kaynaklar | «Bu eserin kaynakları» ortak listeden seçilir ya da yeni girilir. Hikâyede her cümle kaynağını bu listeden seçer; sayfa cümleye yazılır. |
 | 4 Hikâye | Her cümle tek satır: **Cümle · Fotoğraf · Kart · Açı · Vurgu** (ayrıntı aşağıda ve §10.7). 3D'siz eserde sadece **Cümle · Fotoğraf**. |
 | 5 Yayın | Eksik listesi. Engelleyenler (kaynak, fotoğraf, fotoğrafın lisansı, vurgu) ve engellemeyenler (EN) ayrı. |
 
@@ -81,12 +89,17 @@ Metin alanları dil anahtarlı: `{ tr: "...", en: "..." }`. Her tarihî cümleni
 - **Kart:** Satır başına aç/kapa. Açıksa bu cümlenin fotoğrafı 3D ile anlatımda modelin üstünde kart olarak çıkar (içerik fotoğrafın bilgisi). Görünüşü radio dairesi, davranışı checkbox (§10.7).
 - **Açı:** Sağdaki model döndürülür → "Açıyı kaydet" → satırda küçük bir daire (açının küçük resmi) çıkar. Daireye basınca model o açıya döner. Açı kaydedilmemiş cümle bir önceki cümlenin açısında kalır.
 - **Vurgu:** Modelden okunan parça listesi. Seçilen parça önizlemede parlar.
-- Satıra tıklayınca altında ses (TR/EN), kaynak ve güven alanları açılır.
+- Satıra tıklayınca altında ses (TR/EN), **Bu cümlenin kaynağı** + **Sayfa** ve güven alanları açılır.
+- 20 Ekim: Figma'daki sütun düzeni geçerlidir (fotoğrafı olmayan hücrede «+ Fotoğraf», basınca hücre fotoğraf olur). §10.7'deki genişlikler yön göstericidir.
 - Önizlemenin üstünde **3D | Fotoğraf** geçişi var: iki görünümü de buradan kontrol edersin.
 
-**2 · Ortak ekranlar:** Kartlar (tüm fotoğraflar eser eser gruplu, nerede kullanıldığı yazılı; kart = fotoğraf olduğu için adının "Fotoğraflar" olması öneriliyor, karar açık) · Rota düzenle (duraklar sürüklenir, süre ve mesafe otomatik, durak başına bulmaca ve Geçmişi Gör) · İçe aktar (dosya → alan eşleme → doğrulama → taslak olarak içe al) · Katkı moderasyonu.
+**2 · Ortak ekranlar:** Kartlar (tüm fotoğraflar eser eser gruplu, nerede kullanıldığı yazılı; kart = fotoğraf olduğu için adının "Fotoğraflar" olması öneriliyor, karar açık). 20 Ekim: Figma'da ekran bu modele göre düzenlendi: ad şimdilik «Kartlar», liste kartı kapalı olanlar dahil bütün fotoğrafları gösterir, üstte «Tümü · Kart olarak kullanılanlar · Lisans eksik» filtresi, her satırda «● Kart / ○ Kart değil» ve kullanıldığı cümleler, ayrıntı panelinde alt metin, kaynak, lisans ve güven etiketi. Ayrı «Kart_*» kaydı ve «birden çok eserde kullanılır» ibaresi kalktı · Rota düzenle (duraklar sürüklenir, süre ve mesafe otomatik, durak eserlerinin Geçmişi Gör kayıtları sayılır; bulmaca ertelendi) · İçe aktar (dosya → alan eşleme → doğrulama → taslak olarak içe al) · Katkı moderasyonu.
 
-Sol menü: Eserler · Rotalar · Kartlar · Katkılar · İçe aktar. (Hikâye ve kaynaklar eserin içinde.)
+**3 · Eser düzenleme (20 Ekim):** Listeden yayındaki esere tıklayınca açılır. Sekmeler yeni eser adımlarıyla aynı sırada: Model · Bilgiler · Kaynaklar · Eser hakkında · Fotoğraflar · Hikâye · Geçmişi Gör · Yayın. Model, Bilgiler, Kaynaklar, Hikâye ve Yayın adım ekranlarının aynısıdır. Ek sekmeler: **Eser hakkında** (paragraf + güven + kaynak/sayfa), **Fotoğraflar** (eserin fotoğraf havuzu, galeri sırası, kapak), **Geçmişi Gör** (eski görsel, tarih, lisans, bugünkü eş; esere bağlı). Model sekmesinde sürüm listesi, Normal/Hafif dosya, parça farkı uyarısı ve harita yerleşimi (yön, ölçek). Yayındaki eserde değişiklikler «Yayınla»ya kadar taslakta durur.
+
+**4 · Diğer ekranlar (20 Ekim):** Rotalar listesi → Rota düzenle (rota bilgileri: görsel, şehir, zorluk, tema; duraklar; süre ve mesafe otomatik; Bulmaca ertelendi) · Kaynaklar (ortak liste) · Kullanıcılar ve roller (davet) · Katkı moderasyonu → ret nedeni penceresi (sabit liste + Diğer, zorunlu).
+
+Sol menü: Eserler · Rotalar · Kartlar · Katkılar · İçe aktar · Kaynaklar · Kullanıcılar. (Hikâye ve eserin kaynakları eserin içinde.)
 
 ## 4. Anlatım motoru (frontend)
 
@@ -133,9 +146,9 @@ Sol menü: Eserler · Rotalar · Kartlar · Katkılar · İçe aktar. (Hikâye v
 
 - Bütçe: Normal ≤ 40k üçgen, dosya ≤ 1 MB (Draco). Redmi 9T'de 25k üçgen her ayarda ~60 FPS ölçüldü.
 - Renk düz malzemeden (palet), ışık hafif AO. Büyük tek atlas mobilde bulanık çıktı, kullanılmıyor.
-- Parça adları uygulamanın vurgu ve kamera hedefi listesidir; .glb'deki adlarla birebir aynı olmalı (ör. `Kubbeler_20`, `Sadirvan_Kubbe`, `Minare_1`).
+- Parça adları uygulamanın vurgu ve kamera hedefi listesidir; .glb'deki adlarla birebir aynı olmalı (ör. `Kubbeler_19`, `Sadirvan_Kubbe`, `Minare_1`).
 - Kademe: Normal → Hafif (ilk 2 sn FPS < 25 ise sessizce) → Görsel (WebGL yoksa ya da hata).
-- Durum: Ulucami v02c hazır (`eserler/ulu-cami/claude/export/`); sırada Bedesten, sonra Koza Hanı. Yöntem: `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md`.
+- Durum (20 Ekim): Ulucami v25, Bedesten v05, Koza Han v13, Orhan Bey Camii v06, Orhan Bey Hamamı v04, Emir Hanı v03, Orhan Gazi Türbesi v01 hazır (`eserler/<eser>/3d/export/`). Yöntem: `eserler/_kutuphane/AKAR_3D_Yontem_Notlari.md`.
 
 ## 8. Hareket ve etkileşim (küçük ama önemli)
 
@@ -215,7 +228,7 @@ Uygulamanın "akışkan" hissi bu ayrıntılardan gelir. Hepsi `prefers-reduced-
 - **Kodda şu an OSM raster karo kullanılıyor; bu stil dosyasına geçilmeli.**
 
 **3D (`eserler/`)**
-- Uygulamanın kullanacağı dosyalar sadece `.glb`'ler (ör. `eserler/ayasofya/export/ayasofya_v19_normal.glb`, `_hafif.glb`). `.blend` ve `_kutuphane/` modelleme içindir, frontend'e girmez.
+- Uygulamanın kullanacağı dosyalar sadece `.glb`'ler (20 Ekim düzeni: `eserler/<eser>/3d/export/<eser>_vN.glb` uygulama dosyası; `<eser>_vN_sunum.glb` kaide, zemin, ağaç ve figürlü sunum kopyası, uygulamada kullanılmaz. Uygulama dosyasında **çevre (`Cevre_*`) ve insan figürü (`Olcek_Insan_*`) yok**, yalnız yapı (20 Ekim 2026; kural: `eserler/_GENEL_SAHNE_STANDARDI.md` §5.5). Ör. `ulu-cami_v25.glb`. Parça adları iki dosyada aynı ve hikâyelerdeki Vurgu adlarıyla eşleşiyor, 20 Ekim'de 6 eserde kontrol edildi). `.blend` ve `_kutuphane/` modelleme içindir, frontend'e girmez.
 - Ayasofya pilot modelidir: demoda gösterilmez ama three.js görüntüleyiciyi kurmak ve parça adlarıyla vurgu denemek için kullanılabilir. Bursa modelleri gelince aynı kod çalışır.
 - Yükleme (Draco sıkıştırmalı):
   ```js
@@ -228,7 +241,7 @@ Uygulamanın "akışkan" hissi bu ayrıntılardan gelir. Hepsi `prefers-reduced-
   gltf.scene.traverse(o => { if (o.isMesh) parcalar.push(o.name); }); // panelin "Vurgu" listesi bu
   ```
 - Ölçek metre, yukarı ekseni Y (glTF standardı). Bursa modellerinde kural: orijin yapının zemin ortası (Ayasofya pilotunda kontrol edilmedi). Haritaya koyarken `model.yon_derece` ile döndürülür.
-- Kademe: önce `_normal`; ilk 2 sn FPS < 25 ise sessizce `_hafif`'e geç; WebGL yoksa ya da hata olursa kapak görseli (Görsel kademe).
+- Kademe: önce `_vN.glb`; ilk 2 sn FPS < 25 ise varsa Hafif sürüme geç (şimdilik üretilmiyor, panelde isteğe bağlı); WebGL yoksa ya da hata olursa kapak görseli (Görsel kademe).
 - Vurgu: modeller ışıksız (unlit) malzemeyle çıkıyor (`KHR_materials_unlit`). three.js bunu `MeshBasicMaterial` olarak yükler, bu malzemede `emissive` yoktur. Bu yüzden vurgu iki yoldan biriyle yapılır:
   - Renk: malzeme klonlanır, rengi altına doğru kaydırılır; vurgu bitince eski malzemeye dönülür.
     ```js
@@ -351,3 +364,8 @@ Seçici bir `role="radiogroup"`: iki öğe `role="radio"`, ←/→ ile geçiş.
 - Panelde "Kartlar" menüsünün adı: "Fotoğraflar" olsun mu?
 - Rozetler kapsamda mı? (§0)
 - Bulmaca ve Birlikte Gez'in yerine ne gelecek?
+- 20 Ekim, Figma karşılaştırmasından çıkan veri modeli kararları:
+  - **Sayfa numarası cümle–kaynak bağında durmalı.** `kaynak.sayfa` yerine bağ tablosunda `sayfa` ve sayfa türü (PDF / kitap). Aynı kitap farklı cümlelerde farklı sayfayla anılıyor.
+  - **Bir cümlenin birden çok kaynağı olabilir.** Figma Kaynak detayı 3–4 kaynak gösteriyor; `hikaye_cumle.kaynak_id` tek. En az bir kaynak zorunlu kalacak şekilde çoka çok bağ.
+  - **Akar bağı** (`akar_bagi`) kaynak, güven etiketi ve akış kalemleri (bakım, aydınlatma, görevliler) taşımalı; Figma'da bu kalemler Akar akışı ve Rota tamamlandı ekranlarında var.
+  - Yayın kuralları (§2) Tier 1 / Tier 2 / Hero'ya göre ayrı çalışır: Tier 1'in hikâyesi ve cümle fotoğrafı yoktur.

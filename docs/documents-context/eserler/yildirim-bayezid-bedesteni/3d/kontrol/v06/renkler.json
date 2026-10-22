@@ -1,0 +1,117 @@
+{
+ "eser": "bedesten",
+ "surum": "v06",
+ "not": "baseColor = malzeme faktörü; dokulu malzemede etkin = faktör x doku ortalaması (opak piksel). Alan yüzdesi uygulama GLB yapı yüzeyi.",
+ "malzemeler": [
+  {
+   "ad": "Duvar",
+   "baseColor": "#FFFFFF",
+   "doku": true,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 41.31,
+   "doku_ort": "#DDBD9C",
+   "doku_dominant": "#E3DDBE",
+   "doku_opak": 1,
+   "etkin": "#DDBD9C",
+   "V": 0.867
+  },
+  {
+   "ad": "Cati",
+   "baseColor": "#BCC2C6",
+   "doku": false,
+   "kaba": 0.45,
+   "metal": 0.2,
+   "alan_yuzde": 29.09,
+   "V": 0.776
+  },
+  {
+   "ad": "Kubbe",
+   "baseColor": "#BCC2C6",
+   "doku": true,
+   "kaba": 0.45,
+   "metal": 0.2,
+   "alan_yuzde": 11.87,
+   "doku_ort": "#F8F8F9",
+   "doku_dominant": "#FFFFFF",
+   "doku_opak": 1,
+   "etkin": "#B7BDC1",
+   "V": 0.757
+  },
+  {
+   "ad": "Bant_Cati",
+   "baseColor": "#BCC2C6",
+   "doku": true,
+   "kaba": 0.45,
+   "metal": 0.2,
+   "alan_yuzde": 8.48,
+   "doku_ort": "#FCFCFC",
+   "doku_dominant": "#FFFFFF",
+   "doku_opak": 1,
+   "etkin": "#BAC0C4",
+   "V": 0.769
+  },
+  {
+   "ad": "Tas",
+   "baseColor": "#E6D8BA",
+   "doku": false,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 6.56,
+   "V": 0.902
+  },
+  {
+   "ad": "Dukkan_Vitrin",
+   "baseColor": "#FFFFFF",
+   "doku": true,
+   "kaba": 0.3,
+   "metal": 0,
+   "alan_yuzde": 2.09,
+   "doku_ort": "#8F9A95",
+   "doku_dominant": "#9FB8C0",
+   "doku_opak": 1,
+   "etkin": "#8F9A95",
+   "V": 0.604
+  },
+  {
+   "ad": "Pencere",
+   "baseColor": "#FFFFFF",
+   "doku": true,
+   "kaba": 0.3,
+   "metal": 0,
+   "alan_yuzde": 0.27,
+   "doku_ort": "#909799",
+   "doku_dominant": "#F5F4F0",
+   "doku_opak": 1,
+   "etkin": "#909799",
+   "V": 0.6
+  },
+  {
+   "ad": "Kapi",
+   "baseColor": "#7A5134",
+   "doku": false,
+   "kaba": 0.75,
+   "metal": 0,
+   "alan_yuzde": 0.22,
+   "V": 0.478
+  },
+  {
+   "ad": "Tugla",
+   "baseColor": "#CF7F55",
+   "doku": false,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 0.11,
+   "V": 0.812
+  },
+  {
+   "ad": "Kitabe",
+   "baseColor": "#F5F4F0",
+   "doku": false,
+   "kaba": 0.4,
+   "metal": 0,
+   "alan_yuzde": 0,
+   "V": 0.961
+  }
+ ]
+}

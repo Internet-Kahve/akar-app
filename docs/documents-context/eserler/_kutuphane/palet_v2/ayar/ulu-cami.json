@@ -1,0 +1,488 @@
+{
+ "eser": "ulu-cami",
+ "dir": "ulu-cami",
+ "base": "ulu-cami",
+ "from": "v25",
+ "to": "v26",
+ "ymin": -0.20000000298023224,
+ "ymax": 47.900001525878906,
+ "duz": [],
+ "nodes": [
+  "Alemler",
+  "Avlu_Mermer_Cesme",
+  "Avlu_Sadirvan_Bati",
+  "Avlu_Sadirvan_Dogu",
+  "Cati",
+  "Cephe_Bati",
+  "Cephe_Dogu",
+  "Cephe_Guney",
+  "Cephe_Kuzey",
+  "Giris_Cikintili_Blok",
+  "Govde",
+  "Ic_Sadirvan_Havuz",
+  "Ic_Zemin",
+  "Kapi_Bati",
+  "Kapi_Dogu",
+  "Kasnak_Pencereleri",
+  "Kubbeler_19",
+  "Mermer_Bant",
+  "Minare_1",
+  "Minare_2",
+  "Pencere_Girintileri",
+  "Portal_Silmeleri",
+  "Sadirvan_Iskeleti",
+  "Sadirvan_Kubbe",
+  "Silme_Ust",
+  "Tac_Kapi"
+ ],
+ "materials": {
+  "Alem_kursun": {
+   "hex": "#C9A13B",
+   "alpha": 1,
+   "lin": [
+    0.5840784178911641,
+    0.3564001441459435,
+    0.043735029256973465,
+    1
+   ],
+   "rough": 0.3499999940395355,
+   "metal": 0.6000000238418579,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Mermer": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Su": {
+   "hex": "#8CC3C6",
+   "alpha": 1,
+   "lin": [
+    0.26225065752969623,
+    0.5457244613701866,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.10000000149011612,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Mermer_Gol": {
+   "hex": "#D5D6D2",
+   "alpha": 1,
+   "lin": [
+    0.665387298282272,
+    0.6724431569576875,
+    0.6444796819705821,
+    1
+   ],
+   "rough": 0.44999998807907104,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Ahsap": {
+   "hex": "#6B4A3A",
+   "alpha": 1,
+   "lin": [
+    0.14702726649759498,
+    0.06847816984440017,
+    0.042311410620809675,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Fanus": {
+   "hex": "#F4F1E8",
+   "alpha": 1,
+   "lin": [
+    0.9046611743911496,
+    0.8796223968878317,
+    0.8069522576692516,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Krem": {
+   "hex": "#E8DFCB",
+   "alpha": 1,
+   "lin": [
+    0.8069522576692516,
+    0.7379104087727308,
+    0.5972017883637634,
+    1
+   ],
+   "rough": 0.800000011920929,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Kursun": {
+   "hex": "#9AA2A7",
+   "alpha": 1,
+   "lin": [
+    0.32314320911295075,
+    0.3613067797835095,
+    0.386429433787049,
+    1
+   ],
+   "rough": 0.6000000238418579,
+   "metal": 0.25,
+   "tex": null,
+   "lead": false
+  },
+  "Sad_Dikis": {
+   "hex": "#98A1A8",
+   "alpha": 1,
+   "lin": [
+    0.31398871337571754,
+    0.3564001441459435,
+    0.39157247774972326,
+    1
+   ],
+   "rough": 0.44999998807907104,
+   "metal": 0.20000000298023224,
+   "tex": null,
+   "lead": false
+  },
+  "Cati": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Ic_Duvar": {
+   "hex": "#E8DFCB",
+   "alpha": 1,
+   "lin": [
+    0.8069522576692516,
+    0.7379104087727308,
+    0.5972017883637634,
+    1
+   ],
+   "rough": 0.800000011920929,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Tas_Orgusu_Hafif": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ulu-cami/3d/build/doku_palet_v2/Tas_Orgusu_Hafif_palet_v2.png",
+   "lead": false
+  },
+  "Tas_Orgusu_Nis": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ulu-cami/3d/build/doku_palet_v2/Tas_Orgusu_Nis_palet_v2.png",
+   "lead": false
+  },
+  "Mermer": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kafes_Beyaz": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ulu-cami/3d/build/doku_palet_v2/Kafes_Beyaz_palet_v2.png",
+   "lead": false
+  },
+  "Pencere": {
+   "hex": "#5A6672",
+   "alpha": 1,
+   "lin": [
+    0.10224173308810132,
+    0.13286832155381798,
+    0.16826940018969075,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Ic_Hali": {
+   "hex": "#D9C9B4",
+   "alpha": 1,
+   "lin": [
+    0.6938717612919899,
+    0.5840784178911641,
+    0.45641102318040466,
+    1
+   ],
+   "rough": 0.8999999761581421,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kapi_Kahverengi": {
+   "hex": "#7A5134",
+   "alpha": 1,
+   "lin": [
+    0.1946178304415758,
+    0.0822827071298148,
+    0.03433980680868217,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kafes_Beyaz.001": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ulu-cami/3d/build/doku_palet_v2/Kafes_Beyaz.001_palet_v2.png",
+   "lead": false
+  },
+  "Mermer.001": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kasnak.001": {
+   "hex": "#F2E2A8",
+   "alpha": 1,
+   "lin": [
+    0.8879231178819663,
+    0.7605245046752924,
+    0.39157247774972326,
+    1
+   ],
+   "rough": 0.800000011920929,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kubbe.001": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Minare_Kaide_Mermer": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Bant_koyu": {
+   "hex": "#4B5654",
+   "alpha": 1,
+   "lin": [
+    0.07036009569659588,
+    0.09305896284668745,
+    0.08865558628577294,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Minare_Tugla_Derzi": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/ulu-cami/3d/build/doku_palet_v2/Minare_Tugla_Derzi_palet_v2.png",
+   "lead": false
+  },
+  "Minare_Ust_Tas_Tonu": {
+   "hex": "#E6D8BA",
+   "alpha": 1,
+   "lin": [
+    0.7912979403326302,
+    0.6866853124353135,
+    0.4910208498478356,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Minare_Kulah": {
+   "hex": "#E6D8BA",
+   "alpha": 1,
+   "lin": [
+    0.7912979403326302,
+    0.6866853124353135,
+    0.4910208498478356,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Demir_Yesil": {
+   "hex": "#4B5654",
+   "alpha": 1,
+   "lin": [
+    0.07036009569659588,
+    0.09305896284668745,
+    0.08865558628577294,
+    1
+   ],
+   "rough": 0.6000000238418579,
+   "metal": 0.30000001192092896,
+   "tex": null,
+   "lead": false
+  },
+  "Ahsap": {
+   "hex": "#6B4A3A",
+   "alpha": 1,
+   "lin": [
+    0.14702726649759498,
+    0.06847816984440017,
+    0.042311410620809675,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kubbe_Metal_Iskelet.001": {
+   "hex": "#B6B4A7",
+   "alpha": 1,
+   "lin": [
+    0.467783796112159,
+    0.45641102318040466,
+    0.386429433787049,
+    1
+   ],
+   "rough": 0.47999998927116394,
+   "metal": 0.3499999940395355,
+   "tex": null,
+   "lead": false
+  },
+  "Sadirvan_Cam.001": {
+   "hex": "#9FB8C0",
+   "alpha": 0.4000000059604645,
+   "lin": [
+    0.3467040563550296,
+    0.4793201831008268,
+    0.5271151257058131,
+    0.4000000059604645
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kapi_Yesil": {
+   "hex": "#3F7A5C",
+   "alpha": 1,
+   "lin": [
+    0.04970656598412723,
+    0.1946178304415758,
+    0.10702310297826761,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  }
+ }
+}
