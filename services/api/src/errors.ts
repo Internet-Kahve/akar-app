@@ -12,13 +12,15 @@ export type ErrorBody = {
 };
 
 export class AppError extends Error {
-  constructor(
-    readonly statusCode: number,
-    readonly code: string,
-    message: string,
-    readonly fieldErrors: Record<string, string[]> = {},
-  ) {
+  readonly statusCode: number;
+  readonly code: string;
+  readonly fieldErrors: Record<string, string[]>;
+
+  constructor(statusCode: number, code: string, message: string, fieldErrors: Record<string, string[]> = {}) {
     super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+    this.fieldErrors = fieldErrors;
   }
 }
 

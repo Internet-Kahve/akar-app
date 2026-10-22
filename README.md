@@ -29,7 +29,7 @@ npm run build
 npm start
 ```
 
-API'yi yerelde açmak (`npm run api`), rol rol token almak ve bütün testler: [docs/TESTING.md](docs/TESTING.md).
+API'yi yerelde açmak (`npm run api`), rol rol token almak ve bütün testler: [docs/TESTING.md](docs/TESTING.md). API'yi yayına alma (Docker imajı, migration, Supabase bulut ve Vercel adımları): [services/api/README.md "Yayına alma"](services/api/README.md#yayına-alma).
 
 ## Çalışan akışlar
 

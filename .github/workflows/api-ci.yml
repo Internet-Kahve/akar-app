@@ -3,10 +3,10 @@ name: API CI
 on:
   push:
     branches: [main]
-    paths: ["services/api/**", "packages/domain/**", "package-lock.json", ".github/workflows/api-ci.yml"]
+    paths: ["services/api/**", "packages/domain/**", "packages/api-client/**", "package-lock.json", ".dockerignore", ".github/workflows/api-ci.yml"]
   pull_request:
     branches: [main]
-    paths: ["services/api/**", "packages/domain/**", "package-lock.json", ".github/workflows/api-ci.yml"]
+    paths: ["services/api/**", "packages/domain/**", "packages/api-client/**", "package-lock.json", ".dockerignore", ".github/workflows/api-ci.yml"]
 
 permissions:
   contents: read
@@ -31,3 +31,10 @@ jobs:
       - run: npm test -w @akar/api
       - name: OpenAPI spec is committed and current
         run: npm run openapi -w @akar/api && git diff --exit-code docs/api/openapi.json
+      - name: Production image builds and loads every module
+        # The server imports all modules before reading its config, so an incomplete production env proves that Node
+        # runs the whole TypeScript graph without tsx, and that startup refuses the missing settings.
+        run: |
+          docker build -f services/api/Dockerfile -t akar-api .
+          out=$(docker run --rm -e DATABASE_URL=postgres://ci@127.0.0.1/ci akar-api 2>&1) && exit 1
+          echo "$out" | grep -q "Invalid production environment" || { echo "$out"; exit 1; }

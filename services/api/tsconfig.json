@@ -7,9 +7,10 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
     "noEmit": true,
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src", "drizzle.config.ts"]
+  "include": ["src", "e2e", "drizzle.config.ts"]
 }

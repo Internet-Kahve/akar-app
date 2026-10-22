@@ -70,10 +70,42 @@ const Env = z.object({
 
 export type Config = z.infer<typeof Env>;
 
+/**
+ * In production every missing setting is an error at startup, not a quietly degraded server (401 for every
+ * token, 503 media and receipts, files on the container disk, a web origin CORS never matches).
+ * Development and tests may leave these out. S3 credentials are checked by `storageFromConfig` at startup.
+ */
+export function productionIssues(config: Config): string[] {
+  const issues: string[] = [];
+  const required = [
+    "AUTH_JWKS_URL",
+    "AUTH_JWT_ISSUER",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "STORAGE_PUBLIC_BASE_URL",
+    "RECEIPT_SECRET",
+  ] as const;
+  for (const key of required) {
+    if (config[key] === undefined) issues.push(`${key} is required`);
+  }
+  if (config.STORAGE_DRIVER !== "s3") issues.push("STORAGE_DRIVER must be s3 (the container disk is not kept across deploys)");
+  if (config.CORS_ORIGINS.length === 0) issues.push("CORS_ORIGINS is required (the web app's origin)");
+  for (const origin of config.CORS_ORIGINS) {
+    if (!URL.canParse(origin) || new URL(origin).origin !== origin) {
+      issues.push(`CORS_ORIGINS entry "${origin}" must be an exact origin such as https://akar.vercel.app (no path, no trailing slash, no *)`);
+    }
+  }
+  return issues;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const parsed = Env.safeParse(env);
   if (!parsed.success) {
     throw new Error(`Invalid environment:\n${z.prettifyError(parsed.error)}`);
+  }
+  const issues = parsed.data.NODE_ENV === "production" ? productionIssues(parsed.data) : [];
+  if (issues.length > 0) {
+    throw new Error(`Invalid production environment:\n${issues.map((i) => `  - ${i}`).join("\n")}`);
   }
   return parsed.data;
 }
