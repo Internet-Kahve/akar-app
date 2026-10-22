@@ -3774,8 +3774,50 @@ td small {
 .admin-page {
   position: relative;
 }
-.admin-main {
+.admin-body {
   grid-column: 2;
+  min-width: 0;
+}
+.admin-health {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 24px 40px 0;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--inferred-bg);
+  color: var(--inferred);
+  font-size: 12px;
+}
+.admin-health.critical {
+  background: color-mix(in srgb, var(--error) 10%, var(--surface));
+  color: var(--error);
+}
+.admin-health svg {
+  flex: none;
+  margin-top: 1px;
+}
+.admin-health p {
+  margin: 0;
+  line-height: 1.6;
+}
+.admin-health p + p {
+  margin-top: 4px;
+  color: var(--inferred);
+}
+.admin-health-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.admin-health-error {
+  margin: 24px 40px 0;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 .site-editor {
   background: var(--bg);
@@ -3817,8 +3859,12 @@ td small {
   transform: rotate(180deg);
 }
 @media (max-width: 900px) {
-  .admin-main {
+  .admin-body {
     grid-column: 1;
+  }
+  .admin-health,
+  .admin-health-error {
+    margin: 16px 16px 0;
   }
   .admin-nav-toggle {
     display: none;

@@ -37,6 +37,26 @@ export interface QuizAnswerResult {
   /** Fresh state (points, quizIds). */
   snapshot: Snapshot;
 }
+/** `GET /v1/admin/health` (decision §11.21): panel warnings for moderators and admins. */
+export interface AdminHealth {
+  /** Memories pending longer than `thresholdHours`, counted from submission. */
+  pendingStale: {
+    count: number;
+    oldestCreatedAt: string | null;
+    thresholdHours: number;
+  };
+  /** Admins only; absent for moderators and in the demo, which stores no files. */
+  storage?: {
+    usedBytes: number;
+    quotaBytes: number;
+    /** One decimal; may exceed 100. */
+    percent: number;
+    level: "ok" | "warn" | "critical";
+    byKind: { photo: number; model: number; audio: number };
+  };
+}
+/** Hours after which a pending memory counts as stale (`PENDING_STALE_HOURS` server-side). */
+const PENDING_STALE_HOURS = 48;
 /** UI depends only on this contract: the local demo client or the HTTP client behind it. */
 export interface AkarClient {
   getSnapshot(): Promise<Snapshot>;
@@ -49,6 +69,8 @@ export interface AkarClient {
   revealQuiz(
     quizId: string,
   ): Promise<{ correctOption: string; snapshot: Snapshot }>;
+  /** Moderator and admin only; the server answers 403 for other roles. */
+  getAdminHealth(): Promise<AdminHealth>;
 }
 // Keep the previous Istanbul demo untouched in its original storage key.
 export const demoStorageKey = "akar-demo-bursa-v1";
@@ -207,6 +229,22 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       return {
         correctOption: quiz.options[quiz.correct],
         snapshot,
+      };
+    },
+    async getAdminHealth() {
+      const cutoff = Date.now() - PENDING_STALE_HOURS * 3_600_000;
+      const stale = (state.moderationQueue ?? state.memories)
+        .filter(
+          (m) => m.status === "pending" && Date.parse(m.createdAt) < cutoff,
+        )
+        .map((m) => m.createdAt)
+        .sort((a, b) => Date.parse(a) - Date.parse(b));
+      return {
+        pendingStale: {
+          count: stale.length,
+          oldestCreatedAt: stale[0] ?? null,
+          thresholdHours: PENDING_STALE_HOURS,
+        },
       };
     },
   };

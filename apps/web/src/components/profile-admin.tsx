@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookOpen,
   MapPin,
@@ -19,10 +19,12 @@ import {
   type Role,
   type Snapshot,
 } from "@akar/domain";
+import type { AdminHealth } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
 import { MemoryActions } from "./memory-actions";
+import { AdminHealthAlert } from "./admin-health";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -281,10 +283,12 @@ export function Admin({
   state,
   commit,
   role,
+  loadHealth,
 }: {
   state: Snapshot;
   commit: Commit;
   role: Role;
+  loadHealth: () => Promise<AdminHealth>;
 }) {
   const queue = state.moderationQueue ?? state.memories;
   const ownIds = new Set(state.memories.map((m) => m.id));
@@ -298,7 +302,26 @@ export function Admin({
     [query, setQuery] = useState(""),
     [editing, setEditing] = useState<HeritageSite | null>(null),
     [reject, setReject] = useState<string>(),
-    [reason, setReason] = useState("");
+    [reason, setReason] = useState(""),
+    [health, setHealth] = useState<AdminHealth | null>(null),
+    [healthFailed, setHealthFailed] = useState(false);
+  const seesHealth = role === "moderator" || role === "admin";
+  // Re-read after every state change: a decision or deletion changes the pending count.
+  useEffect(() => {
+    if (!seesHealth) return;
+    let cancelled = false;
+    loadHealth().then(
+      (h) => {
+        if (cancelled) return;
+        setHealth(h);
+        setHealthFailed(false);
+      },
+      () => !cancelled && setHealthFailed(true),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [seesHealth, loadHealth, state]);
   function newSite() {
     setEditing({
       id: crypto.randomUUID(),
@@ -380,206 +403,228 @@ export function Admin({
           Demo paneli. Gerçek yetkilendirme ve sunucuya yayın henüz bağlı değil.
         </Notice>
       </aside>
-      {editing ? (
-        <SiteEditor
-          key={editing.id}
-          site={editing}
-          sites={state.sites}
-          catalogRoutes={state.catalogRoutes}
-          onClose={() => setEditing(null)}
-          onSave={(site) => commit({ type: "site", site })}
-        />
-      ) : tab === "routes" ? (
-        <RouteAdmin state={state} commit={commit} />
-      ) : tab === "photos" ? (
-        <PhotoAdmin state={state} commit={commit} />
-      ) : tab === "import" ? (
-        <ImportAdmin state={state} commit={commit} />
-      ) : (
-        <section className="admin-main">
-          <div className="row between">
-            <div>
-              <small className="eyebrow">İNTERNET KAHVE</small>
-              <h1>{tab === "sites" ? "Eserler" : "Yaşayan hafızayı yönet"}</h1>
-            </div>
-            {tab === "sites" && (
-              <button className="btn" onClick={newSite}>
-                <Plus size={17} />
-                Yeni eser
-              </button>
-            )}
-          </div>
-          {tab === "sites" ? (
-            <>
-              <input
-                className="admin-search"
-                placeholder="Eser ara…"
-                aria-label="Panelde eser ara"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Eser</th>
-                      <th>Şehir</th>
-                      <th>Dönem</th>
-                      <th>Seviye</th>
-                      <th>Durum</th>
-                      <th>
-                        <span className="sr-only">Düzenle</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {state.sites
-                      .filter((s) =>
-                        s.name
-                          .toLocaleLowerCase("tr")
-                          .includes(query.toLocaleLowerCase("tr")),
-                      )
-                      .map((s) => (
-                        <tr key={s.id}>
-                          <td>
-                            <strong>{s.name}</strong>
-                            <small>{s.stories.length} hikâye bölümü</small>
-                          </td>
-                          <td>{s.city}</td>
-                          <td>{s.year || "—"}</td>
-                          <td>
-                            <Tag>{s.tier}</Tag>
-                          </td>
-                          <td>
-                            <Tag
-                              tone={
-                                s.status === "published" ? "success" : "muted"
-                              }
-                            >
-                              {s.status === "published" ? "Yayında" : "Taslak"}
-                            </Tag>
-                          </td>
-                          <td>
-                            <button
-                              className="icon-btn"
-                              aria-label={`${s.name} düzenle`}
-                              onClick={() => setEditing(s)}
-                            >
-                              <Pencil size={16} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+      <div className="admin-body">
+        {seesHealth && (
+          <AdminHealthAlert
+            health={health}
+            failed={healthFailed}
+            onPending={
+              editing
+                ? undefined
+                : () => {
+                    setTab("memories");
+                    setFilter("pending");
+                  }
+            }
+          />
+        )}
+        {editing ? (
+          <SiteEditor
+            key={editing.id}
+            site={editing}
+            sites={state.sites}
+            catalogRoutes={state.catalogRoutes}
+            onClose={() => setEditing(null)}
+            onSave={(site) => commit({ type: "site", site })}
+          />
+        ) : tab === "routes" ? (
+          <RouteAdmin state={state} commit={commit} />
+        ) : tab === "photos" ? (
+          <PhotoAdmin state={state} commit={commit} />
+        ) : tab === "import" ? (
+          <ImportAdmin state={state} commit={commit} />
+        ) : (
+          <section className="admin-main">
+            <div className="row between">
+              <div>
+                <small className="eyebrow">İNTERNET KAHVE</small>
+                <h1>
+                  {tab === "sites" ? "Eserler" : "Yaşayan hafızayı yönet"}
+                </h1>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="segmented admin-tabs">
-                {(["pending", "approved", "rejected"] as const).map((s) => (
-                  <button
-                    key={s}
-                    className={s === filter ? "active" : ""}
-                    onClick={() => setFilter(s)}
-                  >
-                    {s === "pending"
-                      ? "Bekleyen"
-                      : s === "approved"
-                        ? "Onaylanan"
-                        : "Reddedilen"}{" "}
-                    · {queue.filter((m) => m.status === s).length}
-                  </button>
-                ))}
-              </div>
-              {!queue.some((m) => m.status === filter) ? (
-                <div className="empty-state">
-                  <Shield size={36} />
-                  <h3>Bu listede katkı yok</h3>
-                  <p>
-                    Eser sayfasındaki İz Bırak ile yeni bir katkı
-                    oluşturabilirsin.
-                  </p>
-                </div>
-              ) : (
-                queue
-                  .filter((m) => m.status === filter)
-                  .map((m) => {
-                    const own = ownIds.has(m.id);
-                    const can = memoryPermissions(role, m.status, own);
-                    return (
-                      <div className="card moderation-card" key={m.id}>
-                        {m.photo && (
-                          <img
-                            className="memory-photo"
-                            src={m.photo}
-                            alt="Ziyaretçi katkısı"
-                          />
-                        )}
-                        <div className="grow">
-                          <small>
-                            {state.sites.find((s) => s.id === m.siteId)?.name} ·{" "}
-                            {m.author}
-                          </small>
-                          <p>{m.text}</p>
-                          <Tag>{m.photo ? "Fotoğraf + anı" : "Sadece anı"}</Tag>
-                          {m.reason && <p className="error">{m.reason}</p>}
-                        </div>
-                        <div className="moderation-actions">
-                          <div className="row">
-                            {can.decide && (
-                              <>
-                                <button
-                                  className="btn"
-                                  onClick={() =>
-                                    void commit({
-                                      type: "moderate",
-                                      id: m.id,
-                                      status: "approved",
-                                    })
-                                  }
-                                >
-                                  <Check size={15} />
-                                  Onayla
-                                </button>
-                                <button
-                                  className="btn secondary"
-                                  onClick={() => {
-                                    setReject(m.id);
-                                    setReason("");
-                                  }}
-                                >
-                                  <X size={15} />
-                                  Reddet
-                                </button>
-                              </>
-                            )}
-                            <MemoryActions
-                              variant="button"
-                              memory={m}
-                              siteName={
-                                state.sites.find((s) => s.id === m.siteId)
-                                  ?.name ?? "Eser"
-                              }
-                              role={role}
-                              own={own}
-                              commit={commit}
-                            />
-                          </div>
-                          {can.takedown && (
-                            <small>
-                              Yayından kaldırırken ret nedeni seçmek zorunlu
-                            </small>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
+              {tab === "sites" && (
+                <button className="btn" onClick={newSite}>
+                  <Plus size={17} />
+                  Yeni eser
+                </button>
               )}
-            </>
-          )}
-        </section>
-      )}
+            </div>
+            {tab === "sites" ? (
+              <>
+                <input
+                  className="admin-search"
+                  placeholder="Eser ara…"
+                  aria-label="Panelde eser ara"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Eser</th>
+                        <th>Şehir</th>
+                        <th>Dönem</th>
+                        <th>Seviye</th>
+                        <th>Durum</th>
+                        <th>
+                          <span className="sr-only">Düzenle</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {state.sites
+                        .filter((s) =>
+                          s.name
+                            .toLocaleLowerCase("tr")
+                            .includes(query.toLocaleLowerCase("tr")),
+                        )
+                        .map((s) => (
+                          <tr key={s.id}>
+                            <td>
+                              <strong>{s.name}</strong>
+                              <small>{s.stories.length} hikâye bölümü</small>
+                            </td>
+                            <td>{s.city}</td>
+                            <td>{s.year || "—"}</td>
+                            <td>
+                              <Tag>{s.tier}</Tag>
+                            </td>
+                            <td>
+                              <Tag
+                                tone={
+                                  s.status === "published" ? "success" : "muted"
+                                }
+                              >
+                                {s.status === "published"
+                                  ? "Yayında"
+                                  : "Taslak"}
+                              </Tag>
+                            </td>
+                            <td>
+                              <button
+                                className="icon-btn"
+                                aria-label={`${s.name} düzenle`}
+                                onClick={() => setEditing(s)}
+                              >
+                                <Pencil size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="segmented admin-tabs">
+                  {(["pending", "approved", "rejected"] as const).map((s) => (
+                    <button
+                      key={s}
+                      className={s === filter ? "active" : ""}
+                      onClick={() => setFilter(s)}
+                    >
+                      {s === "pending"
+                        ? "Bekleyen"
+                        : s === "approved"
+                          ? "Onaylanan"
+                          : "Reddedilen"}{" "}
+                      · {queue.filter((m) => m.status === s).length}
+                    </button>
+                  ))}
+                </div>
+                {!queue.some((m) => m.status === filter) ? (
+                  <div className="empty-state">
+                    <Shield size={36} />
+                    <h3>Bu listede katkı yok</h3>
+                    <p>
+                      Eser sayfasındaki İz Bırak ile yeni bir katkı
+                      oluşturabilirsin.
+                    </p>
+                  </div>
+                ) : (
+                  queue
+                    .filter((m) => m.status === filter)
+                    .map((m) => {
+                      const own = ownIds.has(m.id);
+                      const can = memoryPermissions(role, m.status, own);
+                      return (
+                        <div className="card moderation-card" key={m.id}>
+                          {m.photo && (
+                            <img
+                              className="memory-photo"
+                              src={m.photo}
+                              alt="Ziyaretçi katkısı"
+                            />
+                          )}
+                          <div className="grow">
+                            <small>
+                              {state.sites.find((s) => s.id === m.siteId)?.name}{" "}
+                              · {m.author}
+                            </small>
+                            <p>{m.text}</p>
+                            <Tag>
+                              {m.photo ? "Fotoğraf + anı" : "Sadece anı"}
+                            </Tag>
+                            {m.reason && <p className="error">{m.reason}</p>}
+                          </div>
+                          <div className="moderation-actions">
+                            <div className="row">
+                              {can.decide && (
+                                <>
+                                  <button
+                                    className="btn"
+                                    onClick={() =>
+                                      void commit({
+                                        type: "moderate",
+                                        id: m.id,
+                                        status: "approved",
+                                      })
+                                    }
+                                  >
+                                    <Check size={15} />
+                                    Onayla
+                                  </button>
+                                  <button
+                                    className="btn secondary"
+                                    onClick={() => {
+                                      setReject(m.id);
+                                      setReason("");
+                                    }}
+                                  >
+                                    <X size={15} />
+                                    Reddet
+                                  </button>
+                                </>
+                              )}
+                              <MemoryActions
+                                variant="button"
+                                memory={m}
+                                siteName={
+                                  state.sites.find((s) => s.id === m.siteId)
+                                    ?.name ?? "Eser"
+                                }
+                                role={role}
+                                own={own}
+                                commit={commit}
+                              />
+                            </div>
+                            {can.takedown && (
+                              <small>
+                                Yayından kaldırırken ret nedeni seçmek zorunlu
+                              </small>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </>
+            )}
+          </section>
+        )}
+      </div>
       {reject && (
         <Modal title="Katkıyı reddet" onClose={() => setReject(undefined)}>
           <label className="field">
