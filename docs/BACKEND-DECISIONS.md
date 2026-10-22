@@ -296,3 +296,9 @@ Karar: `apps/web`/`packages/*` PR'ında geliştirici PR açmadan önce Weissman'
 Neden: küçük ön yüz işleri Tamer'i beklemesin, Tamer yine her şeyden haberdar olsun.
 Karar veren / tarih: Weissman, 22 Eki.
 Nasıl değiştirilir: bu kayıt; GitHub dal koruması şu an yok.
+
+**11.21 Yönetim panelinde sağlık uyarısı: depolama doluluğu ve uzun süredir bekleyen anılar.**
+Karar: `GET /v1/admin/health` (moderatör ve admin, `no-store`). `pendingStale`: 48 saatten uzun süredir `pending` olan anıların sayısı, en eskisinin gönderim zamanı ve eşik (`thresholdHours: 48`); moderatöre de gösterilir. `storage`: medya kayıtlarının toplam boyutu (`SUM(media.bytes)`, boyutsuz kayıt 0) kotaya (`STORAGE_QUOTA_MB`, varsayılan 1024) oranlanır, türe göre dökümüyle; yalnız admin'e verilir, moderatör cevabında alan yoktur. Eşikler: %80 ve üstü `warn`, %95 ve üstü `critical`.
+Neden: Supabase Free depolaması 1 GB; fotoğraflar anı onaylanınca kalıcıdır ve bekleyen anılar moderasyon olmadan birikebilir. Depolama dolunca yüklemeler durur; bunu panelde önceden görmek gerekir. Depolama kotası ve fatura kararı admin'in işidir, bu yüzden moderatör yalnız bekleyen uyarısını görür.
+Karar veren / tarih: Weissman, 22 Eki.
+Nasıl değiştirilir: `STORAGE_QUOTA_MB` ortam değişkeni ve bu kayıt; eşikler `services/api/src/modules/admin-health/service.ts` (`PENDING_STALE_HOURS`, `STORAGE_WARN_PERCENT`, `STORAGE_CRITICAL_PERCENT`).

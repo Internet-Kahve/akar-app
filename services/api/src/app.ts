@@ -19,6 +19,7 @@ import type { JobQueue } from "./platform/jobs.ts";
 import type { StorageBuckets } from "./platform/storage.ts";
 import type { Geocoder } from "./modules/ingest/geocode.ts";
 import type { CityConfig } from "./modules/ingest/cities.ts";
+import { adminHealthRoutes } from "./modules/admin-health/routes.ts";
 import { adminImportRoutes } from "./modules/admin-catalog/imports-routes.ts";
 import { adminReportRoutes } from "./modules/admin-catalog/reports-routes.ts";
 import { adminRouteRoutes } from "./modules/admin-catalog/routes-editor-routes.ts";
@@ -66,6 +67,7 @@ const MODULES: ModulePlugin[] = [
   adminImportRoutes,
   adminReportRoutes,
   moderationRoutes,
+  adminHealthRoutes,
   engagementRoutes,
   settingsRoutes,
 ];

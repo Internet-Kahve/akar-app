@@ -39,3 +39,10 @@ test("production rejects CORS entries the browser's Origin header can never equa
     assert.throws(() => loadConfig({ ...production, CORS_ORIGINS: `https://ok.example,${origin}` }), /CORS_ORIGINS entry/, origin);
   }
 });
+
+test("STORAGE_QUOTA_MB must be a positive integer", () => {
+  for (const value of ["0", "-5", "1.5", "lots"]) {
+    assert.throws(() => loadConfig({ ...production, STORAGE_QUOTA_MB: value }), /STORAGE_QUOTA_MB/, value);
+  }
+  assert.equal(loadConfig({ ...production, STORAGE_QUOTA_MB: "5120" }).STORAGE_QUOTA_MB, 5120);
+});
