@@ -1,8 +1,11 @@
 import { createHash } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 
-/** Public, revalidated read cache. */
-export const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300";
+/**
+ * Public read cache: clients may store the body but must revalidate it on every use, so a
+ * publish, route edit or moderation decision shows on the next read; an unchanged body costs a 304.
+ */
+export const CACHE_CONTROL = "public, no-cache";
 
 /**
  * Adds a weak ETag over the serialized body and 304 on If-None-Match to every 200 GET in

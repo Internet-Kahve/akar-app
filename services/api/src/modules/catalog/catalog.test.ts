@@ -290,7 +290,8 @@ test("detail returns ordered story blocks and 304 on a matching ETag", async () 
   assert.deepEqual(first.body.coordinates, [29, 40]);
   const etag = first.res.headers.etag as string;
   assert.match(etag, /^W\/"/);
-  assert.match(String(first.res.headers["cache-control"]), /max-age=/);
+  // Revalidated on every use: an editor's write shows on the very next read (§11.24).
+  assert.equal(first.res.headers["cache-control"], "public, no-cache");
 
   const again = await app.inject({ method: "GET", url: "/v1/sites/carsi-hamami", headers: { "if-none-match": etag } });
   assert.equal(again.statusCode, 304);

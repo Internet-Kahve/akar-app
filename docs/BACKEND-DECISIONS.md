@@ -199,7 +199,7 @@ Nasıl değiştirilir: boyut sınırı `services/api/src/modules/media/magic.ts`
 Karar veren / tarih: Weissman, 21 Eki.
 
 **11.4 Harita ayarları veritabanında, yönetici panelden değiştirir.**
-Karar: 3B yakınlaştırma eşiği (`modelMinZoom`, başlangıç 16) ve aynı anda en çok model (`maxVisibleModels`, başlangıç 5) tek satırlık `map_settings` tablosunda durur (migration `0005` satırı başlangıç değerleriyle açar). Uygulamalar `GET /v1/map-settings` ile okur (herkese açık, 60 sn önbellek); yönetici `PUT /v1/admin/map-settings` ile değiştirir, değişiklik audit'e yazılır (`map-settings.update`). Sınırlar: yakınlaştırma 0–24, model 0–50 (0 haritada 3B'yi kapatır). `.env` seçeneği reddedildi: her değişiklik yeniden başlatma ister ve panelden ayarlanamaz.
+Karar: 3B yakınlaştırma eşiği (`modelMinZoom`, başlangıç 16) ve aynı anda en çok model (`maxVisibleModels`, başlangıç 5) tek satırlık `map_settings` tablosunda durur (migration `0005` satırı başlangıç değerleriyle açar). Uygulamalar `GET /v1/map-settings` ile okur (herkese açık, önbellekli; §11.24'ten beri her okumada doğrulanır); yönetici `PUT /v1/admin/map-settings` ile değiştirir, değişiklik audit'e yazılır (`map-settings.update`). Sınırlar: yakınlaştırma 0–24, model 0–50 (0 haritada 3B'yi kapatır). `.env` seçeneği reddedildi: her değişiklik yeniden başlatma ister ve panelden ayarlanamaz.
 Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: değerler panelden ya da `PUT /v1/admin/map-settings`; sınırlar `services/api/src/modules/settings/schemas.ts` ve `src/db/schema/settings.ts` CHECK'leri (yeni migration).
 
@@ -315,3 +315,9 @@ Neden: arayüz değişmeden (alan, uyarı ya da ayrı "konum düzelt" ekranı ek
 Bilinen sınır: tohum ve SQL ile yayınlanmış bazı eserler bugünkü yayın kapısını geçmez; panelde taslağa alınırlarsa eksikler tamamlanmadan yeniden yayınlanamazlar. Hikâye, fotoğraf ve kaynak düzenleme API kipinde henüz yok, bu yüzden içe aktarılan taslakların çoğu panelden henüz yayınlanamaz.
 Karar veren / tarih: Weissman, 22 Eki.
 Nasıl değiştirilir: `packages/api-client/src/http.ts` (`mapAdminSite`, `placeholderOf`, `updateSite`) ve bu kayıt.
+
+**11.24 Herkese açık okumalar süreli önbellek yerine her kullanımda doğrulanır.**
+Karar: Önbellekli herkese açık uçların `Cache-Control` başlığı `public, max-age=60, stale-while-revalidate=300` yerine `public, no-cache` (`services/api/src/http-cache.ts`). Zayıf `ETag` ve `If-None-Match` → `304` aynen kalır. Tarayıcı yanıtı saklar ama her kullanımda sunucuya sorar; değişmeyen yanıt gövdesiz `304` döner.
+Neden: 60 saniyelik süre ve ardından 5 dakikalık "eskiyi göster, arkada tazele" penceresi yüzünden yeni rota, bulmaca, yayınlanan eser ya da moderasyon kararı ziyaretçiye geç görünüyordu. Panelin kendisi de etkileniyordu: rota ve fotoğraf kaydından sonraki yeniden okuma (`refreshRoutes`, `refreshSite`) tarayıcı önbelleğinden önceki hâli alabiliyordu. Demo yolunda "panelde onay + yeni eser" adımı anında görünmeli. Maliyet: her sayfa açılışında üç istek (`site-details`, `routes`, `memories`) yine sunucuya gider ve veritabanı sorgusu çalışır; değişiklik yoksa yalnız başlık döner. İstek sayısı değişmez (önbellekten okunan yanıt zaten açılış başına bir kez okunuyordu), bu yüzden IP başına dakikada 300 sınırı etkilenmez. Paylaşılan CDN yok; olursa `s-maxage` ayrıca düşünülür. Yazmadan sonra uçları tek tek geçersiz kılmak (sürüm numarası, etiket) daha karmaşık olduğu için seçilmedi.
+Karar veren / tarih: Weissman (iş sırası, "kısalt ya da değişince geçersiz kıl"), 22 Eki; biçim backend sorumlusunun.
+Nasıl değiştirilir: `CACHE_CONTROL` (`services/api/src/http-cache.ts`); süre geri gelirse istemcinin yazmadan sonraki okumaları `cache: "no-cache"` göndermeli.
