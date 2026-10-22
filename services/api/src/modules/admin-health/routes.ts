@@ -17,7 +17,7 @@ export const adminHealthRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["admin-health"],
         summary: "Sağlık uyarıları: uzun süredir bekleyen anılar ve depolama doluluğu",
         description:
-          "Moderatör ve admin görür. `pendingStale`: 48 saatten uzun süredir `pending` olan anıların sayısı ve en eskisinin gönderim zamanı. `storage` yalnız admin cevabında bulunur (moderatör cevabında alan hiç yoktur): medya kayıtlarının toplam boyutu `STORAGE_QUOTA_MB` kotasına oranlanır; `level` %80'den `warn`, %95'ten `critical`.",
+          "Moderatör ve admin görür. `pendingStale`: kuyruğa son girişinden (gönderim ya da bildirimle geri dönüş) beri 48 saatten uzun süredir `pending` olan anıların sayısı ve en eskisinin kuyruğa giriş zamanı. `storage` yalnız admin cevabında bulunur (moderatör cevabında alan hiç yoktur): medya kayıtlarının toplam boyutu `STORAGE_QUOTA_MB` kotasına oranlanır; `level` %80'den `warn`, %95'ten `critical`.",
         response: { 200: AdminHealthResponse },
       },
     },

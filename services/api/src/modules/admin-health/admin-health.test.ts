@@ -8,6 +8,8 @@ import { loadCatalog } from "../../db/seed.ts";
 import type { Role } from "../../platform/auth.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
+import { moderationRoutes } from "../moderation/routes.ts";
+import { REPORT_HIDE_THRESHOLD } from "../moderation/service.ts";
 import { adminHealthRoutes } from "./routes.ts";
 import type { AdminHealthResponse } from "./schemas.ts";
 import { storageLevel } from "./service.ts";
@@ -38,7 +40,7 @@ let db: Db;
 let stop: (() => Promise<void>) | undefined;
 
 before(async () => {
-  ({ app, stop } = await startTestApp({ register: [adminHealthRoutes], env: { STORAGE_QUOTA_MB: "1" } }));
+  ({ app, stop } = await startTestApp({ register: [adminHealthRoutes, moderationRoutes], env: { STORAGE_QUOTA_MB: "1" } }));
   db = app.deps.db;
   await loadCatalog(db, { sites: [site], routes: [] });
 });
@@ -55,9 +57,11 @@ const health = (role: Role | null) =>
 const healthAs = async (role: Role) => (await health(role)).json<AdminHealthResponse>();
 
 let seq = 0;
-const seedMemory = (hoursAgo: number, status: "pending" | "approved" = "pending") =>
-  db.insert(memories).values({
-    id: `mem-${++seq}`,
+const seedMemory = async (hoursAgo: number, status: "pending" | "approved" = "pending") => {
+  const id = `mem-${++seq}`;
+  const at = new Date(Date.now() - hoursAgo * HOUR);
+  await db.insert(memories).values({
+    id,
     siteId: SITE,
     authorId: "author",
     authorName: "Ayşe",
@@ -65,8 +69,11 @@ const seedMemory = (hoursAgo: number, status: "pending" | "approved" = "pending"
     status,
     kvkkConsentAt: new Date(),
     kvkkTextVersion: "kvkk-v1",
-    createdAt: new Date(Date.now() - hoursAgo * HOUR),
+    createdAt: at,
+    pendingSince: at,
   });
+  return id;
+};
 
 const seedMedia = (kind: "photo" | "model" | "audio", bytes: number | null) =>
   db.insert(media).values({ id: `media-${++seq}`, kind, mime: "application/octet-stream", url: `https://cdn.akar.test/${seq}`, license: "CC0", trust: "representative", bytes });
@@ -94,15 +101,29 @@ test("a moderator sees the stale-pending warning and no storage; an admin sees b
 test("pending memories count as stale after 48 hours, not before; only pending ones count", async () => {
   await seedMemory(47);
   await seedMemory(72, "approved");
-  assert.deepEqual((await healthAs("moderator")).pendingStale, { count: 0, oldestCreatedAt: null, thresholdHours: 48 });
+  assert.deepEqual((await healthAs("moderator")).pendingStale, { count: 0, oldestPendingSince: null, thresholdHours: 48 });
 
   await seedMemory(49);
   await seedMemory(100);
   const { pendingStale } = await healthAs("moderator");
   assert.equal(pendingStale.count, 2);
   assert.equal(pendingStale.thresholdHours, 48);
-  const oldest = new Date(pendingStale.oldestCreatedAt!).getTime();
+  const oldest = new Date(pendingStale.oldestPendingSince!).getTime();
   assert.ok(Math.abs(Date.now() - oldest - 100 * HOUR) < 60_000);
+});
+
+test("a memory sent back to the queue by reports ages from that moment, not from its submission", async () => {
+  const id = await seedMemory(100, "approved");
+  for (let n = 1; n <= REPORT_HIDE_THRESHOLD; n++) {
+    const res = await app.inject({
+      method: "POST",
+      url: `/v1/memories/${id}/report`,
+      headers: authHeader({ id: `reporter-${n}`, role: "user" }),
+      payload: { reason: "Uygunsuz içerik" },
+    });
+    assert.equal(res.statusCode, 201);
+  }
+  assert.deepEqual((await healthAs("moderator")).pendingStale, { count: 0, oldestPendingSince: null, thresholdHours: 48 });
 });
 
 test("storage sums media bytes by kind, counting rows without a size as 0", async () => {
