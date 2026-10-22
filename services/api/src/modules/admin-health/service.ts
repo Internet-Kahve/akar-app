@@ -3,7 +3,7 @@ import type { Db } from "../../db/client.ts";
 import { media, memories, mediaKinds } from "../../db/schema/index.ts";
 import type { AdminHealthResponse, StorageLevel } from "./schemas.ts";
 
-/** A `pending` memory older than this is flagged in the panel (decision log §11.21). */
+/** A memory `pending` for longer than this (since it last entered the queue) is flagged in the panel (§11.21, §11.25). */
 export const PENDING_STALE_HOURS = 48;
 /** Storage fill levels, percent of the quota (§11.21). */
 export const STORAGE_WARN_PERCENT = 80;
@@ -15,12 +15,12 @@ const MB = 1024 * 1024;
 export async function pendingStale(db: Db, now: Date): Promise<AdminHealthResponse["pendingStale"]> {
   const cutoff = new Date(now.getTime() - PENDING_STALE_HOURS * HOUR_MS);
   const [row] = await db
-    .select({ count: sql<number>`count(*)::int`, oldest: sql<Date | null>`min(${memories.createdAt})` })
+    .select({ count: sql<number>`count(*)::int`, oldest: sql<Date | null>`min(${memories.pendingSince})` })
     .from(memories)
-    .where(and(eq(memories.status, "pending"), lt(memories.createdAt, cutoff)));
+    .where(and(eq(memories.status, "pending"), lt(memories.pendingSince, cutoff)));
   return {
     count: row?.count ?? 0,
-    oldestCreatedAt: row?.oldest ? new Date(row.oldest).toISOString() : null,
+    oldestPendingSince: row?.oldest ? new Date(row.oldest).toISOString() : null,
     thresholdHours: PENDING_STALE_HOURS,
   };
 }

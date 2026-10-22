@@ -30,6 +30,8 @@ export const memories = pgTable(
     reason: text("reason"),
     decidedBy: text("decided_by"),
     decidedAt: timestamp("decided_at", { withTimezone: true }),
+    /** When the memory last entered the queue: submission, or a report sending it back. The health box ages pending memories by it. */
+    pendingSince: timestamp("pending_since", { withTimezone: true }).notNull().defaultNow(),
     kvkkConsentAt: timestamp("kvkk_consent_at", { withTimezone: true }).notNull(),
     kvkkTextVersion: text("kvkk_text_version").notNull(),
     ...timestamps,

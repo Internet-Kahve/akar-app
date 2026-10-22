@@ -461,8 +461,9 @@ export async function reportMemory(
     return { status: 201, body };
   }
 
-  // Back to the queue: a pending memory carries no decision.
-  await tx.update(memories).set({ status: "pending", decidedBy: null, decidedAt: null, updatedAt: new Date() }).where(eq(memories.id, id));
+  // Back to the queue: a pending memory carries no decision, and its wait starts now (health box, §11.25).
+  const now = new Date();
+  await tx.update(memories).set({ status: "pending", decidedBy: null, decidedAt: null, pendingSince: now, updatedAt: now }).where(eq(memories.id, id));
   await recordAudit(tx, {
     actorId: reporterId,
     action: "memory.report",

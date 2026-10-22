@@ -5,8 +5,8 @@ export const StorageLevel = z.enum(["ok", "warn", "critical"]);
 export type StorageLevel = z.infer<typeof StorageLevel>;
 
 export const PendingStale = z.object({
-  count: z.number().int().nonnegative().describe("Eşikten uzun süredir bekleyen (pending) anı sayısı"),
-  oldestCreatedAt: z.iso.datetime().nullable().describe("Bu anıların en eskisinin gönderim zamanı; yoksa null"),
+  count: z.number().int().nonnegative().describe("Kuyruğa son girişinden beri eşikten uzun süredir bekleyen (pending) anı sayısı"),
+  oldestPendingSince: z.iso.datetime().nullable().describe("Bu anıların en eskisinin kuyruğa son giriş zamanı (gönderim ya da bildirimle geri dönüş); yoksa null"),
   thresholdHours: z.number().int().positive().describe("Bekleme eşiği, saat (48)"),
 });
 

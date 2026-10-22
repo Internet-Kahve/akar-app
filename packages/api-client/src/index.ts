@@ -37,12 +37,12 @@ export interface QuizAnswerResult {
   /** Fresh state (points, quizIds). */
   snapshot: Snapshot;
 }
-/** `GET /v1/admin/health` (decision §11.21): panel warnings for moderators and admins. */
+/** `GET /v1/admin/health` (decisions §11.21, §11.25): panel warnings for moderators and admins. */
 export interface AdminHealth {
-  /** Memories pending longer than `thresholdHours`, counted from submission. */
+  /** Memories pending longer than `thresholdHours`, counted from when they last entered the queue (submission or a report sending them back; the demo has no reports, so submission). */
   pendingStale: {
     count: number;
-    oldestCreatedAt: string | null;
+    oldestPendingSince: string | null;
     thresholdHours: number;
   };
   /** Admins only; absent for moderators and in the demo, which stores no files. */
@@ -242,7 +242,7 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       return {
         pendingStale: {
           count: stale.length,
-          oldestCreatedAt: stale[0] ?? null,
+          oldestPendingSince: stale[0] ?? null,
           thresholdHours: PENDING_STALE_HOURS,
         },
       };

@@ -300,7 +300,7 @@ Nasıl değiştirilir: bu kayıt; GitHub dal koruması şu an yok.
 **11.21 Yönetim panelinde sağlık uyarısı: depolama doluluğu ve uzun süredir bekleyen anılar.**
 Karar: `GET /v1/admin/health` (moderatör ve admin, `no-store`). `pendingStale`: 48 saatten uzun süredir `pending` olan anıların sayısı, en eskisinin gönderim zamanı ve eşik (`thresholdHours: 48`); moderatöre de gösterilir. `storage`: medya kayıtlarının toplam boyutu (`SUM(media.bytes)`, boyutsuz kayıt 0) kotaya (`STORAGE_QUOTA_MB`, varsayılan 1024) oranlanır, türe göre dökümüyle; yalnız admin'e verilir, moderatör cevabında alan yoktur. Eşikler: %80 ve üstü `warn`, %95 ve üstü `critical`.
 Neden: Supabase Free depolaması 1 GB; fotoğraflar anı onaylanınca kalıcıdır ve bekleyen anılar moderasyon olmadan birikebilir. Depolama dolunca yüklemeler durur; bunu panelde önceden görmek gerekir. Depolama kotası ve fatura kararı admin'in işidir, bu yüzden moderatör yalnız bekleyen uyarısını görür.
-Karar veren / tarih: Weissman, 22 Eki.
+Karar veren / tarih: Weissman, 22 Eki. Bekleme süresinin başlangıcı §11.25 ile değişti (gönderim yerine kuyruğa son giriş).
 Nasıl değiştirilir: `STORAGE_QUOTA_MB` ortam değişkeni ve bu kayıt; eşikler `services/api/src/modules/admin-health/service.ts` (`PENDING_STALE_HOURS`, `STORAGE_WARN_PERCENT`, `STORAGE_CRITICAL_PERCENT`).
 
 **11.22 Yönetim paneli taslakları toplu okur: `GET /v1/admin/site-details`.**
@@ -321,3 +321,9 @@ Karar: Önbellekli herkese açık uçların `Cache-Control` başlığı `public,
 Neden: 60 saniyelik süre ve ardından 5 dakikalık "eskiyi göster, arkada tazele" penceresi yüzünden yeni rota, bulmaca, yayınlanan eser ya da moderasyon kararı ziyaretçiye geç görünüyordu. Panelin kendisi de etkileniyordu: rota ve fotoğraf kaydından sonraki yeniden okuma (`refreshRoutes`, `refreshSite`) tarayıcı önbelleğinden önceki hâli alabiliyordu. Demo yolunda "panelde onay + yeni eser" adımı anında görünmeli. Maliyet: her sayfa açılışında üç istek (`site-details`, `routes`, `memories`) yine sunucuya gider ve veritabanı sorgusu çalışır; değişiklik yoksa yalnız başlık döner. İstek sayısı değişmez (önbellekten okunan yanıt zaten açılış başına bir kez okunuyordu), bu yüzden IP başına dakikada 300 sınırı etkilenmez. Paylaşılan CDN yok; olursa `s-maxage` ayrıca düşünülür. Yazmadan sonra uçları tek tek geçersiz kılmak (sürüm numarası, etiket) daha karmaşık olduğu için seçilmedi.
 Karar veren / tarih: Weissman (iş sırası, "kısalt ya da değişince geçersiz kıl"), 22 Eki; biçim backend sorumlusunun.
 Nasıl değiştirilir: `CACHE_CONTROL` (`services/api/src/http-cache.ts`); süre geri gelirse istemcinin yazmadan sonraki okumaları `cache: "no-cache"` göndermeli.
+
+**11.25 Bekleyen anının süresi kuyruğa son girişinden sayılır.**
+Karar: `memories.pending_since` (migration `0007`): anı gönderilince ve bildirimlerle kuyruğa geri dönünce (`REPORT_HIDE_THRESHOLD` = 3) o ana ayarlanır. Sağlık uyarısı (§11.21) bekleyen anıyı `created_at` yerine buna göre yaşlandırır; yanıttaki alan `oldestCreatedAt` yerine `oldestPendingSince`. Migration mevcut satırları doldurur: bekleyen anıda `updated_at` (bugün bekleyen anı yalnız gönderimde ve geri dönüşte yazılır), diğerlerinde `created_at`. Kuyruk sırası (`GET /v1/admin/memories`, en eski gönderim önce) değişmedi.
+Neden: haftalar önce gönderilmiş, bugün bildirimle kuyruğa dönen anı panelde hemen "48 saati aştı" görünüyordu. Ayrı sütun `updated_at`'e dayanmaktan sağlamdır: bekleyen anıya ileride başka bir yazma (ör. düzenleme) eklense süre sıfırlanmaz.
+Karar veren / tarih: Weissman (sütun ve alan adı), 22 Eki.
+Nasıl değiştirilir: `services/api/src/modules/admin-health/service.ts` (`pendingStale`), `reportMemory` (`services/api/src/modules/moderation/service.ts`) ve bu kayıt.
