@@ -992,3 +992,92 @@ test("upload progress runs 0 → 1 and always ends with null, also on failure", 
   await assert.rejects(client.dispatch({ type: "memory", memory }), ApiError);
   assert.deepEqual(seen, [0, null]);
 });
+
+test("removing a memory sends DELETE with an idempotency key and re-reads the feed past the HTTP cache and the points; the snapshot carries the role", async () => {
+  const removed = new Set<string>();
+  const feedCaches: Array<RequestCache | undefined> = [];
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/me": () => ({ id: "u", role: "admin", displayName: "Ada" }),
+    "GET /v1/me/passport": () => ({
+      points: removed.has("m1") ? 0 : 25,
+      saved: [],
+      read: [],
+      visited: [],
+      quizzesSolved: [],
+    }),
+    "GET /v1/me/memories": () => ({
+      items: removed.has("m1")
+        ? []
+        : [
+            {
+              id: "m1",
+              siteId: "a",
+              text: "benim anım",
+              photo: null,
+              status: "approved",
+              reason: null,
+              createdAt: "2026-10-11T10:00:00.000Z",
+            },
+          ],
+      nextCursor: null,
+    }),
+    "GET /v1/memories": () => ({
+      items: ["m1", "m2"]
+        .filter((id) => !removed.has(id))
+        .map((id) => feedItem(id, "a")),
+      nextCursor: null,
+    }),
+    "GET /v1/admin/memories": () => ({ items: [], nextCursor: null }),
+    "DELETE /v1/me/memories/m1": () => {
+      removed.add("m1");
+      return new Response(null, { status: 204 });
+    },
+    "DELETE /v1/admin/memories/m2": () => {
+      removed.add("m2");
+      return new Response(null, { status: 204 });
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "tok",
+    fetch: (input, init) => {
+      if (String(input).includes("/v1/memories?")) feedCaches.push(init?.cache);
+      return api.fetch(input, init);
+    },
+  });
+  const before = await client.getSnapshot();
+  assert.deepEqual(
+    [before.role, before.points, before.memories.map((m) => m.id)],
+    ["admin", 25, ["m1"]],
+  );
+  assert.deepEqual(
+    before.publicMemories?.map((m) => m.id),
+    ["m2"],
+  );
+
+  const afterOwn = await client.dispatch({ type: "delete-memory", id: "m1" });
+  const del = api.calls.find(
+    (c) => c.method === "DELETE" && c.path === "/v1/me/memories/m1",
+  );
+  assert.ok(del?.headers["idempotency-key"]);
+  assert.deepEqual([afterOwn.points, afterOwn.memories], [0, []]);
+  // The own copy is gone and the feed was re-read: it does not come back as somebody else's.
+  assert.deepEqual(
+    afterOwn.publicMemories?.map((m) => m.id),
+    ["m2"],
+  );
+  assert.deepEqual(feedCaches, [undefined, "no-cache"]);
+
+  const afterAdmin = await client.dispatch({
+    type: "admin-delete-memory",
+    id: "m2",
+  });
+  assert.ok(
+    api.calls.some(
+      (c) => c.method === "DELETE" && c.path === "/v1/admin/memories/m2",
+    ),
+  );
+  assert.deepEqual(afterAdmin.publicMemories, []);
+});

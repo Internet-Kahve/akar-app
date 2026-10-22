@@ -74,7 +74,7 @@ async function guestPage(browser: Browser) {
   return { context, page };
 }
 
-test("guest writes a photo memory, signs in when sending, a moderator approves it, a new guest reads it", async ({
+test("guest writes a photo memory, a moderator approves it, a new guest reads it, the moderator takes it down, the author deletes it", async ({
   browser,
 }) => {
   const run = randomUUID().slice(0, 8);
@@ -130,8 +130,74 @@ test("guest writes a photo memory, signs in when sending, a moderator approves i
   // The src is set when the card renders; the browser fetches the file afterwards.
   await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
 
+  // 4. The moderator takes the memory down from the public card (no report needed); only an admin sees "Kalıcı sil".
+  await moderator.page.goto("/");
+  await openSite(moderator.page, MEMORY_SITE.name);
+  await moderator.page.getByRole("button", { name: /Yaşayan hafıza/ }).click();
+  const published = moderator.page.locator(".memory-public").filter({ hasText: text });
+  await expect(published.getByRole("button", { name: "Kalıcı sil" })).toHaveCount(0);
+  const photoUrl = await published.getByRole("img", { name: "Ziyaretçinin eser fotoğrafı" }).getAttribute("src");
+  await published.getByRole("button", { name: "Yayından kaldır" }).click();
+  const takedown = moderator.page.getByRole("dialog", { name: "Yayından kaldır" });
+  await takedown.getByRole("radio", { name: "Uygunsuz içerik" }).check();
+  await takedown.getByRole("button", { name: "Yayından kaldır" }).click();
+  await expect(published).toBeHidden();
+  const feed = await (await fetch(`${API}/v1/sites/${MEMORY_SITE.id}/memories`, { cache: "no-store" })).json();
+  expect(feed.items.map((m: { text: string }) => m.text)).not.toContain(text);
+  // The published photo file is gone from public storage.
+  expect((await fetch(photoUrl!)).ok).toBe(false);
+
+  // 5. The author sees the reason in Paylaşımlarım and deletes the memory for good.
+  await visitor.page.goto("/");
+  await openProfile(visitor.page);
+  const own = visitor.page.locator(".memory-row").filter({ hasText: text });
+  await expect(own).toContainText("Uygunsuz içerik");
+  await own.getByRole("button", { name: "Sil", exact: true }).click();
+  await visitor.page.getByRole("dialog", { name: "Anı silinsin mi?" }).getByRole("button", { name: "Evet, sil" }).click();
+  await expect(own).toHaveCount(0);
+
   expect(errors).toEqual([]);
   await Promise.all([visitor.context.close(), moderator.context.close(), reader.context.close()]);
+});
+
+test("an admin deletes another visitor's approved memory permanently from the public card", async ({ browser }) => {
+  const run = randomUUID().slice(0, 8);
+  const adminEmail = `e2e-admin-${run}@akar.test`;
+  const author = tokenFor(`e2e-user-${run}@akar.test`, "user");
+  const admin = tokenFor(adminEmail, "admin");
+  const text = `E2E anısı ${run}: kalıcı silinecek.`;
+  const call = async (token: string, path: string, body: unknown) => {
+    const res = await fetch(`${API}${path}`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "idempotency-key": randomUUID() },
+      body: JSON.stringify(body),
+    });
+    expect(res.ok, `${path} ${res.status}`).toBe(true);
+    return res.json();
+  };
+  const created = await call(author, "/v1/memories", {
+    siteId: MEMORY_SITE.id,
+    text,
+    kvkkConsent: true,
+    kvkkTextVersion: "e2e",
+  });
+  await call(admin, `/v1/admin/memories/${created.id}/decision`, { status: "approved" });
+
+  const page = (await guestPage(browser)).page;
+  await openProfile(page);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await signIn(page, adminEmail);
+  await page.goto("/");
+  await openSite(page, MEMORY_SITE.name);
+  await page.getByRole("button", { name: /Yaşayan hafıza/ }).click();
+  const card = page.locator(".memory-public").filter({ hasText: text });
+  await card.getByRole("button", { name: "Kalıcı sil" }).click();
+  await page.getByRole("dialog", { name: "Anı kalıcı silinsin mi?" }).getByRole("button", { name: "Evet, kalıcı sil" }).click();
+  await expect(card).toHaveCount(0);
+
+  const mine = await (await fetch(`${API}/v1/me/memories`, { headers: { authorization: `Bearer ${author}` } })).json();
+  expect(mine.items.map((m: { id: string }) => m.id)).not.toContain(created.id);
+  await page.context().close();
 });
 
 test("guest quiz: a wrong answer can be retried, the right one shows the explanation", async ({ browser }) => {

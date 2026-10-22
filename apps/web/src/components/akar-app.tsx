@@ -38,6 +38,7 @@ import {
   normalize,
   type Command,
   type HeritageSite,
+  type Role,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
@@ -45,6 +46,7 @@ import { Architecture, Scene } from "./scene";
 import { StoryPanel } from "./story-panel";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
+import { MemoryActions } from "./memory-actions";
 import { SignInModal } from "./sign-in-modal";
 import { Modal, Tag, Notice, Back, Motif } from "./ui";
 import { describeError, needsSignIn } from "../lib/errors";
@@ -103,6 +105,7 @@ export function AkarApp() {
     consent = useRef<{ textVersion: string } | null>(null),
     accountId = useRef<string | null | undefined>(undefined);
   const live = !!apiUrl;
+  const role: Role = state.role ?? (live ? "user" : "admin");
   const load = useCallback(async () => {
     if (!client.current) return;
     if (!loaded.current) setLoadError("");
@@ -442,6 +445,7 @@ export function AkarApp() {
               onSite={selectSite}
               onAdmin={() => go("admin")}
               onReset={() => setOverlay("reset")}
+              commit={commit}
               auth={
                 live
                   ? {
@@ -453,7 +457,9 @@ export function AkarApp() {
               }
             />
           )}
-          {view === "admin" && <Admin state={state} commit={commit} />}
+          {view === "admin" && (
+            <Admin state={state} commit={commit} role={role} />
+          )}
           {view === "history" && site && (
             <HistoryView
               site={site}
@@ -1032,6 +1038,15 @@ export function AkarApp() {
                 <strong>{m.author}</strong>
                 <p>{m.text}</p>
                 <Tag tone="success">Demo moderasyonunda onaylandı</Tag>
+                <div className="memory-actions">
+                  <MemoryActions
+                    memory={m}
+                    siteName={site.name}
+                    role={role}
+                    own={state.memories.some((x) => x.id === m.id)}
+                    commit={commit}
+                  />
+                </div>
               </article>
             ))
           ) : (

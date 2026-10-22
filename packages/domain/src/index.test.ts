@@ -4,6 +4,7 @@ import {
   reduceSnapshot,
   filterSites,
   validateSite,
+  memoryPermissions,
   type Memory,
 } from "./index";
 import { createSeed } from "../../api-client/src/seed";
@@ -202,4 +203,113 @@ test("shared photo updates all referencing sites and preserves unrelated media",
   assert.equal(next.sites[0].photos?.[0].alt, "New alt");
   assert.equal(next.sites[1].photos?.[0].alt, "New alt");
   assert.equal(state.sites[0].photos[0].alt, "Old alt");
+});
+function pendingMemory(photo?: string) {
+  const memory: Memory = {
+    id: "m1",
+    siteId: "ulu-cami",
+    text: "Avludaki şadırvanın sesi.",
+    status: "pending",
+    createdAt: "2026-10-22T10:00:00.000Z",
+    author: "Gezgin",
+    ...(photo && { photo }),
+  };
+  return reduceSnapshot(createSeed(), { type: "memory", memory });
+}
+test("taking down an approved memory keeps text and reason, drops the photo and takes the points back once", () => {
+  let state = reduceSnapshot(pendingMemory("data:image/png;base64,AAAA"), {
+    type: "moderate",
+    id: "m1",
+    status: "approved",
+  });
+  assert.equal(state.points, 25);
+  assert.throws(
+    () =>
+      reduceSnapshot(state, {
+        type: "moderate",
+        id: "m1",
+        status: "rejected",
+        reason: "  ",
+      }),
+    /Ret nedeni/,
+  );
+  for (let i = 0; i < 2; i++)
+    state = reduceSnapshot(state, {
+      type: "moderate",
+      id: "m1",
+      status: "rejected",
+      reason: " Uygunsuz içerik ",
+    });
+  const [m] = state.memories;
+  assert.deepEqual(
+    [m?.status, m?.reason, m?.photo, m?.text, state.points],
+    ["rejected", "Uygunsuz içerik", undefined, "Avludaki şadırvanın sesi.", 0],
+  );
+  // Rejection is final: a later approval changes nothing and pays nothing.
+  state = reduceSnapshot(state, {
+    type: "moderate",
+    id: "m1",
+    status: "approved",
+  });
+  assert.deepEqual([state.memories[0]?.status, state.points], ["rejected", 0]);
+});
+test("deleting removes the record in any status and takes approval points back once", () => {
+  for (const type of ["delete-memory", "admin-delete-memory"] as const) {
+    let state = reduceSnapshot(pendingMemory(), {
+      type: "moderate",
+      id: "m1",
+      status: "approved",
+    });
+    state = reduceSnapshot(state, { type: "visit", siteId: "ulu-cami" });
+    assert.equal(state.points, 125);
+    state = reduceSnapshot(state, { type, id: "m1" });
+    assert.deepEqual([state.memories.length, state.points], [0, 100]);
+    assert.throws(
+      () => reduceSnapshot(state, { type, id: "m1" }),
+      /bulunamadı/,
+    );
+    // A pending memory carries no points.
+    const pending = reduceSnapshot(pendingMemory(), { type, id: "m1" });
+    assert.deepEqual([pending.memories.length, pending.points], [0, 0]);
+  }
+});
+test("memory permissions: a moderator never decides their own memory, an admin may, only an admin purges others'", () => {
+  const none = { remove: false, decide: false, takedown: false, purge: false };
+  assert.deepEqual(memoryPermissions("user", "approved", false), none);
+  assert.deepEqual(memoryPermissions("editor", "pending", false), none);
+  assert.deepEqual(memoryPermissions("user", "rejected", true), {
+    ...none,
+    remove: true,
+  });
+  assert.deepEqual(memoryPermissions("moderator", "pending", false), {
+    ...none,
+    decide: true,
+  });
+  assert.deepEqual(memoryPermissions("moderator", "approved", false), {
+    ...none,
+    takedown: true,
+  });
+  assert.deepEqual(memoryPermissions("moderator", "approved", true), {
+    ...none,
+    remove: true,
+  });
+  assert.deepEqual(memoryPermissions("moderator", "pending", true), {
+    ...none,
+    remove: true,
+  });
+  assert.deepEqual(memoryPermissions("admin", "approved", false), {
+    ...none,
+    takedown: true,
+    purge: true,
+  });
+  assert.deepEqual(memoryPermissions("admin", "approved", true), {
+    ...none,
+    remove: true,
+    takedown: true,
+  });
+  assert.deepEqual(memoryPermissions("admin", "pending", true), {
+    ...none,
+    remove: true,
+    decide: true,
+  });
 });
