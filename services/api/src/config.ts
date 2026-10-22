@@ -51,6 +51,9 @@ const Env = z.object({
   /** Public read base for stored objects (CDN or storage public URL), no trailing slash. */
   STORAGE_PUBLIC_BASE_URL: optionalUrl,
 
+  /** Quota the panel health warning measures `media.bytes` against, MB (Supabase Free: 1 GB). Not required in production. */
+  STORAGE_QUOTA_MB: z.coerce.number().int().positive().default(1024),
+
   // Import geocoding (`npm run ingest` and the panel import): public OSM services, cached in `.cache/`.
   NOMINATIM_URL: z.url().default("https://nominatim.openstreetmap.org"),
   /** Contact address sent to Nominatim (usage policy). */

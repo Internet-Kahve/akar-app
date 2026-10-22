@@ -24317,6 +24317,131 @@
         }
       }
     },
+    "/v1/admin/health": {
+      "get": {
+        "summary": "Sağlık uyarıları: uzun süredir bekleyen anılar ve depolama doluluğu",
+        "tags": [
+          "admin-health"
+        ],
+        "description": "Moderatör ve admin görür. `pendingStale`: 48 saatten uzun süredir `pending` olan anıların sayısı ve en eskisinin gönderim zamanı. `storage` yalnız admin cevabında bulunur (moderatör cevabında alan hiç yoktur): medya kayıtlarının toplam boyutu `STORAGE_QUOTA_MB` kotasına oranlanır; `level` %80'den `warn`, %95'ten `critical`.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pendingStale": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Eşikten uzun süredir bekleyen (pending) anı sayısı"
+                        },
+                        "oldestCreatedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "Bu anıların en eskisinin gönderim zamanı; yoksa null"
+                        },
+                        "thresholdHours": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Bekleme eşiği, saat (48)"
+                        }
+                      },
+                      "required": [
+                        "count",
+                        "oldestCreatedAt",
+                        "thresholdHours"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "storage": {
+                      "description": "Yalnız admin için; moderatör cevabında bu alan hiç bulunmaz",
+                      "type": "object",
+                      "properties": {
+                        "usedBytes": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Medya kayıtlarının toplam boyutu (media.bytes toplamı; boyutu bilinmeyen kayıt 0 sayılır)"
+                        },
+                        "quotaBytes": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991,
+                          "description": "Depolama kotası, bayt (STORAGE_QUOTA_MB)"
+                        },
+                        "percent": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Doluluk yüzdesi, bir ondalık; kota aşılırsa 100'ü geçebilir"
+                        },
+                        "level": {
+                          "type": "string",
+                          "enum": [
+                            "ok",
+                            "warn",
+                            "critical"
+                          ],
+                          "description": "ok: %80 altı; warn: %80 ve üstü; critical: %95 ve üstü"
+                        },
+                        "byKind": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string",
+                            "enum": [
+                              "photo",
+                              "model",
+                              "audio"
+                            ]
+                          },
+                          "additionalProperties": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "required": [
+                            "photo",
+                            "model",
+                            "audio"
+                          ],
+                          "description": "Medya türüne göre bayt (photo, model, audio); kaydı olmayan tür 0"
+                        }
+                      },
+                      "required": [
+                        "usedBytes",
+                        "quotaBytes",
+                        "percent",
+                        "level",
+                        "byKind"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "pendingStale"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/saved/{siteId}": {
       "put": {
         "summary": "Eseri kaydedilenlere ekle: istenen durum belirlenir, tekrarında bir şey değişmez; yayında olmayan eser 404",

@@ -58,6 +58,7 @@ Tüm değişkenler `.env.example` içinde; `src/config.ts` doğrular.
 | `OVERPASS_URL` | `https://overpass-api.de/api/interpreter` | OSM toplu eşleşmesi; isteğe bağlı |
 | `STORAGE_BUCKET` | `media` | Herkese açık okunan medya kovası; yalnız sunucu yazar |
 | `STORAGE_UPLOAD_BUCKET` | `uploads` | Herkese kapalı yükleme kovası; istemci imzalı PUT ile buraya yükler, `complete` doğrulanan dosyayı `STORAGE_BUCKET`'a kopyalar. `STORAGE_BUCKET` ile aynı olamaz. Yerelde `supabase start` (çalışan yığında `supabase seed buckets --local`) açar; bulutta elle, herkese kapalı açılmalı |
+| `STORAGE_QUOTA_MB` | `1024` | Yönetim panelinin depolama uyarısının ölçtüğü kota, MB (pozitif tam sayı); `1024` = Supabase Free. Ücretli plana geçilince büyütülür. Üretimde zorunlu değil (§11.21) |
 
 ### İlk yönetici
 
