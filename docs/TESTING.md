@@ -121,6 +121,13 @@ Bir hata bulduğunda: ne yaptın, hangi istek/ekran, beklenen ve gelen yanıt (y
 
 Kurulum adımları (Supabase bulut projesi, ayarlar, kovalar, migration, veri, API sunucusu, Vercel): [services/api/README.md "Yayına alma"](../services/api/README.md#yayına-alma). Hesapları Weissman açar.
 
+| Adres | Ne |
+| --- | --- |
+| https://akar-app-jade.vercel.app | Gerçek API'ye bağlı web (test edenler bunu kullanır) |
+| https://akar-app.onrender.com | API (Render, Free: 15 dakika boşta kalınca uyur, ilk istek ~1 dakika) · Swagger: `/docs` |
+
+Tamer'in Vercel projesi demo verisiyle çalışmaya devam eder; ikisinin verisi ayrıdır (§11.16).
+
 **Hesap açmadan önce imajı yerelde dene.** `npm run api` açıkken (Supabase ve veritabanı yerelde), `services/api` içinde:
 
 ```sh
@@ -140,7 +147,7 @@ curl http://127.0.0.1:4010/ready
 | `curl -i <api>/v1/sites?limit=1 -H "Origin: <web>"` | 200 ve `access-control-allow-origin: <web>` |
 | `curl "https://<ref>.supabase.co/rest/v1/quiz_answers?select=*" -H "apikey: <anon>"` | Satır dönmez (Data API kapalı) |
 | Harita ve eser listesi | Yayındaki eserler (tohum + editörün yayınladıkları) görünür; taslaklar görünmez |
-| Giriş | Mirasım → Giriş yap → kod e-postası gelir (yalnız ekipteki 4 adrese, saatte 2 e-posta) |
+| Giriş | Mirasım → Giriş yap → 6 haneli kod e-postası gelir (Gmail SMTP; saatte en çok 30 e-posta) |
 | İz Bırak (fotoğraflı) | Yükleme çubuğu ilerler, anı "onay bekliyor"; yönetici panelinde onaylanınca misafir de görür |
 | Fotoğraf adresi | `complete` sonrası adres `…/object/public/media/…`; `uploads` kovasındaki dosya herkese açık adresle açılmaz (400/404) |
 | Bulmaca | Yanlışta tekrar/göster, doğruda açıklama |

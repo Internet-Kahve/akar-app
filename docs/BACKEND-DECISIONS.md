@@ -227,7 +227,7 @@ Neden: P1–P4 bitti; P5'i beklemeden başlatmak, dondurmadan (6 Kas) önce ekib
 Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: P5'in bir parçası Tamer'e devredilebilir; bu kayıt güncellenir.
 
-**11.9 Çevrimiçi test ortamında giriş, Supabase'in kendi e-postasıyla.**
+**11.9 Çevrimiçi test ortamında giriş, Supabase'in kendi e-postasıyla.** (Yerleşik e-posta kısmı §11.16 ile değişti: Gmail SMTP.)
 Karar: Test ortamında giriş, üretimdekiyle aynı e-posta kodu akışıdır; ayrı bir SMTP hesabı açılmaz, Supabase'in yerleşik e-posta servisi kullanılır. Test eden 4 kişi Supabase organizasyonunun ekibine eklenir (yerleşik servis yalnız ekip üyelerine gönderir). Sabit, şifreli rol hesapları yapılmaz.
 Neden: Ücretsiz, kurulum gerektirmez ve üretimden ayrı bir giriş yolu kodlamayı önler. Sınır: proje başına saatte 2 e-posta; oturumlar uzun sürdüğü için 4 kişilik ekipte yeterli.
 Karar veren / tarih: Weissman, 21 Eki. API sunucusu (Render/Railway vb.) seçimi yayına alma adımına (P5.2) bırakıldı.
@@ -263,3 +263,10 @@ Teknik seçimler: Derleme adımı yok; Node 24 TypeScript kaynağını tip silme
 Bulut için bilinen riskler (hesap açılınca doğrulanır): Supabase'te API tabloları `public` şemasında olduğundan Data API kapatılmalı (aksi halde anon anahtarla erişilebilir; README adım 2). Bağlantı session pooler üzerinden; `pg` havuzu (en çok 10) ve pg-boss bağlantıları ücretsiz katmanın havuz sınırına yaklaşabilir.
 Karar veren / tarih: Weissman, 22 Eki ("host-neutral deploy prep before accounts exist").
 Nasıl değiştirilir: sağlayıcı seçilince (P5.2) gerekirse sağlayıcıya özel ayar dosyası eklenir; imaj ve komutlar değişmez.
+
+**11.16 Çevrimiçi test ortamı: Render + Supabase bulut + ayrı Vercel projesi; giriş e-postası Gmail SMTP.**
+Karar: API Render'da (Web Service, Docker, Frankfurt, Free plan) `https://akar-app.onrender.com` adresinde çalışır; Supabase bulut projesi `akar-staging` (AB, eu-west-1). Web, Weissman'ın Vercel hesabında ayrı bir projedir (`https://akar-app-jade.vercel.app`); Tamer'in Vercel projesi API'siz demo olarak kalır. Giriş e-postaları Supabase'in yerleşik servisi yerine Weissman'ın Gmail hesabından SMTP ile (uygulama şifresi) gönderilir; saatte en çok 30 e-posta.
+Neden: Render kurulumu basit ve şimdilik ücretsiz; öğrenci avantajıyla Heroku da değerlendirildi, vazgeçildi. Ücretsiz Supabase planında yerleşik e-posta şablon değişikliğine izin vermiyor ve varsayılan şablon 6 haneli kod yerine bağlantı gönderiyor; giriş ekranı kod beklediği için özel SMTP gerekli. Gmail alan adı istemez, ücretsizdir (günde ~500 e-posta) ve test edenlerin Supabase ekibine eklenmesi gerekmez. Ayrı Vercel projesi, demo adresini değiştirmeden gerçek API'yi denemeyi sağlar; ön yüz kodu değişmez.
+Bilinen sınırlar: Free plan 15 dakika boşta kalınca uyur (ilk istek ~1 dakika); dağıtım öncesi migration komutu yok, migration bilgisayardan çalıştırılır. API kipinde sayfa başına istek sayısı yayındaki eser sayısıyla artar; misafir sınırı IP başına dakikada 300 (bkz. docs/TESTING.md §4).
+Karar veren / tarih: Weissman, 22 Eki.
+Nasıl değiştirilir: Render planı panelden yükseltilir (Starter, dağıtım öncesi `node src/db/migrate.ts`); SMTP Supabase → Authentication → Emails'ten başka bir servise (Brevo, Resend) çevrilir, kod değişmez; Tamer'in projesi gerçek API'ye geçecekse aynı üç `NEXT_PUBLIC_*` değişkeni orada tanımlanır.
