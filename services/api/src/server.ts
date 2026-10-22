@@ -3,9 +3,10 @@ import { loadConfig } from "./config.ts";
 import { createDb } from "./db/client.ts";
 import { createJwksVerifier } from "./modules/identity/verifier.ts";
 import { DEFAULT_DATASET_REF, networkGeocoderFor } from "./modules/ingest/network-geocoder.ts";
-import { expireUploads } from "./modules/media/service.ts";
+import { expireUploads, sweepUnattachedPhotos } from "./modules/media/service.ts";
 import { storageFromConfig } from "./modules/media/storage-config.ts";
 import { pgBossJobs } from "./platform/jobs.ts";
+import { purgeIdempotencyKeys } from "./platform/idempotency.ts";
 
 const config = loadConfig();
 const { db, pool } = createDb(config.DATABASE_URL);
@@ -35,18 +36,32 @@ if (!auth) app.log.warn("AUTH_JWKS_URL / AUTH_JWT_ISSUER unset: every bearer tok
 if (!storage) app.log.warn("STORAGE_DRIVER unset: media endpoints answer 503");
 
 // Upload tickets nobody finished are expired, and every upload's key in the non-public bucket is emptied once its link is dead.
+// Visitors' photos that no memory or content uses are deleted a day after their upload.
 const sweepUploads = storage
   ? setInterval(() => {
       expireUploads({ db, storage }).then(
         (n) => n > 0 && app.log.info({ cleaned: n }, "cleaned up closed uploads"),
         (err: unknown) => app.log.error({ err }, "upload expiry sweep failed"),
       );
+      sweepUnattachedPhotos({ db, storage }).then(
+        (n) => n > 0 && app.log.info({ deleted: n }, "deleted unattached visitor photos"),
+        (err: unknown) => app.log.error({ err }, "unattached photo sweep failed"),
+      );
     }, 15 * 60_000)
   : undefined;
+
+// Replay records (and the personal data in stored responses) are forgotten after IDEMPOTENCY_TTL_HOURS.
+const purgeReplays = setInterval(() => {
+  purgeIdempotencyKeys(db).then(
+    (n) => n > 0 && app.log.info({ purged: n }, "purged old idempotency keys"),
+    (err: unknown) => app.log.error({ err }, "idempotency key purge failed"),
+  );
+}, 15 * 60_000);
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.once(signal, async () => {
     clearInterval(sweepUploads);
+    clearInterval(purgeReplays);
     await app.close();
     await jobs.stop();
     await pool.end();

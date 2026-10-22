@@ -53,9 +53,11 @@ Gerekli bağımlılık `null` ise uç `503 SERVICE_UNAVAILABLE` döner, sahte da
 | `listSiteTypeAliases`, `existingSiteKeys`, `insertDraftSites` | `modules/catalog/drafts.ts` | İçe aktarma taslakları |
 | `planImport`, `commitImport`, `formatReport`, `parseCsv` | `modules/ingest/` | İçe aktarma deneme/onay (panel uçları da bunu kullanır) |
 | `playableQuizzes`, `playableQuiz`, `checkQuizAnswer` | `modules/routes/quizzes.ts` | Cevapsız bulmaca ve sunucuda kontrol |
-| `recordPointEvent`, `pointsOf`, `POINT_ACTIONS` | `modules/engagement/points.ts` | Puan defteri |
+| `recordPointEvent`, `pointsOf`, `POINT_ACTIONS`, `takeBackMemoryPoints` | `modules/engagement/points.ts` | Puan defteri; kalkan onaylı anının puanını bir kez geri alma |
 | `idempotent`, `idempotencyKeyOf` | `platform/idempotency.ts` | Tekrar güvenli mutasyon |
 | `expireUploads` | `modules/media/service.ts` | Süresi dolmuş yüklemelerin `uploads` kovasındaki nesnelerini temizler (`server.ts`, 15 dk) |
+| `deleteUnreferencedMedia`, `deleteMediaObjects`, `MEDIA_REFERENCES` | `modules/media/service.ts` | Hiçbir tablonun kullanmadığı medya satırını işlem içinde siler, nesnesini işlem bittikten sonra kovadan siler |
+| `sweepUnattachedPhotos` | `modules/media/service.ts` | Ziyaretçinin 24 saattir hiçbir yerde kullanılmayan fotoğrafını siler (`server.ts`, 15 dk) |
 | `recordAudit` | `platform/audit.ts` | Audit kaydı |
 | `requireUser`, `requireRole` | `platform/auth.ts` | Yetki kontrolü |
 | `PageQuery`, `pageResponse`, `encodeCursor`, `decodeCursor` | `platform/pagination.ts` | Keyset sayfalama |
@@ -78,10 +80,10 @@ type AuthVerifier = { verify(token: string): Promise<AuthUser | null> };
 | Rol | Yetki |
 | --- | --- |
 | misafir | Okuma; bulmaca/hikâye için imzalı makbuz alır |
-| `user` | Kaydet, ilerleme, puan, İz Bırak, Bildir, makbuz bozdurma |
+| `user` | Kaydet, ilerleme, puan, İz Bırak (kendi anısını silme dahil), Bildir, makbuz bozdurma |
 | `editor` | Eser/rota/kart oluşturma, düzenleme, yayınlama; içe aktarma |
-| `moderator` | Katkı onay/ret, bildirilen içerik |
-| `admin` | Hepsi + davet ve rol atama |
+| `moderator` | Katkı onay/ret, onaylı anıyı yayından kaldırma, bildirilen içerik |
+| `admin` | Hepsi + davet ve rol atama, anıyı kalıcı silme |
 
 ## 3. Hata sözleşmesi
 
@@ -94,13 +96,13 @@ Gövde her zaman `{ error: { code, message, fieldErrors, requestId } }`. Mesajla
 | 401 | `UNAUTHENTICATED` | Giriş yok ya da token geçersiz |
 | 403 | `FORBIDDEN` | Rol yetmiyor |
 | 404 | `NOT_FOUND` | Kayıt yok **veya yayında değil** (taslağın varlığı sızdırılmaz) |
-| 409 | `CONFLICT` | Durum geçişi geçersiz (örn. onaylı anıyı tekrar onaylama; bildirilmemiş onaylı anıya karar), kapanmış yüklemeye PUT, yinelenen kayıt |
+| 409 | `CONFLICT` | Durum geçişi geçersiz (örn. onaylı anıyı tekrar onaylama; reddedilmiş anıya karar), kapanmış yüklemeye PUT, yinelenen kayıt |
 | 413 | `PAYLOAD_TOO_LARGE` | Dosya sınırı aşıldı |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Dosya içeriği beyan edilen türle uyuşmuyor |
 | 422 | `PUBLISH_BLOCKED` | Yayın kapısı (`publicationIssues`); sorunlar `fieldErrors._` içinde |
 | 422 | `IDEMPOTENCY_KEY_REUSED` | Aynı anahtar farklı istekle |
 | 422 | `RECEIPT_INVALID` | Makbuz imzası/süresi geçersiz |
-| 429 | `RATE_LIMITED` | Hız sınırı (oturum açıksa hesap, değilse IP başına); ayrıca anı bildirme kotası (24 saatte en çok 5 yeni bildirim) ve açık yükleme sınırı (hesap başına 10) |
+| 429 | `RATE_LIMITED` | Hız sınırı (oturum açıkken hesap, değilse IP başına); ayrıca anı bildirme kotası (24 saatte en çok 5 yeni bildirim), açık yükleme sınırı (hesap başına 10) ve yalnız `user` rolü için anı/fotoğraf kotası (en çok 3 bekleyen anı; 24 saatte 10 anı, 10 yükleme bileti) |
 | 500 | `INTERNAL` | Beklenmeyen hata (ayrıntı loga) |
 | 502 | `UPSTREAM_FAILED` | Dış servis (Supabase Auth admin API, e-posta) hata döndü |
 | 503 | `SERVICE_UNAVAILABLE` | Gerekli bağımlılık (depolama, kimlik, iş kuyruğu, coğrafi kodlama) yapılandırılmamış |
@@ -119,11 +121,13 @@ return idempotent(app.deps.db, req, req.user!.id, async (tx) => {
 ```
 
 - Anahtar aktöre göre kapsamlıdır (`actorId`; misafir için `guest:<cihazId>`). Aynı anahtar + aynı gövde: ilk yanıt tekrar döner, iş yeniden çalışmaz. Aynı anahtar + farklı istek: 422.
-- 5xx yanıtlar saklanmaz. Atılan `AppError` işlemi geri alır, anahtar kaydedilmez.
+- 5xx yanıtlar saklanmaz. Atılan `AppError` işlemi geri alır, anahtar kaydedilmez. Gövdesiz yanıt (204) JSON `null` olarak saklanır.
+- Kayıtlar 24 saat yaşar (`IDEMPOTENCY_TTL_HOURS`); `purgeIdempotencyKeys` (`server.ts`, 15 dakikada bir) eskilerini siler. Saklanan yanıtlardaki kişisel veri (örn. silinen anının metni) böylece kalıcı olmaz; 24 saatten sonra aynı anahtarla tekrar istek yeni istek sayılır.
+- Depolamadaki nesneyi silen mutasyon nesneyi işlem tamamlandıktan sonra siler (örnek: `moderation/routes.ts` `removing`): silme başarısız olursa sahipsiz nesne kalır, olmayan nesneyi gösteren satır kalmaz.
 
 ## 5. Audit
 
-Her ayrıcalıklı yazma (`editor`, `moderator`, `admin` işlemleri) aynı işlem içinde `recordAudit` çağırır. `action` noktalı fiil: `site.create`, `site.update`, `site.publish`, `site.unpublish`, `card.create`, `card.update`, `route.create`, `route.update`, `route.set-stops`, `route.publish`, `route.unpublish`, `quiz.create`, `quiz.update`, `media.create`, `media.update`, `import.create`, `import.commit`, `memory.approve`, `memory.reject`, `memory.report`, `staff.invite`, `staff.grant`, `staff.role`, `staff.revoke`, `map-settings.update`. `before`/`after` JSON anlık görüntülerdir; kişisel veri (e-posta dışında) yazılmaz.
+Her ayrıcalıklı yazma (`editor`, `moderator`, `admin` işlemleri) aynı işlem içinde `recordAudit` çağırır. `action` noktalı fiil: `site.create`, `site.update`, `site.publish`, `site.unpublish`, `card.create`, `card.update`, `route.create`, `route.update`, `route.set-stops`, `route.publish`, `route.unpublish`, `quiz.create`, `quiz.update`, `media.create`, `media.update`, `import.create`, `import.commit`, `memory.create`, `memory.approve`, `memory.reject`, `memory.takedown`, `memory.delete`, `memory.report`, `staff.invite`, `staff.grant`, `staff.role`, `staff.revoke`, `map-settings.update`. `before`/`after` JSON anlık görüntülerdir; kişisel veri (e-posta dışında) yazılmaz. `memory.create` (her gönderide, günlük anı kotası bunu sayar) ve `memory.delete` anı metnini içermez.
 
 ## 6. Puan olay kaydı
 
@@ -135,6 +139,7 @@ Her ayrıcalıklı yazma (`editor`, `moderator`, `admin` işlemleri) aynı işle
 | `quiz.correct` | 20 | bulmaca id |
 | `visit.verified` | 100 | eser id |
 | `memory.approved` | 25 | anı id (moderasyon onayında yazara) |
+| `memory.removed` | −25 | anı id (onaylı anı silinince, kaldırılınca ya da reddedilince; yalnız `memory.approved` yazılmışsa) |
 
 Puan her zaman `sum(points)`; istemciden puan kabul edilmez. "Cevabı göster" puan yazmaz; bozdurana ait `quiz_progress.revealed = true` olan bulmacanın `quiz.correct` makbuzu bozdurmada `revealed` nedeniyle reddedilir (puan ve defter satırı yazılmaz, `jti` kullanılmış sayılmaz).
 
@@ -169,10 +174,11 @@ Sürücüler: S3 protokolü (Supabase Storage; yerelde `supabase start`, bulutta
 
 Yükleme akışı:
 
-- `POST /v1/media/uploads` sunucunun ürettiği yükleme anahtarı (`<kind>/<yyyy>/<mm>/<uuid>.<ext>`) için `uploads` kovasına imzalı PUT adresi verir. Bir hesap en çok 10 açık (bekleyen, süresi dolmamış) yükleme tutar; aşılırsa 429 `RATE_LIMITED`. Sınır her rol için geçerlidir.
+- `POST /v1/media/uploads` sunucunun ürettiği yükleme anahtarı (`<kind>/<yyyy>/<mm>/<uuid>.<ext>`) için `uploads` kovasına imzalı PUT adresi verir. Bir hesap en çok 10 açık (bekleyen, süresi dolmamış) yükleme tutar; aşılırsa 429 `RATE_LIMITED`. Sınır her rol için geçerlidir. `user` rolü ayrıca kayan 24 saatte en çok 10 bilet alır (`media_uploads` satırları sayılır, silinmezler).
 - `complete` dosyayı `uploads`'tan **bir kez** okur (en çok 5 MB + 1 bayt), boyut ve ilk baytları o tampon üzerinde doğrular, doğruladığı baytları `media` kovasında yeni bir son anahtara (`<kind>/<yyyy>/<mm>/<mediaId>.<ext>`) yazar ve yükleme anahtarını siler. `media.url`, `media.storageKey` ve `media.bytes` son anahtardan gelir; istemcinin yazma izni olduğu kova asla yayınlanmaz. İstemci adresi türetmez, yanıttaki `url`'yi kullanır.
 - Dosya sistemi sürücüsünün PUT'u yalnız `pending` yüklemede yazar (satır yoksa 404, durum `pending` değilse 409); satır yazma boyunca kilitli olduğundan `complete` ile yarış olmaz.
 - `expireUploads` (`server.ts`, 15 dakikada bir): `cleaned_at` boş ve süresi 5 dakikadan fazla önce dolmuş her yüklemenin `uploads` nesnesini siler ve `cleaned_at` yazar; `pending` olanları ayrıca `expired` yapar. Böylece S3 imzalı PUT'u (geri alınamaz) `complete` ya da ret sonrası süresi dolana kadar yeniden kullanılsa bile bırakılan dosya herkese kapalı kalır ve süpürmede silinir. Birden çok örnekte güvenle çalışır (`FOR UPDATE SKIP LOCKED`); `delete` olmayan nesneye hata vermez.
+- `sweepUnattachedPhotos` (aynı zamanlayıcı): yükleyeni şu an personel olmayan (`staff_members`), editör/admin olarak yüklenmemiş (`media.create` audit kaydı yok, böylece yetkisi alınan editörün kütüphanesi kalır), 24 saatten eski ve `MEDIA_REFERENCES`'taki hiçbir sütunun göstermediği fotoğrafın satırını siler, yüklemesinin bağını (`media_uploads.media_id`) boşaltır, işlem bitince `media` nesnesini siler. Silme önce satırı kilitler, kullanımı kilitten sonra ayrı sorguyla yeniden denetler (beklerken bağlanan anı görülür; `deleteUnreferencedMedia` de böyle). Nesne silmede her anahtar denenir, başarısızlar tek hatada loga düşer. Medyaya yeni yabancı anahtar eklenirse `MEDIA_REFERENCES`'a da eklenir (`media.test.ts` veritabanıyla karşılaştırır).
 
 ### İş kuyruğu
 
@@ -189,6 +195,7 @@ Liste uçları `PageQuery` (`cursor`, `limit` 1–100, varsayılan 20) alır, `p
 - Her içerik parçası `trust` (verified / inferred / representative) ve kaynak taşır. İçe aktarılan taslaklar `inferred`.
 - Bulmaca cevabı `quiz_answers` tablosundadır; yalnız `checkQuizAnswer` okur. Hiçbir DTO doğru seçeneğin indeksini içermez.
 - Bildirilen anı: onaylı bir anı, onaydan sonra **3 farklı** kullanıcı bildirince `pending`'e döner; öncesinde yayında kalır ve moderasyon kuyruğunda `reportCount` ile görünür. Kullanıcı başına 24 saatte en çok 5 yeni bildirim (429 `RATE_LIMITED`). Moderatörün onayı önceki bildirimleri düşürür.
+- Yayından kaldırma ve silme (§11.18): moderatör onaylı her anıyı nedenli retle kaldırabilir (bildirilmemişse audit `memory.takedown`). Ret ya da kaldırma fotoğrafı (satır ve nesne) siler, metin kalır. Yazar kendi anısını her durumda, admin her anıyı kalıcı siler (kayıt, bildirimler, fotoğraf). Kalkan onaylı anının puanı bir kez geri alınır.
 - `OwnMemory.siteName` eser yayında değilse `null`'dır (taslak adı sızmaz); `AdminMemory.siteName` her zaman metindir.
 
 ## 11. Test kuralları

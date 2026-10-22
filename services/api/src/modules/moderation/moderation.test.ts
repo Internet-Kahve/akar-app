@@ -1,10 +1,13 @@
 import type { HeritageSite } from "@akar/domain";
 import { and, asc, eq, sql } from "drizzle-orm";
 import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { after, before, beforeEach, test } from "node:test";
 import type { App } from "../../app.ts";
 import type { Db } from "../../db/client.ts";
-import { auditLog, media, memories, memoryReports, pointEvents, profiles } from "../../db/schema/index.ts";
+import { auditLog, media, mediaUploads, memories, memoryReports, pointEvents, profiles, staffMembers } from "../../db/schema/index.ts";
 import { loadCatalog } from "../../db/seed.ts";
 import type { ErrorBody } from "../../errors.ts";
 import type { Role } from "../../platform/auth.ts";
@@ -12,6 +15,8 @@ import { encodeCursor } from "../../platform/pagination.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
 import { pointsOf } from "../engagement/points.ts";
+import { sweepUnattachedPhotos } from "../media/service.ts";
+import { createFsStorage, type FsStorage } from "../media/storage-fs.ts";
 import { moderationRoutes } from "./routes.ts";
 import type { AdminMemory, OwnMemory, PublicMemory } from "./schemas.ts";
 
@@ -41,9 +46,17 @@ const site = (id: string, name: string, over: Partial<HeritageSite> = {}): Herit
 let app: App;
 let db: Db;
 let stop: (() => Promise<void>) | undefined;
+let storage: { uploads: FsStorage; media: FsStorage };
+let root: string;
 
 before(async () => {
-  ({ app, stop } = await startTestApp({ register: [moderationRoutes] }));
+  root = await mkdtemp(join(tmpdir(), "akar-moderation-"));
+  const links = { uploadBaseUrl: "http://api.akar.test", signingSecret: "test-signing-secret-0123456789abcdef" };
+  storage = {
+    uploads: createFsStorage({ ...links, root: join(root, "uploads") }),
+    media: createFsStorage({ ...links, root: join(root, "media"), publicBaseUrl: "https://cdn.akar.test/media" }),
+  };
+  ({ app, stop } = await startTestApp({ register: [moderationRoutes], storage }));
   db = app.deps.db;
   await loadCatalog(db, {
     sites: [
@@ -55,7 +68,10 @@ before(async () => {
     routes: [],
   });
 });
-after(() => stop?.());
+after(async () => {
+  await stop?.();
+  await rm(root, { recursive: true, force: true });
+});
 // Every test starts from an empty moderation state (reports go with their memories) and uses its own user ids.
 beforeEach(async () => {
   await db.delete(memories);
@@ -358,13 +374,11 @@ test("only a pending memory can be decided: approved and rejected ones answer 40
   }
   assert.equal(await statusOf(pending), "rejected");
 
-  // An approved memory nobody reported cannot be approved again or rejected: it has nothing to decide.
+  // An approved memory nobody reported cannot be approved again: it has nothing to decide (taking it down is a rejection).
   const live = await seedMemory({ status: "approved", authorId: author.id });
-  for (const body of [{ status: "approved" }, { status: "rejected", reason: "Geç kaldın" }]) {
-    const conflict = await decide<ErrorBody>(live, body, mod);
-    assert.equal(conflict.res.statusCode, 409, JSON.stringify(body));
-    assert.match(conflict.body.error.message, /Yalnız beklemedeki/);
-  }
+  const conflict = await decide<ErrorBody>(live, { status: "approved" }, mod);
+  assert.equal(conflict.res.statusCode, 409);
+  assert.match(conflict.body.error.message, /onaylanacak bir şey yok/);
   assert.equal(await statusOf(live), "approved");
   assert.equal((await auditOf(live)).length, 0);
 
@@ -427,15 +441,17 @@ test("approval pays the author 25 points once, even when the memory is reported 
   // Every step is audited with the states before and after.
   const trail = await auditOf(id);
   assert.deepEqual(trail.map((a) => [a.action, a.actorId]), [
+    ["memory.create", author.id],
     ["memory.approve", mod.id],
     ["memory.report", reporters[0]?.id],
     ["memory.report", reporters[1]?.id],
     ["memory.report", reporters[2]?.id],
     ["memory.approve", mod.id],
   ]);
-  assert.deepEqual([trail[0]?.before, trail[0]?.after], [{ status: "pending", reason: null }, { status: "approved", reason: null }]);
-  assert.deepEqual([trail[1]?.before, trail[1]?.after], [{ status: "approved" }, { status: "approved", reporters: 1 }]);
-  assert.deepEqual([trail[3]?.before, trail[3]?.after], [{ status: "approved" }, { status: "pending", reporters: 3 }]);
+  assert.deepEqual([trail[0]?.before, trail[0]?.after], [null, { status: "pending", siteId: SITE, photo: false }]);
+  assert.deepEqual([trail[1]?.before, trail[1]?.after], [{ status: "pending", reason: null }, { status: "approved", reason: null }]);
+  assert.deepEqual([trail[2]?.before, trail[2]?.after], [{ status: "approved" }, { status: "approved", reporters: 1 }]);
+  assert.deepEqual([trail[4]?.before, trail[4]?.after], [{ status: "approved" }, { status: "pending", reporters: 3 }]);
 });
 
 // ── reports ("Bildir") ───────────────────────────────────────────────────────
@@ -715,4 +731,331 @@ test("pages follow (created_at, id) exactly: no repeat or gap across rows create
     assert.equal(res.statusCode, 400, cursor);
     assert.equal(body.error.code, "INVALID_CURSOR");
   }
+});
+
+// ── removal: takedown, rejection, delete ─────────────────────────────────────
+
+const remove = (url: string, as: Actor | null, extra: Record<string, string> = {}) =>
+  app.inject({ method: "DELETE", url, headers: { ...(as ? as.headers : {}), ...extra } });
+
+let photoCount = 0;
+/** A visitor photo with its object in the public bucket, as `complete` leaves it. */
+const storedPhoto = async (uploadedBy: string | null, over: Partial<typeof media.$inferInsert> = {}) => {
+  const id = `foto-${++photoCount}`;
+  const storageKey = `photo/2026/10/${id}.jpg`;
+  await storage.media.put(storageKey, Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]), "image/jpeg");
+  await seedMedia(id, { uploadedBy, storageKey, url: storage.media.publicUrl(storageKey), ...over });
+  return { id, storageKey };
+};
+const photoGone = async (photo: { id: string; storageKey: string }) =>
+  (await db.select({ id: media.id }).from(media).where(eq(media.id, photo.id))).length === 0 && (await storage.media.head(photo.storageKey)) === null;
+
+/** A memory submitted with `photo` and approved through the API, so the author holds its 25 points. */
+const approvedWithPhoto = async (author: Actor, photo: { id: string }) => {
+  const created = await call<OwnMemory>("POST", "/v1/memories", author, memoryBody({ mediaId: photo.id }));
+  assert.equal(created.res.statusCode, 201, created.res.body);
+  assert.equal((await decide(created.body.id, { status: "approved" }, actor("moderator"))).res.statusCode, 200);
+  return created.body.id;
+};
+
+test("a moderator takes down an approved memory nobody reported: rejected, audited as a takedown, photo deleted, points taken back once", async () => {
+  const author = actor();
+  const mod = actor("moderator");
+  const photo = await storedPhoto(author.id);
+  const id = await approvedWithPhoto(author, photo);
+  assert.equal(await pointsOf(db, author.id), 25);
+
+  // A reason is still required.
+  assert.equal((await decide<ErrorBody>(id, { status: "rejected" }, mod)).res.statusCode, 400);
+  assert.deepEqual(await publicIds(), [id]);
+
+  const key = { "idempotency-key": "takedown-1" };
+  const down = await decide(id, { status: "rejected", reason: "Kişisel bilgi içeriyor" }, mod, key);
+  assert.equal(down.res.statusCode, 200);
+  assert.deepEqual([down.body.status, down.body.reason, down.body.photo], ["rejected", "Kişisel bilgi içeriyor", null]);
+  assert.deepEqual(await publicIds(), []);
+  assert.ok(await photoGone(photo), "photo row and public object are gone");
+  assert.equal((await db.select({ text: memories.text }).from(memories).where(eq(memories.id, id))).length, 1, "the text stays for the record");
+
+  const trail = await auditOf(id);
+  assert.deepEqual(trail.at(-1), {
+    action: "memory.takedown",
+    actorId: mod.id,
+    before: { status: "approved", reason: null },
+    after: { status: "rejected", reason: "Kişisel bilgi içeriyor" },
+  });
+
+  // The replay changes nothing; the decision is final; the points went back exactly once.
+  assert.deepEqual((await decide(id, { status: "rejected", reason: "Kişisel bilgi içeriyor" }, mod, key)).body, down.body);
+  assert.equal((await decide<ErrorBody>(id, { status: "approved" }, mod)).res.statusCode, 409);
+  assert.equal(await pointsOf(db, author.id), 0);
+  const events = await db.select().from(pointEvents).where(eq(pointEvents.subjectId, id));
+  assert.deepEqual(events.map((e) => [e.action, e.points]).sort(), [["memory.approved", 25], ["memory.removed", -25]]);
+
+  // A moderator still cannot take down their own memory; an admin can.
+  const ownByMod = await seedMemory({ status: "approved", authorId: mod.id });
+  assert.equal((await decide<ErrorBody>(ownByMod, { status: "rejected", reason: "Kendi anım" }, mod)).res.statusCode, 403);
+  const admin = actor("admin");
+  const ownByAdmin = await seedMemory({ status: "approved", authorId: admin.id });
+  assert.equal((await decide(ownByAdmin, { status: "rejected", reason: "Kendi anım" }, admin)).res.statusCode, 200);
+});
+
+test("rejecting a pending memory deletes its photo and moves no points; rejecting a reported approved one takes the points back", async () => {
+  const author = actor();
+  const mod = actor("moderator");
+
+  const photo = await storedPhoto(author.id);
+  const created = await call<OwnMemory>("POST", "/v1/memories", author, memoryBody({ mediaId: photo.id }));
+  const rejected = await decide(created.body.id, { status: "rejected", reason: "Fotoğraf uygun değil" }, mod);
+  assert.deepEqual([rejected.body.status, rejected.body.photo], ["rejected", null]);
+  assert.ok(await photoGone(photo));
+  assert.equal((await db.select().from(pointEvents).where(eq(pointEvents.userId, author.id))).length, 0);
+
+  const second = await storedPhoto(author.id);
+  const id = await approvedWithPhoto(author, second);
+  assert.equal((await call("POST", `/v1/memories/${id}/report`, actor(), { reason: "Uygunsuz içerik" })).res.statusCode, 201);
+  const down = await decide(id, { status: "rejected", reason: "Bildirim haklı" }, mod);
+  assert.equal(down.res.statusCode, 200);
+  assert.equal((await auditOf(id)).at(-1)?.action, "memory.reject", "a reported memory is rejected, not taken down");
+  assert.ok(await photoGone(second));
+  assert.equal(await pointsOf(db, author.id), 0);
+});
+
+test("an author deletes their own memory in any status: record, reports and photo go, approval points come back; others' ids are 404", async () => {
+  const author = actor();
+  const other = actor();
+  const photo = await storedPhoto(author.id);
+  const approved = await approvedWithPhoto(author, photo);
+  await call("POST", `/v1/memories/${approved}/report`, other, { reason: "Uygunsuz içerik" });
+  const pending = await seedMemory({ status: "pending", authorId: author.id });
+  const rejected = await seedMemory({ status: "rejected", reason: "Uygun değil", authorId: author.id });
+  const notMine = await seedMemory({ status: "approved", authorId: other.id });
+  assert.equal(await pointsOf(db, author.id), 25);
+
+  assert.equal((await remove(`/v1/me/memories/${approved}`, null)).statusCode, 401);
+  const notFound = await remove(`/v1/me/memories/${notMine}`, author);
+  assert.equal(notFound.statusCode, 404, "somebody else's memory reads as unknown");
+  assert.equal(await statusOf(notMine), "approved");
+  assert.equal((await remove("/v1/me/memories/yok", author)).statusCode, 404);
+
+  const key = { "idempotency-key": "sil-1" };
+  const gone = await remove(`/v1/me/memories/${approved}`, author, key);
+  assert.equal(gone.statusCode, 204);
+  assert.equal(gone.body, "");
+  assert.equal((await remove(`/v1/me/memories/${approved}`, author, key)).statusCode, 204, "a replay answers the same");
+  assert.equal((await remove(`/v1/me/memories/${approved}`, author)).statusCode, 404, "a fresh delete of a deleted memory is 404");
+
+  assert.equal(await statusOf(approved), undefined);
+  assert.deepEqual(await publicIds(), [notMine]);
+  assert.equal((await db.select().from(memoryReports).where(eq(memoryReports.memoryId, approved))).length, 0);
+  assert.ok(await photoGone(photo));
+  assert.equal(await pointsOf(db, author.id), 0);
+
+  // Audited once, without the text.
+  const deletions = (await auditOf(approved)).filter((e) => e.action === "memory.delete");
+  assert.deepEqual(deletions, [
+    { action: "memory.delete", actorId: author.id, before: { status: "approved", siteId: SITE, photo: true, byAuthor: true }, after: null },
+  ]);
+
+  for (const id of [pending, rejected]) assert.equal((await remove(`/v1/me/memories/${id}`, author)).statusCode, 204);
+  assert.equal(await storedBy(author.id), 0);
+});
+
+test("only an admin deletes any memory for good; moderators, editors and users get 403", async () => {
+  const author = actor();
+  const photo = await storedPhoto(author.id);
+  const id = await approvedWithPhoto(author, photo);
+
+  assert.equal((await remove(`/v1/admin/memories/${id}`, null)).statusCode, 401);
+  for (const role of ["user", "editor", "moderator"] as const) {
+    assert.equal((await remove(`/v1/admin/memories/${id}`, actor(role))).statusCode, 403, role);
+  }
+  // The author is no admin either: their way is DELETE /v1/me/memories/:id.
+  assert.equal((await remove(`/v1/admin/memories/${id}`, author)).statusCode, 403);
+  assert.equal(await statusOf(id), "approved");
+
+  const admin = actor("admin");
+  assert.equal((await remove(`/v1/admin/memories/${id}`, admin)).statusCode, 204);
+  assert.equal(await statusOf(id), undefined);
+  assert.ok(await photoGone(photo));
+  assert.equal(await pointsOf(db, author.id), 0);
+  assert.deepEqual((await auditOf(id)).at(-1), {
+    action: "memory.delete",
+    actorId: admin.id,
+    before: { status: "approved", siteId: SITE, photo: true, byAuthor: false },
+    after: null,
+  });
+  assert.equal((await remove(`/v1/admin/memories/${id}`, admin)).statusCode, 404);
+});
+
+test("a photo still used elsewhere keeps its row and object when its memory goes", async () => {
+  const editor = actor("editor");
+  const photo = await storedPhoto(editor.id);
+  const first = await seedMemory({ status: "pending", authorId: editor.id, mediaId: photo.id });
+  const second = await seedMemory({ status: "pending", authorId: editor.id, mediaId: photo.id });
+
+  assert.equal((await remove(`/v1/me/memories/${first}`, editor)).statusCode, 204);
+  assert.equal(await photoGone(photo), false);
+  assert.ok(await storage.media.head(photo.storageKey));
+  assert.equal((await remove(`/v1/me/memories/${second}`, editor)).statusCode, 204);
+  assert.ok(await photoGone(photo));
+});
+
+// ── abuse limits ─────────────────────────────────────────────────────────────
+
+test("a visitor holds at most 3 pending memories; deleting one frees a slot; staff are exempt", async () => {
+  const user = actor();
+  const ids: string[] = [];
+  for (let n = 0; n < 3; n++) {
+    const created = await call<OwnMemory>("POST", "/v1/memories", user, memoryBody());
+    assert.equal(created.res.statusCode, 201);
+    ids.push(created.body.id);
+  }
+  const fourth = await call<ErrorBody>("POST", "/v1/memories", user, memoryBody());
+  assert.equal(fourth.res.statusCode, 429);
+  assert.equal(fourth.body.error.code, "RATE_LIMITED");
+  assert.match(fourth.body.error.message, /en fazla 3 anın/);
+  assert.equal(await storedBy(user.id), 3);
+
+  assert.equal((await remove(`/v1/me/memories/${ids[0]}`, user)).statusCode, 204);
+  assert.equal((await call("POST", "/v1/memories", user, memoryBody())).res.statusCode, 201);
+  // A decision frees a slot too.
+  assert.equal((await decide(ids[1] as string, { status: "approved" }, actor("moderator"))).res.statusCode, 200);
+  assert.equal((await call("POST", "/v1/memories", user, memoryBody())).res.statusCode, 201);
+
+  const mod = actor("moderator");
+  for (let n = 0; n < 4; n++) assert.equal((await call("POST", "/v1/memories", mod, memoryBody())).res.statusCode, 201);
+});
+
+test("a visitor submits at most 10 memories per rolling day; deleted ones still count; a burst cannot get past", async () => {
+  const user = actor();
+  const mod = actor("moderator");
+  const submit = () => call<OwnMemory>("POST", "/v1/memories", user, memoryBody());
+  // Approved or deleted at once, so the pending limit never stands in the way.
+  for (let n = 0; n < 10; n++) {
+    const created = await submit();
+    assert.equal(created.res.statusCode, 201, `memory ${n + 1}`);
+    if (n % 2 === 0) await remove(`/v1/me/memories/${created.body.id}`, user);
+    else await decide(created.body.id, { status: "approved" }, mod);
+  }
+  const over = await call<ErrorBody>("POST", "/v1/memories", user, memoryBody());
+  assert.equal(over.res.statusCode, 429);
+  assert.match(over.body.error.message, /en fazla 10 anı/);
+  assert.equal(await storedBy(user.id), 5);
+
+  // The window rolls: once a submission is a day old, one more fits.
+  const [oldest] = await db
+    .select({ id: auditLog.id })
+    .from(auditLog)
+    .where(and(eq(auditLog.actorId, user.id), eq(auditLog.action, "memory.create")))
+    .orderBy(asc(auditLog.id))
+    .limit(1);
+  assert.ok(oldest);
+  await db.update(auditLog).set({ at: new Date(Date.now() - 25 * 3_600_000) }).where(eq(auditLog.id, oldest.id));
+  assert.equal((await submit()).res.statusCode, 201);
+
+  // Parallel submissions are counted one after the other.
+  const burster = actor();
+  const codes = (await Promise.all(Array.from({ length: 5 }, () => call("POST", "/v1/memories", burster, memoryBody())))).map((r) => r.res.statusCode);
+  assert.deepEqual(codes.sort(), [201, 201, 201, 429, 429]);
+});
+
+test("the sweep deletes a visitor's photo no memory uses after a day; attached, young, staff, former-staff and seed photos stay", async () => {
+  const visitor = actor();
+  const staff = actor("editor");
+  await db.insert(staffMembers).values({ userId: staff.id, email: "editor@akar.test", role: "editor", grantedBy: "seed" });
+  const dayOld = new Date(Date.now() - 25 * 3_600_000);
+
+  const orphan = await storedPhoto(visitor.id, { createdAt: dayOld });
+  const attached = await storedPhoto(visitor.id, { createdAt: dayOld });
+  await seedMemory({ status: "approved", authorId: visitor.id, mediaId: attached.id });
+  const young = await storedPhoto(visitor.id);
+  const staffOwn = await storedPhoto(staff.id, { createdAt: dayOld });
+  const seed = await storedPhoto(null, { createdAt: dayOld });
+  // An editor's library upload (audited `media.create`) stays after the editor's staff role is revoked.
+  const formerEditor = actor();
+  const library = await storedPhoto(formerEditor.id, { createdAt: dayOld });
+  await db.insert(auditLog).values({ actorId: formerEditor.id, action: "media.create", entityType: "media", entityId: library.id });
+  // The upload that produced the orphan keeps its row (it counts toward the daily quota), only unlinked.
+  await db.insert(mediaUploads).values({
+    id: `upload-${orphan.id}`,
+    ownerId: visitor.id,
+    kind: "photo",
+    contentType: "image/jpeg",
+    maxBytes: 5_000_000,
+    storageKey: `photo/2026/10/upload-${orphan.id}.jpg`,
+    status: "completed",
+    mediaId: orphan.id,
+    expiresAt: dayOld,
+  });
+
+  assert.equal(await sweepUnattachedPhotos({ db, storage }), 1);
+  assert.ok(await photoGone(orphan));
+  for (const kept of [attached, young, staffOwn, seed, library]) {
+    assert.equal(await photoGone(kept), false, kept.id);
+    assert.ok(await storage.media.head(kept.storageKey), kept.id);
+  }
+  const [upload] = await db.select({ mediaId: mediaUploads.mediaId }).from(mediaUploads).where(eq(mediaUploads.id, `upload-${orphan.id}`));
+  assert.deepEqual(upload, { mediaId: null });
+  assert.equal(await sweepUnattachedPhotos({ db, storage }), 0);
+});
+
+test("one failed object delete does not strand the rest of the sweep: every key is tried, then the run reports the failure", async () => {
+  const visitor = actor();
+  const dayOld = new Date(Date.now() - 25 * 3_600_000);
+  const photos = [await storedPhoto(visitor.id, { createdAt: dayOld }), await storedPhoto(visitor.id, { createdAt: dayOld }), await storedPhoto(visitor.id, { createdAt: dayOld })];
+  const broken = photos[0]!.storageKey;
+  const flaky = new Proxy(storage.media, {
+    get: (target, prop, receiver) =>
+      prop === "delete"
+        ? async (key: string) => {
+            if (key === broken) throw new Error("S3 geçici hata");
+            return target.delete(key);
+          }
+        : Reflect.get(target, prop, receiver),
+  });
+
+  await assert.rejects(sweepUnattachedPhotos({ db, storage: { uploads: storage.uploads, media: flaky } }), new RegExp(broken));
+  for (const photo of photos.slice(1)) assert.ok(await photoGone(photo), photo.id);
+  assert.ok(await storage.media.head(broken), "the failed one is an orphaned object; its row is gone");
+});
+
+test("a removal that waited for a memory being attached to the same photo sees it after the wait and keeps the photo", async () => {
+  const author = actor();
+  const photo = await storedPhoto(author.id);
+  const first = await seedMemory({ status: "pending", authorId: author.id, mediaId: photo.id });
+
+  // A second memory is being attached to the photo, as `createMemory` does (FOR SHARE, then insert), and commits late.
+  let commit!: () => void;
+  let locked!: () => void;
+  const holding = new Promise<void>((resolve) => (locked = resolve));
+  const attaching = db.transaction(async (tx) => {
+    await tx.select({ id: media.id }).from(media).where(eq(media.id, photo.id)).for("share");
+    await tx.insert(memories).values({
+      id: "mem-race-second",
+      siteId: SITE,
+      authorId: author.id,
+      authorName: "Ayşe",
+      text: "İkinci",
+      mediaId: photo.id,
+      status: "pending",
+      kvkkConsentAt: new Date(),
+      kvkkTextVersion: "kvkk-v1",
+    });
+    locked();
+    await new Promise<void>((resolve) => (commit = resolve));
+  });
+  await holding;
+
+  const removal = remove(`/v1/me/memories/${first}`, author);
+  // Wait until the removal is actually blocked on the photo's row lock (the condition, not a guessed delay).
+  const lockWaiters = async () =>
+    (await db.execute<{ n: number }>(sql`select count(*)::int as n from pg_stat_activity where wait_event_type = 'Lock' and datname = current_database()`)).rows[0]?.n ?? 0;
+  while ((await lockWaiters()) === 0) await new Promise((resolve) => setImmediate(resolve));
+  commit();
+  await attaching;
+
+  assert.equal((await removal).statusCode, 204, "no foreign-key 500");
+  assert.equal(await photoGone(photo), false, "the second memory still uses it");
+  assert.equal((await db.select({ mediaId: memories.mediaId }).from(memories).where(eq(memories.id, "mem-race-second")))[0]?.mediaId, photo.id);
 });

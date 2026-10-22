@@ -5,9 +5,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { after, before, test } from "node:test";
+import { after, before, beforeEach, test } from "node:test";
 import { setTimeout as sleep } from "node:timers/promises";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, getTableName, sql } from "drizzle-orm";
 import type { LightMyRequestResponse } from "fastify";
 import type { App } from "../../app.ts";
 import { auditLog, media, mediaUploads, sources } from "../../db/schema/index.ts";
@@ -19,12 +19,21 @@ import { startTestApp } from "../../test/harness.ts";
 import { MEDIA_LIMITS } from "./magic.ts";
 import { mediaRoutes } from "./routes.ts";
 import type { MediaItem, UploadTicket } from "./schemas.ts";
-import { completeUpload, CONTRIBUTOR_LICENSE, expireUploads, MAX_OPEN_UPLOADS } from "./service.ts";
+import { completeUpload, CONTRIBUTOR_LICENSE, DAILY_UPLOAD_QUOTA, expireUploads, MAX_OPEN_UPLOADS, MEDIA_REFERENCES } from "./service.ts";
 import { createFsStorage, type FsStorage } from "./storage-fs.ts";
 import { createS3Storage } from "./storage-s3.ts";
 
-const visitor: AuthUser = { id: "visitor-1", role: "user" };
-const stranger: AuthUser = { id: "visitor-2", role: "user" };
+// A visitor gets at most DAILY_UPLOAD_QUOTA tickets a day, so every test starts with fresh visitors.
+let visitorSeq = 0;
+let visitor: AuthUser;
+let stranger: AuthUser;
+let sweeper: AuthUser;
+beforeEach(() => {
+  const n = ++visitorSeq;
+  visitor = { id: `visitor-${n}`, role: "user" };
+  stranger = { id: `stranger-${n}`, role: "user" };
+  sweeper = { id: `sweeper-${n}`, role: "user" };
+});
 const moderator: AuthUser = { id: "moderator-1", role: "moderator" };
 const editor: AuthUser = { id: "editor-1", role: "editor" };
 
@@ -243,19 +252,20 @@ test("types a kind does not allow are refused before any link is issued", async 
 // ── content checks on complete ───────────────────────────────────────────────
 
 const mismatches = [
-  { name: "a PNG declared as JPEG", user: visitor, kind: "photo", type: "image/jpeg", file: PNG },
-  { name: "a text file declared as GLB", user: editor, kind: "model", type: "model/gltf-binary", file: Buffer.from("this is not a model") },
-  { name: "a GLB of version 1 declared as GLB", user: editor, kind: "model", type: "model/gltf-binary", file: glb({}, 1) },
-  { name: "a PNG declared as MP3", user: editor, kind: "audio", type: "audio/mpeg", file: PNG },
+  { name: "a PNG declared as JPEG", user: () => visitor, kind: "photo", type: "image/jpeg", file: PNG },
+  { name: "a text file declared as GLB", user: () => editor, kind: "model", type: "model/gltf-binary", file: Buffer.from("this is not a model") },
+  { name: "a GLB of version 1 declared as GLB", user: () => editor, kind: "model", type: "model/gltf-binary", file: glb({}, 1) },
+  { name: "a PNG declared as MP3", user: () => editor, kind: "audio", type: "audio/mpeg", file: PNG },
 ];
 for (const c of mismatches) {
   test(`${c.name} is refused with 415, its object deleted and the upload marked rejected`, async () => {
-    const ticket = await upload(c.user, c.kind, c.type, c.file);
+    const user = c.user();
+    const ticket = await upload(user, c.kind, c.type, c.file);
     const { storageKey } = await uploadRow(ticket.uploadId);
     assert.ok(await storage.uploads.head(storageKey), "the object was uploaded");
     const before = await mediaCount();
 
-    const res = await complete(c.user, ticket.uploadId, metadataFor(c.user));
+    const res = await complete(user, ticket.uploadId, metadataFor(user));
     assert.equal(res.statusCode, 415, res.body);
     assert.equal(errorOf(res).code, "UNSUPPORTED_MEDIA_TYPE");
 
@@ -266,7 +276,7 @@ for (const c of mismatches) {
     assert.equal(await mediaCount(), before, "nothing was published");
 
     // A rejected upload is final.
-    assert.equal((await complete(c.user, ticket.uploadId, metadataFor(c.user))).statusCode, 409);
+    assert.equal((await complete(user, ticket.uploadId, metadataFor(user))).statusCode, 409);
   });
 }
 
@@ -454,8 +464,9 @@ test("complete judges the bytes it reads, not a HEAD answer that a later write h
 
 const askForTicket = (user: AuthUser) => requestUpload(user, { kind: "photo", contentType: "image/jpeg", bytes: JPEG.length });
 
-test("an account holds at most 10 open upload tickets; a finished or expired one frees its slot", async () => {
-  const hoarder: AuthUser = { id: "visitor-hoarder", role: "user" };
+test("an account of any role holds at most 10 open upload tickets; a finished or expired one frees its slot", async () => {
+  // A moderator: staff have no daily quota, so only the open-ticket cap is at work here.
+  const hoarder: AuthUser = { id: "moderator-hoarder", role: "moderator" };
   const tickets: UploadTicket[] = [];
   for (let i = 0; i < MAX_OPEN_UPLOADS; i++) {
     const res = await askForTicket(hoarder);
@@ -487,9 +498,43 @@ test("a burst of ticket requests cannot get past the cap together", async () => 
   assert.deepEqual(statuses, [...Array<number>(MAX_OPEN_UPLOADS).fill(201), ...Array<number>(5).fill(429)]);
 });
 
-// ── abandoned uploads ────────────────────────────────────────────────────────
+test("a visitor gets at most 10 upload tickets per rolling day, finished ones included; staff are exempt", async () => {
+  for (let i = 0; i < DAILY_UPLOAD_QUOTA; i++) {
+    const ticket = await upload(visitor, "photo", "image/jpeg", JPEG);
+    assert.equal((await complete(visitor, ticket.uploadId, { alt: "Avlu" })).statusCode, 201);
+  }
+  const over = await askForTicket(visitor);
+  assert.equal(over.statusCode, 429, "no open ticket, but the day's quota is used up");
+  assert.equal(errorOf(over).code, "RATE_LIMITED");
+  assert.match(errorOf(over).message, /en fazla 10 fotoğraf/);
 
-const sweeper: AuthUser = { id: "visitor-sweeper", role: "user" };
+  // The window rolls: once one upload is a day old, a new ticket fits again.
+  const [oldest] = await app.deps.db.select({ id: mediaUploads.id }).from(mediaUploads).where(eq(mediaUploads.ownerId, visitor.id)).limit(1);
+  assert.ok(oldest);
+  await app.deps.db.update(mediaUploads).set({ createdAt: new Date(Date.now() - 25 * 3_600_000) }).where(eq(mediaUploads.id, oldest.id));
+  assert.equal((await askForTicket(visitor)).statusCode, 201);
+
+  // Staff: past ten finished uploads in a day, the open-ticket cap is the only limit.
+  const staff: AuthUser = { id: `moderator-daily-${visitorSeq}`, role: "moderator" };
+  for (let i = 0; i <= DAILY_UPLOAD_QUOTA; i++) {
+    const ticket = await upload(staff, "photo", "image/jpeg", JPEG);
+    assert.equal((await complete(staff, ticket.uploadId, { alt: "Avlu" })).statusCode, 201);
+  }
+});
+
+test("MEDIA_REFERENCES lists every foreign key that points at media, so a media row in use is never removed", async () => {
+  const fks = await app.deps.db.execute<{ table_name: string; column_name: string }>(sql`
+    select kcu.table_name, kcu.column_name
+    from information_schema.referential_constraints rc
+    join information_schema.key_column_usage kcu on kcu.constraint_name = rc.constraint_name and kcu.constraint_schema = rc.constraint_schema
+    join information_schema.constraint_column_usage ccu on ccu.constraint_name = rc.unique_constraint_name and ccu.constraint_schema = rc.unique_constraint_schema
+    where ccu.table_name = 'media' and ccu.column_name = 'id' and kcu.table_schema = 'public'`);
+  const inDatabase = fks.rows.map((r) => `${r.table_name}.${r.column_name}`).filter((c) => c !== "media_uploads.media_id");
+  const listed = MEDIA_REFERENCES.map((column) => `${getTableName(column.table)}.${column.name}`);
+  assert.deepEqual(listed.sort(), inDatabase.sort());
+});
+
+// ── abandoned uploads ────────────────────────────────────────────────────────
 
 /** A ticket of `sweeper`, with its file when given, whose window closed `minutesAgo` minutes ago (negative: still open). */
 async function ticketClosedAgo(minutesAgo: number, file: Buffer | null): Promise<UploadTicket> {
