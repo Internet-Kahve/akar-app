@@ -73,7 +73,7 @@ Komut yalnız `DATABASE_URL`'ye bağlanır; Supabase'i çağırmaz ve e-posta g�
 | Endpoint | Not |
 | --- | --- |
 | `GET /v1/map-settings` | Herkese açık, önbellekli. `{ modelMinZoom, maxVisibleModels }`: 3B modellerin yüklendiği yakınlaştırma eşiği (0–24) ve haritada aynı anda çizilen en çok model (0–50, tam sayı; 0 3B'yi kapatır) |
-| `PUT /v1/admin/map-settings` | Yalnız `admin`; aynı gövde, `Idempotency-Key` kabul eder, audit `map-settings.update`. Uygulamalar en geç bir dakika içinde görür |
+| `PUT /v1/admin/map-settings` | Yalnız `admin`; aynı gövde, `Idempotency-Key` kabul eder, audit `map-settings.update`. Uygulamalar bir sonraki okumada görür |
 
 Tablo `map_settings` (tek satır), migration `drizzle/0005_map_settings.sql`; `npm run db:migrate` uygular.
 
@@ -143,7 +143,7 @@ Doğrulama: [docs/TESTING.md §7](../../docs/TESTING.md#7-çevrimiçi-test-ortam
 - Sayfalama keyset: ada göre `(sort_name, id)` (C collation), mesafeye göre `(mesafe, id)`; imleç opak base64url ve sıralama türüne bağlıdır, başka sıralamanın imleci `400 INVALID_CURSOR`. Sayfalar arasında tekrar/boşluk olmaz. `sort=distance` için `near` zorunlu (`400 VALIDATION_FAILED`, `fieldErrors.near`).
 - Bulmaca cevabı hiçbir yanıtta yoktur; paket yalnız soru, seçenek ve ipucu taşır.
 - Arama `normalize()` (`@akar/domain`) ile yazma anında hesaplanan `sites.search_text` üzerinde çalışır: `çarşı` / `Çarşı` / `carsi`, `İznik` / `Iznik` / `iznik` aynı sonucu verir. Haystack domain `filterSites` ile aynı: ad, şehir, ilçe, mimar. `%` ve `_` düz karakterdir. Kayıt sayısı büyürse `pg_trgm` GIN indeksi eklenmeli.
-- Tüm 200 yanıtlarda zayıf `ETag` ve `Cache-Control: public, max-age=60, stale-while-revalidate=300`; eşleşen `If-None-Match` için `304`.
+- Tüm 200 yanıtlarda zayıf `ETag` ve `Cache-Control: public, no-cache` (tarayıcı saklar ama her kullanımda doğrular, §11.24); eşleşen `If-None-Match` için `304`.
 - Şema: `sites.editor_version` boş = eski kayıt (hikâye `photoId`/`sourceId` boş olabilir), `2` = editör v2 (yayında `publicationIssues` zorunlu). Konum `geometry(Point,4326)`, koordinat yanıtta `[boylam, enlem]`.
 
 ### Demo veri
