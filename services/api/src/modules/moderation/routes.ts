@@ -143,7 +143,7 @@ export const moderationRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["admin-memories"],
         summary: "Anıyı onayla ya da nedenli reddet",
         description:
-          "`pending` anı ve onaydan sonra bildirilmiş (`reportCount` > 0) onaylı anı karara bağlanır; bildirilmemiş onaylı anı ya da reddedilen anı 409 verir (ret kesindir). Bildirilmiş onaylı anıda ret anıyı yayından kaldırır; onay bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar. Ret nedeni zorunludur (400). Moderatör kendi anısını karara bağlayamaz (403). Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
+          "`pending` anı ve onaydan sonra bildirilmiş (`reportCount` > 0) onaylı anı karara bağlanır; bildirilmemiş onaylı anı ya da reddedilen anı 409 verir (ret kesindir). Bildirilmiş onaylı anıda ret anıyı yayından kaldırır; onay bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar. Ret nedeni zorunludur (400). Moderatör kendi anısını karara bağlayamaz (403); admin bağlayabilir. Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
         params: IdParams,
         body: DecisionBody,
         response: { 200: AdminMemory },
@@ -153,7 +153,7 @@ export const moderationRoutes: FastifyPluginAsyncZod = async (app) => {
       const moderator = req.user!;
       const result = await idempotent(app.deps.db, req, moderator.id, async (tx) => ({
         status: 200,
-        body: await decideMemory(tx, moderator.id, req.params.id, req.body, req.id),
+        body: await decideMemory(tx, moderator, req.params.id, req.body, req.id),
       }));
       reply.statusCode = result.status;
       return result.body;

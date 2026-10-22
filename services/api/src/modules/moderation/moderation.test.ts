@@ -323,7 +323,7 @@ test("replaying POST /v1/memories with the same Idempotency-Key stores one memor
 
 // ── decisions ────────────────────────────────────────────────────────────────
 
-test("only a pending memory can be decided: approved and rejected ones answer 409, a rejection needs a reason, nobody decides their own", async () => {
+test("only a pending memory can be decided: approved and rejected ones answer 409, a rejection needs a reason, only an admin decides their own", async () => {
   const author = actor();
   const mod = actor("moderator");
 
@@ -378,6 +378,16 @@ test("only a pending memory can be decided: approved and rejected ones answer 40
   assert.equal(await statusOf(own), "pending");
   assert.equal((await auditOf(own)).length, 0);
   assert.equal(await pointsOf(db, mod.id), 0);
+
+  // An admin may decide a memory they wrote: it is published, audited under their id, and pays the usual points.
+  const admin = actor("admin");
+  const adminOwn = await seedMemory({ status: "pending", authorId: admin.id });
+  const selfApproved = await decide(adminOwn, { status: "approved" }, admin);
+  assert.equal(selfApproved.res.statusCode, 200);
+  assert.equal(selfApproved.body.decidedBy, admin.id);
+  assert.ok((await publicIds()).includes(adminOwn));
+  assert.deepEqual((await auditOf(adminOwn)).map((e) => [e.action, e.actorId]), [["memory.approve", admin.id]]);
+  assert.equal(await pointsOf(db, admin.id), 25);
 
   // Rejected memories pay nothing; an approval replayed with its Idempotency-Key is one decision.
   assert.equal(await pointsOf(db, author.id), 0);

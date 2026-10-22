@@ -5,6 +5,7 @@ import type { Db } from "../../db/client.ts";
 import { media, memories, memoryReports, profiles, sites } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
+import type { AuthUser } from "../../platform/auth.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
 import { published } from "../catalog/service.ts";
@@ -21,7 +22,7 @@ import type { AdminMemory, CreateMemoryBody, DecisionBody, MemoryFeedInput, Memo
 // back to `pending`. Meanwhile it shows up in the moderation queue with its `reportCount`, and a
 // moderator can decide it there: reject (final, takes it down) or approve (dismisses the reports;
 // the memory stays public and counts reports from zero). An approved memory without reports and a
-// rejected one are 409. A moderator can never decide their own memory (403); an author can never
+// rejected one are 409. A moderator can never decide their own memory (403), an admin can; an author can never
 // report their own (403). Reports only apply to approved memories (anything else reads as 404, like
 // content that is not public). Each user may file REPORT_QUOTA new reports per rolling
 // REPORT_QUOTA_HOURS hours (429 after that).
@@ -269,10 +270,14 @@ export async function createMemory(tx: Tx, userId: string, input: CreateMemoryBo
 /**
  * Approves or rejects a pending memory and audits it. Approval pays the author 25 points through
  * the ledger, whose unique key makes a second approval of the same memory (after a report) free.
+ * Only an admin may decide a memory they wrote.
  */
-export async function decideMemory(tx: Tx, moderatorId: string, id: string, decision: DecisionBody, requestId: string): Promise<AdminMemory> {
+export async function decideMemory(tx: Tx, moderator: AuthUser, id: string, decision: DecisionBody, requestId: string): Promise<AdminMemory> {
+  const moderatorId = moderator.id;
   const memory = await lockMemory(tx, id);
-  if (memory.authorId === moderatorId) throw new AppError(403, "FORBIDDEN", "Kendi anını karara bağlayamazsın.");
+  if (memory.authorId === moderatorId && moderator.role !== "admin") {
+    throw new AppError(403, "FORBIDDEN", "Kendi anını karara bağlayamazsın.");
+  }
   // An approved memory is decidable only while it carries reports since its approval.
   const reported = memory.status === "approved" && ((await reportStats(tx, [id])).get(id)?.count ?? 0) > 0;
   if (memory.status === "rejected" || (memory.status === "approved" && !reported)) {

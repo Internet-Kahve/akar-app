@@ -24078,7 +24078,7 @@
         "tags": [
           "admin-memories"
         ],
-        "description": "`pending` anı ve onaydan sonra bildirilmiş (`reportCount` > 0) onaylı anı karara bağlanır; bildirilmemiş onaylı anı ya da reddedilen anı 409 verir (ret kesindir). Bildirilmiş onaylı anıda ret anıyı yayından kaldırır; onay bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar. Ret nedeni zorunludur (400). Moderatör kendi anısını karara bağlayamaz (403). Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
+        "description": "`pending` anı ve onaydan sonra bildirilmiş (`reportCount` > 0) onaylı anı karara bağlanır; bildirilmemiş onaylı anı ya da reddedilen anı 409 verir (ret kesindir). Bildirilmiş onaylı anıda ret anıyı yayından kaldırır; onay bildirimleri geçersiz sayar, anı yayında kalır ve bildirim sayısı sıfırdan başlar. Ret nedeni zorunludur (400). Moderatör kendi anısını karara bağlayamaz (403); admin bağlayabilir. Onay yazara 25 puan yazar (anı başına bir kez). Karar audit kaydına düşer.",
         "requestBody": {
           "required": true,
           "content": {
