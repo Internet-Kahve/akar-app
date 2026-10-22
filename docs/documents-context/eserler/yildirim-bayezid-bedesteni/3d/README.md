@@ -2,7 +2,11 @@
 
 Yalnız **son sürüm** tutulur. Eski sürümlerin değerleri ve kararları aşağıdaki tabloda ve `../bedesten_notlar.md` "Ek: Geçmiş kayıt" bölümündedir.
 
-## Güncel sürüm: v05 (19 Ekim 2026)
+## Güncel sürüm: v06 (21 Ekim 2026)
+
+v05 + ortak palet ve yumuşak pişirme; geometri ve parça adları aynı. Betik `build/build_v06.py` (v05 blend'ini açar, `_kutuphane/palet_v2/` ile yalnız rengi ve pişirilmiş ışığı değiştirir; ayar `palet_v2/ayar/bedesten.json`), sahne `blend/bedesten_v06.blend`, uygulama modeli `export/bedesten_v06.glb` (yalnız yapı, Draco, 0,17 MB, 20 088 üçgen, 8 nesne), sunum `export/bedesten_v06_sunum.glb` (kaide, figür), render'lar `kontrol/v06/`. v05 blend'i silindiği için `build_v06.py`'yi baştan çalıştırmak için v05'i git geçmişinden almak gerekir.
+
+### v05 (19 Ekim 2026)
 
 Betik `build/build_v05.py`, sahne `blend/bedesten_v05.blend`, uygulama modelleri `export/bedesten_v05.glb` (zeminsiz, yalnız yapı: figürler 20 Ekim 2026'da çıkarıldı, bkz. `_GENEL_SAHNE_STANDARDI.md` §5.5) ve `export/bedesten_v05_sunum.glb` (kaideli, figürlü), render'lar `kontrol/v05/`. Aşağıdaki dosya tablosu ve «Bilinen sorunlar» v03 dönemindendir; v04'te giderildi.
 

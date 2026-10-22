@@ -2,7 +2,11 @@
 
 Yalnız **son sürüm** tutulur. Eski sürüm kararları aşağıda ve `../orhan-bey-hamami_notlar.md` (§1 güncel kararlar, "Ek: Geçmiş kayıt") içindedir.
 
-## Güncel sürüm: v04 (19 Ekim 2026, kullanıcı onaylı; v03 + güney kapısı ayrıntısı)
+## Güncel sürüm: v05 (21 Ekim 2026)
+
+v04 + ortak palet ve yumuşak pişirme; geometri ve parça adları aynı (aşağıdaki «Nesneler» v05 için de geçerli). Betik `build/build_hamam_v05.py` (v04 blend'ini açar, `_kutuphane/palet_v2/` ile yalnız rengi ve pişirilmiş ışığı değiştirir), sahne `blend/orhan-bey-hamami_v05.blend`, uygulama modeli `export/orhan-bey-hamami_v05.glb` (yalnız yapı, Draco, 0,21 MB, 15 008 üçgen, 11 nesne), sunum `export/orhan-bey-hamami_v05_sunum.glb`, render'lar `kontrol/hamam_v05/`. v04 blend'i silindiği için `build_hamam_v05.py`'yi baştan çalıştırmak için v04'ü git geçmişinden almak gerekir.
+
+### v04 (19 Ekim 2026, kullanıcı onaylı; v03 + güney kapısı ayrıntısı)
 
 | Dosya | İçerik |
 |---|---|

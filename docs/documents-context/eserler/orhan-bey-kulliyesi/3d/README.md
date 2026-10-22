@@ -2,7 +2,11 @@
 
 Yalnız **son sürüm** tutulur. Eski sürümlerin kararları aşağıdaki tabloda ve `../orhan-bey-kulliyesi_notlar.md` "Ek: Geçmiş kayıt" bölümündedir. Hamam ve Emir Hanı üretimleri kendi klasörlerindedir.
 
-## Güncel sürüm: v06 (19 Ekim 2026)
+## Güncel sürüm: v07 (21 Ekim 2026)
+
+v06 + ortak palet ve yumuşak pişirme; geometri ve parça adları aynı (aşağıdaki «Nesneler» ve «Parça adı değişikliği» v07 için de geçerli). Betik `build/build_v07.py` (v06 blend'ini açar, `_kutuphane/palet_v2/` ile yalnız rengi ve pişirilmiş ışığı değiştirir), sahne `blend/orhan-bey-camii_v07.blend`, uygulama modeli `export/orhan-bey-camii_v07.glb` (yalnız yapı, Draco, 0,27 MB, 16 014 üçgen, 12 nesne), sunum `export/orhan-bey-camii_v07_sunum.glb`, render'lar `kontrol/v07/`. v06 blend'i silindiği için `build_v07.py`'yi baştan çalıştırmak için v06'yı git geçmişinden almak gerekir.
+
+### v06 (19 Ekim 2026)
 
 | Dosya | İçerik |
 |---|---|

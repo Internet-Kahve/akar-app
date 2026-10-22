@@ -1,8 +1,16 @@
 # Ulu Cami: 3D üretim klasörü
 
-Güncel sürüm **v25** (19 Ekim 2026; v24 + ağaç dokusu). Bu klasörde yalnızca son sürüm tutulur; önceki sürümler aşağıdaki tabloda kayıtlıdır. Kaynaklar `../ref/` altında, model kararları `../ulu-cami_notlar.md` içinde.
+Güncel sürüm **v26** (21 Ekim 2026; v25 + ortak palet ve yumuşak pişirme, geometri ve parça adları aynı). Bu klasörde yalnızca son sürüm tutulur; önceki sürümler aşağıdaki tabloda kayıtlıdır. Kaynaklar `../ref/` altında, model kararları `../ulu-cami_notlar.md` içinde.
 
 ## İçerik
+
+- `blend/ulu-cami_v26.blend`: düzenlenebilir son sahne.
+- `export/ulu-cami_v26.glb`: uygulama modeli, yalnız yapı (ağaç, figür, zemin yok), Draco, 0,83 MB, 87 280 üçgen, 26 nesne.
+- `export/ulu-cami_v26_sunum.glb`: daire kaide, avlu döşemesi, ağaçlar ve figürlerle sunum, 0,59 MB.
+- `kontrol/v26/`: dört yön, havadan, eski/yeni karşılaştırma, 8 yakın çekim, `kontrol_rapor.json`, `renkler.json`, `_blend_sayim.json`.
+- `build/build_v26.py`: v25 blend'ini açıp `_kutuphane/palet_v2/` ile yalnız rengi ve pişirilmiş ışığı değiştirir (ayar `palet_v2/ayar/ulu-cami.json`). Girdisi olan v25 blend'i silindiği için baştan çalıştırmak için v25'i git geçmişinden almak gerekir.
+
+v25 dönemindeki dosyaların kaydı:
 
 - `blend/ulu-cami_v25.blend`: düzenlenebilir son sahne (dokular paketli). — **silindi** (21 Ekim 2026; yerine v26)
 - `export/ulu-cami_v25.glb`: cami, avlu yapıları ve iç şadırvan; **ağaç ve figür yok** (20 Ekim 2026'da çıkarıldı), zeminsiz, dünya koordinatlı, Draco, 0,57 MB. uygulama GLB'sinden çevre (`Cevre_*`) ve insan figürleri (`Olcek_Insan_*`) çıkarıldı; bunlar yalnız `_sunum.glb`'de. Sürüm numarası değişmedi. Kural ve betik: `eserler/_GENEL_SAHNE_STANDARDI.md` §5.5, `eserler/_kutuphane/glb_temizle.mjs`. Yeni sürümde son adım olarak tekrar çalıştır. — **silindi** (21 Ekim 2026; yerine v26)
