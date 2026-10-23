@@ -10,7 +10,9 @@ services:
     volumes:
       - akar-db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U akar -d akar"]
+      # The initialization server accepts Unix sockets before init scripts finish.
+      # TCP is available only after the final server starts, ready for migrations.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U akar -d akar"]
       interval: 2s
       timeout: 3s
       retries: 30
