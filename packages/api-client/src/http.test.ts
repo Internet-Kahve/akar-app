@@ -573,7 +573,10 @@ test("sign-in moves the device's saves and Rotam into the account once; Rotam th
   );
   assert.deepEqual(
     [signedIn.savedIds, signedIn.routeIds],
-    [["a", "b"], ["a", "b"]],
+    [
+      ["a", "b"],
+      ["a", "b"],
+    ],
   );
   const stored = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
   assert.deepEqual([stored.saved, stored.route], [[], []]);
@@ -646,17 +649,32 @@ test("a failed move keeps the device's lists for the next load; a save unpublish
 
   tokenValue = "T";
   const failed = await client.getSnapshot();
-  assert.deepEqual(failed.routeIds, [], "the account's own (unpublished stops are not shown)");
+  assert.deepEqual(
+    failed.routeIds,
+    [],
+    "the account's own (unpublished stops are not shown)",
+  );
   const kept = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
-  assert.deepEqual([kept.saved, kept.route], [["a", "b"], ["a", "b"]]);
+  assert.deepEqual(
+    [kept.saved, kept.route],
+    [
+      ["a", "b"],
+      ["a", "b"],
+    ],
+  );
 
   routeStatus = 200;
   await client.getSnapshot();
   const moved = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
-  assert.deepEqual([moved.saved, moved.route], [[], []]);
-  assert.deepEqual(api.calls.filter((c) => c.method === "PUT" && c.path === "/v1/me/route").at(-1)?.body, {
-    siteIds: [...full, "a"],
-  });
+  assert.deepEqual([moved.saved, moved.route], [[], ["b"]]);
+  assert.deepEqual(
+    api.calls
+      .filter((c) => c.method === "PUT" && c.path === "/v1/me/route")
+      .at(-1)?.body,
+    {
+      siteIds: [...full, "a"],
+    },
+  );
 });
 
 for (const failure of ["server", "network"] as const) {
@@ -842,10 +860,12 @@ test("a full editor save goes through the step endpoints in reference order: new
     };
   };
   const writes: Call[] = [];
-  const write = (out: unknown = {}) => (c: Call) => {
-    writes.push(c);
-    return out;
-  };
+  const write =
+    (out: unknown = {}) =>
+    (c: Call) => {
+      writes.push(c);
+      return out;
+    };
   const api = fakeApi({
     ...catalogHandlers(),
     ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
@@ -856,16 +876,27 @@ test("a full editor save goes through the step endpoints in reference order: new
     "POST /v1/media/uploads": (c) => {
       writes.push(c);
       upload++;
-      return { uploadId: `up${upload}`, url: `/v1/media/uploads/up${upload}/content`, headers: {} };
+      return {
+        uploadId: `up${upload}`,
+        url: `/v1/media/uploads/up${upload}/content`,
+        headers: {},
+      };
     },
-    "PUT /v1/media/uploads/up1/content": () => new Response(null, { status: 204 }),
-    "PUT /v1/media/uploads/up2/content": () => new Response(null, { status: 204 }),
+    "PUT /v1/media/uploads/up1/content": () =>
+      new Response(null, { status: 204 }),
+    "PUT /v1/media/uploads/up2/content": () =>
+      new Response(null, { status: 204 }),
     "POST /v1/media/uploads/up1/complete": write({ id: "p-new" }),
     "POST /v1/media/uploads/up2/complete": write({ id: "m-new" }),
     "PATCH /v1/admin/media/cover": write(),
     "PUT /v1/admin/sites/a/model": (c) => {
       const body = c.body;
-      if (body && typeof body === "object" && "mediaId" in body && typeof body.mediaId === "string")
+      if (
+        body &&
+        typeof body === "object" &&
+        "mediaId" in body &&
+        typeof body.mediaId === "string"
+      )
         model = body.mediaId;
       return write()(c);
     },
@@ -879,7 +910,11 @@ test("a full editor save goes through the step endpoints in reference order: new
     fetch: api.fetch,
   });
   const site = (await client.getSnapshot()).sites.find((s) => s.id === "a")!;
-  const newSource = { ...source1, id: "src-new", title: "Yeni kaynak" } as const;
+  const newSource = {
+    ...source1,
+    id: "src-new",
+    title: "Yeni kaynak",
+  } as const;
   await client.dispatch({
     type: "site",
     site: {
@@ -887,7 +922,9 @@ test("a full editor save goes through the step endpoints in reference order: new
       city: "Kütahya",
       sources: [...site.sources!, newSource],
       photos: [
-        ...site.photos!.map((p) => (p.id === "cover" ? { ...p, title: "Kapak" } : p)),
+        ...site.photos!.map((p) =>
+          p.id === "cover" ? { ...p, title: "Kapak" } : p,
+        ),
         {
           id: "tmp-photo",
           src: "data:image/png;base64,iVBORw0KGgo=",
@@ -910,7 +947,15 @@ test("a full editor save goes through the step endpoints in reference order: new
       },
       stories: [
         { ...site.stories[0]!, photoId: "tmp-photo", highlights: ["minare"] },
-        { id: "s-new", title: "İki", text: "t", simple: "s", trust: "inferred", photoId: "extra", sourceId: "src-new" },
+        {
+          id: "s-new",
+          title: "İki",
+          text: "t",
+          simple: "s",
+          trust: "inferred",
+          photoId: "extra",
+          sourceId: "src-new",
+        },
       ],
     },
   });
@@ -922,38 +967,101 @@ test("a full editor save goes through the step endpoints in reference order: new
       [
         "PUT",
         "/v1/admin/sites/a/sources",
-        { sources: [{ ...source1, locator: "s. 42" }, { ...newSource, locator: null }] },
+        {
+          sources: [
+            { ...source1, locator: "s. 42" },
+            { ...newSource, locator: null },
+          ],
+        },
       ],
       // Photos in list order: the edited cover first, then the new file.
       [
         "PATCH",
         "/v1/admin/media/cover",
-        { alt: "cover", title: "Kapak", titleEn: null, description: "", license: "CC BY", sourceId: null, trust: "verified" },
+        {
+          alt: "cover",
+          title: "Kapak",
+          titleEn: null,
+          description: "",
+          license: "CC BY",
+          sourceId: null,
+          trust: "verified",
+        },
       ],
-      ["POST", "/v1/media/uploads", { kind: "photo", contentType: "image/png", bytes: 8 }],
+      [
+        "POST",
+        "/v1/media/uploads",
+        { kind: "photo", contentType: "image/png", bytes: 8 },
+      ],
       [
         "POST",
         "/v1/media/uploads/up1/complete",
-        { alt: "Yeni", title: "Yeni", titleEn: null, description: "", license: "CC BY", sourceId: "src-new", trust: "verified" },
+        {
+          alt: "Yeni",
+          title: "Yeni",
+          titleEn: null,
+          description: "",
+          license: "CC BY",
+          sourceId: "src-new",
+          trust: "verified",
+        },
       ],
-      ["POST", "/v1/media/uploads", { kind: "model", contentType: "model/gltf-binary", bytes: 8 }],
-      ["POST", "/v1/media/uploads/up2/complete", { title: "yeni.glb", license: "Katkı sahibi izniyle", trust: "representative" }],
+      [
+        "POST",
+        "/v1/media/uploads",
+        { kind: "model", contentType: "model/gltf-binary", bytes: 8 },
+      ],
+      [
+        "POST",
+        "/v1/media/uploads/up2/complete",
+        {
+          title: "yeni.glb",
+          license: "Katkı sahibi izniyle",
+          trust: "representative",
+        },
+      ],
       ["PUT", "/v1/admin/sites/a/model", { mediaId: "m-new" }],
-      ["PUT", "/v1/admin/sites/a/media", { photoIds: ["cover", "extra", "p-new"], coverPhotoId: "p-new" }],
+      [
+        "PUT",
+        "/v1/admin/sites/a/media",
+        { photoIds: ["cover", "extra", "p-new"], coverPhotoId: "p-new" },
+      ],
       [
         "PUT",
         "/v1/admin/sites/a/stories",
         {
           blocks: [
             {
-              id: "s1", title: "t", text: "x", textEn: null, simple: "y", trust: "verified",
-              photoId: "p-new", sourceId: null, showCard: null, highlights: ["minare"],
-              cardId: "card-1", camera: { azimuthDeg: 10, elevationDeg: 20, distanceM: 30 }, audioMediaId: "voice", audioEnMediaId: null,
+              id: "s1",
+              title: "t",
+              text: "x",
+              textEn: null,
+              simple: "y",
+              trust: "verified",
+              photoId: "p-new",
+              sourceId: null,
+              showCard: null,
+              highlights: ["minare"],
+              cardId: "card-1",
+              camera: { azimuthDeg: 10, elevationDeg: 20, distanceM: 30 },
+              audioMediaId: "voice",
+              audioEnMediaId: null,
             },
             {
-              id: "s-new", title: "İki", text: "t", textEn: null, simple: "s", trust: "inferred",
-              photoId: "extra", sourceId: "src-new", showCard: null, highlights: [],
-              cardId: null, camera: null, audioMediaId: null, audioEnMediaId: null,
+              id: "s-new",
+              title: "İki",
+              text: "t",
+              textEn: null,
+              simple: "s",
+              trust: "inferred",
+              photoId: "extra",
+              sourceId: "src-new",
+              showCard: null,
+              highlights: [],
+              cardId: null,
+              camera: null,
+              audioMediaId: null,
+              audioEnMediaId: null,
             },
           ],
         },
@@ -963,7 +1071,10 @@ test("a full editor save goes through the step endpoints in reference order: new
   // The highlights wait for the new model's part names: read after the model is set, before the story.
   const order = api.calls.map((c) => `${c.method} ${c.path}`);
   const modelSet = order.indexOf("PUT /v1/admin/sites/a/model");
-  assert.ok(order.slice(modelSet).indexOf("GET /v1/admin/sites/a") < order.slice(modelSet).indexOf("PUT /v1/admin/sites/a/stories"));
+  assert.ok(
+    order.slice(modelSet).indexOf("GET /v1/admin/sites/a") <
+      order.slice(modelSet).indexOf("PUT /v1/admin/sites/a/stories"),
+  );
 });
 
 test("users and moderators never request drafts (sites or routes)", async () => {
@@ -1519,21 +1630,32 @@ test("other people's memories are never the user's own: guest, signed-in user an
 
   // The panel tabs need every status; the pending list repeats a reported approved memory.
   const byStatus: Record<string, object[]> = {
-    pending: [pendingItem("q1", "b"), { ...pendingItem("r1", "a"), status: "approved" }],
-    approved: [{ ...pendingItem("r1", "a"), status: "approved" }, { ...pendingItem("a1", "a"), status: "approved" }],
-    rejected: [{ ...pendingItem("x1", "b"), status: "rejected", reason: "Uygunsuz" }],
+    pending: [
+      pendingItem("q1", "b"),
+      { ...pendingItem("r1", "a"), status: "approved" },
+    ],
+    approved: [
+      { ...pendingItem("r1", "a"), status: "approved" },
+      { ...pendingItem("a1", "a"), status: "approved" },
+    ],
+    rejected: [
+      { ...pendingItem("x1", "b"), status: "rejected", reason: "Uygunsuz" },
+    ],
   };
   const mod = await asRole("moderator", {
     "GET /v1/admin/memories": (c) => ({
-      items: byStatus[new URL(c.path, "http://api.test").searchParams.get("status") ?? ""] ?? [],
+      items:
+        byStatus[
+          new URL(c.path, "http://api.test").searchParams.get("status") ?? ""
+        ] ?? [],
       nextCursor: null,
     }),
   });
   assert.deepEqual(mod.memories, []);
-  assert.deepEqual(
-    mod.moderationQueue?.map((m) => [m.id, m.status]).sort(),
-    [["a1", "approved"], ["q1", "pending"], ["r1", "approved"], ["x1", "rejected"]],
-  );
+  assert.deepEqual(mod.moderationQueue?.map((m) => [m.id, m.status]).sort(), [
+    ["q1", "pending"],
+    ["r1", "approved"],
+  ]);
   assert.deepEqual(
     mod.publicMemories?.map((m) => m.id),
     ["m1"],
@@ -1744,4 +1866,278 @@ test("removing a memory sends DELETE with an idempotency key and re-reads the fe
     ),
   );
   assert.deepEqual(afterAdmin.publicMemories, []);
+});
+
+for (const capacity of [99, 100]) {
+  test(`sign-in preserves guest overflow when the account has ${capacity} stops`, async () => {
+    const store = storage();
+    let tokenValue: string | null = null;
+    let accountRoute = Array.from({ length: capacity }, (_, i) => `full-${i}`);
+    const api = fakeApi({
+      ...catalogHandlers(),
+      ...accountHandlers({ T: { saved: [], points: 0 } }),
+      "GET /v1/site-details": () => ({
+        items: [
+          ...accountRoute.map((id) => detail(id)),
+          detail("a"),
+          detail("b"),
+        ],
+        nextCursor: null,
+      }),
+      "GET /v1/me/route": () => ({ siteIds: accountRoute }),
+      "PUT /v1/me/route": (c) => {
+        accountRoute = (c.body as { siteIds: string[] }).siteIds;
+        return { siteIds: accountRoute };
+      },
+    });
+    const client = createHttpClient({
+      baseUrl: "http://api.test",
+      storage: store,
+      getToken: () => tokenValue,
+      fetch: api.fetch,
+    });
+    await client.dispatch({ type: "set-route", siteIds: ["a", "b"] });
+    tokenValue = "T";
+    const first = await client.getSnapshot();
+    const overflow = capacity === 99 ? ["b"] : ["a", "b"];
+    assert.equal(first.routeIds.length, 100);
+    assert.equal(first.pendingRouteCount, overflow.length);
+    assert.deepEqual(
+      JSON.parse(store.getItem(httpStorageKey)!).route,
+      overflow,
+    );
+    await client.getSnapshot();
+    assert.deepEqual(
+      JSON.parse(store.getItem(httpStorageKey)!).route,
+      overflow,
+      "repeat sign-in keeps the remainder",
+    );
+    accountRoute = accountRoute.slice(2);
+    const moved = await client.getSnapshot();
+    assert.equal(moved.pendingRouteCount, 0);
+    assert.ok(moved.routeIds.includes("a") && moved.routeIds.includes("b"));
+    assert.equal(new Set(moved.routeIds).size, moved.routeIds.length);
+    assert.deepEqual(JSON.parse(store.getItem(httpStorageKey)!).route, []);
+  });
+}
+
+for (const failFirst of [false, true]) {
+  test(`editor keeps canonical media and reuses uploads after partial failure=${failFirst}`, async () => {
+    let uploads = 0;
+    let fail = failFirst;
+    let stored: any = {
+      ...detail("d1"),
+      status: "draft",
+      sourceLinks: [],
+      openingCamera: null,
+      photoIds: [],
+    };
+    const api = fakeApi({
+      ...catalogHandlers(),
+      ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+      "GET /v1/admin/site-details": () => ({
+        items: [stored],
+        nextCursor: null,
+      }),
+      "GET /v1/admin/sites/d1": () => stored,
+      "POST /v1/media/uploads": () => ({
+        uploadId: `up${++uploads}`,
+        url: "http://api.test/upload",
+        headers: {},
+      }),
+      "PUT /upload": () => new Response(null, { status: 204 }),
+      "POST /v1/media/uploads/up1/complete": () => ({ id: "p1" }),
+      "POST /v1/media/uploads/up2/complete": () => ({ id: "m1" }),
+      "PATCH /v1/admin/media/p1": () => media("p1", "photo"),
+      "PATCH /v1/admin/media/m1": () => media("m1", "model"),
+      "PUT /v1/admin/sites/d1/model": () => {
+        stored = {
+          ...stored,
+          media: [
+            ...stored.media.filter((m: any) => m.kind !== "model"),
+            media("m1", "model", { title: "New model" }),
+          ],
+        };
+        return stored;
+      },
+      "PUT /v1/admin/sites/d1/media": (c) => {
+        if (fail) {
+          fail = false;
+          return Response.json(
+            {
+              error: {
+                code: "INTERNAL",
+                message: "Retry",
+                fieldErrors: {},
+                requestId: "r",
+              },
+            },
+            { status: 500 },
+          );
+        }
+        const b = c.body as { photoIds: string[]; coverPhotoId: string | null };
+        stored = {
+          ...stored,
+          photoIds: b.photoIds,
+          coverMediaId: b.coverPhotoId,
+          media: [
+            ...stored.media.filter((m: any) => m.kind !== "photo"),
+            ...b.photoIds.map((id) => media(id, "photo", { alt: "New photo" })),
+          ],
+        };
+        return stored;
+      },
+      "PATCH /v1/admin/sites/d1/info": (c) => {
+        stored = { ...stored, ...(c.body as object) };
+        return stored;
+      },
+    });
+    const client = createHttpClient({
+      baseUrl: "http://api.test",
+      storage: storage(),
+      getToken: () => "T",
+      fetch: api.fetch,
+    });
+    const site = (await client.getSnapshot()).sites.find((s) => s.id === "d1")!;
+    const input: HeritageSite = {
+      ...site,
+      photos: [
+        {
+          id: "tmp-photo",
+          src: "data:image/png;base64,iVBORw0KGgo=",
+          alt: "New photo",
+          title: "",
+          titleEn: "",
+          description: "",
+          sourceId: "",
+          license: "CC BY",
+          trust: "verified",
+        },
+      ],
+      coverPhotoId: "tmp-photo",
+      model: {
+        src: "data:model/gltf-binary;base64,Z2xURg==",
+        name: "New model",
+        bytes: 4,
+        parts: [],
+        trust: "verified",
+      },
+    };
+    if (failFirst) await assert.rejects(client.saveSite(input), /Retry/);
+    const saved = await client.saveSite(input);
+    assert.equal(saved.site.coverPhotoId, "p1");
+    assert.equal(saved.site.photos?.[0]?.src, "https://cdn.test/p1");
+    assert.equal(saved.site.model?.src, "https://cdn.test/m1");
+    await client.saveSite({ ...saved.site, name: "Changed title" });
+    assert.equal(
+      uploads,
+      2,
+      "exactly one photo and one model upload across retries and subsequent saves",
+    );
+    assert.equal(stored.name, "Changed title");
+  });
+}
+
+test("explicit gallery ids preserve photos also used by cards and history across editor saves", async () => {
+  let stored: any = {
+    ...siteA(),
+    status: "published",
+    photoIds: ["cover", "card-img", "old", "extra"],
+    sourceLinks: [],
+    openingCamera: null,
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored], nextCursor: null }),
+    "GET /v1/sites/a": () => stored,
+    "GET /v1/admin/sites/a": () => stored,
+    "PUT /v1/admin/sites/a/media": (c) => {
+      const b = c.body as { photoIds: string[]; coverPhotoId: string };
+      stored = {
+        ...stored,
+        photoIds: b.photoIds,
+        coverMediaId: b.coverPhotoId,
+      };
+      return stored;
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const current = (await client.getSnapshot()).sites[0]!;
+  assert.deepEqual(
+    current.photos?.map((p) => p.id),
+    ["cover", "card-img", "old", "extra"],
+  );
+  await client.saveSite({ ...current, coverPhotoId: "extra" });
+  assert.deepEqual(stored.photoIds, ["cover", "card-img", "old", "extra"]);
+});
+
+test("moderation reads one bounded page per selected tab and forwards its cursor", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "moderator"),
+    "GET /v1/admin/memories": (c) => ({
+      items: [pendingItem(c.path.includes("cursor=next") ? "q2" : "q1", "a")],
+      nextCursor: c.path.includes("cursor=next") ? null : "next",
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  await client.getSnapshot();
+  let reads = api.calls.filter((c) => c.path.startsWith("/v1/admin/memories"));
+  assert.equal(reads.length, 1);
+  assert.equal(
+    new URL(reads[0]!.path, "http://api.test").searchParams.get("limit"),
+    "25",
+  );
+  const first = await client.getModerationPage("rejected");
+  const next = await client.getModerationPage("rejected", first.nextCursor!);
+  reads = api.calls.filter((c) => c.path.startsWith("/v1/admin/memories"));
+  assert.equal(reads.length, 3, "does not eagerly follow pagination");
+  assert.ok(
+    reads[2]!.path.includes("status=rejected") &&
+      reads[2]!.path.includes("cursor=next"),
+  );
+  assert.equal(next.items[0]?.id, "q2");
+});
+
+test("draft route loading uses one page without detail requests for each route", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/admin/routes": () => ({
+      items: Array.from({ length: 30 }, (_, i) => ({
+        id: `draft-${i}`,
+        name: "Route",
+        nameEn: null,
+        description: "",
+        theme: "",
+        status: "draft",
+        stops: [{ site: { id: "a" }, quizId: null, historyImageId: null }],
+      })),
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const state = await client.getSnapshot();
+  assert.equal(
+    state.catalogRoutes?.filter((r) => r.status === "draft").length,
+    30,
+  );
+  assert.equal(
+    api.calls.filter((c) => c.path.startsWith("/v1/admin/routes")).length,
+    1,
+  );
 });

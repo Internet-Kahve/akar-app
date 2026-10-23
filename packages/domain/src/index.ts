@@ -104,6 +104,8 @@ export interface Snapshot {
   publicMemories?: Memory[];
   savedIds: string[];
   routeIds: string[];
+  /** Guest stops retained on this device because they could not be moved to the account. */
+  pendingRouteCount?: number;
   visitedIds: string[];
   readIds: string[];
   quizIds: string[];

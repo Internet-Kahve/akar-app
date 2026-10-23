@@ -223,6 +223,19 @@ export function AkarApp() {
     async (command: Command) => (await run(command)) === null,
     [run],
   );
+  const saveSite = useCallback(async (site: HeritageSite) => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    const result = await client.current.saveSite(site);
+    setState(result.snapshot);
+    return result.site;
+  }, []);
+  const loadModeration = useCallback<AkarClient["getModerationPage"]>(
+    async (status, cursor) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.getModerationPage(status, cursor);
+    },
+    [],
+  );
   const loadHealth = useCallback(async () => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
@@ -461,12 +474,22 @@ export function AkarApp() {
               }
             />
           )}
+          {!!state.pendingRouteCount && (
+            <Notice>
+              {state.pendingRouteCount} durak hesabındaki rotaya taşınamadı ve
+              bu cihazda korundu. Rotam en fazla 100 durak alır. Yer açtıktan
+              sonra sayfayı yenileyerek yeniden deneyebilirsin.
+            </Notice>
+          )}
           {view === "admin" && (
             <Admin
               state={state}
               commit={commit}
               role={role}
               loadHealth={loadHealth}
+              loadModeration={loadModeration}
+              saveSite={saveSite}
+              live={live}
             />
           )}
           {view === "history" && site && (

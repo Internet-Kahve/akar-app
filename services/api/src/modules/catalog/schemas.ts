@@ -231,6 +231,7 @@ export const SiteDetail = SiteSummary.extend({
   sections: z.array(SectionDto).describe("Eser hakkında bölümler (Tarihçe, Mimari, Vakıf ve akar), sıralı"),
   cards: z.array(CardDto).describe("Hikâye cümlelerinin kullandığı kartlar; ilk kullanım sırasıyla, tekrarsız"),
   historyImages: z.array(HistoryImageDto).describe("Geçmişi Gör görselleri, sıralı"),
+  photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
   media: z
     .array(MediaDto)
     .describe("Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),

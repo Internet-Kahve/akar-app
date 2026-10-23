@@ -354,22 +354,23 @@ Rehberli grup yürüyüşleri (vakıf veya belediye ortaklığı), daha fazla ş
 **Eksik tasarımlar:** logo, uygulama ikonu, splash, rozet görselleri ve adları. (Odak halkası ve devre dışı buton durumu Figma «00 · Tasarım Sistemi › 8 · Erişilebilirlik durumları» panelinde çizili.)
 
 ---
-Beylere Not:
-(Bağlam belgesinde teknoloji tercihi Vite + React + TypeScript, mobil öncelikli PWA ve Supabase (Postgres, Auth, Storage, RLS) olarak tanımlanıyor. Ayrı bir backend sunucusu planlanmıyor; ileride mağaza uygulaması gerekirse Capacitor değerlendiriliyor.
-Mevcut yayındaki uygulama ise Next.js + React + TypeScript kullanıyor ve verileri şimdilik mock servis üzerinden tarayıcıdaki localStorage’da tutuyor. Uygulamanın teknik belgelerinde ayrıca ayrı bir backend API’si ve ilerleyen aşamada Expo / React Native yaklaşımı yer alıyor; bunlar henüz uygulanmış değil.
-Dolayısıyla bağlamdaki teknoloji planıyla mevcut uygulama ve teknik yol haritası arasında farklılıklar bulunuyor. Mevcut yapının korunması, bağlamdaki yapıya geçilmesi veya iki yaklaşımın birleştirilmesi konusundaki değerlendirme ve nihai tercih, ekip deneyimi ve geliştirme takvimi doğrultusunda Tamer ve Burak’ın inisiyatifine bırakılmıştır.)
+## 8. Teknik mimari — güncel uygulama (23 Ekim 2026)
 
-## 8. Teknik mimari
+Teknik kararlar için güncel referans [BACKEND-DECISIONS.md](../BACKEND-DECISIONS.md), API sözleşmesi için [CONTRACTS.md](../../services/api/CONTRACTS.md) esas alınır. Bu belgedeki Vite/Netlify ve ayrı API olmayan Supabase planı tarihî bir öneriydi; uygulanmış mimariyi anlatmıyordu.
 
-| Katman | Seçim |
+| Katman | Uygulanan yapı |
 |---|---|
-| Arayüz | Vite + React + TypeScript, PWA (manifest + service worker) |
-| Harita | MapLibre GL JS + OpenFreeMap (anahtarsız, OSM verisi); stil Maputnik'te |
-| 3D | three.js: GLTFLoader + DRACOLoader, CSS2DRenderer (kartlar), OrbitControls (hedef "Merkez") |
-| Modeller | Blender → .glb (Draco sıkıştırmalı) |
-| Arka uç | Supabase: Postgres, Auth, Storage, **RLS** (kendi sunucu yok; güvenlik RLS kurallarında) |
-| Yayın | GitHub → Netlify (her PR için önizleme linki) |
-| Ses | Cümle başına ayrı ses dosyası önerildi; prototipte Web Speech API (tr-TR) |
+| Arayüz | Next.js App Router + React + TypeScript (`apps/web`) |
+| İstemci | `packages/api-client`: `NEXT_PUBLIC_API_URL` varsa HTTP API; yoksa tarayıcıda saklanan demo |
+| Harita | MapLibre GL JS + OpenFreeMap (OSM verisi) |
+| 3D üretim | Blender → GLB; araştırma/prototip paketleri `docs/documents-context/eserler/` içinde, üretime alınmaları ayrı teslim kontrolü gerektirir |
+| Arka uç | Fastify + TypeScript (`services/api`), PostgreSQL/PostGIS + Drizzle; yetki ve yayın kontrolleri API'de |
+| Kimlik / dosya | Supabase Auth (e-posta kodu, JWT/JWKS); özel `uploads` ve açık `media` kovaları, S3 protokolü |
+| Arka plan | pg-boss; medya silme için transaction ile kalıcı niyet ve yeniden deneme işçisi |
+| Staging kararı | Vercel web + Render API + Supabase cloud; ortamların güncel çalışırlığı ayrıca doğrulanır |
+| Ses | Mevcut web anlatımı ve prototip notları birbirinden ayrıdır; dosya bazlı ses alanları API'de desteklenir |
+
+Ayrı backend uygulanmış durumdadır. Expo/React Native veya Capacitor seçimi bu sürümde teslim edilmiş bir mağaza uygulaması anlamına gelmez. Aşağıdaki anlatım tasarımı ve içerik hedefleri, kaynak kodda doğrulanmadıkça tamamlanmış özellik kabul edilmemelidir.
 
 ### Anlatım motoru
 - Bir cue listesi. Her cümlede başlangıç saniyesi, metin, güven etiketi, kaynak ve **sahne durumu** var (kamera hedefi/açısı/uzaklığı, vurgulanacak parçalar, açık kart, akar akışı, gravür).
@@ -382,7 +383,7 @@ Dolayısıyla bağlamdaki teknoloji planıyla mevcut uygulama ve teknik yol hari
 - E-posta ile **6 haneli kod** (link değil): `signInWithOtp({ email })` → `verifyOtp({ email, token, type: "email" })`.
   - E-posta şablonunda `{{ .Token }}` kullanılacak, kod 600 sn geçerli.
   - Magic link önce önerildi; ekip değerlendirmesi sonrası koda geçildi.
-- Supabase'in kendi e-posta servisi büyük ihtimalle sadece ekip adreslerine gönderiyor (**doğrulanmalı**). Bu yüzden Resend SMTP bağlanacak.
+- Staging SMTP kararı Gmail SMTP olarak BACKEND-DECISIONS §11.16’da kayıtlıdır. Ortam ayarı ve teslim edilebilirlik canlı ortamda ayrıca doğrulanır; Resend eski öneridir.
 
 ### Veri modeli (taslak)
 - Tablolar: Eser · Dönem · Kaynak · Hikâye cue'su · Karşılaştırma görseli (gravür + bugünkü foto + **lisans**) · Rota · Rota durağı · Bulmaca · Vakıf akışı (gelir → harcama, kaynaklı) · Katkı (moderasyon durumu) · Kullanıcı ilerlemesi · Profil (rol).

@@ -100,17 +100,22 @@ export async function listAdminRoutes(
     .limit(q.limit + 1);
 
   const page = rows.slice(0, q.limit);
-  const counts = page.length
-    ? await db
-        .select({ routeId: routeStops.routeId, n: sql<number>`count(*)::int` })
-        .from(routeStops)
-        .where(inArray(routeStops.routeId, page.map((r) => r.id)))
-        .groupBy(routeStops.routeId)
-    : [];
-  const stopCount = new Map(counts.map((c) => [c.routeId, c.n]));
+  const stops = page.length ? await db.select({
+    routeId: routeStops.routeId, position: routeStops.position,
+    siteId: sites.id, siteName: sites.name, siteStatus: sites.status,
+    quizId: routeStops.quizId, historyImageId: routeStops.historyImageId,
+  }).from(routeStops).innerJoin(sites, eq(sites.id, routeStops.siteId))
+    .where(inArray(routeStops.routeId, page.map((r) => r.id)))
+    .orderBy(asc(routeStops.routeId), asc(routeStops.position)) : [];
+  const byRoute = new Map<string, AdminRoute["stops"]>();
+  for (const stop of stops) {
+    const list = byRoute.get(stop.routeId) ?? [];
+    list.push({ position: stop.position, site: { id: stop.siteId, name: stop.siteName, status: stop.siteStatus }, quizId: stop.quizId, historyImageId: stop.historyImageId });
+    byRoute.set(stop.routeId, list);
+  }
   const last = rows.length > q.limit ? page.at(-1) : undefined;
   return {
-    items: page.map((r) => ({ ...routeFields(r), stopCount: stopCount.get(r.id) ?? 0 })),
+    items: page.map((r) => ({ ...routeFields(r), stopCount: byRoute.get(r.id)?.length ?? 0, stops: byRoute.get(r.id) ?? [] })),
     nextCursor: last ? encodeCursor({ i: last.id }) : null,
   };
 }
