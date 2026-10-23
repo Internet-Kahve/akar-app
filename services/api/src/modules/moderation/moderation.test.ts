@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { after, before, beforeEach, test } from "node:test";
 import type { App } from "../../app.ts";
 import type { Db } from "../../db/client.ts";
-import { auditLog, media, mediaUploads, memories, memoryReports, pointEvents, profiles, staffMembers } from "../../db/schema/index.ts";
+import { auditLog, media, mediaDeletions, mediaUploads, memories, memoryReports, pointEvents, profiles, staffMembers } from "../../db/schema/index.ts";
 import { loadCatalog } from "../../db/seed.ts";
 import type { ErrorBody } from "../../errors.ts";
 import type { Role } from "../../platform/auth.ts";
@@ -15,7 +15,7 @@ import { encodeCursor } from "../../platform/pagination.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
 import { pointsOf } from "../engagement/points.ts";
-import { sweepUnattachedPhotos } from "../media/service.ts";
+import { deleteUnreferencedMedia, drainMediaDeletions, sweepUnattachedPhotos } from "../media/service.ts";
 import { createFsStorage, type FsStorage } from "../media/storage-fs.ts";
 import { moderationRoutes } from "./routes.ts";
 import type { AdminMemory, OwnMemory, PublicMemory } from "./schemas.ts";
@@ -1000,7 +1000,7 @@ test("the sweep deletes a visitor's photo no memory uses after a day; attached, 
   assert.equal(await sweepUnattachedPhotos({ db, storage }), 0);
 });
 
-test("one failed object delete does not strand the rest of the sweep: every key is tried, then the run reports the failure", async () => {
+test("a failed sweep deletion survives in the outbox and a fresh worker retries it", async () => {
   const visitor = actor();
   const dayOld = new Date(Date.now() - 25 * 3_600_000);
   const photos = [await storedPhoto(visitor.id, { createdAt: dayOld }), await storedPhoto(visitor.id, { createdAt: dayOld }), await storedPhoto(visitor.id, { createdAt: dayOld })];
@@ -1015,9 +1015,17 @@ test("one failed object delete does not strand the rest of the sweep: every key 
         : Reflect.get(target, prop, receiver),
   });
 
-  await assert.rejects(sweepUnattachedPhotos({ db, storage: { uploads: storage.uploads, media: flaky } }), new RegExp(broken));
+  assert.ok(await sweepUnattachedPhotos({ db, storage: { uploads: storage.uploads, media: flaky } }) >= photos.length);
   for (const photo of photos.slice(1)) assert.ok(await photoGone(photo), photo.id);
-  assert.ok(await storage.media.head(broken), "the failed one is an orphaned object; its row is gone");
+  assert.ok(await storage.media.head(broken));
+  const [intent] = await db.select().from(mediaDeletions).where(eq(mediaDeletions.storageKey, broken));
+  assert.equal(intent?.attempts, 1);
+  assert.ok(intent!.nextAttemptAt > new Date(), "failed keys back off");
+  await db.update(mediaDeletions).set({ nextAttemptAt: new Date(0) }).where(eq(mediaDeletions.storageKey, broken));
+  assert.deepEqual(await drainMediaDeletions({ db, storage }, { keys: [broken] }), { deleted: 1, failed: 0 });
+  assert.equal(await storage.media.head(broken), null);
+  assert.deepEqual(await db.select().from(mediaDeletions).where(eq(mediaDeletions.storageKey, broken)), []);
+  assert.deepEqual(await drainMediaDeletions({ db, storage }, { keys: [broken] }), { deleted: 0, failed: 0 });
 });
 
 test("a removal that waited for a memory being attached to the same photo sees it after the wait and keeps the photo", async () => {
@@ -1058,4 +1066,46 @@ test("a removal that waited for a memory being attached to the same photo sees i
   assert.equal((await removal).statusCode, 204, "no foreign-key 500");
   assert.equal(await photoGone(photo), false, "the second memory still uses it");
   assert.equal((await db.select({ mediaId: memories.mediaId }).from(memories).where(eq(memories.id, "mem-race-second")))[0]?.mediaId, photo.id);
+});
+
+
+test("deletion intent is atomic with media removal and survives a process stopping after commit", async () => {
+  const photo = await storedPhoto(actor().id);
+  await assert.rejects(db.transaction(async (tx) => {
+    await deleteUnreferencedMedia(tx, [photo.id]);
+    throw new Error("rollback");
+  }), /rollback/);
+  assert.ok(await storage.media.head(photo.storageKey));
+  assert.equal((await db.select().from(media).where(eq(media.id, photo.id))).length, 1);
+  assert.deepEqual(await db.select().from(mediaDeletions).where(eq(mediaDeletions.storageKey, photo.storageKey)), []);
+  // Commit, then abandon the request entirely. A separately invoked worker needs no in-memory keys.
+  await db.transaction((tx) => deleteUnreferencedMedia(tx, [photo.id]));
+  assert.ok(await storage.media.head(photo.storageKey));
+  await drainMediaDeletions({ db, storage });
+  assert.ok(await photoGone(photo));
+});
+
+
+test("a successful DELETE retains failed storage work across replay and a later worker removes it", async () => {
+  const author = actor();
+  const photo = await storedPhoto(author.id);
+  const memory = await seedMemory({ status: "pending", authorId: author.id, mediaId: photo.id });
+  const original = app.deps.storage;
+  app.deps.storage = { uploads: storage.uploads, media: new Proxy(storage.media, {
+    get: (target, prop, receiver) => prop === "delete" ? async () => { throw new Error("503 storage unavailable"); } : Reflect.get(target, prop, receiver),
+  }) };
+  const key = { "idempotency-key": "delete-with-storage-outage" };
+  try {
+    const result = await remove(`/v1/me/memories/${memory}`, author, key);
+    assert.equal(result.statusCode, 204, result.body);
+    assert.equal((await remove(`/v1/me/memories/${memory}`, author, key)).statusCode, 204);
+  } finally {
+    app.deps.storage = original;
+  }
+  const pending = await db.select().from(mediaDeletions).where(eq(mediaDeletions.storageKey, photo.storageKey));
+  assert.equal(pending.length, 1, "replay cannot discard or duplicate the intent");
+  assert.ok(await storage.media.head(photo.storageKey));
+  await db.update(mediaDeletions).set({ nextAttemptAt: new Date(0) }).where(eq(mediaDeletions.storageKey, photo.storageKey));
+  await drainMediaDeletions({ db, storage });
+  assert.ok(await photoGone(photo));
 });

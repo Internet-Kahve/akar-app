@@ -97,6 +97,8 @@ Bekleyen altı kurumun betikteki adları:
 
 Dumbarton Oaks "CC BY-NC-SA bütün koleksiyona geçerli" derse durum `kullanilabilir` olur, not alanına lisansı yaz. ND/NC kuralları geçerli kalır.
 
-## Jüriye anlatım
+## Jüriye anlatım — 23 Ekim 2026 sayımına göre
 
-"Foto Atlas'taki 10.214 kaydın tamamını, sahibinin izniyle aldık. Lisansı açık olanları ve yaşı nedeniyle kamu malı olanları kullanıyoruz (4.579 kayıt). Telifli arşivler için altı kuruma izin talebi gönderdik, cevap bekliyoruz. Her görselde fotoğrafçı ve asıl arşiv yazılı. Uygulama veriyi kendi içinde tutuyor, Foto Atlas'a bağımlı değil."
+“Foto Atlas veri setindeki 10.214 kaydı kaynak ve izin durumlarıyla sınıflandırdık. Bu tablonun güncel sayımında 3.372 kayıt `kullanilabilir`, 1.892 kayıt `kullanilabilir-yas` olarak işaretli; ikinci grup bağımsız hukuki izin doğrulaması değildir. Bursa'daki 236 adaydan 56 benzersiz fotoğraf 17 esere bağlandı (65 eşleşme). Kaynak ve arşiv numarası her görselle korunuyor. İzin bekleyen ve kullanılamaz kayıtlar teslim paketine alınmıyor. Eser eşleştirmeleri ve taslak alt metinler yayın öncesinde içerik sorumlusu tarafından doğrulanacak.”
+
+Kurum yanıtları yukarıdaki tarihli tabloda izlenir; “altı kurumun tümünden yanıt bekleniyor” ifadesi güncel değildir. Teslim paketinin sayıları `cikti/gecmisi-gor.json` üzerinden yeniden hesaplanmalıdır.

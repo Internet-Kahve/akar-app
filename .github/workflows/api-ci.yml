@@ -21,6 +21,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/documents-context/
       - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .nvmrc

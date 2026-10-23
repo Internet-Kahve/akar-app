@@ -163,6 +163,8 @@ interface SiteDetailDto {
   cards: Array<{ mediaId: string }>;
   historyImages: Array<{ mediaId: string; presentMediaId: string | null }>;
   media: MediaDto[];
+  /** Explicit gallery relationship; absent on older API versions. */
+  photoIds?: string[];
   sources: SiteSource[];
 }
 interface CameraPoseDto {
@@ -303,8 +305,13 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
       ...d.historyImages.flatMap((h) => [h.mediaId, h.presentMediaId]),
     ].filter(present),
   );
+  const gallery = d.photoIds ? new Set(d.photoIds) : null;
   const photos = d.media
-    .filter((m) => m.kind === "photo" && (used.has(m.id) || !other.has(m.id)))
+    .filter(
+      (m) =>
+        m.kind === "photo" &&
+        (gallery ? gallery.has(m.id) : used.has(m.id) || !other.has(m.id)),
+    )
     .map(toPhoto);
   const model = d.media.find((m) => m.kind === "model");
   return {
@@ -542,8 +549,6 @@ interface UserState {
   queue: Memory[];
 }
 
-const MODERATION_STATUSES = ["pending", "approved", "rejected"] as const;
-
 export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const base = opts.baseUrl.replace(/\/+$/, "");
   const doFetch: typeof fetch = opts.fetch ?? ((...a) => fetch(...a));
@@ -768,20 +773,11 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         routesStale: boolean;
       }
     | undefined;
-  /** Draft routes with their stops: one list read, then one read per draft (drafts are few). */
-  const loadDraftRoutes = async () => {
-    const list = await pages<{ id: string }>("/v1/admin/routes", {
-      status: "draft",
-    });
-    return pool(list, CONCURRENCY, async ({ id }) =>
-      mapAdminRoute(
-        await call<AdminRouteDto>(
-          "GET",
-          `/v1/admin/routes/${encodeURIComponent(id)}`,
-        ),
-      ),
+  /** Each page includes ordered stops in bulk; no per-route detail requests. */
+  const loadDraftRoutes = async () =>
+    (await pages<AdminRouteDto>("/v1/admin/routes", { status: "draft" })).map(
+      mapAdminRoute,
     );
-  };
   const refreshDraftRoutes = async () => {
     if (!drafts) return;
     drafts.routesStale = true;
@@ -932,7 +928,11 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               body: { siteIds: merged },
             })
           ).siteIds;
-    writeLocal({ ...local, saved: [], route: [] });
+    writeLocal({
+      ...local,
+      saved: [],
+      route: local.route.filter((id) => !nextRoute.includes(id)),
+    });
     // The passport lists saved sites newest first.
     return { saved: [...added.reverse(), ...saved], route: nextRoute };
   }
@@ -989,23 +989,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       },
     );
     const name = me.displayName ?? "Gezgin";
-    // The panel has "Bekleyen", "Onaylanan" and "Reddedilen" tabs, so all three lists are read. The pending
-    // list also carries reported approved memories, which the approved list repeats: one entry per id.
+    // Only the first pending page belongs to the snapshot. Other tabs and older pages are requested on demand.
     const queue =
       me.role === "moderator" || me.role === "admin"
-        ? [
-            ...new Map(
-              (
-                await Promise.all(
-                  MODERATION_STATUSES.map((status) =>
-                    pages<MemoryDto>("/v1/admin/memories", { status }),
-                  ),
-                )
-              )
-                .flat()
-                .map((m) => [m.id, m]),
-            ).values(),
-          ]
+        ? (
+            await call<{ items: MemoryDto[] }>("GET", "/v1/admin/memories", {
+              query: { status: "pending", limit: 25 },
+              cache: "no-store",
+            })
+          ).items
         : [];
     const solved = await pool(
       passport.quizzesSolved,
@@ -1086,6 +1078,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       ),
       savedIds: user.savedIds.filter((id) => published.has(id)),
       routeIds: user.routeIds.filter((id) => published.has(id)),
+      pendingRouteCount: user.signedIn ? local.route.length : 0,
       visitedIds: user.visitedIds,
       readIds: user.readIds,
       quizIds: user.quizIds,
@@ -1180,6 +1173,32 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
    * open, so a second save of a new site or route updates the record instead of creating another.
    */
   const createdIds = new Map<string, string>();
+  // Keep completed uploads across failed later steps, scoped to the authenticated session and file content.
+  const completedUploads = new Map<string, { src: string; id: string }>();
+  let uploadsToken: string | null = null;
+  async function editorUpload(
+    key: string,
+    kind: "photo" | "model",
+    src: string,
+    metadata: Record<string, unknown>,
+  ) {
+    const currentToken = await token();
+    if (currentToken !== uploadsToken) {
+      completedUploads.clear();
+      uploadsToken = currentToken;
+    }
+    const cached = completedUploads.get(key);
+    if (cached?.src === src) {
+      // Metadata may have changed after a partially successful save.
+      await call("PATCH", `/v1/admin/media/${encodeURIComponent(cached.id)}`, {
+        body: metadata,
+      });
+      return cached.id;
+    }
+    const id = await uploadMedia(kind, src, metadata);
+    completedUploads.set(key, { src, id });
+    return id;
+  }
 
   async function updateSite(input: HeritageSite) {
     validateSite(input);
@@ -1301,7 +1320,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     for (const p of photos) {
       const old = oldPhotos.get(p.id);
       if (p.src.startsWith("data:"))
-        uploaded.set(p.id, await uploadMedia("photo", p.src, photoMetadata(p)));
+        uploaded.set(
+          p.id,
+          await editorUpload(
+            `${site.id}:photo:${p.id}`,
+            "photo",
+            p.src,
+            photoMetadata(p),
+          ),
+        );
       // A photo is shared: its details change wherever it is used (as the "photo" command does).
       else if (old && !same(photoMetadata(p), photoMetadata(old)))
         await call("PATCH", `/v1/admin/media/${encodeURIComponent(p.id)}`, {
@@ -1316,7 +1343,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         await call("PUT", `${path}/model`, { body: { mediaId: null } });
       } else if (model.src.startsWith("data:")) {
         // The opening camera belongs to the old model; a new one starts without it.
-        const id = await uploadMedia("model", model.src, {
+        const id = await editorUpload(`${site.id}:model`, "model", model.src, {
           title: model.name,
           license: CONTRIBUTOR_LICENSE,
           trust: model.trust,
@@ -1655,10 +1682,33 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     `/v1/quizzes/${encodeURIComponent(quizId)}`;
   return {
     getSnapshot: () => enqueue(() => build(true)),
+    getModerationPage: (status, cursor) =>
+      enqueue(async () => {
+        const page = await call<{
+          items: MemoryDto[];
+          nextCursor: string | null;
+        }>("GET", "/v1/admin/memories", {
+          query: { status, limit: 25, ...(cursor && { cursor }) },
+          cache: "no-store",
+        });
+        return {
+          items: page.items.map((m) => mapMemory(m, m.authorName ?? "Gezgin")),
+          nextCursor: page.nextCursor,
+        };
+      }),
     dispatch: (command) =>
       enqueue(async () => {
         const reload = await run(command);
         return build(reload);
+      }),
+    saveSite: (input) =>
+      enqueue(async () => {
+        await run({ type: "site", site: input });
+        const snapshot = await build(false);
+        const id = createdIds.get(input.id) ?? input.id;
+        const site = snapshot.sites.find((s) => s.id === id);
+        if (!site) throw new Error("Kaydedilen eser yeniden okunamadı.");
+        return { site, snapshot };
       }),
     reset: () =>
       enqueue(() => {

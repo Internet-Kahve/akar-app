@@ -58,12 +58,14 @@ export function SiteEditor({
   catalogRoutes = routes,
   onClose,
   onSave,
+  live,
 }: {
   site: HeritageSite;
   sites: HeritageSite[];
   catalogRoutes?: typeof routes;
   onClose: () => void;
-  onSave: (s: HeritageSite) => Promise<boolean>;
+  onSave: (s: HeritageSite) => Promise<HeritageSite>;
+  live: boolean;
 }) {
   const [draft, setDraft] = useState(() => prepareSite(site));
   const [step, setStep] = useState(0),
@@ -136,19 +138,25 @@ export function SiteEditor({
       source: sources.map((s) => s.title).join(" · "),
     };
     try {
-      if (await onSave(next)) {
-        setDraft(next);
-        setBaseline(JSON.stringify(next));
-        setSaved(
-          status === "published"
+      const canonical = await onSave(next);
+      setDraft(canonical);
+      setBaseline(JSON.stringify(canonical));
+      setSaved(
+        live
+          ? canonical.status === "published"
+            ? "Eser yayında."
+            : "Taslak sunucuya kaydedildi."
+          : canonical.status === "published"
             ? "Eser demo keşfinde yayında."
             : "Taslak bu tarayıcıya kaydedildi.",
-        );
-        if (exit) onClose();
-      } else
-        setError(
-          "Kayıt yapılamadı. Tarayıcı depolamasını kontrol et; büyük model veya fotoğrafları azalt. Değişikliklerin bu ekranda duruyor.",
-        );
+      );
+      if (exit) onClose();
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Kayıt yapılamadı. Değişikliklerin bu ekranda duruyor.",
+      );
     } finally {
       setBusy(false);
     }

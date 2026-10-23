@@ -68,3 +68,15 @@ export const mediaUploads = pgTable(
   },
   (t) => [index("media_uploads_owner_idx").on(t.ownerId, t.createdAt)],
 );
+
+/** Durable deletion intent, committed with removal of the media row. No FK: the row is already gone. */
+export const mediaDeletions = pgTable(
+  "media_deletions",
+  {
+    storageKey: text("storage_key").primaryKey(),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("media_deletions_due_idx").on(t.nextAttemptAt)],
+);

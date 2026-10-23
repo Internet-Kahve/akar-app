@@ -35,3 +35,6 @@ blob-report/
 Thumbs.db
 Desktop.ini
 .idea/
+
+# Generated from the locked MapLibre package by predev/prebuild.
+/apps/web/public/maplibre/

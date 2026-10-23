@@ -413,6 +413,7 @@ test("detail returns sections, cards and archive images, and every media and sou
   const { res, body } = await get<SiteDetail>("/v1/sites/iznik-han");
   assert.equal(res.statusCode, 200);
   // Inserted out of order: sections and archive images follow their position.
+  assert.deepEqual(body.photoIds, [], "card/history references are separate from the gallery");
   assert.deepEqual(body.sections.map((s) => s.id), ["sec-history", "sec-arch", "sec-waqf"]);
   assert.deepEqual(body.historyImages.map((h) => h.id), ["hist-1", "hist-2"]);
   // Three sentences share two cards: each is listed once, in the order the story first uses it.

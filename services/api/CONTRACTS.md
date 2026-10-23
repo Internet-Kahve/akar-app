@@ -13,7 +13,7 @@ Her modül `src/modules/<modül>/` altında yaşar: `routes.ts` (Fastify eklenti
 | platform | `src/platform/` | `schema/platform.ts`, `schema/shared.ts` | `idempotency_keys`, `audit_log`; ortak enum ve tipler |
 | catalog (okuma) | `modules/catalog/` | `schema/catalog.ts` | sözlük tabloları (`role_categories`, `site_types`, `periods`), `cities`, `regions`, `sources`, `sites`, `site_*`, `cards`, `story_blocks`, `history_images` |
 | routes (okuma) | `modules/routes/` | `schema/routes.ts` | `catalog_routes`, `route_stops`, `quizzes`, `quiz_answers` |
-| media | `modules/media/` | `schema/media.ts` | `media`, `media_uploads` |
+| media | `modules/media/` | `schema/media.ts` | `media`, `media_uploads`, `media_deletions` |
 | ingest | `modules/ingest/` | yok | catalog `drafts.ts` üzerinden yazar |
 | identity | `modules/identity/` | `schema/identity.ts` | `staff_members`, `staff_invites`, `profiles` |
 | admin-catalog | `modules/admin-catalog/` | `schema/admin-catalog.ts` | `import_jobs`; ayrıca catalog ve routes tablolarının **yazma** tarafı |
@@ -27,7 +27,7 @@ Kurallar:
 - Bir modül başka modülün tablosuna **yazmaz**; dışa açılmış servis fonksiyonunu çağırır. Tek istisna: `admin-catalog` içerik tablolarının yazarıdır (catalog/routes yalnız okur).
 - Okuma sorguları yayın kapısını atlamamak koşuluyla başka modülün tablosuna `join` yapabilir (örnek: catalog → `media`).
 - `app.ts`, `server.ts`, `src/db/schema/index.ts`, `drizzle/`, `package.json`, `src/config.ts`, `src/platform/*`, `src/test/harness.ts` ve `CONTRACTS.md` ortak dosyalardır; backend sorumlusu düzenler. Yeni modül, kayıt satırını (`MODULES` listesine eklenecek eklenti) ve bağımlılık ihtiyacını PR açıklamasında belirtir. Kayıtlı modüller: health, catalog, routes, identity, media, admin-catalog (sites, routes-editor, imports, reports), moderation, admin-health, engagement, settings.
-- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0008` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`, `0008` `user_route_stops`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
+- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0009` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`, `0008` `user_route_stops`, `0009` `media_deletions`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
 - Modül eklentisi `FastifyPluginAsyncZod` döner ve kendi `routes.ts` dosyasından dışa açılır. Testler eklentiyi `startTestApp({ register: [xxxRoutes] })` ile yükler; modül `MODULES`'a eklendiğinde aynı test değişmeden çalışır.
 
 ### Çalışma zamanı bağımlılıkları (`app.deps`)
@@ -57,7 +57,7 @@ Gerekli bağımlılık `null` ise uç `503 SERVICE_UNAVAILABLE` döner, sahte da
 | `recordPointEvent`, `pointsOf`, `POINT_ACTIONS`, `takeBackMemoryPoints` | `modules/engagement/points.ts` | Puan defteri; kalkan onaylı anının puanını bir kez geri alma |
 | `idempotent`, `idempotencyKeyOf` | `platform/idempotency.ts` | Tekrar güvenli mutasyon |
 | `expireUploads` | `modules/media/service.ts` | Süresi dolmuş yüklemelerin `uploads` kovasındaki nesnelerini temizler (`server.ts`, 15 dk) |
-| `deleteUnreferencedMedia`, `deleteMediaObjects`, `MEDIA_REFERENCES` | `modules/media/service.ts` | Hiçbir tablonun kullanmadığı medya satırını işlem içinde siler, nesnesini işlem bittikten sonra kovadan siler |
+| `deleteUnreferencedMedia`, `deleteMediaObjects`, `drainMediaDeletions`, `MEDIA_REFERENCES` | `modules/media/service.ts` | Hiçbir tablonun kullanmadığı medya satırını işlem içinde siler, nesnesini işlem bittikten sonra kovadan siler |
 | `sweepUnattachedPhotos` | `modules/media/service.ts` | Ziyaretçinin 24 saattir hiçbir yerde kullanılmayan fotoğrafını siler (`server.ts`, 15 dk) |
 | `recordAudit` | `platform/audit.ts` | Audit kaydı |
 | `requireUser`, `requireRole` | `platform/auth.ts` | Yetki kontrolü |
@@ -124,7 +124,7 @@ return idempotent(app.deps.db, req, req.user!.id, async (tx) => {
 - Anahtar aktöre göre kapsamlıdır (`actorId`; misafir için `guest:<cihazId>`). Aynı anahtar + aynı gövde: ilk yanıt tekrar döner, iş yeniden çalışmaz. Aynı anahtar + farklı istek: 422.
 - 5xx yanıtlar saklanmaz. Atılan `AppError` işlemi geri alır, anahtar kaydedilmez. Gövdesiz yanıt (204) JSON `null` olarak saklanır.
 - Kayıtlar 24 saat yaşar (`IDEMPOTENCY_TTL_HOURS`); `purgeIdempotencyKeys` (`server.ts`, 15 dakikada bir) eskilerini siler. Saklanan yanıtlardaki kişisel veri (örn. silinen anının metni) böylece kalıcı olmaz; 24 saatten sonra aynı anahtarla tekrar istek yeni istek sayılır.
-- Depolamadaki nesneyi silen mutasyon nesneyi işlem tamamlandıktan sonra siler (örnek: `moderation/routes.ts` `removing`): silme başarısız olursa sahipsiz nesne kalır, olmayan nesneyi gösteren satır kalmaz.
+- Depolamadaki nesneyi silen mutasyon nesneyi işlem tamamlandıktan sonra siler (örnek: `moderation/routes.ts` `removing`): silme niyeti aynı DB işleminde `media_deletions` tablosuna yazılır. Silme başarısız olursa anahtar kalır; başlangıçta ve 30 saniyede bir çalışan işçi artan bekleme süresiyle yeniden dener. Başarılı veya zaten olmayan nesne silmelerinde niyet kaldırılır.
 
 ## 5. Audit
 

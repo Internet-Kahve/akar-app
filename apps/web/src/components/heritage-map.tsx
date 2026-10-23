@@ -46,9 +46,10 @@ export function HeritageMap({
   useEffect(() => {
     let disposed = false;
     import("maplibre-gl")
-      .then(({ default: lib }) => {
+      .then((lib) => {
         if (disposed || !container.current) return;
         try {
+          lib.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
           const m = new lib.Map({
             container: container.current,
             center: demoRegion.center,
@@ -83,7 +84,7 @@ export function HeritageMap({
     const m = map.current;
     if (!loaded || !m) return;
     let cancelled = false;
-    import("maplibre-gl").then(({ default: lib }) => {
+    import("maplibre-gl").then((lib) => {
       if (cancelled) return;
       markers.current.forEach((marker) => marker.remove());
       markers.current = sites.map((site) => {
