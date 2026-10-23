@@ -79,6 +79,8 @@ const CONTRIBUTOR_LICENSE = "Katkı sahibi izniyle";
 /** A new model's part names come from a server job: polled this often, this long apart (~20 s). */
 const MODEL_PARTS_ATTEMPTS = 20;
 const MODEL_PARTS_WAIT_MS = 1000;
+/** Most stops "Rotam" may hold (`MY_ROUTE_MAX` server-side). */
+const MY_ROUTE_MAX = 100;
 /** Points the server awards per receipt action (CONTRACTS §6); used only to show pending guest points. */
 const receiptPoints: Record<string, number> = {
   "story.complete": 15,
@@ -528,6 +530,8 @@ interface UserState {
   role: MeDto["role"];
   name: string;
   savedIds: string[];
+  /** "Rotam": the account's when signed in, the device's for a guest. */
+  routeIds: string[];
   readIds: string[];
   visitedIds: string[];
   quizIds: string[];
@@ -890,6 +894,49 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       });
   };
 
+  /**
+   * Moves the device's saved sites and "Rotam" into the account after sign-in (§11.30), then clears them
+   * locally. Saves the account lacks are added one by one (a site unpublished since is skipped); the
+   * device's stops follow the account's, each once, up to the limit. Returns the account's lists after it.
+   */
+  async function adoptLocal(
+    cat: Catalog,
+    saved: string[],
+    route: string[],
+  ): Promise<{ saved: string[]; route: string[] }> {
+    if (!local.saved.length && !local.route.length) return { saved, route };
+    const published = new Set(cat.sites.map((s) => s.id));
+    const added = (
+      await pool(
+        local.saved.filter((id) => !saved.includes(id)),
+        CONCURRENCY,
+        async (id) => {
+          try {
+            await call("PUT", `/v1/me/saved/${encodeURIComponent(id)}`);
+            return id;
+          } catch (e) {
+            if (e instanceof ApiError && e.status === 404) return null;
+            throw e;
+          }
+        },
+      )
+    ).filter((id): id is string => id !== null);
+    const merged = [
+      ...new Set([...route, ...local.route.filter((id) => published.has(id))]),
+    ].slice(0, MY_ROUTE_MAX);
+    const nextRoute =
+      merged.length === route.length
+        ? route
+        : (
+            await call<{ siteIds: string[] }>("PUT", "/v1/me/route", {
+              body: { siteIds: merged },
+            })
+          ).siteIds;
+    writeLocal({ ...local, saved: [], route: [] });
+    // The passport lists saved sites newest first.
+    return { saved: [...added.reverse(), ...saved], route: nextRoute };
+  }
+
   // ── user state ─────────────────────────────────────────────────────────────
   let user: UserState | undefined;
   async function loadUserOnce(cat: Catalog): Promise<UserState> {
@@ -918,6 +965,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         role: "user",
         name: "Gezgin",
         savedIds: local.saved,
+        routeIds: local.route,
         readIds: subjects("story.complete"),
         visitedIds: subjects("visit.verified"),
         quizIds: quizSites,
@@ -926,11 +974,20 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         queue: [],
       };
     }
-    const [me, passport, own] = await Promise.all([
+    const [me, passport, own, account] = await Promise.all([
       call<MeDto>("GET", "/v1/me"),
       call<PassportDto>("GET", "/v1/me/passport"),
       pages<MemoryDto>("/v1/me/memories"),
+      call<{ siteIds: string[] }>("GET", "/v1/me/route"),
     ]);
+    // A failed move keeps the device's lists; it is retried on the next load. A rejected token is not a
+    // failed move: `loadUser` continues as a guest.
+    const lists = await adoptLocal(cat, passport.saved, account.siteIds).catch(
+      (e: unknown) => {
+        if (e instanceof ApiError && e.status === 401) throw e;
+        return { saved: passport.saved, route: account.siteIds };
+      },
+    );
     const name = me.displayName ?? "Gezgin";
     // The panel has "Bekleyen", "Onaylanan" and "Reddedilen" tabs, so all three lists are read. The pending
     // list also carries reported approved memories, which the approved list repeats: one entry per id.
@@ -968,7 +1025,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       signedIn: true,
       role: me.role,
       name,
-      savedIds: passport.saved,
+      savedIds: lists.saved,
+      routeIds: lists.route,
       readIds: union(passport.read, subjects("story.complete")),
       visitedIds: union(passport.visited, subjects("visit.verified")),
       quizIds: union(solved, quizSites),
@@ -1027,7 +1085,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         (m) => published.has(m.siteId) && !own.has(m.id),
       ),
       savedIds: user.savedIds.filter((id) => published.has(id)),
-      routeIds: local.route.filter((id) => published.has(id)),
+      routeIds: user.routeIds.filter((id) => published.has(id)),
       visitedIds: user.visitedIds,
       readIds: user.readIds,
       quizIds: user.quizIds,
@@ -1409,6 +1467,19 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     await refreshDraftRoutes();
   }
 
+  /** Replaces "Rotam": the account's (one PUT, the server's answer is kept) or the device's for a guest. */
+  async function setRoute(siteIds: string[]) {
+    if (await token()) {
+      const res = await call<{ siteIds: string[] }>("PUT", "/v1/me/route", {
+        body: { siteIds },
+      });
+      user!.routeIds = res.siteIds;
+      return;
+    }
+    writeLocal({ ...local, route: siteIds });
+    user!.routeIds = siteIds;
+  }
+
   async function run(command: Command): Promise<boolean> {
     const cat = await loadCatalog();
     user = await ensureUser(cat);
@@ -1430,21 +1501,21 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         });
         return true;
       }
-      case "route": {
-        const desired = !local.route.includes(command.siteId);
-        writeLocal({
-          ...local,
-          route: toggled(local.route, command.siteId, desired),
-        });
+      case "route":
+        await setRoute(
+          toggled(
+            user.routeIds,
+            command.siteId,
+            !user.routeIds.includes(command.siteId),
+          ),
+        );
         return false;
-      }
       case "set-route":
-        writeLocal({
-          ...local,
-          route: [...new Set(command.siteIds)].filter((id) =>
+        await setRoute(
+          [...new Set(command.siteIds)].filter((id) =>
             cat.sites.some((s) => s.id === id),
           ),
-        });
+        );
         return false;
       case "read": {
         if (user.readIds.includes(command.siteId)) return false;
