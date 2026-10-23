@@ -7,7 +7,7 @@ import { createGeocoder, createNominatim, loadOverpassPlaces, osmMatcher, overpa
 import { DEFAULT_DATASET_REF, geocodeCacheFile, presentDistricts, readDatasetFile } from "./network-geocoder.ts";
 import { commitImport, formatReport, planImport } from "./service.ts";
 
-// npm run ingest -- --city bursa [--dry-run] [--offline] [--include-toc] [--verbose] [--data <dir>] [--ref origin/docs]
+// npm run ingest -- --city bursa [--dry-run] [--offline] [--include-toc] [--verbose] [--data <dir>] [--ref origin/main]
 const { values } = parseArgs({
   options: {
     city: { type: "string" },
