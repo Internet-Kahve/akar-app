@@ -2171,6 +2171,7 @@ input[type="checkbox"] {
   margin: 15px 0 22px;
 }
 .table-wrap {
+  position: relative;
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: 14px;

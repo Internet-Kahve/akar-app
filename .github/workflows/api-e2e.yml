@@ -52,9 +52,11 @@ jobs:
           cat /tmp/akar-api.log
           exit 1
       - run: npm run test:e2e:api
-      - name: API log on failure
+      - name: API and database logs on failure
         if: failure()
-        run: cat /tmp/akar-api.log 2>/dev/null || true
+        run: |
+          cat /tmp/akar-api.log 2>/dev/null || true
+          docker compose -f services/api/docker-compose.yml logs --no-color db || true
       - name: Stop disposable services
         if: always()
         working-directory: services/api
