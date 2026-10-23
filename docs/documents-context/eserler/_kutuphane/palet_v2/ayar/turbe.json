@@ -1,0 +1,190 @@
+{
+ "eser": "turbe",
+ "dir": "orhan-gazi-turbesi",
+ "base": "orhan-gazi-turbesi",
+ "from": "v01",
+ "to": "v02",
+ "ymin": 0,
+ "ymax": 15.498000144958496,
+ "duz": [],
+ "nodes": [
+  "Cati_Etek",
+  "Giris_Holu",
+  "Govde",
+  "Kapi",
+  "Kasnak",
+  "Kubbe",
+  "Pencereler",
+  "Pilastr_Silme"
+ ],
+ "materials": {
+  "Kursun": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-gazi-turbesi/3d/build/doku_palet_v2/Kursun_palet_v2.png",
+   "lead": true
+  },
+  "Cephe_Krem": {
+   "hex": "#E8DFCB",
+   "alpha": 1,
+   "lin": [
+    0.8069522576692516,
+    0.7379104087727308,
+    0.5972017883637634,
+    1
+   ],
+   "rough": 0.800000011920929,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Ahsap_Koyu": {
+   "hex": "#6B4A3A",
+   "alpha": 1,
+   "lin": [
+    0.14702726649759498,
+    0.06847816984440017,
+    0.042311410620809675,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Hol_Cam": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-gazi-turbesi/3d/build/doku_palet_v2/Hol_Cam_palet_v2.png",
+   "lead": false
+  },
+  "Pencere_Bosluk": {
+   "hex": "#5A6672",
+   "alpha": 1,
+   "lin": [
+    0.10224173308810132,
+    0.13286832155381798,
+    0.16826940018969075,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sove_Tas": {
+   "hex": "#D5D6D2",
+   "alpha": 1,
+   "lin": [
+    0.665387298282272,
+    0.6724431569576875,
+    0.6444796819705821,
+    1
+   ],
+   "rough": 0.6000000238418579,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Mermer": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Ahsap_Kapi": {
+   "hex": "#7A5134",
+   "alpha": 1,
+   "lin": [
+    0.1946178304415758,
+    0.0822827071298148,
+    0.03433980680868217,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Sebeke_Kapi": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.6000000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-gazi-turbesi/3d/build/doku_palet_v2/Sebeke_Kapi_palet_v2.png",
+   "lead": false
+  },
+  "Silme_Beyaz": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Alem": {
+   "hex": "#C9A13B",
+   "alpha": 1,
+   "lin": [
+    0.5840784178911641,
+    0.3564001441459435,
+    0.043735029256973465,
+    1
+   ],
+   "rough": 0.3499999940395355,
+   "metal": 0.6000000238418579,
+   "tex": null,
+   "lead": false
+  },
+  "Sebeke_Beyaz": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.6000000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-gazi-turbesi/3d/build/doku_palet_v2/Sebeke_Beyaz_palet_v2.png",
+   "lead": false
+  }
+ }
+}

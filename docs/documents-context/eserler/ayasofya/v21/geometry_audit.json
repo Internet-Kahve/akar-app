@@ -1,0 +1,1985 @@
+{
+  "vertices": 112585,
+  "triangles": 138033,
+  "boundary_edges": 74299,
+  "nonmanifold_edges": 74299,
+  "connected_components": 6965,
+  "largest_components_vertices": [
+    3073,
+    3073,
+    3073,
+    3073,
+    3073,
+    3073,
+    3073,
+    431,
+    388,
+    320,
+    319,
+    317,
+    292,
+    201,
+    197,
+    180,
+    180,
+    175,
+    175,
+    175
+  ],
+  "visible_crossing_segments": 2224,
+  "crossings": [
+    {
+      "triangles": [
+        96308,
+        97121
+      ],
+      "length_m": 17.549,
+      "center": [
+        -11.131807327270508,
+        -37.57710266113281,
+        8.777795791625977
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        128091,
+        128095
+      ],
+      "length_m": 14.131,
+      "center": [
+        21.646255493164062,
+        -64.67323303222656,
+        7.065663814544678
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray.001",
+        "Concrete_Block_8x8_Gray.001"
+      ]
+    },
+    {
+      "triangles": [
+        37519,
+        37540
+      ],
+      "length_m": 12.153,
+      "center": [
+        -14.266304016113281,
+        -67.15576171875,
+        8.026000022888184
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Kursun.001"
+      ]
+    },
+    {
+      "triangles": [
+        38575,
+        51863
+      ],
+      "length_m": 10.795,
+      "center": [
+        -34.369571685791016,
+        -55.71855926513672,
+        0.3599998354911804
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        99090,
+        117993
+      ],
+      "length_m": 9.012,
+      "center": [
+        33.93762969970703,
+        -0.22163891792297363,
+        20.99241065979004
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        111895,
+        130442
+      ],
+      "length_m": 8.25,
+      "center": [
+        64.66532135009766,
+        3.5721209049224854,
+        13.77556037902832
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray4.001"
+      ]
+    },
+    {
+      "triangles": [
+        117259,
+        129699
+      ],
+      "length_m": 7.466,
+      "center": [
+        -59.30086135864258,
+        21.94381332397461,
+        6.72891902923584
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray1.001",
+        "Metal_Aluminum_Anodized.001"
+      ]
+    },
+    {
+      "triangles": [
+        117250,
+        124126
+      ],
+      "length_m": 6.729,
+      "center": [
+        -47.2392463684082,
+        49.884151458740234,
+        3.364459276199341
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray1.001",
+        "Concrete_Stamped_Ashlar.001"
+      ]
+    },
+    {
+      "triangles": [
+        112470,
+        129096
+      ],
+      "length_m": 6.685,
+      "center": [
+        -61.88079071044922,
+        -0.5052759647369385,
+        19.081342697143555
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray3.001"
+      ]
+    },
+    {
+      "triangles": [
+        38593,
+        51869
+      ],
+      "length_m": 6.609,
+      "center": [
+        -36.394195556640625,
+        -54.419769287109375,
+        7.615999698638916
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Kursun.001"
+      ]
+    },
+    {
+      "triangles": [
+        97103,
+        111906
+      ],
+      "length_m": 6.071,
+      "center": [
+        -3.472522735595703,
+        -57.7463493347168,
+        7.920544624328613
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_004.001"
+      ]
+    },
+    {
+      "triangles": [
+        97926,
+        111907
+      ],
+      "length_m": 5.706,
+      "center": [
+        4.6140241622924805,
+        -63.14772033691406,
+        7.892517566680908
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_004.001"
+      ]
+    },
+    {
+      "triangles": [
+        115526,
+        129615
+      ],
+      "length_m": 5.271,
+      "center": [
+        28.961833953857422,
+        -64.07240295410156,
+        20.40802764892578
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "material_0.001",
+        "Concrete_Block_8x8_Gray3.001"
+      ]
+    },
+    {
+      "triangles": [
+        97927,
+        111907
+      ],
+      "length_m": 5.155,
+      "center": [
+        7.511269569396973,
+        -58.63132858276367,
+        8.727882385253906
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_004.001"
+      ]
+    },
+    {
+      "triangles": [
+        97458,
+        111906
+      ],
+      "length_m": 4.74,
+      "center": [
+        0.37772345542907715,
+        -63.77949142456055,
+        7.453625679016113
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_004.001"
+      ]
+    },
+    {
+      "triangles": [
+        97104,
+        111907
+      ],
+      "length_m": 4.622,
+      "center": [
+        -0.5305067300796509,
+        -53.16017150878906,
+        8.768817901611328
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_004.001"
+      ]
+    },
+    {
+      "triangles": [
+        38575,
+        51869
+      ],
+      "length_m": 4.498,
+      "center": [
+        -31.71973419189453,
+        -57.41841506958008,
+        7.615999698638916
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Kursun.001"
+      ]
+    },
+    {
+      "triangles": [
+        127925,
+        130452
+      ],
+      "length_m": 4.432,
+      "center": [
+        64.68234252929688,
+        -1.3395907878875732,
+        2.322049617767334
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray.001",
+        "Concrete_Block_8x8_Gray4.001"
+      ]
+    },
+    {
+      "triangles": [
+        98467,
+        128300
+      ],
+      "length_m": 3.994,
+      "center": [
+        32.060791015625,
+        -31.32369613647461,
+        0.6653364896774292
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Concrete_Block_8x8_Gray.001"
+      ]
+    },
+    {
+      "triangles": [
+        97460,
+        111906
+      ],
+      "length_m": 3.718,
+      "center": [
+        -3.5270485877990723,
+        -61.27459716796875,
+        7.453625679016113
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_004.001"
+      ]
+    },
+    {
+      "triangles": [
+        97022,
+        113275
+      ],
+      "length_m": 3.438,
+      "center": [
+        40.94839859008789,
+        -4.7190141677856445,
+        19.27330207824707
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "material_0.001"
+      ]
+    },
+    {
+      "triangles": [
+        52913,
+        94977
+      ],
+      "length_m": 3.35,
+      "center": [
+        -48.562355041503906,
+        -49.85657501220703,
+        12.100000381469727
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        52911,
+        94981
+      ],
+      "length_m": 3.35,
+      "center": [
+        -68.3844985961914,
+        -50.957275390625,
+        12.100000381469727
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        52912,
+        94979
+      ],
+      "length_m": 3.35,
+      "center": [
+        -57.923072814941406,
+        -60.31800079345703,
+        12.100000381469727
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        38587,
+        52252
+      ],
+      "length_m": 3.337,
+      "center": [
+        -39.13416290283203,
+        -53.49565124511719,
+        12.800000190734863
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        112473,
+        117455
+      ],
+      "length_m": 3.173,
+      "center": [
+        -68.04542541503906,
+        -3.574030876159668,
+        15.284744262695312
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray1.001"
+      ]
+    },
+    {
+      "triangles": [
+        111868,
+        129582
+      ],
+      "length_m": 3.167,
+      "center": [
+        28.75452423095703,
+        -60.49224090576172,
+        17.928081512451172
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray3.001"
+      ]
+    },
+    {
+      "triangles": [
+        24261,
+        37541
+      ],
+      "length_m": 3.078,
+      "center": [
+        -15.58273983001709,
+        -71.37364959716797,
+        8.185999870300293
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "V21_Siva.001",
+        "V21_Kursun.001"
+      ]
+    },
+    {
+      "triangles": [
+        111879,
+        128582
+      ],
+      "length_m": 2.998,
+      "center": [
+        -19.07685089111328,
+        57.11499786376953,
+        20.267620086669922
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray3.001"
+      ]
+    },
+    {
+      "triangles": [
+        23964,
+        129083
+      ],
+      "length_m": 2.931,
+      "center": [
+        -60.583248138427734,
+        -7.58755350112915,
+        20.27076530456543
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray3.001"
+      ]
+    },
+    {
+      "triangles": [
+        98423,
+        107982
+      ],
+      "length_m": 2.878,
+      "center": [
+        47.39241409301758,
+        12.702189445495605,
+        6.669304847717285
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        24244,
+        37541
+      ],
+      "length_m": 2.833,
+      "center": [
+        -17.855968475341797,
+        -69.85971069335938,
+        8.185999870300293
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "V21_Siva.001",
+        "V21_Kursun.001"
+      ]
+    },
+    {
+      "triangles": [
+        24243,
+        37529
+      ],
+      "length_m": 2.766,
+      "center": [
+        -15.568168640136719,
+        -71.39459991455078,
+        0.36000001430511475
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "V21_Siva.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        117260,
+        129761
+      ],
+      "length_m": 2.7,
+      "center": [
+        -52.7188606262207,
+        22.81833267211914,
+        6.72891902923584
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray1.001",
+        "Metal_Aluminum_Anodized.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118341
+      ],
+      "length_m": 2.663,
+      "center": [
+        15.561922073364258,
+        -6.532108306884766,
+        41.36876678466797
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        127910,
+        130449
+      ],
+      "length_m": 2.636,
+      "center": [
+        68.02763366699219,
+        6.316012382507324,
+        5.131744384765625
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray.001",
+        "Concrete_Block_8x8_Gray4.001"
+      ]
+    },
+    {
+      "triangles": [
+        117565,
+        118436
+      ],
+      "length_m": 2.603,
+      "center": [
+        -29.012529373168945,
+        23.941776275634766,
+        28.52169418334961
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        117565,
+        118438
+      ],
+      "length_m": 2.603,
+      "center": [
+        -30.754676818847656,
+        25.059356689453125,
+        28.52169418334961
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118254
+      ],
+      "length_m": 2.598,
+      "center": [
+        15.169076919555664,
+        6.69124698638916,
+        41.222023010253906
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118256
+      ],
+      "length_m": 2.598,
+      "center": [
+        16.67137908935547,
+        0.45473814010620117,
+        41.22201919555664
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118319
+      ],
+      "length_m": 2.59,
+      "center": [
+        -16.27765655517578,
+        -7.4866485595703125,
+        41.224281311035156
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118318
+      ],
+      "length_m": 2.59,
+      "center": [
+        -17.781953811645508,
+        -1.2417972087860107,
+        41.224281311035156
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118333
+      ],
+      "length_m": 2.575,
+      "center": [
+        4.714200496673584,
+        -16.819168090820312,
+        41.21015167236328
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118331
+      ],
+      "length_m": 2.575,
+      "center": [
+        2.2320914268493652,
+        -17.417076110839844,
+        41.21015167236328
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118347
+      ],
+      "length_m": 2.575,
+      "center": [
+        -3.3422937393188477,
+        16.62568473815918,
+        41.210201263427734
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118350
+      ],
+      "length_m": 2.575,
+      "center": [
+        -5.8242292404174805,
+        16.027812957763672,
+        41.210201263427734
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        38586,
+        52254
+      ],
+      "length_m": 2.559,
+      "center": [
+        -30.40359115600586,
+        -59.27302551269531,
+        12.800000190734863
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        98742,
+        117994
+      ],
+      "length_m": 2.454,
+      "center": [
+        33.49285888671875,
+        -6.402128219604492,
+        22.26049041748047
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        98673,
+        118002
+      ],
+      "length_m": 2.446,
+      "center": [
+        19.05297088623047,
+        -28.9196834564209,
+        22.260486602783203
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        112567,
+        117994
+      ],
+      "length_m": 2.423,
+      "center": [
+        30.1744384765625,
+        -5.140899658203125,
+        22.43062973022461
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "material_0.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        98423,
+        107985
+      ],
+      "length_m": 2.382,
+      "center": [
+        48.39469909667969,
+        12.059226036071777,
+        5.230207443237305
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118258
+      ],
+      "length_m": 2.369,
+      "center": [
+        12.73161792755127,
+        10.612184524536133,
+        41.30047607421875
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118308
+      ],
+      "length_m": 2.369,
+      "center": [
+        16.28665542602539,
+        -4.146026134490967,
+        41.30047607421875
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        117555,
+        118442
+      ],
+      "length_m": 2.363,
+      "center": [
+        -36.219146728515625,
+        16.36398696899414,
+        28.55991554260254
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118316
+      ],
+      "length_m": 2.362,
+      "center": [
+        -17.396236419677734,
+        3.3580942153930664,
+        41.302085876464844
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118321
+      ],
+      "length_m": 2.362,
+      "center": [
+        -13.839691162109375,
+        -11.406332015991211,
+        41.302085876464844
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118335
+      ],
+      "length_m": 2.35,
+      "center": [
+        8.694329261779785,
+        -14.962003707885742,
+        41.25702667236328
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118329
+      ],
+      "length_m": 2.35,
+      "center": [
+        -2.1571083068847656,
+        -17.57596206665039,
+        41.25702667236328
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118345
+      ],
+      "length_m": 2.35,
+      "center": [
+        1.0469324588775635,
+        16.784629821777344,
+        41.2570686340332
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118352
+      ],
+      "length_m": 2.35,
+      "center": [
+        -9.8043851852417,
+        14.170680046081543,
+        41.2570686340332
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        127925,
+        127985
+      ],
+      "length_m": 2.332,
+      "center": [
+        49.95330810546875,
+        -24.300045013427734,
+        1.58981192111969
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray.001",
+        "Concrete_Block_8x8_Gray.001"
+      ]
+    },
+    {
+      "triangles": [
+        38583,
+        52249
+      ],
+      "length_m": 2.309,
+      "center": [
+        -48.35350799560547,
+        -62.339385986328125,
+        12.800000190734863
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        38584,
+        52247
+      ],
+      "length_m": 2.309,
+      "center": [
+        -39.60064697265625,
+        -72.06486511230469,
+        12.800000190734863
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        98467,
+        128319
+      ],
+      "length_m": 2.299,
+      "center": [
+        32.907073974609375,
+        -31.27303695678711,
+        7.375710964202881
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Concrete_Block_8x8_Gray.001"
+      ]
+    },
+    {
+      "triangles": [
+        117260,
+        129723
+      ],
+      "length_m": 2.213,
+      "center": [
+        -51.218631744384766,
+        26.952735900878906,
+        6.72891902923584
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray1.001",
+        "Metal_Aluminum_Anodized.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118336
+      ],
+      "length_m": 2.185,
+      "center": [
+        10.527408599853516,
+        -13.628055572509766,
+        41.30359649658203
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118330
+      ],
+      "length_m": 2.185,
+      "center": [
+        -4.396561622619629,
+        -17.223020553588867,
+        41.30359649658203
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118346
+      ],
+      "length_m": 2.185,
+      "center": [
+        3.286388874053955,
+        16.431682586669922,
+        41.303627014160156
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118351
+      ],
+      "length_m": 2.185,
+      "center": [
+        -11.637489318847656,
+        12.836729049682617,
+        41.303627014160156
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118315
+      ],
+      "length_m": 2.173,
+      "center": [
+        -17.74917984008789,
+        1.118640661239624,
+        41.25560760498047
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118322
+      ],
+      "length_m": 2.173,
+      "center": [
+        -15.173654556274414,
+        -9.573241233825684,
+        41.25560760498047
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118259
+      ],
+      "length_m": 2.166,
+      "center": [
+        14.065560340881348,
+        8.779088973999023,
+        41.25358200073242
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118309
+      ],
+      "length_m": 2.166,
+      "center": [
+        16.639596939086914,
+        -1.9065701961517334,
+        41.25358200073242
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        111868,
+        129581
+      ],
+      "length_m": 2.163,
+      "center": [
+        26.52390480041504,
+        -59.061309814453125,
+        18.20682144165039
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray3.001"
+      ]
+    },
+    {
+      "triangles": [
+        52914,
+        94986
+      ],
+      "length_m": 2.117,
+      "center": [
+        -49.58734893798828,
+        -46.26901626586914,
+        12.100000381469727
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        52915,
+        94984
+      ],
+      "length_m": 1.962,
+      "center": [
+        -59.70669174194336,
+        -40.37322998046875,
+        12.100000381469727
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118334
+      ],
+      "length_m": 1.959,
+      "center": [
+        6.830096244812012,
+        -16.00508689880371,
+        41.22603225708008
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118111,
+        118332
+      ],
+      "length_m": 1.959,
+      "center": [
+        -0.022388100624084473,
+        -17.6557559967041,
+        41.22603225708008
+      ],
+      "views": [
+        "guneydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118348
+      ],
+      "length_m": 1.959,
+      "center": [
+        -1.0878150463104248,
+        16.864397048950195,
+        41.22608184814453
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118349
+      ],
+      "length_m": 1.959,
+      "center": [
+        -7.9401140213012695,
+        15.213750839233398,
+        41.22608184814453
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118310
+      ],
+      "length_m": 1.958,
+      "center": [
+        11.273868560791016,
+        12.185013771057129,
+        41.357173919677734
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118093,
+        118355
+      ],
+      "length_m": 1.956,
+      "center": [
+        -13.135135650634766,
+        11.434006690979004,
+        41.35798645019531
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        127909,
+        128344
+      ],
+      "length_m": 1.954,
+      "center": [
+        39.43406677246094,
+        -37.56950378417969,
+        5.131744384765625
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray.001",
+        "Concrete_Block_8x8_Gray.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118320
+      ],
+      "length_m": 1.945,
+      "center": [
+        -17.091720581054688,
+        -5.370763301849365,
+        41.20842742919922
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118094,
+        118317
+      ],
+      "length_m": 1.945,
+      "center": [
+        -17.543254852294922,
+        -3.496290683746338,
+        41.20842742919922
+      ],
+      "views": [
+        "kuzeybati",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118255
+      ],
+      "length_m": 1.936,
+      "center": [
+        15.983150482177734,
+        4.575350761413574,
+        41.206024169921875
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        118110,
+        118257
+      ],
+      "length_m": 1.936,
+      "center": [
+        16.43268394470215,
+        2.7092037200927734,
+        41.206024169921875
+      ],
+      "views": [
+        "guneydogu",
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_007.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        98725,
+        118002
+      ],
+      "length_m": 1.913,
+      "center": [
+        20.585189819335938,
+        -28.796096801757812,
+        22.477493286132812
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Color_A03.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        111879,
+        128580
+      ],
+      "length_m": 1.848,
+      "center": [
+        -19.04877281188965,
+        58.87004089355469,
+        20.127212524414062
+      ],
+      "views": [
+        "kuzeydogu"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Concrete_Block_8x8_Gray3.001"
+      ]
+    },
+    {
+      "triangles": [
+        52915,
+        94997
+      ],
+      "length_m": 1.829,
+      "center": [
+        -61.480796813964844,
+        -40.73451232910156,
+        12.100000381469727
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "V21_Mermer.001",
+        "V21_Mermer.001"
+      ]
+    },
+    {
+      "triangles": [
+        22404,
+        95638
+      ],
+      "length_m": 1.794,
+      "center": [
+        -33.64418029785156,
+        -1.1799315214157104,
+        22.078664779663086
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        22395,
+        95638
+      ],
+      "length_m": 1.794,
+      "center": [
+        -32.138702392578125,
+        -2.1456894874572754,
+        22.078664779663086
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        21738,
+        117681
+      ],
+      "length_m": 1.788,
+      "center": [
+        -36.08156204223633,
+        5.740963459014893,
+        25.531309127807617
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_007.001"
+      ]
+    },
+    {
+      "triangles": [
+        127910,
+        130453
+      ],
+      "length_m": 1.783,
+      "center": [
+        63.469215393066406,
+        -0.5613738894462585,
+        5.131744384765625
+      ],
+      "views": [
+        "guneydogu"
+      ],
+      "materials": [
+        "Concrete_Block_8x8_Gray.001",
+        "Concrete_Block_8x8_Gray4.001"
+      ]
+    },
+    {
+      "triangles": [
+        22385,
+        95638
+      ],
+      "length_m": 1.779,
+      "center": [
+        -30.65827178955078,
+        -3.0953803062438965,
+        21.799354553222656
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        22411,
+        95638
+      ],
+      "length_m": 1.779,
+      "center": [
+        -35.124610900878906,
+        -0.23024089634418488,
+        21.799354553222656
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        23524,
+        97726
+      ],
+      "length_m": 1.779,
+      "center": [
+        -0.7236414551734924,
+        43.56842803955078,
+        21.799354553222656
+      ],
+      "views": [
+        "kuzeydogu",
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        22420,
+        95638
+      ],
+      "length_m": 1.75,
+      "center": [
+        -36.53072738647461,
+        0.6717754602432251,
+        21.250030517578125
+      ],
+      "views": [
+        "guneybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        23555,
+        96224
+      ],
+      "length_m": 1.75,
+      "center": [
+        -16.574310302734375,
+        31.780975341796875,
+        21.250030517578125
+      ],
+      "views": [
+        "kuzeydogu",
+        "kuzeybati"
+      ],
+      "materials": [
+        "Color_004.001",
+        "Color_A03.001"
+      ]
+    },
+    {
+      "triangles": [
+        114296,
+        129696
+      ],
+      "length_m": 1.735,
+      "center": [
+        -53.898860931396484,
+        18.478452682495117,
+        14.417219161987305
+      ],
+      "views": [
+        "kuzeybati"
+      ],
+      "materials": [
+        "material_0.001",
+        "Metal_Aluminum_Anodized.001"
+      ]
+    }
+  ]
+}

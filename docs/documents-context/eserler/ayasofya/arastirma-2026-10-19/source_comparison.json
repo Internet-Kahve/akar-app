@@ -1,0 +1,16 @@
+{
+  "old_reference_to_v20": {
+    "samples": 5103,
+    "median_m": 1.9073486328125e-06,
+    "p95_m": 8.529922524758149e-06,
+    "maximum_m": 3.4596170735312626e-05,
+    "within_1mm_percent": 100.0
+  },
+  "v20_to_old_reference": {
+    "samples": 5462,
+    "median_m": 1.9073486328125e-06,
+    "p95_m": 7.921813448774628e-06,
+    "maximum_m": 1.714335667202249e-05,
+    "within_1mm_percent": 100.0
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "roof_triangles": 3669,
+  "projected_overlap_pairs_over_1e_minus_6_m2": 289,
+  "crossings_over_1mm": 0,
+  "scope": "Only rebuilt roof surface; excludes vertical fascias, facades, ornaments and other parts."
+}

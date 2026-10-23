@@ -1,0 +1,447 @@
+{
+  "aciklama": "Ulu Cami ref/foto/, ref/plan/, ref/metin/ altındaki kaynak türevlerinin kaydı. PDF sayfaları 1 tabanlıdır. 18 Ekim 2026'da yeni_kaynak/ bu klasörlere dağıtıldı; taşıma SHA-256 ile doğrulandı. Kaynak PDF'ler veri/ altında yerinde durur. 18 Ekim'de ref-* klasörleri ref/ altında birleştirildi (SHA-256 doğrulandı). Yollar ulu-cami/ klasörüne göredir.",
+  "kayitlar": [
+    {
+      "output": "ref/foto/envanter_c1_pdf038_sadirvan_tek.jpg",
+      "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+      "pdf_page": 38,
+      "image_object": "Im4.jpg",
+      "pixels": [
+        275,
+        491
+      ],
+      "method": "PDF embedded image, original bytes",
+      "sha256": "dd9176161ed628cbac7dc7d9d70d00adb907a4ca6445a50930575ee61b3aba7b"
+    },
+    {
+      "output": "ref/foto/envanter_c1_pdf038_sadirvan_havuz_kemer_detay.jpg",
+      "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+      "pdf_page": 38,
+      "image_object": "Im3.jpg",
+      "pixels": [
+        387,
+        209
+      ],
+      "method": "PDF embedded image, original bytes",
+      "sha256": "812825e64084482199bc4088b035c08d74dbb3a20f64b2cc60abd5724de7bf28"
+    },
+    {
+      "output": "ref/foto/envanter_c1_pdf038_orta_mermer_cesme.jpg",
+      "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+      "pdf_page": 38,
+      "image_object": "Im1.jpg",
+      "pixels": [
+        180,
+        258
+      ],
+      "method": "PDF embedded image, original bytes",
+      "sha256": "958d5a9d8c6f77f8f6b19a20a981696b5ba1f430ff12cc5d290b253db8ddd1c3"
+    },
+    {
+      "output": "ref/foto/envanter_c1_pdf038_uc_yapi_birlikte.jpg",
+      "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+      "pdf_page": 38,
+      "image_object": "Im0.jpg",
+      "pixels": [
+        691,
+        491
+      ],
+      "method": "PDF embedded image, original bytes",
+      "sha256": "cbb55f5646a7044900c7575ea73e76dec84e278e1d918c111172ecb660b260ce"
+    },
+    {
+      "output": "ref/foto/envanter_c1_pdf039_kuzey_avlu_havadan.jpg",
+      "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+      "pdf_page": 39,
+      "image_object": "Im0.jpg",
+      "pixels": [
+        1324,
+        889
+      ],
+      "method": "PDF embedded image, original bytes",
+      "sha256": "782877cd08535b91608e1634fb466466066a0f5995337028c00894d348507d5d"
+    },
+    {
+      "output": "ref/foto/canbakis_pdf054_tarihi_avlu_sekil3_35a.png",
+      "crop_px": [
+        309,
+        1056,
+        671,
+        1352
+      ],
+      "method": "unaltered rectangular crop of Poppler page render (crop_px on that render)",
+      "sha256": "c1aff79bcd94eae204485fca73b1cdb7d0dab82aebafe4dac815f7214ea72fb6",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 54,
+      "printed_page": "38"
+    },
+    {
+      "output": "ref/foto/canbakis_pdf054_avlu_2021_sekil3_35b.png",
+      "crop_px": [
+        674,
+        1056,
+        963,
+        1352
+      ],
+      "method": "unaltered rectangular crop of Poppler page render (crop_px on that render)",
+      "sha256": "da414b16db21999a2e81f47f4775044767601c3bddf5be9f05909e3e5c58d420",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 54,
+      "printed_page": "38"
+    },
+    {
+      "output": "ref/foto/kitabeler_pdf125_kuzey_cesme_bati_kitabesi.png",
+      "crop_px": [
+        160,
+        654,
+        1243,
+        856
+      ],
+      "method": "unaltered rectangular crop of Poppler page render (crop_px on that render)",
+      "sha256": "9e08c4f0285cf5884951c76e7966febb14e8ee52dc78c776b4a4ee94187a0f40",
+      "source": "docs/documents-context/veri/bursa/bursa-kitabeleri_e012d005a33d26d218102023170305000000.pdf",
+      "pdf_page": 125,
+      "printed_page": "125"
+    },
+    {
+      "output": "ref/plan/ayverdi_plan687_ulu-cami.png",
+      "source": "docs/documents-context/veri/bursa/ulu-cami_plan_ayverdi.png",
+      "method": "unchanged copy; does not include three courtyard structures",
+      "sha256": "efde2535ef15f1e92da8b0dfbbbe31ac9eca974ab9ef79d1181693d7cda9251a"
+    },
+    {
+      "output": "ref/plan/alan-baskanligi_pdf007_vaziyet.jpg",
+      "source": "docs/documents-context/veri/bursa/hanlar-bolgesi.pdf",
+      "pdf_page": 7,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "ca37383c74d46fdbc5b5cca60b937593f5a20a7d066c42f2d78b8b90ec5f87e2"
+    },
+    {
+      "output": "ref/plan/canbakis_pdf055_kuzey_cephe_cetintas1949.jpg",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 55,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "bd400d650df4aeb4af23b054675e79446ea1c55091e33917af18b5943b83b043"
+    },
+    {
+      "output": "ref/plan/canbakis_pdf055_pencere_tas_sebeke_detay.jpg",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 55,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "6fa55f6dc7f9e2d935876c91b473e35d37a6016f35548f93e2b25d62b8f63265"
+    },
+    {
+      "output": "ref/plan/canbakis_pdf056_kesit.jpg",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 56,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "effeb3edb83feabea2ebbcfaedd045c2aef35e7b5f303a8735f92ce963a4a55c"
+    },
+    {
+      "output": "ref/plan/canbakis_pdf057_ic_sadirvan_ustu_aydinlik_feneri.jpg",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 57,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "43f6826249c2f8f6d524297329d07395542bfe667c33c83a80d6f044095a79a9"
+    },
+    {
+      "output": "ref/plan/canbakis_pdf058_plan.jpg",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 58,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "878633e40453178d68a2b2c0d31e36a164169b0d164a5bae7780613dc4fa442d"
+    },
+    {
+      "output": "ref/plan/canbakis_pdf058_plan_kesit_kombine.jpg",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_page": 58,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "2c5d1b1d34d69a32aede72ac4ca45853ce3b910e0b8f7f8b005196c1a46f2a80"
+    },
+    {
+      "output": "ref/plan/kul_pdf193_havadan_kuzeybati.jpg",
+      "source": "docs/documents-context/veri/bursa/Kul.pdf",
+      "pdf_page": 193,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "ed473249a12b7c4eb48368fc98dff0f74bb704d10b0951f83f0835ed65d01c1e"
+    },
+    {
+      "output": "ref/plan/kul_pdf194_dogu_cephe_cetintas1950_a.jpg",
+      "source": "docs/documents-context/veri/bursa/Kul.pdf",
+      "pdf_page": 194,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "173e43e4f40228cc49b731601ecd8fc02a398927601e23d5c7df38db0e8105e3"
+    },
+    {
+      "output": "ref/plan/kul_pdf194_dogu_cephe_cetintas1950_b.jpg",
+      "source": "docs/documents-context/veri/bursa/Kul.pdf",
+      "pdf_page": 194,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "770d8c1edc18c2aeedce67826381b9b482e5366874da2a119c7ecbc3cd98e86a"
+    },
+    {
+      "output": "ref/plan/kul_pdf194_kuzey_cephe_cetintas1950.jpg",
+      "source": "docs/documents-context/veri/bursa/Kul.pdf",
+      "pdf_page": 194,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "93a6f75776841c0254e9b8bbd55030386a4c2d8b619d17077752ac5af19d9970"
+    },
+    {
+      "output": "ref/plan/kul_pdf195_bati_minare_plan_kesit_gorunus_vgm.png",
+      "source": "docs/documents-context/veri/bursa/Kul.pdf",
+      "pdf_page": 195,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "a71d263471f256ab07059cca6ebedd53da2d95e5def0c89b96151a9af33b1877"
+    },
+    {
+      "output": "ref/plan/kul_pdf196_dogu_minare_plan_kesit_gorunus_vgm.png",
+      "source": "docs/documents-context/veri/bursa/Kul.pdf",
+      "pdf_page": 196,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "968dfd615835498f27aac65e5a98ef24b103410f8fd6311d091a9ff3b83ba841"
+    },
+    {
+      "output": "ref/plan/urgen_pdf006_cami_plani_baykal1993.jpg",
+      "source": "docs/documents-context/veri/bursa/Bursa_Ulu_Cami_Mimari_Ozellikleri.pdf",
+      "pdf_page": 6,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "a9b42f8203437c2d32e735addea32a5a00fc0a1a6456de50961009dd50772bc8"
+    },
+    {
+      "output": "ref/plan/urgen_pdf008_mihrap_cizimi.jpg",
+      "source": "docs/documents-context/veri/bursa/Bursa_Ulu_Cami_Mimari_Ozellikleri.pdf",
+      "pdf_page": 8,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "25440362b2b3c5ecf8485ade42a554ee65a65dea3946e072e94ee30d205e70ed"
+    },
+    {
+      "output": "ref/plan/urgen_pdf013_muezzin_mahfili_kuzey_cephe.jpg",
+      "source": "docs/documents-context/veri/bursa/Bursa_Ulu_Cami_Mimari_Ozellikleri.pdf",
+      "pdf_page": 13,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "09006d6320c84e6b3a6d62e05631ffe28a030b5e782521f8655c85c6af85a983"
+    },
+    {
+      "output": "ref/plan/urgen_pdf013_muezzin_mahfili_plan.jpg",
+      "source": "docs/documents-context/veri/bursa/Bursa_Ulu_Cami_Mimari_Ozellikleri.pdf",
+      "pdf_page": 13,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "44aa5c03ed52456958eff7bad123a6d76e3dea09c6c7754ab5c4e86dd53c76a4"
+    },
+    {
+      "output": "ref/plan/urgen_pdf020_minber_cizimi.jpg",
+      "source": "docs/documents-context/veri/bursa/Bursa_Ulu_Cami_Mimari_Ozellikleri.pdf",
+      "pdf_page": 20,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "785bedc2f2f1d8c71bab95e408c57b3a0e783e2616d4d117ee25d443a0e5a240"
+    },
+    {
+      "output": "ref/plan/urgen_pdf022_minare_serefe_cizimi.jpg",
+      "source": "docs/documents-context/veri/bursa/Bursa_Ulu_Cami_Mimari_Ozellikleri.pdf",
+      "pdf_page": 22,
+      "method": "PDF embedded image, original bytes (ppm→png lossless)",
+      "added": "2026-10-18",
+      "sha256": "85b46a99e6ebeb85d565cbac68fb1f6d84a828bdfcde2d2ef0be6557e302b9a1"
+    },
+    {
+      "output": "ref/foto/ulucamii_001_kuzey_tac_kapi.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241027172515_0203_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "ad921cbc5571357d0920e7a27816dc8a96ea1383c1d7a8db963ee876fc74fa29"
+    },
+    {
+      "output": "ref/foto/ulucamii_002_havadan_ust_20_kubbe.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241027173425_0228_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "4eb2e850c75a6a960520a06af0149d9c874193d106d49dd7ea83132a0214b973"
+    },
+    {
+      "output": "ref/foto/ulucamii_004_tac_kapi_mukarnas.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241027174601_0258_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "7f940acff68d9a97cfe6fe923793e6533a643a37e32fe92f35a7c05b18db270e"
+    },
+    {
+      "output": "ref/foto/ulucamii_007_kubbe_kursun_yakin.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241027180237_0315_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "03776a533a67693b72c8b4e7cd716b5b786a1baffcac985eaf79bb226397b507"
+    },
+    {
+      "output": "ref/foto/ulucamii_008_havadan_kuzey_genel.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241129211815_0387_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "ffa5402cef763109338678586ef03b25bec33352d6a9c1dbf44aede6dd2e75e1"
+    },
+    {
+      "output": "ref/foto/ulucamii_009_havadan_kuzeybati.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241129212451_0417_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "3e7ddf4baf4fcdf7dafe61164baa3bd6df35137a3437427103d7c7fad4f60350"
+    },
+    {
+      "output": "ref/foto/ulucamii_011_havadan_guney_minareler.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241201093700_0590_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "b587e11a9b9fbd7904a7fe0bccbf5b93499a5eda5d9e800fb8cc5963490edbcb"
+    },
+    {
+      "output": "ref/foto/ulucamii_012_minare_serefe.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241205174837_0085_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "f54076112a6c65943191a5c1cb65af6d4c306df813b19d68491dfc4a30578bf7"
+    },
+    {
+      "output": "ref/foto/ulucamii_016_bati_cephe_bati_minare_kaide.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241208084026_0291_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "a08b90f99457fcdd1847a3e899b53196f732ef44e5f90f95ca3be7e5f81ed62a"
+    },
+    {
+      "output": "ref/foto/ulucamii_087_ic_paye_kemer.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241210035234_0288_D_ODAK-3.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "43dea7eff7cb55842eb44444856b1a2242dbdf38eed766842cd911066228fd0f"
+    },
+    {
+      "output": "ref/foto/ulucamii_089_ic_mekan_genel.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241210045740_0325_D_ODAK.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "6ad5a6a54916af7e744c640dc936a55e67f56957fb590e0ba01d61a30c08f3cb"
+    },
+    {
+      "output": "ref/foto/ulucamii_092_ic_sadirvan_genel.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241210051038_0350_D_ODAK-2.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "2364f0744c0fe01dbebfc8ec012f7d7d44be4e13085838c3252c059f06a4ed27"
+    },
+    {
+      "output": "ref/foto/ulucamii_094_avlu_sadirvan_yakin.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/ERD04721 kopya.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "2263a2f66635de3b3e06319887bd9843fc3bb9c82977626ec58ce7c2f61089e8"
+    },
+    {
+      "output": "ref/foto/ulucamii_095_avlu_sadirvan_ust_ortu.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/ERD04751 kopya.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "fb0645ac5ddcc8fe582600130c9d6fea40f5873698934cebbcc6781208649de1"
+    },
+    {
+      "output": "ref/foto/ulucamii_096_avlu_mermer_cesme.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/ERD04829 kopya.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "4fc40ab0e1fb650b6b9e29444cb814dd8581f069e83afe65831bb7a9ec728c3f"
+    },
+    {
+      "output": "ref/foto/ulucamii_097_avlu_sadirvan_ici_havuz.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/ERD04834 kopya.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "458b9b14add47f25271d4ae191ee8a919910f160657991bce809060ec88f903e"
+    },
+    {
+      "output": "ref/foto/ulucamii_105_ic_sadirvan_havuz_yakin.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/ERD05081.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "ee9adf93e547affffc75a1f1ae95f8a18d405e55d71b4c7e7fe8e42b548d9faa"
+    },
+    {
+      "output": "ref/foto/ulucamii_107_ic_kubbe_alti.jpg",
+      "source": "docs/documents-context/veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/ERD05149-Geliştirilmiş-NR kopya.jpg",
+      "method": "unchanged copy of envanter photo archive (long side 2400 px)",
+      "added": "2026-10-18",
+      "sha256": "5ee42a775963e5c110cbbd85b440a18a5bd8e06bdcd6a98b6065e0fbbe961491"
+    },
+    {
+      "output": "ref/metin/envanter_c1_anayapi.md",
+      "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+      "pdf_pages": "19-37",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-18"
+    },
+    {
+      "output": "ref/metin/alan_baskanligi.md",
+      "source": "docs/documents-context/veri/bursa/hanlar-bolgesi.pdf",
+      "pdf_pages": "7-8",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-18"
+    },
+    {
+      "output": "ref/metin/kul_minare.md",
+      "source": "docs/documents-context/veri/bursa/Kul.pdf",
+      "pdf_pages": "193-198,221-223",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-18"
+    },
+    {
+      "output": "ref/metin/urgen.md",
+      "source": "docs/documents-context/veri/bursa/Bursa_Ulu_Cami_Mimari_Ozellikleri.pdf",
+      "pdf_pages": "5-6 +7-23",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-18"
+    },
+    {
+      "output": "ref/metin/canbakis.md",
+      "source": "docs/documents-context/veri/bursa/Busra_CANBAKIS.pdf",
+      "pdf_pages": "54,164 +55-58,148,153",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-18"
+    },
+    {
+      "output": "ref/metin/vakif_1983.md",
+      "source": "docs/documents-context/veri/bursa/turkiyede-vakif-abideleri-ve-eski-eserler-3.pdf",
+      "pdf_pages": "105 +102-104,106",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-18"
+    },
+    {
+      "output": "ref/metin/kitabeler.md",
+      "source": "docs/documents-context/veri/bursa/bursa-kitabeleri_e012d005a33d26d218102023170305000000.pdf",
+      "pdf_pages": "124-127 +45",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-18"
+    },
+    {
+      "output": "ref/metin/envanter_c1.md",
+      "source": "docs/documents-context/veri/kaynak_pdf/bursa-envanteri-cilt-1.pdf",
+      "pdf_pages": "38-39",
+      "method": "pdftotext text extraction",
+      "added": "2026-10-17"
+    }
+  ]
+}

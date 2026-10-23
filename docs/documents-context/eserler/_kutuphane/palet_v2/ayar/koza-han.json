@@ -1,0 +1,435 @@
+{
+ "eser": "koza-han",
+ "dir": "koza-han",
+ "base": "koza-han",
+ "from": "v13",
+ "to": "v14",
+ "ymin": 0,
+ "ymax": 13.149755477905273,
+ "duz": [],
+ "nodes": [
+  "Avlu_Cephe",
+  "Avlu_Halka",
+  "Avlu_Mescit",
+  "Avlu_Revak",
+  "Avlu_Zemin",
+  "Baca",
+  "Cati",
+  "Cephe",
+  "Govde_Dis",
+  "Ic_Koza",
+  "Kubbe_Avlu",
+  "Mescit_Dikis",
+  "Mescit_Kubbe",
+  "Portal",
+  "Silme_Kat"
+ ],
+ "materials": {
+  "Ahsap": {
+   "hex": "#7A5134",
+   "alpha": 1,
+   "lin": [
+    0.1946178304415758,
+    0.0822827071298148,
+    0.03433980680868217,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kapi": {
+   "hex": "#5A6672",
+   "alpha": 1,
+   "lin": [
+    0.10224173308810132,
+    0.13286832155381798,
+    0.16826940018969075,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Avlu_Halka": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Avlu_Halka_palet_v2.png",
+   "lead": false
+  },
+  "Mermer_Beyaz": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Su": {
+   "hex": "#8CC3C6",
+   "alpha": 1,
+   "lin": [
+    0.26225065752969623,
+    0.5457244613701866,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.10000000149011612,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Alem": {
+   "hex": "#C9A13B",
+   "alpha": 1,
+   "lin": [
+    0.5840784178911641,
+    0.3564001441459435,
+    0.043735029256973465,
+    1
+   ],
+   "rough": 0.3499999940395355,
+   "metal": 0.6000000238418579,
+   "tex": null,
+   "lead": false
+  },
+  "Kesme_Tas": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Kesme_Tas_palet_v2.png",
+   "lead": false
+  },
+  "Pencere_Izgara": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.30000001192092896,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Pencere_Izgara_palet_v2.png",
+   "lead": false
+  },
+  "Sacak": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Petek_Sebeke": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Petek_Sebeke_palet_v2.png",
+   "lead": false
+  },
+  "Tabela": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.4000000059604645,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Tabela_palet_v2.png",
+   "lead": false
+  },
+  "Merdiven_Korkuluk": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Merdiven_Korkuluk_palet_v2.png",
+   "lead": false
+  },
+  "Duvar_Almasik": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Duvar_Almasik_palet_v2.png",
+   "lead": false
+  },
+  "Korkuluk_Beyaz": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Korkuluk_Beyaz_palet_v2.png",
+   "lead": false
+  },
+  "Avlu_Zemin": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Avlu_Zemin_palet_v2.png",
+   "lead": false
+  },
+  "Arnavut": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Arnavut_palet_v2.png",
+   "lead": false
+  },
+  "Baca_Tugla": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Baca_Tugla_palet_v2.png",
+   "lead": false
+  },
+  "Tugla": {
+   "hex": "#CF7F55",
+   "alpha": 1,
+   "lin": [
+    0.6239603916750761,
+    0.21223075741405523,
+    0.09084171118340768,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Baca_Kulah": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Cati_Kursun": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Siva": {
+   "hex": "#E8DFCB",
+   "alpha": 1,
+   "lin": [
+    0.8069522576692516,
+    0.7379104087727308,
+    0.5972017883637634,
+    1
+   ],
+   "rough": 0.8500000238418579,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Moloz": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Moloz_palet_v2.png",
+   "lead": false
+  },
+  "Cati_Metal": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Disli_Tugla": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Disli_Tugla_palet_v2.png",
+   "lead": false
+  },
+  "Kursun_Dikis": {
+   "hex": "#98A1A8",
+   "alpha": 1,
+   "lin": [
+    0.31398871337571754,
+    0.3564001441459435,
+    0.39157247774972326,
+    1
+   ],
+   "rough": 0.44999998807907104,
+   "metal": 0.20000000298023224,
+   "tex": null,
+   "lead": false
+  },
+  "Kursun": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Tas_Portal": {
+   "hex": "#E6D8BA",
+   "alpha": 1,
+   "lin": [
+    0.7912979403326302,
+    0.6866853124353135,
+    0.4910208498478356,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Portal_On": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/koza-han/3d/build/doku_palet_v2/Portal_On_palet_v2.png",
+   "lead": false
+  },
+  "Tas_Acik": {
+   "hex": "#E6D8BA",
+   "alpha": 1,
+   "lin": [
+    0.7912979403326302,
+    0.6866853124353135,
+    0.4910208498478356,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  }
+ }
+}

@@ -1,0 +1,237 @@
+{
+ "eser": "orhan-hamam",
+ "dir": "orhan-bey-hamami",
+ "base": "orhan-bey-hamami",
+ "from": "v04",
+ "to": "v05",
+ "ymin": 0,
+ "ymax": 15.199089050292969,
+ "duz": [
+  "Duz"
+ ],
+ "nodes": [
+  "Hamam_Detay",
+  "Hamam_Giris",
+  "Hamam_Giris_Kadin",
+  "Hamam_Sicaklik",
+  "Hamam_Sogukluk_Erkek",
+  "Hamam_Sogukluk_Kadin",
+  "Kubbe_Halvetler",
+  "Kubbe_Iliklik",
+  "Kubbe_Sicaklik",
+  "Kubbe_Sogukluk_Erkek",
+  "Kubbe_Sogukluk_Kadin"
+ ],
+ "materials": {
+  "Tas": {
+   "hex": "#E6D8BA",
+   "alpha": 1,
+   "lin": [
+    0.7912979403326302,
+    0.6866853124353135,
+    0.4910208498478356,
+    1
+   ],
+   "rough": 0.7,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Tugla": {
+   "hex": "#CF7F55",
+   "alpha": 1,
+   "lin": [
+    0.6239603916750761,
+    0.21223075741405523,
+    0.09084171118340768,
+    1
+   ],
+   "rough": 0.7,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Kursun_Dikis": {
+   "hex": "#98A1A8",
+   "alpha": 1,
+   "lin": [
+    0.31398871337571754,
+    0.3564001441459435,
+    0.39157247774972326,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Ahsap_Kapi": {
+   "hex": "#7A5134",
+   "alpha": 1,
+   "lin": [
+    0.1946178304415758,
+    0.0822827071298148,
+    0.03433980680868217,
+    1
+   ],
+   "rough": 0.75,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Pencere": {
+   "hex": "#5A6672",
+   "alpha": 1,
+   "lin": [
+    0.10224173308810132,
+    0.13286832155381798,
+    0.16826940018969075,
+    1
+   ],
+   "rough": 0.3,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Mermer": {
+   "hex": "#F5F4F0",
+   "alpha": 1,
+   "lin": [
+    0.9130986517934192,
+    0.9046611743911496,
+    0.8713671191987972,
+    1
+   ],
+   "rough": 0.4,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Krem": {
+   "hex": "#E8DFCB",
+   "alpha": 1,
+   "lin": [
+    0.8069522576692516,
+    0.7379104087727308,
+    0.5972017883637634,
+    1
+   ],
+   "rough": 0.8,
+   "metal": 0,
+   "tex": null,
+   "lead": false
+  },
+  "Demir": {
+   "hex": "#4B5654",
+   "alpha": 1,
+   "lin": [
+    0.07036009569659588,
+    0.09305896284668745,
+    0.08865558628577294,
+    1
+   ],
+   "rough": 0.6,
+   "metal": 0.3,
+   "tex": null,
+   "lead": false
+  },
+  "Kirpi": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-bey-hamami/3d/build/doku_palet_v2/Kirpi_palet_v2.png",
+   "lead": false
+  },
+  "Kubbe": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-bey-hamami/3d/build/doku_palet_v2/Kubbe_palet_v2.png",
+   "lead": true
+  },
+  "Sebeke": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.800000011920929,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-bey-hamami/3d/build/doku_palet_v2/Sebeke_palet_v2.png",
+   "lead": false
+  },
+  "Kasnak": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-bey-hamami/3d/build/doku_palet_v2/Kasnak_palet_v2.png",
+   "lead": false
+  },
+  "Alem": {
+   "hex": "#C9A13B",
+   "alpha": 1,
+   "lin": [
+    0.5840784178911641,
+    0.3564001441459435,
+    0.043735029256973465,
+    1
+   ],
+   "rough": 0.35,
+   "metal": 0.6,
+   "tex": null,
+   "lead": false
+  },
+  "Kursun": {
+   "hex": "#BCC2C6",
+   "alpha": 1,
+   "lin": [
+    0.5028864580325687,
+    0.5394794890121072,
+    0.5647115057049292,
+    1
+   ],
+   "rough": 0.45,
+   "metal": 0.2,
+   "tex": null,
+   "lead": false
+  },
+  "Duvar": {
+   "hex": "#FFFFFF",
+   "alpha": 1,
+   "lin": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "rough": 0.699999988079071,
+   "metal": 0,
+   "tex": "/Users/ksenophon/Desktop/internet-kahve/akar-app/docs/documents-context/eserler/orhan-bey-hamami/3d/build/doku_palet_v2/Duvar_palet_v2.png",
+   "lead": false
+  }
+ }
+}

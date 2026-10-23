@@ -1,0 +1,162 @@
+{
+ "eser": "orhan-hamam",
+ "surum": "v05",
+ "not": "baseColor = malzeme faktörü; dokulu malzemede etkin = faktör x doku ortalaması (opak piksel). Alan yüzdesi uygulama GLB yapı yüzeyi.",
+ "malzemeler": [
+  {
+   "ad": "Kubbe",
+   "baseColor": "#BCC2C6",
+   "doku": true,
+   "kaba": 0.45,
+   "metal": 0.2,
+   "alan_yuzde": 37.85,
+   "doku_ort": "#F7F7F8",
+   "doku_dominant": "#FFFFFF",
+   "doku_opak": 1,
+   "etkin": "#B6BCC0",
+   "V": 0.753
+  },
+  {
+   "ad": "Duvar",
+   "baseColor": "#FFFFFF",
+   "doku": true,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 34.46,
+   "doku_ort": "#E3D8BA",
+   "doku_dominant": "#FFEAC8",
+   "doku_opak": 1,
+   "etkin": "#E3D8BA",
+   "V": 0.89
+  },
+  {
+   "ad": "Kasnak",
+   "baseColor": "#FFFFFF",
+   "doku": true,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 21.33,
+   "doku_ort": "#DDBD9C",
+   "doku_dominant": "#F2F1D6",
+   "doku_opak": 1,
+   "etkin": "#DDBD9C",
+   "V": 0.867
+  },
+  {
+   "ad": "Kirpi",
+   "baseColor": "#FFFFFF",
+   "doku": true,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 1.72,
+   "doku_ort": "#D1855C",
+   "doku_dominant": "#E09467",
+   "doku_opak": 1,
+   "etkin": "#D1855C",
+   "V": 0.82
+  },
+  {
+   "ad": "Tugla",
+   "baseColor": "#CF7F55",
+   "doku": false,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 1.27,
+   "V": 0.812
+  },
+  {
+   "ad": "Pencere",
+   "baseColor": "#5A6672",
+   "doku": false,
+   "kaba": 0.3,
+   "metal": 0,
+   "alan_yuzde": 0.9,
+   "V": 0.447
+  },
+  {
+   "ad": "Tas",
+   "baseColor": "#E6D8BA",
+   "doku": false,
+   "kaba": 0.7,
+   "metal": 0,
+   "alan_yuzde": 0.85,
+   "V": 0.902
+  },
+  {
+   "ad": "Ahsap_Kapi",
+   "baseColor": "#7A5134",
+   "doku": false,
+   "kaba": 0.75,
+   "metal": 0,
+   "alan_yuzde": 0.62,
+   "V": 0.478
+  },
+  {
+   "ad": "Kursun_Dikis",
+   "baseColor": "#98A1A8",
+   "doku": false,
+   "kaba": 0.45,
+   "metal": 0.2,
+   "alan_yuzde": 0.35,
+   "V": 0.659
+  },
+  {
+   "ad": "Mermer",
+   "baseColor": "#F5F4F0",
+   "doku": false,
+   "kaba": 0.4,
+   "metal": 0,
+   "alan_yuzde": 0.27,
+   "V": 0.961
+  },
+  {
+   "ad": "Demir",
+   "baseColor": "#4B5654",
+   "doku": false,
+   "kaba": 0.6,
+   "metal": 0.3,
+   "alan_yuzde": 0.23,
+   "V": 0.337
+  },
+  {
+   "ad": "Sebeke",
+   "baseColor": "#FFFFFF",
+   "doku": true,
+   "kaba": 0.8,
+   "metal": 0,
+   "alan_yuzde": 0.14,
+   "doku_ort": "#EDE9E0",
+   "doku_dominant": "#F5F4F0",
+   "doku_opak": 0.56,
+   "etkin": "#EDE9E0",
+   "V": 0.929
+  },
+  {
+   "ad": "Kursun",
+   "baseColor": "#BCC2C6",
+   "doku": false,
+   "kaba": 0.45,
+   "metal": 0.2,
+   "alan_yuzde": 0.01,
+   "V": 0.776
+  },
+  {
+   "ad": "Krem",
+   "baseColor": "#E8DFCB",
+   "doku": false,
+   "kaba": 0.8,
+   "metal": 0,
+   "alan_yuzde": 0,
+   "V": 0.91
+  },
+  {
+   "ad": "Alem",
+   "baseColor": "#C9A13B",
+   "doku": false,
+   "kaba": 0.35,
+   "metal": 0.6,
+   "alan_yuzde": 0,
+   "V": 0.788
+  }
+ ]
+}
