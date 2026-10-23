@@ -111,7 +111,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   await openProfile(moderator.page);
   await moderator.page.getByRole("button", { name: "Giriş yap" }).click();
   await signIn(moderator.page, moderatorEmail);
-  await moderator.page.getByRole("button", { name: "Demo yönetim paneli" }).click();
+  await moderator.page.getByRole("button", { name: "Yönetim paneli" }).click();
   await moderator.page.locator(".admin-nav").getByRole("button", { name: /Katkılar/ }).click();
   const card = moderator.page.locator(".moderation-card").filter({ hasText: text });
   await expect(card.getByText("Fotoğraf + anı")).toBeVisible();
@@ -277,4 +277,114 @@ test("guest quiz: a wrong answer can be retried, the right one shows the explana
   await dialog.getByRole("button", { name: "Cevabı kontrol et" }).click();
   await expect(dialog.getByText(`Doğru! ${key.explanation}`, { exact: false })).toBeVisible();
   await context.close();
+});
+
+test("live guests and ordinary accounts cannot open the content studio", async ({ page }) => {
+  await page.goto("/#view=profile");
+  await expect(page.getByRole("heading", { name: "Mirasım", level: 1 })).toBeVisible();
+  await expect(page.getByRole("button", { name: /yönetim paneli/i })).toHaveCount(0);
+  await expect(page.getByText("Deneysel arayüzleri göster")).toHaveCount(0);
+  await expect(page.getByText("İnteraktif demo", { exact: true })).toHaveCount(0);
+  await page.goto("/#view=admin");
+  await expect(page.getByText("Yönetim paneline erişmek için yetkili hesabınla giriş yap.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Yeni eser", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await signIn(page, `e2e-ui-user-${randomUUID().slice(0, 8)}@akar.test`);
+  await expect(page.getByText("Bu hesabın yönetim yetkisi bulunmuyor.")).toBeVisible();
+  await openProfile(page);
+  await expect(page.getByRole("button", { name: /yönetim paneli/i })).toHaveCount(0);
+});
+
+for (const role of ["editor", "moderator", "admin"] as const) {
+  test(`live ${role} sees only supported studio controls and loses access on sign-out`, async ({ page }) => {
+    const email = `e2e-ui-${role}-${randomUUID().slice(0, 8)}@akar.test`;
+    tokenFor(email, role);
+    await page.goto("/#view=profile");
+    await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
+    await signIn(page, email);
+    await page.getByRole("button", { name: "Yönetim paneli", exact: true }).click();
+    const nav = page.locator(".admin-nav");
+    await expect(nav.getByRole("button", { name: "İçe aktar", exact: true })).toHaveCount(0);
+    if (role === "moderator") {
+      await expect(page.getByRole("heading", { name: "Yaşayan hafızayı yönet" })).toBeVisible();
+      await expect(nav.getByRole("button", { name: /^Eserler/ })).toHaveCount(0);
+      await expect(nav.getByRole("button", { name: "Rotalar", exact: true })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Yeni eser", exact: true })).toHaveCount(0);
+    } else {
+      await expect(page.getByRole("button", { name: "Yeni eser", exact: true })).toBeVisible();
+      await expect(nav.getByRole("button", { name: "Katkılar", exact: true })).toHaveCount(role === "admin" ? 1 : 0);
+      await page.getByRole("button", { name: "Yeni eser", exact: true }).click();
+      await page.getByRole("button", { name: "5 Yayın", exact: true }).click();
+      await expect(page.getByText("Yayınladığın değişiklikler kaydedilir ve eserin herkese açık sayfasında görünür.")).toBeVisible();
+      await expect(page.getByText(/Sunucuya veri gönderilmez/)).toHaveCount(0);
+    }
+    await expect(page.locator("body")).not.toHaveText(/Demo paneli/);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await openProfile(page);
+    await page.getByRole("button", { name: "Çıkış yap", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Yönetim paneli", exact: true })).toHaveCount(0);
+    await page.goto("/#view=admin");
+    await expect(page.getByText("Yönetim paneline erişmek için yetkili hesabınla giriş yap.")).toBeVisible();
+  });
+}
+
+test("live visits require location and only display success after server verification", async ({ page, context }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "geolocation", { configurable: true, value: {
+      getCurrentPosition: (_success: unknown, failure: (error: { code: number }) => void) => failure({ code: 1 }),
+    } });
+  });
+  await page.goto("/");
+  await openSite(page, MEMORY_SITE.name);
+  await page.getByRole("button", { name: "Yanındayım", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Yanındayım", exact: true });
+  await expect(dialog.getByText(/Konum izni vererek/)).toBeVisible();
+  await expect(dialog.getByText(/Simülasyon/)).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
+  await expect(page.locator(".toast.fault")).toContainText("konum izni vermelisin");
+  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toHaveCount(0);
+  // Restore the real browser geolocation provider; the local API decides proximity.
+  await page.evaluate(() => { Reflect.deleteProperty(navigator, "geolocation"); });
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ latitude: 41, longitude: 29, accuracy: 10 });
+  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
+  await expect(page.locator(".toast.fault")).toContainText("esere yaklaşmalısın");
+  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toHaveCount(0);
+  const site = await (await fetch(`${API}/v1/sites/${MEMORY_SITE.id}`)).json();
+  await context.setGeolocation({ latitude: site.coordinates[1], longitude: site.coordinates[0], accuracy: 10 });
+  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
+  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toBeVisible();
+});
+
+
+test("live photo metadata editing preserves imported licenses and excludes unsupported file replacement", async ({ page }, testInfo) => {
+  const email = `e2e-photo-editor-${randomUUID().slice(0, 8)}@akar.test`;
+  tokenFor(email, "editor");
+  // Only this browser's catalog response is enriched: no fabricated media is written to the API.
+  await page.route(`${API}/v1/site-details*`, async (route) => {
+    const response = await route.fetch();
+    const catalog = await response.json();
+    const site = catalog.items.find((item: { id: string }) => item.id === MEMORY_SITE.id);
+    if (site) {
+      site.coverMediaId = "test-photo";
+      site.photoIds = ["test-photo"];
+      site.sources = [{ id: "test-source", title: "Test arşivi", kind: "archive", author: "", year: "", page: "", url: "", trust: "verified" }];
+      site.media = [{ id: "test-photo", kind: "photo", url: `data:image/png;base64,${PNG.toString("base64")}`, alt: "Test fotoğrafı", title: "Test fotoğrafı", titleEn: null, description: "", license: "Arşiv kullanım izni", sourceId: "test-source", trust: "verified", parts: [] }];
+    }
+    await route.fulfill({ response, json: catalog });
+  });
+  await page.goto("/#view=profile");
+  await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await signIn(page, email);
+  await page.getByRole("button", { name: "Yönetim paneli", exact: true }).click();
+  await page.locator(".admin-nav").getByRole("button", { name: "Kartlar ve fotoğraflar", exact: true }).click();
+  await page.locator(".photo-option").filter({ hasText: "Test fotoğrafı" }).click();
+  const dialog = page.getByRole("dialog", { name: "Fotoğrafı düzenle", exact: true });
+  await expect(dialog.getByRole("combobox", { name: "Lisans", exact: true })).toHaveValue("Arşiv kullanım izni");
+  await expect(dialog.getByRole("combobox", { name: "Fotoğraf kaynağı", exact: true })).toBeDisabled();
+  await expect(dialog.locator('input[type="file"]')).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Yeni kaynak ekle", exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Fotoğrafı güncelle", exact: true })).toBeEnabled();
+  await expect(dialog.getByText(/Dosya veya kaynak değişikliği için/)).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("photo-editor.png"), fullPage: true });
 });
