@@ -339,3 +339,9 @@ Karar: API kipinde eser kaydı (`site` komutu) hikâye, fotoğraf, kaynak, model
 Bilinen sınırlar: adımlar tek işlem değildir; ortada bir adım reddedilirse önceki adımlar kayıtlı kalır ve eser yeniden okunarak gösterilir (yüklenen dosya kütüphanede kalır). Yalnız Geçmişi Gör görseli ya da kart görseli olan fotoğraf panelin fotoğraf listesinde görünmez; liste kaydedilirse bu fotoğrafın eserle bağı (`site_media`) düşer, görsel yerinde kalır.
 Karar veren / tarih: Weissman (iş listesi madde 3), 23 Eki; adım sırası ve bekleme backend sorumlusunun.
 Nasıl değiştirilir: `packages/api-client/src/http.ts` (`saveContent`, `MODEL_PARTS_ATTEMPTS`, `CONTRIBUTOR_LICENSE`) ve bu kayıt.
+
+**11.28 Next.js 16.4.0 → 16.4.2 (güvenlik yaması).**
+Karar: `apps/web` Next.js sürümü 16.4.2'ye yükseltilir (tam sürüm sabit kalır). 16.0.0–16.4.0 arası üç güvenlik uyarısı taşır: Image Optimization API'de SVG ile kimliksiz uzaktan kod çalıştırma (GHSA-2464-fhr4-w9xw, kritik), `use cache` işlevlerinde kimliksiz uzaktan kod çalıştırma (GHSA-673q-mjm6-r5xr, kritik), Server Actions ile hizmet dışı bırakma (GHSA-p3m5-59mp-jv5r, yüksek). Yama sürümüdür; kilit dosyasında yalnız `next` ve `@next/*` değişir. 16.4.0 ile yerelde `next dev` güvenlik uyarısı gösterip kapanıyordu.
+Neden: uygulama `next/image`, `use cache` ya da Server Actions kullanmıyor, açık bu yüzden düşük olabilir; yine de yama küçük ve riski az, yerel geliştirme ve API kipi uçtan uca testleri de onsuz çalışmıyor. `maplibre-gl` için ayrı bir kritik uyarı var; düzeltmesi ana sürüm değişikliği ister, bu kararın dışında.
+Karar veren / tarih: Weissman, 23 Eki; Tamer'e bilgi (§11.20).
+Nasıl değiştirilir: `apps/web/package.json` `next` sürümü ve `package-lock.json` (`npm install next@<sürüm> --save-exact -w @akar/web`).
