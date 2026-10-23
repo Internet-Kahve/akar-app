@@ -28,6 +28,8 @@ blob-report/
 *.swp
 *.swo
 *~
+__pycache__/
+*.py[cod]
 
 # Machine-specific files
 .DS_Store

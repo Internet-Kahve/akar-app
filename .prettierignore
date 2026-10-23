@@ -1,0 +1,9 @@
+# Editorial source files and prototypes are maintained by the content team.
+docs/documents-context/
+# Generated contracts, migrations, and local review artifacts.
+docs/api/openapi.json
+services/api/drizzle/
+docs/reviews/
+package-lock.json
+apps/web/public/maplibre/
+apps/web/public/draco/
