@@ -120,14 +120,11 @@ Bir hata bulduğunda: ne yaptın, hangi istek/ekran, beklenen ve gelen yanıt (y
 
 ## 7. Çevrimiçi test ortamı
 
-Kurulum adımları (Supabase bulut projesi, ayarlar, kovalar, migration, veri, API sunucusu, Vercel): [services/api/README.md "Yayına alma"](../services/api/README.md#yayına-alma). Hesapları Weissman açar.
-
-| Adres | Ne |
-| --- | --- |
-| https://akar-app-jade.vercel.app | Gerçek API'ye bağlı web (test edenler bunu kullanır) |
-| https://akar-app.onrender.com | API (Render, Free: 15 dakika boşta kalınca uyur, ilk istek ~1 dakika) · Swagger: `/docs` |
-
-Tamer'in Vercel projesi demo verisiyle çalışmaya devam eder; ikisinin verisi ayrıdır (§11.16).
+Kurulum: [API yayına alma rehberi](../services/api/README.md#yayına-alma).
+Yeni hedef Tamer'in `akar-app` web ve `akar-api` API Vercel projeleri ile kendi Supabase projesidir.
+Eski Render ve ayrı staging adresleri yeni kurulumun doğrulama hedefi değildir.
+Canlı geçiş tamamlandıktan sonra gerçek Production domainlerini kullan; yalnız build başarısı
+veritabanı, giriş ve Storage bağlantılarının çalıştığını göstermez.
 
 **Hesap açmadan önce imajı yerelde dene.** `npm run api` açıkken (Supabase ve veritabanı yerelde), `services/api` içinde:
 

@@ -38,7 +38,7 @@ type AppDeps = {
   db: Db;
   auth: AuthVerifier | null; // identity sağlar; null iken her token 401
   storage: StorageBuckets | null; // src/platform/storage.ts: { uploads, media } (iki ObjectStorage); media sürücüleri sağlar
-  jobs: JobQueue | null;     // src/platform/jobs.ts; sunucuda pg-boss, testte inlineJobs() (+ drain())
+  jobs: JobQueue | null;     // src/platform/jobs.ts; sunucuda databaseJobs (Supabase Cron ile), testte inlineJobs() (+ drain())
   geocoderFor: ((city: CityConfig) => Promise<Geocoder>) | null; // admin içe aktarma
 };
 ```
