@@ -41,11 +41,11 @@ import {
  */
 async function erasing(deps: AppDeps, req: FastifyRequest, userId: string): Promise<void> {
   const supabase = supabaseAdminFrom(deps.config, "Hesap silinemiyor");
+  requireDep(deps.storage, "Depolama");
   const actor = { id: req.user!.id, requestId: req.id };
   let freed: ErasedObjects = { media: [], uploads: [] };
   await idempotent(deps.db, req, actor.id, async (tx) => {
     const objects = await eraseAccount(tx, userId, actor, () => deleteSupabaseUser(supabase, userId, req.log));
-    if (objects.media.length + objects.uploads.length > 0) requireDep(deps.storage, "Depolama");
     freed = objects;
     return { status: 204, body: null };
   });

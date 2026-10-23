@@ -85,6 +85,13 @@
       "when": 1792767845264,
       "tag": "0011_deleted_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792770660870,
+      "tag": "0012_upload_deletions",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,7 @@ import {
   idempotencyKeys,
   media,
   mediaUploads,
+  uploadDeletions,
   memories,
   memoryReports,
   pointEvents,
@@ -32,6 +33,7 @@ import { loadCatalog } from "../../db/seed.ts";
 import type { AuthVerifier } from "../../platform/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
 import { createFsStorage, type FsStorage } from "../media/storage-fs.ts";
+import { drainMediaDeletions } from "../media/service.ts";
 import { identityRoutes } from "./routes.ts";
 import { createJwksVerifier } from "./verifier.ts";
 
@@ -291,4 +293,44 @@ test("staff accounts cannot be erased until their role is removed; only admins e
   assert.deepEqual({ actor: audit?.actorId, byUser: (audit?.before as { byUser: boolean }).byUser }, { actor: admin, byUser: false });
   assert.equal((await call("GET", "/v1/me", await login(target))).statusCode, 401);
   assert.equal((await call("DELETE", `/v1/admin/users/${target}`, asAdmin)).statusCode, 204, "erasing again is harmless");
+});
+
+
+test("missing storage cannot delete Auth before rolling back account data", async (t) => {
+  const userId = randomUUID();
+  await photo(userId);
+  const upstream = mockSupabase(t, () => new Response(null, { status: 200 }));
+  const before = await traces(userId);
+  const configured = app.deps.storage;
+  app.deps.storage = null;
+  try {
+    assert.equal((await call("DELETE", "/v1/me", await login(userId))).statusCode, 503);
+    assert.deepEqual(upstream, []);
+    assert.deepEqual(await traces(userId), before);
+  } finally { app.deps.storage = configured; }
+});
+
+test("private upload cleanup survives failures and replay until the signed link expires", async (t) => {
+  const userId = randomUUID();
+  const p = await photo(userId);
+  mockSupabase(t, () => new Response(null, { status: 200 }));
+  const fail = t.mock.method(storage.uploads, "delete", async () => { throw new Error("storage offline"); });
+  assert.equal((await call("DELETE", "/v1/me", await login(userId))).statusCode, 204);
+  const [queued] = await db.select().from(uploadDeletions).where(eq(uploadDeletions.storageKey, p.uploadKey));
+  assert.ok(queued && queued.nextAttemptAt.getTime() > Date.now() + 600_000);
+  fail.mock.restore();
+  // A still-valid presigned PUT may recreate the object after the immediate delete.
+  await storage.uploads.put(p.uploadKey, Buffer.from("replayed"), "image/jpeg");
+  await drainMediaDeletions({ db, storage });
+  assert.ok(await storage.uploads.head(p.uploadKey), "not due while the link can still write");
+  await db.update(uploadDeletions).set({ nextAttemptAt: new Date(0) }).where(eq(uploadDeletions.storageKey, p.uploadKey));
+  const retryFail = t.mock.method(storage.uploads, "delete", async () => { throw new Error("still offline"); });
+  await drainMediaDeletions({ db, storage });
+  const [retry] = await db.select().from(uploadDeletions).where(eq(uploadDeletions.storageKey, p.uploadKey));
+  assert.equal(retry?.attempts, 1);
+  retryFail.mock.restore();
+  await db.update(uploadDeletions).set({ nextAttemptAt: new Date(0) }).where(eq(uploadDeletions.storageKey, p.uploadKey));
+  await drainMediaDeletions({ db, storage });
+  assert.equal(await storage.uploads.head(p.uploadKey), null);
+  assert.equal((await db.select().from(uploadDeletions).where(eq(uploadDeletions.storageKey, p.uploadKey))).length, 0);
 });
