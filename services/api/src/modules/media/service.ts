@@ -262,7 +262,16 @@ async function readChecked(
   return matchesMagic(upload.contentType, bytes) ? bytes : MISMATCH;
 }
 
-export type CompleteContext = { storage: StorageBuckets; jobs: JobQueue | null; user: AuthUser; requestId: string };
+/** An object `completeUpload` wrote to the `media` bucket, with the id of the row that should point at it. */
+export type PublishedObject = { mediaId: string; storageKey: string };
+export type CompleteContext = {
+  storage: StorageBuckets;
+  jobs: JobQueue | null;
+  user: AuthUser;
+  requestId: string;
+  /** Filled before each write to the `media` bucket; the caller passes it to `discardUnsavedObjects` if the transaction fails. */
+  published: PublishedObject[];
+};
 export type Completion = {
   result: MutationResult<MediaItem | ErrorBody>;
   /** Set when a model row was created: the caller enqueues part extraction once the transaction has committed. */
@@ -278,7 +287,8 @@ export type Completion = {
  * The checked bytes are written to the public `media` bucket under a new key and the upload key is deleted. The
  * client can still write to the upload key until its link runs out, but that bucket is not public: what lands
  * there is never served (so it cannot swap the bytes a moderator approved) and `expireUploads` removes it once
- * the link is dead.
+ * the link is dead. The object is written before the transaction commits, so it is listed in `ctx.published`:
+ * if the transaction rolls back, the caller removes it with `discardUnsavedObjects`.
  */
 export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: string, body: MediaMetadata): Promise<Completion> {
   const { storage, user, requestId } = ctx;
@@ -324,6 +334,7 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
   // Published under the new media id, which the client has never seen, in the same `<kind>/<yyyy>/<mm>/` folder.
   const mediaId = randomUUID();
   const storageKey = posix.join(posix.dirname(upload.storageKey), `${mediaId}${posix.extname(upload.storageKey)}`);
+  ctx.published.push({ mediaId, storageKey });
   await storage.media.put(storageKey, checked, upload.contentType);
 
   const [row] = await tx
@@ -634,6 +645,37 @@ export async function deleteMediaObjects(db: Db, storage: StorageBuckets | null,
     if (result.failed) log.error(result, "media deletion queued for retry");
   } catch (err) {
     log.error({ err }, "media deletion worker failed; durable intents retained");
+  }
+}
+
+/**
+ * Removes what `completeUpload` wrote to the `media` bucket when its transaction failed, since no row and no
+ * `media_deletions` intent survive the rollback. An object is deleted only when its row is confirmed absent: a
+ * failure reported after COMMIT reached the server may still have committed, and that row's photo must stay. If the
+ * check itself fails (database down), the objects stay and are logged. Never throws, so the caller's error is kept.
+ */
+export async function discardUnsavedObjects(
+  db: Db,
+  storage: StorageBuckets,
+  published: PublishedObject[],
+  log: FastifyBaseLogger,
+): Promise<void> {
+  if (published.length === 0) return;
+  let saved: Set<string>;
+  try {
+    const rows = await db.select({ id: media.id }).from(media).where(inArray(media.id, published.map((p) => p.mediaId)));
+    saved = new Set(rows.map((r) => r.id));
+  } catch (err) {
+    log.error({ err, keys: published.map((p) => p.storageKey) }, "could not check unsaved media objects; left in storage");
+    return;
+  }
+  for (const { mediaId, storageKey } of published) {
+    if (saved.has(mediaId)) continue;
+    try {
+      await storage.media.delete(storageKey);
+    } catch (err) {
+      log.error({ err, key: storageKey }, "unsaved media object delete failed; left in storage");
+    }
   }
 }
 

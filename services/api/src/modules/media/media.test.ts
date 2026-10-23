@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -19,7 +19,15 @@ import { startTestApp } from "../../test/harness.ts";
 import { MEDIA_LIMITS } from "./magic.ts";
 import { mediaRoutes } from "./routes.ts";
 import type { MediaItem, UploadTicket } from "./schemas.ts";
-import { completeUpload, CONTRIBUTOR_LICENSE, DAILY_UPLOAD_QUOTA, expireUploads, MAX_OPEN_UPLOADS, MEDIA_REFERENCES } from "./service.ts";
+import {
+  completeUpload,
+  CONTRIBUTOR_LICENSE,
+  DAILY_UPLOAD_QUOTA,
+  discardUnsavedObjects,
+  expireUploads,
+  MAX_OPEN_UPLOADS,
+  MEDIA_REFERENCES,
+} from "./service.ts";
 import { createFsStorage, type FsStorage } from "./storage-fs.ts";
 import { createS3Storage } from "./storage-s3.ts";
 
@@ -451,13 +459,43 @@ test("complete judges the bytes it reads, not a HEAD answer that a later write h
     const { storageKey } = await uploadRow(ticket.uploadId);
     await storage.uploads.put(storageKey, swap.file, "image/jpeg"); // the write a presigned S3 URL still allows
     const { result } = await app.deps.db.transaction((tx) =>
-      completeUpload(tx, { storage: staleStorage, jobs: null, user: visitor, requestId: "stale-head" }, ticket.uploadId, { alt: "x" }),
+      completeUpload(tx, { storage: staleStorage, jobs: null, user: visitor, requestId: "stale-head", published: [] }, ticket.uploadId, { alt: "x" }),
     );
 
     assert.equal(result.status, swap.status, swap.name);
     assert.equal((await uploadRow(ticket.uploadId)).status, "rejected", swap.name);
     assert.equal(await storage.uploads.head(storageKey), null, swap.name);
   }
+});
+
+test("a complete whose transaction fails leaves no object in the media bucket; a saved one keeps its object", async () => {
+  const objects = join(root, "media");
+  await mkdir(objects, { recursive: true }); // absent until the first object, when this test runs alone
+  const published = async () =>
+    (await readdir(objects, { recursive: true, withFileTypes: true })).filter((e) => e.isFile() && !e.name.endsWith(".meta.json")).length;
+  const ticket = await upload(visitor, "photo", "image/jpeg", JPEG);
+  const before = await published();
+
+  // The upload key is deleted last inside the transaction, after the media object was written: failing it rolls back.
+  const deleteUpload = storage.uploads.delete;
+  storage.uploads.delete = async () => {
+    throw new Error("storage unavailable");
+  };
+  try {
+    assert.equal((await complete(visitor, ticket.uploadId, { alt: "Çeşme" })).statusCode, 500);
+  } finally {
+    storage.uploads.delete = deleteUpload;
+  }
+  assert.equal(await published(), before, "the rolled-back object was removed");
+  assert.equal((await uploadRow(ticket.uploadId)).status, "pending");
+
+  // The retry publishes; a cleanup that runs after all (a commit reported as failed) must not take its object.
+  const done = await complete(visitor, ticket.uploadId, { alt: "Çeşme" });
+  assert.equal(done.statusCode, 201);
+  const [row] = await app.deps.db.select().from(media).where(eq(media.id, done.json<MediaItem>().id));
+  await discardUnsavedObjects(app.deps.db, storage, [{ mediaId: row!.id, storageKey: row!.storageKey! }], app.log);
+  assert.notEqual(await storage.media.head(row!.storageKey!), null);
+  assert.equal(await published(), before + 1);
 });
 
 // ── open tickets per account ─────────────────────────────────────────────────
