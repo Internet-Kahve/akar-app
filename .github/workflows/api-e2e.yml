@@ -18,8 +18,10 @@ concurrency:
 
 jobs:
   api-e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      AKAR_E2E_BROWSER_CHANNEL: chrome
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -35,7 +37,9 @@ jobs:
         with:
           version: 2.121.0
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # The hosted image already includes Chrome and its system dependencies.
+      # Avoid apt mirror downloads before every run; keep the same browser assertions.
+      - run: google-chrome --version
       # Entirely local, disposable runner services: no staging credentials or user data.
       - run: npm run local:up -w @akar/api
       - name: Start API and wait for database readiness

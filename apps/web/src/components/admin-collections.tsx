@@ -289,9 +289,11 @@ export function RouteAdmin({
 export function PhotoAdmin({
   state,
   commit,
+  live = false,
 }: {
   state: Snapshot;
   commit: Commit;
+  live?: boolean;
 }) {
   const [query, setQuery] = useState(""),
     [siteId, setSiteId] = useState(""),
@@ -380,6 +382,7 @@ export function PhotoAdmin({
           photos={photos}
           sources={sources}
           initial={editing}
+          metadataOnly={live}
           onClose={() => setEditing(undefined)}
           onChoose={async (photo, newSource) => {
             const source =

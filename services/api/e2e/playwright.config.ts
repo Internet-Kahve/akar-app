@@ -15,7 +15,8 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   use: {
     baseURL: "http://127.0.0.1:3001",
-    // Bundled Chromium (`npx playwright install chromium`), so Google Chrome is not required.
+    // Bundled Chromium locally; opt into the hosted runner's preinstalled Chrome in CI.
+    channel: process.env.AKAR_E2E_BROWSER_CHANNEL === "chrome" ? "chrome" : undefined,
     trace: "retain-on-failure",
   },
   projects: [

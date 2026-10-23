@@ -177,11 +177,11 @@ export function HeritageMap({
           center: [p.coords.longitude, p.coords.latitude],
           zoom: 15,
         });
-        setLocationError("Konumuna gidildi. Eserler Bursa demo bölgesinde.");
+        setLocationError("Konumuna gidildi. Eserler Bursa keşif bölgesinde.");
       },
       () =>
         setLocationError(
-          "Konum alınamadı. Bursa demo bölgesinde keşfe devam edebilirsin.",
+          "Konum alınamadı. Bursa keşif bölgesinde keşfe devam edebilirsin.",
         ),
       { timeout: 8000 },
     );
@@ -266,7 +266,7 @@ export function HeritageMap({
       </div>
       <button
         className="compass icon-btn"
-        aria-label="Demo bölgesine dön"
+        aria-label="Keşif bölgesine dön"
         onClick={() => {
           map.current?.easeTo({
             center: demoRegion.center,
@@ -315,5 +315,5 @@ export function HeritageMap({
   );
 }
 function TagText() {
-  return <small>DEMO BÖLGESİ</small>;
+  return <small>HANLAR BÖLGESİ</small>;
 }
