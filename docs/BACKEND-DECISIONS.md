@@ -183,7 +183,7 @@ Nasıl değiştirilir: giriş/depolama ayarları `services/api/supabase/config.t
 - Konumu bulunamayan eserler panelde elle düzeltilecek; panelin "listede elle düzelt" ekranı P3'te.
 - Overpass ve Nominatim ücretsiz, gönüllü servislerdir; yalnız içe aktarma sırasında kullanılır, demo anında çağrılmaz.
 - Sponsor veri setinin lisansı, KVKK metni (saklama süresi, veri sorumlusu): [BACKEND-PLAN §6](BACKEND-PLAN.md).
-- **Haritadaki 3B model başına üçgen hedefi (öneri ~30k), 3B ekibine sorulacak (Weissman).** Her GLB küçük üçgenlerden oluşur; üçgen sayısı telefonun her karede ne kadar çizdiğini belirler. Haritada aynı anda en çok 5 model var (§11.4), yani ~5 × 30k = ~150k üçgen; orta seviye telefonda akıcı. Dosya boyutu sınırı (5 MiB) bunu korumaz: küçük dosya da çok üçgen taşıyabilir. Şu an API denetlemez; 3B ekibinin dışa aktarma kılavuzudur. Sonradan değiştirmek kolay: sayı yalnız bir anlaşmadır (kod yok); ağır gelirse yönetici `maxVisibleModels` düşürür ya da `modelMinZoom` yükseltir (uygulama sürümü gerekmez); istenirse yüklemede üçgen sayımı eklenebilir. Hiçbir işi engellemez. İlk adım: mevcut bir modelin (örn. Ulu Cami v25) üçgen sayısını ekipten öğrenmek.
+- **Haritadaki 3B model başına üçgen hedefi:** §11.34 ile rafa kaldırıldı (yükleme sınırı yok; performans sorunu görülürse cihazda ölçülüp yeniden ele alınır).
 
 ## 11. Kimlik ve 3B model (P3, 21 Eki)
 
@@ -389,3 +389,9 @@ Neden: diğer yetim dosya yolları zaten kapalıydı (`expireUploads` ve `upload
 Bilinen sınır: işlem geri alındıktan sonra silme de başarısız olursa (depolama o an erişilemez) dosya kalır; yalnız logda görünür. Bu düzeltmeden önce oluşmuş yetim dosyalar temizlenmez.
 Karar veren / tarih: Weissman (iş listesi madde 8), 23 Eki: "küçük düzeltme" seçildi.
 Nasıl değiştirilir: yeniden deneme gerekirse anahtar işlemden bağımsız bir bağlantıyla `media_deletions`'a `put` öncesinde yazılır ve commit sonrası kaldırılır; tam temizlik için `media` kovasını listeleyip `media.storage_key` ve `media_deletions` ile karşılaştıran bir bakım işi eklenir.
+
+**11.34 3B model yüklemesinde üçgen, doku ve 1 MB sınırı şimdilik konmaz.**
+Karar: `complete` GLB için yalnız mevcut denetimleri yapar (ilk baytlar, 5 MB üst sınır). Üçgen sayısı, draw call, doku çözünürlüğü ve Figma'daki "Normal ≤ 1 MB" API'de zorlanmaz; Figma bütçesi (≤ 40k üçgen, ≤ 60 draw call, ≤ 1 MB Draco, Ulucami istisnası) 3B ekibinin dışa aktarma kılavuzu olarak kalır.
+Neden: haritada aynı anda 5 modelin (§11.4) mobil tarayıcıda kaç üçgene kadar akıcı çalıştığı ölçülmeden tavan koymak tahmin olur; 100k üçgenli 5 model de akıcı olabilir. Depolama için boyut sınırı gerekmez: ekibin 14 GLB'si (Draco) 0,13–0,81 MB, üçgen 8k–39k (Ulucami 87 280), draw call 17–91, en büyük doku Koza Han'da 2087 px (23 Eki ölçümü, `docs/documents-context/eserler/*/3d/export/`). Modeller henüz haritada da çizilmiyor, yalnız hikâye ekranında tek tek açılıyor (`scene.tsx` → `model-viewer.tsx`); `modelMinZoom` ve `maxVisibleModels` web'de okunmuyor.
+Karar veren / tarih: Weissman (iş listesi madde 6), 23 Eki: "performans sorunu görülürse ele alınır".
+Nasıl değiştirilir: önce cihazda ölçüm (Redmi 9T, harita katmanı geldiğinde 5 model); sonra `media/magic.ts` `MEDIA_LIMITS.model.maxBytes` ve `complete`'te GLB JSON parçasından üçgen sayımı (Draco'da da accessor `count` geçerli) ile sınır; ya da yönetici `maxVisibleModels` düşürür / `modelMinZoom` yükseltir (uygulama sürümü gerekmez).
