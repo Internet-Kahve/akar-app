@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import type { HeritageRoute, HeritageSite } from "@akar/domain";
 import {
   ApiError,
   createHttpClient,
@@ -132,6 +133,7 @@ const catalogHandlers = (): Record<string, Handler> => ({
   "GET /v1/sites/a": () => siteA(),
   "GET /v1/sites/b": () => detail("b"),
   "GET /v1/admin/site-details": () => ({ items: [], nextCursor: null }),
+  "GET /v1/admin/routes": () => ({ items: [], nextCursor: null }),
   "GET /v1/admin/sites/a": () => ({ ...siteA(), status: "published" }),
   "GET /v1/memories": () => ({ items: [], nextCursor: null }),
   "GET /v1/routes": () => ({
@@ -833,7 +835,7 @@ test("a full editor save goes through the step endpoints in reference order: new
   assert.ok(order.slice(modelSet).indexOf("GET /v1/admin/sites/a") < order.slice(modelSet).indexOf("PUT /v1/admin/sites/a/stories"));
 });
 
-test("users and moderators never request drafts", async () => {
+test("users and moderators never request drafts (sites or routes)", async () => {
   for (const role of ["user", "moderator"]) {
     const api = fakeApi({
       ...catalogHandlers(),
@@ -847,10 +849,257 @@ test("users and moderators never request drafts", async () => {
       fetch: api.fetch,
     }).getSnapshot();
     assert.ok(
-      !api.calls.some((c) => c.path.startsWith("/v1/admin/site")),
+      !api.calls.some((c) => /^\/v1\/admin\/(site|routes)/.test(c.path)),
       role,
     );
   }
+});
+
+test("a new site is created once with its city and pin; later saves of the same panel id update it, publishing last", async () => {
+  let server: Record<string, unknown> | undefined;
+  const writes: Call[] = [];
+  const write =
+    (change: (body: Record<string, unknown>) => Record<string, unknown>) =>
+    (c: Call) => {
+      writes.push(c);
+      server = { ...server, ...change(c.body as Record<string, unknown>) };
+      return {};
+    };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "POST /v1/admin/sites": (c) => {
+      writes.push(c);
+      const b = c.body as Record<string, unknown>;
+      server = {
+        ...detail("n1"),
+        ...b,
+        kind: b.typeId,
+        city: { id: "bursa", name: "Bursa" },
+        coordinates: null,
+        status: "draft",
+      };
+      return server;
+    },
+    "GET /v1/admin/sites/n1": () => server,
+    "PATCH /v1/admin/sites/n1/info": write((b) => b),
+    "PUT /v1/admin/sites/n1/location": write((b) => b),
+    "POST /v1/admin/sites/n1/publish": write(() => ({ status: "published" })),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  await client.getSnapshot();
+  const site: HeritageSite = {
+    id: "panel-1",
+    name: "Yeni Han",
+    city: "Bursa",
+    district: "Osmangazi",
+    year: "1450",
+    architect: "",
+    kind: "han",
+    coordinates: [29.07, 40.19],
+    minutes: 15,
+    description: "Bir han.",
+    source: "",
+    stories: [],
+    status: "draft",
+    tier: "Tier 1",
+  };
+
+  const drafted = await client.dispatch({ type: "site", site });
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path, c.body]),
+    [
+      [
+        "POST",
+        "/v1/admin/sites",
+        {
+          name: "Yeni Han",
+          nameEn: null,
+          typeId: "han",
+          year: "1450",
+          architect: "",
+          patron: null,
+          era: null,
+          address: null,
+          role: null,
+          relatedSiteId: null,
+          description: "Bir han.",
+          descriptionEn: null,
+          minutes: 15,
+          district: "Osmangazi",
+          tier: "Tier 1",
+          city: "Bursa",
+        },
+      ],
+      ["PUT", "/v1/admin/sites/n1/location", { coordinates: [29.07, 40.19] }],
+    ],
+  );
+  assert.deepEqual(
+    drafted.sites.filter((s) => s.name === "Yeni Han").map((s) => s.id),
+    ["n1"],
+  );
+
+  // The editor stays open with its own id: no second site, only the change and the publish.
+  writes.length = 0;
+  const published = await client.dispatch({
+    type: "site",
+    site: { ...site, year: "1460", source: "Envanter", status: "published" },
+  });
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path, c.body]),
+    [
+      ["PATCH", "/v1/admin/sites/n1/info", { year: "1460" }],
+      ["POST", "/v1/admin/sites/n1/publish", undefined],
+    ],
+  );
+  assert.equal(published.sites.find((s) => s.id === "n1")?.status, "published");
+});
+
+test("a new route takes its first stop's city, stays a draft in the panel only, and is published under the server's id; deleting one is refused", async () => {
+  const server: Record<string, Record<string, unknown>> = {};
+  const writes: Call[] = [];
+  const base = catalogHandlers();
+  const api = fakeApi({
+    ...base,
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/routes": (c) => {
+      const pub = base["GET /v1/routes"]!(c) as { items: unknown[] };
+      const live = Object.values(server)
+        .filter((r) => r.status === "published")
+        .map((r) => ({ ...r, minutes: 20, distance: "1 km" }));
+      return { items: [...pub.items, ...live] };
+    },
+    "GET /v1/admin/routes": (c) => {
+      assert.ok(c.path.includes("status=draft"));
+      return {
+        items: Object.values(server).filter((r) => r.status === "draft"),
+        nextCursor: null,
+      };
+    },
+    "GET /v1/admin/routes/rt1": () => server.rt1,
+    "POST /v1/admin/routes": (c) => {
+      writes.push(c);
+      server.rt1 = {
+        ...(c.body as object),
+        id: "rt1",
+        status: "draft",
+        stops: [],
+      };
+      return server.rt1;
+    },
+    "PUT /v1/admin/routes/rt1/stops": (c) => {
+      writes.push(c);
+      const { stops } = c.body as { stops: { siteId: string }[] };
+      server.rt1!.stops = stops.map((s) => ({
+        site: { id: s.siteId },
+        quizId: null,
+        historyImageId: null,
+      }));
+      return server.rt1;
+    },
+    "POST /v1/admin/routes/rt1/publish": (c) => {
+      writes.push(c);
+      server.rt1!.status = "published";
+      return server.rt1;
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const snap = await client.getSnapshot();
+  const existing = snap.catalogRoutes!;
+  const route: HeritageRoute = {
+    id: "panel-r",
+    name: "Yeni Rota",
+    nameEn: "",
+    description: "Kısa",
+    siteIds: [],
+    minutes: 0,
+    distance: "0 km",
+    theme: "Bursa",
+    status: "draft",
+  };
+
+  // No stop, no city: refused before anything is sent.
+  await assert.rejects(
+    client.dispatch({ type: "catalog-routes", routes: [...existing, route] }),
+    { name: "UnsupportedCommandError" },
+  );
+  assert.deepEqual(writes, []);
+
+  const drafted = await client.dispatch({
+    type: "catalog-routes",
+    routes: [...existing, { ...route, siteIds: ["a", "b"] }],
+  });
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path, c.body]),
+    [
+      [
+        "POST",
+        "/v1/admin/routes",
+        {
+          name: "Yeni Rota",
+          nameEn: null,
+          description: "Kısa",
+          theme: "Bursa",
+          cityId: "bursa",
+        },
+      ],
+      [
+        "PUT",
+        "/v1/admin/routes/rt1/stops",
+        {
+          stops: [
+            { siteId: "a", quizId: null, historyImageId: null },
+            { siteId: "b", quizId: null, historyImageId: null },
+          ],
+        },
+      ],
+    ],
+  );
+  assert.deepEqual(
+    drafted.catalogRoutes?.map((r) => [r.id, r.status, r.siteIds]),
+    [
+      ["r1", "published", ["b", "a"]],
+      ["rt1", "draft", ["a", "b"]],
+    ],
+  );
+
+  // Saved again under the panel's id: the same route is published, nothing else is written.
+  writes.length = 0;
+  const published = await client.dispatch({
+    type: "catalog-routes",
+    routes: [
+      ...existing,
+      { ...route, siteIds: ["a", "b"], status: "published" },
+    ],
+  });
+  assert.deepEqual(
+    writes.map((c) => c.path),
+    ["/v1/admin/routes/rt1/publish"],
+  );
+  assert.deepEqual(
+    published.catalogRoutes?.map((r) => [r.id, r.status]),
+    [
+      ["r1", "published"],
+      ["rt1", "published"],
+    ],
+  );
+
+  writes.length = 0;
+  await assert.rejects(
+    client.dispatch({ type: "catalog-routes", routes: existing }),
+    { name: "UnsupportedCommandError" },
+  );
+  assert.deepEqual(writes, []);
 });
 
 const quizState = (extra = {}) => ({
