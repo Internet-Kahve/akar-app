@@ -13,4 +13,4 @@
 - `veri/bursa/bursa_3d_adaylari.md`: 3D aday eserler ve ana hikâye önerisi (Ulucami + Bedesten).
 - Uygulama şeması ve içe aktarma kuralları: `FRONTEND_BACKEND_NOTLARI.md`.
 
-- `veri/fotoatlas/`: Foto Atlas'tan alınan 10.214 eski fotoğraf kaydı (konum, yön, kaynak, lisans, izin durumu). Önce `fotoatlas/IZIN_DURUMU.md` dosyasını oku; sadece `durum` alanı `kullanilabilir` / `kullanilabilir-yas` olanlar kullanılır. (21 Ekim 2026) 22 Ekim: Bursa'daki 236 kullanılabilir fotoğraf indirildi, 56'sı 17 esere bağlandı; Geçmişi Gör paketi `fotoatlas/cikti/`, klasör rehberi `fotoatlas/BENIOKU.md`.
+- `veri/fotoatlas/`: Foto Atlas'tan alınan 10.214 eski fotoğraf kaydı (konum, yön, kaynak, lisans, izin durumu). Önce `fotoatlas/IZIN_DURUMU.md` dosyasını oku; sadece `durum` alanı `kullanilabilir` / `kullanilabilir-yas` olanlar kullanılır. (21 Ekim 2026) 22 Ekim: Bursa'daki 236 kullanılabilir fotoğraf indirildi, 56'sı 17 esere bağlandı; Geçmişi Gör paketi `fotoatlas/cikti/`, klasör rehberi `fotoatlas/BENIOKU.md`. 23 Ekim: 476 fotoğraf, 126'sı 21 esere bağlı. **Klasör Git dışında** (ekibe Drive'dan); uygulamadaki eserlerin paketi `eserler/<eser>/gecmisi-gor/`.

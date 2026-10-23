@@ -42,7 +42,7 @@ ESERLER = [
          glb='orhan-bey-hamami_v05', yaw=6, lat=40.184466, lon=29.062931),
     dict(id='emir-han', ad='Emir Hanı', yil='1339–40', yaptiran='Orhan Bey', tur='Han', ikon='han', rol='akar',
          kisa='Orhan Bey’in külliyesinin parçası olan, Bursa’nın ilk bedesteni sayılan han.', glb='emir-hani_v05', yaw=7,
-         lat=40.184602, lon=29.061711),
+         lat=40.184537, lon=29.062346),   # uydu görüntüsünden (22 Ekim); OSM'de adlı çokgeni yok
     dict(id='orhan-gazi-turbesi', ad='Orhan Gazi Türbesi', yil='', yaptiran='Hisar içi', tur='Türbe', ikon='turbe',
          rol='dini', kisa='Orhan Gazi’nin ve ailesinin gömülü olduğu kare planlı türbe.', glb='orhan-gazi-turbesi_v02',
          yaw=2, lat=40.186786, lon=29.057715),
@@ -50,10 +50,11 @@ ESERLER = [
 
 # Haritada OSM bina izine oturtma düzeltmesi (m, doğu / kuzey). 22 Ekim 2026'da tepeden görüntüde modelin ana gövdesi
 # OSM bina sınırlarıyla karşılaştırıldı (Ulucami, Koza Han, Orhan Bey Camii ve Hamam'da çokgen merkezi; Bedesten, Emir Hanı ve
-# türbede çokgen dükkânları da içerdiği için kenarlardan ölçüldü).
+# türbede çokgen dükkânları da içerdiği için kenarlardan ölçüldü). Emir Hanı için seçilen OSM çokgeni (way 1271724730) batıdaki başka
+# bir binaydı; han uydu görüntüsünde Ulucami'nin kuzeydoğu köşesinde ölçülüp doğrudan konum olarak yazıldı (48 m doğuya).
 OSM_DUZELTME = {
     'ulu-cami': (10.6, -0.6), 'yildirim-bayezid-bedesteni': (6.1, -3.9), 'koza-han': (3.8, -4.0),
-    'orhan-bey-kulliyesi': (-2.2, -5.6), 'orhan-bey-hamami': (1.2, 4.2), 'emir-han': (5.5, -1.6), 'orhan-gazi-turbesi': (-1.8, -1.1),
+    'orhan-bey-kulliyesi': (-2.2, -5.6), 'orhan-bey-hamami': (1.2, 4.2), 'emir-han': (0, 0), 'orhan-gazi-turbesi': (-1.8, -1.1),
 }
 
 ROTALAR = [
@@ -177,6 +178,22 @@ def hakkinda_oku(eid):
     return bolumler
 
 
+def gecmis_oku(eid, cikti):
+    """eserler/<eser>/gecmisi-gor/ paketi (Foto Atlas, gecmisi_gor_uret.py yazar): fotoğraflar + WebP'ler gg/<eser>/'e."""
+    yol = os.path.join(ESER, eid, 'gecmisi-gor', 'gecmisi-gor.json')
+    if not os.path.exists(yol):
+        return []
+    with open(yol, encoding='utf-8') as f:
+        fotolar = json.load(f)['fotograflar']
+    for g in fotolar:
+        for alan in ('gorsel', 'kucuk'):
+            hedef = os.path.join(cikti, 'gg', eid, os.path.basename(g[alan]))
+            os.makedirs(os.path.dirname(hedef), exist_ok=True)
+            shutil.copyfile(os.path.join(ESER, eid, 'gecmisi-gor', g[alan]), hedef)
+            g[alan] = f'gg/{eid}/{os.path.basename(g[alan])}'
+    return fotolar
+
+
 def kucult(kaynak, hedef):
     """sips (macOS) ile uzun kenar 1280 px, JPEG kalite 72; önbellekte varsa kopyalar."""
     os.makedirs(os.path.dirname(hedef), exist_ok=True)
@@ -208,12 +225,12 @@ def main():
                 f['url'] = f'medya/{eid}/{f["dosya"]}'
         fotolar = [f for f in fotolar if f.get('url')]
         hikaye = hikaye_oku(eid)
-        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda_oku(eid),
+        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda_oku(eid), gecmis=gecmis_oku(eid, cikti),
                      sure=max(1, round(sum(len(c['metin'].split()) for c in hikaye) / 130)) if hikaye else 0)
         veri['eserler'].append(kayit)
     with open(os.path.join(cikti, 'veri.json'), 'w', encoding='utf-8') as f:
         json.dump(veri, f, ensure_ascii=False, indent=1)
-    ozet = ', '.join(f"{e['ad']} {len(e['hikaye'])}c/{len(e['fotolar'])}f" for e in veri['eserler'])
+    ozet = ', '.join(f"{e['ad']} {len(e['hikaye'])}c/{len(e['fotolar'])}f/{len(e['gecmis'])}g" for e in veri['eserler'])
     print('veri.json hazır:', ozet)
 
 
