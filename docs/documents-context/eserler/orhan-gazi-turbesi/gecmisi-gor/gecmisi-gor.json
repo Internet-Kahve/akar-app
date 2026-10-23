@@ -1,0 +1,177 @@
+{
+ "_aciklama": "veri/fotoatlas/gecmisi_gor_uret.py üretir; elle düzenleme. Kaynak: Foto Atlas, yalnız kullanılabilir kayıtlar. Her fotoğrafta kaynakSatiri gösterilmeli; duzenlenebilir=false (ND) ise kırpma / ekranı doldur yok. Fotoğraf yoksa uygulama «Bu eserin eski görüntüsü henüz yok» gösterir.",
+ "uretildi": "2026-10-23",
+ "eser": "orhan-gazi-turbesi",
+ "ad": "Orhan Gazi Türbesi",
+ "konum": [
+  40.1867711,
+  29.0576941
+ ],
+ "fotograflar": [
+  {
+   "fotoAtlasId": 34618,
+   "gorsel": "gorseller/fa-34618.webp",
+   "kucuk": "gorseller/fa-34618_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1195,
+   "baslik": "Yeşil Cami’den Bursa Görünümü",
+   "altMetin": "Eski fotoğraf: Yeşil Cami’den Bursa Görünümü, 1870–90",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1870,
+    "enGec": 1890,
+    "etiket": "1870–90"
+   },
+   "fotografci": "Guillaume Berggren",
+   "kaynakSatiri": "Fotoğraf: Guillaume Berggren · Getty Research Institute Digital Collections (96.R.14 (F2.148)) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Getty Research Institute Digital Collections",
+   "asilArsivId": "96.R.14 (F2.148)",
+   "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12749_6j0",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/yesil-camiden-bursa-gorunumu/",
+   "lisans": "CC0 1.0 Public Domain",
+   "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.182499,
+    "lng": 29.074305
+   },
+   "yon": 287,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 1486
+  },
+  {
+   "fotoAtlasId": 423,
+   "gorsel": "gorseller/fa-423.webp",
+   "kucuk": "gorseller/fa-423_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1213,
+   "baslik": "Osman ve Orhan Gazi Türbeleri",
+   "altMetin": "Eski fotoğraf: Osman ve Orhan Gazi Türbeleri, 1890'lar",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1890,
+    "enGec": 1899,
+    "etiket": "1890'lar"
+   },
+   "fotografci": "Sébah&Joaillier",
+   "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14 (F2.039)) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Getty Research Institute Digital Collections",
+   "asilArsivId": "96.R.14 (F2.039)",
+   "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12580_0uu",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/osman-ve-orhan-gazi-turbeleri/",
+   "lisans": "CC0 1.0 Public Domain",
+   "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.186504,
+    "lng": 29.056658
+   },
+   "yon": 83,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 93
+  },
+  {
+   "fotoAtlasId": 13053,
+   "gorsel": "gorseller/fa-13053.webp",
+   "kucuk": "gorseller/fa-13053_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1247,
+   "baslik": "Osman ve Orhan Gazi Türbeleri",
+   "altMetin": "Eski fotoğraf: Osman ve Orhan Gazi Türbeleri, 1890–1900",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1890,
+    "enGec": 1900,
+    "etiket": "1890–1900"
+   },
+   "fotografci": "Sébah&Joaillier",
+   "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A26)) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Getty Research Institute Digital Collections",
+   "asilArsivId": "96.R.14(A26)",
+   "asilArsivUrl": "http://hdl.handle.net/10020/96r14d1175",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/osman-ve-orhan-gazi-turbeleri-2/",
+   "lisans": "CC0 1.0 Public Domain",
+   "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.186516,
+    "lng": 29.056658
+   },
+   "yon": 73,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 92
+  },
+  {
+   "fotoAtlasId": 65257,
+   "gorsel": "gorseller/fa-65257.webp",
+   "kucuk": "gorseller/fa-65257_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1095,
+   "baslik": "Orhan Gazi Türbesi",
+   "altMetin": "Eski fotoğraf: Orhan Gazi Türbesi, 1894",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1894,
+    "enGec": 1894,
+    "etiket": "1894"
+   },
+   "fotografci": "Fotoğrafçı Bilinmiyor",
+   "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+   "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+   "asilArsivId": null,
+   "asilArsivUrl": null,
+   "fotoAtlasUrl": "https://fotoatlas.net/image/orhan-gazi-turbesi-2/",
+   "lisans": "Yazılı izin",
+   "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.186281,
+    "lng": 29.057502
+   },
+   "yon": 10,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 57
+  },
+  {
+   "fotoAtlasId": 65262,
+   "gorsel": "gorseller/fa-65262.webp",
+   "kucuk": "gorseller/fa-65262_k.webp",
+   "genislik": 604,
+   "yukseklik": 379,
+   "baslik": "Tophane Saat Kulesinden Bursa’ya Bakış",
+   "altMetin": "Eski fotoğraf: Tophane Saat Kulesinden Bursa’ya Bakış, 1935–40",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1935,
+    "enGec": 1940,
+    "etiket": "1935–40"
+   },
+   "fotografci": "Fotoğrafçı Bilinmiyor",
+   "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+   "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+   "asilArsivId": null,
+   "asilArsivUrl": null,
+   "fotoAtlasUrl": "https://fotoatlas.net/image/tophane-saat-kulesinden-bursaya-bakis/",
+   "lisans": "Yazılı izin",
+   "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.187505,
+    "lng": 29.057587
+   },
+   "yon": 190,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 82
+  }
+ ]
+}
