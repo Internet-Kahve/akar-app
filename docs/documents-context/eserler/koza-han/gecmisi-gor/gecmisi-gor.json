@@ -1,0 +1,177 @@
+{
+ "_aciklama": "veri/fotoatlas/gecmisi_gor_uret.py üretir; elle düzenleme. Kaynak: Foto Atlas, yalnız kullanılabilir kayıtlar. Her fotoğrafta kaynakSatiri gösterilmeli; duzenlenebilir=false (ND) ise kırpma / ekranı doldur yok. Fotoğraf yoksa uygulama «Bu eserin eski görüntüsü henüz yok» gösterir.",
+ "uretildi": "2026-10-23",
+ "eser": "koza-han",
+ "ad": "Koza Hanı",
+ "konum": [
+  40.1844464,
+  29.0632519
+ ],
+ "fotograflar": [
+  {
+   "fotoAtlasId": 49845,
+   "gorsel": "gorseller/fa-49845.webp",
+   "kucuk": "gorseller/fa-49845_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1235,
+   "baslik": "Bursa Ulu Cami ve Çevresi Genel Görünümü",
+   "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi Genel Görünümü, 1862",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1862,
+    "enGec": 1862,
+    "etiket": "1862"
+   },
+   "fotografci": "Alfred de Moustier",
+   "kaynakSatiri": "Fotoğraf: Alfred de Moustier · Getty Research Institute Digital Collections (96.R.14 (PP9_007)) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Getty Research Institute Digital Collections",
+   "asilArsivId": "96.R.14 (PP9_007)",
+   "asilArsivUrl": "http://hdl.handle.net/10020/96r14_ref12084_7i0",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-genel-gorunumu/",
+   "lisans": "CC0 1.0 Public Domain",
+   "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.181107,
+    "lng": 29.059174
+   },
+   "yon": 40,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 507
+  },
+  {
+   "fotoAtlasId": 46272,
+   "gorsel": "gorseller/fa-46272.webp",
+   "kucuk": "gorseller/fa-46272_k.webp",
+   "genislik": 976,
+   "yukseklik": 1500,
+   "baslik": "Koza Hanı",
+   "altMetin": "Eski fotoğraf: Koza Hanı, 1908–34",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1908,
+    "enGec": 1934,
+    "etiket": "1908–34"
+   },
+   "fotografci": "Albert Gabriel",
+   "kaynakSatiri": "Fotoğraf: Albert Gabriel · © Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie (AG20K005701) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Ministère de la Culture (France)",
+   "asilArsivId": "AG20K005701",
+   "asilArsivUrl": "https://www.pop.culture.gouv.fr/notice/memoire/AG20K005701",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/koza-hani/",
+   "lisans": "© Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie",
+   "lisansNotu": "Médiathèque du patrimoine izin verdi (Camille Duclert, müdür yardımcısı, 22.10.2026): kredi satırı aynen yazılmak şartıyla yeniden kullanım mümkün",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.184261,
+    "lng": 29.063457
+   },
+   "yon": 30,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 27
+  },
+  {
+   "fotoAtlasId": 47770,
+   "gorsel": "gorseller/fa-47770.webp",
+   "kucuk": "gorseller/fa-47770_k.webp",
+   "genislik": 930,
+   "yukseklik": 1445,
+   "baslik": "Koza Han Mescidi",
+   "altMetin": "Eski fotoğraf: Koza Han Mescidi, 1908–34",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1908,
+    "enGec": 1934,
+    "etiket": "1908–34"
+   },
+   "fotografci": "Albert Gabriel",
+   "kaynakSatiri": "Fotoğraf: Albert Gabriel · © Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie (AG20K006124) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Ministère de la Culture (France)",
+   "asilArsivId": "AG20K006124",
+   "asilArsivUrl": "https://www.pop.culture.gouv.fr/notice/memoire/AG20K006124",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/koza-han-mescidi-2/",
+   "lisans": "© Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie",
+   "lisansNotu": "Médiathèque du patrimoine izin verdi (Camille Duclert, müdür yardımcısı, 22.10.2026): kredi satırı aynen yazılmak şartıyla yeniden kullanım mümkün",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.184162,
+    "lng": 29.063629
+   },
+   "yon": 348,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 45
+  },
+  {
+   "fotoAtlasId": 47774,
+   "gorsel": "gorseller/fa-47774.webp",
+   "kucuk": "gorseller/fa-47774_k.webp",
+   "genislik": 922,
+   "yukseklik": 1447,
+   "baslik": "Koza Han Mescidi",
+   "altMetin": "Eski fotoğraf: Koza Han Mescidi, 1908–34",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1908,
+    "enGec": 1934,
+    "etiket": "1908–34"
+   },
+   "fotografci": "Albert Gabriel",
+   "kaynakSatiri": "Fotoğraf: Albert Gabriel · © Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie (AG20K006134) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Ministère de la Culture (France)",
+   "asilArsivId": "AG20K006134",
+   "asilArsivUrl": "https://www.pop.culture.gouv.fr/notice/memoire/AG20K006134",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/koza-han-mescidi/",
+   "lisans": "© Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie",
+   "lisansNotu": "Médiathèque du patrimoine izin verdi (Camille Duclert, müdür yardımcısı, 22.10.2026): kredi satırı aynen yazılmak şartıyla yeniden kullanım mümkün",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.184364,
+    "lng": 29.06366
+   },
+   "yon": 268,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 36
+  },
+  {
+   "fotoAtlasId": 64741,
+   "gorsel": "gorseller/fa-64741.webp",
+   "kucuk": "gorseller/fa-64741_k.webp",
+   "genislik": 1178,
+   "yukseklik": 1600,
+   "baslik": "Kozahan",
+   "altMetin": "Eski fotoğraf: Kozahan, 1945 öncesi",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": null,
+    "enGec": 1945,
+    "etiket": "1945 öncesi"
+   },
+   "fotografci": "Fotoğrafçı Bilinmiyor",
+   "kaynakSatiri": "Fotoğraf: Fotoğrafçı Bilinmiyor · Mazhar Yüce Doruk Koleksiyonu · Foto Atlas aracılığıyla",
+   "asilKaynak": "Mazhar Yüce Doruk Koleksiyonu",
+   "asilArsivId": null,
+   "asilArsivUrl": null,
+   "fotoAtlasUrl": "https://fotoatlas.net/image/kozahan/",
+   "lisans": "Yazılı izin",
+   "lisansNotu": "Caner Cangül onayı, 21.10.2026 (Telegram)",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.18417,
+    "lng": 29.063733
+   },
+   "yon": 270,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 51
+  }
+ ]
+}

@@ -29,10 +29,32 @@ veri/vakıf-eserleri-envanteri/
 # Repo herkese açıksa bunu da aç (kitapların tam metni):
 veri/metin/
 
-# Foto Atlas fotoğraflarının tam boy asılları (~136 MB) → ekibe Drive'dan.
-# gorseller/manifest.json ve uygulamaya giden cikti/ repoda kalır.
-veri/fotoatlas/gorseller/orijinal/
-veri/fotoatlas/_inceleme_rota.jpg
+# Foto Atlas çalışma klasörü (10.214 kayıt, izinler, betikler, tam boy fotoğraflar) repoya girmez → ekibe Drive'dan.
+# Uygulamaya giden kısım eser klasörlerinde: eserler/<eser>/gecmisi-gor/ (gecmisi_gor_uret.py yazar).
+veri/fotoatlas/
+
+# --- Repoda yalnız uygulamaya gerekenler kalır (23 Ekim 2026) ---
+# Eserler: uygulamadaki 7 Bursa eseri kalır (icerik/, 3d/export GLB'leri, eser.md, notlar, 3D README) ve _kutuphane/.
+# Aday eserler, Ayasofya pilotu ve Yarhisar çeşmesi; eserlerin kaynak klasörleri (ref/), Blender dosyaları,
+# build betikleri ve kontrol görüntüleri repoya girmez → ekip arşivinde.
+eserler/aday-eserler/
+eserler/ayasofya/
+eserler/yarhisar-orhan-gazi-cesmesi/
+eserler/*/ref/
+eserler/*/3d/blend/
+eserler/*/3d/build/
+eserler/*/3d/kontrol/
+
+# Veri: ham arşivler repoya girmez. veri/bursa'daki CSV/MD dosyaları kalır
+# (eser-turleri.csv ve osm_secilen.csv backend içe aktarma aracı tarafından okunuyor).
+veri/bursa-foto/
+veri/bursa/*.pdf
+veri/bursa/*.png
+veri/bursa/*.jpg
+veri/panorama-test/
+
+# Hackathon belgeleri (başvuru, şartname) repoya girmez
+hackathon/
 
 # Redmi prototipi: küçültülmüş fotoğraf önbelleği (hazirla.py üretir)
 design/test-redmi9t/.onbellek/

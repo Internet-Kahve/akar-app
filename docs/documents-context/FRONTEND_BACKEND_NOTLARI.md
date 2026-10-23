@@ -8,7 +8,7 @@ Ayrıntı: §12. Figma: `akar-yeni` (https://www.figma.com/design/HGTgq5vRXVqhVO
 
 - **Geçmişi Gör yeniden tasarlandı** (§12.1–12.2). Üstteki «Karşılaştır / Kamerayla eşleştir» sekmeleri kalktı. Ekranda büyük eski fotoğraf, tarih sıralı şerit ve «Nereden çekildi?» haritası var; tek eylem **«Kamerayı aç»**. **«Tozu sil» modu yok**; eski promptlarda geçiyorsa geçersizdir.
 - **Kamera yalnız telefonda.** Masaüstünde kamera düğmesi ve QR penceresi yok; bilgi kartında tek satır uyarı var.
-- **Eski fotoğraf verisi hazır:** Foto Atlas'tan Bursa'da 236 kullanılabilir fotoğraf; 56'sı 17 esere bağlandı. Paket `veri/fotoatlas/cikti/`; rehber `veri/fotoatlas/BENIOKU.md` (§12.4).
+- **Eski fotoğraf verisi hazır:** Foto Atlas'tan Bursa'da 476 kullanılabilir fotoğraf; 126'sı 21 esere bağlandı (23 Ekim). Uygulamadaki eserlerin paketi `eserler/<eser>/gecmisi-gor/` içinde; `veri/fotoatlas/` çalışma klasörü Git dışında, ekibe Drive'dan (§12.4).
 - **Hikâye sonrası:** «İz Bırak» kutusu **«Yaşayan hafıza»** oldu (mobilde «Hafıza · 12 iz»). İz Bırak, hafıza sayfasının içinden açılır (§12.3).
 - **Yaşayan hafıza** masaüstü ve mobilde yeniden düzenlendi; **Tüm izler** (şehir / eser seçili) eklendi.
 - **Panel › Eser düzenle › Geçmişi Gör** yeni alanlarla çizildi: kaynak tek arşive bağlı değil, konum ve yön düzenlenebilir (§12.5).
@@ -470,10 +470,10 @@ Figma `akar-yeni`. Ekranların altında kısa notlar var; bu bölüm onların to
 
 ### 12.4 Veri: Foto Atlas paketi
 
-- Kaynak: `veri/fotoatlas/` (rehber: `BENIOKU.md`, izinler: `IZIN_DURUMU.md`). Uygulama Foto Atlas'a **canlı bağlanmaz**, `cdn.fotoatlas.net`'ten görsel çekmez.
-- **Frontend'in tek girdisi:** `veri/fotoatlas/cikti/gecmisi-gor.json` + `cikti/gorseller/` (`fa-<id>.webp` 1600 px, `fa-<id>_k.webp` 400 px). Kendi `public/` ya da Storage yolunuza kopyalayın; JSON elle düzenlenmez, `gecmisi_gor_uret.py` üretir. Alanların listesi: `veri/fotoatlas/BENIOKU.md`.
+- Kaynak: `veri/fotoatlas/` (rehber: `BENIOKU.md`, izinler: `IZIN_DURUMU.md`). Bu klasör 23 Ekim'den beri **Git dışında** (10.214 kayıt, izin yazışmaları, tam boy fotoğraflar); ekibe Drive'dan verilir. Uygulama Foto Atlas'a **canlı bağlanmaz**, `cdn.fotoatlas.net`'ten görsel çekmez.
+- **Frontend'in tek girdisi:** her eserin `eserler/<eser>/gecmisi-gor/gecmisi-gor.json` + `gorseller/` klasörü (`fa-<id>.webp` 1600 px, `fa-<id>_k.webp` 400 px). Şu an Ulucami 21, Koza Han 5, Orhan Bey Camii 5, Orhan Gazi Türbesi 5 fotoğraf; Bedesten, Hamam ve Emir Hanı'nda liste boş («eski görüntü henüz yok» ekranı). 21 Bursa eserinin tamamı yerelde `veri/fotoatlas/cikti/`'de. Kendi `public/` ya da Storage yolunuza kopyalayın; JSON elle düzenlenmez, `gecmisi_gor_uret.py` üretir. Alanların listesi: `veri/fotoatlas/BENIOKU.md`.
 - Her görselde `kaynakSatiri` gösterilir (İÜ Yıldız Albümleri fotoğraflarında NEKYA + demirbaş numarasıyla). `fotoAtlasId` saklanır (Kültür Envanteri'ne geçişte eşleştirme).
-- Şu an bağlı eserler: Ulucami 18 · Yeşil Külliyesi 7 · Orhan Gazi Türbesi 5 · Osman Gazi Türbesi, Yıldırım Bayezid, Muradiye, Eski Kaplıca, Yeni Kaplıca, Nilüfer Hatun İmareti 4'er · Koza Hanı, Orhan Gazi Camii, Irgandı Köprüsü 2'şer · Pirinç Hanı, Kayhan Camii, Emir Sultan, Şehadet Camii, Eşrefzade Camii 1'er.
+- Şu an bağlı eserler (23 Ekim, 21 eser): Ulucami 21 · Muradiye 21 · Yeşil Külliyesi 19 · Yıldırım Bayezid 17 · Pirinç Hanı 7 · Koza Hanı, Orhan Gazi Camii, Emir Sultan, Yeni Kaplıca, Orhan Gazi Türbesi 5'er · Osman Gazi Türbesi, Nilüfer Hatun İmareti, Irgandı Köprüsü, Eski Kaplıca 4'er · Hamza Bey Külliyesi 3 · Fidan Hanı, Şehzade Mahmut Türbesi, Eşrefzade Camii 2'şer · Kayhan Camii, Nasuh Paşa Hamamı, Şehadet Camii 1'er.
 - Rota önerisi: Ulucami **14239** (ilk açılan) · **65828** (kaydırıcı/kamera, sokak seviyesi) · **15226** (iç mekân); Koza Hanı **64741**; Orhan Gazi Camii **25056** (doğrulanacak).
 - Gravürler eklenirse aynı alanlarla (çizer, tarih, kaynak, lisans) `gorsel` tablosuna girer; ekran «Eski fotoğraf» der ama türü `gravur` olabilir.
 

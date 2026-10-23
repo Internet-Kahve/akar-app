@@ -109,7 +109,7 @@ Külliye üretim günlüğünden ayrılan eser bölümleri. Tarihli ölçü ve v
 | Dış ölçü | ≈ 45 × 45 m | E PDF s.108 | EHA yatay 45,5 m ✓ |
 | Avlu | ≈ 650 m² (≈ 25 × 26 m) | E, H | |
 | Kat | 2; alt 36, üst 38 oda; revaklı avlu, şadırvan, çınarlar | E | |
-| OSM | adsız way 1271724730 (Ulucami'nin kuzeyi), 57,5 (D–B) × 50,9 (K–G) m | O | EHA'da çekirdeğin doğu ve batısına bitişik dükkân sıraları var → toplam ≈ 57 m (EHA yatay ✓). **> 2 m çelişki** E 45 ↔ O 57,5 / 50,9 |
+| OSM | adsız way 1271724730 (Ulucami'nin kuzeyi), 57,5 (D–B) × 50,9 (K–G) m. **22 Ekim düzeltmesi:** bu çokgen hanın ~48 m batısındaki başka bir bina; han, uydu görüntüsünde Ulucami'nin kuzeydoğu köşesinde ≈ 43 × 43 m (40.184537, 29.062346). Aşağıdaki ölçü karşılaştırması bu yüzden geçersiz | O | EHA'da çekirdeğin doğu ve batısına bitişik dükkân sıraları var → toplam ≈ 57 m (EHA yatay ✓). **> 2 m çelişki** E 45 ↔ O 57,5 / 50,9 |
 | Yükseklik | yok | — | T: 2 katlı Bursa hanı, saçak ≈ 9–10 m (Koza Han ile karşılaştırılacak) |
 | Malzeme | 2 sıra tuğla + 1 sıra küfeki almaşık; revaklar tuğla, 2 sıra kirpi saçak | E | |
 

@@ -1,0 +1,177 @@
+{
+ "_aciklama": "veri/fotoatlas/gecmisi_gor_uret.py üretir; elle düzenleme. Kaynak: Foto Atlas, yalnız kullanılabilir kayıtlar. Her fotoğrafta kaynakSatiri gösterilmeli; duzenlenebilir=false (ND) ise kırpma / ekranı doldur yok. Fotoğraf yoksa uygulama «Bu eserin eski görüntüsü henüz yok» gösterir.",
+ "uretildi": "2026-10-23",
+ "eser": "orhan-bey-kulliyesi",
+ "ad": "Orhan Bey Külliyesi (Orhan Gazi Camii)",
+ "konum": [
+  40.1839745,
+  29.0641131
+ ],
+ "fotograflar": [
+  {
+   "fotoAtlasId": 15211,
+   "gorsel": "gorseller/fa-15211.webp",
+   "kucuk": "gorseller/fa-15211_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1259,
+   "baslik": "Bursa Ulu Cami ve Çevresi",
+   "altMetin": "Eski fotoğraf: Bursa Ulu Cami ve Çevresi, 1890–1900",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1890,
+    "enGec": 1900,
+    "etiket": "1890–1900"
+   },
+   "fotografci": "Sébah&Joaillier",
+   "kaynakSatiri": "Fotoğraf: Sébah&Joaillier · Getty Research Institute Digital Collections (96.R.14(A21)) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Getty Research Institute Digital Collections",
+   "asilArsivId": "96.R.14(A21)",
+   "asilArsivUrl": "http://hdl.handle.net/10020/96r14d0900",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/bursa-ulu-cami-ve-cevresi-3/",
+   "lisans": "CC0 1.0 Public Domain",
+   "lisansNotu": "Açık lisans: CC0 1.0 Public Domain",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.186802,
+    "lng": 29.058792
+   },
+   "yon": 135,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 550
+  },
+  {
+   "fotoAtlasId": 45758,
+   "gorsel": "gorseller/fa-45758.webp",
+   "kucuk": "gorseller/fa-45758_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1208,
+   "baslik": "Gazi Orhan Bey Camii",
+   "altMetin": "Eski fotoğraf: Gazi Orhan Bey Camii, 1908–34",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1908,
+    "enGec": 1934,
+    "etiket": "1908–34"
+   },
+   "fotografci": "Albert Gabriel",
+   "kaynakSatiri": "Fotoğraf: Albert Gabriel · © Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie (AG20K002357) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Ministère de la Culture (France)",
+   "asilArsivId": "AG20K002357",
+   "asilArsivUrl": "https://www.pop.culture.gouv.fr/notice/memoire/AG20K002357",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/gazi-orhan-bey-camii-3/",
+   "lisans": "© Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie",
+   "lisansNotu": "Médiathèque du patrimoine izin verdi (Camille Duclert, müdür yardımcısı, 22.10.2026): kredi satırı aynen yazılmak şartıyla yeniden kullanım mümkün",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.183617,
+    "lng": 29.064127
+   },
+   "yon": 340,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 40
+  },
+  {
+   "fotoAtlasId": 47428,
+   "gorsel": "gorseller/fa-47428.webp",
+   "kucuk": "gorseller/fa-47428_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1123,
+   "baslik": "Gazi Orhan Bey Camii",
+   "altMetin": "Eski fotoğraf: Gazi Orhan Bey Camii, 1908–34",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1908,
+    "enGec": 1934,
+    "etiket": "1908–34"
+   },
+   "fotografci": "Albert Gabriel",
+   "kaynakSatiri": "Fotoğraf: Albert Gabriel · © Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie (AG20K002533) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Ministère de la Culture (France)",
+   "asilArsivId": "AG20K002533",
+   "asilArsivUrl": "https://www.pop.culture.gouv.fr/notice/memoire/AG20K002533",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/gazi-orhan-bey-camii/",
+   "lisans": "© Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie",
+   "lisansNotu": "Médiathèque du patrimoine izin verdi (Camille Duclert, müdür yardımcısı, 22.10.2026): kredi satırı aynen yazılmak şartıyla yeniden kullanım mümkün",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.184143,
+    "lng": 29.064453
+   },
+   "yon": 225,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 34
+  },
+  {
+   "fotoAtlasId": 47618,
+   "gorsel": "gorseller/fa-47618.webp",
+   "kucuk": "gorseller/fa-47618_k.webp",
+   "genislik": 1600,
+   "yukseklik": 1036,
+   "baslik": "Gazi Orhan Bey Camii",
+   "altMetin": "Eski fotoğraf: Gazi Orhan Bey Camii, 1909–34",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1909,
+    "enGec": 1934,
+    "etiket": "1909–34"
+   },
+   "fotografci": "Albert Gabriel",
+   "kaynakSatiri": "Fotoğraf: Albert Gabriel · © Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie (AG20K005645) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Ministère de la Culture (France)",
+   "asilArsivId": "AG20K005645",
+   "asilArsivUrl": "https://www.pop.culture.gouv.fr/notice/memoire/AG20K005645",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/gazi-orhan-bey-camii-2/",
+   "lisans": "© Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie",
+   "lisansNotu": "Médiathèque du patrimoine izin verdi (Camille Duclert, müdür yardımcısı, 22.10.2026): kredi satırı aynen yazılmak şartıyla yeniden kullanım mümkün",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.184109,
+    "lng": 29.06452
+   },
+   "yon": 322,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "kesin",
+   "eserMesafesiM": 38
+  },
+  {
+   "fotoAtlasId": 25056,
+   "gorsel": "gorseller/fa-25056.webp",
+   "kucuk": "gorseller/fa-25056_k.webp",
+   "genislik": 1131,
+   "yukseklik": 979,
+   "baslik": "Bursa’da Belediye Dairesi",
+   "altMetin": "Eski fotoğraf: Bursa’da Belediye Dairesi, Tarih bilinmiyor",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": null,
+    "enGec": null,
+    "etiket": "Tarih bilinmiyor"
+   },
+   "fotografci": "Kaymakam Ahmed",
+   "kaynakSatiri": "Fotoğraf: Kaymakam Ahmed · İstanbul Üniversitesi Nadir Eserler Kütüphanesi Yıldız Albümleri, NEKYA90758/21 · Foto Atlas aracılığıyla",
+   "asilKaynak": "İstanbul Üniversitesi Nadir Eserler Kütüphanesi",
+   "asilArsivId": "NEKYA90758/21",
+   "asilArsivUrl": "http://nek.istanbul.edu.tr/ekos/FOTOGRAF/90758---0021.jpg",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/bursada-belediye-dairesi/",
+   "lisans": "Yazılı izin",
+   "lisansNotu": "İÜ Nadir Eserler Kütüphanesi izin verdi (nadirkut@istanbul.edu.tr, 22.10.2026): NEKYA kısaltması ve numarası kaynak gösterilerek kullanılabilir",
+   "duzenlenebilir": true,
+   "cekimNoktasi": {
+    "lat": 40.183681,
+    "lng": 29.064123
+   },
+   "yon": 31,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "elle",
+   "eserMesafesiM": 33
+  }
+ ]
+}
