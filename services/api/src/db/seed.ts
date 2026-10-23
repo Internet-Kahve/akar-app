@@ -2,6 +2,7 @@ import { createSeed, routes as demoRoutes } from "@akar/api-client";
 import { validateSite, type HeritageRoute, type HeritageSite, type SitePhoto, type Trust } from "@akar/domain";
 import { eq, sql } from "drizzle-orm";
 import { siteDedupeKey, siteSearchText, siteSortName, slugify } from "../modules/catalog/service.ts";
+import type { Tx } from "../platform/idempotency.ts";
 import { createDb, type Db } from "./client.ts";
 import {
   catalogRoutes,
@@ -36,7 +37,7 @@ function photoMime(photo: SitePhoto): string {
  * ordered children (stories, stops, links) are replaced, so a second run changes nothing.
  * Existing `created_at`/`updated_at` are left alone; this is a content loader, not an editor.
  */
-export async function loadCatalog(db: Db, input: { sites: HeritageSite[]; routes: HeritageRoute[] }): Promise<void> {
+export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; routes: HeritageRoute[] }): Promise<void> {
   for (const site of input.sites) validateSite(site);
 
   await db.transaction(async (tx) => {

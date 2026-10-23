@@ -160,8 +160,24 @@ interface SiteDetailDto {
     audioMediaId?: string | null;
     audioEnMediaId?: string | null;
   }>;
+  sections?: Array<{
+    id: string;
+    kind: "history" | "architecture" | "waqf";
+    title: string;
+    body: string;
+    trust: Trust;
+    sourceId: string | null;
+  }>;
   cards: Array<{ mediaId: string }>;
-  historyImages: Array<{ mediaId: string; presentMediaId: string | null }>;
+  historyImages: Array<{
+    id?: string;
+    mediaId: string;
+    presentMediaId: string | null;
+    caption?: string;
+    dateLabel?: string;
+    sourceId?: string | null;
+    trust?: Trust;
+  }>;
   media: MediaDto[];
   /** Explicit gallery relationship; absent on older API versions. */
   photoIds?: string[];
@@ -332,6 +348,33 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     tier: d.tier,
     photos,
     sources: d.sources,
+    sections: (d.sections ?? []).map((section) => ({
+      ...section,
+      sourceId: section.sourceId ?? "",
+    })),
+    storyPhotos: d.media
+      .filter((m) => m.kind === "photo" && used.has(m.id))
+      .map(toPhoto),
+    historyImages: d.historyImages.flatMap((h) => {
+      const image = d.media.find(
+        (m) => m.id === h.mediaId && m.kind === "photo",
+      );
+      if (!image) return [];
+      const current = d.media.find(
+        (m) => m.id === h.presentMediaId && m.kind === "photo",
+      );
+      return [
+        {
+          id: h.id ?? h.mediaId,
+          photo: toPhoto(image),
+          caption: h.caption ?? image.title,
+          dateLabel: h.dateLabel ?? "Tarih bilinmiyor",
+          sourceId: h.sourceId ?? image.sourceId ?? "",
+          trust: h.trust ?? image.trust,
+          ...(current ? { presentPhoto: toPhoto(current) } : {}),
+        },
+      ];
+    }),
     ...(d.editorVersion === 2 && { editorVersion: 2 as const }),
     ...(present(d.nameEn) && { nameEn: d.nameEn }),
     ...(present(d.descriptionEn) && { descriptionEn: d.descriptionEn }),

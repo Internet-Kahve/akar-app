@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "next typegen && tsc --noEmit",
-    "predev": "node scripts/prepare-maplibre.mjs",
-    "prebuild": "node scripts/prepare-maplibre.mjs"
+    "predev": "node scripts/prepare-maplibre.mjs && node scripts/prepare-draco.mjs",
+    "prebuild": "node scripts/prepare-maplibre.mjs && node scripts/prepare-draco.mjs"
   },
   "dependencies": {
     "@akar/api-client": "*",
@@ -21,12 +21,14 @@
     "maplibre-gl": "^6.15.0",
     "next": "16.4.2",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.186.0",
     "typescript": "^5.9.3"
   }
 }

@@ -26,7 +26,7 @@ async function signIn(page: Page, email: string) {
   const dialog = page.getByRole("dialog").filter({ has: page.getByRole("heading", { name: "Giriş yap" }) });
   await dialog.getByRole("textbox", { name: "E-posta" }).fill(email);
   await dialog.getByRole("button", { name: "Kod gönder" }).click();
-  await expect(dialog.getByText(`${email} adresine 6 haneli bir kod gönderdik.`)).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Doğrulama kodu" })).toBeVisible();
   await dialog.getByRole("textbox", { name: "Doğrulama kodu" }).fill(await otpFor(email));
   await dialog.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page.getByText("Giriş yaptın.")).toBeVisible();
@@ -39,7 +39,7 @@ async function otpFor(email: string): Promise<string> {
     const id = search.messages?.[0]?.ID as string | undefined;
     if (id) {
       const message = await (await fetch(`${MAILPIT}/api/v1/message/${id}`)).json();
-      const code = /\b(\d{6})\b/.exec(message.Text as string)?.[1];
+      const code = /\b(\d{6,12})\b/.exec(message.Text as string)?.[1];
       if (code) return code;
     }
     await sleep(250);

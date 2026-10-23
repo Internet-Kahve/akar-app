@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 const pins = {
   cami: "e269f.svg",
+  turbe: "e269f.svg",
   cesme: "d42c6.svg",
   hamam: "29586.svg",
   han: "c4a6c.svg",

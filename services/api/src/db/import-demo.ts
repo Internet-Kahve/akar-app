@@ -1,0 +1,109 @@
+import { createHash } from "node:crypto";
+import { readFile, realpath } from "node:fs/promises";
+import { extname, resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
+import { parseArgs } from "node:util";
+import { and, eq, inArray, like } from "drizzle-orm";
+import { validateSite, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
+import { loadConfig } from "../config.ts";
+import { readGlbParts } from "../modules/media/glb.ts";
+import { storageFromConfig } from "../modules/media/storage-config.ts";
+import { createDb } from "./client.ts";
+import { loadCatalog } from "./seed.ts";
+import { historyImages, media, siteMedia, siteSections, sites } from "./schema/index.ts";
+
+type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string };
+type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages"> & {
+  photos: Array<NonNullable<HeritageSite["photos"]>[number] & { file: string; galleryPosition: number | null }>;
+  model: NonNullable<HeritageSite["model"]> & { file: string };
+  historyImages: ArchiveEntry[];
+  sections: Array<{ id: string; kind: "history" | "architecture" | "waqf"; title: string; body: string; trust: Trust; sourceId: string }>;
+};
+type Manifest = { version: number; sites: ContentSite[]; routes: HeritageRoute[]; retireSiteIds: string[] };
+const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".glb": "model/gltf-binary" };
+
+/** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
+export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env) {
+  const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
+  if (manifest.version !== 1 || manifest.sites.length !== 7) throw new Error("Expected the reviewed seven-site manifest (version 1)");
+  const root = await realpath(contentRoot);
+  const files = new Map<string, { body: Buffer; key: string; mime: string }>();
+  const mediaFiles = new Map<string, string>();
+  for (const site of manifest.sites) {
+    validateSite({ ...site, historyImages: [] });
+    const ids = new Set(site.photos.map((p) => p.id));
+    if (!ids.has(site.coverPhotoId ?? "") || site.stories.some((s) => !ids.has(s.photoId ?? ""))) throw new Error(`Unresolved photographs: ${site.id}`);
+    for (const item of [...site.photos, ...site.historyImages, { ...site.model, id: `${site.id}-model` }]) {
+      const file = await realpath(resolve(root, item.file));
+      if (!file.startsWith(root + sep)) throw new Error("Content path leaves the supplied root");
+      if (!files.has(item.file)) {
+        const body = await readFile(file), extension = extname(file).toLowerCase(), mime = MIME[extension];
+        if (!mime || !body.length || body.length > 50 * 1024 * 1024) throw new Error(`Unsupported content file: ${item.file}`);
+        const key = `demo/content/${createHash("sha256").update(body).digest("hex")}${extension}`;
+        files.set(item.file, { body, key, mime });
+      }
+      mediaFiles.set(item.id, item.file);
+    }
+    const model = files.get(site.model.file)!;
+    site.model.parts = await readGlbParts(model.body.length, async ({ start, end }) => model.body.subarray(start, end + 1));
+    site.model.bytes = model.body.length;
+    site.stories.forEach((story) => {
+      // Editorial group names may be prefixes, while GLB nodes carry numbered suffixes.
+      story.highlights = [...new Set((story.highlights ?? []).flatMap((prefix) => site.model.parts.filter((part) => part === prefix || part.startsWith(prefix + "_"))))];
+    });
+  }
+  const unique = new Map([...files.values()].map((f) => [f.key, f]));
+  const report = { sites: manifest.sites.length, objects: unique.size, bytes: [...unique.values()].reduce((n, f) => n + f.body.length, 0), applied: apply };
+  if (!apply) return report;
+  const config = loadConfig(env);
+  const storage = storageFromConfig(config)?.media;
+  if (!storage) throw new Error("Storage must be configured before --apply");
+  // Upload everything first: a failed transfer must not publish broken catalogue references.
+  for (const file of unique.values()) {
+    const existing = await storage.head(file.key);
+    if (!existing) await storage.put(file.key, file.body, file.mime);
+    else if (existing.bytes !== file.body.length || existing.contentType !== file.mime) throw new Error("Content-addressed object mismatch");
+  }
+  for (const site of manifest.sites) {
+    for (const photo of site.photos) photo.src = storage.publicUrl(files.get(photo.file)!.key);
+    site.model.src = storage.publicUrl(files.get(site.model.file)!.key);
+  }
+  const { db, pool } = createDb(config.DATABASE_URL, 2, config.DATABASE_SSL_CA);
+  try {
+    await db.transaction(async (tx) => {
+      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sections: _sections, ...site }) => site), routes: manifest.routes });
+      for (const site of manifest.sites) {
+        // The seed includes every story photo; only editorial gallery entries belong in site_media.
+        await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
+        const gallery = site.photos.filter((p) => p.galleryPosition !== null).sort((a, b) => a.galleryPosition! - b.galleryPosition!);
+        await tx.insert(siteMedia).values([...gallery.map((p) => p.id), `${site.id}-model`].map((mediaId, position) => ({ siteId: site.id, mediaId, position })));
+        await tx.delete(historyImages).where(eq(historyImages.siteId, site.id));
+        for (const [position, h] of site.historyImages.entries()) {
+          const file = files.get(h.file)!;
+          // A separate row per site keeps attribution and edit ownership explicit even when bytes are shared.
+          const row = { kind: "photo" as const, mime: file.mime, url: storage.publicUrl(file.key), alt: h.alt, title: h.caption,
+            description: h.credit, license: h.license, sourceId: h.sourceId, trust: h.trust, bytes: file.body.length };
+          await tx.insert(media).values({ id: h.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
+          await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, caption: h.caption,
+            dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust });
+        }
+        await tx.delete(siteSections).where(eq(siteSections.siteId, site.id));
+        if (site.sections.length) await tx.insert(siteSections).values(site.sections.map((section, position) => ({ ...section, siteId: site.id, position })));
+        for (const id of [...site.photos.map((p) => p.id), `${site.id}-model`]) {
+          const file = files.get(mediaFiles.get(id)!)!;
+          // Shared content-addressed files are seed-managed (storage_key stays null); deleting one site must not delete another's photo.
+          await tx.update(media).set({ bytes: file.body.length, ...(id.endsWith("-model") ? { partsStatus: "done" as const, license: "AKAR ekip üretimi · temsili model" } : {}) }).where(eq(media.id, id));
+        }
+      }
+      // Hide only the original fictional fixtures. Preserve records/progress and any subsequently edited content.
+      await tx.update(sites).set({ status: "draft" }).where(and(inArray(sites.id, manifest.retireSiteIds), like(sites.sourceSummary, "15 Ekim AKAR ürün notları%")));
+    });
+  } finally { await pool.end(); }
+  return report;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false } } });
+  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply]");
+  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply)));
+}

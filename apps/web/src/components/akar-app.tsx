@@ -35,6 +35,7 @@ import {
   approvedMemories,
   filterSites,
   kindLabels,
+  trustLabels,
   normalize,
   type Command,
   type HeritageSite,
@@ -43,6 +44,7 @@ import {
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
 import { Architecture, Scene } from "./scene";
+import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
@@ -494,6 +496,7 @@ export function AkarApp() {
           )}
           {view === "history" && site && (
             <HistoryView
+              key={site.id}
               site={site}
               onBack={() => go("detail", site.id)}
               onMemory={() => setOverlay("memory")}
@@ -557,7 +560,9 @@ export function AkarApp() {
                           {site.architect} <span>·</span> {site.year}
                         </p>
                         <Tag tone="representative">
-                          Örnek veri · doğrulama bekliyor
+                          {site.sources?.length
+                            ? "Kaynaklı içerik"
+                            : "Örnek veri · doğrulama bekliyor"}
                         </Tag>
                       </div>
                       <Motif />
@@ -915,6 +920,7 @@ export function AkarApp() {
                               {[
                                 "all",
                                 "cami",
+                                "turbe",
                                 "cesme",
                                 "hamam",
                                 "han",
@@ -963,6 +969,7 @@ export function AkarApp() {
                 </button>
                 {isDetail && site ? (
                   <Scene
+                    key={`${site.id}-${view === "story" ? storyIndex : "detail"}`}
                     site={site}
                     photoId={
                       view === "story"
@@ -992,7 +999,7 @@ export function AkarApp() {
                 )}
                 <div className="demo-label">
                   <span />
-                  İnteraktif demo · Örnek veriler
+                  İnteraktif demo
                 </div>
               </div>
             </main>
@@ -1050,13 +1057,24 @@ export function AkarApp() {
               </dd>
             </div>
           </dl>
+          {site.sections?.map((section) => (
+            <section key={section.id}>
+              <h3>{section.title}</h3>
+              <p>{section.body}</p>
+              <Tag tone={section.trust}>{trustLabels[section.trust]}</Tag>
+              <p className="muted">
+                {
+                  site.sources?.find((source) => source.id === section.sourceId)
+                    ?.title
+                }
+              </p>
+            </section>
+          ))}
           <h3>Kaynak ve içerik durumu</h3>
           <p>{site.source}</p>
-          <Notice>
-            Bu prototipteki tarih, konum ve metinler demo amaçlıdır. Sponsorun
-            doğrulanmış veri paketi geldiğinde kaynak kayıtlarıyla
-            değiştirilecek.
-          </Notice>
+          {!site.sources?.length && (
+            <Notice>Bu kaydın kaynaklı içerik paketi henüz eklenmedi.</Notice>
+          )}
         </Modal>
       )}
       {overlay === "memories" && site && (
@@ -1278,88 +1296,5 @@ function SiteCard({
         <Bookmark size={17} />
       </button>
     </article>
-  );
-}
-function HistoryView({
-  site,
-  onBack,
-  onMemory,
-}: {
-  site: HeritageSite;
-  onBack: () => void;
-  onMemory: () => void;
-}) {
-  const [year, setYear] = useState("1880"),
-    [split, setSplit] = useState(50);
-  return (
-    <main id="main-content" tabIndex={-1} className="history-page">
-      <Back onClick={onBack} />
-      <div className="row between">
-        <div>
-          <small className="eyebrow">AYNI YER, BAŞKA BİR ZAMAN</small>
-          <h1>Geçmişi Gör</h1>
-          <p className="muted">{site.name}</p>
-        </div>
-        <Tag tone="representative">Karşılaştırma demosu</Tag>
-      </div>
-      <div className="history-grid">
-        <div className="comparison">
-          <div className="compare-current">
-            <Architecture />
-            <span>Bugünkü görsel bekleniyor</span>
-          </div>
-          <div
-            className="compare-old"
-            style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
-          >
-            <Architecture />
-            <span>{year} · Arşiv görseli bekleniyor</span>
-          </div>
-          <div className="compare-line" style={{ left: `${split}%` }}>
-            <span>↔</span>
-          </div>
-          <input
-            type="range"
-            min={5}
-            max={95}
-            value={split}
-            onChange={(e) => setSplit(Number(e.target.value))}
-            aria-label="Geçmiş ve bugün karşılaştırma oranı"
-          />
-          <div className="compare-label">
-            Temsili düzen · Tarihî görüntü değildir
-          </div>
-        </div>
-        <aside className="card">
-          <History size={28} />
-          <h2>Geçmişe açılan pencere</h2>
-          <p>
-            Tarihî gravürleri, fotoğrafları ve bugünkü görüntüyü aynı açıdan
-            karşılaştır.
-          </p>
-          <Notice>
-            Henüz arşiv görseli sağlanmadı. Kaynak, lisans ve çekim tarihi
-            doğrulanan görseller bu alana eklenecek.
-          </Notice>
-          <button className="btn secondary full" onClick={onMemory}>
-            Bu açıdan fotoğrafın var mı?
-            <ArrowRight size={16} />
-          </button>
-        </aside>
-      </div>
-      <div className="timeline" aria-label="Tarih seçimi">
-        {["1880", "1910", "1955", "1990"].map((y) => (
-          <button
-            key={y}
-            className={y === year ? "active" : ""}
-            onClick={() => setYear(y)}
-          >
-            <History size={20} />
-            <strong>{y}</strong>
-            <small>İçerik bekleniyor</small>
-          </button>
-        ))}
-      </div>
-    </main>
   );
 }

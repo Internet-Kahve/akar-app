@@ -2141,3 +2141,45 @@ test("draft route loading uses one page without detail requests for each route",
     1,
   );
 });
+
+test("archive attribution and story-only photographs reach the UI without becoming gallery entries", async () => {
+  const d = siteA();
+  const archive = {
+    ...d,
+    photoIds: ["extra"],
+    historyImages: [
+      {
+        id: "h1",
+        mediaId: "old",
+        presentMediaId: null,
+        caption: "Eski yapı",
+        dateLabel: "1890–1900",
+        sourceId: "archive-source",
+        trust: "inferred",
+      },
+    ],
+  };
+  const transport = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({ items: [archive], nextCursor: null }),
+  });
+  const client = createHttpClient({
+    baseUrl: "https://api.test",
+    fetch: transport.fetch,
+    storage: storage(),
+  });
+  const snapshot = await client.getSnapshot();
+  const site = snapshot.sites[0]!;
+  assert.deepEqual(
+    site.photos?.map((p) => p.id),
+    ["extra"],
+  );
+  assert.deepEqual(
+    site.storyPhotos?.map((p) => p.id),
+    ["cover"],
+  );
+  assert.equal(site.historyImages?.[0]?.dateLabel, "1890–1900");
+  assert.equal(site.historyImages?.[0]?.photo.license, "CC BY");
+  assert.equal(site.historyImages?.[0]?.sourceId, "archive-source");
+  assert.equal(site.historyImages?.[0]?.presentPhoto, undefined);
+});
