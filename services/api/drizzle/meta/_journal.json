@@ -71,6 +71,13 @@
       "when": 1792746430086,
       "tag": "0009_media_deletion_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792754249534,
+      "tag": "0010_durable_background_jobs",
+      "breakpoints": true
     }
   ]
 }

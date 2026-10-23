@@ -152,14 +152,11 @@ export const mediaRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const user = req.user!;
       const store = requireDep(storage, "Dosya depolama");
-      const created: { modelId: string | undefined } = { modelId: undefined };
       const result = await idempotent(db, req, user.id, async (tx) => {
         const done = await completeUpload(tx, { storage: store, jobs, user, requestId: req.id }, req.params.id, req.body);
-        created.modelId = done.modelId;
+        if (done.modelId) await requireDep(jobs, "İş kuyruğu").send(GLB_PARTS_JOB, { mediaId: done.modelId }, tx);
         return done.result;
       });
-      // Only after the commit: a worker that picks the job up must find the row.
-      if (created.modelId) await requireDep(jobs, "İş kuyruğu").send(GLB_PARTS_JOB, { mediaId: created.modelId });
       return reply.status(result.status as 200 | 201 | 409 | 413 | 415).send(result.body);
     },
   );
