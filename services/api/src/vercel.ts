@@ -1,6 +1,6 @@
 import { attachDatabasePool } from "@vercel/functions";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createRuntime } from "../src/runtime.ts";
+import { createRuntime } from "./runtime.ts";
 
 let runtime: ReturnType<typeof createRuntime> | undefined;
 export default async function handler(req: IncomingMessage, res: ServerResponse) {

@@ -103,7 +103,8 @@ Render artık dağıtım hedefi değildir. Eski hesapların verileri otomatik si
    Tam arşiv için `ingest` çalıştırma. Medya adreslerinin yeni Storage kovasına ait olduğunu kontrol et;
    mevcut seed yalnız arayüz için örnek metinler içerir, dosyaları Storage'a taşımaz.
 6. Vercel API projesi: Root Directory `services/api`, Framework **Other**, Node **24.x**, kök dışı
-   kaynaklar dahil. `vercel.json` Fastify girişini `api/index.ts` üzerinden yönlendirir; süre 300 saniye.
+   kaynaklar dahil. `npm run build`, uygulama ve ortak TypeScript paketlerini `dist/vercel.mjs` olarak derler.
+   `vercel.json` Fastify girişini `api/index.mjs` üzerinden yönlendirir; süre 300 saniye.
    Ortam değişkenleri aşağıda. Production domain web, mobil ve cron tarafından erişilebilir olmalı;
    preview dağıtımlarının Vercel korumasını koru.
 7. Web projesi Root Directory `apps/web`, Framework Next.js. Production ortamına
