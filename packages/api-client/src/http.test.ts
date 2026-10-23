@@ -672,6 +672,167 @@ test("editors see drafts at the city centre; an unmoved placeholder sends no loc
   );
 });
 
+test("a full editor save goes through the step endpoints in reference order: new files uploaded and their ids mapped, server-only story fields and source locators kept", async () => {
+  const source1 = {
+    id: "src-1",
+    title: "Envanter",
+    kind: "book",
+    author: "",
+    year: "",
+    page: "",
+    url: "",
+    trust: "verified",
+  };
+  let model = "glb";
+  let upload = 0;
+  const published = () => ({ ...siteA(), sources: [source1] });
+  const admin = () => {
+    const base = published();
+    return {
+      ...base,
+      status: "published",
+      openingCamera: null,
+      sourceLinks: [{ sourceId: "src-1", locator: "s. 42" }],
+      stories: base.stories.map((s) => ({
+        ...s,
+        cardId: "card-1",
+        camera: { azimuthDeg: 10, elevationDeg: 20, distanceM: 30 },
+        audioMediaId: "voice",
+        audioEnMediaId: null,
+      })),
+      media: [
+        ...base.media.filter((m) => m.kind !== "model"),
+        model === "glb"
+          ? media("glb", "model", { title: "Model", parts: ["kubbe"] })
+          : media(model, "model", { parts: ["kubbe", "minare"] }),
+      ],
+    };
+  };
+  const writes: Call[] = [];
+  const write = (out: unknown = {}) => (c: Call) => {
+    writes.push(c);
+    return out;
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [published()], nextCursor: null }),
+    "GET /v1/admin/sites/a": () => admin(),
+    "PATCH /v1/admin/sites/a/info": write(),
+    "PUT /v1/admin/sites/a/sources": write(),
+    "POST /v1/media/uploads": (c) => {
+      writes.push(c);
+      upload++;
+      return { uploadId: `up${upload}`, url: `/v1/media/uploads/up${upload}/content`, headers: {} };
+    },
+    "PUT /v1/media/uploads/up1/content": () => new Response(null, { status: 204 }),
+    "PUT /v1/media/uploads/up2/content": () => new Response(null, { status: 204 }),
+    "POST /v1/media/uploads/up1/complete": write({ id: "p-new" }),
+    "POST /v1/media/uploads/up2/complete": write({ id: "m-new" }),
+    "PATCH /v1/admin/media/cover": write(),
+    "PUT /v1/admin/sites/a/model": (c) => {
+      const body = c.body;
+      if (body && typeof body === "object" && "mediaId" in body && typeof body.mediaId === "string")
+        model = body.mediaId;
+      return write()(c);
+    },
+    "PUT /v1/admin/sites/a/media": write(),
+    "PUT /v1/admin/sites/a/stories": write(),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const site = (await client.getSnapshot()).sites.find((s) => s.id === "a")!;
+  const newSource = { ...source1, id: "src-new", title: "Yeni kaynak" } as const;
+  await client.dispatch({
+    type: "site",
+    site: {
+      ...site,
+      city: "Kütahya",
+      sources: [...site.sources!, newSource],
+      photos: [
+        ...site.photos!.map((p) => (p.id === "cover" ? { ...p, title: "Kapak" } : p)),
+        {
+          id: "tmp-photo",
+          src: "data:image/png;base64,iVBORw0KGgo=",
+          alt: "Yeni",
+          title: "Yeni",
+          titleEn: "",
+          description: "",
+          sourceId: "src-new",
+          license: "CC BY",
+          trust: "verified",
+        },
+      ],
+      coverPhotoId: "tmp-photo",
+      model: {
+        name: "yeni.glb",
+        bytes: 8,
+        src: "data:model/gltf-binary;base64,Z2xURgIAAAA=",
+        parts: ["minare"],
+        trust: "representative",
+      },
+      stories: [
+        { ...site.stories[0]!, photoId: "tmp-photo", highlights: ["minare"] },
+        { id: "s-new", title: "İki", text: "t", simple: "s", trust: "inferred", photoId: "extra", sourceId: "src-new" },
+      ],
+    },
+  });
+
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path, c.body]),
+    [
+      ["PATCH", "/v1/admin/sites/a/info", { city: "Kütahya" }],
+      [
+        "PUT",
+        "/v1/admin/sites/a/sources",
+        { sources: [{ ...source1, locator: "s. 42" }, { ...newSource, locator: null }] },
+      ],
+      // Photos in list order: the edited cover first, then the new file.
+      [
+        "PATCH",
+        "/v1/admin/media/cover",
+        { alt: "cover", title: "Kapak", titleEn: null, description: "", license: "CC BY", sourceId: null, trust: "verified" },
+      ],
+      ["POST", "/v1/media/uploads", { kind: "photo", contentType: "image/png", bytes: 8 }],
+      [
+        "POST",
+        "/v1/media/uploads/up1/complete",
+        { alt: "Yeni", title: "Yeni", titleEn: null, description: "", license: "CC BY", sourceId: "src-new", trust: "verified" },
+      ],
+      ["POST", "/v1/media/uploads", { kind: "model", contentType: "model/gltf-binary", bytes: 8 }],
+      ["POST", "/v1/media/uploads/up2/complete", { title: "yeni.glb", license: "Katkı sahibi izniyle", trust: "representative" }],
+      ["PUT", "/v1/admin/sites/a/model", { mediaId: "m-new" }],
+      ["PUT", "/v1/admin/sites/a/media", { photoIds: ["cover", "extra", "p-new"], coverPhotoId: "p-new" }],
+      [
+        "PUT",
+        "/v1/admin/sites/a/stories",
+        {
+          blocks: [
+            {
+              id: "s1", title: "t", text: "x", textEn: null, simple: "y", trust: "verified",
+              photoId: "p-new", sourceId: null, showCard: null, highlights: ["minare"],
+              cardId: "card-1", camera: { azimuthDeg: 10, elevationDeg: 20, distanceM: 30 }, audioMediaId: "voice", audioEnMediaId: null,
+            },
+            {
+              id: "s-new", title: "İki", text: "t", textEn: null, simple: "s", trust: "inferred",
+              photoId: "extra", sourceId: "src-new", showCard: null, highlights: [],
+              cardId: null, camera: null, audioMediaId: null, audioEnMediaId: null,
+            },
+          ],
+        },
+      ],
+    ],
+  );
+  // The highlights wait for the new model's part names: read after the model is set, before the story.
+  const order = api.calls.map((c) => `${c.method} ${c.path}`);
+  const modelSet = order.indexOf("PUT /v1/admin/sites/a/model");
+  assert.ok(order.slice(modelSet).indexOf("GET /v1/admin/sites/a") < order.slice(modelSet).indexOf("PUT /v1/admin/sites/a/stories"));
+});
+
 test("users and moderators never request drafts", async () => {
   for (const role of ["user", "moderator"]) {
     const api = fakeApi({

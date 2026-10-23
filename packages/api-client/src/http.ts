@@ -74,6 +74,11 @@ export const httpStorageKey = "akar-http-v1";
 const CONCURRENCY = 6;
 /** Most site ids one `GET /v1/memories` request may name (`FEED_SITE_IDS_MAX` server-side). */
 const FEED_SITE_IDS_MAX = 100;
+/** Licence stated for files the panel uploads; the editor states the trust level. */
+const CONTRIBUTOR_LICENSE = "Katkı sahibi izniyle";
+/** A new model's part names come from a server job: polled this often, this long apart (~20 s). */
+const MODEL_PARTS_ATTEMPTS = 20;
+const MODEL_PARTS_WAIT_MS = 1000;
 /** Points the server awards per receipt action (CONTRACTS §6); used only to show pending guest points. */
 const receiptPoints: Record<string, number> = {
   "story.complete": 15,
@@ -147,11 +152,22 @@ interface SiteDetailDto {
     sourceId: string | null;
     showCard: boolean | null;
     highlights: string[];
+    /** Server-side only fields the domain does not carry; kept as they are on a story save. */
+    cardId?: string | null;
+    camera?: CameraPoseDto | null;
+    audioMediaId?: string | null;
+    audioEnMediaId?: string | null;
   }>;
   cards: Array<{ mediaId: string }>;
   historyImages: Array<{ mediaId: string; presentMediaId: string | null }>;
   media: MediaDto[];
   sources: SiteSource[];
+}
+interface CameraPoseDto {
+  label?: string;
+  azimuthDeg: number;
+  elevationDeg: number;
+  distanceM: number;
 }
 /** `AdminSiteDetail`: the public detail plus status; a draft may lack type and location. */
 interface AdminSiteDetailDto extends Omit<
@@ -161,6 +177,9 @@ interface AdminSiteDetailDto extends Omit<
   kind: string | null;
   coordinates: [number, number] | null;
   status: "draft" | "published";
+  openingCamera: CameraPoseDto | null;
+  /** Per-site place inside each source ("s. 42"); the domain source has no such field. */
+  sourceLinks: Array<{ sourceId: string; locator: string | null }>;
 }
 interface RouteDto {
   id: string;
@@ -691,7 +710,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const refreshFeed = async () => {
     const cat = await loadCatalog();
     cat.feedStale = true;
-    // Revalidate: the feed is publicly cached (`max-age=60`) and this runs right after a write.
+    // Runs right after a write: always ask the server. The feed is `public, no-cache` (§11.24), so
+    // browsers revalidate anyway; the request option keeps it so whatever the server sends.
     cat.feed = await loadFeed(
       cat.sites.map((s) => s.id),
       "no-cache",
@@ -966,19 +986,26 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const toggled = (ids: string[], id: string, desired: boolean) =>
     desired ? [...new Set([...ids, id])] : ids.filter((x) => x !== id);
 
-  async function uploadPhoto(
+  /** Uploads a data-URL file (ticket, PUT, complete) and returns the new media id. */
+  async function uploadMedia(
+    kind: "photo" | "model",
     dataUrl: string,
-    alt: string,
-    role: MeDto["role"],
+    metadata: Record<string, unknown>,
   ): Promise<string> {
     const file = decodeDataUrl(dataUrl);
-    if (!file) throw new Error("Fotoğraf geçerli bir dosya değil.");
+    if (!file)
+      throw new Error(
+        kind === "photo"
+          ? "Fotoğraf geçerli bir dosya değil."
+          : "Model geçerli bir GLB dosyası değil.",
+      );
     const progress = opts.onUploadProgress;
     try {
       const ticket = await call<UploadTicketDto>("POST", "/v1/media/uploads", {
         body: {
-          kind: "photo",
-          contentType: file.mime,
+          kind,
+          // Browsers label a .glb differently or not at all; the server checks the bytes.
+          contentType: kind === "model" ? "model/gltf-binary" : file.mime,
           bytes: file.bytes.length,
         },
       });
@@ -1003,16 +1030,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       const media = await call<{ id: string }>(
         "POST",
         `/v1/media/uploads/${encodeURIComponent(ticket.uploadId)}/complete`,
-        {
-          // Editors and admins must state licence and trust; visitors send only `alt`.
-          body: {
-            alt,
-            ...((role === "editor" || role === "admin") && {
-              license: "Katkı sahibi izniyle",
-              trust: "representative",
-            }),
-          },
-        },
+        { body: metadata },
       );
       progress?.(1);
       return media.id;
@@ -1040,19 +1058,6 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       ? pub.coordinates
       : (draft!.coordinates ?? placeholderOf(cat, draft!));
     const cur = pub ? mapSite(pub) : mapAdminSite(draft!, shownAt);
-    const locked = [
-      "stories",
-      "photos",
-      "sources",
-      "model",
-      "coverPhotoId",
-      "city",
-    ] as const;
-    if (locked.some((k) => !same(cur[k], site[k])))
-      throw new UnsupportedCommandError(
-        "site",
-        "Hikâye, fotoğraf, kaynak, model ve şehir değişiklikleri adım adım API uçlarıyla yapılır; bu komut yalnızca eser bilgilerini ve konumu günceller.",
-      );
     const info: Record<string, unknown> = {};
     const field = (key: string, now: unknown, before: unknown) => {
       if (!same(now, before)) info[key] = now;
@@ -1082,25 +1087,169 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     field("minutes", site.minutes, cur.minutes);
     field("district", site.district || null, cur.district || null);
     field("tier", site.tier, cur.tier);
-    const id = encodeURIComponent(site.id);
+    const path = `/v1/admin/sites/${encodeURIComponent(site.id)}`;
     try {
+      // City goes with the other details (§11.26): the server takes the city's name.
+      if (site.city !== cur.city) info.city = site.city;
       if (Object.keys(info).length)
-        await call("PATCH", `/v1/admin/sites/${id}/info`, { body: info });
+        await call("PATCH", `${path}/info`, { body: info });
       // An unmoved placeholder is no location: the server keeps refusing to publish it.
       if (!same(site.coordinates, shownAt))
-        await call("PUT", `/v1/admin/sites/${id}/location`, {
+        await call("PUT", `${path}/location`, {
           body: { coordinates: site.coordinates },
         });
+      await saveContent(site, cur, path);
       if (site.status === "published" && !pub)
-        await call("POST", `/v1/admin/sites/${id}/publish`);
+        await call("POST", `${path}/publish`);
       if (site.status === "draft" && pub)
-        await call("POST", `/v1/admin/sites/${id}/unpublish`);
+        await call("POST", `${path}/unpublish`);
     } catch (e) {
       // Earlier steps may have been saved (e.g. info before a refused publish): show them.
       await refreshAdminSite(site.id).catch(() => undefined);
       throw e;
     }
     await refreshAdminSite(site.id);
+  }
+
+  const photoMetadata = (p: SitePhoto) => ({
+    alt: p.alt,
+    title: p.title,
+    titleEn: p.titleEn || null,
+    description: p.description,
+    license: p.license,
+    sourceId: p.sourceId || null,
+    trust: p.trust,
+  });
+
+  /**
+   * Waits for the server to read a new model's part names (a background job), which story
+   * highlights are checked against.
+   */
+  async function modelParts(path: string, modelId: string) {
+    for (let attempt = 0; attempt < MODEL_PARTS_ATTEMPTS; attempt++) {
+      const d = await call<AdminSiteDetailDto>("GET", path);
+      if (d.media.find((m) => m.id === modelId)?.parts.length) return;
+      await new Promise((r) => setTimeout(r, MODEL_PARTS_WAIT_MS));
+    }
+    throw new Error(
+      "Modelin parça adları henüz okunmadı. Vurgulu cümleler için birkaç saniye sonra yeniden kaydet.",
+    );
+  }
+
+  /**
+   * Sources, photos, model and story of an editor save, through the wizard's step endpoints. Order
+   * follows the references: sources before the photos and sentences citing them, files before the
+   * lists naming them, the model (and its part names) before the highlights. Each step is skipped
+   * when unchanged. A new file is a data URL: it is uploaded and its domain id mapped to the media id.
+   */
+  async function saveContent(
+    site: HeritageSite,
+    cur: HeritageSite,
+    path: string,
+  ) {
+    const photos = site.photos ?? [];
+    const sourcesChanged = !same(site.sources ?? [], cur.sources ?? []);
+    const modelChanged = !same(site.model, cur.model);
+    const photosChanged =
+      !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
+    const storiesChanged = !same(site.stories, cur.stories);
+    if (!sourcesChanged && !modelChanged && !photosChanged && !storiesChanged)
+      return;
+    // What the domain site does not carry: source locators, story cards, cameras and audio.
+    const before = await call<AdminSiteDetailDto>("GET", path);
+
+    if (sourcesChanged) {
+      const locators = new Map(
+        before.sourceLinks.map((l) => [l.sourceId, l.locator]),
+      );
+      await call("PUT", `${path}/sources`, {
+        body: {
+          sources: (site.sources ?? []).map((s) => ({
+            ...s,
+            locator: locators.get(s.id) ?? null,
+          })),
+        },
+      });
+    }
+
+    const uploaded = new Map<string, string>();
+    const mediaId = (photoId: string) => uploaded.get(photoId) ?? photoId;
+    const oldPhotos = new Map((cur.photos ?? []).map((p) => [p.id, p]));
+    for (const p of photos) {
+      const old = oldPhotos.get(p.id);
+      if (p.src.startsWith("data:"))
+        uploaded.set(p.id, await uploadMedia("photo", p.src, photoMetadata(p)));
+      // A photo is shared: its details change wherever it is used (as the "photo" command does).
+      else if (old && !same(photoMetadata(p), photoMetadata(old)))
+        await call("PATCH", `/v1/admin/media/${encodeURIComponent(p.id)}`, {
+          body: photoMetadata(p),
+        });
+    }
+
+    if (modelChanged) {
+      const model = site.model;
+      const linked = before.media.find((m) => m.kind === "model");
+      if (!model) {
+        await call("PUT", `${path}/model`, { body: { mediaId: null } });
+      } else if (model.src.startsWith("data:")) {
+        // The opening camera belongs to the old model; a new one starts without it.
+        const id = await uploadMedia("model", model.src, {
+          title: model.name,
+          license: CONTRIBUTOR_LICENSE,
+          trust: model.trust,
+        });
+        await call("PUT", `${path}/model`, { body: { mediaId: id } });
+        if (site.stories.some((s) => s.highlights?.length))
+          await modelParts(path, id);
+      } else if (linked && model.trust !== linked.trust) {
+        await call(
+          "PATCH",
+          `/v1/admin/media/${encodeURIComponent(linked.id)}`,
+          {
+            body: { trust: model.trust },
+          },
+        );
+      }
+    }
+
+    if (photosChanged)
+      await call("PUT", `${path}/media`, {
+        body: {
+          photoIds: photos.map((p) => mediaId(p.id)),
+          coverPhotoId: site.coverPhotoId ? mediaId(site.coverPhotoId) : null,
+        },
+      });
+
+    // A replaced photo keeps its domain id in the sentences but has a new media id.
+    const remapped = site.stories.some(
+      (s) => s.photoId !== undefined && uploaded.has(s.photoId),
+    );
+    if (storiesChanged || remapped) {
+      const kept = new Map(before.stories.map((s) => [s.id, s]));
+      await call("PUT", `${path}/stories`, {
+        body: {
+          blocks: site.stories.map((s) => {
+            const k = kept.get(s.id);
+            return {
+              id: s.id,
+              title: s.title,
+              text: s.text,
+              textEn: s.textEn || null,
+              simple: s.simple,
+              trust: s.trust,
+              photoId: s.photoId ? mediaId(s.photoId) : null,
+              sourceId: s.sourceId || null,
+              showCard: s.showCard ?? null,
+              highlights: s.highlights ?? [],
+              cardId: k?.cardId ?? null,
+              camera: k?.camera ?? null,
+              audioMediaId: k?.audioMediaId ?? null,
+              audioEnMediaId: k?.audioEnMediaId ?? null,
+            };
+          }),
+        },
+      });
+    }
   }
 
   async function updateRoutes(routes: HeritageRoute[]) {
@@ -1232,11 +1381,14 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         const site = cat.sites.find((s) => s.id === command.memory.siteId);
         const photo = command.memory.photo;
         const mediaId = photo
-          ? await uploadPhoto(
-              photo,
-              `${site?.name ?? "Eser"} için paylaşılan fotoğraf`,
-              user.role,
-            )
+          ? await uploadMedia("photo", photo, {
+              alt: `${site?.name ?? "Eser"} için paylaşılan fotoğraf`,
+              // Editors and admins must state licence and trust; visitors send only `alt`.
+              ...((user.role === "editor" || user.role === "admin") && {
+                license: CONTRIBUTOR_LICENSE,
+                trust: "representative",
+              }),
+            })
           : undefined;
         await call("POST", "/v1/memories", {
           body: {
