@@ -153,6 +153,8 @@ const catalogHandlers = (): Record<string, Handler> => ({
       },
     ],
   }),
+  // Every signed-in load reads Rotam; an empty one unless a test says otherwise.
+  "GET /v1/me/route": () => ({ siteIds: [] }),
 });
 
 test("snapshot maps site DTOs: coordinates order, photos without card/history media, model, route order, paging, no request per site", async () => {
@@ -490,6 +492,7 @@ const accountHandlers = (
       quizzesSolved: [],
     }),
     "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "GET /v1/me/route": () => ({ siteIds: [] }),
     "PUT /v1/me/saved/a": () => ({ siteId: "a", saved: true }),
     "DELETE /v1/me/saved/a": () => ({ siteId: "a", saved: false }),
   };
@@ -526,6 +529,134 @@ test("the user cache follows the token: another account never inherits cached sa
     [guest.savedIds, guest.points, guest.routeIds],
     [[], 0, ["a"]],
   );
+});
+
+test("sign-in moves the device's saves and Rotam into the account once; Rotam then lives in the account", async () => {
+  const store = storage();
+  let tokenValue: string | null = null;
+  const account = { saved: ["b"], route: ["a"] };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: account.saved, points: 0 } }),
+    "GET /v1/me/route": () => ({ siteIds: account.route }),
+    "PUT /v1/me/route": (c) => {
+      account.route = (c.body as { siteIds: string[] }).siteIds;
+      return { siteIds: account.route };
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: store,
+    getToken: () => tokenValue,
+    fetch: api.fetch,
+  });
+  await client.dispatch({ type: "save", siteId: "a" });
+  await client.dispatch({ type: "save", siteId: "b" });
+  await client.dispatch({ type: "set-route", siteIds: ["b", "a"] });
+  assert.deepEqual(
+    api.calls.filter((c) => c.method !== "GET"),
+    [],
+    "a guest writes nothing",
+  );
+
+  tokenValue = "T";
+  const signedIn = await client.getSnapshot();
+  assert.deepEqual(
+    api.calls
+      .filter((c) => c.method !== "GET")
+      .map((c) => [c.method, c.path, c.body, c.headers.authorization]),
+    [
+      ["PUT", "/v1/me/saved/a", undefined, "Bearer T"],
+      ["PUT", "/v1/me/route", { siteIds: ["a", "b"] }, "Bearer T"],
+    ],
+    "only the save the account lacks; the device's stops after the account's, each once",
+  );
+  assert.deepEqual(
+    [signedIn.savedIds, signedIn.routeIds],
+    [["a", "b"], ["a", "b"]],
+  );
+  const stored = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
+  assert.deepEqual([stored.saved, stored.route], [[], []]);
+
+  const writes = api.calls.length;
+  await client.getSnapshot();
+  assert.ok(
+    api.calls.slice(writes).every((c) => c.method === "GET"),
+    "moved once",
+  );
+
+  const toggled = await client.dispatch({ type: "route", siteId: "a" });
+  assert.deepEqual(api.calls.at(-1)?.body, { siteIds: ["b"] });
+  assert.deepEqual(toggled.routeIds, ["b"]);
+
+  tokenValue = null;
+  assert.deepEqual(
+    (await client.getSnapshot()).routeIds,
+    [],
+    "signed out, the device's Rotam was moved away",
+  );
+});
+
+test("a failed move keeps the device's lists for the next load; a save unpublished since is skipped; Rotam stops at 100", async () => {
+  const store = storage();
+  let tokenValue: string | null = null;
+  let routeStatus = 500;
+  const full = Array.from({ length: 99 }, (_, i) => `x${i}`);
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }),
+    "PUT /v1/me/saved/a": () =>
+      Response.json(
+        {
+          error: {
+            code: "NOT_FOUND",
+            message: "Eser bulunamadı.",
+            fieldErrors: {},
+            requestId: "r",
+          },
+        },
+        { status: 404 },
+      ),
+    "PUT /v1/me/saved/b": () => ({ siteId: "b", saved: true }),
+    "GET /v1/me/route": () => ({ siteIds: full }),
+    "PUT /v1/me/route": (c) =>
+      routeStatus === 200
+        ? c.body
+        : Response.json(
+            {
+              error: {
+                code: "INTERNAL",
+                message: "Sunucu hatası.",
+                fieldErrors: {},
+                requestId: "r",
+              },
+            },
+            { status: 500 },
+          ),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: store,
+    getToken: () => tokenValue,
+    fetch: api.fetch,
+  });
+  await client.dispatch({ type: "save", siteId: "a" });
+  await client.dispatch({ type: "save", siteId: "b" });
+  await client.dispatch({ type: "set-route", siteIds: ["a", "b"] });
+
+  tokenValue = "T";
+  const failed = await client.getSnapshot();
+  assert.deepEqual(failed.routeIds, [], "the account's own (unpublished stops are not shown)");
+  const kept = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
+  assert.deepEqual([kept.saved, kept.route], [["a", "b"], ["a", "b"]]);
+
+  routeStatus = 200;
+  await client.getSnapshot();
+  const moved = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
+  assert.deepEqual([moved.saved, moved.route], [[], []]);
+  assert.deepEqual(api.calls.filter((c) => c.method === "PUT" && c.path === "/v1/me/route").at(-1)?.body, {
+    siteIds: [...full, "a"],
+  });
 });
 
 for (const failure of ["server", "network"] as const) {

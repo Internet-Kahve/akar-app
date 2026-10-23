@@ -162,6 +162,46 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   await Promise.all([visitor.context.close(), moderator.context.close(), reader.context.close()]);
 });
 
+test("a guest's saved site and Rotam move into the account at sign-in; Rotam then changes in the account", async ({ browser }) => {
+  const email = `e2e-rotam-${randomUUID().slice(0, 8)}@akar.test`;
+  const { context, page } = await guestPage(browser);
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+
+  // 1. As a guest: save the site and add it to Rotam (kept on the device).
+  await openSite(page, MEMORY_SITE.name);
+  const save = page.getByRole("button", { name: "Eseri kaydet" });
+  await save.click();
+  await expect(save).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Rotama ekle" }).click();
+  await expect(page.getByRole("button", { name: "Rotamdan çıkar" })).toBeVisible();
+
+  // 2. Sign in: both move into the account.
+  await page.goto("/");
+  await openProfile(page);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await signIn(page, email);
+  const auth = { authorization: `Bearer ${tokenFor(email, "user")}` };
+  const account = async () => {
+    const [route, passport] = await Promise.all(
+      ["/v1/me/route", "/v1/me/passport"].map(async (p) => (await fetch(`${API}${p}`, { headers: auth })).json()),
+    );
+    return { route: route.siteIds, saved: passport.saved };
+  };
+  await expect.poll(account).toEqual({ route: [MEMORY_SITE.id], saved: [MEMORY_SITE.id] });
+
+  // 3. After a reload the account's lists are shown; removing the stop writes the account's Rotam.
+  await page.goto("/");
+  await openSite(page, MEMORY_SITE.name);
+  await expect(page.getByRole("button", { name: "Eseri kaydet" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Rotamdan çıkar" }).click();
+  await expect(page.getByRole("button", { name: "Rotama ekle" })).toBeVisible();
+  await expect.poll(account).toEqual({ route: [], saved: [MEMORY_SITE.id] });
+
+  expect(errors).toEqual([]);
+  await context.close();
+});
+
 test("an admin deletes another visitor's approved memory permanently from the public card", async ({ browser }) => {
   const run = randomUUID().slice(0, 8);
   const adminEmail = `e2e-admin-${run}@akar.test`;
