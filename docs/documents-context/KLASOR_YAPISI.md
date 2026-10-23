@@ -26,18 +26,18 @@ documents-context/
 │   ├── _kutuphane/           Ortak Blender yardımcıları ve yöntem
 │   ├── ulu-cami/
 │   ├── yildirim-bayezid-bedesteni/
-│   ├── ayasofya/             Önceki pilot (sürüm klasörleri v20–v24)
-│   ├── aday-eserler/         Henüz işlenmemiş 30 aday eser (eser.md + ref)
+│   ├── ayasofya/             Önceki pilot (sürüm klasörleri v20–v24; Git dışında)
+│   ├── aday-eserler/         Henüz işlenmemiş 30 aday eser (eser.md + ref; Git dışında)
 │   ├── _GENEL_SAHNE_STANDARDI.md  Renk, ışık, zemin kuralları
-│   └── <eser>/               eser.md, notlar, icerik/, ref/, 3d/
+│   └── <eser>/               eser.md, notlar, icerik/, gecmisi-gor/, 3d/export (ref/, 3d/blend, build, kontrol Git dışında)
 └── veri/
     ├── BENIOKU.md
     ├── kaynak_pdf/           Vakıf Katılım envanter PDF'leri (Git dışında; ekibe kısıtlı Drive'dan)
     ├── metin/
     ├── eserler_taslak.csv
     ├── bursa/                Ortak kaynaklar, kararlar, denetim ve şablonlar
-    ├── bursa-foto/           Envanter fotoğrafları ve manifest
-    ├── fotoatlas/            Foto Atlas eski fotoğrafları, izinler, Geçmişi Gör paketi (BENIOKU.md)
+    ├── bursa-foto/           Envanter fotoğrafları ve manifest (Git dışında)
+    ├── fotoatlas/            Foto Atlas eski fotoğrafları, izinler, betikler (Git dışında; uygulama paketi eserler/<eser>/gecmisi-gor/)
     ├── panorama-test/        Panorama denemesi ve atıf
     └── vakıf-eserleri-envanteri/  Büyük yerel kaynak arşivi (Git dışında)
 ```
