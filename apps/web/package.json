@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "next typegen && tsc --noEmit",
-    "predev": "node scripts/prepare-maplibre.mjs",
-    "prebuild": "node scripts/prepare-maplibre.mjs"
+    "predev": "node scripts/prepare-maplibre.mjs && node scripts/prepare-draco.mjs",
+    "prebuild": "node scripts/prepare-maplibre.mjs && node scripts/prepare-draco.mjs"
   },
   "dependencies": {
     "@akar/api-client": "*",

@@ -559,7 +559,9 @@ export function AkarApp() {
                           {site.architect} <span>·</span> {site.year}
                         </p>
                         <Tag tone="representative">
-                          Örnek veri · doğrulama bekliyor
+                          {site.sources?.length
+                            ? "Kaynaklı içerik"
+                            : "Örnek veri · doğrulama bekliyor"}
                         </Tag>
                       </div>
                       <Motif />

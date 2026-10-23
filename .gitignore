@@ -38,3 +38,6 @@ Desktop.ini
 
 # Generated from the locked MapLibre package by predev/prebuild.
 /apps/web/public/maplibre/
+
+# Draco decoder copied from the locked Three.js package.
+/apps/web/public/draco/

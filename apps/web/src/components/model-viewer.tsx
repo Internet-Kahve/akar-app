@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { SiteModel } from "@akar/domain";
 import * as THREE from "three";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
@@ -20,6 +21,7 @@ export default function ModelViewer({
     let disposed = false;
     let renderer: THREE.WebGLRenderer | undefined;
     let controls: OrbitControls | undefined;
+    let decoder: DRACOLoader | undefined;
     let observer: ResizeObserver | undefined;
     let object: THREE.Group | undefined;
     const disposeObject = (root: THREE.Object3D) =>
@@ -67,7 +69,8 @@ export default function ModelViewer({
         render();
       });
       observer.observe(element);
-      new GLTFLoader().load(
+      decoder = new DRACOLoader().setDecoderPath("/draco/").setWorkerLimit(2);
+      new GLTFLoader().setDRACOLoader(decoder).load(
         model.src,
         (gltf) => {
           if (disposed) {
@@ -109,6 +112,7 @@ export default function ModelViewer({
       disposed = true;
       observer?.disconnect();
       controls?.dispose();
+      decoder?.dispose();
       if (object) disposeObject(object);
       renderer?.dispose();
       renderer?.forceContextLoss();
@@ -116,7 +120,8 @@ export default function ModelViewer({
     };
   }, [model.src, name]);
   return (
-    <div className="model-viewer" ref={host}>
+    <div className="model-viewer">
+      <div className="model-canvas" ref={host} />
       {status && (
         <p className="model-status" role="status">
           {status}

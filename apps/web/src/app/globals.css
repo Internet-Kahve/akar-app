@@ -3973,3 +3973,8 @@ td small {
 .archive-timeline small {
   white-space: normal;
 }
+
+.model-canvas {
+  position: absolute;
+  inset: 0;
+}

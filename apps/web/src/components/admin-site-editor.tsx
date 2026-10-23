@@ -33,7 +33,15 @@ function prepareSite(site: HeritageSite): HeritageSite {
   return {
     ...copy,
     editorVersion: 2,
-    photos: copy.photos ?? [],
+    // Story-only media must stay selectable and valid when a seeded site enters the editor.
+    photos: [
+      ...new Map(
+        [...(copy.photos ?? []), ...(copy.storyPhotos ?? [])].map((p) => [
+          p.id,
+          p,
+        ]),
+      ).values(),
+    ],
     sources:
       copy.sources ??
       (copy.source
