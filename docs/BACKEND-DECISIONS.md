@@ -375,3 +375,10 @@ Nasıl değiştirilir: `eraseAccount` (`modules/identity/erasure.ts`) ve modüll
 Dağıtım önkoşulu: `0011_deleted_accounts` , `0012_upload_deletions` ve `0013_erasure_rls` migration’ları yeni API sürümünden önce uygulanır.
 
 Yeni silme tablolarında RLS açıktır; istemci rollerine doğrudan erişim politikası verilmez. API sunucusu ve bakım işçisi veritabanı bağlantısıyla erişir.
+
+**11.32 Genel istek sınırı Vercel'de instance başına kalır (demo için kabul).**
+Karar: `@fastify/rate-limit` (`app.ts`; dakikada 300, oturum açanda hesap, misafirde IP başına) bellekte sayar ve paylaşılan depo eklenmez. Vercel'de her serverless instance kendi sayacını tutar; trafik birden çok instance'a dağılınca toplam sınır 300'ün katlarına çıkar. Maliyetli kötüye kullanım veritabanındaki kotalarla zaten sınırlıdır ve instance sayısından etkilenmez: aynı anda 3 bekleyen anı ve 24 saatte 10 anı (§11.19), 24 saatte 10 fotoğraf yüklemesi ve açık en çok 10 yükleme bileti, 24 saatte 5 yeni bildirim.
+Neden: Postgres'te ortak sayaç her isteğe (ya da her yazmaya) bir veritabanı yazması ekler; Supabase Free bağlantı havuzu ve sayfa açılış gecikmesi için demo haftasında değmez. Upstash yeni bir dış hesap ister. Bu sınır yalnız kaba sel trafiğine karşıdır.
+Bilinen sınır: çok instance'a yayılan yoğun okuma trafiği (sayfa açılışı, katalog) API tarafında sınırlanmaz; veritabanı yükü artar.
+Karar veren / tarih: Weissman (iş listesi madde 10), 23 Eki: "demo için kabul et".
+Nasıl değiştirilir: `@fastify/rate-limit` `store` seçeneğine ortak depo (Postgres tablosu ya da Redis/Upstash) verilir, istenirse yalnız yazma uçları için; ya da Vercel Firewall'da IP başına kural tanımlanır (hesap Tamer'in). Demo sonrası P6 uç uç incelemesinde yeniden ele alınır.
