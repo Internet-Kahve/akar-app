@@ -327,3 +327,9 @@ Karar: `memories.pending_since` (migration `0007`): anı gönderilince ve bildir
 Neden: haftalar önce gönderilmiş, bugün bildirimle kuyruğa dönen anı panelde hemen "48 saati aştı" görünüyordu. Ayrı sütun `updated_at`'e dayanmaktan sağlamdır: bekleyen anıya ileride başka bir yazma (ör. düzenleme) eklense süre sıfırlanmaz.
 Karar veren / tarih: Weissman (sütun ve alan adı), 22 Eki.
 Nasıl değiştirilir: `services/api/src/modules/admin-health/service.ts` (`pendingStale`), `reportMemory` (`services/api/src/modules/moderation/service.ts`) ve bu kayıt.
+
+**11.26 Eserin şehri panelden değiştirilebilir.**
+Karar: `PATCH /v1/admin/sites/:id/info` `city` alanı alır (şehir kimliği ya da adı; `slugify` ile kimliğe çevrilir, oluşturmadaki gibi). Eser kimliği değişmez (kimlik opaktır; rota durakları, anılar ve kaydedilenler ona bağlı). İlçe yeni şehirde yeniden aranır ya da açılır; arama metni ve yinelenme anahtarı yeni şehre göre yazılır, yeni şehirde aynı ad ve ilçe 409. Bir rotada durak olan eser taşınamaz (400, rota adlarıyla): rotanın durakları rotanın şehrinde kalır (`setStops` kuralı). Bilinmeyen şehir 400. Audit `site.update` anlık görüntüsü `cityId` taşır.
+Neden: tam eser düzenleme (iş listesi madde 3) istemcide hikâye, fotoğraf, kaynak ve modelin yanında şehri de API'ye yazmalı; API'de bunun ucu yoktu. Ayrı API PR'ı, istemci PR'ından önce.
+Karar veren / tarih: Weissman (önce küçük API PR'ı), 23 Eki; kurallar backend sorumlusunun.
+Nasıl değiştirilir: `services/api/src/modules/admin-catalog/sites.ts` (`resolveMoveCity`, `updateSiteInfo`), `SiteInfoBody` (`sites-schemas.ts`) ve bu kayıt.

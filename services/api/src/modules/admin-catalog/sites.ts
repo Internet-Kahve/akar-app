@@ -14,11 +14,13 @@ import { randomUUID } from "node:crypto";
 import type { Db } from "../../db/client.ts";
 import {
   cards,
+  catalogRoutes,
   cities,
   historyImages,
   media,
   periods,
   regions,
+  routeStops,
   siteMedia,
   siteSections,
   siteSources,
@@ -765,6 +767,7 @@ async function uniqueSiteId(tx: Tx, base: string): Promise<string> {
 }
 
 const infoSnapshot = (s: SiteRow) => ({
+  cityId: s.cityId,
   name: s.name,
   nameEn: s.nameEn,
   typeId: s.typeId,
@@ -880,7 +883,27 @@ export async function createSite(tx: Tx, ctx: AuditCtx, input: CreateSiteInput):
   return toAdminDetail(created);
 }
 
-/** Adım 2 (Bilgiler): partial update; search text, sort name and duplicate key follow the name and district. */
+/**
+ * The city a site moves to: 400 for an unknown city, and for a site that is a stop of a route (a
+ * route's stops stay in its city; see `setStops`).
+ */
+async function resolveMoveCity(tx: Tx, siteId: string, city: string): Promise<{ id: string; name: string }> {
+  const [row] = await tx.select({ id: cities.id, name: cities.name }).from(cities).where(eq(cities.id, slugify(city)));
+  if (!row) throw new AppError(400, "VALIDATION_FAILED", "Girdi doğrulanamadı.", { city: ["Şehir bulunamadı."] });
+  const stops = await tx
+    .selectDistinct({ name: catalogRoutes.name })
+    .from(routeStops)
+    .innerJoin(catalogRoutes, eq(catalogRoutes.id, routeStops.routeId))
+    .where(eq(routeStops.siteId, siteId));
+  if (stops.length) {
+    throw new AppError(400, "VALIDATION_FAILED", "Girdi doğrulanamadı.", {
+      city: [`Eser şu rotalarda durak: ${stops.map((s) => s.name).join(", ")}. Şehrini değiştirmeden önce rotalardan çıkar.`],
+    });
+  }
+  return row;
+}
+
+/** Adım 2 (Bilgiler): partial update; search text, sort name and duplicate key follow the name, district and city. */
 export function updateSiteInfo(tx: Tx, ctx: AuditCtx, id: string, p: SiteInfoInput): Promise<AdminSiteDetail> {
   return mutate(
     tx,
@@ -911,20 +934,27 @@ export function updateSiteInfo(tx: Tx, ctx: AuditCtx, id: string, p: SiteInfoInp
       if (p.minutes !== undefined) set.minutes = p.minutes;
       if (p.tier !== undefined) set.tier = p.tier;
 
+      let city = { id: s.cityId, name: s.cityName };
+      const moved = p.city !== undefined && slugify(p.city) !== s.cityId;
+      if (moved) {
+        city = await resolveMoveCity(tx, id, p.city!);
+        set.cityId = city.id;
+      }
       let district = s.district;
-      if (p.district !== undefined) {
-        const region = await resolveRegion(tx, s.cityId, p.district || null);
+      // Regions belong to a city: a move looks the district up again in the new city.
+      if (p.district !== undefined || moved) {
+        const region = await resolveRegion(tx, city.id, p.district !== undefined ? p.district || null : s.district);
         set.regionId = region?.id ?? null;
         district = region?.name ?? null;
       }
       const name = p.name ?? s.name;
-      if (p.name !== undefined || p.district !== undefined || p.architect !== undefined) {
-        set.searchText = siteSearchText({ name, city: s.cityName, district: district ?? "", architect: p.architect ?? s.architect });
+      if (p.name !== undefined || p.district !== undefined || p.architect !== undefined || moved) {
+        set.searchText = siteSearchText({ name, city: city.name, district: district ?? "", architect: p.architect ?? s.architect });
       }
-      if (p.name !== undefined || p.district !== undefined) {
+      if (p.name !== undefined || p.district !== undefined || moved) {
         const dedupeKey = siteDedupeKey(name, district);
-        if (dedupeKey !== s.dedupeKey) {
-          await assertNoDuplicate(tx, s.cityId, dedupeKey, id);
+        if (dedupeKey !== s.dedupeKey || moved) {
+          await assertNoDuplicate(tx, city.id, dedupeKey, id);
           set.dedupeKey = dedupeKey;
         }
       }

@@ -236,6 +236,53 @@ test("Bilgiler: references are checked, and a rename or move keeps search text, 
   assert.equal((await call<AdminSiteDetail>("GET", `/v1/admin/sites/${b.id}`, editor)).body.name, "Çakışan Ad");
 });
 
+test("Bilgiler: a site moves to another city by id or name; the district, search and duplicate key follow, and route stops or unknown cities refuse", async () => {
+  const db = app.deps.db;
+  // A city of its own, so the Edirne list of the panel test stays exact.
+  await db.insert(cities).values({ id: "kutahya", name: "Kütahya" });
+  const moving = await newDraft("Göçer Hanı", { district: "Merkez" });
+  const twin = await newDraft("Göçer Hanı", { city: "kutahya", district: "Merkez" });
+  const info = `/v1/admin/sites/${moving.id}/info`;
+  const unchanged = async () => {
+    const now = (await call<AdminSiteDetail>("GET", `/v1/admin/sites/${moving.id}`, editor)).body;
+    assert.deepEqual([now.city.id, now.district, now.dedupeKey], ["bursa", "Merkez", moving.dedupeKey]);
+  };
+
+  const unknown = await call<ErrorBody>("PATCH", info, editor, { city: "Atlantis" });
+  assert.equal(unknown.res.statusCode, 400);
+  assert.deepEqual(unknown.body.error.fieldErrors.city, ["Şehir bulunamadı."]);
+
+  // Same name and district as a site of the new city: the 409 of create, even though the key itself does not change.
+  const clash = await call<ErrorBody>("PATCH", info, editor, { city: "kutahya" });
+  assert.equal(clash.res.statusCode, 409);
+  assert.deepEqual(clash.body.error.fieldErrors.existingSiteId, [twin.id]);
+  await unchanged();
+
+  await db.insert(catalogRoutes).values({ id: "goc-rotasi", cityId: "bursa", name: "Göç rotası", description: "Duraklı", theme: "tarih" });
+  await db.insert(routeStops).values({ routeId: "goc-rotasi", position: 0, siteId: moving.id });
+  const stop = await call<ErrorBody>("PATCH", info, editor, { city: "Kütahya", name: "Göçer Hanı Yeni" });
+  assert.equal(stop.res.statusCode, 400);
+  assert.match(stop.body.error.fieldErrors.city?.[0] ?? "", /Göç rotası/);
+  await unchanged();
+  await db.delete(routeStops).where(eq(routeStops.routeId, "goc-rotasi"));
+
+  // The city's display name works as well as its id; the district is looked up again in the new city.
+  const moved = await send("PATCH", info, { city: "Kütahya", name: "Göçer Hanı Yeni" });
+  assert.deepEqual(moved.city, { id: "kutahya", name: "Kütahya" });
+  assert.equal(moved.district, "Merkez");
+  assert.equal(moved.id, moving.id);
+  const [row] = await db.select({ regionId: sites.regionId }).from(sites).where(eq(sites.id, moving.id));
+  assert.equal(row?.regionId, "kutahya-merkez");
+  const listed = async (query: string) => (await call<Page>("GET", `/v1/admin/sites?limit=100&${query}`, editor)).body.items.map((i) => i.id);
+  assert.ok((await listed("city=kutahya")).includes(moving.id));
+  assert.ok(!(await listed("city=bursa")).includes(moving.id));
+  assert.ok((await listed("query=kutahya")).includes(moving.id));
+
+  // Sending the current city (here by name) is no move: no route or duplicate check runs.
+  await db.insert(routeStops).values({ routeId: "goc-rotasi", position: 0, siteId: twin.id });
+  assert.equal((await send("PATCH", `/v1/admin/sites/${twin.id}/info`, { city: "Kütahya", year: "1500" })).year, "1500");
+});
+
 test("publishing is blocked with Turkish issues until the site is complete; then it is public, and unpublishing hides it again", async () => {
   const draft = await newDraft("Kapı Camii", { typeId: null, description: "" });
   const id = draft.id;
