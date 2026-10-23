@@ -20,6 +20,8 @@ export async function createRuntime(env: NodeJS.ProcessEnv = process.env) {
     const maintenance = () => runMaintenance({ db, storage }, jobs);
     const app = await buildApp({ config, db, auth, storage, jobs, geocoderFor: curatedGeocoderFor }, {
       register: [maintenanceRoutes(maintenance)],
+      // The local docs UI serves static assets and is unnecessary in the serverless runtime.
+      docs: config.API_RUNTIME !== "vercel",
     });
     pool.on("error", (err) => app.log.error({ err }, "idle database connection failed"));
     return { app, pool, config, maintenance };
