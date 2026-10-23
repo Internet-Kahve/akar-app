@@ -86,4 +86,4 @@ export const uploadDeletions = pgTable("upload_deletions", {
   storageKey: text("storage_key").primaryKey(),
   nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull(),
   attempts: integer("attempts").notNull().default(0),
-}, (t) => [index("upload_deletions_due_idx").on(t.nextAttemptAt)]);
+}, (t) => [index("upload_deletions_due_idx").on(t.nextAttemptAt)]).enableRLS();

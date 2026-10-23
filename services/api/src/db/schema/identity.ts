@@ -46,4 +46,4 @@ export const profiles = pgTable("profiles", {
 export const deletedAccounts = pgTable("deleted_accounts", {
   userId: text("user_id").primaryKey(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}).enableRLS();

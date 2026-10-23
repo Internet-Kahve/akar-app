@@ -372,4 +372,6 @@ Bilinen sınır: silme sırasında aynı kullanıcının eşzamanlı başka bir 
 Karar veren / tarih: Weissman (iş listesi madde 7), 23 Eki: yetkili hesap engellenir, bildirimler silinir, audit olduğu gibi kalır, eski token silme işaretiyle engellenir, admin ucu aynı PR'da.
 Nasıl değiştirilir: `eraseAccount` (`modules/identity/erasure.ts`) ve modüllerin silme fonksiyonları (`eraseMemories`, `eraseUploads`, `eraseEngagement`, `forgetIdempotencyKeys`); kullanıcıya bağlı yeni tablo eklenirse silmeye de eklenir (`identity-erasure.test.ts` her tabloyu tarar). Bekleme süreli (ör. 30 gün) silme yeni karar ister.
 
-Dağıtım önkoşulu: `0011_deleted_accounts` ve `0012_upload_deletions` migration’ları yeni API sürümünden önce uygulanır.
+Dağıtım önkoşulu: `0011_deleted_accounts` , `0012_upload_deletions` ve `0013_erasure_rls` migration’ları yeni API sürümünden önce uygulanır.
+
+Yeni silme tablolarında RLS açıktır; istemci rollerine doğrudan erişim politikası verilmez. API sunucusu ve bakım işçisi veritabanı bağlantısıyla erişir.
