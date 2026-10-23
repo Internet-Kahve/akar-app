@@ -43,6 +43,7 @@ import {
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
 import { Architecture, Scene } from "./scene";
+import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
@@ -494,6 +495,7 @@ export function AkarApp() {
           )}
           {view === "history" && site && (
             <HistoryView
+              key={site.id}
               site={site}
               onBack={() => go("detail", site.id)}
               onMemory={() => setOverlay("memory")}
@@ -915,6 +917,7 @@ export function AkarApp() {
                               {[
                                 "all",
                                 "cami",
+                                "turbe",
                                 "cesme",
                                 "hamam",
                                 "han",
@@ -963,6 +966,7 @@ export function AkarApp() {
                 </button>
                 {isDetail && site ? (
                   <Scene
+                    key={`${site.id}-${view === "story" ? storyIndex : "detail"}`}
                     site={site}
                     photoId={
                       view === "story"
@@ -992,7 +996,7 @@ export function AkarApp() {
                 )}
                 <div className="demo-label">
                   <span />
-                  İnteraktif demo · Örnek veriler
+                  İnteraktif demo
                 </div>
               </div>
             </main>
@@ -1278,88 +1282,5 @@ function SiteCard({
         <Bookmark size={17} />
       </button>
     </article>
-  );
-}
-function HistoryView({
-  site,
-  onBack,
-  onMemory,
-}: {
-  site: HeritageSite;
-  onBack: () => void;
-  onMemory: () => void;
-}) {
-  const [year, setYear] = useState("1880"),
-    [split, setSplit] = useState(50);
-  return (
-    <main id="main-content" tabIndex={-1} className="history-page">
-      <Back onClick={onBack} />
-      <div className="row between">
-        <div>
-          <small className="eyebrow">AYNI YER, BAŞKA BİR ZAMAN</small>
-          <h1>Geçmişi Gör</h1>
-          <p className="muted">{site.name}</p>
-        </div>
-        <Tag tone="representative">Karşılaştırma demosu</Tag>
-      </div>
-      <div className="history-grid">
-        <div className="comparison">
-          <div className="compare-current">
-            <Architecture />
-            <span>Bugünkü görsel bekleniyor</span>
-          </div>
-          <div
-            className="compare-old"
-            style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
-          >
-            <Architecture />
-            <span>{year} · Arşiv görseli bekleniyor</span>
-          </div>
-          <div className="compare-line" style={{ left: `${split}%` }}>
-            <span>↔</span>
-          </div>
-          <input
-            type="range"
-            min={5}
-            max={95}
-            value={split}
-            onChange={(e) => setSplit(Number(e.target.value))}
-            aria-label="Geçmiş ve bugün karşılaştırma oranı"
-          />
-          <div className="compare-label">
-            Temsili düzen · Tarihî görüntü değildir
-          </div>
-        </div>
-        <aside className="card">
-          <History size={28} />
-          <h2>Geçmişe açılan pencere</h2>
-          <p>
-            Tarihî gravürleri, fotoğrafları ve bugünkü görüntüyü aynı açıdan
-            karşılaştır.
-          </p>
-          <Notice>
-            Henüz arşiv görseli sağlanmadı. Kaynak, lisans ve çekim tarihi
-            doğrulanan görseller bu alana eklenecek.
-          </Notice>
-          <button className="btn secondary full" onClick={onMemory}>
-            Bu açıdan fotoğrafın var mı?
-            <ArrowRight size={16} />
-          </button>
-        </aside>
-      </div>
-      <div className="timeline" aria-label="Tarih seçimi">
-        {["1880", "1910", "1955", "1990"].map((y) => (
-          <button
-            key={y}
-            className={y === year ? "active" : ""}
-            onClick={() => setYear(y)}
-          >
-            <History size={20} />
-            <strong>{y}</strong>
-            <small>İçerik bekleniyor</small>
-          </button>
-        ))}
-      </div>
-    </main>
   );
 }

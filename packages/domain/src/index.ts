@@ -1,5 +1,5 @@
 export type SiteKind =
-  "cami" | "cesme" | "hamam" | "han" | "bedesten" | "egitim";
+  "cami" | "cesme" | "hamam" | "han" | "bedesten" | "egitim" | "turbe";
 export type Trust = "verified" | "inferred" | "representative";
 export interface SiteSource {
   id: string;
@@ -41,6 +41,15 @@ export interface StoryBlock {
   showCard?: boolean;
   highlights?: string[];
 }
+export interface HistoryImage {
+  id: string;
+  photo: SitePhoto;
+  presentPhoto?: SitePhoto;
+  caption: string;
+  dateLabel: string;
+  sourceId: string;
+  trust: Trust;
+}
 export interface HeritageSite {
   id: string;
   name: string;
@@ -68,6 +77,8 @@ export interface HeritageSite {
   sources?: SiteSource[];
   coverPhotoId?: string;
   model?: SiteModel;
+  historyImages?: HistoryImage[];
+  storyPhotos?: SitePhoto[];
 }
 export interface HeritageRoute {
   id: string;
@@ -140,6 +151,7 @@ export const kindLabels: Record<SiteKind, string> = {
   han: "Han",
   bedesten: "Bedesten",
   egitim: "Eğitim",
+  turbe: "Türbe",
 };
 export const trustLabels: Record<Trust, string> = {
   verified: "Doğrulanmış",

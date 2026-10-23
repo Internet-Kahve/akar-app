@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import {
   ArrowRight,
   Landmark,
@@ -9,6 +11,11 @@ import {
   Maximize2,
 } from "lucide-react";
 import type { HeritageSite } from "@akar/domain";
+const ModelViewer = dynamic(() => import("./model-viewer"), {
+  ssr: false,
+  loading: () => <p role="status">3B görünüm hazırlanıyor…</p>,
+});
+
 export function Architecture({ kind = "cami" }: { kind?: string }) {
   return (
     <div className={`architecture ${kind}`} aria-hidden="true">
@@ -58,9 +65,61 @@ export function Scene({
   photoId?: string;
   onHotspot: (id: string) => void;
 }) {
-  const photo = site.photos?.find(
+  const [mode, setMode] = useState<"photo" | "model">(
+    photoId ? "photo" : "model",
+  );
+  const photo = [...(site.photos ?? []), ...(site.storyPhotos ?? [])].find(
     (p) => p.id === (photoId || site.coverPhotoId),
   );
+  if (site.model && !flow)
+    return (
+      <div className="scene media-scene">
+        <div
+          className="scene-media-switch"
+          role="group"
+          aria-label="Eser görünümü"
+        >
+          <button
+            className="btn secondary"
+            aria-pressed={mode === "model"}
+            onClick={() => setMode("model")}
+          >
+            3B model
+          </button>
+          {photo && (
+            <button
+              className="btn secondary"
+              aria-pressed={mode === "photo"}
+              onClick={() => setMode("photo")}
+            >
+              Fotoğraf
+            </button>
+          )}
+        </div>
+        {mode === "model" || !photo ? (
+          <>
+            <ModelViewer
+              key={site.model.src}
+              model={site.model}
+              name={site.name}
+            />
+            <div className="scene-photo-credit">
+              Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için
+              kaydır.
+            </div>
+          </>
+        ) : (
+          <>
+            <img className="scene-photo" src={photo.src} alt={photo.alt} />
+            <div className="scene-photo-credit">
+              {photo.title} · {photo.license}
+              <br />
+              {site.sources?.find((s) => s.id === photo.sourceId)?.title}
+            </div>
+          </>
+        )}
+      </div>
+    );
   if (photo && !flow)
     return (
       <div className="scene">
