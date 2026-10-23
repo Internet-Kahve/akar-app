@@ -464,11 +464,13 @@ export function VisitModal({
   onClose,
   onVisit,
   visited,
+  live = false,
 }: {
   site: HeritageSite;
   onClose: () => void;
   onVisit: () => Promise<boolean>;
   visited: boolean;
+  live?: boolean;
 }) {
   const [busy, setBusy] = useState(false),
     [done, setDone] = useState(visited);
@@ -476,15 +478,25 @@ export function VisitModal({
     <Modal title="Yanındayım" onClose={onClose}>
       <div className="success-state">
         {done ? <ShieldCheck size={48} /> : <MapPin size={48} />}
-        <h3>{done ? "Demo ziyareti pasaportunda" : site.name}</h3>
+        <h3>
+          {done
+            ? live
+              ? "Ziyaretin doğrulandı"
+              : "Demo ziyareti pasaportunda"
+            : site.name}
+        </h3>
         <p>
           {done
             ? "Bu eser daha önce ziyaret edildi."
-            : "Demo ziyaretini deneyerek keşif ilerlemeni görebilirsin. Gerçek konum doğrulaması yapılmaz."}
+            : live
+              ? "Konum izni vererek bu eserin yakınında olduğunu doğrulayabilirsin. Ziyaret, konumun kontrol edildikten sonra pasaportuna eklenir."
+              : "Demo ziyaretini deneyerek keşif ilerlemeni görebilirsin. Gerçek konum doğrulaması yapılmaz."}
         </p>
-        <Tag tone="representative">
-          Simülasyon · Fiziksel ziyaret doğrulanmadı
-        </Tag>
+        {!live && (
+          <Tag tone="representative">
+            Simülasyon · Fiziksel ziyaret doğrulanmadı
+          </Tag>
+        )}
         {done ? (
           <button className="btn" onClick={onClose}>
             Devam et
@@ -499,7 +511,11 @@ export function VisitModal({
               setBusy(false);
             }}
           >
-            Demo ziyaretini tamamla · +100
+            {busy
+              ? "Konum doğrulanıyor…"
+              : live
+                ? "Ziyareti doğrula"
+                : "Demo ziyaretini tamamla · +100"}
           </button>
         )}
       </div>

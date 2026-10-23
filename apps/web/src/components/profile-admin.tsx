@@ -30,6 +30,7 @@ export function Profile({
   state,
   onSite,
   onAdmin,
+  canManage,
   onReset,
   experimental,
   onExperimentalChange,
@@ -39,6 +40,7 @@ export function Profile({
   state: Snapshot;
   onSite: (id: string) => void;
   onAdmin: () => void;
+  canManage: boolean;
   onReset: () => void;
   experimental: boolean;
   onExperimentalChange: (enabled: boolean) => void;
@@ -56,6 +58,7 @@ export function Profile({
         typeof document !== "undefined" &&
         document.documentElement.dataset.textSize === "large",
     );
+  const firstSite = state.sites.find((s) => s.status === "published");
   const badges = [
     { name: "İlk hikâye", earned: state.readIds.length > 0 },
     { name: "İlk adım", earned: state.visitedIds.length > 0 },
@@ -104,18 +107,24 @@ export function Profile({
           </div>
           <div className="settings card">
             <h3>Deneyimini özelleştir</h3>
-            <label>
-              Deneysel arayüzleri göster
-              <input
-                type="checkbox"
-                checked={experimental}
-                onChange={(event) => onExperimentalChange(event.target.checked)}
-              />
-            </label>
-            <p className="muted">
-              Rozet, Bulmaca ve Birlikte Gez önizlemeleri. Ürün kapsamı henüz
-              kesinleşmedi; çok kullanıcılı bağlantı yoktur.
-            </p>
+            {!auth && (
+              <>
+                <label>
+                  Deneysel arayüzleri göster
+                  <input
+                    type="checkbox"
+                    checked={experimental}
+                    onChange={(event) =>
+                      onExperimentalChange(event.target.checked)
+                    }
+                  />
+                </label>
+                <p className="muted">
+                  Rozet, Bulmaca ve Birlikte Gez önizlemeleri. Ürün kapsamı
+                  henüz kesinleşmedi; çok kullanıcılı bağlantı yoktur.
+                </p>
+              </>
+            )}
             <label>
               Yüksek kontrast
               <input
@@ -142,11 +151,13 @@ export function Profile({
                 }}
               />
             </label>
-            <button className="text-btn" onClick={onAdmin}>
-              <Shield size={16} />
-              Demo yönetim paneli
-              <ArrowRight size={15} />
-            </button>
+            {canManage && (
+              <button className="text-btn" onClick={onAdmin}>
+                <Shield size={16} />
+                {auth ? "Yönetim paneli" : "Demo yönetim paneli"}
+                <ArrowRight size={15} />
+              </button>
+            )}
             {!auth && (
               <button className="text-btn danger" onClick={onReset}>
                 <RotateCcw size={16} />
@@ -166,7 +177,7 @@ export function Profile({
               {
                 icon: MapPin,
                 n: state.visitedIds.length,
-                label: "demo ziyareti",
+                label: auth ? "doğrulanmış ziyaret" : "demo ziyareti",
               },
               {
                 icon: MessageSquare,
@@ -208,10 +219,19 @@ export function Profile({
             {state.readIds.length === 0 ? (
               <div className="empty-inline">
                 <BookOpen size={26} />
-                <p>İlk hikâyen seni bekliyor.</p>
-                <button className="text-btn" onClick={() => onSite("ulu-cami")}>
-                  Keşfe başla <ArrowRight size={15} />
-                </button>
+                <p>
+                  {firstSite
+                    ? "İlk hikâyen seni bekliyor."
+                    : "Henüz yayında eser yok."}
+                </p>
+                {firstSite && (
+                  <button
+                    className="text-btn"
+                    onClick={() => onSite(firstSite.id)}
+                  >
+                    Keşfe başla <ArrowRight size={15} />
+                  </button>
+                )}
               </div>
             ) : (
               state.readIds.map((id) => (
@@ -227,7 +247,9 @@ export function Profile({
                     <small>
                       Hikâye tamamlandı{" "}
                       {state.visitedIds.includes(id)
-                        ? "· Demo ziyareti yapıldı"
+                        ? auth
+                          ? "· Ziyaret doğrulandı"
+                          : "· Demo ziyareti yapıldı"
                         : ""}
                     </small>
                   </span>
@@ -296,6 +318,7 @@ export function Admin({
   saveSite: (site: HeritageSite) => Promise<HeritageSite>;
   live: boolean;
 }) {
+  const canEdit = role === "editor" || role === "admin";
   const [page, setPage] = useState<ModerationPage>({
     items: [],
     nextCursor: null,
@@ -309,7 +332,7 @@ export function Admin({
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [tab, setTab] = useState<
       "sites" | "memories" | "routes" | "photos" | "import"
-    >("sites"),
+    >(canEdit ? "sites" : "memories"),
     [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
       "pending",
     ),
@@ -423,47 +446,57 @@ export function Admin({
       </button>
       <aside className="admin-nav" hidden={navCollapsed}>
         <span className="eyebrow">AKAR · İÇERİK STÜDYOSU</span>
-        <button
-          className={tab === "sites" ? "active" : ""}
-          disabled={!!editing}
-          onClick={() => setTab("sites")}
-        >
-          <BookOpen size={18} />
-          Eserler<Tag>{state.sites.length}</Tag>
-        </button>
-        <button
-          disabled={!!editing}
-          className={tab === "routes" ? "active" : ""}
-          onClick={() => setTab("routes")}
-        >
-          <MapPin size={18} />
-          Rotalar
-        </button>
-        <button
-          disabled={!!editing}
-          className={tab === "photos" ? "active" : ""}
-          onClick={() => setTab("photos")}
-        >
-          <BookOpen size={18} />
-          Kartlar ve fotoğraflar
-        </button>
-        <button
-          className={tab === "memories" ? "active" : ""}
-          disabled={!!editing}
-          onClick={() => setTab("memories")}
-        >
-          <MessageSquare size={18} />
-          Katkılar
-          <Tag>{queue.filter((m) => m.status === "pending").length}</Tag>
-        </button>
-        <button
-          disabled={!!editing}
-          className={tab === "import" ? "active" : ""}
-          onClick={() => setTab("import")}
-        >
-          <Plus size={18} />
-          İçe aktar
-        </button>
+        {canEdit && (
+          <>
+            <button
+              className={tab === "sites" ? "active" : ""}
+              disabled={!!editing}
+              onClick={() => setTab("sites")}
+            >
+              <BookOpen size={18} />
+              Eserler<Tag>{state.sites.length}</Tag>
+            </button>
+            <button
+              disabled={!!editing}
+              className={tab === "routes" ? "active" : ""}
+              onClick={() => setTab("routes")}
+            >
+              <MapPin size={18} />
+              Rotalar
+            </button>
+            <button
+              disabled={!!editing}
+              className={tab === "photos" ? "active" : ""}
+              onClick={() => setTab("photos")}
+            >
+              <BookOpen size={18} />
+              Kartlar ve fotoğraflar
+            </button>
+          </>
+        )}
+        {seesHealth && (
+          <button
+            className={tab === "memories" ? "active" : ""}
+            disabled={!!editing}
+            onClick={() => setTab("memories")}
+          >
+            <MessageSquare size={18} />
+            Katkılar
+            {!live && (
+              <Tag>{queue.filter((m) => m.status === "pending").length}</Tag>
+            )}
+          </button>
+        )}
+        {!live && canEdit && (
+          <button
+            disabled={!!editing}
+            className={tab === "import" ? "active" : ""}
+            onClick={() => setTab("import")}
+          >
+            <Plus size={18} />
+            İçe aktar
+          </button>
+        )}
         <Notice>
           {live
             ? "Sunucu paneli. Değişiklikler hesabının yetkileriyle kaydedilir."
@@ -498,7 +531,7 @@ export function Admin({
         ) : tab === "routes" ? (
           <RouteAdmin state={state} commit={commit} />
         ) : tab === "photos" ? (
-          <PhotoAdmin state={state} commit={commit} />
+          <PhotoAdmin state={state} commit={commit} live={live} />
         ) : tab === "import" ? (
           <ImportAdmin state={state} commit={commit} />
         ) : (

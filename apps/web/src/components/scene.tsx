@@ -57,11 +57,13 @@ export function Architecture({ kind = "cami" }: { kind?: string }) {
 export function Scene({
   site,
   flow = false,
+  live = false,
   photoId,
   onHotspot,
 }: {
   site: HeritageSite;
   flow?: boolean;
+  live?: boolean;
   photoId?: string;
   onHotspot: (id: string) => void;
 }) {
@@ -128,6 +130,15 @@ export function Scene({
           {photo.title || site.name} · {photo.license}
           <br />
           {site.sources?.find((s) => s.id === photo.sourceId)?.title}
+        </div>
+      </div>
+    );
+  if (live)
+    return (
+      <div className="scene">
+        <div className="empty-state">
+          <h2>{site.name}</h2>
+          <p>Bu esere henüz fotoğraf veya 3B model eklenmedi.</p>
         </div>
       </div>
     );

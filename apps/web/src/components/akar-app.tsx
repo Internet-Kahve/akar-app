@@ -108,6 +108,8 @@ export function AkarApp() {
     accountId = useRef<string | null | undefined>(undefined);
   const live = !!apiUrl;
   const role: Role = state.role ?? (live ? "user" : "admin");
+  const canManage = !live || (!!account && role !== "user");
+  const showExperimental = !live && experimental;
   const load = useCallback(async () => {
     if (!client.current) return;
     if (!loaded.current) setLoadError("");
@@ -141,19 +143,32 @@ export function AkarApp() {
           getMemoryConsent: () => consent.current,
           onUploadProgress: setUploadProgress,
           locate: () =>
-            new Promise((resolve, reject) =>
+            new Promise((resolve, reject) => {
+              if (!navigator.geolocation) {
+                reject(
+                  new Error("Bu cihaz konum doğrulamasını desteklemiyor."),
+                );
+                return;
+              }
               navigator.geolocation.getCurrentPosition(
                 (p) =>
                   resolve({
                     coordinates: [p.coords.longitude, p.coords.latitude],
                     accuracyM: p.coords.accuracy,
                   }),
-                () =>
+                (error) =>
                   reject(
-                    new Error("Konum alınamadı. Konum iznini kontrol et."),
+                    new Error(
+                      error.code === 1
+                        ? "Ziyareti doğrulamak için konum izni vermelisin."
+                        : error.code === 3
+                          ? "Konum alınması zaman aşımına uğradı. Yeniden dene."
+                          : "Konum alınamadı. Konum hizmetlerini kontrol et.",
+                    ),
                   ),
-              ),
-            ),
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+              );
+            }),
         })
       : createMockClient(storage);
     void load();
@@ -164,8 +179,10 @@ export function AkarApp() {
       setAccount(user ? { id: user.id, email: user.email ?? "" } : null);
       const previous = accountId.current;
       accountId.current = user?.id ?? null;
-      if (previous !== undefined && previous !== accountId.current)
+      if (previous !== undefined && previous !== accountId.current) {
+        setState((current) => ({ ...current, role: "user" }));
         setTimeout(() => void load(), 0);
+      }
     }).data.subscription;
     const readLocation = () => {
       const p = new URLSearchParams(location.hash.slice(1));
@@ -258,9 +275,11 @@ export function AkarApp() {
     () => state.sites.filter((s) => s.status === "published"),
     [state.sites],
   );
-  const routes = (state.catalogRoutes ?? seedRoutes).filter(
+  const routes = (state.catalogRoutes ?? (live ? [] : seedRoutes)).filter(
     (r) => r.status !== "draft",
   );
+  const cities = [...new Set(published.map((s) => s.city))];
+  const firstStory = published.find((s) => s.stories.length > 0);
   const route = routes.find((r) => r.id === routeId);
   const routeSites = (
     routeId === "custom" ? state.routeIds : (route?.siteIds ?? [])
@@ -318,6 +337,7 @@ export function AkarApp() {
       {filtered.length ? (
         filtered.map((s) => (
           <SiteCard
+            live={live}
             key={s.id}
             site={s}
             saved={state.savedIds.includes(s.id)}
@@ -398,7 +418,7 @@ export function AkarApp() {
             </button>
           )}
           <button className="city-chip" onClick={() => setOverlay("city")}>
-            Bursa
+            {ready && cities.length === 1 ? cities[0] : "Şehirler"}
             <ChevronDown size={13} />
           </button>
         </div>
@@ -421,10 +441,11 @@ export function AkarApp() {
           ))}
           <button
             className={view === "story" ? "active" : ""}
+            disabled={!ready || !firstStory}
             onClick={() => {
               setStoryIndex(0);
               setListening(false);
-              go("story", "ulu-cami");
+              if (firstStory) go("story", firstStory.id);
             }}
           >
             <Headphones size={16} />
@@ -459,7 +480,8 @@ export function AkarApp() {
           {view === "profile" && (
             <Profile
               state={state}
-              experimental={experimental}
+              experimental={showExperimental}
+              canManage={canManage}
               onExperimentalChange={setExperimental}
               onSite={selectSite}
               onAdmin={() => go("admin")}
@@ -483,8 +505,24 @@ export function AkarApp() {
               sonra sayfayı yenileyerek yeniden deneyebilirsin.
             </Notice>
           )}
-          {view === "admin" && (
+          {view === "admin" && !canManage && (
+            <main id="main-content" tabIndex={-1} className="profile-page">
+              <h1>Yönetim paneli</h1>
+              <Notice>
+                {account
+                  ? "Bu hesabın yönetim yetkisi bulunmuyor."
+                  : "Yönetim paneline erişmek için yetkili hesabınla giriş yap."}
+              </Notice>
+              {!account && (
+                <button className="btn" onClick={() => setSignIn("")}>
+                  Giriş yap
+                </button>
+              )}
+            </main>
+          )}
+          {view === "admin" && canManage && (
             <Admin
+              key={`${account?.id ?? "local"}-${role}`}
               state={state}
               commit={commit}
               role={role}
@@ -557,7 +595,9 @@ export function AkarApp() {
                         </div>
                         <h1>{site.name}</h1>
                         <p>
-                          {site.architect} <span>·</span> {site.year}
+                          {[site.architect, site.year]
+                            .filter((value) => value && value !== "—")
+                            .join(" · ")}
                         </p>
                         <Tag tone="representative">
                           {site.sources?.length
@@ -597,7 +637,7 @@ export function AkarApp() {
                       ) : (
                         <Notice>Bu eserin anlatımı henüz hazırlanmadı.</Notice>
                       )}
-                      {experimental && (
+                      {showExperimental && (
                         <p className="muted">
                           Deneysel arayüzler açık · kapsam kararı bekleniyor
                         </p>
@@ -614,7 +654,7 @@ export function AkarApp() {
                             label: "İz Bırak",
                             action: () => setOverlay("memory"),
                           },
-                          ...(experimental
+                          ...(showExperimental
                             ? [
                                 {
                                   icon: Puzzle,
@@ -704,7 +744,7 @@ export function AkarApp() {
                           Tüm rotalar
                         </Back>
                         <div className="route-cover">
-                          <Architecture />
+                          <SiteArtwork site={routeSites[0]} live={live} />
                           <Tag>
                             {routeId === "custom"
                               ? "SENİN ROTAN"
@@ -850,8 +890,11 @@ export function AkarApp() {
                                     onClick={() => setRouteId(r.id)}
                                   >
                                     <div className={`route-art art-${i}`}>
-                                      <Architecture
-                                        kind={i === 2 ? "cesme" : "cami"}
+                                      <SiteArtwork
+                                        site={published.find((s) =>
+                                          r.siteIds.includes(s.id),
+                                        )}
+                                        live={live}
                                       />
                                       <span>
                                         {String(i + 1).padStart(2, "0")}
@@ -905,7 +948,7 @@ export function AkarApp() {
                               <h2>
                                 {saved
                                   ? "Kaydettiklerin"
-                                  : "Yakınındaki eserler"}
+                                  : "Keşfedilecek eserler"}
                               </h2>
                               <button
                                 className={`small-icon ${saved ? "active" : ""}`}
@@ -971,12 +1014,14 @@ export function AkarApp() {
                   <Scene
                     key={`${site.id}-${view === "story" ? storyIndex : "detail"}`}
                     site={site}
+                    live={live}
                     photoId={
                       view === "story"
                         ? site.stories[storyIndex]?.photoId
                         : undefined
                     }
                     flow={
+                      !live &&
                       view === "story" &&
                       site.stories[storyIndex]?.id === "akar"
                     }
@@ -997,10 +1042,12 @@ export function AkarApp() {
                     collapsed={collapsed}
                   />
                 )}
-                <div className="demo-label">
-                  <span />
-                  İnteraktif demo
-                </div>
+                {!live && (
+                  <div className="demo-label">
+                    <span />
+                    İnteraktif demo
+                  </div>
+                )}
               </div>
             </main>
           )}
@@ -1021,7 +1068,7 @@ export function AkarApp() {
           }}
         />
       )}
-      {experimental && overlay === "quiz" && site && client.current && (
+      {showExperimental && overlay === "quiz" && site && client.current && (
         <QuizModal
           site={site}
           client={client.current}
@@ -1031,6 +1078,7 @@ export function AkarApp() {
       )}
       {overlay === "visit" && site && (
         <VisitModal
+          live={live}
           site={site}
           visited={state.visitedIds.includes(site.id)}
           onClose={() => setOverlay(null)}
@@ -1087,7 +1135,9 @@ export function AkarApp() {
                 )}
                 <strong>{m.author}</strong>
                 <p>{m.text}</p>
-                <Tag tone="success">Demo moderasyonunda onaylandı</Tag>
+                <Tag tone="success">
+                  {live ? "Onaylanmış katkı" : "Demo moderasyonunda onaylandı"}
+                </Tag>
                 <div className="memory-actions">
                   <MemoryActions
                     memory={m}
@@ -1117,28 +1167,37 @@ export function AkarApp() {
           title="Nerede keşfetmek istersin?"
           onClose={() => setOverlay(null)}
         >
-          <button
-            className="city-option"
-            onClick={() => {
-              setOverlay(null);
-              setQuery("");
-              go("map");
-            }}
-          >
-            <MapPin />
-            <span>
-              <strong>Bursa</strong>
-              <small>Hanlar Bölgesi · {published.length} örnek eser</small>
-            </span>
-            <Check />
-          </button>
+          {cities.map((city) => (
+            <button
+              key={city}
+              className="city-option"
+              onClick={() => {
+                setOverlay(null);
+                setQuery(city);
+                setKind("all");
+                setSaved(false);
+                setRouteId(undefined);
+                go("map");
+              }}
+            >
+              <MapPin />
+              <span>
+                <strong>{city}</strong>
+                <small>
+                  {published.filter((s) => s.city === city).length} eser
+                </small>
+              </span>
+              <ArrowRight />
+            </button>
+          ))}
+          {!cities.length && <p>Henüz yayında eser yok.</p>}
           <Notice>
-            İlk demo bölgesi Bursa. Yeni şehirler sponsor veri paketiyle
-            eklenecek.
+            Yayındaki eserleri haritada keşfedebilir, kendi rotanı
+            oluşturabilirsin.
           </Notice>
         </Modal>
       )}
-      {experimental && overlay === "together" && (
+      {showExperimental && overlay === "together" && (
         <Modal title="Birlikte Gez" onClose={() => setOverlay(null)}>
           <div className="empty-state">
             <Users size={40} />
@@ -1250,12 +1309,14 @@ function PlusIcon() {
 }
 function SiteCard({
   site,
+  live,
   saved,
   visited,
   onClick,
   onSave,
 }: {
   site: HeritageSite;
+  live: boolean;
   saved: boolean;
   visited: boolean;
   onClick: () => void;
@@ -1265,15 +1326,7 @@ function SiteCard({
     <article className="site-card">
       <button className="site-card-main" onClick={onClick}>
         <div className={`site-thumb ${site.kind}`}>
-          {site.photos?.find((p) => p.id === site.coverPhotoId) ? (
-            <img
-              className="site-photo"
-              src={site.photos.find((p) => p.id === site.coverPhotoId)!.src}
-              alt={site.photos.find((p) => p.id === site.coverPhotoId)!.alt}
-            />
-          ) : (
-            <Architecture kind={site.kind} />
-          )}
+          <SiteArtwork site={site} live={live} />
         </div>
         <span>
           <small>
@@ -1296,5 +1349,26 @@ function SiteCard({
         <Bookmark size={17} />
       </button>
     </article>
+  );
+}
+
+function SiteArtwork({ site, live }: { site?: HeritageSite; live: boolean }) {
+  const photo =
+    site?.photos?.find((p) => p.id === site.coverPhotoId) ?? site?.photos?.[0];
+  if (photo)
+    return (
+      <img
+        className="site-photo"
+        src={photo.src}
+        alt={photo.alt}
+        loading="lazy"
+      />
+    );
+  return live ? (
+    <div className="artwork-placeholder" aria-label="Görsel eklenmedi">
+      <Landmark aria-hidden="true" size={32} />
+    </div>
+  ) : (
+    <Architecture kind={site?.kind} />
   );
 }

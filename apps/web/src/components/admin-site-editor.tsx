@@ -853,8 +853,9 @@ export function SiteEditor({
                   .join(" · ") || "Bu esere bağlı rota yok."}
               </p>
               <Notice>
-                Yayınlama yalnız bu tarayıcıdaki demo keşfini günceller.
-                Sunucuya veri gönderilmez.
+                {live
+                  ? "Yayınladığın değişiklikler kaydedilir ve eserin herkese açık sayfasında görünür."
+                  : "Yayınlama yalnız bu tarayıcıdaki demo keşfini günceller. Sunucuya veri gönderilmez."}
               </Notice>
               <div className="row">
                 <button
