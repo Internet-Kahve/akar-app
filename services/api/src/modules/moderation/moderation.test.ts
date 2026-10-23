@@ -1084,3 +1084,28 @@ test("deletion intent is atomic with media removal and survives a process stoppi
   await drainMediaDeletions({ db, storage });
   assert.ok(await photoGone(photo));
 });
+
+
+test("a successful DELETE retains failed storage work across replay and a later worker removes it", async () => {
+  const author = actor();
+  const photo = await storedPhoto(author.id);
+  const memory = await seedMemory({ status: "pending", authorId: author.id, mediaId: photo.id });
+  const original = app.deps.storage;
+  app.deps.storage = { uploads: storage.uploads, media: new Proxy(storage.media, {
+    get: (target, prop, receiver) => prop === "delete" ? async () => { throw new Error("503 storage unavailable"); } : Reflect.get(target, prop, receiver),
+  }) };
+  const key = { "idempotency-key": "delete-with-storage-outage" };
+  try {
+    const result = await remove(`/v1/me/memories/${memory}`, author, key);
+    assert.equal(result.statusCode, 204, result.body);
+    assert.equal((await remove(`/v1/me/memories/${memory}`, author, key)).statusCode, 204);
+  } finally {
+    app.deps.storage = original;
+  }
+  const pending = await db.select().from(mediaDeletions).where(eq(mediaDeletions.storageKey, photo.storageKey));
+  assert.equal(pending.length, 1, "replay cannot discard or duplicate the intent");
+  assert.ok(await storage.media.head(photo.storageKey));
+  await db.update(mediaDeletions).set({ nextAttemptAt: new Date(0) }).where(eq(mediaDeletions.storageKey, photo.storageKey));
+  await drainMediaDeletions({ db, storage });
+  assert.ok(await photoGone(photo));
+});
