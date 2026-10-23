@@ -63,7 +63,8 @@ export function HeritageMap({
           m.on("load", () => {
             if (!disposed) {
               setLoaded(true);
-              setFailed(false);
+              // A load event can follow a tile error; keep discovery available
+              // through the schematic view for the lifetime of this map.
             }
           });
           m.on("error", () => {
