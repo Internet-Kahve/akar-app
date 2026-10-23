@@ -25771,6 +25771,95 @@
         }
       }
     },
+    "/v1/me/route": {
+      "get": {
+        "summary": "Rotam: kullanıcının kendi rotası, sırasıyla; artık yayında olmayan eser gösterilmez",
+        "tags": [
+          "me"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "siteIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Rotadaki yayındaki eserler, rota sırasıyla"
+                    }
+                  },
+                  "required": [
+                    "siteIds"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Rotam'ı baştan yaz: gövdedeki liste rotanın tamamıdır (en çok 100, yinelenmez); yayında olmayan eser 404",
+        "tags": [
+          "me"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "siteIds": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "description": "Rotanın tamamı, sırasıyla (en çok 100 eser, yinelenmez). Boş dizi rotayı temizler"
+                  }
+                },
+                "required": [
+                  "siteIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "siteIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Rotadaki yayındaki eserler, rota sırasıyla"
+                    }
+                  },
+                  "required": [
+                    "siteIds"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/progress/{siteId}": {
       "put": {
         "summary": "Hikâye ilerlemesini kaydet: ulaşılan en uzak blok korunur, geri gitmez; hikâyenin uzunluğunu aşamaz",

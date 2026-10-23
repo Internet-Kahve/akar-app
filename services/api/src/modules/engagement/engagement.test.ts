@@ -171,6 +171,8 @@ test("every player-state endpoint that needs an account answers a guest with 401
     ["PUT", "/v1/me/saved/han-a"],
     ["DELETE", "/v1/me/saved/han-a"],
     ["GET", "/v1/me/saved"],
+    ["GET", "/v1/me/route"],
+    ["PUT", "/v1/me/route", { siteIds: [] }],
     ["PUT", "/v1/me/progress/han-a", { lastBlock: 0 }],
     ["GET", "/v1/me/progress"],
     ["GET", "/v1/me/passport"],
@@ -228,6 +230,50 @@ test("saving is a state: PUT twice keeps it, DELETE removes it, and GET shows ex
     assert.equal(res.statusCode, 404, "a draft can neither be saved nor told apart from an unknown site");
     assert.equal(res.json<ErrorBody>().error.code, "NOT_FOUND");
   }
+});
+
+test("Rotam is replaced as a whole, keeps its order, is per user, and hides a stop unpublished since", async () => {
+  const u = user();
+  const route = async (who: AuthUser) => (await send("GET", "/v1/me/route", { as: who })).json<{ siteIds: string[] }>().siteIds;
+  const put = (siteIds: unknown, who: Who = { as: u }) => send("PUT", "/v1/me/route", who, { siteIds });
+
+  assert.deepEqual(await route(u), [], "empty before the first write");
+  const first = await put(["han-c", "han-a", "han-e"]);
+  assert.deepEqual([first.statusCode, first.json()], [200, { siteIds: ["han-c", "han-a", "han-e"] }]);
+  assert.deepEqual((await put(["han-e", "han-b", "han-c"])).json(), { siteIds: ["han-e", "han-b", "han-c"] });
+  assert.deepEqual(await route(u), ["han-e", "han-b", "han-c"], "the new list replaces the old one, in the given order");
+  assert.deepEqual(await route(user()), [], "routes are per user");
+
+  await app.deps.db.update(siteTable).set({ status: "draft" }).where(eq(siteTable.id, "han-e"));
+  try {
+    assert.deepEqual(await route(u), ["han-b", "han-c"], "an unpublished stop is not shown");
+  } finally {
+    await app.deps.db.update(siteTable).set({ status: "published" }).where(eq(siteTable.id, "han-e"));
+  }
+  assert.deepEqual(await route(u), ["han-e", "han-b", "han-c"], "and comes back when published again");
+
+  for (const bad of [["han-a", "taslak-han"], ["yok"]]) {
+    const res = await put(bad);
+    assert.equal(res.statusCode, 404, `${bad}: a draft is not told apart from an unknown site`);
+    assert.equal(res.json<ErrorBody>().error.code, "NOT_FOUND");
+  }
+  for (const bad of [["han-a", "han-a"], Array.from({ length: 101 }, (_, i) => `han-${i}`)]) {
+    const res = await put(bad);
+    assert.equal(res.statusCode, 400, "duplicates and more than 100 stops are refused");
+    assert.equal(res.json<ErrorBody>().error.code, "VALIDATION_FAILED");
+  }
+  assert.deepEqual(await route(u), ["han-e", "han-b", "han-c"], "a refused write changes nothing");
+
+  const parallel = await Promise.all([put(["han-a", "han-b"]), put(["han-c"]), put(["han-b", "han-d", "han-a"])]);
+  assert.deepEqual(parallel.map((r) => r.statusCode), [200, 200, 200]);
+  const after = await route(u);
+  assert.ok(
+    parallel.some((r) => JSON.stringify(r.json<{ siteIds: string[] }>().siteIds) === JSON.stringify(after)),
+    `concurrent writes do not mix: ${after}`,
+  );
+
+  assert.deepEqual((await put([])).json(), { siteIds: [] });
+  assert.deepEqual(await route(u), [], "an empty list clears the route");
 });
 
 test("saved sites page by keyset without repeats or gaps, and a site unpublished since is gone from the list", async () => {

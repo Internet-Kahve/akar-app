@@ -40,6 +40,22 @@ export const savedSites = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.siteId] })],
 );
 
+/**
+ * "Rotam": the player's own ordered list of sites, separate from catalog routes. Replaced as a whole
+ * (`PUT /v1/me/route`); `position` is the 0-based order. Guests keep theirs on the device.
+ */
+export const userRouteStops = pgTable(
+  "user_route_stops",
+  {
+    userId: text("user_id").notNull(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    position: smallint("position").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.siteId] })],
+);
+
 /** Story reading progress ("Devam et · 5/9"): furthest block reached, completion time. */
 export const storyProgress = pgTable(
   "story_progress",

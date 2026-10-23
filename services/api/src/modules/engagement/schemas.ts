@@ -26,6 +26,23 @@ export const SavedState = z.object({
 
 export const SavedListResponse = pageResponse(SiteSummary);
 
+// ── my route ("Rotam") ───────────────────────────────────────────────────────
+
+/** Upper bound of "Rotam" (user, 23 Oct). */
+export const MY_ROUTE_MAX = 100;
+
+export const MyRouteBody = z.object({
+  siteIds: z
+    .array(z.string().min(1).max(100))
+    .max(MY_ROUTE_MAX)
+    .refine((ids) => new Set(ids).size === ids.length, "Aynı eser rotada bir kez yer alabilir.")
+    .describe(`Rotanın tamamı, sırasıyla (en çok ${MY_ROUTE_MAX} eser, yinelenmez). Boş dizi rotayı temizler`),
+});
+
+export const MyRouteResponse = z.object({
+  siteIds: z.array(z.string()).describe("Rotadaki yayındaki eserler, rota sırasıyla"),
+});
+
 // ── progress ─────────────────────────────────────────────────────────────────
 
 export const ProgressBody = z.object({

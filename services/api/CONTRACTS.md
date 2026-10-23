@@ -18,7 +18,7 @@ Her modül `src/modules/<modül>/` altında yaşar: `routes.ts` (Fastify eklenti
 | identity | `modules/identity/` | `schema/identity.ts` | `staff_members`, `staff_invites`, `profiles` |
 | admin-catalog | `modules/admin-catalog/` | `schema/admin-catalog.ts` | `import_jobs`; ayrıca catalog ve routes tablolarının **yazma** tarafı |
 | moderation | `modules/moderation/` | `schema/moderation.ts` | `memories`, `memory_reports` |
-| engagement | `modules/engagement/` | `schema/engagement.ts` | `point_events`, `saved_sites`, `story_progress`, `quiz_progress`, `user_badges` |
+| engagement | `modules/engagement/` | `schema/engagement.ts` | `point_events`, `saved_sites`, `user_route_stops`, `story_progress`, `quiz_progress`, `user_badges` |
 | admin-health | `modules/admin-health/` | yok | yok; `memories` ve `media` tablolarını yalnız okur |
 | settings | `modules/settings/` | `schema/settings.ts` | `map_settings` (tek satır) |
 
@@ -27,7 +27,7 @@ Kurallar:
 - Bir modül başka modülün tablosuna **yazmaz**; dışa açılmış servis fonksiyonunu çağırır. Tek istisna: `admin-catalog` içerik tablolarının yazarıdır (catalog/routes yalnız okur).
 - Okuma sorguları yayın kapısını atlamamak koşuluyla başka modülün tablosuna `join` yapabilir (örnek: catalog → `media`).
 - `app.ts`, `server.ts`, `src/db/schema/index.ts`, `drizzle/`, `package.json`, `src/config.ts`, `src/platform/*`, `src/test/harness.ts` ve `CONTRACTS.md` ortak dosyalardır; backend sorumlusu düzenler. Yeni modül, kayıt satırını (`MODULES` listesine eklenecek eklenti) ve bağımlılık ihtiyacını PR açıklamasında belirtir. Kayıtlı modüller: health, catalog, routes, identity, media, admin-catalog (sites, routes-editor, imports, reports), moderation, admin-health, engagement, settings.
-- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0007` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
+- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0008` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`, `0008` `user_route_stops`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
 - Modül eklentisi `FastifyPluginAsyncZod` döner ve kendi `routes.ts` dosyasından dışa açılır. Testler eklentiyi `startTestApp({ register: [xxxRoutes] })` ile yükler; modül `MODULES`'a eklendiğinde aynı test değişmeden çalışır.
 
 ### Çalışma zamanı bağımlılıkları (`app.deps`)
@@ -81,7 +81,7 @@ type AuthVerifier = { verify(token: string): Promise<AuthUser | null> };
 | Rol | Yetki |
 | --- | --- |
 | misafir | Okuma; bulmaca/hikâye için imzalı makbuz alır |
-| `user` | Kaydet, ilerleme, puan, İz Bırak (kendi anısını silme dahil), Bildir, makbuz bozdurma |
+| `user` | Kaydet, Rotam, ilerleme, puan, İz Bırak (kendi anısını silme dahil), Bildir, makbuz bozdurma |
 | `editor` | Eser/rota/kart oluşturma, düzenleme, yayınlama; içe aktarma |
 | `moderator` | Katkı onay/ret, onaylı anıyı yayından kaldırma, bildirilen içerik |
 | `admin` | Hepsi + davet ve rol atama, anıyı kalıcı silme |
