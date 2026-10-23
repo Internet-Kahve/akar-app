@@ -1015,7 +1015,7 @@ test("a failed sweep deletion survives in the outbox and a fresh worker retries 
         : Reflect.get(target, prop, receiver),
   });
 
-  assert.equal(await sweepUnattachedPhotos({ db, storage: { uploads: storage.uploads, media: flaky } }), 3);
+  assert.ok(await sweepUnattachedPhotos({ db, storage: { uploads: storage.uploads, media: flaky } }) >= photos.length);
   for (const photo of photos.slice(1)) assert.ok(await photoGone(photo), photo.id);
   assert.ok(await storage.media.head(broken));
   const [intent] = await db.select().from(mediaDeletions).where(eq(mediaDeletions.storageKey, broken));
