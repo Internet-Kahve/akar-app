@@ -112,18 +112,22 @@ export const SiteInfoShape = {
 };
 
 const { name: nameField, ...optionalInfoShape } = SiteInfoShape;
+const cityField = text(60).min(1).describe("Şehir kimliği (cities) ya da adı, örn. bursa / Bursa");
 
 export const CreateSiteBody = z
   .object(optionalInfoShape)
   .partial()
   .extend({
     name: nameField,
-    city: text(60).min(1).describe("Şehir kimliği (cities), örn. bursa"),
+    city: cityField,
   });
 export type CreateSiteInput = z.infer<typeof CreateSiteBody>;
 
 export const SiteInfoBody = z
-  .object(SiteInfoShape)
+  .object({
+    ...SiteInfoShape,
+    city: cityField.describe("Eseri başka şehre taşır; ilçe yeni şehirde aranır, rotalarda durak olan eser taşınamaz"),
+  })
   .partial()
   .refine((body) => Object.values(body).some((v) => v !== undefined), { message: "En az bir alan gönder." });
 export type SiteInfoInput = z.infer<typeof SiteInfoBody>;

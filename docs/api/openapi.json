@@ -7324,7 +7324,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 60,
-                    "description": "Şehir kimliği (cities), örn. bursa"
+                    "description": "Şehir kimliği (cities) ya da adı, örn. bursa / Bursa"
                   }
                 },
                 "required": [
@@ -10327,6 +10327,12 @@
                       "Tier 2",
                       "Tier 1"
                     ]
+                  },
+                  "city": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Eseri başka şehre taşır; ilçe yeni şehirde aranır, rotalarda durak olan eser taşınamaz"
                   }
                 }
               }
