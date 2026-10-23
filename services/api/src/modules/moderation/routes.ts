@@ -35,7 +35,7 @@ import {
 
 /**
  * Runs a removal under `idempotent`, then deletes the photo objects it freed, after the commit: a failed delete
- * leaves an orphaned object, never a row pointing at a missing file. A replay removes nothing again. Refuses with
+ * leaves a durable deletion intent for retry, never a row pointing at a missing file. A replay removes nothing again. Refuses with
  * 503 (rolling back) when a photo object must go but no storage is configured.
  */
 async function removing<T>(
@@ -52,7 +52,7 @@ async function removing<T>(
     removed = removedObjects;
     return { status, body };
   });
-  await deleteMediaObjects(deps.storage, removed, req.log);
+  await deleteMediaObjects(deps.db, deps.storage, removed, req.log);
   return result;
 }
 

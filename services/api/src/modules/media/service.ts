@@ -10,6 +10,7 @@ import {
   historyImages,
   media,
   mediaUploads,
+  mediaDeletions,
   memories,
   siteMedia,
   sites,
@@ -572,8 +573,10 @@ async function dropMediaRows(tx: Tx, rows: { id: string; storageKey: string | nu
   const ids = rows.map((r) => r.id);
   // The upload rows stay (they count toward the daily quota); only their link to the media goes.
   await tx.update(mediaUploads).set({ mediaId: null, updatedAt: new Date() }).where(inArray(mediaUploads.mediaId, ids));
+  const keys = rows.flatMap((r) => (r.storageKey ? [r.storageKey] : []));
+  if (keys.length) await tx.insert(mediaDeletions).values(keys.map((storageKey) => ({ storageKey }))).onConflictDoNothing();
   await tx.delete(media).where(inArray(media.id, ids));
-  return rows.flatMap((r) => (r.storageKey ? [r.storageKey] : []));
+  return keys;
 }
 
 /**
@@ -588,17 +591,47 @@ export async function deleteUnreferencedMedia(tx: Tx, ids: string[]): Promise<st
 }
 
 /**
- * Deletes published objects whose rows are already gone. Run it after the commit: a failure here leaves an
- * orphaned object (logged), never a row pointing at a missing file.
+ * Processes durable deletion intents. A crash or DB rollback after deleting an object leaves the intent
+ * for an idempotent retry. Row locks prevent workers from processing the same key concurrently. Failed
+ * keys back off (up to one hour), without blocking other keys or ever exhausting their retry budget.
  */
-export async function deleteMediaObjects(storage: StorageBuckets | null, keys: string[], log: FastifyBaseLogger): Promise<void> {
-  if (!storage) return;
-  for (const key of keys) {
-    try {
-      await storage.media.delete(key);
-    } catch (err) {
-      log.error({ err, key }, "media object delete failed; the object is orphaned");
+export async function drainMediaDeletions(
+  deps: { db: Db; storage: StorageBuckets },
+  opts: { keys?: string[]; limit?: number } = {},
+): Promise<{ deleted: number; failed: number }> {
+  if (opts.keys?.length === 0) return { deleted: 0, failed: 0 };
+  return deps.db.transaction(async (tx) => {
+    const pending = await tx.select().from(mediaDeletions)
+      .where(and(sql`${mediaDeletions.nextAttemptAt} <= now()`, opts.keys ? inArray(mediaDeletions.storageKey, opts.keys) : undefined))
+      .orderBy(mediaDeletions.nextAttemptAt).limit(opts.limit ?? 50).for("update", { skipLocked: true });
+    let deleted = 0;
+    let failed = 0;
+    for (const row of pending) {
+      try {
+        await deps.storage.media.delete(row.storageKey);
+      } catch {
+        const attempts = row.attempts + 1;
+        const delay = Math.min(3600, 30 * 2 ** Math.min(attempts - 1, 7));
+        await tx.update(mediaDeletions).set({ attempts, nextAttemptAt: new Date(Date.now() + delay * 1000) })
+          .where(eq(mediaDeletions.storageKey, row.storageKey));
+        failed++;
+        continue;
+      }
+      await tx.delete(mediaDeletions).where(eq(mediaDeletions.storageKey, row.storageKey));
+      deleted++;
     }
+    return { deleted, failed };
+  });
+}
+
+/** Best-effort immediate attempt after commit; the durable worker handles failures and process restarts. */
+export async function deleteMediaObjects(db: Db, storage: StorageBuckets | null, keys: string[], log: FastifyBaseLogger): Promise<void> {
+  if (!storage || !keys.length) return;
+  try {
+    const result = await drainMediaDeletions({ db, storage }, { keys });
+    if (result.failed) log.error(result, "media deletion queued for retry");
+  } catch (err) {
+    log.error({ err }, "media deletion worker failed; durable intents retained");
   }
 }
 
@@ -608,7 +641,7 @@ export async function deleteMediaObjects(storage: StorageBuckets | null, keys: s
  * (no uploader), uploads of current staff (`staff_members`) and anything an editor or admin uploaded (a `media.create`
  * audit row), so a revoked editor's library stays. Rows another transaction holds are skipped; the rest are checked
  * again after locking (see `stillUnused`). Handles at most `limit` (default 500) photos per run and returns how many
- * rows it deleted. Objects are deleted after the commit; every key is tried, then one error names the failed ones.
+ * rows it deleted. Objects are deleted after commit; failed keys remain in the durable outbox for retry.
  */
 export async function sweepUnattachedPhotos(deps: { db: Db; storage: StorageBuckets }, opts: { limit?: number } = {}): Promise<number> {
   const { db, storage } = deps;
@@ -632,14 +665,6 @@ export async function sweepUnattachedPhotos(deps: { db: Db; storage: StorageBuck
     const rows = await stillUnused(tx, candidates.map((r) => r.id));
     return { count: rows.length, keys: await dropMediaRows(tx, rows) };
   });
-  const failed: string[] = [];
-  for (const key of swept.keys) {
-    try {
-      await storage.media.delete(key);
-    } catch {
-      failed.push(key);
-    }
-  }
-  if (failed.length > 0) throw new Error(`unattached photo sweep: ${failed.length} object(s) left orphaned: ${failed.join(", ")}`);
+  await drainMediaDeletions({ db, storage }, { keys: swept.keys });
   return swept.count;
 }
