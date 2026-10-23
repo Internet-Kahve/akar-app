@@ -461,6 +461,9 @@ export function AkarApp() {
               }
             />
           )}
+          {!!state.pendingRouteCount && (
+            <Notice>{state.pendingRouteCount} durak hesabındaki rotaya taşınamadı ve bu cihazda korundu. Rotam en fazla 100 durak alır. Yer açtıktan sonra sayfayı yenileyerek yeniden deneyebilirsin.</Notice>
+          )}
           {view === "admin" && (
             <Admin
               state={state}

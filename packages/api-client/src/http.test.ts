@@ -653,7 +653,7 @@ test("a failed move keeps the device's lists for the next load; a save unpublish
   routeStatus = 200;
   await client.getSnapshot();
   const moved = JSON.parse(store.getItem(httpStorageKey) ?? "{}");
-  assert.deepEqual([moved.saved, moved.route], [[], []]);
+  assert.deepEqual([moved.saved, moved.route], [[], ["b"]]);
   assert.deepEqual(api.calls.filter((c) => c.method === "PUT" && c.path === "/v1/me/route").at(-1)?.body, {
     siteIds: [...full, "a"],
   });
@@ -1745,3 +1745,34 @@ test("removing a memory sends DELETE with an idempotency key and re-reads the fe
   );
   assert.deepEqual(afterAdmin.publicMemories, []);
 });
+
+for (const capacity of [99, 100]) {
+  test(`sign-in preserves guest overflow when the account has ${capacity} stops`, async () => {
+    const store = storage();
+    let tokenValue: string | null = null;
+    let accountRoute = Array.from({ length: capacity }, (_, i) => `full-${i}`);
+    const api = fakeApi({
+      ...catalogHandlers(),
+      ...accountHandlers({ T: { saved: [], points: 0 } }),
+      "GET /v1/site-details": () => ({ items: [...accountRoute.map(id => detail(id)), detail("a"), detail("b")], nextCursor: null }),
+      "GET /v1/me/route": () => ({ siteIds: accountRoute }),
+      "PUT /v1/me/route": c => { accountRoute = (c.body as {siteIds: string[]}).siteIds; return { siteIds: accountRoute }; },
+    });
+    const client = createHttpClient({ baseUrl: "http://api.test", storage: store, getToken: () => tokenValue, fetch: api.fetch });
+    await client.dispatch({ type: "set-route", siteIds: ["a", "b"] });
+    tokenValue = "T";
+    const first = await client.getSnapshot();
+    const overflow = capacity === 99 ? ["b"] : ["a", "b"];
+    assert.equal(first.routeIds.length, 100);
+    assert.equal(first.pendingRouteCount, overflow.length);
+    assert.deepEqual(JSON.parse(store.getItem(httpStorageKey)!).route, overflow);
+    await client.getSnapshot();
+    assert.deepEqual(JSON.parse(store.getItem(httpStorageKey)!).route, overflow, "repeat sign-in keeps the remainder");
+    accountRoute = accountRoute.slice(2);
+    const moved = await client.getSnapshot();
+    assert.equal(moved.pendingRouteCount, 0);
+    assert.ok(moved.routeIds.includes("a") && moved.routeIds.includes("b"));
+    assert.equal(new Set(moved.routeIds).size, moved.routeIds.length);
+    assert.deepEqual(JSON.parse(store.getItem(httpStorageKey)!).route, []);
+  });
+}

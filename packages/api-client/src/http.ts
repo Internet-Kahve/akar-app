@@ -932,7 +932,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               body: { siteIds: merged },
             })
           ).siteIds;
-    writeLocal({ ...local, saved: [], route: [] });
+    writeLocal({ ...local, saved: [], route: local.route.filter((id) => !nextRoute.includes(id)) });
     // The passport lists saved sites newest first.
     return { saved: [...added.reverse(), ...saved], route: nextRoute };
   }
@@ -1086,6 +1086,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       ),
       savedIds: user.savedIds.filter((id) => published.has(id)),
       routeIds: user.routeIds.filter((id) => published.has(id)),
+      pendingRouteCount: user.signedIn ? local.route.length : 0,
       visitedIds: user.visitedIds,
       readIds: user.readIds,
       quizIds: user.quizIds,
