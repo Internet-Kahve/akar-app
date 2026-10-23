@@ -58,7 +58,7 @@ npm run check -- --web --e2e         # Masaüstü/mobil web tarayıcı testleri
 npm run test:e2e:api                 # Yerel API/Supabase açıkken gerçek giriş ve moderasyon
 ```
 
-Yerel tarayıcı testleri Google Chrome kullanır; CI kendi Chromium imajını kullanır. PR/main kontrolleri web, API ve gerçek API tarayıcı akışlarını doğrular. [Katkı rehberi](CONTRIBUTING.md) komut kapsamını açıklar.
+Yerel web testleri Google Chrome kullanır; yönetim tablosunun WebKit regresyonu için ilk çalıştırmadan önce `npx playwright install webkit` gerekir. Web CI tarayıcıları hazır Playwright imajından çalıştırır. Gerçek API tarayıcı testleri yerelde Chromium, CI’da runner’ın hazır Chrome’unu kullanır. PR/main kontrolleri web, API ve gerçek API tarayıcı akışlarını doğrular. [Katkı rehberi](CONTRIBUTING.md) komut kapsamını açıklar.
 
 ## İçerik ve sınırlar
 
