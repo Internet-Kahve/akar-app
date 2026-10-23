@@ -1,5 +1,7 @@
 # Eserler ve 3D üretim
 
+> 23 Ekim temizliği: kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği yedi eserle sınırlıdır.
+
 Her eser kendi klasöründe tutulur. Önce `eser.md`, ardından varsa eserin notları ve üretim README'si okunur. Klasör adları eser kimliğini taşır; il bilgisi eser belgesinde yer alır.
 
 - [Modelleme yöntemi](_kutuphane/AKAR_3D_Yontem_Notlari.md)
@@ -16,13 +18,13 @@ Esere özel referanslar tek `ref/` klasöründe toplanır: `ref/foto/` (fotoğra
 - [Külliye ve cami üretimi](orhan-bey-kulliyesi/eser.md)
 - [Orhan Bey Hamamı / Aynalı Çarşı](orhan-bey-hamami/eser.md)
 - [Emir Hanı](emir-han/eser.md)
-- [Orhan Gazi İmareti (yıkık, temsili)](aday-eserler/orhan-gazi-imareti/eser.md)
+- [Orhan Gazi İmareti (yıkık, temsili)](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/aday-eserler/orhan-gazi-imareti/eser.md)
 - [Orhan Gazi Türbesi](orhan-gazi-turbesi/eser.md)
-- [Yarhisar Orhan Gazi Hamamı — ayrı eser](aday-eserler/orhan-gazi-hamami-yarhisar/eser.md)
+- [Yarhisar Orhan Gazi Hamamı — ayrı eser](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/aday-eserler/orhan-gazi-hamami-yarhisar/eser.md)
 
 ## Akar–hayrat bağı için eklenenler (19 Ekim 2026)
 
 - [Orhan Gazi Türbesi](orhan-gazi-turbesi/eser.md): 3D v02 hazır (plan dosyası tur sonunda silindi).
-- [Yarhisar Orhan Gazi Çeşmesi](yarhisar-orhan-gazi-cesmesi/eser.md) (Yenişehir): ölçülü çizim ve plan var, `SONNET_REVIZYON_PLANI.md` (v01) var.
-- [Orhan Gazi İmareti](aday-eserler/orhan-gazi-imareti/eser.md): yıkık (1936); 3D yok, yalnız hikâye kartı.
-- [II. Bayezid Külliyesi, İstanbul](aday-eserler/istanbul-bayezid-kulliyesi/eser.md): Koza Han'ın gelirinin gittiği yer; 3D yok, yalnız hikâye kartı.
+- [Yarhisar Orhan Gazi Çeşmesi](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/yarhisar-orhan-gazi-cesmesi/eser.md) (Yenişehir): ölçülü çizim ve plan var, `SONNET_REVIZYON_PLANI.md` (v01) var.
+- [Orhan Gazi İmareti](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/aday-eserler/orhan-gazi-imareti/eser.md): yıkık (1936); 3D yok, yalnız hikâye kartı.
+- [II. Bayezid Külliyesi, İstanbul](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/aday-eserler/istanbul-bayezid-kulliyesi/eser.md): Koza Han'ın gelirinin gittiği yer; 3D yok, yalnız hikâye kartı.
