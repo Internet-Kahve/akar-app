@@ -21,7 +21,7 @@ Bu bölüm §0.6'nın ve aşağıdaki bölümlerin önündedir. Uygulama ayrınt
 - **Geçmişi Gör kesinleşti.** Büyük eski fotoğraf + tarih sıralı şerit + «Nereden çekildi?» haritası (çekim noktası ve görüş konisi) + **«Kamerayı aç»**. Bugünkü eşi olan fotoğrafta kaydırıcı. Kamerada eski fotoğraf yarı saydam; çekince «İz Bırak olarak gönder». **«Tozu sil» yok.** Kamera yalnız telefonda; masaüstünde yok.
 - **Yönlendirme yok:** bildirim, «yerindesin» uyarısı, yön oku yok. Kullanıcı haritada noktayı ve açıyı görür, oraya kendisi gider.
 - **İç mekânda kamera açık;** açılışta saygı notu (namaz vakitleri, yüz çekme, flaş). «Cami içinde görev yok» kuralı bulmaca içindir.
-- **Eski fotoğraflar geldi:** Foto Atlas'tan Bursa'da 236 kullanılabilir fotoğraf (İÜ Nadir Eserler izniyle +67). 56'sı 17 vakıf eserine bağlandı; Ulucami 18, Koza Hanı 2, Orhan Gazi Camii 2 (biri doğrulanacak). Klasör: `veri/fotoatlas/` (`BENIOKU.md`).
+- **Eski fotoğraflar geldi:** Foto Atlas'tan Bursa'da 476 kullanılabilir fotoğraf (İÜ Nadir Eserler izniyle 67, Médiathèque du patrimoine izniyle 240 Albert Gabriel fotoğrafı; 23 Ekim). 126'sı 21 vakıf eserine bağlandı; Ulucami 21, Koza Hanı 5, Orhan Gazi Camii 5 (biri doğrulanacak). Klasör: `veri/fotoatlas/` (`BENIOKU.md`).
 - **Yaşayan hafıza tek giriş:** Hikâye sonrasında «İz Bırak» kutusu «Yaşayan hafıza» oldu; İz Bırak hafıza sayfasından açılır. Kameradan gelen izler «aynı açı» etiketi taşır ve bugünkü eş olabilir. **Tüm izler** sayfası (şehir / eser seçili) eklendi.
 - **Panel:** Eser düzenle › Geçmişi Gör yeni alanlarla (fotoğrafçı, tarih aralığı, kaynak + arşiv no + link, aracı, lisans, otomatik kaynak satırı, düzenlenebilir konum/yön, iç mekân). Toplu içe aktarma ekranı eklenmedi.
 - **Örnek rota 4 durak oldu:** Hanlar Bölgesi Vakıf Yürüyüşü: Ulucami (1399, Yıldırım Bayezid) → Bedesten (14. yy, Yıldırım Bayezid) → Koza Hanı (1491, II. Bayezid) → Orhan Bey Camii (1339–40, Orhan Bey). Tarih ve adlar envanterden (C1 s.19, s.96; C2 s.8, s.29). Mesafe ~0,5 km (OSM merkezleri arası 361 m + yürüme payı); süre ~10 dk = yürüme + dört hikâyenin sesi. Süre ve mesafe hesaptır, envanterde yok. Figma buna göre güncellendi (durak listelerine ve haritalara 4. satır/yıldız henüz eklenmedi).
@@ -572,7 +572,7 @@ Harita → Ulucami → fotoğraflı anlatım, sonra 3D'ye geçiş (kartlar, kubb
 5. Atlayarak sona gelen "tamamlandı" sayılsın mı?
 6. Gerçek görünüm (fotoğraftan 3D) eklenecek mi; eklenirse hangi yöntemle?
 7. Saha günü: dört durağın (Ulucami, Bedesten, Koza Hanı, Orhan Bey Camii) fotoğrafları, eski fotoğraf açıları, bulmaca cevaplarının doğrulanması.
-8. Eski görseller: Foto Atlas'tan 236 kullanılabilir Bursa fotoğrafı alındı ve eserlere bağlandı (22 Ekim, `veri/fotoatlas/`). Gravürler ayrıca aranacak; aynı alanlarla (çizer, tarih, kaynak, lisans) eklenecek.
+8. Eski görseller: Foto Atlas'tan 476 kullanılabilir Bursa fotoğrafı alındı, 126'sı 21 esere bağlandı (22–23 Ekim, `veri/fotoatlas/`). Gravürler ayrıca aranacak; aynı alanlarla (çizer, tarih, kaynak, lisans) eklenecek.
 9. Tasarım sistemi eksikleri: logo, uygulama ikonu, splash, rozet görselleri (odak halkası ve devre dışı durum Figma'da çizili).
 10. Belgeler: lisans tablosu, KVKK metni, README.
 11. Figma: eğitim planı onayı ya da ücretli plan kararı.
