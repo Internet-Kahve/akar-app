@@ -9,7 +9,7 @@ Kaynak harfi: P rölöve · E envanter · W tez/makale/bildiri · O OSM · F fot
 | Alan | Değer | Kaynak | Not |
 |---|---|---|---|
 | Ad | Emir Hanı; Bey Hanı, Hân-ı Bezzâziye, Eski Bedesten, Kepenekçiler Çarşısı, Sultan Hanı, Kervansaray, Bahar Kapanı | E cilt-1 PDF 108; E Alan Başkanlığı föyü N3 | |
-| Konum | Uzunçarşı Cad. No: 11; Ulucami'nin kuzeydoğu köşesi | E cilt-1 PDF 108 | OSM way 1271724730 (yalnız konum) |
+| Konum | Uzunçarşı Cad. No: 11; Ulucami'nin kuzeydoğu köşesi | E cilt-1 PDF 108 | Haritada 40.184537, 29.062346 (uydu görüntüsünden, 22 Ekim). Eskiden kullanılan OSM way 1271724730 hanın batısındaki başka bir bina; OSM'de hanın adlı çokgeni yok |
 | Yapım | H. 740 / M. 1339–40, Orhan Bey; At Pazarı bölgesi | E cilt-1 PDF 108 | Vakıf 1983: XIV. yy ikinci yarısı |
 | Önem | Bursa'nın ilk Osmanlı hanı, ilk bedesteni; çarşı kantarı burada (kantar peykeleri girişte) | E cilt-1 PDF 108 | |
 | Onarımlar | 1544, 1634, 1674, 1788, 1855, 1958 yangın/deprem; 1956 ve 1962–63 kapsamlı onarım | E cilt-1 PDF 109; E Vakıf 1983 PDF 176; E föy | |
