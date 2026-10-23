@@ -1,0 +1,59 @@
+name: API browser E2E
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ["apps/web/**", "packages/**", "services/api/**", "package-lock.json", ".github/workflows/api-e2e.yml"]
+  push:
+    branches: [main]
+    paths: ["apps/web/**", "packages/**", "services/api/**", "package-lock.json", ".github/workflows/api-e2e.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/documents-context/
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.121.0
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Entirely local, disposable runner services: no staging credentials or user data.
+      - run: npm run local:up -w @akar/api
+      - name: Start API and wait for database readiness
+        run: |
+          npm run start -w @akar/api > /tmp/akar-api.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4000/ready; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/akar-api.log
+          exit 1
+      - run: npm run test:e2e:api
+      - name: API log on failure
+        if: failure()
+        run: cat /tmp/akar-api.log 2>/dev/null || true
+      - name: Stop disposable services
+        if: always()
+        working-directory: services/api
+        run: |
+          supabase stop --no-backup || true
+          docker compose down --volumes || true

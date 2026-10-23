@@ -64,6 +64,11 @@ supabase_ready() {
 
 up() {
   require_tools
+  # A fresh clone (including CI) has no signing key. Never replace an existing local key.
+  if [ ! -f supabase/signing_keys.json ]; then
+    step "Yerel JWT imzalama anahtarı"
+    node scripts/local-signing-key.mjs
+  fi
   step "Supabase"
   local out
   if supabase_ready; then
