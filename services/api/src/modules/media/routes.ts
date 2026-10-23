@@ -20,10 +20,12 @@ import {
 import {
   completeUpload,
   createUpload,
+  discardUnsavedObjects,
   GLB_PARTS_JOB,
   listMedia,
   MAX_OPEN_UPLOADS,
   planUpload,
+  type PublishedObject,
   requireDep,
   runGlbPartsJob,
   storeUploadedObject,
@@ -152,11 +154,18 @@ export const mediaRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const user = req.user!;
       const store = requireDep(storage, "Dosya depolama");
-      const result = await idempotent(db, req, user.id, async (tx) => {
-        const done = await completeUpload(tx, { storage: store, jobs, user, requestId: req.id }, req.params.id, req.body);
-        if (done.modelId) await requireDep(jobs, "İş kuyruğu").send(GLB_PARTS_JOB, { mediaId: done.modelId }, tx);
-        return done.result;
-      });
+      const published: PublishedObject[] = [];
+      let result;
+      try {
+        result = await idempotent(db, req, user.id, async (tx) => {
+          const done = await completeUpload(tx, { storage: store, jobs, user, requestId: req.id, published }, req.params.id, req.body);
+          if (done.modelId) await requireDep(jobs, "İş kuyruğu").send(GLB_PARTS_JOB, { mediaId: done.modelId }, tx);
+          return done.result;
+        });
+      } catch (err) {
+        await discardUnsavedObjects(db, store, published, req.log);
+        throw err;
+      }
       return reply.status(result.status as 200 | 201 | 409 | 413 | 415).send(result.body);
     },
   );
