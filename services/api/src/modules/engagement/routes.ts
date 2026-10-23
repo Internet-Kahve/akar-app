@@ -7,6 +7,8 @@ import { IdParams } from "../catalog/schemas.ts";
 import {
   CompleteResponse,
   DeviceHeaders,
+  MyRouteBody,
+  MyRouteResponse,
   PassportResponse,
   ProgressBody,
   ProgressEntry,
@@ -25,6 +27,7 @@ import {
 } from "./schemas.ts";
 import {
   completeStory,
+  getMyRoute,
   getPassport,
   getQuizState,
   listProgress,
@@ -32,6 +35,7 @@ import {
   playerOf,
   redeemReceipts,
   revealAnswer,
+  setMyRoute,
   setProgress,
   setSaved,
   submitAnswer,
@@ -39,7 +43,7 @@ import {
 } from "./service.ts";
 
 /**
- * Player-facing state: saved sites, story progress, quizzes, visits, receipts, passport. Signed-in
+ * Player-facing state: saved sites, "Rotam", story progress, quizzes, visits, receipts, passport. Signed-in
  * players are identified by their token, guests (stories, quizzes, visits) by `x-device-id`.
  * Nothing here is public or cacheable, and none of it is a privileged write (no audit rows).
  */
@@ -100,6 +104,38 @@ export const engagementRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => listSaved(app.deps.db, req.user!.id, req.query),
+  );
+
+  // ── my route ("Rotam") ─────────────────────────────────────────────────────
+
+  app.get(
+    "/v1/me/route",
+    {
+      preHandler: requireUser,
+      schema: {
+        tags: ["me"],
+        summary: "Rotam: kullanıcının kendi rotası, sırasıyla; artık yayında olmayan eser gösterilmez",
+        response: { 200: MyRouteResponse },
+      },
+    },
+    async (req) => getMyRoute(app.deps.db, req.user!.id),
+  );
+
+  app.put(
+    "/v1/me/route",
+    {
+      preHandler: requireUser,
+      schema: {
+        tags: ["me"],
+        summary: "Rotam'ı baştan yaz: gövdedeki liste rotanın tamamıdır (en çok 100, yinelenmez); yayında olmayan eser 404",
+        body: MyRouteBody,
+        response: { 200: MyRouteResponse },
+      },
+    },
+    async (req) => {
+      const userId = req.user!.id;
+      return mutate(req, userId, (tx) => setMyRoute(tx, userId, req.body.siteIds));
+    },
   );
 
   // ── story progress ─────────────────────────────────────────────────────────

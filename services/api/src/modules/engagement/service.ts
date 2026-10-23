@@ -15,6 +15,7 @@ import {
   storyBlocks,
   storyProgress,
   userBadges,
+  userRouteStops,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import type { Tx } from "../../platform/idempotency.ts";
@@ -145,6 +146,32 @@ export async function listSaved(db: Db, userId: string, page: Page): Promise<{ i
     }),
     nextCursor: last ? encodeCursor({ t: last.t, i: last.siteId }) : null,
   };
+}
+
+// ── my route ("Rotam") ───────────────────────────────────────────────────────
+
+/** "Rotam" in order; a stop whose site is no longer published is left out (its row stays). */
+export async function getMyRoute(db: Reader, userId: string): Promise<{ siteIds: string[] }> {
+  const rows = await db
+    .select({ siteId: userRouteStops.siteId })
+    .from(userRouteStops)
+    .innerJoin(sites, and(eq(sites.id, userRouteStops.siteId), published))
+    .where(eq(userRouteStops.userId, userId))
+    .orderBy(userRouteStops.position);
+  return { siteIds: rows.map((r) => r.siteId) };
+}
+
+/**
+ * Replaces the whole of "Rotam" (hidden stops included). Every site must be published (else 404, as for
+ * saving). One lock per user: two concurrent replacements run one after the other instead of mixing.
+ */
+export async function setMyRoute(tx: Tx, userId: string, siteIds: string[]): Promise<{ siteIds: string[] }> {
+  const visible = await publishedSiteIds(tx, siteIds);
+  if (siteIds.some((id) => !visible.has(id))) throw notFound("Eser");
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`engagement.route:${userId}`}))`);
+  await tx.delete(userRouteStops).where(eq(userRouteStops.userId, userId));
+  if (siteIds.length) await tx.insert(userRouteStops).values(siteIds.map((siteId, position) => ({ userId, siteId, position })));
+  return { siteIds };
 }
 
 // ── story progress ───────────────────────────────────────────────────────────
