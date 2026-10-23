@@ -4,71 +4,68 @@
 
 Geçmişi gör. Hikâyesini dinle. İzini bırak.
 
-Figma tasarımlarından geliştirilmiş, web öncelikli kültürel miras uygulaması. İlk demo bölgesi Bursa / Hanlar Bölgesi. Bu sürüm frontend ve yerel mock servis içerir; sunucu, gerçek kullanıcı hesabı veya doğrulanmış ziyaret altyapısı içermez.
+Bursa / Hanlar Bölgesi için web öncelikli kültürel miras demosu. Canlı sürümde yedi eser, kaynaklı fotoğraflar, temsili GLB modelleri, tarihî görüntüler, e-posta koduyla giriş ve moderasyon bulunur.
 
-## 16 Ekim frontend yenilemesi
+**[Canlı demo](https://akar.tamerakdeniz.com)** · [API sağlık kontrolü](https://akar-api.vercel.app/ready) · [Doküman rehberi](docs/README.md)
 
-Güncel inceleme, kararlar ve kalan işler: [Frontend yenileme kontrol listesi](docs/FRONTEND-REFRESH.md). İlk uyarlama Bursa mock verisi ve yeni harita stilini içerir; aşağıdaki eski ekran kapsamı tüm güncel Figma tasarımının tamamlandığı anlamına gelmez. Mirasım ayarlarından deneysel rozet/Bulmaca/Birlikte Gez ekranları açılabilir. Masaüstü anlatımda Panel / Altyazı karşılaştırması vardır.
+## Mimari
 
-## Çalıştırma
+| Bileşen                  | Konum / hizmet                                                     |
+| ------------------------ | ------------------------------------------------------------------ |
+| Web                      | `apps/web` · Next.js / React · Vercel `akar-app`                   |
+| API                      | `services/api` · Fastify / Drizzle · Vercel `akar-api`, Frankfurt  |
+| Veritabanı, giriş, medya | Supabase PostgreSQL/PostGIS, Auth, Storage · Frankfurt             |
+| Periyodik işler          | Supabase Cron → korumalı API bakım ucu                             |
+| Ortak kod                | `packages/domain`, `packages/api-client`, `packages/design-tokens` |
 
-Node.js 22+ (geliştirmede 24.14.1) ve npm gerekir.
+Web ve API ayrı dağıtılır; üretim dalı `main`dir. Sırlar Git'te tutulmaz. Kurulum ve ortam değişkenleri: [API rehberi](services/api/README.md#yayına-alma), [canlı ortam kaydı](docs/deployment/2026-10-23-cloud-migration.md).
+
+## Yerelde çalıştırma
+
+Node.js sürümü `.nvmrc` içindedir (**24**). İlk kurulum:
 
 ```sh
+nvm use
 npm ci
+```
+
+Yalnız arayüz geliştirmek için Docker veya bulut hesabı gerekmez:
+
+```sh
 npm run dev
 ```
 
-[http://127.0.0.1:3000](http://127.0.0.1:3000) adresini aç. Harita tile'ları için internet gerekir; yüklenemezse şematik görünüm ve eser listesi kullanılabilir. Google Chrome, Playwright testlerinin varsayılan tarayıcısıdır.
+[127.0.0.1:3000](http://127.0.0.1:3000) yerel mock istemcisini kullanır; verisi aynı tarayıcıda saklanır. Bu mod canlı hesaba veya Storage'a bağlanmaz. Harita tile'ları için internet gerekir.
+
+Gerçek API/Auth/Storage akışı için Docker ve Supabase CLI kurulu olmalı. İki terminalde:
 
 ```sh
-npm run typecheck
-npm test
-npm run test:e2e
-npm run build
-npm start
+# Terminal 1: yerel veritabanı, Supabase, migration, örnek veri ve API
+npm run api
+
+# Terminal 2: yerel API'ye bağlı web
+npm run dev:api
 ```
 
-API'yi yerelde açmak (`npm run api`), rol rol token almak ve bütün testler: [docs/TESTING.md](docs/TESTING.md). API'yi yayına alma (Docker imajı, migration, Supabase bulut ve Vercel adımları): [services/api/README.md "Yayına alma"](services/api/README.md#yayına-alma).
+Web [127.0.0.1:3001](http://127.0.0.1:3001), giriş e-postaları [Mailpit](http://127.0.0.1:54324) üzerinden açılır. `dev:api` bağlantıları otomatik sağlar. Elle yapılandırma için [web ortam örneği](apps/web/.env.example); roller ve ayrıntılı akışlar için [test rehberi](docs/TESTING.md).
 
-## Çalışan akışlar
+## Kontroller
 
-- Türkçe arama, eser türü filtresi, favoriler, harita pinleri ve mobil yerleşim.
-- Üç hazır rota, kendi rotasına eser ekleme/çıkarma, sıralı duraklar ve demo ziyaret durumu.
-- Eser detayları, kaynak/durum paneli, bölümlü hikâye, sade anlatım, cihaz üzerinden Türkçe sesli okuma ve hız seçimi.
-- Temsili mimari sahnede hikâye noktaları; genel akar → hayrat ilişkisi.
-- Açıklamalı üç soruluk kültür bulmacası, tekrar puanını engelleyen iş kuralları.
-- Anı ve isteğe bağlı fotoğraf gönderimi, onay bekleyen katkılar, onay/ret ve yaşayan hafıza.
-- Demo ziyaretleri, profil puanları, kazanılan rozetler, yüksek kontrast ve büyük metin.
-- Demo yönetim panelinde eser ekleme/düzenleme, hikâye bölüm düzenleme, taslak/yayın durumu ve moderasyon.
-- Geçmişi Gör için klavye destekli karşılaştırma kaydırıcısı ve tarih seçimi. **Gerçek arşiv görselleri henüz yoktur.**
-
-Veriler aynı tarayıcıda `akar-demo-bursa-v1` anahtarıyla localStorage'da tutulur. Birden fazla cihaz arasında senkronizasyon yoktur. Mirasım → Demo verilerini sıfırla ile başlangıca dönülür. Fotoğraflar yerel depolama kotasına tabidir; kota hatasında işlem kaydedilmiş gibi gösterilmez.
-
-## Proje yapısı
-
-```text
-apps/web/                 Next.js App Router, web arayüzü, MapLibre harita
-packages/domain/          Platform bağımsız tipler, doğrulama ve iş kuralları
-packages/api-client/      AkarClient sözleşmesi, mock servis, örnek veriler
-packages/design-tokens/   Figma Çini paleti, CSS ve mobil için TypeScript tokenları
-tests/                    Masaüstü / mobil uçtan uca testler
-docs/                     Yol haritası, API handoff, kaynak ve kapsam notları
+```sh
+npm run check -- --web --build       # Docker gerektirmeyen web kontrolü
+npm run check -- --build             # Web + API + OpenAPI + derlemeler; Docker gerekir
+npm run check -- --web --e2e         # Masaüstü/mobil web tarayıcı testleri
+npm run test:e2e:api                 # Yerel API/Supabase açıkken gerçek giriş ve moderasyon
 ```
 
-Bu repo frontend, gelecekteki mobil uygulama ve backend için tek monorepo olarak kullanılır. Backend `services/api` altındadır; kurulum ve komutlar için [services/api/README.md](services/api/README.md).
+Yerel tarayıcı testleri Google Chrome kullanır; CI kendi Chromium imajını kullanır. PR/main kontrolleri web, API ve gerçek API tarayıcı akışlarını doğrular. [Katkı rehberi](CONTRIBUTING.md) komut kapsamını açıklar.
 
-Gelecekte `apps/mobile` altında Expo uygulaması aynı domain ve servis paketlerini kullanabilir. Web UI bileşenleri DOM/CSS içerir ve React Native'de doğrudan kullanılamaz. Mobil ekranlar platforma uygun yazılacaktır.
+## İçerik ve sınırlar
 
-## Tasarım ve sınırlar
+- Canlı katalog: 7 eser, 7 temsili model, 58 eser fotoğrafı, 36 tarihî fotoğraf eşleşmesi, 59 hikâye adımı; 94 tekil Storage nesnesi, yaklaşık 73,5 MiB.
+- Kaynak/lisans metinleri ve yeniden aktarım yöntemi: [demo içerik rehberi](docs/content/DEMO-CONTENT.md). Yerel mock seed'i canlı katalog üzerine çalıştırma.
+- Orhan Gazi Türbesi'nin anlatımı henüz yoktur. Diğer eserler tarayıcının Türkçe sesli okumasını kullanır; profesyonel ses kaydı bulunmaz.
+- Rota çizgileri şematiktir; yürüyüş yol tarifi değildir. Modeller tarihsel rekonstrüksiyon olarak sunulmaz.
+- Native mobil uygulama henüz eklenmedi. Mobil web çalışır; gelecekteki React Native uygulaması ortak domain/API paketlerini kullanabilir, web bileşenleri doğrudan native'e taşınmaz.
 
-Güncel kaynak [Akar Figma dosyası](https://www.figma.com/design/Bd3m8xYrCiVK6440POHN39/akar-app?node-id=0-1). Renkler, temel navigasyon, sol panel/harita yapısı ve ana ekran akışları korundu. Wireframe yer tutucuları temsili çizimlerle tamamlandı. Figma ikonları `apps/web/public/figma` altında yereldir; çalışırken geçici Figma URL'lerine ihtiyaç yoktur.
-
-Bu sürümde **3D model, tarihî fotoğraf, gerçek geofence, profesyonel ses kaydı, e-posta doğrulama, çok kullanıcılı birlikte gezme ve gerçek API bağlantısı yoktur**. Bunlar tamamlanmış gibi sunulmaz. Harita eğimi, gerçek 3D yapı modeli anlamına gelmez. Rota çizgisi durakları birleştiren şemadır; yürünebilir yol tarifi değildir.
-
-- [Repo düzeni ve ekip sınırları](docs/REPOSITORY-STRATEGY.md)
-- [Katkı ve branch akışı](CONTRIBUTING.md)
-- [Yol haritası ve kapsam](docs/ROADMAP.md)
-- [Backend entegrasyon sözleşmesi](docs/API-HANDOFF.md)
-- [Figma eşlemesi ve içerik kaynakları](docs/DESIGN-SOURCES.md)
-- [Doğrulama raporu](docs/VERIFICATION.md)
+`docs/documents-context` ekip tarafından tutulan içerik/tasarım kaynaklarıdır. Canlı dosyalar Storage'dan sunulur; kaynak arşivi derleme, biçimlendirme ve CI çalışma kapsamından ayrıdır. Git geçmişindeki eski büyük dosyaları baştan indirmemek için yeni klonda `git clone --filter=blob:none https://github.com/Internet-Kahve/akar-app.git` kullanılabilir; geçmiş korunur, gereken dosyalar indirilir.

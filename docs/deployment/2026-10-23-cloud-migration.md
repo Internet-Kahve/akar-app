@@ -1,57 +1,41 @@
-# Vercel ve Supabase demo kurulumu — 23 Ekim 2026
+# Vercel ve Supabase demo ortamı — 23 Ekim 2026
 
-## Kaynaklar
+## Aktif kaynaklar
 
-| Bileşen | Kurulum |
-| --- | --- |
-| Web | [akar.tamerakdeniz.com](https://akar.tamerakdeniz.com), Vercel `akar-app`, `apps/web` |
-| API | [akar-api.vercel.app](https://akar-api.vercel.app), Vercel `akar-api`, `services/api`, Node 24, Frankfurt `fra1` |
-| Veritabanı / Auth / Storage | `akar-demo-frankfurt`, Supabase Free, `eu-central-1` |
-| SMTP | Hostinger, `info@tamerakdeniz.com`, `smtp.hostinger.com:465`; şifre yalnız Supabase'de |
-| İlk yönetici | Tamer'in hesabı OTP ile giriş yaptı; veritabanındaki `admin` rolü ve panel erişimi doğrulandı |
+| Bileşen                     | Kurulum                                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Web                         | [akar.tamerakdeniz.com](https://akar.tamerakdeniz.com), Vercel `akar-app`, `apps/web`                                  |
+| API                         | [akar-api.vercel.app](https://akar-api.vercel.app/ready), Vercel `akar-api`, `services/api`, Node 24, Frankfurt `fra1` |
+| Veritabanı / Auth / Storage | `akar-demo-frankfurt`, Supabase Free, `eu-central-1`                                                                   |
+| SMTP                        | Hostinger, `info@tamerakdeniz.com`, `smtp.hostinger.com:465`; şifre yalnız Supabase'de                                 |
+| Bakım                       | Supabase Cron `akar-maintenance`, dakikada bir korumalı `/internal/jobs/run` çağrısı                                   |
 
-Supabase migration'ları `0000`–`0010` uygulandı. Örnek katalogda altı eser ve üç rota var.
-Seed dosyası gerçek fotoğraf, ses veya GLB içermez. Sunum medyası ayrıca panelden yüklenmeli.
-`media` kovası herkese açık, `uploads` kovası özeldir. Dosya yüklemesi imzalı URL ile doğrudan Storage'a gider.
+Web ve API `main`den otomatik dağıtılır. #34–#37 birleştirildi; geçici geçiş dalları silindi. Yeni dağıtımda iki projenin aynı merge commitinden READY olduğunu ve özel web domaininin yeni sürüme bağlandığını kontrol et.
 
-API, transaction pooler üzerinden iki bağlantılık havuz kullanır; TLS sertifika zinciri ve hostname
-Supabase CA ile doğrulanır. Migration'lar session pooler üzerinden elle uygulanır.
-Sırlar yalnız API Production ortamında bulunur; web'e yalnız API adresi, Supabase adresi ve publishable key verilir.
+Migration'lar `0000`–`0010` uygulandı. Canlı katalog yedi eser ve üç rota içerir. 94 tekil Storage nesnesi yaklaşık 73,5 MiB tutar; model, fotoğraf, tarihî görsel ve hikâye ayrıntıları [içerik rehberinde](../content/DEMO-CONTENT.md). `media` herkese açık, `uploads` özeldir. Yerel mock seed'i canlı katalog üzerine çalıştırma.
 
-Üretim branch'i hâlâ `main`; bu demo dağıtımları incelemedeki `tamerakdeniz/vercel-api` dalından yapılmıştır.
-PR #35, PR #34 üzerine kuruludur; değişiklikler main'e alınmadan eski main'i yeniden dağıtmak bu kurulumu geri alır.
+API transaction pooler üzerinden iki bağlantılık havuz kullanır; TLS zinciri ve hostname Supabase CA ile doğrulanır. Migration session pooler üzerinden ayrı çalıştırılır. Sırlar yalnız API Production ortamındadır; web yalnız API adresi, Supabase adresi ve publishable key alır. Kurulum sırası ve tüm değişkenler [API README](../../services/api/README.md#yayına-alma) içinde.
 
-## Doğrulama
+## Doğrulanan durum
 
-API üretim commit'i `e9d6113`, web üretim commit'i `423f811` olarak doğrulandı.
-API ve web dağıtımları READY; `/ready` ve katalog `200`, izin verilen web origin'i için CORS doğru.
-Bakım çağrısı anahtarsız `401`, geçerli anahtarla `200` döndü. Supabase Vault ve dakikalık
-`akar-maintenance` işi etkin; 15:07 ve 15:08 (Türkiye saati) otomatik çağrıları `200` döndü.
-Son API dağıtımında yapılan hata/fatal log taramasında kayıt bulunmadı.
+#37 merge commit'i `3f0af96` için web/API READY; tüm GitHub kontrolleri başarılıydı. Canlı doğrulamada:
 
-- Hostinger e-postası kullanıcıya ulaştı; gerçek OTP girişi ve admin yetkisinin alınması doğrulandı.
-- Mobil web görünümü yeni API üzerinden yüklendi; altı eser ve üç rota canlı veritabanından okunuyor.
-- 195 API testi başarılı; web ve API TypeScript kontrolleri başarılı.
-- Derlenen Vercel handler'ı, `require(ESM)` kapalıyken gerçek veritabanına bağlanıp katalog okuyabildi.
-- 1 MiB imzalı Storage yükleme ve okuma testi başarılı; doğrulama dosyaları kaldırıldı.
-- Supabase giriş ve kayıt e-postaları OTP kodunu gösterir. Projedeki 8 haneli kod ayarı korunur;
-  web alanı hem eski hem yeni uzunlukları kabul eder.
+- `/ready` ve katalog `200`; web üzerinden API erişimi başarılı.
+- 94 Storage nesnesi erişilebilir; yedi GLB masaüstünde, model/arşiv/hikâye mobil emülasyonda açıldı; sayfa hatası görülmedi.
+- Kaynaklı eser açıklamaları ve arşiv lisansları görüntülendi.
+- Son üç otomatik bakım çağrısı `200`, zaman aşımı yok. Anahtarsız çağrı önceki kurulum testinde `401` döndü.
+- Hostinger e-postasıyla gerçek OTP girişi ve ilk yöneticinin panel erişimi kullanıcı tarafından doğrulandı.
+- Yerel/CI testleri: 196 API, 51 domain/istemci, 23 web ve 6 API/Auth tarayıcı testi başarılı; kapsam dışı 1 web ve 2 quiz senaryosu atlandı.
+
+Bu bir tarihli doğrulama kaydıdır; güncel dağıtım sonucunu Vercel/GitHub üzerinden kontrol et.
 
 ## Sunum öncesi
 
-- Gerçek eser dosyalarıyla panelden ekleme/yükleme akışını prova et.
-- 6–7 eserin fotoğraf, ses ve GLB dosyalarını yükle; örnek katalog dosyaların yerine geçmez.
-- Hostinger hPanel'de posta kutusunun gönderim limitini kontrol et. Ücretsiz/deneme kutularında
-  günlük limit 100 olabilir; Business Starter için belgelenen limit 1000/gündür. Güncel hesap kotası esas alınır.
-- Supabase'in özel SMTP sonrası varsayılan e-posta sınırı saatte 30'dur. Sunumda yoğun giriş bekleniyorsa
-  hem bu sınırı hem Hostinger kotasını birlikte planla. Katalog gezmek giriş gerektirmez.
-- 7–8 eser × en çok 50 MB = 350–400 MB kalıcı medya; geçici dosyalar ve ziyaretçi fotoğrafları için pay bırak.
-  Depolama ile indirme trafiği ayrı kotalardır.
+- Gerçek telefon donanımında modeli, sesli okumayı ve ağ koşullarını prova et; mobil otomasyon cihaz performansı ölçümü değildir.
+- Hazır sekizinci eseri panelden ekleme/yayımlama akışını prova et. Orhan Gazi Türbesi anlatımı ve profesyonel ses kayıtları bu pakette yoktur.
+- Supabase Auth ve Hostinger gönderim kotalarını panellerde kontrol et; yoğun giriş için ikisini birlikte planla. Katalog gezmek giriş gerektirmez.
+- İki Storage kovasının toplam kullanımını ve indirme trafiğini kontrol et; ziyaretçi yüklemeleri için pay bırak.
 
-Hostinger kota kaynağı: https://www.hostinger.com/support/4625828-parameters-and-limits-of-hostinger-email/
+## Eski bağlantıların durumu
 
-## Eski bağlantılar
-
-Kod ve aktif dağıtım ayarları yeni projeyi kullanır. Önce oluşturulan boş İrlanda Supabase projesi
-silinmedi, duraklatıldı. Eski Render hizmetinin bulut panelinden kapatılması bu kurulumda doğrulanmadı;
-uygulama artık ona bağlı değildir. Eski projelerdeki veriler otomatik silinmedi.
+Aktif kod ve dağıtım yeni Frankfurt projesine bağlıdır. Boş İrlanda Supabase projesi duraklatıldı; silinmedi. Eski Render hizmetinin bulut panelinden kapatılması doğrulanmadı; uygulama ona bağlı değildir. Bu rapor eski hesapların veya verilerin silindiği anlamına gelmez.

@@ -4,7 +4,7 @@ Projeyi kendi bilgisayarında çalıştırıp test etmek için gereken her şey.
 
 ## Gerekenler
 
-- Node.js ve repo kökünde bir kez `npm ci`
+- Node.js 24 (`.nvmrc`) ve repo kökünde bir kez `npm ci`
 - Docker Desktop ya da OrbStack (açık olmalı)
 - [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) (macOS: `brew install supabase/tap/supabase`)
 - Uçtan uca testler için Google Chrome
@@ -30,7 +30,7 @@ npm run dev:api   # API'ye bağlı web: http://127.0.0.1:3001
 
 Komut yerel Supabase adresini ve anahtarını `supabase status` ile okur, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` değişkenlerini kendisi verir. API'nin `CORS_ORIGINS` değerinde `http://127.0.0.1:3001` olmalıdır (`services/api/.env.example` bunu içerir; eski bir `.env`'in varsa ekle ve `npm run api`'yi yeniden başlat).
 
-**Web'den giriş:** Mirasım sayfasında **Giriş yap** → e-posta adresini yaz → 6 haneli kod http://127.0.0.1:54324 (Mailpit) adresindeki e-postaya düşer → kodu gir. Kaydetme sonrası İz Bırak ya da yönetim işlemleri giriş gerektirdiğinde pencere kendiliğinden açılır. Yönetim/moderasyon için adresi önce yetkilendir: `npm run staff:invite -w @akar/api -- --email ben@example.com --role admin`. İz Bırak'ta KVKK açık rıza metni şimdilik taslaktır (sürüm `taslak-2026-10-21`). Bulmaca (Mirasım → Deneysel arayüzleri göster → eserde **Bulmaca**) API'deki sorularla çalışır; fotoğraflı anıda yükleme çubuğu görünür.
+**Web'den giriş:** Mirasım sayfasında **Giriş yap** → e-posta adresini yaz → 8 haneli kod http://127.0.0.1:54324 (Mailpit) adresindeki e-postaya düşer → kodu gir. Kaydetme sonrası İz Bırak ya da yönetim işlemleri giriş gerektirdiğinde pencere kendiliğinden açılır. Yönetim/moderasyon için adresi önce yetkilendir: `npm run staff:invite -w @akar/api -- --email ben@example.com --role admin`. İz Bırak'ta KVKK açık rıza metni şimdilik taslaktır (sürüm `taslak-2026-10-21`). Bulmaca (Mirasım → Deneysel arayüzleri göster → eserde **Bulmaca**) API'deki sorularla çalışır; fotoğraflı anıda yükleme çubuğu görünür.
 
 API'yi ayrıca Swagger ya da `curl` ile de test edebilirsin.
 
@@ -121,10 +121,10 @@ Bir hata bulduğunda: ne yaptın, hangi istek/ekran, beklenen ve gelen yanıt (y
 ## 7. Çevrimiçi test ortamı
 
 Kurulum: [API yayına alma rehberi](../services/api/README.md#yayına-alma).
-Yeni hedef Tamer'in `akar-app` web ve `akar-api` API Vercel projeleri ile kendi Supabase projesidir.
-Eski Render ve ayrı staging adresleri yeni kurulumun doğrulama hedefi değildir.
-Canlı geçiş tamamlandıktan sonra gerçek Production domainlerini kullan; yalnız build başarısı
-veritabanı, giriş ve Storage bağlantılarının çalıştığını göstermez.
+Canlı web [akar.tamerakdeniz.com](https://akar.tamerakdeniz.com), API
+[akar-api.vercel.app](https://akar-api.vercel.app/ready) üzerindedir. Her ikisi `main`den dağıtılır;
+veritabanı/Auth/Storage Frankfurt Supabase projesidir. [Dağıtım kaydı](deployment/2026-10-23-cloud-migration.md)
+aktif kaynakları listeler. Yalnız build başarısı veritabanı, giriş ve Storage bağlantılarının çalıştığını göstermez.
 
 **Hesap açmadan önce imajı yerelde dene.** `npm run api` açıkken (Supabase ve veritabanı yerelde), `services/api` içinde:
 
@@ -145,7 +145,7 @@ curl http://127.0.0.1:4010/ready
 | `curl -i <api>/v1/sites?limit=1 -H "Origin: <web>"` | 200 ve `access-control-allow-origin: <web>` |
 | `curl "https://<ref>.supabase.co/rest/v1/quiz_answers?select=*" -H "apikey: <anon>"` | Satır dönmez (Data API kapalı) |
 | Harita ve eser listesi | Yayındaki eserler (tohum + editörün yayınladıkları) görünür; taslaklar görünmez |
-| Giriş | Mirasım → Giriş yap → 6 haneli kod e-postası gelir (Gmail SMTP; saatte en çok 30 e-posta) |
+| Giriş | Mirasım → Giriş yap → 8 haneli kod e-postası gelir (Hostinger SMTP; güncel gönderim kotaları Supabase ve Hostinger panellerinden kontrol edilir) |
 | İz Bırak (fotoğraflı) | Yükleme çubuğu ilerler, anı "onay bekliyor"; yönetici panelinde onaylanınca misafir de görür |
 | Fotoğraf adresi | `complete` sonrası adres `…/object/public/media/…`; `uploads` kovasındaki dosya herkese açık adresle açılmaz (400/404) |
 | Bulmaca | Yanlışta tekrar/göster, doğruda açıklama |

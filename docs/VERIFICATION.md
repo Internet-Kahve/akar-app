@@ -1,5 +1,7 @@
 # Doğrulama raporu
 
+> Tarihli plan/inceleme kaydıdır; güncel kurulum ve canlı özellikler için [doküman rehberini](README.md) kullan. Aşağıdaki durumlar yazıldıkları tarihe aittir.
+
 ## 16 Ekim · admin ve harita ikinci adımı
 
 - `npm run typecheck`, `npm run build` başarılı; 12 birim testi geçti.

@@ -1,5 +1,7 @@
 # Akar Backend Plan · Backend Planı
 
+> Tarihli plan/inceleme kaydıdır; güncel kurulum ve canlı özellikler için [doküman rehberini](README.md) kullan. Aşağıdaki durumlar yazıldıkları tarihe aittir.
+
 > Status: **proposal** for team review (20 Oct 2026). Nothing here is final until the team agrees on the decisions in §3.
 > Durum: ekip incelemesi için **öneri** (20 Ekim 2026). §3'teki kararlar ekipçe onaylanana kadar hiçbir madde kesin değildir.
 
