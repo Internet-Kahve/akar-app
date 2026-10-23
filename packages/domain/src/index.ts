@@ -79,6 +79,14 @@ export interface HeritageSite {
   model?: SiteModel;
   historyImages?: HistoryImage[];
   storyPhotos?: SitePhoto[];
+  sections?: Array<{
+    id: string;
+    kind: "history" | "architecture" | "waqf";
+    title: string;
+    body: string;
+    trust: Trust;
+    sourceId: string;
+  }>;
 }
 export interface HeritageRoute {
   id: string;

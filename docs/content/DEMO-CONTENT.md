@@ -31,5 +31,6 @@ Dosyalar önce içerik özetiyle adlandırılmış nesnelere yüklenir. Aynı ba
 
 - 196 API ve 51 domain/istemci testi başarılı.
 - Yeni aktarım testi: bayt tekilleştirme, tekrar çalıştırma, kaynakların korunması ve son eserde hata oluştuğunda tüm işlemin geri alınması.
+- 23 web tarayıcı testi ve 6 gerçek API/Auth tarayıcı testi başarılı (kapsam dışı 1 web ve 2 quiz senaryosu atlandı).
 - Masaüstü/mobil tarayıcı regresyonu: model yükleme sonrası canvas korunması, fotoğraf geçişi, arşiv lisansı ve yerel Draco çözücüsü.
 - Web üretim derlemesi ve API/web tür kontrolleri başarılı.

@@ -91,13 +91,11 @@ test("admin photo wizard publishes complete content and persists shared images",
   await page
     .getByRole("button", { name: "Kapak fotoğrafı seç", exact: true })
     .click();
-  await page
-    .getByLabel("Fotoğraf dosyası")
-    .setInputFiles({
-      name: "bad.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from("invalid"),
-    });
+  await page.getByLabel("Fotoğraf dosyası").setInputFiles({
+    name: "bad.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("invalid"),
+  });
   await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
     "JPG, PNG veya WebP",
   );
@@ -113,13 +111,11 @@ test("admin photo wizard publishes complete content and persists shared images",
     ctx.fillText("Demo arşiv görseli", 130, 200);
     return c.toDataURL("image/png").split(",")[1];
   });
-  await page
-    .getByLabel("Fotoğraf dosyası")
-    .setInputFiles({
-      name: "demo.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(photo, "base64"),
-    });
+  await page.getByLabel("Fotoğraf dosyası").setInputFiles({
+    name: "demo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(photo, "base64"),
+  });
   await expect(page.locator(".upload-preview")).toBeVisible();
   await page
     .getByLabel("Alt metin (zorunlu)")
@@ -128,7 +124,9 @@ test("admin photo wizard publishes complete content and persists shared images",
   await page
     .getByRole("combobox", { name: "Lisans", exact: true })
     .selectOption("Kendi çekimim");
-  await page.getByRole("textbox", {name: /^Yeni kaynak başlığı/}).fill("Ekip demo arşivi");
+  await page
+    .getByRole("textbox", { name: /^Yeni kaynak başlığı/ })
+    .fill("Ekip demo arşivi");
   await page
     .getByRole("button", { name: "Fotoğrafı ekle", exact: true })
     .click();
@@ -201,7 +199,7 @@ test("admin photo wizard publishes complete content and persists shared images",
   );
   expect(errors).toEqual([]);
 });
-test("deferred features are hidden and history remains keyboard accessible", async ({
+test("deferred features are hidden and the empty archive remains keyboard accessible", async ({
   page,
 }) => {
   await page.goto("/#view=detail&site=ulu-cami");
@@ -218,10 +216,14 @@ test("deferred features are hidden and history remains keyboard accessible", asy
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Geçmişi Gör", exact: true }).click();
-  const slider = page.getByRole("slider");
-  await slider.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(slider).toHaveValue("51");
+  await expect(
+    page.getByRole("heading", { name: "Bu eserin eski görüntüsü henüz yok" }),
+  ).toBeVisible();
+  await expect(page.getByRole("slider")).toHaveCount(0);
+  await page.getByRole("button", { name: "Bir fotoğraf paylaş" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
   await expect(page.getByRole("heading", { name: "Mirasım" })).toBeVisible();
   await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);

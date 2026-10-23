@@ -35,6 +35,7 @@ import {
   approvedMemories,
   filterSites,
   kindLabels,
+  trustLabels,
   normalize,
   type Command,
   type HeritageSite,
@@ -1056,13 +1057,24 @@ export function AkarApp() {
               </dd>
             </div>
           </dl>
+          {site.sections?.map((section) => (
+            <section key={section.id}>
+              <h3>{section.title}</h3>
+              <p>{section.body}</p>
+              <Tag tone={section.trust}>{trustLabels[section.trust]}</Tag>
+              <p className="muted">
+                {
+                  site.sources?.find((source) => source.id === section.sourceId)
+                    ?.title
+                }
+              </p>
+            </section>
+          ))}
           <h3>Kaynak ve içerik durumu</h3>
           <p>{site.source}</p>
-          <Notice>
-            Bu prototipteki tarih, konum ve metinler demo amaçlıdır. Sponsorun
-            doğrulanmış veri paketi geldiğinde kaynak kayıtlarıyla
-            değiştirilecek.
-          </Notice>
+          {!site.sources?.length && (
+            <Notice>Bu kaydın kaynaklı içerik paketi henüz eklenmedi.</Notice>
+          )}
         </Modal>
       )}
       {overlay === "memories" && site && (

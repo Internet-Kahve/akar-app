@@ -74,6 +74,21 @@ test("model survives its loading state, photo switch and uncropped archive retai
       trust: "verified",
     },
   ];
+  site.historyImages.push({
+    ...site.historyImages[0]!,
+    id: "archive-2",
+    dateLabel: "1930",
+  });
+  site.sections = [
+    {
+      id: "section-1",
+      kind: "history",
+      title: "Tarihçe",
+      body: "Kaynaklı tarihçe metni.",
+      trust: "verified",
+      sourceId: photo.sourceId,
+    },
+  ];
   site.sources = [
     {
       id: photo.sourceId,
@@ -106,6 +121,11 @@ test("model survives its loading state, photo switch and uncropped archive retai
   await expect(page.locator(".model-viewer canvas")).toBeVisible();
   await page.getByRole("button", { name: "Fotoğraf", exact: true }).click();
   await expect(page.locator(".scene-photo")).toHaveAttribute("alt", photo.alt);
+  await page.getByRole("button", { name: "Eser hakkında" }).click();
+  await expect(
+    page.getByRole("dialog").getByText("Kaynaklı tarihçe metni."),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Geçmişi Gör", exact: true }).click();
   await expect(page.locator(".archive-photo img")).toBeVisible();
   await expect(page.locator(".archive-photo img")).toHaveCSS(
@@ -117,6 +137,9 @@ test("model survives its loading state, photo switch and uncropped archive retai
   await expect(
     page.getByRole("link", { name: "Arşiv kaydını aç" }),
   ).toHaveAttribute("href", "https://archive.example/item");
+  await page.locator(".archive-timeline button").nth(1).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".archive-photo figcaption")).toContainText("1930");
   const decoder = await request.get("/draco/draco_decoder.wasm");
   expect(decoder.ok()).toBe(true);
   expect((await decoder.body()).subarray(0, 4).toString("hex")).toBe(

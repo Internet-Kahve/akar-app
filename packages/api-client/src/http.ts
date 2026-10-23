@@ -160,6 +160,14 @@ interface SiteDetailDto {
     audioMediaId?: string | null;
     audioEnMediaId?: string | null;
   }>;
+  sections?: Array<{
+    id: string;
+    kind: "history" | "architecture" | "waqf";
+    title: string;
+    body: string;
+    trust: Trust;
+    sourceId: string | null;
+  }>;
   cards: Array<{ mediaId: string }>;
   historyImages: Array<{
     id?: string;
@@ -340,6 +348,10 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     tier: d.tier,
     photos,
     sources: d.sources,
+    sections: (d.sections ?? []).map((section) => ({
+      ...section,
+      sourceId: section.sourceId ?? "",
+    })),
     storyPhotos: d.media
       .filter((m) => m.kind === "photo" && used.has(m.id))
       .map(toPhoto),
