@@ -25,3 +25,7 @@
 - [Tasarım rehberi](design/README.md)
 
 Belgelerde kod biçiminde yazılan `eserler/...`, `veri/...`, `design/...` yolları bu klasöre göredir. Tıklanabilir bağlantılar bulundukları dosyaya göredir. Tarihli kararlar, eski promptlar ve arşivler geçmiş durumu anlatabilir; güncel model için eserin kendi klasöründeki notlara bakın.
+
+## Güncel teknik referans
+
+23 Ekim 2026: uygulama Next.js + Fastify + PostgreSQL/PostGIS ve Supabase Auth/Storage kullanır. [Teknik kararlar](../BACKEND-DECISIONS.md) ve [API sözleşmesi](../../services/api/CONTRACTS.md) güncel kaynaktır. [PR incelemesi takip planı](../reviews/PR-FIXES-2026-10-23.md) arşiv/geçmiş ve içerik kontrolünün kapanış ölçütlerini içerir.
