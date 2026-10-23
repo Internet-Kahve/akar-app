@@ -141,12 +141,22 @@ export function SiteEditor({
       const canonical = await onSave(next);
       setDraft(canonical);
       setBaseline(JSON.stringify(canonical));
-      setSaved(live
-        ? (canonical.status === "published" ? "Eser yayında." : "Taslak sunucuya kaydedildi.")
-        : (canonical.status === "published" ? "Eser demo keşfinde yayında." : "Taslak bu tarayıcıya kaydedildi."));
+      setSaved(
+        live
+          ? canonical.status === "published"
+            ? "Eser yayında."
+            : "Taslak sunucuya kaydedildi."
+          : canonical.status === "published"
+            ? "Eser demo keşfinde yayında."
+            : "Taslak bu tarayıcıya kaydedildi.",
+      );
       if (exit) onClose();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Kayıt yapılamadı. Değişikliklerin bu ekranda duruyor.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Kayıt yapılamadı. Değişikliklerin bu ekranda duruyor.",
+      );
     } finally {
       setBusy(false);
     }

@@ -40,10 +40,14 @@ export function AdminHealthAlert({
         {storage && (
           <p className={storage.level}>
             <strong>
-              Kayıtlı medya: {size(storage.usedBytes)} / {size(storage.quotaBytes)}{" "}
-              (%{number.format(storage.percent)})
+              Kayıtlı medya: {size(storage.usedBytes)} /{" "}
+              {size(storage.quotaBytes)} (%{number.format(storage.percent)})
             </strong>
-            <span> Bu değer medya kayıtlarını kapsar; geçici yüklemeler ve sahipsiz dosyalar dahil değildir.</span>
+            <span>
+              {" "}
+              Bu değer medya kayıtlarını kapsar; geçici yüklemeler ve sahipsiz
+              dosyalar dahil değildir.
+            </span>
             {storage.level === "critical"
               ? " Yer kalmayınca fotoğraf yüklemeleri durur."
               : " Kotanın %80'i geçildi."}

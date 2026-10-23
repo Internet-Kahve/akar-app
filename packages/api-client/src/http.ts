@@ -307,7 +307,11 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
   );
   const gallery = d.photoIds ? new Set(d.photoIds) : null;
   const photos = d.media
-    .filter((m) => m.kind === "photo" && (gallery ? gallery.has(m.id) : (used.has(m.id) || !other.has(m.id))))
+    .filter(
+      (m) =>
+        m.kind === "photo" &&
+        (gallery ? gallery.has(m.id) : used.has(m.id) || !other.has(m.id)),
+    )
     .map(toPhoto);
   const model = d.media.find((m) => m.kind === "model");
   return {
@@ -545,7 +549,6 @@ interface UserState {
   queue: Memory[];
 }
 
-
 export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const base = opts.baseUrl.replace(/\/+$/, "");
   const doFetch: typeof fetch = opts.fetch ?? ((...a) => fetch(...a));
@@ -771,7 +774,10 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       }
     | undefined;
   /** Each page includes ordered stops in bulk; no per-route detail requests. */
-  const loadDraftRoutes = async () => (await pages<AdminRouteDto>("/v1/admin/routes", { status: "draft" })).map(mapAdminRoute);
+  const loadDraftRoutes = async () =>
+    (await pages<AdminRouteDto>("/v1/admin/routes", { status: "draft" })).map(
+      mapAdminRoute,
+    );
   const refreshDraftRoutes = async () => {
     if (!drafts) return;
     drafts.routesStale = true;
@@ -922,7 +928,11 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               body: { siteIds: merged },
             })
           ).siteIds;
-    writeLocal({ ...local, saved: [], route: local.route.filter((id) => !nextRoute.includes(id)) });
+    writeLocal({
+      ...local,
+      saved: [],
+      route: local.route.filter((id) => !nextRoute.includes(id)),
+    });
     // The passport lists saved sites newest first.
     return { saved: [...added.reverse(), ...saved], route: nextRoute };
   }
@@ -980,9 +990,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     );
     const name = me.displayName ?? "Gezgin";
     // Only the first pending page belongs to the snapshot. Other tabs and older pages are requested on demand.
-    const queue = me.role === "moderator" || me.role === "admin"
-      ? (await call<{ items: MemoryDto[] }>("GET", "/v1/admin/memories", { query: { status: "pending", limit: 25 }, cache: "no-store" })).items
-      : [];
+    const queue =
+      me.role === "moderator" || me.role === "admin"
+        ? (
+            await call<{ items: MemoryDto[] }>("GET", "/v1/admin/memories", {
+              query: { status: "pending", limit: 25 },
+              cache: "no-store",
+            })
+          ).items
+        : [];
     const solved = await pool(
       passport.quizzesSolved,
       CONCURRENCY,
@@ -1160,7 +1176,12 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   // Keep completed uploads across failed later steps, scoped to the authenticated session and file content.
   const completedUploads = new Map<string, { src: string; id: string }>();
   let uploadsToken: string | null = null;
-  async function editorUpload(key: string, kind: "photo" | "model", src: string, metadata: Record<string, unknown>) {
+  async function editorUpload(
+    key: string,
+    kind: "photo" | "model",
+    src: string,
+    metadata: Record<string, unknown>,
+  ) {
     const currentToken = await token();
     if (currentToken !== uploadsToken) {
       completedUploads.clear();
@@ -1169,7 +1190,9 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     const cached = completedUploads.get(key);
     if (cached?.src === src) {
       // Metadata may have changed after a partially successful save.
-      await call("PATCH", `/v1/admin/media/${encodeURIComponent(cached.id)}`, { body: metadata });
+      await call("PATCH", `/v1/admin/media/${encodeURIComponent(cached.id)}`, {
+        body: metadata,
+      });
       return cached.id;
     }
     const id = await uploadMedia(kind, src, metadata);
@@ -1297,7 +1320,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     for (const p of photos) {
       const old = oldPhotos.get(p.id);
       if (p.src.startsWith("data:"))
-        uploaded.set(p.id, await editorUpload(`${site.id}:photo:${p.id}`, "photo", p.src, photoMetadata(p)));
+        uploaded.set(
+          p.id,
+          await editorUpload(
+            `${site.id}:photo:${p.id}`,
+            "photo",
+            p.src,
+            photoMetadata(p),
+          ),
+        );
       // A photo is shared: its details change wherever it is used (as the "photo" command does).
       else if (old && !same(photoMetadata(p), photoMetadata(old)))
         await call("PATCH", `/v1/admin/media/${encodeURIComponent(p.id)}`, {
@@ -1651,25 +1682,34 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     `/v1/quizzes/${encodeURIComponent(quizId)}`;
   return {
     getSnapshot: () => enqueue(() => build(true)),
-    getModerationPage: (status, cursor) => enqueue(async () => {
-      const page = await call<{ items: MemoryDto[]; nextCursor: string | null }>("GET", "/v1/admin/memories", {
-        query: { status, limit: 25, ...(cursor && { cursor }) }, cache: "no-store",
-      });
-      return { items: page.items.map((m) => mapMemory(m, m.authorName ?? "Gezgin")), nextCursor: page.nextCursor };
-    }),
+    getModerationPage: (status, cursor) =>
+      enqueue(async () => {
+        const page = await call<{
+          items: MemoryDto[];
+          nextCursor: string | null;
+        }>("GET", "/v1/admin/memories", {
+          query: { status, limit: 25, ...(cursor && { cursor }) },
+          cache: "no-store",
+        });
+        return {
+          items: page.items.map((m) => mapMemory(m, m.authorName ?? "Gezgin")),
+          nextCursor: page.nextCursor,
+        };
+      }),
     dispatch: (command) =>
       enqueue(async () => {
         const reload = await run(command);
         return build(reload);
       }),
-    saveSite: (input) => enqueue(async () => {
-      await run({ type: "site", site: input });
-      const snapshot = await build(false);
-      const id = createdIds.get(input.id) ?? input.id;
-      const site = snapshot.sites.find((s) => s.id === id);
-      if (!site) throw new Error("Kaydedilen eser yeniden okunamadı.");
-      return { site, snapshot };
-    }),
+    saveSite: (input) =>
+      enqueue(async () => {
+        await run({ type: "site", site: input });
+        const snapshot = await build(false);
+        const id = createdIds.get(input.id) ?? input.id;
+        const site = snapshot.sites.find((s) => s.id === id);
+        if (!site) throw new Error("Kaydedilen eser yeniden okunamadı.");
+        return { site, snapshot };
+      }),
     reset: () =>
       enqueue(() => {
         // Local guest state only: no server mutation. The device id is kept.

@@ -296,7 +296,10 @@ export function Admin({
   saveSite: (site: HeritageSite) => Promise<HeritageSite>;
   live: boolean;
 }) {
-  const [page, setPage] = useState<ModerationPage>({ items: [], nextCursor: null });
+  const [page, setPage] = useState<ModerationPage>({
+    items: [],
+    nextCursor: null,
+  });
   const [pageBusy, setPageBusy] = useState(false);
   const [pageError, setPageError] = useState("");
   const pageGeneration = useRef(0);
@@ -323,11 +326,24 @@ export function Admin({
     setPage({ items: [], nextCursor: null });
     setPageBusy(true);
     setPageError("");
-    loadModeration(filter).then(
-      (next) => { if (generation === pageGeneration.current) setPage(next); },
-      (error) => { if (generation === pageGeneration.current) setPageError(error instanceof Error ? error.message : "Katkılar yüklenemedi."); },
-    ).finally(() => { if (generation === pageGeneration.current) setPageBusy(false); });
-    return () => { pageGeneration.current++; };
+    loadModeration(filter)
+      .then(
+        (next) => {
+          if (generation === pageGeneration.current) setPage(next);
+        },
+        (error) => {
+          if (generation === pageGeneration.current)
+            setPageError(
+              error instanceof Error ? error.message : "Katkılar yüklenemedi.",
+            );
+        },
+      )
+      .finally(() => {
+        if (generation === pageGeneration.current) setPageBusy(false);
+      });
+    return () => {
+      pageGeneration.current++;
+    };
   }, [live, seesHealth, tab, filter, state, loadModeration, pageRevision]);
   async function moreMemories() {
     if (pageBusy || !page.nextCursor) return;
@@ -336,11 +352,20 @@ export function Admin({
     setPageError("");
     try {
       const next = await loadModeration(filter, page.nextCursor);
-      if (generation === pageGeneration.current) setPage((previous) => ({
-        items: [...new Map([...previous.items, ...next.items].map((m) => [m.id, m])).values()], nextCursor: next.nextCursor,
-      }));
+      if (generation === pageGeneration.current)
+        setPage((previous) => ({
+          items: [
+            ...new Map(
+              [...previous.items, ...next.items].map((m) => [m.id, m]),
+            ).values(),
+          ],
+          nextCursor: next.nextCursor,
+        }));
     } catch (error) {
-      if (generation === pageGeneration.current) setPageError(error instanceof Error ? error.message : "Katkılar yüklenemedi.");
+      if (generation === pageGeneration.current)
+        setPageError(
+          error instanceof Error ? error.message : "Katkılar yüklenemedi.",
+        );
     } finally {
       if (generation === pageGeneration.current) setPageBusy(false);
     }
@@ -440,7 +465,9 @@ export function Admin({
           İçe aktar
         </button>
         <Notice>
-          {live ? "Sunucu paneli. Değişiklikler hesabının yetkileriyle kaydedilir." : "Demo paneli. Değişiklikler bu tarayıcıda saklanır."}
+          {live
+            ? "Sunucu paneli. Değişiklikler hesabının yetkileriyle kaydedilir."
+            : "Demo paneli. Değişiklikler bu tarayıcıda saklanır."}
         </Notice>
       </aside>
       <div className="admin-body">
@@ -571,11 +598,23 @@ export function Admin({
                         : s === "approved"
                           ? "Onaylanan"
                           : "Reddedilen"}{" "}
-                      {!live && <>· {queue.filter((m) => m.status === s).length}</>}
+                      {!live && (
+                        <>· {queue.filter((m) => m.status === s).length}</>
+                      )}
                     </button>
                   ))}
                 </div>
-                {pageError && <div role="alert">{pageError} <button disabled={pageBusy} onClick={() => setPageRevision((n) => n + 1)}>Yeniden dene</button></div>}
+                {pageError && (
+                  <div role="alert">
+                    {pageError}{" "}
+                    <button
+                      disabled={pageBusy}
+                      onClick={() => setPageRevision((n) => n + 1)}
+                    >
+                      Yeniden dene
+                    </button>
+                  </div>
+                )}
                 {pageBusy && <p role="status">Katkılar yükleniyor…</p>}
                 {!visibleQueue.length && !pageBusy ? (
                   <div className="empty-state">
@@ -588,80 +627,86 @@ export function Admin({
                   </div>
                 ) : (
                   visibleQueue.map((m) => {
-                      const own = ownIds.has(m.id);
-                      const can = memoryPermissions(role, m.status, own);
-                      return (
-                        <div className="card moderation-card" key={m.id}>
-                          {m.photo && (
-                            <img
-                              className="memory-photo"
-                              src={m.photo}
-                              alt="Ziyaretçi katkısı"
-                            />
-                          )}
-                          <div className="grow">
-                            <small>
-                              {state.sites.find((s) => s.id === m.siteId)?.name}{" "}
-                              · {m.author}
-                            </small>
-                            <p>{m.text}</p>
-                            <Tag>
-                              {m.photo ? "Fotoğraf + anı" : "Sadece anı"}
-                            </Tag>
-                            {m.reason && <p className="error">{m.reason}</p>}
-                          </div>
-                          <div className="moderation-actions">
-                            <div className="row">
-                              {can.decide && (
-                                <>
-                                  <button
-                                    className="btn"
-                                    onClick={() =>
-                                      void commit({
-                                        type: "moderate",
-                                        id: m.id,
-                                        status: "approved",
-                                      })
-                                    }
-                                  >
-                                    <Check size={15} />
-                                    Onayla
-                                  </button>
-                                  <button
-                                    className="btn secondary"
-                                    onClick={() => {
-                                      setReject(m.id);
-                                      setReason("");
-                                    }}
-                                  >
-                                    <X size={15} />
-                                    Reddet
-                                  </button>
-                                </>
-                              )}
-                              <MemoryActions
-                                variant="button"
-                                memory={m}
-                                siteName={
-                                  state.sites.find((s) => s.id === m.siteId)
-                                    ?.name ?? "Eser"
-                                }
-                                role={role}
-                                own={own}
-                                commit={commit}
-                              />
-                            </div>
-                            {can.takedown && (
-                              <small>
-                                Yayından kaldırırken ret nedeni seçmek zorunlu
-                              </small>
-                            )}
-                          </div>
+                    const own = ownIds.has(m.id);
+                    const can = memoryPermissions(role, m.status, own);
+                    return (
+                      <div className="card moderation-card" key={m.id}>
+                        {m.photo && (
+                          <img
+                            className="memory-photo"
+                            src={m.photo}
+                            alt="Ziyaretçi katkısı"
+                          />
+                        )}
+                        <div className="grow">
+                          <small>
+                            {state.sites.find((s) => s.id === m.siteId)?.name} ·{" "}
+                            {m.author}
+                          </small>
+                          <p>{m.text}</p>
+                          <Tag>{m.photo ? "Fotoğraf + anı" : "Sadece anı"}</Tag>
+                          {m.reason && <p className="error">{m.reason}</p>}
                         </div>
-                      );
-                    })
+                        <div className="moderation-actions">
+                          <div className="row">
+                            {can.decide && (
+                              <>
+                                <button
+                                  className="btn"
+                                  onClick={() =>
+                                    void commit({
+                                      type: "moderate",
+                                      id: m.id,
+                                      status: "approved",
+                                    })
+                                  }
+                                >
+                                  <Check size={15} />
+                                  Onayla
+                                </button>
+                                <button
+                                  className="btn secondary"
+                                  onClick={() => {
+                                    setReject(m.id);
+                                    setReason("");
+                                  }}
+                                >
+                                  <X size={15} />
+                                  Reddet
+                                </button>
+                              </>
+                            )}
+                            <MemoryActions
+                              variant="button"
+                              memory={m}
+                              siteName={
+                                state.sites.find((s) => s.id === m.siteId)
+                                  ?.name ?? "Eser"
+                              }
+                              role={role}
+                              own={own}
+                              commit={commit}
+                            />
+                          </div>
+                          {can.takedown && (
+                            <small>
+                              Yayından kaldırırken ret nedeni seçmek zorunlu
+                            </small>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
-                {live && page.nextCursor && <button className="btn secondary" disabled={pageBusy} onClick={() => void moreMemories()}>Daha fazla katkı yükle</button>}
+                {live && page.nextCursor && (
+                  <button
+                    className="btn secondary"
+                    disabled={pageBusy}
+                    onClick={() => void moreMemories()}
+                  >
+                    Daha fazla katkı yükle
+                  </button>
+                )}
               </>
             )}
           </section>

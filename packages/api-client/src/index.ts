@@ -1,4 +1,10 @@
-import { reduceSnapshot, type Command, type Snapshot, type HeritageSite, type Memory } from "@akar/domain";
+import {
+  reduceSnapshot,
+  type Command,
+  type Snapshot,
+  type HeritageSite,
+  type Memory,
+} from "@akar/domain";
 import { createSeed, demoQuizzes } from "./seed";
 export { routes, createSeed, demoRegion, demoQuizzes } from "./seed";
 export {
@@ -63,7 +69,9 @@ export interface AkarClient {
   getSnapshot(): Promise<Snapshot>;
   dispatch(command: Command): Promise<Snapshot>;
   /** Save and return the canonical site, including server ids and media URLs. */
-  saveSite(site: HeritageSite): Promise<{ site: HeritageSite; snapshot: Snapshot }>;
+  saveSite(
+    site: HeritageSite,
+  ): Promise<{ site: HeritageSite; snapshot: Snapshot }>;
   reset(): Promise<Snapshot>;
   /** Playable quizzes of a published site, in order; [] when it has none. */
   getQuizzes(siteId: string): Promise<PlayableQuiz[]>;
@@ -74,7 +82,10 @@ export interface AkarClient {
   ): Promise<{ correctOption: string; snapshot: Snapshot }>;
   /** Moderator and admin only; the server answers 403 for other roles. */
   getAdminHealth(): Promise<AdminHealth>;
-  getModerationPage(status: Memory["status"], cursor?: string): Promise<ModerationPage>;
+  getModerationPage(
+    status: Memory["status"],
+    cursor?: string,
+  ): Promise<ModerationPage>;
 }
 // Keep the previous Istanbul demo untouched in its original storage key.
 export const demoStorageKey = "akar-demo-bursa-v1";
@@ -171,7 +182,10 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     async getModerationPage(status, cursor) {
       const items = state.memories.filter((m) => m.status === status);
       const start = Number(cursor ?? 0);
-      return { items: structuredClone(items.slice(start, start + 25)), nextCursor: items.length > start + 25 ? String(start + 25) : null };
+      return {
+        items: structuredClone(items.slice(start, start + 25)),
+        nextCursor: items.length > start + 25 ? String(start + 25) : null,
+      };
     },
     async saveSite(site) {
       const snapshot = persist(reduceSnapshot(state, { type: "site", site }));
