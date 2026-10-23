@@ -16,6 +16,7 @@ const Env = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(10).default(2),
+  DATABASE_SSL_CA: optionalText,
   JOB_SECRET: z.string().min(32).optional(),
   API_RUNTIME: z.enum(["server", "vercel"]).default("server"),
   HOST: z.string().default("127.0.0.1"),

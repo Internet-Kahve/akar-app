@@ -10,7 +10,7 @@ import { maintenanceRoutes, runMaintenance } from "./platform/maintenance.ts";
 /** Shared by the local server and the Vercel handler. No listeners or timers on import. */
 export async function createRuntime(env: NodeJS.ProcessEnv = process.env) {
   const config = loadConfig(env);
-  const { db, pool } = createDb(config.DATABASE_URL, config.DATABASE_POOL_MAX);
+  const { db, pool } = createDb(config.DATABASE_URL, config.DATABASE_POOL_MAX, config.DATABASE_SSL_CA);
   try {
     const auth = config.AUTH_JWKS_URL && config.AUTH_JWT_ISSUER
       ? createJwksVerifier({ jwks: config.AUTH_JWKS_URL, issuer: config.AUTH_JWT_ISSUER, audience: config.AUTH_JWT_AUDIENCE, db })

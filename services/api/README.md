@@ -97,11 +97,11 @@ Render artık dağıtım hedefi değildir. Eski hesapların verileri otomatik si
    yerel, Git tarafından yok sayılan `.env` dosyasına koy. `npm run db:migrate -w @akar/api` çalıştır.
    Üretim migration'ları API açılışında veya her Vercel build'inde çalıştırılmaz.
 4. Çalışan API için **transaction pooler (6543)** bağlantısını `DATABASE_URL` olarak kullan.
-   `DATABASE_POOL_MAX=2`; her sıcak instance küçük bir havuz kullanır. TLS sağlayıcının bağlantı
-   talimatlarına göre doğrulanmalı; sertifika denetimini kapatma. Migration bağlantısını Vercel'e koyma.
+   `DATABASE_POOL_MAX=2`; her sıcak instance küçük bir havuz kullanır. Database Settings → SSL Configuration → Download certificate ile indirilen PEM içeriğini
+   `DATABASE_SSL_CA` olarak ekle; bağlantı zinciri ve hostname doğrulanır. Migration bağlantısını Vercel'e koyma.
 5. Yalnız demo içeriğini yükle: `npm run db:seed -w @akar/api` altı eser ve rotaları yükler.
    Tam arşiv için `ingest` çalıştırma. Medya adreslerinin yeni Storage kovasına ait olduğunu kontrol et;
-   mevcut seed göreli statik adresler içerir, tek başına dosyaları Storage'a taşımaz.
+   mevcut seed yalnız arayüz için örnek metinler içerir, dosyaları Storage'a taşımaz.
 6. Vercel API projesi: Root Directory `services/api`, Framework **Other**, Node **24.x**, kök dışı
    kaynaklar dahil. `vercel.json` Fastify girişini `api/index.ts` üzerinden yönlendirir; süre 300 saniye.
    Ortam değişkenleri aşağıda. Production domain web, mobil ve cron tarafından erişilebilir olmalı;
@@ -124,6 +124,7 @@ Render artık dağıtım hedefi değildir. Eski hesapların verileri otomatik si
 | --- | --- |
 | `NODE_ENV`, `API_RUNTIME` | `production`, `vercel` |
 | `DATABASE_URL`, `DATABASE_POOL_MAX` | Transaction pooler bağlantısı, `2` |
+| `DATABASE_SSL_CA` | Supabase panelinden indirilen kök sertifikanın PEM içeriği |
 | `CORS_ORIGINS` | Web'in tam origin adresleri, virgülle ayrılmış; wildcard yok |
 | `TRUST_PROXY` | Vercel önünde `1` |
 | `SUPABASE_URL` | Yeni projenin HTTPS adresi |
