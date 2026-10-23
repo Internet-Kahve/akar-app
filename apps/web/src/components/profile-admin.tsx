@@ -284,11 +284,15 @@ export function Admin({
   commit,
   role,
   loadHealth,
+  saveSite,
+  live,
 }: {
   state: Snapshot;
   commit: Commit;
   role: Role;
   loadHealth: () => Promise<AdminHealth>;
+  saveSite: (site: HeritageSite) => Promise<HeritageSite>;
+  live: boolean;
 }) {
   const queue = state.moderationQueue ?? state.memories;
   const ownIds = new Set(state.memories.map((m) => m.id));
@@ -400,7 +404,7 @@ export function Admin({
           İçe aktar
         </button>
         <Notice>
-          Demo paneli. Gerçek yetkilendirme ve sunucuya yayın henüz bağlı değil.
+          {live ? "Sunucu paneli. Değişiklikler hesabının yetkileriyle kaydedilir." : "Demo paneli. Değişiklikler bu tarayıcıda saklanır."}
         </Notice>
       </aside>
       <div className="admin-body">
@@ -425,7 +429,8 @@ export function Admin({
             sites={state.sites}
             catalogRoutes={state.catalogRoutes}
             onClose={() => setEditing(null)}
-            onSave={(site) => commit({ type: "site", site })}
+            onSave={saveSite}
+            live={live}
           />
         ) : tab === "routes" ? (
           <RouteAdmin state={state} commit={commit} />

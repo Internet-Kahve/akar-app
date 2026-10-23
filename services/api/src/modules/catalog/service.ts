@@ -462,6 +462,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         trust: h.trust,
         camera: h.camera,
       })),
+      photoIds: (mediaLinksOf.get(row.id) ?? []).filter((m) => mediaById.get(m.id)?.kind === "photo").map((m) => m.id),
       media: siteMediaList.map((m) => ({
         id: m.id,
         kind: m.kind,

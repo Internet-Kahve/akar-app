@@ -1060,6 +1060,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -1231,6 +1238,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources"
                   ],
@@ -1897,6 +1905,13 @@
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
                           },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"
+                          },
                           "media": {
                             "type": "array",
                             "items": {
@@ -2068,6 +2083,7 @@
                           "sections",
                           "cards",
                           "historyImages",
+                          "photoIds",
                           "media",
                           "sources"
                         ],
@@ -4005,6 +4021,13 @@
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
                           },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"
+                          },
                           "media": {
                             "type": "array",
                             "items": {
@@ -4176,6 +4199,7 @@
                           "sections",
                           "cards",
                           "historyImages",
+                          "photoIds",
                           "media",
                           "sources"
                         ],
@@ -7974,6 +7998,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -8149,13 +8180,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -8222,6 +8246,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -8229,7 +8254,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -8948,6 +8972,13 @@
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
                           },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                          },
                           "media": {
                             "type": "array",
                             "items": {
@@ -9123,13 +9154,6 @@
                               "null"
                             ]
                           },
-                          "photoIds": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            },
-                            "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                          },
                           "sourceLinks": {
                             "type": "array",
                             "items": {
@@ -9196,6 +9220,7 @@
                           "sections",
                           "cards",
                           "historyImages",
+                          "photoIds",
                           "media",
                           "sources",
                           "status",
@@ -9203,7 +9228,6 @@
                           "locationSource",
                           "importMeta",
                           "modelMediaId",
-                          "photoIds",
                           "sourceLinks",
                           "issues"
                         ],
@@ -9886,6 +9910,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -10061,13 +10092,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -10134,6 +10158,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -10141,7 +10166,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -10990,6 +11014,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -11165,13 +11196,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -11238,6 +11262,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -11245,7 +11270,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -11948,6 +11972,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -12123,13 +12154,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -12196,6 +12220,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -12203,7 +12228,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -12939,6 +12963,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -13114,13 +13145,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -13187,6 +13211,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -13194,7 +13219,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -13904,6 +13928,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -14079,13 +14110,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -14152,6 +14176,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -14159,7 +14184,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -14920,6 +14944,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -15095,13 +15126,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -15168,6 +15192,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -15175,7 +15200,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -16044,6 +16068,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -16219,13 +16250,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -16292,6 +16316,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -16299,7 +16324,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -17055,6 +17079,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -17230,13 +17261,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -17303,6 +17327,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -17310,7 +17335,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -18118,6 +18142,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -18293,13 +18324,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -18366,6 +18390,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -18373,7 +18398,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -19042,6 +19066,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -19217,13 +19248,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -19290,6 +19314,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -19297,7 +19322,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],
@@ -19966,6 +19990,13 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -20141,13 +20172,6 @@
                         "null"
                       ]
                     },
-                    "photoIds": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
-                    },
                     "sourceLinks": {
                       "type": "array",
                       "items": {
@@ -20214,6 +20238,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "photoIds",
                     "media",
                     "sources",
                     "status",
@@ -20221,7 +20246,6 @@
                     "locationSource",
                     "importMeta",
                     "modelMediaId",
-                    "photoIds",
                     "sourceLinks",
                     "issues"
                   ],

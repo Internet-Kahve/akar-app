@@ -1,4 +1,4 @@
-import { reduceSnapshot, type Command, type Snapshot } from "@akar/domain";
+import { reduceSnapshot, type Command, type Snapshot, type HeritageSite } from "@akar/domain";
 import { createSeed, demoQuizzes } from "./seed";
 export { routes, createSeed, demoRegion, demoQuizzes } from "./seed";
 export {
@@ -61,6 +61,8 @@ const PENDING_STALE_HOURS = 48;
 export interface AkarClient {
   getSnapshot(): Promise<Snapshot>;
   dispatch(command: Command): Promise<Snapshot>;
+  /** Save and return the canonical site, including server ids and media URLs. */
+  saveSite(site: HeritageSite): Promise<{ site: HeritageSite; snapshot: Snapshot }>;
   reset(): Promise<Snapshot>;
   /** Playable quizzes of a published site, in order; [] when it has none. */
   getQuizzes(siteId: string): Promise<PlayableQuiz[]>;
@@ -163,6 +165,10 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     },
     async dispatch(command) {
       return persist(reduceSnapshot(state, command));
+    },
+    async saveSite(site) {
+      const snapshot = persist(reduceSnapshot(state, { type: "site", site }));
+      return { site: snapshot.sites.find((s) => s.id === site.id)!, snapshot };
     },
     async reset() {
       return persist(createSeed(), {});

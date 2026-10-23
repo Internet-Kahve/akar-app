@@ -1776,3 +1776,59 @@ for (const capacity of [99, 100]) {
     assert.deepEqual(JSON.parse(store.getItem(httpStorageKey)!).route, []);
   });
 }
+
+for (const failFirst of [false, true]) {
+  test(`editor keeps canonical media and reuses uploads after partial failure=${failFirst}`, async () => {
+    let uploads = 0;
+    let fail = failFirst;
+    let stored: any = { ...detail("d1"), status: "draft", sourceLinks: [], openingCamera: null, photoIds: [] };
+    const api = fakeApi({
+      ...catalogHandlers(),
+      ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+      "GET /v1/admin/site-details": () => ({ items: [stored], nextCursor: null }),
+      "GET /v1/admin/sites/d1": () => stored,
+      "POST /v1/media/uploads": () => ({ uploadId: `up${++uploads}`, url: "http://api.test/upload", headers: {} }),
+      "PUT /upload": () => new Response(null, { status: 204 }),
+      "POST /v1/media/uploads/up1/complete": () => ({ id: "p1" }),
+      "POST /v1/media/uploads/up2/complete": () => ({ id: "m1" }),
+      "PATCH /v1/admin/media/p1": () => media("p1", "photo"),
+      "PATCH /v1/admin/media/m1": () => media("m1", "model"),
+      "PUT /v1/admin/sites/d1/model": () => { stored = { ...stored, media: [...stored.media.filter((m: any) => m.kind !== "model"), media("m1", "model", { title: "New model" })] }; return stored; },
+      "PUT /v1/admin/sites/d1/media": c => {
+        if (fail) { fail = false; return Response.json({ error: { code: "INTERNAL", message: "Retry", fieldErrors: {}, requestId: "r" } }, { status: 500 }); }
+        const b = c.body as { photoIds: string[]; coverPhotoId: string | null };
+        stored = { ...stored, photoIds: b.photoIds, coverMediaId: b.coverPhotoId, media: [...stored.media.filter((m: any) => m.kind !== "photo"), ...b.photoIds.map(id => media(id, "photo", { alt: "New photo" }))] };
+        return stored;
+      },
+      "PATCH /v1/admin/sites/d1/info": c => { stored = { ...stored, ...(c.body as object) }; return stored; },
+    });
+    const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "T", fetch: api.fetch });
+    const site = (await client.getSnapshot()).sites.find(s => s.id === "d1")!;
+    const input: HeritageSite = { ...site, photos: [{ id: "tmp-photo", src: "data:image/png;base64,iVBORw0KGgo=", alt: "New photo", title: "", titleEn: "", description: "", sourceId: "", license: "CC BY", trust: "verified" }], coverPhotoId: "tmp-photo", model: { src: "data:model/gltf-binary;base64,Z2xURg==", name: "New model", bytes: 4, parts: [], trust: "verified" } };
+    if (failFirst) await assert.rejects(client.saveSite(input), /Retry/);
+    const saved = await client.saveSite(input);
+    assert.equal(saved.site.coverPhotoId, "p1");
+    assert.equal(saved.site.photos?.[0]?.src, "https://cdn.test/p1");
+    assert.equal(saved.site.model?.src, "https://cdn.test/m1");
+    await client.saveSite({ ...saved.site, name: "Changed title" });
+    assert.equal(uploads, 2, "exactly one photo and one model upload across retries and subsequent saves");
+    assert.equal(stored.name, "Changed title");
+  });
+}
+
+test("explicit gallery ids preserve photos also used by cards and history across editor saves", async () => {
+  let stored: any = { ...siteA(), status: "published", photoIds: ["cover", "card-img", "old", "extra"], sourceLinks: [], openingCamera: null };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored], nextCursor: null }),
+    "GET /v1/sites/a": () => stored,
+    "GET /v1/admin/sites/a": () => stored,
+    "PUT /v1/admin/sites/a/media": c => { const b = c.body as {photoIds: string[]; coverPhotoId: string}; stored = { ...stored, photoIds: b.photoIds, coverMediaId: b.coverPhotoId }; return stored; },
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "T", fetch: api.fetch });
+  const current = (await client.getSnapshot()).sites[0]!;
+  assert.deepEqual(current.photos?.map(p => p.id), ["cover", "card-img", "old", "extra"]);
+  await client.saveSite({ ...current, coverPhotoId: "extra" });
+  assert.deepEqual(stored.photoIds, ["cover", "card-img", "old", "extra"]);
+});

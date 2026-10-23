@@ -223,6 +223,12 @@ export function AkarApp() {
     async (command: Command) => (await run(command)) === null,
     [run],
   );
+  const saveSite = useCallback(async (site: HeritageSite) => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    const result = await client.current.saveSite(site);
+    setState(result.snapshot);
+    return result.site;
+  }, []);
   const loadHealth = useCallback(async () => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
@@ -470,6 +476,8 @@ export function AkarApp() {
               commit={commit}
               role={role}
               loadHealth={loadHealth}
+              saveSite={saveSite}
+              live={live}
             />
           )}
           {view === "history" && site && (
