@@ -6,7 +6,7 @@ Fastify + Zod, Drizzle ORM, PostgreSQL 17 + PostGIS. Sözleşme: [API-HANDOFF](.
 
 Docker (veya OrbStack), [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) ve repo kökünde `npm ci` gerekir.
 
-API Node.js 24+ ister: TypeScript kaynağını Node doğrudan çalıştırır (tip silme); derleme adımı yoktur. Bu yüzden `tsconfig.json` yalnız silinebilen TypeScript'e izin verir (`erasableSyntaxOnly`: `enum`, `namespace`, kurucu parametre alanı yok).
+API Node.js 24+ ister: yerel/Docker sunucusunda TypeScript kaynağını Node doğrudan çalıştırır (tip silme). Vercel dağıtımı ayrıca `npm run build` ile handler üretir. Bu yüzden `tsconfig.json` yalnız silinebilen TypeScript'e izin verir (`erasableSyntaxOnly`: `enum`, `namespace`, kurucu parametre alanı yok).
 
 Tek komut (repo kökünden):
 
@@ -99,9 +99,10 @@ Render artık dağıtım hedefi değildir. Eski hesapların verileri otomatik si
 4. Çalışan API için **transaction pooler (6543)** bağlantısını `DATABASE_URL` olarak kullan.
    `DATABASE_POOL_MAX=2`; her sıcak instance küçük bir havuz kullanır. Database Settings → SSL Configuration → Download certificate ile indirilen PEM içeriğini
    `DATABASE_SSL_CA` olarak ekle; bağlantı zinciri ve hostname doğrulanır. Migration bağlantısını Vercel'e koyma.
-5. Yalnız demo içeriğini yükle: `npm run db:seed -w @akar/api` altı eser ve rotaları yükler.
-   Tam arşiv için `ingest` çalıştırma. Medya adreslerinin yeni Storage kovasına ait olduğunu kontrol et;
-   mevcut seed yalnız arayüz için örnek metinler içerir, dosyaları Storage'a taşımaz.
+5. Canlı demo için [kaynaklı içerik aktarımını](../../docs/content/DEMO-CONTENT.md) kullan:
+   yedi eserin dosyalarını Storage'a, metin ve ilişkilerini kataloğa yükler. Önce dry-run ve yedek al.
+   `db:seed` yalnız yerel örnek veridir; canlı editoryal kataloğun üzerine çalıştırma.
+   Tam arşiv için `ingest` çalıştırmak demo kurulumu için gerekli değildir.
 6. Vercel API projesi: Root Directory `services/api`, Framework **Other**, Node **24.x**, kök dışı
    kaynaklar dahil. `npm run build`, uygulama ve ortak TypeScript paketlerini `dist/vercel.mjs` olarak derler.
    `vercel.json` Fastify girişini `api/index.mjs` üzerinden yönlendirir; süre 300 saniye.

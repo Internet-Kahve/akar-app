@@ -1,5 +1,7 @@
 # AKAR · Proje bağlamı ve üretim dosyaları
 
+> 23 Ekim temizliği: kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği yedi eserle sınırlıdır.
+
 Ürün belgeleri, tasarım referansları, kaynak verisi ve eserlerin 3D üretimi burada tutulur. Güncel ürün odağı Bursa'dır. Uygulama kodu aynı reponun `apps/` ve `packages/` klasörlerindedir.
 
 ## Nereden başlamalı?
@@ -7,7 +9,7 @@
 1. [Tam bağlam](AKAR_Tam_Baglam.md): ürün kararları; güncel bölümlerden başlayın.
 2. [Frontend/backend notları](FRONTEND_BACKEND_NOTLARI.md): kapsam, şema ve ekran kuralları.
 3. [İçerik yöntemi](ICERIK_YONTEMI.md): eser hikâyeleri, fotoğraf seçimi ve kaynak kuralları.
-4. [Hackathon rehberi](hackathon/README.md): başvuru ve yarışma kaynakları.
+4. [Hackathon rehberi · Git arşivi](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/hackathon/README.md): başvuru ve yarışma kaynakları.
 
 ## Hangi dosya nerede?
 
@@ -17,7 +19,7 @@
 | `design/` | Ekranlar, ikonlar, desenler, harita stili ve eski prototip referansı |
 | `eserler/` | Eser kimliği, ölçüler, referanslar ve 3D üretim dosyaları |
 | `veri/` | Envanter PDF'leri, çıkarılmış metinler, CSV'ler ve ortak Bursa kaynakları |
-| `hackathon/` | Yarışma belgeleri ve başvuru |
+| Git arşivindeki `hackathon/` | Çalışma ağacından kaldırılan yarışma belgeleri ve başvuru |
 
 - [Klasör kuralları ve ayrıntılı yapı](KLASOR_YAPISI.md)
 - [Veri rehberi](veri/BENIOKU.md)

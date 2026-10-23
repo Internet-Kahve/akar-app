@@ -3,20 +3,8 @@
     "name": "imgFrame",
     "node": "3:3429"
   },
-  "527f5.svg": {
-    "name": "imgEllipse",
-    "node": "3:3429"
-  },
-  "c7474.svg": {
-    "name": "imgEllipse1",
-    "node": "3:3429"
-  },
   "e269f.svg": {
     "name": "imgHaritaPini",
-    "node": "3:3429"
-  },
-  "99dff.svg": {
-    "name": "imgHaritaPini1",
     "node": "3:3429"
   },
   "d42c6.svg": {
@@ -27,125 +15,13 @@
     "name": "imgHaritaPini3",
     "node": "3:3429"
   },
-  "28f99.svg": {
-    "name": "imgHaritaPini4",
-    "node": "3:3429"
-  },
   "29586.svg": {
     "name": "imgHaritaPini5",
     "node": "3:3429"
   },
-  "11504.svg": {
-    "name": "imgEllipse2",
-    "node": "3:3429"
-  },
-  "f3b19.svg": {
-    "name": "imgEllipse3",
-    "node": "3:3429"
-  },
-  "d6528.svg": {
-    "name": "imgEllipse4",
-    "node": "3:3429"
-  },
-  "75960.svg": {
-    "name": "imgEllipse5",
-    "node": "3:3429"
-  },
-  "fa513.svg": {
-    "name": "imgEllipse2",
-    "node": "3:4024"
-  },
-  "c97d6.svg": {
-    "name": "imgEllipse3",
-    "node": "3:4024"
-  },
-  "3bb2f.svg": {
-    "name": "imgEllipse4",
-    "node": "3:4024"
-  },
-  "7770c.svg": {
-    "name": "imgIkonLucideRotate",
-    "node": "3:4024"
-  },
-  "e7342.svg": {
-    "name": "imgKuzey",
-    "node": "3:4024"
-  },
-  "edea9.svg": {
-    "name": "imgIkonLucideMove",
-    "node": "3:4024"
-  },
-  "1f99d.svg": {
-    "name": "imgEllipse5",
-    "node": "3:4024"
-  },
   "dd9ae.svg": {
     "name": "imgMotif",
     "node": "3:4024"
-  },
-  "079de.svg": {
-    "name": "imgIkonLucideHeadphones",
-    "node": "3:4024"
-  },
-  "93005.svg": {
-    "name": "imgIkonLucideBook",
-    "node": "3:4024"
-  },
-  "2ccf4.svg": {
-    "name": "imgEllipse6",
-    "node": "3:4024"
-  },
-  "e9c28.svg": {
-    "name": "imgIkonLucideHeadphones",
-    "node": "3:4348"
-  },
-  "adfe7.svg": {
-    "name": "imgIkonLucideBook",
-    "node": "3:4348"
-  },
-  "99677.svg": {
-    "name": "imgEllipse5",
-    "node": "3:4348"
-  },
-  "70ea6.svg": {
-    "name": "imgEllipse6",
-    "node": "3:4348"
-  },
-  "ed5a4.svg": {
-    "name": "imgEllipse7",
-    "node": "3:4348"
-  },
-  "c4e37.svg": {
-    "name": "imgEllipse8",
-    "node": "3:4348"
-  },
-  "abab4.svg": {
-    "name": "imgIkonLucideSkipBack",
-    "node": "3:4348"
-  },
-  "5036a.svg": {
-    "name": "imgIkonLucidePause",
-    "node": "3:4348"
-  },
-  "0d144.svg": {
-    "name": "imgIkonLucideSkipForward",
-    "node": "3:4348"
-  },
-  "99f9c.svg": {
-    "name": "imgLine",
-    "node": "3:4348"
-  },
-  "bcd54.svg": {
-    "name": "imgFrame1",
-    "node": "3:4348"
-  },
-  "592fd.svg": {
-    "name": "imgIkonRozet",
-    "node": "3:5074"
-  },
-  "a7578.svg": {
-    "name": "imgAnahtar",
-    "node": "3:5074"
   },
   "718a4.svg": {
     "name": "imgIkonRozet1",
@@ -154,22 +30,6 @@
   "b8133.svg": {
     "name": "imgIkonRozet2",
     "node": "3:5074"
-  },
-  "dc134.svg": {
-    "name": "imgLine",
-    "node": "3:3848"
-  },
-  "89680.svg": {
-    "name": "imgEllipse2",
-    "node": "3:3848"
-  },
-  "f1bc8.svg": {
-    "name": "imgIkonLucideHeadphones",
-    "node": "3:4264"
-  },
-  "ec3d3.svg": {
-    "name": "imgIkonLucideBook",
-    "node": "3:4264"
   },
   "c4a6c.svg": {
     "name": "Han ve bedesten · akar pini",

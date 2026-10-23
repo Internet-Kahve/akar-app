@@ -1,5 +1,7 @@
 # Frontend yenileme · inceleme ve iş listesi
 
+> Tarihli plan/inceleme kaydıdır; güncel kurulum ve canlı özellikler için [doküman rehberini](README.md) kullan. Aşağıdaki durumlar yazıldıkları tarihe aittir.
+
 16 Ekim 2026 · Branch: `tamerakdeniz/frontend-refresh`
 
 ## Kapsam ve kaynak önceliği

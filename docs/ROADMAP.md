@@ -1,5 +1,7 @@
 # Akar geliştirme yol haritası
 
+> Tarihli plan/inceleme kaydıdır; güncel kurulum ve canlı özellikler için [doküman rehberini](README.md) kullan. Aşağıdaki durumlar yazıldıkları tarihe aittir.
+
 10 Ekim 2026 · İnternet Kahve
 
 ## Kararlar

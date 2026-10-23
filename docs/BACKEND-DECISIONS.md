@@ -12,6 +12,10 @@ Yeni karar eklerken biçim: **Karar** · **Neden** · **Karar veren / tarih** ·
 
 ---
 
+## 23 Ekim 2026 · Güncel durum
+
+Üretim web/API Vercel üzerinde, veritabanı/Auth/Storage Frankfurt Supabase projesindedir. Üretim dalı `main`dir; eski `origin/docs` dalı kullanılmaz, içerik `main:docs/documents-context` içinde bulunur. Kurulum ve doğrulama [canlı ortam kaydında](deployment/2026-10-23-cloud-migration.md), içerik aktarımı [demo içerik rehberinde](content/DEMO-CONTENT.md) tutulur. Aşağıdaki tarihli kararlar gerekçe kaydı olarak korunur.
+
 ## 1. Çalışma biçimi
 
 | Konu | Karar | Karar veren / tarih |
@@ -266,6 +270,8 @@ Karar veren / tarih: Weissman, 22 Eki ("host-neutral deploy prep before accounts
 Nasıl değiştirilir: sağlayıcı seçilince (P5.2) gerekirse sağlayıcıya özel ayar dosyası eklenir; imaj ve komutlar değişmez.
 
 **11.16 Çevrimiçi test ortamı: Render + Supabase bulut + ayrı Vercel projesi; giriş e-postası Gmail SMTP.**
+
+**Değişti — 23 Ekim 2026:** Web ve API Vercel `main` dağıtımlarına, veritabanı/Auth/Storage Frankfurt Supabase projesine taşındı. SMTP Hostinger kullanıyor. Güncel bağlantı ve doğrulama: [canlı ortam kaydı](deployment/2026-10-23-cloud-migration.md). Aşağıdaki gerekçe eski kararın kaydıdır.
 > Bu eski dağıtım kararı yeni Vercel + Supabase kurulumu ile değiştirilmiştir. Güncel bağlantı ve kurulum adımları `services/api/README.md` içindedir; eski servis adresleri kullanılmaz.
 Neden: Render kurulumu basit ve şimdilik ücretsiz; öğrenci avantajıyla Heroku da değerlendirildi, vazgeçildi. Ücretsiz Supabase planında yerleşik e-posta şablon değişikliğine izin vermiyor ve varsayılan şablon 6 haneli kod yerine bağlantı gönderiyor; giriş ekranı kod beklediği için özel SMTP gerekli. Gmail alan adı istemez, ücretsizdir (günde ~500 e-posta) ve test edenlerin Supabase ekibine eklenmesi gerekmez. Ayrı Vercel projesi, demo adresini değiştirmeden gerçek API'yi denemeyi sağlar; ön yüz kodu değişmez.
 Bilinen sınırlar: Free plan 15 dakika boşta kalınca uyur (ilk istek ~1 dakika); dağıtım öncesi migration komutu yok, migration bilgisayardan çalıştırılır. Misafir sınırı IP başına dakikada 300; API kipinde sayfa açılışı eser sayısından bağımsız olarak üç istektir (`site-details`, `routes`, `memories`; PR #14).

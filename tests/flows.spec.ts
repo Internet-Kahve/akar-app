@@ -293,12 +293,31 @@ test("route search opens a usable route and selection persists", async ({
   ).toBeVisible();
 });
 test("map failure keeps the artifact discovery usable", async ({ page }) => {
+  // Use a deterministic tile failure without depending on the provider's style.
+  await page.route("**/harita/akar-style.json", (route) =>
+    route.fulfill({
+      json: {
+        version: 8,
+        sources: {
+          offline: {
+            type: "raster",
+            tiles: ["https://tiles.openfreemap.org/unavailable/{z}/{x}/{y}.png"],
+            tileSize: 256,
+          },
+        },
+        layers: [{ id: "offline", type: "raster", source: "offline" }],
+      },
+    }),
+  );
   await page.route("https://tiles.openfreemap.org/**", (route) =>
     route.abort(),
   );
   await page.goto("/");
+  // MapLibre can emit load after error. Markers prove that load was handled;
+  // the fallback must still be present instead of disappearing during a click.
+  await expect(page.locator(".map-marker")).toHaveCount(6);
   await expect(page.locator(".fallback-note")).toContainText(
-    "Şematik konum görünümü",
+    "Harita yüklenemedi · Şematik konum görünümü",
   );
   await page.locator(".fallback-pin").filter({ hasText: "Ulucami" }).click();
   await expect(

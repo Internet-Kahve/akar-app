@@ -34,7 +34,7 @@ Bu ekranların yüksek ayrıntılı tasarım verileri ve ekran görüntüleri in
 
 Gerçek fotoğraf/model yerine uygulama içinde CSS ile temsili mimari çizim kullanılır. Bu çizim Kılıç Ali Paşa Camii'nin ölçülü modeli veya tarihî belgesi değildir. Arşiv karşılaştırmasının iki yanı da açıkça içerik bekleyen örnektir. Temsili görselden tarihsel sonuç çıkarılmaz.
 
-Figma SVG'leri `apps/web/public/figma/` altında saklanır. `figma-assets.json` kaynak node envanteridir. Süreli indirme URL'leri repoya dahil edilmez; yeni varlıklar Figma'dan tekrar dışa aktarılır. Dini, su, akar pinleri renk/kategori eşleşmesiyle kullanılır; eğitim örneği ayrı E pinidir. SVG doğal ölçüleri korunur. Kullanılmayan indirilmiş ikonlar tasarım envanteridir.
+Figma SVG'leri `apps/web/public/figma/` altında saklanır. `figma-assets.json` kaynak node envanteridir. Süreli indirme URL'leri repoya dahil edilmez; yeni varlıklar Figma'dan tekrar dışa aktarılır. Dini, su, akar pinleri renk/kategori eşleşmesiyle kullanılır; eğitim örneği ayrı E pinidir. SVG doğal ölçüleri korunur. Yalnız uygulamanın kullandığı dokuz SVG tutulur; `docs/design/figma-assets.json` bu dosyaların kaynak node eşlemesidir. Kullanılmayan dışa aktarımlar Git geçmişinden geri alınabilir.
 
 ## İçerik ve lisans
 
