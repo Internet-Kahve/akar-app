@@ -78,7 +78,10 @@ const MODULES: ModulePlugin[] = [
  */
 export async function buildApp(deps: AppDeps, opts: { docs?: boolean; register?: ModulePlugin[] } = {}) {
   const logger: FastifyServerOptions["logger"] =
-    deps.config.NODE_ENV === "test" ? false : { level: deps.config.LOG_LEVEL };
+    deps.config.NODE_ENV === "test" ? false : {
+      level: deps.config.LOG_LEVEL,
+      redact: ["req.headers.authorization", "req.headers['x-akar-job-secret']"],
+    };
 
   const app = Fastify({
     logger,

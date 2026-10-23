@@ -10,7 +10,7 @@ export type CityConfig = {
   /** Canonical district spellings (OSM admin_level 6 names); CSV values are matched by `normalize()`. */
   districts: string[];
   /**
-   * Paths inside the dataset (`origin/docs:docs/documents-context/veri/` by default). Inventory
+   * Paths inside the dataset (`origin/main:docs/documents-context/veri/` by default). Inventory
    * columns: id, cilt, sayfa, ilce, ad_ham, ad_supheli, tur, sablon, rol, olcu_sayisi, kubbe_gecisi, adres.
    */
   dataset: { inventory: string; osm: string };
