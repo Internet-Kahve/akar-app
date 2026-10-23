@@ -78,6 +78,13 @@
       "when": 1792754249534,
       "tag": "0010_durable_background_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792767845264,
+      "tag": "0011_deleted_accounts",
+      "breakpoints": true
     }
   ]
 }

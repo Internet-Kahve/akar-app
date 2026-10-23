@@ -38,3 +38,12 @@ export const profiles = pgTable("profiles", {
   displayName: text("display_name").notNull(),
   ...timestamps,
 });
+
+/**
+ * Erased accounts (KVKK, `DELETE /v1/me`): only the id and when. An access token stays valid until it expires
+ * after Supabase deletes the user; the verifier answers 401 for these ids, so nothing new is written under them.
+ */
+export const deletedAccounts = pgTable("deleted_accounts", {
+  userId: text("user_id").primaryKey(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }).notNull().defaultNow(),
+});

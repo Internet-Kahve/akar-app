@@ -636,6 +636,47 @@ export async function deleteMediaObjects(db: Db, storage: StorageBuckets | null,
 }
 
 /**
+ * Deletes upload-key objects in the private `uploads` bucket after the commit, once (account erasure). No outbox:
+ * the bucket is private, so a failed delete leaves an unreadable object (logged).
+ */
+export async function deleteUploadObjects(storage: StorageBuckets | null, keys: string[], log: FastifyBaseLogger): Promise<void> {
+  if (!storage) return;
+  for (const key of keys) {
+    try {
+      await storage.uploads.delete(key);
+    } catch (err) {
+      log.error({ err, key }, "upload object delete failed; the private object is orphaned");
+    }
+  }
+}
+
+/**
+ * Account erasure (KVKK): deletes the user's upload tickets and the media rows they uploaded that nothing uses
+ * (see `MEDIA_REFERENCES`), except an editor's or admin's library (`media.create` audit, as in `sweepUnattachedPhotos`).
+ * Rows still in use (site content) stay without an uploader. Returns the object keys to delete after the commit:
+ * `media` bucket, and `uploads` bucket for every ticket whose upload key was not cleaned yet.
+ */
+export async function eraseUploads(tx: Tx, userId: string): Promise<{ media: string[]; uploads: string[] }> {
+  const candidates = await tx
+    .select({ id: media.id })
+    .from(media)
+    .where(
+      and(
+        eq(media.uploadedBy, userId),
+        sql`not exists (select 1 from ${auditLog} where ${auditLog.entityType} = 'media' and ${auditLog.entityId} = ${media.id} and ${auditLog.action} = 'media.create')`,
+      ),
+    )
+    .for("update");
+  const mediaKeys = await dropMediaRows(tx, await stillUnused(tx, candidates.map((r) => r.id)));
+  await tx.update(media).set({ uploadedBy: null, updatedAt: new Date() }).where(eq(media.uploadedBy, userId));
+  const tickets = await tx
+    .delete(mediaUploads)
+    .where(eq(mediaUploads.ownerId, userId))
+    .returning({ storageKey: mediaUploads.storageKey, cleanedAt: mediaUploads.cleanedAt });
+  return { media: mediaKeys, uploads: tickets.flatMap((t) => (t.cleanedAt ? [] : [t.storageKey])) };
+}
+
+/**
  * Deletes visitors' photos that nothing uses (an "İz Bırak" upload never attached, or whose memory went) once they
  * are `UNATTACHED_PHOTO_HOURS` old: the row, its upload link and the published object. Never touched: seed content
  * (no uploader), uploads of current staff (`staff_members`) and anything an editor or admin uploaded (a `media.create`

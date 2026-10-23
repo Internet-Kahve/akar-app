@@ -10,6 +10,8 @@ export const StaffRoleSchema = z
 const Email = z.email("Geçerli bir e-posta adresi gir.").max(254, "E-posta adresi en fazla 254 karakter olmalı.");
 
 export const UserIdParams = z.object({ userId: z.string().min(1).max(200) });
+/** Supabase Auth user ids are UUIDs; a typo must not mark a random id as erased. */
+export const AccountIdParams = z.object({ userId: z.uuid() });
 export const InviteIdParams = z.object({ id: z.string().min(1).max(100) });
 
 export const MeResponse = z.object({

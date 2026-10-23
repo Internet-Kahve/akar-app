@@ -3,7 +3,7 @@ import type { FastifyBaseLogger } from "fastify";
 import { randomUUID } from "node:crypto";
 import type { Config } from "../../config.ts";
 import type { Db } from "../../db/client.ts";
-import { profiles, staffInvites, staffMembers } from "../../db/schema/index.ts";
+import { deletedAccounts, profiles, staffInvites, staffMembers } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
 import type { Role } from "../../platform/auth.ts";
@@ -26,7 +26,7 @@ export const normalizeEmail = (email: string): string => email.trim().toLowerCas
  * single lock is cheap, and it turns "the last admin stays" and "an invite is consumed once" into
  * plain read-then-write checks that concurrent requests cannot interleave.
  */
-async function lockStaff(tx: Tx): Promise<void> {
+export async function lockStaff(tx: Tx): Promise<void> {
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext('identity.staff'))`);
 }
 
@@ -57,11 +57,17 @@ export const toInviteDto = (i: StaffInviteRow): StaffInviteDto => ({
 
 /**
  * The server-side role of a verified token. Comes from `staff_members` only; a user without a row
- * who carries the address of an open invite is granted that invite's role on the spot.
+ * who carries the address of an open invite is granted that invite's role on the spot. Null for an
+ * erased account (`deleted_accounts`): its still-valid token is refused.
  */
-export async function resolveRole(db: Db, userId: string, email: string | undefined): Promise<Role> {
-  const [member] = await db.select({ role: staffMembers.role }).from(staffMembers).where(eq(staffMembers.userId, userId));
-  if (member) return member.role;
+export async function resolveRole(db: Db, userId: string, email: string | undefined): Promise<Role | null> {
+  // One round trip per request: the role grant and the erasure mark together.
+  const { rows } = await db.execute<{ role: StaffRole | null; erased: boolean }>(sql`select
+    (select ${staffMembers.role} from ${staffMembers} where ${staffMembers.userId} = ${userId}) as role,
+    exists (select 1 from ${deletedAccounts} where ${deletedAccounts.userId} = ${userId}) as erased`);
+  const [row] = rows;
+  if (row?.erased) return null;
+  if (row?.role) return row.role;
   if (email) {
     const granted = await claimInvite(db, userId, email);
     if (granted) return granted;
@@ -316,11 +322,14 @@ export function inviteResponse(result: InviteResult): InviteResponse {
 
 export type SupabaseAdmin = { url: string; serviceRoleKey: string };
 
-/** 503 when the server has no Supabase project to invite through. */
-export function supabaseAdminFrom(config: Pick<Config, "SUPABASE_URL" | "SUPABASE_SERVICE_ROLE_KEY">): SupabaseAdmin {
+/** 503 when the server has no Supabase project to call; `unavailable` says what cannot be done. */
+export function supabaseAdminFrom(
+  config: Pick<Config, "SUPABASE_URL" | "SUPABASE_SERVICE_ROLE_KEY">,
+  unavailable = "Davet e-postası gönderilemiyor",
+): SupabaseAdmin {
   const { SUPABASE_URL: url, SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey } = config;
   if (!url || !serviceRoleKey) {
-    throw new AppError(503, "SERVICE_UNAVAILABLE", "Davet e-postası gönderilemiyor: kimlik hizmeti (Supabase) yapılandırılmamış.");
+    throw new AppError(503, "SERVICE_UNAVAILABLE", `${unavailable}: kimlik hizmeti (Supabase) yapılandırılmamış.`);
   }
   return { url, serviceRoleKey };
 }
