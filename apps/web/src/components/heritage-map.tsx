@@ -49,6 +49,7 @@ export function HeritageMap({
       .then((lib) => {
         if (disposed || !container.current) return;
         try {
+          lib.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
           const m = new lib.Map({
             container: container.current,
             center: demoRegion.center,
