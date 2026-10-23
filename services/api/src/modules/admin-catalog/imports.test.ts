@@ -431,7 +431,7 @@ test("a plan interrupted mid-run (server stopped) is taken over when the queue r
   // The run that claimed the job died before writing a result.
   await app.deps.db.update(importJobs).set({ status: "planning", updatedAt: new Date() }).where(eq(importJobs.id, queued.id));
 
-  // The redelivery (pg-boss retries a job whose worker stopped) is the message still pending here.
+  // The redelivery (the durable queue retries a job whose worker stopped) is the message still pending here.
   await jobs.drain();
   assert.equal((await detail(queued.id)).status, "planned");
   assert.equal((await commit(queued.id)).res.statusCode, 200);

@@ -15,6 +15,10 @@ const optionalText = z
 const Env = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(10).default(2),
+  DATABASE_SSL_CA: optionalText,
+  JOB_SECRET: z.string().min(32).optional(),
+  API_RUNTIME: z.enum(["server", "vercel"]).default("server"),
   HOST: z.string().default("127.0.0.1"),
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
@@ -80,6 +84,7 @@ export type Config = z.infer<typeof Env>;
  */
 export function productionIssues(config: Config): string[] {
   const issues: string[] = [];
+  if (config.API_RUNTIME === "vercel" && !config.JOB_SECRET) issues.push("JOB_SECRET is required for Supabase Cron");
   const required = [
     "AUTH_JWKS_URL",
     "AUTH_JWT_ISSUER",

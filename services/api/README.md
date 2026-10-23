@@ -79,53 +79,84 @@ Tablo `map_settings` (tek satır), migration `drizzle/0005_map_settings.sql`; `n
 
 ## Yayına alma
 
-API tek bir Docker imajıdır; barındırma sağlayıcısından bağımsızdır. İmaj repo kökünden kurulur (ortak `@akar/domain` paketi gerekir); kök `.dockerignore` yalnız API'nin dosyalarını içeri alır.
+Hedef mimari: **Next.js → ayrı Vercel Fastify API → Supabase PostgreSQL/PostGIS, Auth ve Storage**.
+Web projesi `akar-app`, API projesi `akar-api`; ikisi aynı GitHub monoreposundan dağıtılır.
+API bölgesi `fra1`, Supabase bölgesi açıkça **Central EU (Frankfurt), eu-central-1** seçilir.
+Render artık dağıtım hedefi değildir. Eski hesapların verileri otomatik silinmez.
 
-```sh
-docker build -f services/api/Dockerfile -t akar-api .
-docker run --env-file <ortam-dosyası> akar-api node src/db/migrate.ts   # migration (sunucudan ayrı)
-docker run --env-file <ortam-dosyası> -p 4000:4000 akar-api             # sunucu
-```
+### Kurulum sırası
 
-İmaj `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=4000` ile gelir (sağlayıcı `PORT` verirse o geçerlidir) ve root olmayan kullanıcıyla çalışır. `SIGTERM`'de bağlantıları kapatıp çıkar. Sağlık denetimi: canlılık `GET /health`, hazır olma `GET /ready` (veritabanı).
+1. Tamer'in hesabında Free Supabase projesi oluştur. Data API'yi kapalı tut: uygulama tablolarına
+   yalnız Fastify erişir; web/mobil Supabase'i giriş için kullanır. JWT imzalaması asimetrik olmalı;
+   `/auth/v1/.well-known/jwks.json` en az bir anahtar döndürmeli.
+2. `media` herkese açık, `uploads` özel Storage kovalarını oluştur. Her dosya için 50 MB üst sınır
+   kullan; `services/api/supabase/config.toml` tür ve kova ayarlarını içerir. S3 erişim anahtarlarını
+   yalnız API ortamına koy. Tarayıcı dosyaları imzalı PUT ile doğrudan `uploads` kovasına yollar;
+   API doğruladıktan sonra `media` kovasına aktarır. Dosyalar Vercel istek gövdesinden geçmez.
+3. Migration için **session pooler (5432)** veya doğrudan bağlantıyı `DIRECT_DATABASE_URL` olarak
+   yerel, Git tarafından yok sayılan `.env` dosyasına koy. `npm run db:migrate -w @akar/api` çalıştır.
+   Üretim migration'ları API açılışında veya her Vercel build'inde çalıştırılmaz.
+4. Çalışan API için **transaction pooler (6543)** bağlantısını `DATABASE_URL` olarak kullan.
+   `DATABASE_POOL_MAX=2`; her sıcak instance küçük bir havuz kullanır. Database Settings → SSL Configuration → Download certificate ile indirilen PEM içeriğini
+   `DATABASE_SSL_CA` olarak ekle; bağlantı zinciri ve hostname doğrulanır. Migration bağlantısını Vercel'e koyma.
+5. Yalnız demo içeriğini yükle: `npm run db:seed -w @akar/api` altı eser ve rotaları yükler.
+   Tam arşiv için `ingest` çalıştırma. Medya adreslerinin yeni Storage kovasına ait olduğunu kontrol et;
+   mevcut seed yalnız arayüz için örnek metinler içerir, dosyaları Storage'a taşımaz.
+6. Vercel API projesi: Root Directory `services/api`, Framework **Other**, Node **24.x**, kök dışı
+   kaynaklar dahil. `npm run build`, uygulama ve ortak TypeScript paketlerini `dist/vercel.mjs` olarak derler.
+   `vercel.json` Fastify girişini `api/index.mjs` üzerinden yönlendirir; süre 300 saniye.
+   Swagger UI yalnız yerel sunucuda açılır; OpenAPI sözleşmesi repoda üretilir.
+   Ortam değişkenleri aşağıda. Production domain web, mobil ve cron tarafından erişilebilir olmalı;
+   preview dağıtımlarının Vercel korumasını koru.
+7. Web projesi Root Directory `apps/web`, Framework Next.js. Production ortamına
+   `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publishable key)
+   ekle ve yeniden derle. Preview'a üretim veritabanı sırlarını kopyalama.
+8. Supabase Vault'a `akar_api_url` (API origin) ve `akar_job_secret` (`JOB_SECRET` ile aynı değer)
+   kaydet. `scripts/schedule-maintenance.sql` dosyasını SQL Editor'da çalıştır. Dakikalık çağrılar
+   kalıcı GLB/içe aktarma işlerini ve sınırlı temizlik gruplarını işler. `/internal/jobs/run`
+   yalnız `x-akar-job-secret` ile açılır; yanlış veya eksik anahtar 401 döner.
+9. Auth Site URL ve redirect listesine web adresini ekle. E-posta koduyla giriş için kendi SMTP
+   hesabını ve şablonları yapılandır. Varsayılan Supabase e-postasıyla 200 kişilik katılımcı girişini
+   hazır kabul etme; SMTP kotasını ve kod gönderimini ayrıca doğrula. İlk yöneticiyi
+   `npm run staff:invite -w @akar/api -- --email <adres> --role admin` ile tanımla.
 
-**Üretimde eksik ayarla açılmaz.** `NODE_ENV=production` iken `src/config.ts` (`productionIssues`) şunları ister, eksiklerin hepsini tek mesajda listeler ve süreç 1 ile çıkar: `AUTH_JWKS_URL`, `AUTH_JWT_ISSUER`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STORAGE_PUBLIC_BASE_URL`, `RECEIPT_SECRET`, `STORAGE_DRIVER=s3` (konteyner diski dağıtımlar arasında kalmaz) ve tam köken biçiminde `CORS_ORIGINS` (`https://akar.vercel.app`; sonda `/`, yol ya da `*` olmaz). S3 anahtarları açılışta `storageFromConfig` ile denetlenir. Geliştirmede bu ayarlar eksik kalabilir; ilgili uçlar 401/503 döner.
+### API Production ortamı
 
-### Hesap gerektiren adımlar (sırayla)
+| Değişken | Değer |
+| --- | --- |
+| `NODE_ENV`, `API_RUNTIME` | `production`, `vercel` |
+| `DATABASE_URL`, `DATABASE_POOL_MAX` | Transaction pooler bağlantısı, `2` |
+| `DATABASE_SSL_CA` | Supabase panelinden indirilen kök sertifikanın PEM içeriği |
+| `CORS_ORIGINS` | Web'in tam origin adresleri, virgülle ayrılmış; wildcard yok |
+| `TRUST_PROXY` | Vercel önünde `1` |
+| `SUPABASE_URL` | Yeni projenin HTTPS adresi |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yalnız sunucu service_role/secret anahtarı |
+| `AUTH_JWKS_URL`, `AUTH_JWT_ISSUER` | Proje adresi + `/auth/v1/.well-known/jwks.json`, `/auth/v1` |
+| `STORAGE_DRIVER` | `s3` |
+| `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION` | Proje S3 adresi, `eu-central-1` |
+| `STORAGE_S3_ACCESS_KEY_ID`, `STORAGE_S3_SECRET_ACCESS_KEY` | Yeni S3 erişim bilgileri |
+| `STORAGE_PUBLIC_BASE_URL` | Proje adresi + `/storage/v1/object/public/media` |
+| `RECEIPT_SECRET`, `JOB_SECRET` | Birbirinden farklı, rastgele üretilmiş en az 32 karakterlik sırlar |
 
-Hesapları Weissman açar; gizli değerler yalnız sağlayıcı ayarlarına yazılır, sohbete ya da repoya yazılmaz. `<ref>` Supabase proje kimliği, `<api>` API'nin HTTPS adresi, `<web>` Vercel adresi.
+Sırlar Git'e, loglara veya `NEXT_PUBLIC_*` alanlarına yazılmaz. Vercel'de Production Secret olarak saklanır.
+Eksik üretim ayarı API'nin açılmasını engeller. Kontroller: `/health`, `/ready`, katalog okuma,
+OTP giriş, imzalı fotoğraf/GLB yükleme, cron sonrası model parçaları ve özel kovanın erişim kontrolü.
+Web ve mobil aynı HTTPS API/Supabase projesini kullanabilir; mobil deep link redirect'i uygulama eklenirken tanımlanır.
 
-1. **Supabase bulut projesi** (AB bölgesi). Proje → Settings → JWT Keys: imzalama anahtarı asimetrik (ES256/RS256) olmalı. Kontrol: `curl https://<ref>.supabase.co/auth/v1/.well-known/jwks.json` en az bir anahtar döner; boşsa JWT signing keys'e geçilir.
-2. **Giriş e-postası ve ayarlar.** Ücretsiz planda Supabase'in yerleşik e-postası şablon değişikliğine izin vermez (`config push` 400 döner) ve varsayılan şablon kod yerine bağlantı gönderir; önce özel SMTP açılır (§11.16: Gmail + uygulama şifresi). Authentication → Emails → SMTP Settings: ana makine `smtp.gmail.com`, port `465`, kullanıcı ve gönderen Gmail adresi, şifre Google uygulama şifresi (https://myaccount.google.com/apppasswords, iki adımlı doğrulama gerekir), gönderen adı `AKAR`. Authentication → Rate Limits: saatte 30 e-posta (`config push` bu değeri yönetmez). Sonra `services/api` içinde `supabase login`, `supabase link --project-ref <ref>`, önce `supabase config diff`, sonra `supabase config push` (6 haneli kod, 10 dakika, Türkçe şablonlar; yalnız "auth" için onay sorar, SMTP ayarına dokunmaz). Ardından panelde:
-   - Authentication → URL Configuration: Site URL `<web>`, Redirect URLs `<web>` (`config.toml` yerel adresleri taşır; push onları yazar).
-   - Settings → Data API: **kapat** (ya da Exposed schemas'tan `public`'i çıkar). Bulutta API tabloları Supabase'in `public` şemasında durur; Data API açıkken herkese açık anon anahtarla okunabilir/yazılabilir. API Data API'yi kullanmaz, web yalnız giriş için Supabase'e bağlanır. Kontrol: `curl "https://<ref>.supabase.co/rest/v1/quiz_answers?select=*" -H "apikey: <anon>"` satır döndürmemeli. Sonraki `config push`'lar "api" ayarını değiştirmeyi önerirse **hayır** denir.
-3. **Kovalar.** `supabase seed buckets --linked`: `config.toml`'daki `media` (herkese açık) ve `uploads` (**herkese kapalı**) kovalarını boyut ve tür sınırlarıyla açar. Panelde Storage'da `uploads`'ın "Public" olmadığını gör. Storage → S3 Connection: erişim anahtarı oluştur; uç `https://<ref>.supabase.co/storage/v1/s3`, bölge aynı sayfada.
-4. **Migration.** Bağlantı: proje → Connect → **Session pooler** (port 5432; IPv4). Transaction pooler (6543) kullanılmaz: iş kuyruğu (pg-boss) oturum ister. Dizeye `?sslmode=require&uselibpqcompat=true` eklenir (şifreli bağlantı; `pg` düz `sslmode=require`'ı sertifika doğrulaması sayar ve Supabase'in kendi CA'sında düşer). Sonra repo kökünden: `DATABASE_URL='<dize>' npm run db:migrate -w @akar/api` (ya da imajla `node src/db/migrate.ts`). PostGIS uzantısını ilk migration açar.
-5. **Veri.** `DATABASE_URL='<dize>' npm run db:seed -w @akar/api` (6 demo eseri, rotalar, bulmacalar; tekrar çalıştırmak demo içeriğini başa döndürür), sonra `DATABASE_URL='<dize>' npm run ingest -w @akar/api -- --city bursa` (243 taslak; yerel `.cache/` önbelleği ağ isteğini azaltır). İlk yönetici: `DATABASE_URL='<dize>' npm run staff:invite -w @akar/api -- --email <adres> --role admin`. Komut satırındaki `DATABASE_URL`, `.env`'deki yerel değerin önüne geçer.
-6. **API sunucusu.** Sağlayıcıda imaj `services/api/Dockerfile` ile, kök dizin bağlamıyla kurulur. Dağıtım öncesi komut (varsa): `node src/db/migrate.ts`. Ortam:
+### Süre sınırları ve demo kapasitesi
 
-   | Değişken | Değer |
-   | --- | --- |
-   | `DATABASE_URL` | 4. adımdaki session pooler dizesi |
-   | `CORS_ORIGINS` | `<web>` (birden çoksa virgülle; Vercel önizleme adresleri ayrı ayrı eklenmedikçe çalışmaz) |
-   | `TRUST_PROXY` | Sağlayıcının önündeki vekil sayısı; tek yük dengeleyicide `1` |
-   | `SUPABASE_URL` | `https://<ref>.supabase.co` |
-   | `SUPABASE_SERVICE_ROLE_KEY` | Settings → API Keys, service_role / secret (yalnız sunucu) |
-   | `AUTH_JWKS_URL` | `https://<ref>.supabase.co/auth/v1/.well-known/jwks.json` |
-   | `AUTH_JWT_ISSUER` | `https://<ref>.supabase.co/auth/v1` |
-   | `STORAGE_DRIVER` | `s3` |
-   | `STORAGE_S3_ENDPOINT`, `STORAGE_S3_REGION`, `STORAGE_S3_ACCESS_KEY_ID`, `STORAGE_S3_SECRET_ACCESS_KEY` | 3. adımdaki S3 bağlantısı |
-   | `STORAGE_PUBLIC_BASE_URL` | `https://<ref>.supabase.co/storage/v1/object/public/media` |
-   | `RECEIPT_SECRET` | Yeni üretilir, yereldekinden farklı: `openssl rand -base64 48` |
-   | `NOMINATIM_EMAIL` | İsteğe bağlı (panelden içe aktarma) |
+Panel CSV içe aktarma paketlenmiş Bursa OSM listesini kullanır; git, yazılabilir disk veya uzun dış
+geocoder çağrıları gerektirmez. Eşleşmeyen eserler taslak kalır ve konumları editörde tamamlanır.
+Ağ üzerinden kapsamlı eşleştirme yalnız `npm run ingest` yerel komutunda sürer.
+İşler aynı veritabanı transaction'ında kaydedilir; instance kapanırsa 10 dakikalık iş kilidi dolunca
+sonraki cron çağrısı yeniden dener. Tek çağrı en fazla beş iş alır; temizlik her türden on kayıtla sınırlıdır.
 
-   Sağlık denetimi yolu `/ready`. Açılış logunda `Invalid production environment` görülürse listelenen değişkenler eksiktir.
+7–8 eser × en çok 50 MB = 350–400 MB kalıcı medya. Yükleme kopyaları ve ziyaretçi fotoğrafları için
+boş alan bırak; demo öncesinde toplam iki kovanın kullanımını kontrol et. Depolama ve trafik ayrı
+kotalardır: herkese tüm medyayı önceden indirtme, dosyaları ihtiyaç oldukça yükle.
 
-   Render (§11.16): Web Service → Docker, dal `main`, bölge Frankfurt, Dockerfile Path `services/api/Dockerfile`, Docker Build Context `.` (kök), Health Check Path `/ready`. Ortam "Add from .env" ile topluca eklenir. Dağıtım öncesi komut yalnız ücretli planlarda vardır; Free'de migration 4. adımdaki gibi bilgisayardan çalıştırılır. Free plan 15 dakika istek almayınca uyur, ilk istek yaklaşık bir dakika sürer. Build Filters → Included Paths: `services/api/**`, `packages/domain/**`, `packages/api-client/**`, `package-lock.json`.
-7. **Web (Vercel).** Ortam: `NEXT_PUBLIC_API_URL=<api>`, `NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co`, `NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon / publishable anahtar>`; üçü de gizli değildir ve yalnız Production ortamına eklenir (önizleme adresleri `CORS_ORIGINS`'te olmadığı için API'ye bağlanamaz). Değişince yeniden dağıtılır (değerler derlemeye gömülür). Proje Root Directory `apps/web`, Next.js. Çevrimiçi test ortamı ayrı bir Vercel projesidir (§11.16); `NEXT_PUBLIC_API_URL` verilmeyen proje demo verisiyle çalışmaya devam eder.
-8. **Test edenler ve yetkililer.** Özel SMTP ile giriş kodu herkese gider; test edenler Supabase ekibine eklenmez, uygulamada e-postayla giriş yapar ve sıradan kullanıcı olur. Yetkili: 5. adımdaki `staff:invite` (e-posta göndermez, rol ilk girişte verilir) ya da bir yöneticinin `POST /v1/admin/staff/invites` isteği (Supabase davet e-postası gönderir; adres Supabase'te zaten kayıtlıysa göndermez).
-
-Doğrulama: [docs/TESTING.md §7](../../docs/TESTING.md#7-çevrimiçi-test-ortamı).
+Docker imajı yerel doğrulama için kullanılabilir; üretimde ayrı sürekli çalışan sunucu gerekmez.
+Yerel `src/server.ts` aynı işleri dakikada bir çalıştırır; Vercel girişinde zamanlayıcı veya `listen()` yoktur.
 
 ## Okuma API'si (P2)
 
@@ -169,7 +200,7 @@ npm run ingest -- --city bursa --dry-run --verbose   # rapor + satır satır sor
 npm run ingest -- --city bursa                       # Tier 1 taslak olarak yazar; tekrar çalıştırmak kopya üretmez
 ```
 
-- Girdi `eser-turleri.csv` (ilçeleri düzeltilmiş liste) ve `osm_secilen.csv`; varsayılan olarak `origin/docs:docs/documents-context/veri/` içinden `git show` ile okunur (branch'e geçilmez). `--data <klasör>` yerel kopya, `--ref` başka ref.
+- Girdi `eser-turleri.csv` (ilçeleri düzeltilmiş liste) ve `osm_secilen.csv`; varsayılan olarak `origin/main:docs/documents-context/veri/` içinden `git show` ile okunur (branch'e geçilmez). `--data <klasör>` yerel kopya, `--ref` başka ref.
 - Akış: CSV → ad temizleme → `normalize()` → tür (`site_types.aliases`, bilinmiyorsa addaki son tür sözcüğü) → kopya kontrolü (normalize ad + ilçe; "Hanlar Bölgesi" = Osmangazi) → konum → rapor → taslak.
 - Konum sırası: `osm_secilen.csv` → Overpass (ilçedeki OSM nesneleriyle bulanık ad eşleşmesi) → Nominatim ad → Nominatim adres (yalnız kapı/bina düzeyi) → mahalle merkezi ("konum yaklaşık", yayınlanamaz).
 - `[yalnız içindekiler]` satırları atlanır (ilçe, adres, sayfa yok); `--include-toc` ile alınır.

@@ -58,7 +58,7 @@ export function parseInventory(csv: string): Record<string, string>[] {
   return rows;
 }
 
-/** Stores the CSV as a `queued` job and audits it. The caller enqueues `IMPORT_PLAN_JOB` after the commit. */
+/** Stores the CSV as a `queued` job and audits it. The caller enqueues `IMPORT_PLAN_JOB` in the same transaction. */
 export async function createImportJob(
   tx: Tx,
   actor: Actor,
@@ -114,8 +114,7 @@ const heldBy = (claimedAt: Date) => and(eq(importJobs.status, "planning"), eq(im
 
 /**
  * Body of the `admin.import-plan` job. The route sends one message per job, so a second delivery
- * only comes from pg-boss after the run holding the job died: stopped server (retried at once) or
- * expiry (15 min, queue default; 2 retries). The message therefore claims a `queued` job and also
+ * comes from the durable queue after its ten-minute lease expires (for example, when a server stops). The message therefore claims a `queued` job and also
  * takes over one left in `planning`; finished jobs are not touched. The result is written only while
  * this run still holds its claim, so a run that was taken over cannot overwrite a newer plan or a
  * committed job. Any error ends in `failed` with its message rather than propagating: the queue

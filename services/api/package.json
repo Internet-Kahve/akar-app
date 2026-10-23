@@ -22,13 +22,15 @@
     "local:up": "bash scripts/local.sh up",
     "local:down": "bash scripts/local.sh down",
     "local:reset": "bash scripts/local.sh reset",
-    "local:token": "tsx --env-file-if-exists=.env src/dev/local-token.ts"
+    "local:token": "tsx --env-file-if-exists=.env src/dev/local-token.ts",
+    "build": "node scripts/build-vercel.mjs"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^12.2.1",
     "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",
-    "drizzle-kit": "^0.31.11"
+    "drizzle-kit": "^0.31.11",
+    "esbuild": "0.28.2"
   },
   "dependencies": {
     "@akar/api-client": "*",
@@ -40,12 +42,12 @@
     "@fastify/rate-limit": "^11.2.1",
     "@fastify/swagger": "^9.9.2",
     "@fastify/swagger-ui": "^6.1.2",
+    "@vercel/functions": "^3.10.3",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.7",
     "fastify-type-provider-zod": "^7.0.0",
     "jose": "^6.2.13",
     "pg": "^8.23.1",
-    "pg-boss": "^12.38.0",
     "zod": "^4.6.7"
   }
 }

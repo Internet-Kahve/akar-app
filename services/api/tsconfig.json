@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src", "e2e", "drizzle.config.ts"]
+  "include": ["src", "api", "e2e", "drizzle.config.ts"]
 }

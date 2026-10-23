@@ -75,7 +75,7 @@ export function SignInModal({
           {sent ? (
             <>
               <p className="muted">
-                {email.trim()} adresine 6 haneli bir kod gönderdik.
+                {email.trim()} adresine bir doğrulama kodu gönderdik.
               </p>
               <label className="field">
                 Doğrulama kodu
@@ -83,8 +83,8 @@ export function SignInModal({
                   className="otp-code"
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  pattern="[0-9 ]{6,7}"
-                  maxLength={7}
+                  pattern="[0-9 ]{6,12}"
+                  maxLength={12}
                   required
                   autoFocus
                   value={code}

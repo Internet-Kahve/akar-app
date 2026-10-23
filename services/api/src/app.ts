@@ -2,7 +2,6 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
-import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyPluginAsync, type FastifyServerOptions } from "fastify";
 import {
   jsonSchemaTransform,
@@ -78,7 +77,10 @@ const MODULES: ModulePlugin[] = [
  */
 export async function buildApp(deps: AppDeps, opts: { docs?: boolean; register?: ModulePlugin[] } = {}) {
   const logger: FastifyServerOptions["logger"] =
-    deps.config.NODE_ENV === "test" ? false : { level: deps.config.LOG_LEVEL };
+    deps.config.NODE_ENV === "test" ? false : {
+      level: deps.config.LOG_LEVEL,
+      redact: ["req.headers.authorization", "req.headers['x-akar-job-secret']"],
+    };
 
   const app = Fastify({
     logger,
@@ -124,7 +126,10 @@ export async function buildApp(deps: AppDeps, opts: { docs?: boolean; register?:
     },
     transform: jsonSchemaTransform,
   });
-  if (opts.docs !== false) await app.register(swaggerUi, { routePrefix: "/docs" });
+  if (opts.docs !== false) {
+    const { default: swaggerUi } = await import("@fastify/swagger-ui");
+    await app.register(swaggerUi, { routePrefix: "/docs" });
+  }
 
   for (const plugin of [...MODULES, ...(opts.register ?? []).filter((p) => !MODULES.includes(p))]) {
     await app.register(plugin);

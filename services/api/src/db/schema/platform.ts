@@ -1,5 +1,17 @@
 import { bigserial, index, integer, jsonb, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
+/** Request-independent work. A lease survives instance shutdown and expires for a later cron run. */
+export const backgroundJobs = pgTable("background_jobs", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  data: jsonb("data").notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  availableAt: timestamp("available_at", { withTimezone: true }).notNull().defaultNow(),
+  leaseToken: text("lease_token"),
+  leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("background_jobs_due_idx").on(t.availableAt)]).enableRLS();
+
 /** Replay store for mutations carrying an Idempotency-Key (scoped per actor). */
 export const idempotencyKeys = pgTable(
   "idempotency_keys",

@@ -10,7 +10,6 @@ import { formatReport, type ImportReport, type ImportStatus } from "../ingest/se
 import {
   commitImportJob,
   createImportJob,
-  failImportJob,
   getImportJob,
   IMPORT_PLAN_JOB,
   importItems,
@@ -143,25 +142,11 @@ export const adminImportRoutes: FastifyPluginAsyncZod = async (app) => {
       const rows = parseInventory(req.body.csv);
       const actor = { id: req.user!.id, requestId: req.id };
 
-      const created: string[] = [];
       const { body } = await idempotent(app.deps.db, req, actor.id, async (tx) => {
         const job = await createImportJob(tx, actor, { city, csv: req.body.csv, includeToc: req.body.includeToc, rows: rows.length });
-        created.push(job.id);
+        await jobs.send(IMPORT_PLAN_JOB, { importId: job.id }, tx);
         return { status: 202, body: toJob(job) };
       });
-
-      // Enqueued only after the commit, so the worker finds the row. A replayed key created no job
-      // in this call and enqueues nothing.
-      const [importId] = created;
-      if (importId) {
-        try {
-          await jobs.send(IMPORT_PLAN_JOB, { importId });
-        } catch (err) {
-          req.log.error({ err, importId }, "import job could not be queued");
-          await failImportJob(app.deps.db, importId, "İş kuyruğuna eklenemedi.");
-          throw new AppError(503, "SERVICE_UNAVAILABLE", "İçe aktarma sıraya alınamadı; biraz sonra tekrar dene.");
-        }
-      }
       reply.code(202);
       return body;
     },

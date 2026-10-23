@@ -7,7 +7,7 @@ import { parseCsv } from "./csv.ts";
 import { createGeocoder, createNominatim, loadOverpassPlaces, osmMatcher, overpassMatcher, type Geocoder } from "./geocode.ts";
 
 /** Git ref holding the dataset (`docs/documents-context/veri/`). */
-export const DEFAULT_DATASET_REF = "origin/docs";
+export const DEFAULT_DATASET_REF = "origin/main";
 
 /** Dataset file from `dir` or, without it, from the docs branch `ref` without checking it out. */
 export async function readDatasetFile(path: string, from: { dir?: string | undefined; ref: string }): Promise<string> {
