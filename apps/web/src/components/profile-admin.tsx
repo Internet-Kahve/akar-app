@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   MapPin,
@@ -19,7 +19,7 @@ import {
   type Role,
   type Snapshot,
 } from "@akar/domain";
-import type { AdminHealth } from "@akar/api-client";
+import type { AdminHealth, AkarClient, ModerationPage } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
@@ -284,6 +284,7 @@ export function Admin({
   commit,
   role,
   loadHealth,
+  loadModeration,
   saveSite,
   live,
 }: {
@@ -291,10 +292,16 @@ export function Admin({
   commit: Commit;
   role: Role;
   loadHealth: () => Promise<AdminHealth>;
+  loadModeration: AkarClient["getModerationPage"];
   saveSite: (site: HeritageSite) => Promise<HeritageSite>;
   live: boolean;
 }) {
-  const queue = state.moderationQueue ?? state.memories;
+  const [page, setPage] = useState<ModerationPage>({ items: [], nextCursor: null });
+  const [pageBusy, setPageBusy] = useState(false);
+  const [pageError, setPageError] = useState("");
+  const pageGeneration = useRef(0);
+  const [pageRevision, setPageRevision] = useState(0);
+  const queue = live ? page.items : (state.moderationQueue ?? state.memories);
   const ownIds = new Set(state.memories.map((m) => m.id));
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [tab, setTab] = useState<
@@ -310,6 +317,35 @@ export function Admin({
     [health, setHealth] = useState<AdminHealth | null>(null),
     [healthFailed, setHealthFailed] = useState(false);
   const seesHealth = role === "moderator" || role === "admin";
+  useEffect(() => {
+    const generation = ++pageGeneration.current;
+    if (!live || !seesHealth || tab !== "memories") return;
+    setPage({ items: [], nextCursor: null });
+    setPageBusy(true);
+    setPageError("");
+    loadModeration(filter).then(
+      (next) => { if (generation === pageGeneration.current) setPage(next); },
+      (error) => { if (generation === pageGeneration.current) setPageError(error instanceof Error ? error.message : "Katkılar yüklenemedi."); },
+    ).finally(() => { if (generation === pageGeneration.current) setPageBusy(false); });
+    return () => { pageGeneration.current++; };
+  }, [live, seesHealth, tab, filter, state, loadModeration, pageRevision]);
+  async function moreMemories() {
+    if (pageBusy || !page.nextCursor) return;
+    const generation = pageGeneration.current;
+    setPageBusy(true);
+    setPageError("");
+    try {
+      const next = await loadModeration(filter, page.nextCursor);
+      if (generation === pageGeneration.current) setPage((previous) => ({
+        items: [...new Map([...previous.items, ...next.items].map((m) => [m.id, m])).values()], nextCursor: next.nextCursor,
+      }));
+    } catch (error) {
+      if (generation === pageGeneration.current) setPageError(error instanceof Error ? error.message : "Katkılar yüklenemedi.");
+    } finally {
+      if (generation === pageGeneration.current) setPageBusy(false);
+    }
+  }
+  const visibleQueue = live ? queue : queue.filter((m) => m.status === filter);
   // Re-read after every state change: a decision or deletion changes the pending count.
   useEffect(() => {
     if (!seesHealth) return;
@@ -535,11 +571,13 @@ export function Admin({
                         : s === "approved"
                           ? "Onaylanan"
                           : "Reddedilen"}{" "}
-                      · {queue.filter((m) => m.status === s).length}
+                      {!live && <>· {queue.filter((m) => m.status === s).length}</>}
                     </button>
                   ))}
                 </div>
-                {!queue.some((m) => m.status === filter) ? (
+                {pageError && <div role="alert">{pageError} <button disabled={pageBusy} onClick={() => setPageRevision((n) => n + 1)}>Yeniden dene</button></div>}
+                {pageBusy && <p role="status">Katkılar yükleniyor…</p>}
+                {!visibleQueue.length && !pageBusy ? (
                   <div className="empty-state">
                     <Shield size={36} />
                     <h3>Bu listede katkı yok</h3>
@@ -549,9 +587,7 @@ export function Admin({
                     </p>
                   </div>
                 ) : (
-                  queue
-                    .filter((m) => m.status === filter)
-                    .map((m) => {
+                  visibleQueue.map((m) => {
                       const own = ownIds.has(m.id);
                       const can = memoryPermissions(role, m.status, own);
                       return (
@@ -625,6 +661,7 @@ export function Admin({
                       );
                     })
                 )}
+                {live && page.nextCursor && <button className="btn secondary" disabled={pageBusy} onClick={() => void moreMemories()}>Daha fazla katkı yükle</button>}
               </>
             )}
           </section>

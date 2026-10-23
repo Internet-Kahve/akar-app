@@ -545,7 +545,6 @@ interface UserState {
   queue: Memory[];
 }
 
-const MODERATION_STATUSES = ["pending", "approved", "rejected"] as const;
 
 export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const base = opts.baseUrl.replace(/\/+$/, "");
@@ -771,20 +770,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         routesStale: boolean;
       }
     | undefined;
-  /** Draft routes with their stops: one list read, then one read per draft (drafts are few). */
-  const loadDraftRoutes = async () => {
-    const list = await pages<{ id: string }>("/v1/admin/routes", {
-      status: "draft",
-    });
-    return pool(list, CONCURRENCY, async ({ id }) =>
-      mapAdminRoute(
-        await call<AdminRouteDto>(
-          "GET",
-          `/v1/admin/routes/${encodeURIComponent(id)}`,
-        ),
-      ),
-    );
-  };
+  /** Each page includes ordered stops in bulk; no per-route detail requests. */
+  const loadDraftRoutes = async () => (await pages<AdminRouteDto>("/v1/admin/routes", { status: "draft" })).map(mapAdminRoute);
   const refreshDraftRoutes = async () => {
     if (!drafts) return;
     drafts.routesStale = true;
@@ -992,24 +979,10 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       },
     );
     const name = me.displayName ?? "Gezgin";
-    // The panel has "Bekleyen", "Onaylanan" and "Reddedilen" tabs, so all three lists are read. The pending
-    // list also carries reported approved memories, which the approved list repeats: one entry per id.
-    const queue =
-      me.role === "moderator" || me.role === "admin"
-        ? [
-            ...new Map(
-              (
-                await Promise.all(
-                  MODERATION_STATUSES.map((status) =>
-                    pages<MemoryDto>("/v1/admin/memories", { status }),
-                  ),
-                )
-              )
-                .flat()
-                .map((m) => [m.id, m]),
-            ).values(),
-          ]
-        : [];
+    // Only the first pending page belongs to the snapshot. Other tabs and older pages are requested on demand.
+    const queue = me.role === "moderator" || me.role === "admin"
+      ? (await call<{ items: MemoryDto[] }>("GET", "/v1/admin/memories", { query: { status: "pending", limit: 25 }, cache: "no-store" })).items
+      : [];
     const solved = await pool(
       passport.quizzesSolved,
       CONCURRENCY,
@@ -1678,6 +1651,12 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     `/v1/quizzes/${encodeURIComponent(quizId)}`;
   return {
     getSnapshot: () => enqueue(() => build(true)),
+    getModerationPage: (status, cursor) => enqueue(async () => {
+      const page = await call<{ items: MemoryDto[]; nextCursor: string | null }>("GET", "/v1/admin/memories", {
+        query: { status, limit: 25, ...(cursor && { cursor }) }, cache: "no-store",
+      });
+      return { items: page.items.map((m) => mapMemory(m, m.authorName ?? "Gezgin")), nextCursor: page.nextCursor };
+    }),
     dispatch: (command) =>
       enqueue(async () => {
         const reload = await run(command);

@@ -20871,6 +20871,64 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "stops": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "position": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991,
+                                  "description": "Duraktaki sıra, 0'dan başlar"
+                                },
+                                "site": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "status": {
+                                      "type": "string",
+                                      "enum": [
+                                        "draft",
+                                        "published"
+                                      ],
+                                      "description": "Eser taslaksa rota yayınlanamaz"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "name",
+                                    "status"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "quizId": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "historyImageId": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "position",
+                                "site",
+                                "quizId",
+                                "historyImageId"
+                              ],
+                              "additionalProperties": false
+                            }
                           }
                         },
                         "required": [
@@ -20884,7 +20942,8 @@
                           "badgeMediaId",
                           "status",
                           "updatedAt",
-                          "stopCount"
+                          "stopCount",
+                          "stops"
                         ],
                         "additionalProperties": false
                       }

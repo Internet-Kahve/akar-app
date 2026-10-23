@@ -1532,7 +1532,7 @@ test("other people's memories are never the user's own: guest, signed-in user an
   assert.deepEqual(mod.memories, []);
   assert.deepEqual(
     mod.moderationQueue?.map((m) => [m.id, m.status]).sort(),
-    [["a1", "approved"], ["q1", "pending"], ["r1", "approved"], ["x1", "rejected"]],
+    [["q1", "pending"], ["r1", "approved"]],
   );
   assert.deepEqual(
     mod.publicMemories?.map((m) => m.id),
@@ -1831,4 +1831,33 @@ test("explicit gallery ids preserve photos also used by cards and history across
   assert.deepEqual(current.photos?.map(p => p.id), ["cover", "card-img", "old", "extra"]);
   await client.saveSite({ ...current, coverPhotoId: "extra" });
   assert.deepEqual(stored.photoIds, ["cover", "card-img", "old", "extra"]);
+});
+
+
+test("moderation reads one bounded page per selected tab and forwards its cursor", async () => {
+  const api = fakeApi({ ...catalogHandlers(), ...accountHandlers({ T: { saved: [], points: 0 } }, "moderator"),
+    "GET /v1/admin/memories": c => ({ items: [pendingItem(c.path.includes("cursor=next") ? "q2" : "q1", "a")], nextCursor: c.path.includes("cursor=next") ? null : "next" }),
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", getToken: () => "T", fetch: api.fetch });
+  await client.getSnapshot();
+  let reads = api.calls.filter(c => c.path.startsWith("/v1/admin/memories"));
+  assert.equal(reads.length, 1);
+  assert.equal(new URL(reads[0]!.path, "http://api.test").searchParams.get("limit"), "25");
+  const first = await client.getModerationPage("rejected");
+  const next = await client.getModerationPage("rejected", first.nextCursor!);
+  reads = api.calls.filter(c => c.path.startsWith("/v1/admin/memories"));
+  assert.equal(reads.length, 3, "does not eagerly follow pagination");
+  assert.ok(reads[2]!.path.includes("status=rejected") && reads[2]!.path.includes("cursor=next"));
+  assert.equal(next.items[0]?.id, "q2");
+});
+
+
+test("draft route loading uses one page without detail requests for each route", async () => {
+  const api = fakeApi({ ...catalogHandlers(), ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/admin/routes": () => ({ items: Array.from({ length: 30 }, (_, i) => ({ id: `draft-${i}`, name: "Route", nameEn: null, description: "", theme: "", status: "draft", stops: [{ site: { id: "a" }, quizId: null, historyImageId: null }] })), nextCursor: null }),
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", getToken: () => "T", fetch: api.fetch });
+  const state = await client.getSnapshot();
+  assert.equal(state.catalogRoutes?.filter(r => r.status === "draft").length, 30);
+  assert.equal(api.calls.filter(c => c.path.startsWith("/v1/admin/routes")).length, 1);
 });

@@ -1,4 +1,4 @@
-import { reduceSnapshot, type Command, type Snapshot, type HeritageSite } from "@akar/domain";
+import { reduceSnapshot, type Command, type Snapshot, type HeritageSite, type Memory } from "@akar/domain";
 import { createSeed, demoQuizzes } from "./seed";
 export { routes, createSeed, demoRegion, demoQuizzes } from "./seed";
 export {
@@ -58,6 +58,7 @@ export interface AdminHealth {
 /** Hours after which a pending memory counts as stale (`PENDING_STALE_HOURS` server-side). */
 const PENDING_STALE_HOURS = 48;
 /** UI depends only on this contract: the local demo client or the HTTP client behind it. */
+export type ModerationPage = { items: Memory[]; nextCursor: string | null };
 export interface AkarClient {
   getSnapshot(): Promise<Snapshot>;
   dispatch(command: Command): Promise<Snapshot>;
@@ -73,6 +74,7 @@ export interface AkarClient {
   ): Promise<{ correctOption: string; snapshot: Snapshot }>;
   /** Moderator and admin only; the server answers 403 for other roles. */
   getAdminHealth(): Promise<AdminHealth>;
+  getModerationPage(status: Memory["status"], cursor?: string): Promise<ModerationPage>;
 }
 // Keep the previous Istanbul demo untouched in its original storage key.
 export const demoStorageKey = "akar-demo-bursa-v1";
@@ -165,6 +167,11 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     },
     async dispatch(command) {
       return persist(reduceSnapshot(state, command));
+    },
+    async getModerationPage(status, cursor) {
+      const items = state.memories.filter((m) => m.status === status);
+      const start = Number(cursor ?? 0);
+      return { items: structuredClone(items.slice(start, start + 25)), nextCursor: items.length > start + 25 ? String(start + 25) : null };
     },
     async saveSite(site) {
       const snapshot = persist(reduceSnapshot(state, { type: "site", site }));

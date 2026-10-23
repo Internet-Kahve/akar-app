@@ -229,6 +229,10 @@ export function AkarApp() {
     setState(result.snapshot);
     return result.site;
   }, []);
+  const loadModeration = useCallback< AkarClient["getModerationPage"] >(async (status, cursor) => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    return client.current.getModerationPage(status, cursor);
+  }, []);
   const loadHealth = useCallback(async () => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
@@ -476,6 +480,7 @@ export function AkarApp() {
               commit={commit}
               role={role}
               loadHealth={loadHealth}
+              loadModeration={loadModeration}
               saveSite={saveSite}
               live={live}
             />

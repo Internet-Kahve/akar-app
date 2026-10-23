@@ -71,7 +71,7 @@ export const AdminRouteStop = z.object({
   historyImageId: z.string().nullable(),
 });
 
-export const AdminRouteSummary = routeFields.extend({ stopCount: z.number().int() });
+export const AdminRouteSummary = routeFields.extend({ stopCount: z.number().int(), stops: z.array(AdminRouteStop) });
 export type AdminRouteSummary = z.infer<typeof AdminRouteSummary>;
 
 export const AdminRouteList = pageResponse(AdminRouteSummary);
