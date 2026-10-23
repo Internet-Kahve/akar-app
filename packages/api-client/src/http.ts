@@ -191,6 +191,20 @@ interface RouteDto {
   theme: string;
   stops: Array<{ site: SiteSummaryDto; quizId: string | null }>;
 }
+/** `AdminRoute`: drafts included; stops may name draft sites. */
+interface AdminRouteDto {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  description: string;
+  theme: string;
+  status: "draft" | "published";
+  stops: Array<{
+    site: SiteSummaryDto;
+    quizId: string | null;
+    historyImageId: string | null;
+  }>;
+}
 interface MeDto {
   id: string;
   role: Role;
@@ -353,6 +367,19 @@ const mapRoute = (r: RouteDto): HeritageRoute => ({
   distance: r.distance,
   theme: r.theme,
   status: "published",
+  ...(present(r.nameEn) && { nameEn: r.nameEn }),
+});
+
+/** Panel view of a draft route. Duration and distance are computed only for published routes; the panel recomputes both when it saves. */
+const mapAdminRoute = (r: AdminRouteDto): HeritageRoute => ({
+  id: r.id,
+  name: r.name,
+  description: r.description,
+  siteIds: r.stops.map((s) => s.site.id),
+  minutes: 0,
+  distance: "",
+  theme: r.theme,
+  status: r.status,
   ...(present(r.nameEn) && { nameEn: r.nameEn }),
 });
 
@@ -732,8 +759,31 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         raw: Map<string, AdminSiteDetailDto>;
         /** Re-read after a failed refresh, before anything is served. */
         stale: Set<string>;
+        /** Draft routes; published ones come from the public catalog. */
+        routes: HeritageRoute[];
+        routesStale: boolean;
       }
     | undefined;
+  /** Draft routes with their stops: one list read, then one read per draft (drafts are few). */
+  const loadDraftRoutes = async () => {
+    const list = await pages<{ id: string }>("/v1/admin/routes", {
+      status: "draft",
+    });
+    return pool(list, CONCURRENCY, async ({ id }) =>
+      mapAdminRoute(
+        await call<AdminRouteDto>(
+          "GET",
+          `/v1/admin/routes/${encodeURIComponent(id)}`,
+        ),
+      ),
+    );
+  };
+  const refreshDraftRoutes = async () => {
+    if (!drafts) return;
+    drafts.routesStale = true;
+    drafts.routes = await loadDraftRoutes();
+    drafts.routesStale = false;
+  };
   /** Where a draft without a location is shown; kept per id so a save compares against what the editor saw. */
   const placeholders = new Map<string, [number, number]>();
   const placeholderOf = (
@@ -760,15 +810,21 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     }
     const key = await token();
     if (!drafts || drafts.key !== key) {
-      const items = await pages<AdminSiteDetailDto>("/v1/admin/site-details", {
-        status: "draft",
-      });
+      const [items, routes] = await Promise.all([
+        pages<AdminSiteDetailDto>("/v1/admin/site-details", {
+          status: "draft",
+        }),
+        loadDraftRoutes(),
+      ]);
       drafts = {
         key,
         raw: new Map(items.map((d) => [d.id, d])),
         stale: new Set(),
+        routes,
+        routesStale: false,
       };
     }
+    if (drafts.routesStale) await refreshDraftRoutes();
     for (const id of [...drafts.stale]) await refreshAdminSite(id);
     return drafts.raw;
   }
@@ -977,7 +1033,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       quizIds: user.quizIds,
       points: user.points,
       name: user.name,
-      catalogRoutes: cat.routes,
+      catalogRoutes: [...cat.routes, ...(drafts?.routes ?? [])],
     };
     return structuredClone(snapshot);
   }
@@ -1042,51 +1098,60 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   const same = (a: unknown, b: unknown) =>
     JSON.stringify(a) === JSON.stringify(b);
 
-  async function updateSite(site: HeritageSite) {
-    validateSite(site);
+  /** The details step (`PATCH .../info` fields) of a domain site, in the API's shape. */
+  const infoOf = (s: HeritageSite) => ({
+    name: s.name,
+    nameEn: s.nameEn ?? null,
+    typeId: s.kind,
+    year: s.year,
+    architect: s.architect,
+    patron: s.patron ?? null,
+    era: s.era ?? null,
+    address: s.address ?? null,
+    role: s.role ?? null,
+    relatedSiteId: s.relatedSiteId ?? null,
+    description: s.description,
+    descriptionEn: s.descriptionEn ?? null,
+    minutes: s.minutes,
+    district: s.district || null,
+    tier: s.tier,
+  });
+
+  /**
+   * Panel ids of records created here → server ids. The editor keeps its own id while it stays
+   * open, so a second save of a new site or route updates the record instead of creating another.
+   */
+  const createdIds = new Map<string, string>();
+
+  async function updateSite(input: HeritageSite) {
+    validateSite(input);
+    let site = { ...input, id: createdIds.get(input.id) ?? input.id };
     const cat = await loadCatalog();
     const draftRaw = user ? await ensureDrafts(user) : new Map();
     const pub = cat.raw.get(site.id);
-    const draft = pub ? undefined : draftRaw.get(site.id);
-    if (!pub && !draft)
-      throw new UnsupportedCommandError(
-        "site",
-        "Yeni eser oluşturmak için şehir bilgisi gerekir; bu işlem şimdilik API üzerinden yapılamıyor.",
-      );
+    let draft = pub ? undefined : draftRaw.get(site.id);
+    // Unknown id: a new site. Its pin is always sent: the editor placed it (unlike §11.23's placeholder).
+    const fresh = !pub && !draft;
+    if (fresh) {
+      draft = await call<AdminSiteDetailDto>("POST", "/v1/admin/sites", {
+        body: { ...infoOf(site), city: site.city },
+      });
+      createdIds.set(input.id, draft.id);
+      site = { ...site, id: draft.id };
+    }
     // What the editor was shown: a draft's missing location is the placeholder (§11.23).
     const shownAt: [number, number] = pub
       ? pub.coordinates
-      : (draft!.coordinates ?? placeholderOf(cat, draft!));
+      : (draft!.coordinates ??
+        (fresh ? site.coordinates : placeholderOf(cat, draft!)));
     const cur = pub ? mapSite(pub) : mapAdminSite(draft!, shownAt);
     const info: Record<string, unknown> = {};
-    const field = (key: string, now: unknown, before: unknown) => {
-      if (!same(now, before)) info[key] = now;
-    };
-    field("name", site.name, cur.name);
-    field("nameEn", site.nameEn ?? null, cur.nameEn ?? null);
+    const now = infoOf(site),
+      before = infoOf(cur);
+    for (const key of Object.keys(now) as (keyof typeof now)[])
+      if (!same(now[key], before[key])) info[key] = now[key];
     // A draft without a type shows "cami"; its type is sent on every save (§11.23).
     if (draft?.kind === null) info.typeId = site.kind;
-    else field("typeId", site.kind, cur.kind);
-    field("year", site.year, cur.year);
-    field("architect", site.architect, cur.architect);
-    field("patron", site.patron ?? null, cur.patron ?? null);
-    field("era", site.era ?? null, cur.era ?? null);
-    field("address", site.address ?? null, cur.address ?? null);
-    field("role", site.role ?? null, cur.role ?? null);
-    field(
-      "relatedSiteId",
-      site.relatedSiteId ?? null,
-      cur.relatedSiteId ?? null,
-    );
-    field("description", site.description, cur.description);
-    field(
-      "descriptionEn",
-      site.descriptionEn ?? null,
-      cur.descriptionEn ?? null,
-    );
-    field("minutes", site.minutes, cur.minutes);
-    field("district", site.district || null, cur.district || null);
-    field("tier", site.tier, cur.tier);
     const path = `/v1/admin/sites/${encodeURIComponent(site.id)}`;
     try {
       // City goes with the other details (§11.26): the server takes the city's name.
@@ -1094,7 +1159,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       if (Object.keys(info).length)
         await call("PATCH", `${path}/info`, { body: info });
       // An unmoved placeholder is no location: the server keeps refusing to publish it.
-      if (!same(site.coordinates, shownAt))
+      if (fresh || !same(site.coordinates, shownAt))
         await call("PUT", `${path}/location`, {
           body: { coordinates: site.coordinates },
         });
@@ -1252,51 +1317,96 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     }
   }
 
-  async function updateRoutes(routes: HeritageRoute[]) {
+  async function updateRoutes(input: HeritageRoute[]) {
     const cat = await loadCatalog();
+    if (user) await ensureDrafts(user);
+    const known = [...cat.routes, ...(drafts?.routes ?? [])];
+    const routes = input.map((r) => ({
+      ...r,
+      id: createdIds.get(r.id) ?? r.id,
+    }));
     const ids = new Set(routes.map((r) => r.id));
-    if (
-      routes.some((r) => !cat.routes.some((c) => c.id === r.id)) ||
-      cat.routes.some((c) => !ids.has(c.id))
-    )
+    if (known.some((c) => !ids.has(c.id)))
       throw new UnsupportedCommandError(
         "catalog-routes",
-        "Rota ekleme ve silme API üzerinden yapılamıyor (kimliği sunucu üretir, şehir bilgisi gerekir); yalnızca var olan rotalar güncellenir.",
+        "Rota silme API üzerinden yapılamıyor; rotayı yayından kaldırmak için taslak olarak kaydet.",
       );
-    for (const r of routes) {
-      const cur = cat.routes.find((c) => c.id === r.id) as HeritageRoute;
-      const id = encodeURIComponent(r.id);
-      const patch: Record<string, unknown> = {};
-      if (r.name !== cur.name) patch.name = r.name;
-      if ((r.nameEn ?? null) !== (cur.nameEn ?? null))
-        patch.nameEn = r.nameEn ?? null;
-      if (r.description !== cur.description) patch.description = r.description;
-      if (r.theme !== cur.theme) patch.theme = r.theme;
-      if (Object.keys(patch).length)
-        await call("PATCH", `/v1/admin/routes/${id}`, { body: patch });
-      if (!same(r.siteIds, cur.siteIds)) {
-        const full = await call<{
-          stops: Array<{
-            site: { id: string };
-            quizId: string | null;
-            historyImageId: string | null;
-          }>;
-        }>("GET", `/v1/admin/routes/${id}`);
-        const extras = new Map(full.stops.map((s) => [s.site.id, s]));
-        await call("PUT", `/v1/admin/routes/${id}/stops`, {
-          body: {
-            stops: r.siteIds.map((siteId) => ({
-              siteId,
-              quizId: extras.get(siteId)?.quizId ?? null,
-              historyImageId: extras.get(siteId)?.historyImageId ?? null,
-            })),
-          },
-        });
+    // A route lives in one city and its stops in that city (`setStops`): a new one takes its first stop's.
+    const cityOf = (siteId: string) =>
+      cat.raw.get(siteId)?.city.id ?? drafts?.raw.get(siteId)?.city.id;
+    const fresh = routes.filter((r) => !known.some((c) => c.id === r.id));
+    if (fresh.some((r) => !r.siteIds[0] || !cityOf(r.siteIds[0])))
+      throw new UnsupportedCommandError(
+        "catalog-routes",
+        "Yeni rotanın şehri ilk durağından belirlenir; kaydetmeden önce en az bir durak seç.",
+      );
+    // An empty English name clears it: the API takes `null`, never empty text.
+    const nameEnOf = (r: HeritageRoute) => r.nameEn?.trim() || null;
+    try {
+      for (const route of routes) {
+        let r = route;
+        let cur = known.find((c) => c.id === r.id);
+        const isNew = !cur;
+        if (!cur) {
+          const created = await call<AdminRouteDto>(
+            "POST",
+            "/v1/admin/routes",
+            {
+              body: {
+                name: r.name,
+                nameEn: nameEnOf(r),
+                description: r.description,
+                theme: r.theme,
+                cityId: cityOf(r.siteIds[0]!),
+              },
+            },
+          );
+          // A fresh route's id is still the panel's own (never mapped before).
+          createdIds.set(r.id, created.id);
+          cur = mapAdminRoute(created);
+          r = { ...r, id: created.id };
+        }
+        const id = encodeURIComponent(r.id);
+        const patch: Record<string, unknown> = {};
+        if (r.name !== cur.name) patch.name = r.name;
+        if (nameEnOf(r) !== nameEnOf(cur)) patch.nameEn = nameEnOf(r);
+        if (r.description !== cur.description)
+          patch.description = r.description;
+        if (r.theme !== cur.theme) patch.theme = r.theme;
+        if (Object.keys(patch).length)
+          await call("PATCH", `/v1/admin/routes/${id}`, { body: patch });
+        if (!same(r.siteIds, cur.siteIds)) {
+          // Stop quizzes and archive images are not in the domain route: keep the server's.
+          const stops: AdminRouteDto["stops"] = isNew
+            ? []
+            : (await call<AdminRouteDto>("GET", `/v1/admin/routes/${id}`))
+                .stops;
+          const extras = new Map(stops.map((s) => [s.site.id, s]));
+          await call("PUT", `/v1/admin/routes/${id}/stops`, {
+            body: {
+              stops: r.siteIds.map((siteId) => ({
+                siteId,
+                quizId: extras.get(siteId)?.quizId ?? null,
+                historyImageId: extras.get(siteId)?.historyImageId ?? null,
+              })),
+            },
+          });
+        }
+        const status = r.status ?? "published";
+        if (status !== (cur.status ?? "published"))
+          await call(
+            "POST",
+            `/v1/admin/routes/${id}/${status === "published" ? "publish" : "unpublish"}`,
+          );
       }
-      if (r.status === "draft")
-        await call("POST", `/v1/admin/routes/${id}/unpublish`);
+    } catch (e) {
+      // Earlier steps may have been saved (e.g. a new route before refused stops): show them.
+      await refreshRoutes().catch(() => undefined);
+      await refreshDraftRoutes().catch(() => undefined);
+      throw e;
     }
     await refreshRoutes();
+    await refreshDraftRoutes();
   }
 
   async function run(command: Command): Promise<boolean> {

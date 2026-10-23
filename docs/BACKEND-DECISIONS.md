@@ -253,7 +253,7 @@ Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: ortam (P5.2) istenen anda öne alınabilir; barındırma seçimi o zaman sorulur.
 
 **11.13 Demoda yönetim paneli API kipinde yalnız mevcut kayıtları günceller.**
-Karar: P5.1b'de yönetim paneli API kipinde eser, katalog ve fotoğraf için yalnız mevcut kayıtları günceller; yeni eser, rota ya da kart oluşturma API'ye eklenmez, bu komutlar API kipinde `UnsupportedCommandError` ile anlaşılır bir mesaj gösterir. P5.1b'ye Tamer onay verdi.
+Karar: P5.1b'de yönetim paneli API kipinde eser, katalog ve fotoğraf için yalnız mevcut kayıtları günceller; yeni eser, rota ya da kart oluşturma API'ye eklenmez, bu komutlar API kipinde `UnsupportedCommandError` ile anlaşılır bir mesaj gösterir. P5.1b'ye Tamer onay verdi. (Yeni eser ve yeni rota kısmı §11.29 ile değişti.)
 Neden: demo için yeterli; oluşturma uçları ayrı bir API PR'ı ve daha büyük bir ön yüz değişikliği gerektirirdi.
 Karar veren / tarih: Weissman, 21 Eki.
 Nasıl değiştirilir: oluşturma uçları (`POST /v1/admin/sites` vb.) ayrı bir `feat/api-admin-create` PR'ıyla eklenir, sonra panel bağlanır.
@@ -345,3 +345,9 @@ Karar: `apps/web` Next.js sürümü 16.4.2'ye yükseltilir (tam sürüm sabit ka
 Neden: uygulama `next/image`, `use cache` ya da Server Actions kullanmıyor, açık bu yüzden düşük olabilir; yine de yama küçük ve riski az, yerel geliştirme ve API kipi uçtan uca testleri de onsuz çalışmıyor. `maplibre-gl` için ayrı bir kritik uyarı var; düzeltmesi ana sürüm değişikliği ister, bu kararın dışında.
 Karar veren / tarih: Weissman, 23 Eki; Tamer'e bilgi (§11.20).
 Nasıl değiştirilir: `apps/web/package.json` `next` sürümü ve `package-lock.json` (`npm install next@<sürüm> --save-exact -w @akar/web`).
+
+**11.29 Panelde yeni eser ve yeni rota API kipinde.**
+Karar: API kipinde yeni eser ve yeni rota kaydı sunucuda oluşturulur; önceden `UnsupportedCommandError` veriyordu (§11.13). Uçlar zaten vardı (`POST /v1/admin/sites`, `POST /v1/admin/routes`); değişiklik yalnız istemcide (`packages/api-client/src/http.ts`). Yeni eser: bilinmeyen kimlikli `site` komutu bilgilerle ve şehirle (`city`, eserin şehir adı) oluşturulur, sonra konum her zaman gönderilir (iğneyi editör koydu; §11.23'teki yer tutucu kuralı yalnız içe aktarılan taslaklar için), sonra §11.27'deki adımlar, en son yayın. Yeni rota: `catalog-routes` listesindeki bilinmeyen kimlikli rota `POST /v1/admin/routes` ile açılır; şehri ilk durağın şehridir (rotanın durakları tek şehirde olmalı), durağı olmayan yeni rota hiçbir istek atmadan reddedilir ("en az bir durak seç"). Kimliği sunucu üretir; istemci panelin kendi kimliğini sunucununkine eşler, böylece açık kalan düzenleyicide ikinci kayıt aynı kaydı günceller, yenisini açmaz. Editör ve admin taslak rotaları da görür (`GET /v1/admin/routes?status=draft`, sonra taslak başına bir okuma); herkese açık rota listesi taslak rotayı göstermez. Rotanın yayına alınması ve taslağa çekilmesi yalnız durum değişince istek atar. Boş İngilizce rota adı `null` gönderilir.
+Bilinen sınırlar: rota silme API'de yok, panelde reddedilir (taslağa almak yayından kaldırır). Taslak rotanın süre ve mesafesi panelde hesaplanmaz (sunucu yalnız yayındaki rotada hesaplar; panel kayıtta kendi hesaplar). Oluşturma ile sonraki adımlar tek işlem değildir: bir adım reddedilirse oluşan kayıt taslak olarak kalır ve düzenleyiciden yeniden kaydedilebilir.
+Karar veren / tarih: Weissman (iş listesi madde 2), 23 Eki; şehir ve kimlik eşleme kuralları backend sorumlusunun.
+Nasıl değiştirilir: `packages/api-client/src/http.ts` (`updateSite`, `updateRoutes`, `createdIds`, `loadDraftRoutes`) ve bu kayıt.
