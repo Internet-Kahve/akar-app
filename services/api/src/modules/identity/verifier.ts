@@ -31,8 +31,8 @@ class SigningKeysUnavailableError extends Error {
  * Verifies Supabase access tokens: signature against the JWKS, `iss`, `aud`, `exp`, and a `sub`.
  * `AuthUser.id` is `sub` and `email` is the token's email claim. The role is never read from the
  * token: it comes from `staff_members` (no row = `user`), and the address of an open staff invite
- * is turned into that membership on the invitee's first request. An invalid or expired token is
- * `null` (the app answers 401).
+ * is turned into that membership on the invitee's first request. An invalid or expired token, or
+ * one of an erased account (`deleted_accounts`), is `null` (the app answers 401).
  */
 export function createJwksVerifier({ jwks, issuer, audience, db }: JwksVerifierOptions): AuthVerifier {
   const keys: JWTVerifyGetKey = typeof jwks === "function" ? jwks : createRemoteJWKSet(new URL(jwks));
@@ -62,7 +62,8 @@ export function createJwksVerifier({ jwks, issuer, audience, db }: JwksVerifierO
       const claim = typeof payload.email === "string" ? payload.email.trim() : "";
       const email = claim === "" ? undefined : claim;
 
-      return { id: sub, role: await resolveRole(db, sub, email), email };
+      const role = await resolveRole(db, sub, email);
+      return role === null ? null : { id: sub, role, email };
     },
   };
 }

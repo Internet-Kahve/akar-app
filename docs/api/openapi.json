@@ -4344,6 +4344,18 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Hesabımı ve verilerimi sil (KVKK): geri alınamaz",
+        "tags": [
+          "me"
+        ],
+        "description": "Hesap ve ona bağlı her veri kalıcı olarak silinir: anılar (her durumda; bildirimleri ve fotoğraflarıyla), başka anılara yapılan bildirimler, puanlar, kaydedilenler, Rotam, ilerleme, rozetler, görünen ad, yüklemeler; en son Supabase'deki hesap (e-posta). Supabase hata verirse hiçbir şey silinmez (502). Yetkili hesap (editör, moderatör, admin) silinemez (409): önce bir admin yetkiyi kaldırır. Silinen hesabın hâlâ geçerli token'ı 401 alır; bu yüzden aynı Idempotency-Key ile tekrar de 401 döner. Audit kaydında yalnız sayılar kalır (`account.delete`).",
+        "responses": {
+          "204": {
+            "description": "Default Response"
+          }
+        }
       }
     },
     "/v1/me/profile": {
@@ -4898,6 +4910,32 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/admin/users/{userId}": {
+      "delete": {
+        "summary": "Bir kullanıcının hesabını ve verilerini sil (KVKK talebi; yalnız admin)",
+        "tags": [
+          "staff"
+        ],
+        "description": "`DELETE /v1/me` ile aynı silme, e-postayla gelen talepler için. Yetkili hesap 409 (önce yetkiyi kaldır). Bilinmeyen ya da zaten silinmiş id de 204 döner. Audit: `account.delete`, aktör admin.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
           }
         }
       }

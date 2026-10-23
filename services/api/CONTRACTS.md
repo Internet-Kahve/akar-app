@@ -15,7 +15,7 @@ Her modül `src/modules/<modül>/` altında yaşar: `routes.ts` (Fastify eklenti
 | routes (okuma) | `modules/routes/` | `schema/routes.ts` | `catalog_routes`, `route_stops`, `quizzes`, `quiz_answers` |
 | media | `modules/media/` | `schema/media.ts` | `media`, `media_uploads`, `media_deletions` |
 | ingest | `modules/ingest/` | yok | catalog `drafts.ts` üzerinden yazar |
-| identity | `modules/identity/` | `schema/identity.ts` | `staff_members`, `staff_invites`, `profiles` |
+| identity | `modules/identity/` | `schema/identity.ts` | `staff_members`, `staff_invites`, `profiles`, `deleted_accounts`; hesap silme (`erasure.ts`) diğer modüllerin silme fonksiyonlarını çağırır |
 | admin-catalog | `modules/admin-catalog/` | `schema/admin-catalog.ts` | `import_jobs`; ayrıca catalog ve routes tablolarının **yazma** tarafı |
 | moderation | `modules/moderation/` | `schema/moderation.ts` | `memories`, `memory_reports` |
 | engagement | `modules/engagement/` | `schema/engagement.ts` | `point_events`, `saved_sites`, `user_route_stops`, `story_progress`, `quiz_progress`, `user_badges` |
@@ -27,7 +27,7 @@ Kurallar:
 - Bir modül başka modülün tablosuna **yazmaz**; dışa açılmış servis fonksiyonunu çağırır. Tek istisna: `admin-catalog` içerik tablolarının yazarıdır (catalog/routes yalnız okur).
 - Okuma sorguları yayın kapısını atlamamak koşuluyla başka modülün tablosuna `join` yapabilir (örnek: catalog → `media`).
 - `app.ts`, `server.ts`, `src/db/schema/index.ts`, `drizzle/`, `package.json`, `src/config.ts`, `src/platform/*`, `src/test/harness.ts` ve `CONTRACTS.md` ortak dosyalardır; backend sorumlusu düzenler. Yeni modül, kayıt satırını (`MODULES` listesine eklenecek eklenti) ve bağımlılık ihtiyacını PR açıklamasında belirtir. Kayıtlı modüller: health, catalog, routes, identity, media, admin-catalog (sites, routes-editor, imports, reports), moderation, admin-health, engagement, settings.
-- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0009` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`, `0008` `user_route_stops`, `0009` `media_deletions`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
+- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0011` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`, `0008` `user_route_stops`, `0009` `media_deletions`, `0010` `background_jobs`, `0011` `deleted_accounts`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
 - Modül eklentisi `FastifyPluginAsyncZod` döner ve kendi `routes.ts` dosyasından dışa açılır. Testler eklentiyi `startTestApp({ register: [xxxRoutes] })` ile yükler; modül `MODULES`'a eklendiğinde aynı test değişmeden çalışır.
 
 ### Çalışma zamanı bağımlılıkları (`app.deps`)
@@ -59,6 +59,7 @@ Gerekli bağımlılık `null` ise uç `503 SERVICE_UNAVAILABLE` döner, sahte da
 | `expireUploads` | `modules/media/service.ts` | Süresi dolmuş yüklemelerin `uploads` kovasındaki nesnelerini temizler (`server.ts`, 15 dk) |
 | `deleteUnreferencedMedia`, `deleteMediaObjects`, `drainMediaDeletions`, `MEDIA_REFERENCES` | `modules/media/service.ts` | Hiçbir tablonun kullanmadığı medya satırını işlem içinde siler, nesnesini işlem bittikten sonra kovadan siler |
 | `sweepUnattachedPhotos` | `modules/media/service.ts` | Ziyaretçinin 24 saattir hiçbir yerde kullanılmayan fotoğrafını siler (`server.ts`, 15 dk) |
+| `eraseAccount`, `deleteSupabaseUser` | `modules/identity/erasure.ts` | Hesap silme (KVKK, §11.31): modüllerin `eraseMemories` (moderation), `eraseUploads` (media), `eraseEngagement` (engagement), `forgetIdempotencyKeys` (platform) fonksiyonlarını tek işlemde çağırır, en son Supabase kullanıcısını siler. Kullanıcıya bağlı yeni tablo eklenen modül kendi silme fonksiyonuna ekler (`identity-erasure.test.ts` her tabloyu tarar) |
 | `recordAudit` | `platform/audit.ts` | Audit kaydı |
 | `requireUser`, `requireRole` | `platform/auth.ts` | Yetki kontrolü |
 | `PageQuery`, `pageResponse`, `encodeCursor`, `decodeCursor` | `platform/pagination.ts` | Keyset sayfalama |
@@ -75,16 +76,16 @@ type AuthVerifier = { verify(token: string): Promise<AuthUser | null> };
 
 - `app.ts` her istekte `Authorization: Bearer <jwt>` başlığını `deps.auth.verify` ile çözer. Başlık yoksa `req.user = null`. Başlık var ama geçersizse **401 `UNAUTHENTICATED`**; misafire düşürülmez.
 - `deps.auth` identity modülü gelene kadar `null`'dır (her token 401). Identity, Supabase JWKS ile doğrulayan `AuthVerifier`'ı sağlar; `id` = JWT `sub`.
-- Rol JWT'den okunmaz; identity'nin tablosundan gelir. Kaydı olmayan oturum `user` olur.
+- Rol JWT'den okunmaz; identity'nin tablosundan gelir. Kaydı olmayan oturum `user` olur. Silinmiş hesabın (`deleted_accounts`, §11.31) hâlâ geçerli token'ı 401 alır.
 - Yetki: `requireRole("editor")` gibi `preHandler`. `admin` her role geçer.
 
 | Rol | Yetki |
 | --- | --- |
 | misafir | Okuma; bulmaca/hikâye için imzalı makbuz alır |
-| `user` | Kaydet, Rotam, ilerleme, puan, İz Bırak (kendi anısını silme dahil), Bildir, makbuz bozdurma |
+| `user` | Kaydet, Rotam, ilerleme, puan, İz Bırak (kendi anısını silme dahil), Bildir, makbuz bozdurma, kendi hesabını ve verilerini silme |
 | `editor` | Eser/rota/kart oluşturma, düzenleme, yayınlama; içe aktarma |
 | `moderator` | Katkı onay/ret, onaylı anıyı yayından kaldırma, bildirilen içerik |
-| `admin` | Hepsi + davet ve rol atama, anıyı kalıcı silme |
+| `admin` | Hepsi + davet ve rol atama, anıyı kalıcı silme, bir kullanıcının hesabını silme (yetkili hesap silinmez, önce yetki kaldırılır) |
 
 ## 3. Hata sözleşmesi
 
@@ -97,7 +98,7 @@ Gövde her zaman `{ error: { code, message, fieldErrors, requestId } }`. Mesajla
 | 401 | `UNAUTHENTICATED` | Giriş yok ya da token geçersiz |
 | 403 | `FORBIDDEN` | Rol yetmiyor |
 | 404 | `NOT_FOUND` | Kayıt yok **veya yayında değil** (taslağın varlığı sızdırılmaz) |
-| 409 | `CONFLICT` | Durum geçişi geçersiz (örn. onaylı anıyı tekrar onaylama; reddedilmiş anıya karar), kapanmış yüklemeye PUT, yinelenen kayıt |
+| 409 | `CONFLICT` | Durum geçişi geçersiz (örn. onaylı anıyı tekrar onaylama; reddedilmiş anıya karar), kapanmış yüklemeye PUT, yinelenen kayıt, yetkili hesabı silme |
 | 413 | `PAYLOAD_TOO_LARGE` | Dosya sınırı aşıldı |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Dosya içeriği beyan edilen türle uyuşmuyor |
 | 422 | `PUBLISH_BLOCKED` | Yayın kapısı (`publicationIssues`); sorunlar `fieldErrors._` içinde |
@@ -128,7 +129,7 @@ return idempotent(app.deps.db, req, req.user!.id, async (tx) => {
 
 ## 5. Audit
 
-Her ayrıcalıklı yazma (`editor`, `moderator`, `admin` işlemleri) aynı işlem içinde `recordAudit` çağırır. `action` noktalı fiil: `site.create`, `site.update`, `site.publish`, `site.unpublish`, `card.create`, `card.update`, `route.create`, `route.update`, `route.set-stops`, `route.publish`, `route.unpublish`, `quiz.create`, `quiz.update`, `media.create`, `media.update`, `import.create`, `import.commit`, `memory.create`, `memory.approve`, `memory.reject`, `memory.takedown`, `memory.delete`, `memory.report`, `staff.invite`, `staff.grant`, `staff.role`, `staff.revoke`, `map-settings.update`. `before`/`after` JSON anlık görüntülerdir; kişisel veri (e-posta dışında) yazılmaz. `memory.create` (her gönderide, günlük anı kotası bunu sayar) ve `memory.delete` anı metnini içermez.
+Her ayrıcalıklı yazma (`editor`, `moderator`, `admin` işlemleri) aynı işlem içinde `recordAudit` çağırır. `action` noktalı fiil: `site.create`, `site.update`, `site.publish`, `site.unpublish`, `card.create`, `card.update`, `route.create`, `route.update`, `route.set-stops`, `route.publish`, `route.unpublish`, `quiz.create`, `quiz.update`, `media.create`, `media.update`, `import.create`, `import.commit`, `memory.create`, `memory.approve`, `memory.reject`, `memory.takedown`, `memory.delete`, `memory.report`, `account.delete`, `staff.invite`, `staff.grant`, `staff.role`, `staff.revoke`, `map-settings.update`. `before`/`after` JSON anlık görüntülerdir; kişisel veri (e-posta dışında) yazılmaz. `memory.create` (her gönderide, günlük anı kotası bunu sayar) ve `memory.delete` anı metnini içermez.
 
 ## 6. Puan olay kaydı
 

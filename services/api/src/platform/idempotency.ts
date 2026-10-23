@@ -34,6 +34,11 @@ export async function purgeIdempotencyKeys(db: Db, now: Date = new Date()): Prom
   return gone.length;
 }
 
+/** Drops every replay record of one actor (account erasure: stored responses can carry their personal data). */
+export async function forgetIdempotencyKeys(tx: Tx, actorId: string): Promise<void> {
+  await tx.delete(idempotencyKeys).where(eq(idempotencyKeys.actorId, actorId));
+}
+
 /**
  * Runs a mutation once per (actor, Idempotency-Key). The handler gets the transaction that also
  * records the key, so the write and its replay record commit together. A retry with the same key

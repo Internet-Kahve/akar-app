@@ -627,3 +627,13 @@ export async function getPassport(db: Db, userId: string): Promise<PassportRespo
     progress: progress.entries,
   };
 }
+
+/** Account erasure (KVKK): deletes the user's points ledger, saves, Rotam, story/quiz progress and badges. */
+export async function eraseEngagement(tx: Tx, userId: string): Promise<void> {
+  await tx.delete(pointEvents).where(eq(pointEvents.userId, userId));
+  await tx.delete(savedSites).where(eq(savedSites.userId, userId));
+  await tx.delete(userRouteStops).where(eq(userRouteStops.userId, userId));
+  await tx.delete(storyProgress).where(eq(storyProgress.userId, userId));
+  await tx.delete(quizProgress).where(eq(quizProgress.playerId, userId));
+  await tx.delete(userBadges).where(eq(userBadges.userId, userId));
+}

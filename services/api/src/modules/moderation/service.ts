@@ -409,6 +409,24 @@ export async function deleteMemory(tx: Tx, actor: AuthUser, id: string, scope: "
 }
 
 /**
+ * Account erasure (KVKK): deletes every memory the user wrote (any status, with its reports and photo) and every
+ * report the user filed on other memories. A memory a deleted report had sent back to `pending` stays there for a
+ * moderator. No points are taken back: the caller deletes the whole ledger. Photo objects go after the commit.
+ */
+export async function eraseMemories(tx: Tx, userId: string): Promise<Removal<{ memories: number; reports: number }>> {
+  const own = await tx
+    .select({ id: memories.id, mediaId: memories.mediaId })
+    .from(memories)
+    .where(eq(memories.authorId, userId))
+    .for("update");
+  if (own.length > 0) await tx.delete(memories).where(inArray(memories.id, own.map((m) => m.id)));
+  const photos = own.flatMap((m) => (m.mediaId ? [m.mediaId] : []));
+  const removedObjects = await deleteUnreferencedMedia(tx, photos);
+  const reports = await tx.delete(memoryReports).where(eq(memoryReports.reporterId, userId)).returning({ id: memoryReports.id });
+  return { result: { memories: own.length, reports: reports.length }, removedObjects };
+}
+
+/**
  * "Bildir": a user reports an approved memory once. The memory stays `approved` (public) until
  * `REPORT_HIDE_THRESHOLD` different users have reported it since its last approval; the report that
  * reaches the threshold sends it back to `pending`. Below that, moderators see it in the queue with

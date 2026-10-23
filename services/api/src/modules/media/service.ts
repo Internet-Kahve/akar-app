@@ -10,6 +10,7 @@ import {
   historyImages,
   media,
   mediaUploads,
+  uploadDeletions,
   mediaDeletions,
   memories,
   siteMedia,
@@ -600,6 +601,7 @@ export async function drainMediaDeletions(
   opts: { keys?: string[]; limit?: number } = {},
 ): Promise<{ deleted: number; failed: number }> {
   if (opts.keys?.length === 0) return { deleted: 0, failed: 0 };
+  if (!opts.keys) await drainUploadDeletions(deps);
   return deps.db.transaction(async (tx) => {
     const pending = await tx.select().from(mediaDeletions)
       .where(and(sql`${mediaDeletions.nextAttemptAt} <= now()`, opts.keys ? inArray(mediaDeletions.storageKey, opts.keys) : undefined))
@@ -636,6 +638,51 @@ export async function deleteMediaObjects(db: Db, storage: StorageBuckets | null,
 }
 
 /**
+ * Immediate best-effort cleanup. The durable upload queue repeats deletion after signed links expire.
+ */
+export async function deleteUploadObjects(storage: StorageBuckets | null, keys: string[], log: FastifyBaseLogger): Promise<void> {
+  if (!storage) return;
+  for (const key of keys) {
+    try {
+      await storage.uploads.delete(key);
+    } catch (err) {
+      log.error({ err, key }, "upload object delete failed; durable cleanup will retry");
+    }
+  }
+}
+
+/**
+ * Account erasure (KVKK): deletes the user's upload tickets and the media rows they uploaded that nothing uses
+ * (see `MEDIA_REFERENCES`), except an editor's or admin's library (`media.create` audit, as in `sweepUnattachedPhotos`).
+ * Rows still in use (site content) stay without an uploader. Returns the object keys to delete after the commit:
+ * `media` bucket, and `uploads` bucket for every ticket whose upload key was not cleaned yet.
+ */
+export async function eraseUploads(tx: Tx, userId: string): Promise<{ media: string[]; uploads: string[] }> {
+  const candidates = await tx
+    .select({ id: media.id })
+    .from(media)
+    .where(
+      and(
+        eq(media.uploadedBy, userId),
+        sql`not exists (select 1 from ${auditLog} where ${auditLog.entityType} = 'media' and ${auditLog.entityId} = ${media.id} and ${auditLog.action} = 'media.create')`,
+      ),
+    )
+    .for("update");
+  const mediaKeys = await dropMediaRows(tx, await stillUnused(tx, candidates.map((r) => r.id)));
+  await tx.update(media).set({ uploadedBy: null, updatedAt: new Date() }).where(eq(media.uploadedBy, userId));
+  const tickets = await tx
+    .delete(mediaUploads)
+    .where(eq(mediaUploads.ownerId, userId))
+    .returning({ storageKey: mediaUploads.storageKey, cleanedAt: mediaUploads.cleanedAt, expiresAt: mediaUploads.expiresAt });
+  const pending = tickets.filter((t) => !t.cleanedAt);
+  if (pending.length) await tx.insert(uploadDeletions).values(pending.map((t) => ({
+    storageKey: t.storageKey,
+    nextAttemptAt: new Date(Math.max(Date.now(), t.expiresAt.getTime() + EXPIRY_GRACE_MS)),
+  }))).onConflictDoNothing();
+  return { media: mediaKeys, uploads: pending.map((t) => t.storageKey) };
+}
+
+/**
  * Deletes visitors' photos that nothing uses (an "İz Bırak" upload never attached, or whose memory went) once they
  * are `UNATTACHED_PHOTO_HOURS` old: the row, its upload link and the published object. Never touched: seed content
  * (no uploader), uploads of current staff (`staff_members`) and anything an editor or admin uploaded (a `media.create`
@@ -667,4 +714,25 @@ export async function sweepUnattachedPhotos(deps: { db: Db; storage: StorageBuck
   });
   await drainMediaDeletions({ db, storage }, { keys: swept.keys });
   return swept.count;
+}
+
+/** Runs from the existing media maintenance worker; failed deletes remain durable. */
+export async function drainUploadDeletions(deps: { db: Db; storage: StorageBuckets }): Promise<void> {
+  await deps.db.transaction(async (tx) => {
+    const pending = await tx.select().from(uploadDeletions)
+      .where(sql`${uploadDeletions.nextAttemptAt} <= now()`)
+      .orderBy(uploadDeletions.nextAttemptAt).limit(50).for("update", { skipLocked: true });
+    for (const row of pending) {
+      try {
+        await deps.storage.uploads.delete(row.storageKey);
+      } catch {
+        const attempts = row.attempts + 1;
+        await tx.update(uploadDeletions).set({ attempts,
+          nextAttemptAt: new Date(Date.now() + Math.min(3600, 30 * 2 ** Math.min(attempts - 1, 7)) * 1000),
+        }).where(eq(uploadDeletions.storageKey, row.storageKey));
+        continue;
+      }
+      await tx.delete(uploadDeletions).where(eq(uploadDeletions.storageKey, row.storageKey));
+    }
+  });
 }
