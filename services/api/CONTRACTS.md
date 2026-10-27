@@ -208,3 +208,16 @@ Liste uçları `PageQuery` (`cursor`, `limit` 1–100, varsayılan 20) alır, `p
 - `startTestApp({ auth, storage, geocoderFor, env, register })` seçenekleri; dönen `jobs.drain()` arka plan işlerini çalıştırır, `config` test yapılandırmasıdır (`RECEIPT_SECRET` dolu).
 - Ağ yok: coğrafi kodlama, depolama, Supabase admin API ve e-posta enjekte edilir (dosya sistemi depolama, sahte `fetch`, yerel imzalı JWT).
 - Yalnız kırılabilecek davranış: yetki sınırları, taslağın görünmemesi, cevap anahtarının sızmaması, idempotency, moderasyon geçişleri, sahte makbuzun reddi, yayın kapısı. Kablolama, kopya alan ya da varsayılan değer testi yazılmaz.
+
+## 12. Üye dizini ve rol atama
+
+- `GET /v1/admin/users?query=<eposta>&page=1&pageSize=25`: yalnız admin. Tüm kayıtlar Supabase Auth'tan okunur; uygulamaya henüz profil yazmamış yeni üyeler de görünür. Arama kimlik servisinde e-posta üzerinden yapılır. Yanıt `{ items, page, nextPage }`; alanlar `userId`, `email`, `displayName`, `role`, `emailConfirmed`, `createdAt`, `lastSignInAt`. Auth metadata/kimlik detayları aktarılmaz. `private, no-store`.
+- Bu uç, Supabase Auth'un sayfa numaralı API'sine uyum için §9'un istisnasıdır. `page` 1–10000, `pageSize` 1–100. Eşzamanlı yeni kayıtlarda sayfalar kayabilir; Yenile güncel listeyi getirir. Sunucudaki `SUPABASE_URL` ve `SUPABASE_SERVICE_ROLE_KEY` gerekir; anahtar tarayıcıya verilmez.
+- `PUT /v1/admin/users/:userId/role`: `{ role, expectedRole }`. Roller `user`, `editor`, `moderator`, `admin`. `expectedRole`, ekranda görünen roldür; güncel değerle eşleşmezse 409. UUID ve rol doğrulanır. Kendi rolünü değiştirmek 409; yükseltme için doğrulanmış e-posta gerekir. Bilinmeyen/silinmiş üye 404; kimlik servisi hatası 502; eksik yapılandırma 503.
+- Yeni atama `staff_members` kaydı oluşturur; `user` rolü bu kaydı kaldırır. Hesap ve katkıları korunur. `staff.grant`, `staff.role`, `staff.revoke` audit kayıtları aktör ve istek kimliğiyle aynı transaction'da tutulur. Mevcut JWT'nin sonraki API isteği yeni rolü alır; panel gezinme yetkisi sayfa yenilendiğinde yeniden okunur.
+- Ortak staff kilidi altında aktörün hâlâ admin olduğu yeniden doğrulanır (eski staff uçları dahil). Son admin koruması devam eder. Yeni rol uç noktası, üyenin güncel ve kayıtlı eski e-postasına ait açık davetleri iptal eder; bunlar yetkiyi geri getiremez. `Idempotency-Key` tekrarları aynı sonucu döndürür.
+- **Migration gerekmiyor:** mevcut `staff_members`, `staff_invites`, `profiles`, `deleted_accounts` ve `audit_log` yeterlidir. Auth kullanıcılarının e-posta/verilerini ikinci bir dizine kopyalayan tablo veya backfill yoktur. Mevcut migration zinciri güncel olmalıdır.
+
+Panel akışı: yönetici girişi → **Üyeler ve roller** → e-posta araması → **Rolü düzenle** → rol açıklamasını incele → **Değişikliği onayla**. Editör ve moderatör bu ekranı göremez. Demo ekranındaki üyeler örnektir ve sayfa yenilendiğinde sıfırlanır.
+
+Supabase sözleşmesi: [sunucu tarafında listUsers](https://supabase.com/docs/reference/javascript/auth-admin-listusers), [GoTrue listeleme ve filter uygulaması](https://github.com/supabase/auth/blob/master/internal/api/admin.go).

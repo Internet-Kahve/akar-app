@@ -8,6 +8,10 @@ import { deleteMediaObjects, deleteUploadObjects, requireDep } from "../media/se
 import { deleteSupabaseUser, eraseAccount, type ErasedObjects } from "./erasure.ts";
 import {
   AccountIdParams,
+  MemberListQuery,
+  MemberListResponse,
+  MemberDto,
+  MemberRoleBody,
   InviteBody,
   InviteIdParams,
   InviteResponse,
@@ -34,6 +38,8 @@ import {
   toInviteDto,
   toMemberDto,
 } from "./service.ts";
+
+import { listMembers, lockAdmin, setMemberRole } from "./members.ts";
 
 /**
  * Erases `userId` (see `eraseAccount`) under `idempotent`, then deletes the freed storage objects after the commit.
@@ -116,6 +122,26 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 
+  app.get("/v1/admin/users", {
+    preHandler: requireRole("admin"),
+    schema: { tags: ["staff"], summary: "Üyeleri e-posta araması ve sayfalama ile listele",
+      querystring: MemberListQuery, response: { 200: MemberListResponse } },
+  }, async (req) => listMembers(app.deps.db, supabaseAdminFrom(app.deps.config, "Üyeler listelenemiyor"), req.query));
+
+  app.put("/v1/admin/users/:userId/role", {
+    preHandler: requireRole("admin"),
+    schema: { tags: ["staff"], summary: "Üyeye rol ata veya yetkisini kaldır",
+      description: "Doğrulanmış e-posta gerekir. Kendi rolünü değiştirmek yasaktır. Eski rol eşleşmezse 409. Değişiklik ve bekleyen davetlerin iptali audit kaydına yazılır; mevcut oturumun bir sonraki isteğinde geçerli olur.",
+      params: AccountIdParams, body: MemberRoleBody, response: { 200: MemberDto } },
+  }, async (req) => {
+    const admin = supabaseAdminFrom(app.deps.config, "Rol değiştirilemiyor");
+    const actor = { actorId: req.user!.id, requestId: req.id };
+    const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => ({
+      status: 200, body: await setMemberRole(tx, admin, req.params.userId, req.body.role, req.body.expectedRole, actor),
+    }));
+    return result.body;
+  });
+
   app.get(
     "/v1/admin/staff",
     {
@@ -144,6 +170,7 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
       const supabase = supabaseAdminFrom(app.deps.config);
       const actor = { actorId: req.user!.id, requestId: req.id };
       const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => {
+        await lockAdmin(tx, actor.actorId);
         const outcome = await inviteStaff(tx, { ...actor, email: req.body.email, role: req.body.role }, (email) =>
           sendSupabaseInvite(supabase, email, req.log),
         );
@@ -166,10 +193,10 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req) => {
       const actor = { actorId: req.user!.id, requestId: req.id };
-      const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => ({
-        status: 200,
-        body: toInviteDto(await revokeInvite(tx, req.params.id, actor)),
-      }));
+      const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => {
+        await lockAdmin(tx, actor.actorId);
+        return { status: 200, body: toInviteDto(await revokeInvite(tx, req.params.id, actor)) };
+      });
       return result.body;
     },
   );
@@ -188,10 +215,10 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req) => {
       const actor = { actorId: req.user!.id, requestId: req.id };
-      const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => ({
-        status: 200,
-        body: toMemberDto(await setStaffRole(tx, req.params.userId, req.body.role, actor)),
-      }));
+      const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => {
+        await lockAdmin(tx, actor.actorId);
+        return { status: 200, body: toMemberDto(await setStaffRole(tx, req.params.userId, req.body.role, actor)) };
+      });
       return result.body;
     },
   );
@@ -209,10 +236,10 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req) => {
       const actor = { actorId: req.user!.id, requestId: req.id };
-      const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => ({
-        status: 200,
-        body: toMemberDto(await removeStaff(tx, req.params.userId, actor)),
-      }));
+      const result = await idempotent(app.deps.db, req, actor.actorId, async (tx) => {
+        await lockAdmin(tx, actor.actorId);
+        return { status: 200, body: toMemberDto(await removeStaff(tx, req.params.userId, actor)) };
+      });
       return result.body;
     },
   );
