@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expect, test, type Browser, type BrowserContextOptions, type Page } from "@playwright/test";
 
 const API = "http://127.0.0.1:4000";
 const MAILPIT = "http://127.0.0.1:54324";
@@ -67,8 +67,8 @@ async function openProfile(page: Page) {
   await expect(page.getByRole("heading", { name: "Mirasım", level: 1 })).toBeVisible();
 }
 
-async function guestPage(browser: Browser) {
-  const context = await browser.newContext();
+async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+  const context = await browser.newContext(options);
   const page = await context.newPage();
   await page.goto("/");
   return { context, page };
@@ -387,4 +387,50 @@ test("live photo metadata editing preserves imported licenses and excludes unsup
   await expect(dialog.getByRole("button", { name: "Fotoğrafı güncelle", exact: true })).toBeEnabled();
   await expect(dialog.getByText(/Dosya veya kaynak değişikliği için/)).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("photo-editor.png"), fullPage: true });
+});
+
+test("an admin finds a newly registered member, grants admin access and revokes it", async ({ browser, viewport, isMobile, hasTouch }, info) => {
+  const run = randomUUID().slice(0, 8);
+  const adminEmail = `e2e-member-admin-${run}@akar.test`;
+  const memberEmail = `e2e-member-${run}@akar.test`;
+  tokenFor(adminEmail, "admin");
+  const member = await guestPage(browser, { viewport, isMobile, hasTouch });
+  const admin = await guestPage(browser, { viewport, isMobile, hasTouch });
+  try {
+    // A genuine new account: no profile row and no API-side role setup.
+    await member.page.goto("/#view=admin");
+    await member.page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+    await signIn(member.page, memberEmail);
+    await expect(member.page.getByText("Bu hesabın yönetim yetkisi bulunmuyor.")).toBeVisible();
+
+    await admin.page.goto("/#view=admin");
+    await admin.page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+    await signIn(admin.page, adminEmail);
+    await admin.page.getByRole("button", { name: "Üyeler ve roller", exact: true }).click();
+    await admin.page.getByLabel("E-posta ile üye ara").fill(memberEmail);
+    await admin.page.getByRole("button", { name: "Ara", exact: true }).click();
+    const row = admin.page.getByRole("row").filter({ hasText: memberEmail });
+    await expect(row.getByText("Üye", { exact: true })).toBeVisible();
+    await expect(admin.page.getByRole("row")).toHaveCount(2);
+    await row.getByRole("button").click();
+    const dialog = admin.page.getByRole("dialog", { name: "Üye rolünü değiştir" });
+    await dialog.getByLabel("Yeni rol").selectOption("admin");
+    await dialog.getByRole("button", { name: "Değişikliği onayla" }).click();
+    await expect(row.getByText("Yönetici", { exact: true })).toBeVisible();
+    await admin.page.screenshot({ path: `test-results/${info.project.name}-real-admin-members.png`, fullPage: true });
+    // Same signed-in account; no token replacement or sign-in is required.
+    await member.page.reload();
+    await expect(member.page.getByRole("button", { name: "Üyeler ve roller", exact: true })).toBeVisible();
+
+    await row.getByRole("button").click();
+    await dialog.getByLabel("Yeni rol").selectOption("user");
+    await dialog.getByRole("button", { name: "Değişikliği onayla" }).click();
+    await expect(row.getByText("Üye", { exact: true })).toBeVisible();
+    await member.page.reload();
+    await expect(member.page.getByText("Bu hesabın yönetim yetkisi bulunmuyor.")).toBeVisible();
+    await expect(member.page.getByRole("button", { name: "Üyeler ve roller", exact: true })).toHaveCount(0);
+  } finally {
+    await member.context.close();
+    await admin.context.close();
+  }
 });

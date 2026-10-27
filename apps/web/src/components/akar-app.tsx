@@ -255,6 +255,20 @@ export function AkarApp() {
     },
     [],
   );
+  const loadMembers = useCallback<AkarClient["getMembers"]>(
+    async (query, page) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.getMembers(query, page);
+    },
+    [],
+  );
+  const changeMemberRole = useCallback<AkarClient["setMemberRole"]>(
+    async (userId, role, expectedRole) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.setMemberRole(userId, role, expectedRole);
+    },
+    [],
+  );
   const loadHealth = useCallback(async () => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
@@ -528,6 +542,9 @@ export function AkarApp() {
               role={role}
               loadHealth={loadHealth}
               loadModeration={loadModeration}
+              loadMembers={loadMembers}
+              changeMemberRole={changeMemberRole}
+              currentUserId={account?.id ?? "demo-admin"}
               saveSite={saveSite}
               live={live}
             />

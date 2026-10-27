@@ -3992,3 +3992,72 @@ td small {
   padding: 2px 4px;
   border-radius: 3px;
 }
+
+/* Member administration */
+.admin-members > p {
+  max-width: 75ch;
+}
+.member-role-guide {
+  margin: 20px 0;
+}
+.member-role-guide summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.member-role-guide dl {
+  display: grid;
+  gap: 12px;
+}
+.member-role-guide dt {
+  font-weight: 600;
+}
+.member-role-guide dd {
+  margin: 4px 0 0;
+}
+.member-search {
+  margin: 24px 0;
+}
+.member-search label {
+  display: block;
+  margin-bottom: 8px;
+}
+.member-search .admin-search {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+}
+.member-email {
+  display: block;
+  overflow-wrap: anywhere;
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.member-pagination {
+  margin-top: 20px;
+}
+.member-help {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 24px;
+}
+.member-role-select {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+}
+.member-role-select select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  background: var(--surface);
+  color: inherit;
+}
+.admin-members table {
+  min-width: 680px;
+}
+.admin-members th:first-child {
+  width: 34%;
+}

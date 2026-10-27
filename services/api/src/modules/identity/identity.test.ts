@@ -59,7 +59,7 @@ after(() => stop?.());
 
 beforeEach(async () => {
   keysDown = false;
-  await app.deps.db.execute(sql`truncate table staff_members, staff_invites, profiles, audit_log, idempotency_keys`);
+  await app.deps.db.execute(sql`truncate table staff_members, staff_invites, profiles, audit_log, idempotency_keys, deleted_accounts`);
 });
 
 type TokenOptions = {
@@ -112,7 +112,7 @@ function mockSupabase(t: TestContext, respond: (n: number) => Response): Upstrea
       method: init?.method,
       apikey: headers.get("apikey"),
       authorization: headers.get("authorization"),
-      body: JSON.parse(String(init?.body)),
+      body: init?.body ? JSON.parse(String(init.body)) : null,
     });
     return respond(calls.length);
   });
@@ -216,6 +216,8 @@ test("only admins reach the staff endpoints: guests get 401, users and other sta
   const endpoints = [
     ["POST", "/v1/admin/staff/invites", { email: "new@akar.test", role: "editor" }],
     ["GET", "/v1/admin/staff", undefined],
+    ["GET", "/v1/admin/users", undefined],
+    ["PUT", "/v1/admin/users/11111111-1111-4111-8111-111111111111/role", { role: "admin", expectedRole: "user" }],
     ["PUT", "/v1/admin/staff/editor-1", { role: "admin" }],
     ["DELETE", "/v1/admin/staff/moderator-1", undefined],
     ["DELETE", "/v1/admin/staff/invites/inv-1", undefined],
@@ -376,7 +378,7 @@ test("when Supabase fails the invite is rolled back with 502; a retried Idempote
   assert.deepEqual(invites.map((i) => [i.email, i.role]), [["new@akar.test", "moderator"]]);
 });
 
-test("without a Supabase project the invite endpoint is 503 and stores nothing", async () => {
+test("without a Supabase project identity administration returns 503 and stores nothing", async () => {
   await seedStaff("admin-1", "admin@akar.test", "admin");
   const admin = await login("admin-1");
   const configured = app.deps.config.SUPABASE_SERVICE_ROLE_KEY;
@@ -385,6 +387,8 @@ test("without a Supabase project the invite endpoint is 503 and stores nothing",
     const res = await call("POST", "/v1/admin/staff/invites", admin, { email: "new@akar.test", role: "editor" });
     assert.equal(res.statusCode, 503);
     assert.equal(res.json<ErrorBody>().error.code, "SERVICE_UNAVAILABLE");
+    assert.equal((await call("GET", "/v1/admin/users", admin)).statusCode, 503);
+    assert.equal((await call("PUT", `/v1/admin/users/${memberId}/role`, admin, { role: "admin", expectedRole: "user" })).statusCode, 503);
     assert.equal((await app.deps.db.select().from(staffInvites)).length, 0);
   } finally {
     Object.assign(app.deps.config, { SUPABASE_SERVICE_ROLE_KEY: configured });
@@ -483,4 +487,138 @@ test("the bootstrap CLI stores an admin invite that the first sign-in turns into
   const root = await login("user-root", "root@akar.test");
   assert.equal(await roleOf(root), "admin");
   assert.equal((await call("GET", "/v1/admin/staff", root)).statusCode, 200);
+});
+
+const memberId = "11111111-1111-4111-8111-111111111111";
+const authMember = {
+  id: memberId, email: "member@akar.test", created_at: "2026-10-01T12:00:00Z",
+  email_confirmed_at: "2026-10-01T12:01:00Z", last_sign_in_at: null,
+};
+
+test("member directory pages/searches Auth, joins application roles and names, and exposes no Auth metadata", async (t) => {
+  await seedStaff("admin-1", "admin@akar.test", "admin");
+  await seedStaff(memberId, authMember.email, "editor");
+  await app.deps.db.insert(profiles).values({ userId: memberId, displayName: "Ayşe" });
+  const upstream = mockSupabase(t, () => new Response(JSON.stringify({ users: [{ ...authMember, app_metadata: { secret: "hidden" }, phone: "hidden" }] }), {
+    headers: { link: '<http://supabase.test/auth/v1/admin/users?page=3>; rel="next"' },
+  }));
+  const result = await call("GET", "/v1/admin/users?page=2&pageSize=10&query=member%2Btest", await login("admin-1"));
+  assert.equal(result.statusCode, 200, result.body);
+  assert.match(result.headers["cache-control"] as string, /no-store/);
+  assert.deepEqual(result.json(), { items: [{ userId: memberId, email: authMember.email, displayName: "Ayşe", role: "editor", emailConfirmed: true, createdAt: authMember.created_at, lastSignInAt: null }], page: 2, nextPage: 3 });
+  const url = new URL(upstream[0]!.url);
+  assert.equal(url.searchParams.get("filter"), "member+test");
+  assert.equal(url.searchParams.get("per_page"), "10");
+  assert.equal(upstream[0]!.authorization, `Bearer ${SERVICE_KEY}`);
+  for (const query of ["page=0", "pageSize=101", "page=1.5"]) {
+    assert.equal((await call("GET", `/v1/admin/users?${query}`, await login("admin-1"))).statusCode, 400);
+  }
+  assert.equal(upstream.length, 1);
+});
+
+test("ordinary members receive roles immediately; retries are idempotent and removal cannot reclaim an old invite", async (t) => {
+  await seedStaff("admin-1", "admin@akar.test", "admin");
+  const admin = await login("admin-1");
+  const member = await login(memberId, authMember.email);
+  const upstream = mockSupabase(t, () => new Response(JSON.stringify(authMember)));
+  await app.deps.db.insert(staffInvites).values({ id: "pending", email: authMember.email, role: "admin", invitedBy: "admin-1" });
+  const url = `/v1/admin/users/${memberId}/role`;
+  const headers = { ...admin, "idempotency-key": "direct-grant" };
+  const body = { role: "admin", expectedRole: "user" };
+  const grant = await call("PUT", url, headers, body);
+  assert.equal(grant.statusCode, 200, grant.body);
+  assert.equal((await call("PUT", url, headers, body)).statusCode, 200);
+  assert.equal(upstream.length, 1);
+  assert.equal(await roleOf(member), "admin");
+  assert.equal((await call("PUT", url, admin, { role: "editor", expectedRole: "user" })).statusCode, 409);
+  for (const [from, to] of [["admin", "editor"], ["editor", "moderator"], ["moderator", "user"]]) {
+    const changed = await call("PUT", url, admin, { role: to, expectedRole: from });
+    assert.equal(changed.statusCode, 200, changed.body);
+    assert.equal(await roleOf(member), to);
+  }
+  assert.equal((await call("GET", "/v1/admin/users", member)).statusCode, 403);
+  assert.ok((await app.deps.db.select().from(staffInvites))[0]!.revokedAt);
+  const audit = await app.deps.db.select().from(auditLog).where(eq(auditLog.entityId, memberId));
+  assert.deepEqual(audit.map((entry) => entry.action).sort(), ["staff.grant", "staff.revoke", "staff.role", "staff.role"]);
+  assert.ok(audit.every((entry) => entry.actorId === "admin-1" && entry.requestId));
+});
+
+test("member role changes reject self edits, unverified email, deleted/unknown members and invalid roles without writes", async (t) => {
+  await seedStaff(memberId, authMember.email, "admin");
+  await seedStaff("admin-1", "admin@akar.test", "admin");
+  const admin = await login("admin-1");
+  const url = `/v1/admin/users/${memberId}/role`;
+  assert.equal((await call("PUT", url, await login(memberId), { role: "user", expectedRole: "admin" })).statusCode, 409);
+  await app.deps.db.delete(staffMembers).where(eq(staffMembers.userId, memberId));
+  let response = new Response(JSON.stringify({ ...authMember, email_confirmed_at: null }));
+  const upstream = mockSupabase(t, () => response.clone());
+  assert.equal((await call("PUT", url, admin, { role: "admin", expectedRole: "user" })).statusCode, 409);
+  response = new Response("not found", { status: 404 });
+  assert.equal((await call("PUT", url, admin, { role: "admin", expectedRole: "user" })).statusCode, 404);
+  assert.equal((await call("PUT", url, admin, { role: "owner", expectedRole: "user" })).statusCode, 400);
+  assert.equal((await call("PUT", url, admin, { role: "admin" })).statusCode, 400);
+  await app.deps.db.execute(sql`insert into deleted_accounts (user_id) values (${memberId})`);
+  assert.equal((await call("PUT", url, admin, { role: "admin", expectedRole: "user" })).statusCode, 404);
+  assert.equal(upstream.length, 2);
+  assert.equal((await app.deps.db.select().from(auditLog)).length, 0);
+});
+
+test("Auth failures and malformed responses return 502 without granting privileges", async (t) => {
+  await seedStaff("admin-1", "admin@akar.test", "admin");
+  const admin = await login("admin-1");
+  let response = new Response("unavailable", { status: 503 });
+  mockSupabase(t, () => response.clone());
+  for (const next of [response, new Response("not json"), new Response(JSON.stringify({ users: [{}] }))]) {
+    response = next;
+    assert.equal((await call("GET", "/v1/admin/users", admin)).statusCode, 502);
+    assert.equal((await call("PUT", `/v1/admin/users/${memberId}/role`, admin, { role: "admin", expectedRole: "user" })).statusCode, 502);
+  }
+  assert.equal((await app.deps.db.select().from(staffMembers)).length, 1);
+  assert.equal((await app.deps.db.select().from(auditLog)).length, 0);
+});
+
+test("concurrent changes to a member reject stale expectations instead of overwriting", async (t) => {
+  await seedStaff("admin-1", "admin@akar.test", "admin");
+  const admin = await login("admin-1");
+  mockSupabase(t, () => new Response(JSON.stringify(authMember)));
+  const results = await Promise.all(["editor", "admin"].map((role) => call("PUT", `/v1/admin/users/${memberId}/role`, admin, { role, expectedRole: "user" })));
+  assert.deepEqual(results.map((result) => result.statusCode).sort(), [200, 409]);
+  assert.equal((await app.deps.db.select().from(auditLog).where(eq(auditLog.entityId, memberId))).length, 1);
+});
+
+test("role removal revokes invites for both the current Auth email and the former staff email", async (t) => {
+  await seedStaff("admin-1", "admin@akar.test", "admin");
+  await seedStaff(memberId, "old@akar.test", "editor");
+  await app.deps.db.insert(staffInvites).values([
+    { id: "old-email", email: "old@akar.test", role: "admin", invitedBy: "admin-1" },
+    { id: "new-email", email: authMember.email, role: "admin", invitedBy: "admin-1" },
+  ]);
+  mockSupabase(t, () => new Response(JSON.stringify(authMember)));
+  const result = await call("PUT", `/v1/admin/users/${memberId}/role`, await login("admin-1"), { role: "user", expectedRole: "editor" });
+  assert.equal(result.statusCode, 200, result.body);
+  assert.equal(await roleOf(await login(memberId, "old@akar.test")), "user");
+  assert.equal(await roleOf(await login(memberId, authMember.email)), "user");
+  assert.ok((await app.deps.db.select().from(staffInvites)).every((invite) => invite.revokedAt));
+});
+
+test("an actor demoted after token verification cannot write through either member or legacy staff endpoints", async (t) => {
+  await seedStaff("admin-1", "admin@akar.test", "admin");
+  const admin = await login("admin-1");
+  const verify = verifier!.verify.bind(verifier);
+  t.mock.method(verifier!, "verify", async (jwt: string) => {
+    const actor = await verify(jwt);
+    if (actor?.id === "admin-1") await app.deps.db.update(staffMembers).set({ role: "editor" }).where(eq(staffMembers.userId, "admin-1"));
+    return actor;
+  });
+  const upstream = mockSupabase(t, () => { throw new Error("must not reach Auth"); });
+  for (const [method, url, payload] of [
+    ["PUT", `/v1/admin/users/${memberId}/role`, { role: "admin", expectedRole: "user" }],
+    ["POST", "/v1/admin/staff/invites", { email: authMember.email, role: "admin" }],
+  ] as const) {
+    await app.deps.db.update(staffMembers).set({ role: "admin" }).where(eq(staffMembers.userId, "admin-1"));
+    const result = await call(method, url, admin, payload);
+    assert.equal(result.statusCode, 403, result.body);
+  }
+  assert.equal(upstream.length, 0);
+  assert.equal((await app.deps.db.select().from(auditLog)).length, 0);
 });
