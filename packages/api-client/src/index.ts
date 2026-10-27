@@ -4,6 +4,7 @@ import {
   type Snapshot,
   type HeritageSite,
   type Memory,
+  type Role,
 } from "@akar/domain";
 import { createSeed, demoQuizzes } from "./seed";
 export { routes, createSeed, demoRegion, demoQuizzes } from "./seed";
@@ -65,6 +66,20 @@ export interface AdminHealth {
 const PENDING_STALE_HOURS = 48;
 /** UI depends only on this contract: the local demo client or the HTTP client behind it. */
 export type ModerationPage = { items: Memory[]; nextCursor: string | null };
+export interface AdminMember {
+  userId: string;
+  email: string | null;
+  displayName: string | null;
+  role: Role;
+  emailConfirmed: boolean;
+  createdAt: string;
+  lastSignInAt: string | null;
+}
+export interface MemberPage {
+  items: AdminMember[];
+  page: number;
+  nextPage: number | null;
+}
 export interface AkarClient {
   getSnapshot(): Promise<Snapshot>;
   dispatch(command: Command): Promise<Snapshot>;
@@ -82,6 +97,12 @@ export interface AkarClient {
   ): Promise<{ correctOption: string; snapshot: Snapshot }>;
   /** Moderator and admin only; the server answers 403 for other roles. */
   getAdminHealth(): Promise<AdminHealth>;
+  getMembers(query: string, page: number): Promise<MemberPage>;
+  setMemberRole(
+    userId: string,
+    role: Role,
+    expectedRole: Role,
+  ): Promise<AdminMember>;
   getModerationPage(
     status: Memory["status"],
     cursor?: string,
@@ -123,6 +144,35 @@ interface QuizProgress {
 const QUIZ_POINTS = 20;
 const quizIdOf = (siteId: string, n: number) => `${siteId}:quiz-${n + 1}`;
 export function createMockClient(storage?: StorageAdapter): AkarClient {
+  const members: AdminMember[] = [
+    {
+      userId: "demo-admin",
+      email: "yonetici@example.com",
+      displayName: "Demo Yönetici",
+      role: "admin",
+      emailConfirmed: true,
+      createdAt: "2026-10-01T12:00:00Z",
+      lastSignInAt: null,
+    },
+    {
+      userId: "demo-member",
+      email: "uye@example.com",
+      displayName: "Demo Üye",
+      role: "user",
+      emailConfirmed: true,
+      createdAt: "2026-10-02T12:00:00Z",
+      lastSignInAt: null,
+    },
+    {
+      userId: "demo-pending",
+      email: "bekleyen@example.com",
+      displayName: null,
+      role: "user",
+      emailConfirmed: false,
+      createdAt: "2026-10-03T12:00:00Z",
+      lastSignInAt: null,
+    },
+  ];
   let state = createSeed();
   let progress: Record<string, QuizProgress> = {};
   try {
@@ -257,6 +307,28 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
         correctOption: quiz.options[quiz.correct],
         snapshot,
       };
+    },
+    async getMembers(query, page) {
+      const filtered = members.filter((member) =>
+        member.email?.toLowerCase().includes(query.toLowerCase()),
+      );
+      return {
+        items: structuredClone(filtered.slice((page - 1) * 25, page * 25)),
+        page,
+        nextPage: filtered.length > page * 25 ? page + 1 : null,
+      };
+    },
+    async setMemberRole(userId, role, expectedRole) {
+      const member = members.find((item) => item.userId === userId);
+      if (!member) throw new Error("Üye bulunamadı.");
+      if (userId === "demo-admin")
+        throw new Error("Kendi rolünü değiştiremezsin.");
+      if (member.role !== expectedRole)
+        throw new Error("Üyenin rolü değişti. Listeyi yenile.");
+      if (role !== "user" && !member.emailConfirmed)
+        throw new Error("Üye e-posta adresini doğrulamalı.");
+      member.role = role;
+      return structuredClone(member);
     },
     async getAdminHealth() {
       const cutoff = Date.now() - PENDING_STALE_HOURS * 3_600_000;

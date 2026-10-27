@@ -14,6 +14,8 @@ import {
 } from "@akar/domain";
 import type {
   AdminHealth,
+  AdminMember,
+  MemberPage,
   AkarClient,
   PlayableQuiz,
   QuizAnswerResult,
@@ -1829,6 +1831,17 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         };
       }),
     // Live state, not queued behind commands: the panel re-reads it after each one.
+    getMembers: (query, page) =>
+      call<MemberPage>("GET", "/v1/admin/users", {
+        query: { query, page, pageSize: 25 },
+        cache: "no-store",
+      }),
+    setMemberRole: (userId, role, expectedRole) =>
+      call<AdminMember>(
+        "PUT",
+        `/v1/admin/users/${encodeURIComponent(userId)}/role`,
+        { body: { role, expectedRole } },
+      ),
     getAdminHealth: () =>
       call<AdminHealth>("GET", "/v1/admin/health", { cache: "no-store" }),
   };

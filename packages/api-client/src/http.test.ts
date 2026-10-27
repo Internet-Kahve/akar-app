@@ -2183,3 +2183,44 @@ test("archive attribution and story-only photographs reach the UI without becomi
   assert.equal(site.historyImages?.[0]?.sourceId, "archive-source");
   assert.equal(site.historyImages?.[0]?.presentPhoto, undefined);
 });
+
+test("member administration uses protected, uncached endpoints and sends the expected role", async () => {
+  const member = {
+    userId: "member-1",
+    email: "uye@akar.test",
+    displayName: null,
+    role: "user",
+    emailConfirmed: true,
+    createdAt: "2026-10-01T00:00:00Z",
+    lastSignInAt: null,
+  };
+  const api = fakeApi({
+    "GET /v1/admin/users": () => ({ items: [member], page: 2, nextPage: 3 }),
+    "PUT /v1/admin/users/member-1/role": () => ({ ...member, role: "admin" }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    getToken: () => "admin-token",
+    fetch: async (input, init) => {
+      if (init?.method === "GET") assert.equal(init.cache, "no-store");
+      return api.fetch(input, init);
+    },
+  });
+  const page = await client.getMembers("uye+test@akar.test", 2);
+  assert.equal(page.nextPage, 3);
+  const query = new URL(`http://api.test${api.calls[0]!.path}`).searchParams;
+  assert.equal(query.get("query"), "uye+test@akar.test");
+  assert.equal(query.get("page"), "2");
+  assert.equal(query.get("pageSize"), "25");
+  assert.equal(
+    (await client.setMemberRole("member-1", "admin", "user")).role,
+    "admin",
+  );
+  assert.deepEqual(api.calls[1]!.body, { role: "admin", expectedRole: "user" });
+  assert.ok(api.calls[1]!.headers["idempotency-key"]);
+  assert.ok(
+    api.calls.every(
+      (call) => call.headers.authorization === "Bearer admin-token",
+    ),
+  );
+});

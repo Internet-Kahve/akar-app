@@ -7,11 +7,13 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  dismissible = true,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  dismissible?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -28,9 +30,12 @@ export function Modal({
     <dialog
       ref={ref}
       className={`modal ${wide ? "wide" : ""}`}
-      onCancel={onClose}
+      onCancel={(event) => {
+        if (dismissible) onClose();
+        else event.preventDefault();
+      }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (dismissible && e.target === e.currentTarget) onClose();
       }}
       aria-labelledby={titleId}
     >
@@ -39,6 +44,7 @@ export function Modal({
         <button
           className="icon-btn"
           aria-label="Pencereyi kapat"
+          disabled={!dismissible}
           onClick={onClose}
         >
           <X size={20} />

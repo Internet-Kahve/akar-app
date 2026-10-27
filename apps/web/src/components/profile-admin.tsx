@@ -24,6 +24,7 @@ import { Modal, Notice, Tag } from "./ui";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
 import { MemoryActions } from "./memory-actions";
+import { AdminMembers } from "./admin-members";
 import { AdminHealthAlert } from "./admin-health";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
@@ -307,6 +308,9 @@ export function Admin({
   role,
   loadHealth,
   loadModeration,
+  loadMembers,
+  changeMemberRole,
+  currentUserId,
   saveSite,
   live,
 }: {
@@ -315,6 +319,9 @@ export function Admin({
   role: Role;
   loadHealth: () => Promise<AdminHealth>;
   loadModeration: AkarClient["getModerationPage"];
+  loadMembers: AkarClient["getMembers"];
+  changeMemberRole: AkarClient["setMemberRole"];
+  currentUserId: string;
   saveSite: (site: HeritageSite) => Promise<HeritageSite>;
   live: boolean;
 }) {
@@ -331,7 +338,7 @@ export function Admin({
   const ownIds = new Set(state.memories.map((m) => m.id));
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [tab, setTab] = useState<
-      "sites" | "memories" | "routes" | "photos" | "import"
+      "sites" | "memories" | "routes" | "photos" | "import" | "members"
     >(canEdit ? "sites" : "memories"),
     [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
       "pending",
@@ -487,6 +494,16 @@ export function Admin({
             )}
           </button>
         )}
+        {role === "admin" && (
+          <button
+            disabled={!!editing}
+            className={tab === "members" ? "active" : ""}
+            onClick={() => setTab("members")}
+          >
+            <Shield size={18} />
+            Üyeler ve roller
+          </button>
+        )}
         {!live && canEdit && (
           <button
             disabled={!!editing}
@@ -526,6 +543,13 @@ export function Admin({
             catalogRoutes={state.catalogRoutes}
             onClose={() => setEditing(null)}
             onSave={saveSite}
+            live={live}
+          />
+        ) : tab === "members" && role === "admin" ? (
+          <AdminMembers
+            loadMembers={loadMembers}
+            changeRole={changeMemberRole}
+            currentUserId={currentUserId}
             live={live}
           />
         ) : tab === "routes" ? (
