@@ -656,6 +656,24 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
 - **Prompt kuralı gereği bugünkü GLB'lere dokunulmadı.** Geçici çıktılar `eserler/<eser>/3d/export/_esitleme/` altında; karşılaştırma görseli `kontrol/<sürüm>/esitleme.png`. README ve model.json değişmedi; `modelleri-gom.py` çalıştırılmadı.
 - `renk_ao_v3/` betiklerinin başına «bir kerelik geçiş işiydi; yeniden kullanma» notu eklendi.
 - Açık (kullanıcı onayı): Blender çıktısı yedi uygulama ve yedi sunum GLB'sinin yerine yazılsın mı? Hata 1 ve 2'yi düzeltir, diğerlerinde görsel değişiklik yok.
+- **SONUÇ (29 Ekim 2026, kullanıcı onayladı):** Blender çıktısı yedi uygulama ve yedi sunum GLB'sinin yerine yazıldı. Sürüm numaraları aynı; model.json değişmedi. Hata 1 ve 2 düzeltildi.
+  - Boyut (KB, önce → sonra):
+
+    | Eser | Uygulama | Sunum |
+    |---|---|---|
+    | Ulucami v29 | 767 → 767 | 844 → 844 |
+    | Bedesten v08 | 161 → 161 | 203 → 203 |
+    | Koza Han v16 | 899 → 899 | 1011 → 1016 |
+    | Orhan Bey Camii v09 | 259 → 259 | 329 → 329 |
+    | Orhan Bey Hamamı v07 | 189 → 189 | 233 → 233 |
+    | Emir Hanı v07 | 168 → 168 | 229 → 229 |
+    | Orhan Gazi Türbesi v04 | 263 → 263 | 317 → 317 |
+
+    Uygulama toplamı 2706 KB (değişmedi).
+  - Geçici dosyalar silinmedi, taşındı: `export/_esitleme/` içindeki dosyalar yerine yazılarak taşındı, boş kalan klasörler kaldırıldı. `kontrol/<sürüm>/esitleme.png` duruyor.
+  - Her eserin README'sine eşitleme satırı eklendi; Koza (UV kanalı) ile Orhan, Hamam ve Emir (sunumda çevre rengi çift uygulama) satırlarına düzeltilen hata yazıldı.
+  - `modelleri-gom.py` çalıştı (`akar-harita-modeller.js` 3,7 MB). Önizleme v1, v2 ve v3 7 modeli hatasız yüklüyor.
+  - Bundan sonra GLB yalnız `build/build_vXX.py` → `_kutuphane/blend_hat/` ile üretilir.
 
 ## 54. Prototipe v3 ayarları, pin/filtre düzeltmeleri, YAPILACAKLAR.md (test-redmi9t-v2)
 
@@ -667,3 +685,19 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
 - Emir Hanı ve Orhan Bey Camii'nin aynı tarihi (1339–40) kontrol edildi: ikisi de envanterde aynı külliyenin parçası (E cilt-1 s.96, s.108); doğru.
 - `YAPILACAKLAR.md` (documents-context): durum, hemen yapılacaklar, Redmi kontrol listesi, tasarım/Figma, ekip notları, jüri ve sunum, teknik borç.
 - Sınama (Playwright, masaüstü): 7 yeni model yüklendi, filtreler «Dinî», «Ticari (akar)»; 3D etiketi yok; hata yok. Yedek: `.onbellek/_yedek_*_2026-10-29.*`.
+
+## 55. Eser detayındaki 3D sahne haritayla aynı ışıkta; kart parçaları birlikte seçilir; parça sadeleştirme prompt'u (test-redmi9t-v2)
+
+29 Ekim 2026.
+- **Işık:** Sahne3D (eser detayı, hikâye, «Eser hakkında» 3D) haritayla aynı ışığı kullanır. Bunlar: `ISIK` (şehir kaydı `harita_isik`), aynı güneş yönü (model haritadaki yaw ile döndüğü için gölgeli yüzler aynı), aynı ortam/dolgu renkleri, doygunluk 1,25 ve web yer gölgesi (`YG_DOKU`, yapının taban izi boyutunda, zemin katmanlarının üstünde). «Yer_Golgesi» düzlemi varsa gizlenir ve kadraja girmez. Önceden detay sahnesinin kendi sabit ışığı vardı (ortam 2,3 / güneş 1,3).
+- **Seçim:** Bir kartın bütün parçaları birlikte seçilir ve fare üstündeyken birlikte yanar (`Sahne3D.grup`). Örneğin Ulucami'de cepheler ile pencere girintileri artık ayrı ayrı seçilmiyor.
+- **`model.json` «tiklanmaz»:** Bu listedeki parçalar, eserin kartı olmasa da tıklanmaz. Liste parça sadeleştirme işinde doldurulacak.
+- **Prompt:** `_promptlar/PROMPT_parca_sadelestirme_7_eser.md`. İçeriği:
+  - Koza Han mescidi (gövde, kubbe ve dikiş tek parça olacak);
+  - develikteki yanlış birleşmiş yuvarlak nesne;
+  - çatı ince parçaları;
+  - diğer beş eser aynı ilkeyle;
+  - Ulucami'de kullanılan adlar korunur;
+  - tıklama haritası render'ı ve referans denetimi.
+  Blender eşitlemesinden sonra verilecek.
+- Sınama (Playwright): Ulucami önce/sonra; Koza Han yer gölgesi; cepheye fareyle gelince dört cephe ile pencereler birlikte yanıyor; kart açılıyor; hata yok. Yedek: `.onbellek/_yedek_app_2026-10-29b.js`.

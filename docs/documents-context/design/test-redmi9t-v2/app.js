@@ -426,9 +426,12 @@ class Sahne3D {
     this.r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.r.setClearColor(0x000000, 0);
     kap.appendChild(this.r.domElement);
     this.sahne = new THREE.Scene();
-    this.sahne.add(new THREE.HemisphereLight(0xffffff, 0xeef0f4, 2.3));
-    const g = new THREE.DirectionalLight(0xffffff, 1.3); g.position.set(-0.5, 1, 0.7); this.sahne.add(g);
-    const d = new THREE.DirectionalLight(0xfff4e6, 0.5); d.position.set(0.7, 0.55, -0.8); this.sahne.add(d);
+    /* ışık haritadakiyle aynı (ISIK: şehir kaydı harita_isik); model haritadaki yaw ile döndüğü için güneş yönü de aynı düşer */
+    { const a = THREE.MathUtils.degToRad(ISIK.yon), y = THREE.MathUtils.degToRad(ISIK.yukseklik);
+      const yon = new THREE.Vector3(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y));
+      this.sahne.add(new THREE.HemisphereLight(0xffffff, 0xb8b0a2, ISIK.ortam));
+      const g = new THREE.DirectionalLight(0xfff6ea, ISIK.gunes); g.position.copy(yon); this.sahne.add(g);
+      const d = new THREE.DirectionalLight(0xdfe8f2, ISIK.dolgu); d.position.set(-yon.x, 0.5, -yon.z); this.sahne.add(d); }
     this.kam = new THREE.PerspectiveCamera(38, 1, 0.5, 5000);
     this.kont = new OrbitControls(this.kam, this.r.domElement);
     this.kont.enableDamping = true; this.kont.dampingFactor = 0.09; this.kont.maxPolarAngle = Math.PI * 0.49;
@@ -454,7 +457,8 @@ class Sahne3D {
     this.sahne.add(this.kok); this.kok.updateMatrixWorld(true);
     /* kadraj yalnız yapıya göre (zemin, ağaçlar ve ölçek insanları kutuya girmez) */
     this.kutu = new THREE.Box3();
-    for (const o of gltf.scene.children) if (!sunumEk(e, o.name)) this.kutu.expandByObject(o);
+    gltf.scene.traverse((o) => { if (o.isMesh && yerGolgesiMi(o)) o.visible = false; });   // eski modellerdeki pişmiş düzlem
+    for (const o of gltf.scene.children) if (!sunumEk(e, o.name) && !yerGolgesiMi(o)) this.kutu.expandByObject(o);
     const c = this.kutu.getCenter(new THREE.Vector3()), b = this.kutu.getSize(new THREE.Vector3());
     this.yaricap = b.length() / 2; this.boyY = b.y;
     this.merkez = new THREE.Vector3(c.x, this.kutu.min.y + b.y * 0.25, c.z);   // Merkez: kutunun yatay ortası (kadraj için tabandan biraz yukarıda)
@@ -464,10 +468,21 @@ class Sahne3D {
     this.kok.traverse((o) => {
       if (!o.isMesh) return;
       o.material = o.material.clone(); o.material.emissive = new THREE.Color(0, 0, 0);
+      if (ISIK.doygunluk !== 1 && o.material.color) { const hsl = {}; o.material.color.getHSL(hsl); o.material.color.setHSL(hsl.h, Math.min(1, hsl.s * ISIK.doygunluk), hsl.l); }   // haritadaki doygunluk
       let p = o; while (p && !adlar.has(p.name)) p = p.parent;
       o.userData.parca = p ? p.name : null; this.meshler.push(o);
     });
     zeminKatmanlari(this.meshler);
+    /* yer gölgesi haritadaki gibi: aynı bulanık doku, yapının taban izi boyutunda (kutu modelin kendi ekseninde), zemin katmanlarının üstünde */
+    if (ISIK.yer_golgesi > 0) {
+      const ters = this.kok.matrixWorld.clone().invert(), yk = new THREE.Box3();
+      for (const o of gltf.scene.children) if (!sunumEk(e, o.name) && !yerGolgesiMi(o)) yk.union(new THREE.Box3().setFromObject(o).applyMatrix4(ters));
+      if (!yk.isEmpty()) {
+        const boy = yk.getSize(new THREE.Vector3()), kc = yk.getCenter(new THREE.Vector3()), k1 = 1 / 0.59;
+        const yg = new THREE.Mesh(new THREE.PlaneGeometry(boy.x * k1 + 2, boy.z * k1 + 2), new THREE.MeshBasicMaterial({ map:YG_DOKU, transparent:true, opacity:ISIK.yer_golgesi, depthWrite:false, toneMapped:false, polygonOffset:true, polygonOffsetFactor:-6, polygonOffsetUnits:-30 }));
+        yg.rotation.x = -Math.PI / 2; yg.position.set(kc.x, yk.min.y + 0.05, kc.z); yg.renderOrder = 1; this.kok.add(yg);
+      }
+    }
     /* v2: kalkan gruplar (yoksa this.kalkan = null) */
     this.kalkan = null; this.kalkanHedef = 1;
     const tanim = e.model && e.model.ortu_gruplari;
@@ -505,7 +520,9 @@ class Sahne3D {
     this.tween = { t0:performance.now(), k0:this.kam.position.clone(), h0:this.kont.target.clone(), k1:konum, h1:hedef };
   }
   vurgula(adlar) { this.vurgulu = new Set((adlar || []).filter((a) => this.parcalar && this.parcalar.has(a))); this.vurguT0 = performance.now(); this.boya(); }
-  sec(ad) { if (this.secili.has(ad)) this.secili.delete(ad); else { this.secili.clear(); this.secili.add(ad); } this.boya(); return this.secili.has(ad); }
+  /* bir kartın bütün parçaları birlikte seçilir ve vurgulanır (ör. Ulucami: dört cephe + pencere girintileri tek kart); kartı olmayan parça tek başına */
+  grup(ad) { const k = ad && this.eser?.parcalar?.find((p) => p.adlar.includes(ad)); return k ? k.adlar : (ad ? [ad] : []); }
+  sec(ad) { if (this.secili.has(ad)) this.secili.clear(); else this.secili = new Set(this.grup(ad)); this.boya(); return this.secili.has(ad); }
   flasla() { this.flasT0 = performance.now(); this.boya(); }
   boya() {
     if (!this.meshler) return;
@@ -516,7 +533,7 @@ class Sahne3D {
       const e = m.material.emissive.setRGB(0, 0, 0), p = m.userData.parca;
       if (p && this.vurgulu.has(p)) e.copy(ALTIN).multiplyScalar(0.32 + nabiz);
       else if (p && this.secili.has(p)) e.copy(SARI).multiplyScalar(0.42);
-      else if (p && p === this.ustte) e.copy(SARI).multiplyScalar(0.24);   // fare üstünde: seçiliden hafif
+      else if (p && this.ustteGrup && this.ustteGrup.has(p)) e.copy(SARI).multiplyScalar(0.24);   // fare üstünde: seçiliden hafif
       if (this.flasT0 && p) {
         const k = sira.get(p) ?? -1, y = k < 0 ? -1 : (t - this.flasT0 - k * FLAS_ARA) / FLAS_SURE;
         if (y > 0 && y < 1) e.add(SARI.clone().multiplyScalar(0.4 * Math.sin(y * Math.PI)));
@@ -539,12 +556,12 @@ class Sahne3D {
         const hit = ray.intersectObjects(this.meshler, false).find((h) => h.object.userData.parca && gorunurMu(h.object) && h.object.material.opacity > 0.5);
         const ad = hit && this.tiklanir(hit.object.userData.parca) ? hit.object.userData.parca : null;
         if (ad === this.ustte) return;
-        this.ustte = ad; el.style.cursor = ad ? 'pointer' : '';
+        this.ustte = ad; this.ustteGrup = new Set(this.grup(ad)); el.style.cursor = ad ? 'pointer' : '';
         const k = ad && this.eser?.parcalar?.find((p) => p.adlar.includes(ad)); el.title = k ? k.baslik : '';
         this.boya();
       });
     });
-    el.addEventListener('pointerleave', () => { if (this.ustte) { this.ustte = null; el.style.cursor = ''; el.title = ''; this.boya(); } });
+    el.addEventListener('pointerleave', () => { if (this.ustte) { this.ustte = null; this.ustteGrup = null; el.style.cursor = ''; el.title = ''; this.boya(); } });
     el.addEventListener('pointerup', (e) => {
       if (!bas || !this.meshler) return;
       const hareket = Math.hypot(e.clientX - bas.x, e.clientY - bas.y), sure = performance.now() - bas.t; bas = null;
@@ -559,7 +576,8 @@ class Sahne3D {
     });
   }
   /* kural: kartı olan parça tıklanır; eserin hiç parça kartı yoksa (henüz hazırlanmamışsa) bütün parçalar adıyla tıklanır */
-  tiklanir(ad) { const k = this.eser && this.eser.parcalar; return !k || !k.length || k.some((p) => p.adlar.includes(ad)); }
+  /* model.json «tiklanmaz»: kart hazırlanmamış eserlerde de süs/taşıyıcı parçalar (silme, baca, dikiş…) tıklanmaz */
+  tiklanir(ad) { if ((this.eser?.model?.tiklanmaz || []).includes(ad)) return false; const k = this.eser && this.eser.parcalar; return !k || !k.length || k.some((p) => p.adlar.includes(ad)); }
   kartBagla(el, ad) { this.kart = el ? { el, nokta:this.hedefNokta(ad) } : null; this.kirli = true; }
   /* v2 · kubbeleri kaldır (acik = true) / indir */
   kubbeler(acik, gecis = true) {

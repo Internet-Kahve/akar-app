@@ -1,0 +1,10 @@
+{
+ "_aciklama": "blend_hat ayarı: ad (dosya öneki), ao_px (uygulama AO dokusu kenarı; tek kanal JPEG q80).",
+ "ulu-cami":                   {"ad": "ulu-cami",           "ao_px": 1024},
+ "yildirim-bayezid-bedesteni": {"ad": "bedesten",           "ao_px": 512},
+ "koza-han":                   {"ad": "koza-han",           "ao_px": 1024},
+ "orhan-bey-kulliyesi":        {"ad": "orhan-bey-camii",    "ao_px": 512},
+ "orhan-bey-hamami":           {"ad": "orhan-bey-hamami",   "ao_px": 512},
+ "emir-han":                   {"ad": "emir-hani",          "ao_px": 512},
+ "orhan-gazi-turbesi":         {"ad": "orhan-gazi-turbesi", "ao_px": 512}
+}
