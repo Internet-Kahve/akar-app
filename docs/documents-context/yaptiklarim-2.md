@@ -763,3 +763,27 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
   - Normal render farkı %0,002–0,048 (> 8/255 piksel). Tıklama haritası: `kontrol/<sürüm>/tiklama_haritasi.png`.
 - **Kart taslağı:** altı eserde `icerik/parcalar_taslak.md` (Parçalar | Önerilen başlık | Not; metin yok).
 - Bağlama: `model.json` glb → yeni sürümler; `modelleri-gom.py` çalıştı; önizleme v1, v2 ve v3 7 modeli hatasız yüklüyor. test-redmi9t-v2 `hazirla.py` çalıştırılınca yeni modellere geçer (çalıştırılmadı). Eski dosyalar silinmedi.
+
+## 57. Yükleme ekranları şehrin deseniyle (test-redmi9t-v2)
+
+29 Ekim 2026. Figma `akar-yeni` kaynakları:
+- «Amblem · açılış, 3D yükleniyor (çizgi çizgi çizilir), rozet» (1:913);
+- desen kuralı «silik kullanım %6–10: ilk açılış arka planı, boş durumlar» (1:957);
+- «D · Eser detay / 3D yükleniyor» (1:4794): kart, amblem, «3D model yükleniyor · %62», ilerleme çubuğu, «0,4 MB / 0,8 MB. Bu sırada Dinle ya da Oku ile başlayabilirsin; model gelince sahne kendiliğinden açılır.»;
+- Figma notu: «Yüzde ve MB gerçek indirmeden gelir; panel kullanılabilir».
+
+Yapılanlar:
+- **Açılış ekranı** (`index.html` `#acilis`):
+  - sayfa ilk açılınca tam ekran;
+  - arkada şehrin deseni silik (%8, şehrin rengi);
+  - ortada altın amblem çizgi çizgi çizilir;
+  - altında «AKAR», şehir adı (serif) ve «Vakıf eserleri yükleniyor».
+  - Harita ilk kez çizilince (`load`) kalkar; en geç 8 sn.
+  - Şehir, renk ve desen kodda değil, şehir kaydından gelir (`veri/sehir/<şehir>.json → kimlik.zemin`, `desen_renk`, `desen`). Yeni şehir kendi desenini kendiliğinden taşır. Sayfa kökünde `--sehir-aksan`, `--sehir-acik`, `--sehir-desen`.
+- **3D yükleme kartı** (`yuklemeKart`, `yuklemeIzle`): Figma'daki kart. Gerçek indirme yüzdesi ve MB gösterilir (`glbAl` artık akışı okuyor, `glbIzle` dinleyici). Arkada 3D sahne zemininin üstünde silik şehir deseni. Üç yerde kullanılıyor:
+  - eser detayı 3D;
+  - hikâye (Dinle/Oku) 3D;
+  - «Eser hakkında» masaüstü 3D.
+- `prefers-reduced-motion`: amblem çizim animasyonu kapalı, çizili durur.
+- Sınama (Playwright; GLB yavaşlatılarak): masaüstü kart «%43 · 0,4 MB / 1,0 MB», model gelince kart kalkıyor; açılış ekranı deseni ve amblemi; hata yok. Yedekler `.onbellek/_yedek_*_2026-10-29e.*`.
+- **Redmi 9T denemesi** (Muhammed, 29 Ekim): sorun yok; `YAPILACAKLAR.md`'den çıkarıldı.

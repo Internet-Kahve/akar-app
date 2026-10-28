@@ -12,6 +12,12 @@
 <link rel="stylesheet" href="app.css?v=20261028">
 </head>
 <body>
+<!-- açılış ekranı (Figma akar-yeni: «Amblem · açılış, 3D yükleniyor (çizgi çizgi çizilir)», desen «ilk açılış arka planı» %6–10).
+     Şehrin rengi ve deseni app.js'te şehir kaydından (veri/sehir/<şehir>.json → kimlik) konur; harita ilk kez hazır olunca kalkar. -->
+<div id="acilis" role="status" aria-label="AKAR yükleniyor"><div class="acilis-ic">
+  <svg class="amblem" viewBox="-84 -84 168 168" aria-hidden="true"><path pathLength="1" d="M-35.36 -35.36L-50.00 -41.42M-50.00 -41.42L-64.64 -35.36M-35.36 -64.64L-41.42 -50.00M-41.42 -50.00L-35.36 -35.36M-64.64 -35.36L-75.00 -10.36M-75.00 -10.36L-50.00 -0.00M-50.00 -0.00L-75.00 10.36M-75.00 10.36L-64.64 35.36M-64.64 35.36L-50.00 41.42M-50.00 41.42L-35.36 35.36M-35.36 35.36L-41.42 50.00M-41.42 50.00L-35.36 64.64M35.36 -64.64L10.36 -75.00M10.36 -75.00L0.00 -50.00M0.00 -50.00L-10.36 -75.00M-10.36 -75.00L-35.36 -64.64M64.64 -35.36L50.00 -41.42M50.00 -41.42L35.36 -35.36M35.36 -35.36L41.42 -50.00M41.42 -50.00L35.36 -64.64M35.36 35.36L10.36 25.00M10.36 25.00L0.00 50.00M0.00 50.00L-10.36 25.00M-10.36 25.00L-35.36 35.36M-35.36 35.36L-25.00 10.36M-25.00 10.36L-50.00 0.00M-50.00 0.00L-25.00 -10.36M-25.00 -10.36L-35.36 -35.36M-35.36 -35.36L-10.36 -25.00M-10.36 -25.00L-0.00 -50.00M-0.00 -50.00L10.36 -25.00M10.36 -25.00L35.36 -35.36M35.36 -35.36L25.00 -10.36M25.00 -10.36L50.00 -0.00M50.00 -0.00L25.00 10.36M25.00 10.36L35.36 35.36M35.36 64.64L41.42 50.00M41.42 50.00L35.36 35.36M35.36 35.36L50.00 41.42M50.00 41.42L64.64 35.36M-35.36 64.64L-10.36 75.00M-10.36 75.00L-0.00 50.00M-0.00 50.00L10.36 75.00M10.36 75.00L35.36 64.64M64.64 35.36L75.00 10.36M75.00 10.36L50.00 0.00M50.00 0.00L75.00 -10.36M75.00 -10.36L64.64 -35.36"/></svg>
+  <div class="acilis-logo">AKAR</div><div class="acilis-sehir serif" id="acilis-sehir"></div><div class="acilis-alt" id="acilis-alt">Harita hazırlanıyor</div>
+</div></div>
 <div id="app">
   <!-- masaüstü üst çubuk -->
   <header id="ust" class="masaustu">

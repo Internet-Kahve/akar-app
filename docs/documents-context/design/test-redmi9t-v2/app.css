@@ -204,6 +204,29 @@ body.d .ipucu{top:16px}
 .kubbe-dugme[aria-pressed="true"]{background:#FFF3C4;border-color:#E9C75A;color:#6B5200}
 .parca-ad{position:absolute;left:50%;transform:translateX(-50%);z-index:5;padding:6px 12px;border-radius:999px;background:rgba(20,27,43,.82);color:#fff;font:600 13px var(--font);pointer-events:none;white-space:nowrap}
 .yukleniyor{position:absolute;inset:0;display:grid;place-items:center;color:var(--text-muted);font-weight:600;z-index:3}
+/* 29 Ekim 2026 · yükleme ekranları (Figma akar-yeni «D · Eser detay / 3D yükleniyor», «Bileşen · Durum ekranları › Yükleniyor», «Amblem»).
+   Amblem çizgi çizgi çizilir (altın); arkada şehrin deseni silik (%8, desen kuralı: ilk açılış arka planı / boş durumlar %6–10). */
+.amblem path{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:amblem-ciz 2.6s var(--egri) infinite}
+@keyframes amblem-ciz{0%{stroke-dashoffset:1}65%,88%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+@media (prefers-reduced-motion:reduce){.amblem path{animation:none;stroke-dashoffset:0}}
+.desenli-zemin::before{content:"";position:absolute;inset:0;pointer-events:none;background:var(--sehir-aksan);opacity:.08;
+  -webkit-mask:var(--sehir-desen) 0 0/96px auto repeat;mask:var(--sehir-desen) 0 0/96px auto repeat}
+#acilis{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:var(--bg);transition:opacity var(--sure-3) var(--egri)}
+#acilis.bitti{opacity:0;pointer-events:none}
+.acilis-ic{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.acilis-ic .amblem{width:96px;height:96px;color:var(--gold);margin-bottom:14px}
+.acilis-logo{font:700 15px/20px var(--font);letter-spacing:.32em;color:var(--text);padding-left:.32em}
+.acilis-sehir{font-size:34px;line-height:40px;color:var(--sehir-aksan);min-height:40px}
+.acilis-alt{color:var(--text-muted);font-size:13px}
+.yukleme{background:none;z-index:3}
+.yk-kart{position:relative;width:min(380px,calc(100% - 32px));padding:22px 24px 20px;border-radius:16px;background:var(--surface);box-shadow:var(--golge);text-align:center;font-weight:400}
+.yk-kart .amblem{width:44px;height:44px;color:var(--gold);margin:0 auto 10px;display:block}
+.yk-baslik{display:block;font:600 16px/22px var(--font);color:var(--text)}
+.yk-cubuk{height:6px;border-radius:3px;background:var(--border);margin:12px 0 10px;overflow:hidden}
+.yk-cubuk i{display:block;height:100%;width:var(--yuzde,0%);background:var(--primary);border-radius:3px;transition:width var(--sure-2) linear}
+.yk-cubuk.belirsiz i{width:35%;animation:yk-akis 1.2s ease-in-out infinite}
+@keyframes yk-akis{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
+.yk-alt{margin:0;color:var(--text-muted);font-size:13px;line-height:18px}
 .eser-alt{position:absolute;left:12px;right:12px;bottom:calc(12px + var(--sab));z-index:5;background:var(--surface);border-radius:16px;padding:20px 16px 16px;box-shadow:var(--golge)}
 .eser-alt h1,.panel-baslik{margin:0;font:600 32px/38px var(--font-display);font-variant-numeric:lining-nums}
 .eser-alt .meta,.panel-meta{color:var(--text-muted);margin-top:2px}
