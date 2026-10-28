@@ -26,7 +26,7 @@ import type { MutationResult, Tx } from "../../platform/idempotency.ts";
 import type { JobQueue } from "../../platform/jobs.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
 import type { ObjectStorage, StorageBuckets } from "../../platform/storage.ts";
-import { GlbError, readGlbParts } from "./glb.ts";
+import { countTriangles, GlbError, MAX_MODEL_TRIANGLES, readGlbJson, readGlbParts } from "./glb.ts";
 import { extensionFor, matchesMagic, MEDIA_LIMITS, mediaTypeOf, megabytes, type MediaKind } from "./magic.ts";
 import { GlbPartsJob, type MediaItem, type MediaMetadata, type RequestUploadInput, type UploadTicket } from "./schemas.ts";
 
@@ -97,6 +97,7 @@ export function toMediaItem(row: MediaRow): MediaItem {
     sourceId: row.sourceId,
     trust: row.trust,
     parts: row.parts,
+    triangles: row.triangles,
     bytes: row.bytes,
     partsStatus: row.partsStatus,
     uploadedBy: row.uploadedBy,
@@ -239,7 +240,7 @@ type Refusal = { status: 413 | 415; code: "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MED
 const MISMATCH: Refusal = { status: 415, code: "UNSUPPORTED_MEDIA_TYPE", message: "Dosya içeriği beyan edilen türle uyuşmuyor." };
 
 /**
- * The stored object's bytes when they may be published, otherwise why not. The client keeps its write grant until
+ * The stored object's bytes (and, for a model, its triangle count) when they may be published, otherwise why not. The client keeps its write grant until
  * the upload link runs out, so the object can change after the HEAD answer: size and magic bytes are judged on the
  * bytes read here, and these are the very bytes `completeUpload` publishes.
  */
@@ -247,7 +248,7 @@ async function readChecked(
   uploads: ObjectStorage,
   upload: UploadRow,
   object: { bytes: number; contentType: string },
-): Promise<Buffer | Refusal> {
+): Promise<{ bytes: Buffer; triangles: number | null } | Refusal> {
   const tooLarge: Refusal = {
     status: 413,
     code: "PAYLOAD_TOO_LARGE",
@@ -259,7 +260,35 @@ async function readChecked(
   // One byte past the cap tells an object that outgrew it since HEAD from one that fits, and keeps memory at the cap.
   const bytes = await uploads.read(upload.storageKey, { start: 0, end: upload.maxBytes });
   if (bytes.length > upload.maxBytes) return tooLarge;
-  return matchesMagic(upload.contentType, bytes) ? bytes : MISMATCH;
+  if (!matchesMagic(upload.contentType, bytes)) return MISMATCH;
+  if (upload.kind !== "model") return { bytes, triangles: null };
+  const model = await countModel(bytes);
+  return "status" in model ? model : { bytes, triangles: model.triangles };
+}
+
+const trNumber = new Intl.NumberFormat("tr-TR");
+
+/**
+ * Triangle count of a GLB the upload passed the magic check as, or why it may not be published: a file whose
+ * JSON chunk cannot be read is 415 like any file that is not what it claims to be, a model over the limit 413.
+ */
+async function countModel(bytes: Buffer): Promise<{ triangles: number } | Refusal> {
+  let triangles: number;
+  try {
+    const gltf = await readGlbJson(bytes.length, async ({ start, end }) => bytes.subarray(start, end + 1));
+    triangles = countTriangles(gltf);
+  } catch (err) {
+    if (!(err instanceof GlbError)) throw err;
+    return { status: 415, code: "UNSUPPORTED_MEDIA_TYPE", message: "Model dosyası okunamadı; geçerli bir GLB olmalı." };
+  }
+  if (triangles > MAX_MODEL_TRIANGLES) {
+    return {
+      status: 413,
+      code: "PAYLOAD_TOO_LARGE",
+      message: `Model en çok ${trNumber.format(MAX_MODEL_TRIANGLES)} üçgen olabilir; bu dosyada ${trNumber.format(triangles)} var.`,
+    };
+  }
+  return { triangles };
 }
 
 /** An object `completeUpload` wrote to the `media` bucket, with the id of the row that should point at it. */
@@ -325,7 +354,7 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
   if (!object) throw new AppError(409, "CONFLICT", "Dosya henüz yüklenmedi. Yükleme bitince tekrar dene.");
 
   const checked = await readChecked(uploads, upload, object);
-  if (!Buffer.isBuffer(checked)) {
+  if ("status" in checked) {
     await uploads.delete(upload.storageKey);
     await tx.update(mediaUploads).set({ status: "rejected", rejectReason: checked.message, updatedAt: now }).where(eq(mediaUploads.id, upload.id));
     return { result: failure(requestId, checked.status, checked.code, checked.message) };
@@ -335,7 +364,7 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
   const mediaId = randomUUID();
   const storageKey = posix.join(posix.dirname(upload.storageKey), `${mediaId}${posix.extname(upload.storageKey)}`);
   ctx.published.push({ mediaId, storageKey });
-  await storage.media.put(storageKey, checked, upload.contentType);
+  await storage.media.put(storageKey, checked.bytes, upload.contentType);
 
   const [row] = await tx
     .insert(media)
@@ -345,7 +374,8 @@ export async function completeUpload(tx: Tx, ctx: CompleteContext, uploadId: str
       mime: upload.contentType,
       url: storage.media.publicUrl(storageKey),
       ...metadata,
-      bytes: checked.length,
+      bytes: checked.bytes.length,
+      triangles: checked.triangles,
       storageKey,
       uploadedBy: user.id,
       partsStatus: upload.kind === "model" ? "pending" : "none",

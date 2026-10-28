@@ -41,6 +41,7 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.equal(detail.media.find((m: { id: string }) => m.id === "archive-0").description, "Fotoğrafçı · Arşiv");
   assert.deepEqual(detail.photoIds, ["photo-0"]);
   assert.deepEqual(detail.media.find((m: { kind: string }) => m.kind === "model").parts, ["kubbe_1"]);
+  assert.equal(detail.media.find((m: { kind: string }) => m.kind === "model").triangles, 0, "the model's triangles are counted from its file");
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified" }];
   await writeFile(path, JSON.stringify(manifest));

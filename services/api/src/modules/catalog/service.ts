@@ -1,5 +1,5 @@
 import { normalize, type HeritageSite } from "@akar/domain";
-import { and, asc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import type { Db } from "../../db/client.ts";
 import {
   cards,
@@ -7,6 +7,7 @@ import {
   historyImages,
   media,
   regions,
+  siteMapPlacements,
   siteMedia,
   siteSections,
   siteSources,
@@ -16,8 +17,9 @@ import {
   storyBlocks,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
+import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import type { ContentFlag, SiteDetail, SiteSummary } from "./schemas.ts";
+import type { ContentFlag, MapPlacementDto, SiteDetail, SiteSummary } from "./schemas.ts";
 
 /** Single definition of "visible to the public"; every read path goes through it. */
 export const published = eq(sites.status, "published");
@@ -275,6 +277,43 @@ async function sourcesByIds(db: Db, ids: string[]): Promise<SourceRow[]> {
   return db.select().from(sources).where(inArray(sources.id, ids));
 }
 
+/** A stored map placement; `lng`/`lat` are null while the model stands on the site's own location. */
+export type PlacementRow = Omit<typeof siteMapPlacements.$inferSelect, "location"> & { lng: number | null; lat: number | null };
+
+/** The placements of the given sites, one query; sites without one are left out. */
+export async function loadPlacements(q: Db | Tx, siteIds: string[]): Promise<Map<string, PlacementRow>> {
+  if (!siteIds.length) return new Map();
+  const { location, ...columns } = getTableColumns(siteMapPlacements);
+  const rows = await q
+    .select({ ...columns, lng: sql<number | null>`ST_X(${location})`, lat: sql<number | null>`ST_Y(${location})` })
+    .from(siteMapPlacements)
+    .where(inArray(siteMapPlacements.siteId, siteIds));
+  return new Map(rows.map((r) => [r.siteId, r]));
+}
+
+/** The placement as clients get it: the model's own point, or else the site's location `at` (null for a draft without one). */
+export function resolvePlacement<T extends number | null>(
+  row: PlacementRow,
+  at: { lng: T; lat: T },
+): Omit<MapPlacementDto, "lng" | "lat"> & { lng: number | T; lat: number | T } {
+  return {
+    lng: row.lng === null ? at.lng : row.lng,
+    lat: row.lat === null ? at.lat : row.lat,
+    headingDeg: row.headingDeg,
+    scale: row.scale,
+    altitudeM: row.altitudeM,
+    anchorNode: row.anchorNode,
+    hiddenPoints: row.hiddenPoints,
+    keptPoints: row.keptPoints,
+  };
+}
+
+/** What a visitor's map draws: nothing unless the site has a model and the editor left the placement visible. */
+export function publicPlacement(row: PlacementRow | undefined, at: { lng: number; lat: number }, hasModel: boolean): MapPlacementDto | null {
+  if (!row || !row.visible || !hasModel) return null;
+  return resolvePlacement<number>(row, at);
+}
+
 /** Rows grouped by site id; queries are ordered by (site, position), so every group keeps its order. */
 function bySite<T extends { siteId: string }>(rows: T[]): Map<string, T[]> {
   const out = new Map<string, T[]>();
@@ -295,7 +334,7 @@ function bySite<T extends { siteId: string }>(rows: T[]): Map<string, T[]> {
 export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[]> {
   const siteIds = distinct(ids);
   if (!siteIds.length) return [];
-  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, linkedMedia, linkedSources] = await Promise.all([
+  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, linkedMedia, linkedSources, placements] = await Promise.all([
     summaryQuery(db).where(and(published, inArray(sites.id, siteIds))),
     db
       .select({
@@ -340,6 +379,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       .from(siteSources)
       .where(inArray(siteSources.siteId, siteIds))
       .orderBy(asc(siteSources.siteId), asc(siteSources.position)),
+    loadPlacements(db, siteIds),
   ]);
 
   const rowById = new Map(rows.map((r) => [r.id, r]));
@@ -462,6 +502,11 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         trust: h.trust,
         camera: h.camera,
       })),
+      placement: publicPlacement(
+        placements.get(row.id),
+        row,
+        (mediaLinksOf.get(row.id) ?? []).some((m) => mediaById.get(m.id)?.kind === "model"),
+      ),
       photoIds: (mediaLinksOf.get(row.id) ?? []).filter((m) => mediaById.get(m.id)?.kind === "photo").map((m) => m.id),
       media: siteMediaList.map((m) => ({
         id: m.id,
@@ -476,6 +521,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         sourceId: m.sourceId,
         trust: m.trust,
         parts: m.parts,
+        triangles: m.triangles,
       })),
       sources: siteSourceList.map((s) => ({
         id: s.id,

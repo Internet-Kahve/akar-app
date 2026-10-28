@@ -167,6 +167,7 @@ export const MediaDto = z.object({
   sourceId: z.string().nullable(),
   trust: TrustSchema,
   parts: z.array(z.string()),
+  triangles: z.number().int().nullable().describe("3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"),
 });
 
 export const SourceDto = z.object({
@@ -214,6 +215,20 @@ export const HistoryImageDto = z.object({
   camera: CameraPoseDto.nullable().describe("Bugünün görüntüsüyle hizalama açısı"),
 });
 
+export const MapPointDto = z.object({ lng: z.number(), lat: z.number() });
+
+export const MapPlacementDto = z.object({
+  lng: z.number().describe("Modelin boylamı; yerleşimde konum verilmemişse eserin konumu"),
+  lat: z.number().describe("Modelin enlemi; yerleşimde konum verilmemişse eserin konumu"),
+  headingDeg: z.number().describe("Kuzeyden saat yönünde derece, 0 ≤ x < 360"),
+  scale: z.number().describe("0,1–10; 1 = model birimi bir metre"),
+  altitudeM: z.number().describe("Modelin zemine oturmuş hâlinin üstüne eklenen yükseklik, metre (−50–200)"),
+  anchorNode: z.string().nullable().describe("Taban noktasının hesaplandığı modeldeki parça adı; null = presentasyon parçaları dışındaki tüm parçalar"),
+  hiddenPoints: z.array(MapPointDto).describe("Elle gizlenen OSM binalarından birer nokta (en çok 50)"),
+  keptPoints: z.array(MapPointDto).describe("Otomatik gizlenip geri istenen OSM binalarından birer nokta (en çok 50)"),
+});
+export type MapPlacementDto = z.infer<typeof MapPlacementDto>;
+
 export const SiteDetail = SiteSummary.extend({
   descriptionEn: z.string().nullable(),
   architect: z.string(),
@@ -231,6 +246,9 @@ export const SiteDetail = SiteSummary.extend({
   sections: z.array(SectionDto).describe("Eser hakkında bölümler (Tarihçe, Mimari, Vakıf ve akar), sıralı"),
   cards: z.array(CardDto).describe("Hikâye cümlelerinin kullandığı kartlar; ilk kullanım sırasıyla, tekrarsız"),
   historyImages: z.array(HistoryImageDto).describe("Geçmişi Gör görselleri, sıralı"),
+  placement: MapPlacementDto.nullable().describe(
+    "Modelin haritadaki yerleşimi. Eserin modeli varsa ve yerleşim gösterilmek üzere kaydedilmişse dolu; aksi halde null (alan hiçbir zaman eksik olmaz)",
+  ),
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
   media: z
     .array(MediaDto)

@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  doublePrecision,
   foreignKey,
   index,
   integer,
@@ -10,6 +11,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  timestamp,
   unique,
 } from "drizzle-orm/pg-core";
 import { media } from "./media.ts";
@@ -199,6 +201,49 @@ export const siteMedia = pgTable(
   },
   (t) => [primaryKey({ columns: [t.siteId, t.mediaId] }), unique("site_media_order_uq").on(t.siteId, t.position)],
 );
+
+/** A map point as the API sends it: WGS84 degrees. */
+export type MapPoint = { lng: number; lat: number };
+
+/**
+ * Where and how a site's 3D model stands on the map (at most one row per site). It lives apart from the
+ * model record: replacing the site's model keeps the placement. Written by the editor panel only.
+ */
+export const siteMapPlacements = pgTable(
+  "site_map_placements",
+  {
+    siteId: text("site_id")
+      .primaryKey()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    /** Null = the model stands on the site's own location. */
+    location: point4326("location"),
+    /** Clockwise from north. */
+    headingDeg: doublePrecision("heading_deg").notNull().default(0),
+    scale: doublePrecision("scale").notNull().default(1),
+    /** Metres above the ground the model rests on. */
+    altitudeM: doublePrecision("altitude_m").notNull().default(0),
+    /** Name of the model part the base point is computed from; null = all parts. */
+    anchorNode: text("anchor_node"),
+    /** OSM buildings the editor hid by hand. */
+    hiddenPoints: jsonb("hidden_points").$type<MapPoint[]>().notNull().default(sql`'[]'::jsonb`),
+    /** Automatically hidden OSM buildings the editor asked back. */
+    keptPoints: jsonb("kept_points").$type<MapPoint[]>().notNull().default(sql`'[]'::jsonb`),
+    /** False = stored but not drawn on the public map. */
+    visible: boolean("visible").notNull().default(true),
+    updatedBy: text("updated_by").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("site_map_placements_heading", sql`${t.headingDeg} >= 0 AND ${t.headingDeg} < 360`),
+    check("site_map_placements_scale", sql`${t.scale} >= 0.1 AND ${t.scale} <= 10`),
+    check("site_map_placements_altitude", sql`${t.altitudeM} >= -50 AND ${t.altitudeM} <= 200`),
+    check("site_map_placements_anchor", sql`${t.anchorNode} IS NULL OR char_length(${t.anchorNode}) <= 200`),
+    check(
+      "site_map_placements_points",
+      sql`jsonb_typeof(${t.hiddenPoints}) = 'array' AND jsonb_array_length(${t.hiddenPoints}) <= 50 AND jsonb_typeof(${t.keptPoints}) = 'array' AND jsonb_array_length(${t.keptPoints}) <= 50`,
+    ),
+  ],
+).enableRLS();
 
 export const sectionKinds = ["history", "architecture", "waqf"] as const;
 export const sectionKindEnum = pgEnum("section_kind", sectionKinds);

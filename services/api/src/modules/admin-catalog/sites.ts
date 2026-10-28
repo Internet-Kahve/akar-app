@@ -21,6 +21,7 @@ import {
   periods,
   regions,
   routeStops,
+  siteMapPlacements,
   siteMedia,
   siteSections,
   siteSources,
@@ -34,7 +35,8 @@ import { AppError } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import { siteDedupeKey, siteSearchText, siteSortName, slugify } from "../catalog/service.ts";
+import { loadPlacements, publicPlacement, resolvePlacement, siteDedupeKey, siteSearchText, siteSortName, slugify, type PlacementRow } from "../catalog/service.ts";
+import { CITIES } from "../ingest/cities.ts";
 import { APPROXIMATE_SOURCES } from "../ingest/geocode.ts";
 import type {
   AdminCardDto,
@@ -47,6 +49,7 @@ import type {
   CreateSiteInput,
   HistoryImagesInput,
   LocationInput,
+  MapPlacementInput,
   ModelInput,
   SectionsInput,
   SiteInfoInput,
@@ -231,6 +234,8 @@ export type SiteAggregate = {
   cards: ReadonlyMap<string, CardRow>;
   media: ReadonlyMap<string, MediaRow>;
   sources: ReadonlyMap<string, SourceRow>;
+  /** The stored map placement, shown or not. */
+  placement: PlacementRow | undefined;
 };
 
 function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {
@@ -278,6 +283,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...mediaRows.map((m) => m.sourceId),
   ]);
   const sourceRows = sourceIds.length ? await q.select().from(sources).where(inArray(sources.id, sourceIds)) : [];
+  const placements = await loadPlacements(q, ids);
 
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
   const mediaById = new Map(mediaRows.map((m) => [m.id, m]));
@@ -301,6 +307,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
         cards: cardById,
         media: mediaById,
         sources: sourceById,
+        placement: placements.get(site.id),
       },
     ]),
   );
@@ -507,6 +514,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       trust: h.trust,
       camera: h.camera,
     })),
+    placement: s.lng === null || s.lat === null ? null : publicPlacement(a.placement, { lng: s.lng, lat: s.lat }, modelOf(a) !== undefined),
     media: mediaList.map((m) => ({
       id: m.id,
       kind: m.kind,
@@ -520,6 +528,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: m.sourceId,
       trust: m.trust,
       parts: m.parts,
+      triangles: m.triangles,
     })),
     sources: sourceList.map((r) => ({
       id: r.id,
@@ -536,6 +545,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     locationSource: s.locationSource,
     importMeta: s.importMeta && typeof s.importMeta === "object" && !Array.isArray(s.importMeta) ? (s.importMeta as Record<string, unknown>) : null,
     modelMediaId: modelOf(a)?.id ?? null,
+    mapPlacement: a.placement ? { ...resolvePlacement(a.placement, s), visible: a.placement.visible, updatedAt: a.placement.updatedAt.toISOString() } : null,
     photoIds: linked.filter((m) => m.kind === "photo").map((m) => m.id),
     sourceLinks: a.sourceLinks,
     issues: publishIssues(a),
@@ -1005,6 +1015,69 @@ export function setModel(tx: Tx, ctx: AuditCtx, id: string, input: ModelInput): 
       return { openingCamera: input.mediaId !== null && input.openingCamera ? toPose(input.openingCamera) : null };
     },
   );
+}
+
+/** The placement as the audit trail keeps it: stored values (no location = the site's own). */
+const placementSnapshot = (p: PlacementRow | undefined) =>
+  p && {
+    lng: p.lng,
+    lat: p.lat,
+    headingDeg: p.headingDeg,
+    scale: p.scale,
+    altitudeM: p.altitudeM,
+    anchorNode: p.anchorNode,
+    hiddenPoints: p.hiddenPoints,
+    keptPoints: p.keptPoints,
+    visible: p.visible,
+  };
+
+/**
+ * The model's place on the map, replaced whole. Only a site with a model has one (409); the placement is
+ * kept when the model is swapped or removed. The city check is the city's bounding box (`CITIES`, the one
+ * the importer rejects geocoder results by); a city without an entry there only gets the WGS84 range check
+ * the schema already did. The site row is locked and touched like every wizard write.
+ */
+export async function setMapPlacement(tx: Tx, ctx: AuditCtx, id: string, input: MapPlacementInput): Promise<AdminSiteDetail> {
+  const before = await lockAndLoad(tx, id);
+  if (!modelOf(before)) throw new AppError(409, "CONFLICT", "Eserin 3B modeli yok; haritada yerleşim için önce model bağla.");
+
+  const errors = new FieldErrors();
+  const box = Object.hasOwn(CITIES, before.site.cityId) ? CITIES[before.site.cityId]?.bbox : undefined;
+  const outside = ({ lng, lat }: { lng: number; lat: number }) => box !== undefined && (lng < box[0] || lat < box[1] || lng > box[2] || lat > box[3]);
+  const cityName = before.site.cityName;
+  const hasLocation = input.lng != null && input.lat != null;
+  if (hasLocation && outside({ lng: input.lng!, lat: input.lat! })) errors.add("lng", `Konum ${cityName} sınırları dışında.`);
+  input.hiddenPoints.forEach((p, i) => outside(p) && errors.add(`hiddenPoints.${i}`, `Nokta ${cityName} sınırları dışında.`));
+  input.keptPoints.forEach((p, i) => outside(p) && errors.add(`keptPoints.${i}`, `Nokta ${cityName} sınırları dışında.`));
+  errors.throwIfAny();
+
+  const values = {
+    location: hasLocation ? ([input.lng!, input.lat!] as [number, number]) : null,
+    headingDeg: input.headingDeg,
+    scale: input.scale,
+    altitudeM: input.altitudeM,
+    anchorNode: input.anchorNode ? input.anchorNode : null,
+    hiddenPoints: input.hiddenPoints,
+    keptPoints: input.keptPoints,
+    visible: input.visible,
+    updatedBy: ctx.actorId,
+    updatedAt: touched,
+  };
+  await tx.insert(siteMapPlacements).values({ siteId: id, ...values }).onConflictDoUpdate({ target: siteMapPlacements.siteId, set: values });
+  // Public readers key off the site's `updatedAt` too; a placement is a change to the site.
+  await tx.update(sites).set({ updatedAt: touched }).where(eq(sites.id, id));
+
+  const after = await requireAggregate(tx, id);
+  await recordAudit(tx, {
+    actorId: ctx.actorId,
+    action: "site.map-placement",
+    entityType: "site",
+    entityId: id,
+    before: placementSnapshot(before.placement) ?? null,
+    after: placementSnapshot(after.placement) ?? null,
+    requestId: ctx.requestId,
+  });
+  return toAdminDetail(after);
 }
 
 /** Adım 3 (Fotoğraflar): ordered photo list and the cover, which must be one of them. */
