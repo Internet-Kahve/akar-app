@@ -2224,3 +2224,133 @@ test("member administration uses protected, uncached endpoints and sends the exp
     ),
   );
 });
+
+const placement = (extra = {}) => ({
+  lng: 29.0619,
+  lat: 40.184,
+  headingDeg: 174,
+  scale: 1,
+  altitudeM: 0,
+  anchorNode: "Govde",
+  hiddenPoints: [{ lng: 29.06, lat: 40.18 }],
+  keptPoints: [],
+  ...extra,
+});
+
+test("a model carries its triangle count and the site's placement; both are null when the API has none", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [
+        detail("placed", {
+          media: [media("glb", "model", { triangles: 87280 })],
+          placement: placement(),
+        }),
+        // An older API: neither field exists.
+        detail("old", { media: [media("glb2", "model")] }),
+        // Placement hidden or missing: the model is there, the map shows nothing.
+        detail("hidden", {
+          media: [media("glb3", "model", { triangles: null })],
+          placement: null,
+        }),
+        detail("plain"),
+      ],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [placed, old, hidden, plain] = (await client.getSnapshot()).sites;
+  assert.equal(placed!.model?.triangles, 87280);
+  assert.deepEqual(placed!.model?.placement, placement());
+  assert.equal(old!.model?.triangles, null);
+  assert.equal(old!.model?.placement, null);
+  assert.equal(hidden!.model?.triangles, null);
+  assert.equal(hidden!.model?.placement, null);
+  assert.equal(plain!.model, undefined);
+});
+
+test("map settings come from GET /v1/map-settings; missing values fall back to the defaults", async () => {
+  let body: unknown = { modelMinZoom: 15.5, maxVisibleModels: 8 };
+  const api = fakeApi({ "GET /v1/map-settings": () => body });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  assert.deepEqual(await client.getMapSettings(), {
+    modelMinZoom: 15.5,
+    maxVisibleModels: 8,
+  });
+  body = { maxVisibleModels: 0 };
+  assert.deepEqual(await client.getMapSettings(), {
+    modelMinZoom: 16,
+    maxVisibleModels: 0,
+  });
+  body = Response.json(
+    { code: "INTERNAL", message: "x", requestId: "r" },
+    { status: 500 },
+  );
+  await assert.rejects(client.getMapSettings(), ApiError);
+});
+
+test("refreshCatalog re-reads the catalog, shares concurrent reads and keeps the old data when the read fails", async () => {
+  let heading = 174;
+  let fail = false;
+  let reads = 0;
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => {
+      reads++;
+      if (fail) return Response.json({ message: "down" }, { status: 503 });
+      return {
+        items: [
+          detail("a", {
+            media: [media("glb", "model", { triangles: 10 })],
+            placement: placement({ headingDeg: heading }),
+          }),
+        ],
+        nextCursor: null,
+      };
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const first = await client.getSnapshot();
+  assert.equal(first.sites[0]!.model?.placement?.headingDeg, 174);
+  assert.equal(reads, 1);
+  // The administrator moved the model; two triggers (timer and tab focus) arrive together.
+  heading = 90;
+  const [x, y] = await Promise.all([
+    client.refreshCatalog(),
+    client.refreshCatalog(),
+  ]);
+  assert.equal(reads, 2, "one read for both callers");
+  assert.equal(x.sites[0]!.model?.placement?.headingDeg, 90);
+  assert.deepEqual(y, x);
+  // Later reads of the snapshot see the new catalog without another request.
+  assert.equal(
+    (await client.getSnapshot()).sites[0]!.model?.placement?.headingDeg,
+    90,
+  );
+  assert.equal(reads, 2);
+  // A failed refresh throws and leaves what the visitor already has.
+  fail = true;
+  heading = 45;
+  await assert.rejects(client.refreshCatalog());
+  fail = false;
+  assert.equal(
+    (await client.getSnapshot()).sites[0]!.model?.placement?.headingDeg,
+    90,
+  );
+  assert.equal(
+    (await client.refreshCatalog()).sites[0]!.model?.placement?.headingDeg,
+    45,
+  );
+});

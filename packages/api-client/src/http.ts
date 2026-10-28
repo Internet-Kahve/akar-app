@@ -1,8 +1,11 @@
 import {
+  defaultMapSettings,
   validateSite,
   type Command,
   type HeritageRoute,
   type HeritageSite,
+  type MapPlacement,
+  type MapSettings,
   type Memory,
   type Role,
   type SiteKind,
@@ -119,6 +122,8 @@ interface MediaDto {
   sourceId: string | null;
   trust: Trust;
   parts: string[];
+  /** Triangle count of a model; absent on older API versions. */
+  triangles?: number | null;
 }
 interface SiteSummaryDto {
   id: string;
@@ -181,6 +186,8 @@ interface SiteDetailDto {
     trust?: Trust;
   }>;
   media: MediaDto[];
+  /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
+  placement?: MapPlacement | null;
   /** Explicit gallery relationship; absent on older API versions. */
   photoIds?: string[];
   sources: SiteSource[];
@@ -394,6 +401,8 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         src: model.url,
         parts: model.parts,
         trust: model.trust,
+        triangles: model.triangles ?? null,
+        placement: d.placement ?? null,
       },
     }),
   };
@@ -744,23 +753,24 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         out.push(feedToMemory(m));
     return out;
   };
+  const fetchCatalog = async (): Promise<Catalog> => {
+    const details = await pages<SiteDetailDto>("/v1/site-details");
+    const [routes, feed] = await Promise.all([
+      loadRoutes(),
+      loadFeed(details.map((d) => d.id)),
+    ]);
+    return {
+      sites: details.map(mapSite),
+      raw: new Map(details.map((d) => [d.id, d])),
+      feed,
+      stale: new Set<string>(),
+      routesStale: false,
+      feedStale: false,
+      ...routes,
+    };
+  };
   const loadCatalog = (): Promise<Catalog> => {
-    catalogLoad ??= (async () => {
-      const details = await pages<SiteDetailDto>("/v1/site-details");
-      const [routes, feed] = await Promise.all([
-        loadRoutes(),
-        loadFeed(details.map((d) => d.id)),
-      ]);
-      return {
-        sites: details.map(mapSite),
-        raw: new Map(details.map((d) => [d.id, d])),
-        feed,
-        stale: new Set<string>(),
-        routesStale: false,
-        feedStale: false,
-        ...routes,
-      };
-    })();
+    catalogLoad ??= fetchCatalog();
     catalogLoad.catch(() => {
       catalogLoad = undefined;
     });
@@ -1718,6 +1728,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
 
   // One operation at a time: toggles read the cache the previous operation left behind.
   let queue: Promise<unknown> = Promise.resolve();
+  /** The catalog re-read in flight; timers and tab focus share it instead of stacking requests. */
+  let refreshing: Promise<Snapshot> | undefined;
   const enqueue = <T>(task: () => Promise<T>): Promise<T> => {
     const result = queue.then(task);
     queue = result.catch(() => undefined);
@@ -1727,6 +1739,25 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     `/v1/quizzes/${encodeURIComponent(quizId)}`;
   return {
     getSnapshot: () => enqueue(() => build(true)),
+    refreshCatalog: () =>
+      (refreshing ??= enqueue(async () => {
+        // Swap only after the whole read succeeded: a failed refresh keeps what the visitor sees.
+        catalogLoad = Promise.resolve(await fetchCatalog());
+        return build(false);
+      }).finally(() => {
+        refreshing = undefined;
+      })),
+    getMapSettings: async () => {
+      const s = await call<Partial<MapSettings>>("GET", "/v1/map-settings");
+      return {
+        modelMinZoom: Number.isFinite(s.modelMinZoom)
+          ? s.modelMinZoom!
+          : defaultMapSettings.modelMinZoom,
+        maxVisibleModels: Number.isFinite(s.maxVisibleModels)
+          ? s.maxVisibleModels!
+          : defaultMapSettings.maxVisibleModels,
+      };
+    },
     getModerationPage: (status, cursor) =>
       enqueue(async () => {
         const page = await call<{
