@@ -1,6 +1,8 @@
 import {
   reduceSnapshot,
+  defaultMapSettings,
   type Command,
+  type MapSettings,
   type Snapshot,
   type HeritageSite,
   type Memory,
@@ -82,6 +84,13 @@ export interface MemberPage {
 }
 export interface AkarClient {
   getSnapshot(): Promise<Snapshot>;
+  /**
+   * Re-reads the published catalog (sites, models and their placements, routes, feed) and returns the
+   * new snapshot. Concurrent calls share one read; a failed read keeps the data the client already has.
+   */
+  refreshCatalog(): Promise<Snapshot>;
+  /** `GET /v1/map-settings`: when the map loads models and how many it draws. */
+  getMapSettings(): Promise<MapSettings>;
   dispatch(command: Command): Promise<Snapshot>;
   /** Save and return the canonical site, including server ids and media URLs. */
   saveSite(
@@ -225,6 +234,12 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
   return {
     async getSnapshot() {
       return structuredClone(state);
+    },
+    async refreshCatalog() {
+      return structuredClone(state);
+    },
+    async getMapSettings() {
+      return { ...defaultMapSettings };
     },
     async dispatch(command) {
       return persist(reduceSnapshot(state, command));

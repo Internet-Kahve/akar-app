@@ -116,3 +116,26 @@ test("a snapshot saved before quizzes existed still loads", async () => {
   assert.equal((await client.getSnapshot()).points, 40);
   assert.ok((await client.getQuizzes("ulu-cami")).every((q) => !q.solved));
 });
+test("demo sites with a model carry a placement; the mock serves default map settings", async () => {
+  const c = createMockClient(storage());
+  const { sites } = await c.getSnapshot();
+  const placed = sites.filter((s) => s.model?.placement);
+  assert.deepEqual(
+    placed.map((s) => s.id),
+    ["ulu-cami", "bedesten", "koza-han", "orhan-gazi"],
+  );
+  for (const { model } of placed) {
+    assert.ok(model!.src.startsWith("/demo-models/") && model!.triangles! > 0);
+    const p = model!.placement!;
+    // Inside the demo region, a few tens of metres from the marker.
+    assert.ok(
+      Math.abs(p.lng - 29.062) < 0.005 && Math.abs(p.lat - 40.185) < 0.005,
+    );
+    assert.ok(p.headingDeg >= 0 && p.headingDeg < 360 && p.scale === 1);
+  }
+  assert.deepEqual(await c.getMapSettings(), {
+    modelMinZoom: 16,
+    maxVisibleModels: 5,
+  });
+  assert.deepEqual(await c.refreshCatalog(), await c.getSnapshot());
+});

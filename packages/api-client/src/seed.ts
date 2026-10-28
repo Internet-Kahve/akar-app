@@ -1,6 +1,7 @@
 import type {
   HeritageRoute,
   HeritageSite,
+  SiteModel,
   Snapshot,
   StoryBlock,
 } from "@akar/domain";
@@ -127,8 +128,63 @@ const input: Array<
       "Eğitim filtresini denemek için oluşturulmuş kurmaca kayıt; gerçek bir envanter eseri değildir.",
   },
 ];
+/**
+ * Demo models (`apps/web/public/demo-models`) and where the map draws them. Positions and headings are the
+ * prototype's, matched against OSM building outlines and satellite imagery; the anchor part keeps the
+ * courtyards and side buildings from shifting the base point.
+ */
+const demoModel = (
+  name: string,
+  bytes: number,
+  triangles: number,
+  placement: Pick<
+    NonNullable<SiteModel["placement"]>,
+    "lng" | "lat" | "headingDeg" | "anchorNode"
+  >,
+): SiteModel => ({
+  name,
+  bytes,
+  src: `/demo-models/${name}.glb`,
+  parts: [],
+  trust: "representative",
+  triangles,
+  placement: {
+    scale: 1,
+    altitudeM: 0,
+    hiddenPoints: [],
+    keptPoints: [],
+    ...placement,
+  },
+});
+const demoModels: Record<string, SiteModel> = {
+  "ulu-cami": demoModel("ulu-cami", 834836, 87280, {
+    lng: 29.0618836,
+    lat: 40.1839236,
+    headingDeg: 174,
+    anchorNode: "Govde",
+  }),
+  bedesten: demoModel("bedesten", 171848, 20088, {
+    lng: 29.0621257,
+    lat: 40.1851377,
+    headingDeg: 4,
+    anchorNode: "Govde",
+  }),
+  "koza-han": demoModel("koza-han", 848548, 38624, {
+    lng: 29.0635407,
+    lat: 40.1843748,
+    headingDeg: 4,
+    anchorNode: "Govde_Dis",
+  }),
+  "orhan-gazi": demoModel("orhan-gazi", 274116, 16014, {
+    lng: 29.0640872,
+    lat: 40.1839238,
+    headingDeg: 13,
+    anchorNode: "Cami_Govde",
+  }),
+};
 export const sites: HeritageSite[] = input.map((site, i) => ({
   ...site,
+  ...(demoModels[site.id] && { model: demoModels[site.id] }),
   architect: "—",
   city: demoRegion.city,
   district: demoRegion.district,

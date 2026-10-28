@@ -33,12 +33,14 @@ import {
 } from "@akar/api-client";
 import {
   approvedMemories,
+  defaultMapSettings,
   filterSites,
   kindLabels,
   trustLabels,
   normalize,
   type Command,
   type HeritageSite,
+  type MapSettings,
   type Role,
   type Snapshot,
 } from "@akar/domain";
@@ -78,6 +80,8 @@ const navigation = [
   { view: "routes" as View, label: "Rotalar", icon: Route },
   { view: "sites" as View, label: "Eserler", icon: Landmark },
 ];
+/** The catalog is read again this often, and whenever the tab comes back to the front. */
+const CATALOG_REFRESH_MS = 5 * 60_000;
 export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
@@ -102,6 +106,8 @@ export function AkarApp() {
     ),
     // `null` = closed; the string says why the dialog opened ("" = user asked).
     [signIn, setSignIn] = useState<string | null>(null);
+  const [mapSettings, setMapSettings] =
+    useState<MapSettings>(defaultMapSettings);
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -110,6 +116,12 @@ export function AkarApp() {
   const role: Role = state.role ?? (live ? "user" : "admin");
   const canManage = !live || (!!account && role !== "user");
   const showExperimental = !live && experimental;
+  /** Map settings are a refinement: when they cannot be read the map keeps the values it has. */
+  const loadMapSettings = useCallback(async () => {
+    try {
+      if (client.current) setMapSettings(await client.current.getMapSettings());
+    } catch {}
+  }, []);
   const load = useCallback(async () => {
     if (!client.current) return;
     if (!loaded.current) setLoadError("");
@@ -117,12 +129,24 @@ export function AkarApp() {
       setState(await client.current.getSnapshot());
       loaded.current = true;
       setReady(true);
+      void loadMapSettings();
     } catch (e) {
       const message = describeError(e, "Veriler yüklenemedi.");
       if (loaded.current) setFault(message);
       else setLoadError(message);
     }
-  }, []);
+  }, [loadMapSettings]);
+  /** Background re-read of the catalog (new, moved or removed models); a failure is not worth a message. */
+  const refreshCatalog = useCallback(async () => {
+    if (!client.current || !loaded.current) return;
+    try {
+      const [snapshot] = await Promise.all([
+        client.current.refreshCatalog(),
+        loadMapSettings(),
+      ]);
+      setState(snapshot);
+    } catch {}
+  }, [loadMapSettings]);
   useEffect(() => {
     let storage: Storage | undefined;
     try {
@@ -211,6 +235,18 @@ export function AkarApp() {
       subscription?.unsubscribe();
     };
   }, [load]);
+  useEffect(() => {
+    if (!ready) return;
+    const timer = setInterval(() => void refreshCatalog(), CATALOG_REFRESH_MS);
+    const refocus = () => {
+      if (document.visibilityState === "visible") void refreshCatalog();
+    };
+    document.addEventListener("visibilitychange", refocus);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refocus);
+    };
+  }, [ready, refreshCatalog]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 4500);
@@ -1057,6 +1093,7 @@ export function AkarApp() {
                       routeId ? routeSites.map((s) => s.id) : state.routeIds
                     }
                     collapsed={collapsed}
+                    mapSettings={mapSettings}
                   />
                 )}
                 {!live && (

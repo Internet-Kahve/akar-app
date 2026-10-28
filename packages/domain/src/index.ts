@@ -22,12 +22,45 @@ export interface SitePhoto {
   license: string;
   trust: Trust;
 }
+/** Where the site's model stands on the map (the API's public `SiteDetail.placement`). */
+export interface MapPlacement {
+  lng: number;
+  lat: number;
+  /** Clockwise from north, 0 ≤ x < 360. */
+  headingDeg: number;
+  /** 1 = one model unit is one metre. */
+  scale: number;
+  /** Metres added on top of the model resting on the ground. */
+  altitudeM: number;
+  /** Model part the base point is computed from; `null` = every part that is not presentation scenery. */
+  anchorNode: string | null;
+  /** One point of each OSM building the editor removed by hand. */
+  hiddenPoints: Array<{ lng: number; lat: number }>;
+  /** One point of each automatically hidden OSM building the editor asked back. */
+  keptPoints: Array<{ lng: number; lat: number }>;
+}
+/** `GET /v1/map-settings`: values the administrator tunes. */
+export interface MapSettings {
+  /** The map loads models from this zoom level up. */
+  modelMinZoom: number;
+  /** Most models drawn at the same time. */
+  maxVisibleModels: number;
+}
+/** Used until the settings are read, and by the demo. */
+export const defaultMapSettings: MapSettings = {
+  modelMinZoom: 16,
+  maxVisibleModels: 5,
+};
 export interface SiteModel {
   name: string;
   bytes: number;
   src: string;
   parts: string[];
   trust: Trust;
+  /** Triangle count the server counted on upload; `null` or absent when unknown. */
+  triangles?: number | null;
+  /** `null` or absent when the model is not placed on the map or its placement is hidden. */
+  placement?: MapPlacement | null;
 }
 export interface StoryBlock {
   id: string;

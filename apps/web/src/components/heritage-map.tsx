@@ -2,8 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
-import type { HeritageSite } from "@akar/domain";
+import type { HeritageSite, MapSettings } from "@akar/domain";
 import type { Map as MapType, Marker as MarkerType } from "maplibre-gl";
+import type { MapModels } from "../lib/map-models";
 import {
   LocateFixed,
   Plus,
@@ -28,22 +29,28 @@ export function HeritageMap({
   onSelect,
   routeIds,
   collapsed,
+  mapSettings,
 }: {
   sites: HeritageSite[];
   selectedId?: string;
   onSelect: (id: string) => void;
   routeIds: string[];
   collapsed: boolean;
+  /** Without settings the map draws no models (the route preview in the panel). */
+  mapSettings?: MapSettings;
 }) {
   const container = useRef<HTMLDivElement>(null),
     map = useRef<MapType | null>(null),
     markers = useRef<MarkerType[]>([]),
-    selectRef = useRef(onSelect);
+    models = useRef<MapModels | null>(null),
+    selectRef = useRef(onSelect),
+    latest = useRef({ sites, mapSettings });
   const [loaded, setLoaded] = useState(false),
     [failed, setFailed] = useState(false),
     [tilt, setTilt] = useState(false),
     [locationError, setLocationError] = useState("");
   selectRef.current = onSelect;
+  latest.current = { sites, mapSettings };
   useEffect(() => {
     let disposed = false;
     import("maplibre-gl")
@@ -61,11 +68,28 @@ export function HeritageMap({
           });
           map.current = m;
           m.on("load", () => {
-            if (!disposed) {
-              setLoaded(true);
-              // A load event can follow a tile error; keep discovery available
-              // through the schematic view for the lifetime of this map.
-            }
+            if (disposed) return;
+            setLoaded(true);
+            // A load event can follow a tile error; keep discovery available
+            // through the schematic view for the lifetime of this map.
+            // Models and the OSM building layer are an addition: whatever
+            // goes wrong there leaves markers and the base map as they are.
+            if (!latest.current.mapSettings) return;
+            import("../lib/map-models")
+              .then(({ createMapModels }) => {
+                if (disposed) return;
+                models.current = createMapModels(
+                  m,
+                  lib.MercatorCoordinate,
+                  (id) => selectRef.current(id),
+                );
+                if (latest.current.mapSettings)
+                  models.current.update(
+                    latest.current.sites,
+                    latest.current.mapSettings,
+                  );
+              })
+              .catch(() => {});
           });
           m.on("error", () => {
             if (!disposed) setFailed(true);
@@ -78,6 +102,8 @@ export function HeritageMap({
     return () => {
       disposed = true;
       markers.current.forEach((m) => m.remove());
+      models.current?.dispose();
+      models.current = null;
       map.current?.remove();
       map.current = null;
     };
@@ -151,6 +177,9 @@ export function HeritageMap({
       cancelled = true;
     };
   }, [sites, selectedId, routeIds, loaded]);
+  useEffect(() => {
+    if (mapSettings) models.current?.update(sites, mapSettings);
+  }, [sites, mapSettings, loaded]);
   useEffect(() => {
     const site = sites.find((s) => s.id === selectedId);
     if (site && loaded)
