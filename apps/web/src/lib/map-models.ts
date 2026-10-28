@@ -79,10 +79,14 @@ export class MapModelLayer implements CustomLayerInterface {
   /** `site id` → source that failed to load; not retried until the source changes. */
   private readonly failed = new Map<string, string>();
 
+  private opacity = 1;
+
   constructor(
     private readonly mercator: typeof MercatorCoordinate,
     /** Called after a model appeared, left or moved: the building layer follows. */
     private readonly onChange: () => void,
+    /** Load the sites regardless of where the map looks (the panel preview). */
+    private readonly everywhere = false,
   ) {}
 
   onAdd(map: MapLibreMap, gl: WebGL2RenderingContext) {
@@ -127,6 +131,42 @@ export class MapModelLayer implements CustomLayerInterface {
   setSettings(settings: MapSettings) {
     this.settings = settings;
     this.reconcile();
+  }
+
+  /** 1 = as modelled, below 1 the models are see-through (the preview over a satellite picture). */
+  setOpacity(opacity: number) {
+    this.opacity = opacity;
+    for (const entry of this.loaded.values()) this.applyOpacity(entry.model);
+    this.map?.triggerRepaint();
+  }
+
+  /** What became of a site's model: still coming in, drawn, or unreadable. */
+  status(id: string): "loading" | "ready" | "failed" {
+    if (this.loaded.has(id)) return "ready";
+    return this.failed.get(id) === this.sites.get(id)?.src
+      ? "failed"
+      : "loading";
+  }
+
+  private applyOpacity(root: THREE.Object3D) {
+    root.traverse((item) => {
+      if (!(item instanceof THREE.Mesh)) return;
+      const materials: THREE.Material[] = Array.isArray(item.material)
+        ? item.material
+        : [item.material];
+      for (const material of materials) {
+        // Remember what the file said, so opacity 1 gives it back.
+        const own = (material.userData.akarOwn ??= {
+          opacity: material.opacity,
+          transparent: material.transparent,
+          depthWrite: material.depthWrite,
+        }) as { opacity: number; transparent: boolean; depthWrite: boolean };
+        material.opacity = own.opacity * this.opacity;
+        material.transparent = own.transparent || this.opacity < 1;
+        material.depthWrite = this.opacity < 1 ? false : own.depthWrite;
+        material.needsUpdate = true;
+      }
+    });
   }
 
   /** What each drawn model says about the OSM buildings around it. */
@@ -185,6 +225,13 @@ export class MapModelLayer implements CustomLayerInterface {
   /** The models that should be on screen now: in view, nearest the centre, at most `maxVisibleModels`. */
   private select(map: MapLibreMap): Map<string, MapModelSite> {
     if (map.getZoom() < this.settings.modelMinZoom) return new Map();
+    // The panel preview keeps its one model wherever the map is panned.
+    if (this.everywhere)
+      return new Map(
+        [...this.sites.values()]
+          .slice(0, Math.max(0, this.settings.maxVisibleModels))
+          .map((site) => [site.id, site]),
+      );
     const view = map.getBounds();
     const centre = map.getCenter();
     const padLng = (view.getEast() - view.getWest()) * VIEW_MARGIN;
@@ -279,6 +326,7 @@ export class MapModelLayer implements CustomLayerInterface {
         matrix: new THREE.Matrix4(),
         footprint: [],
       };
+      this.applyOpacity(entry.model);
       this.place(entry, site);
       this.loaded.set(site.id, entry);
       this.map?.triggerRepaint();
@@ -288,6 +336,7 @@ export class MapModelLayer implements CustomLayerInterface {
       this.loading.delete(site.id);
       // A model that cannot be read leaves the map as it is; its marker still opens the site.
       this.failed.set(site.id, site.src);
+      this.onChange();
     }
   }
 
@@ -354,7 +403,7 @@ export function createMapModels(
       models.setSettings(settings);
       models.setSites(
         sites.flatMap((s) =>
-          s.model?.placement
+          s.model?.placement && s.model.placement.visible !== false
             ? [{ id: s.id, src: s.model.src, placement: s.model.placement }]
             : [],
         ),

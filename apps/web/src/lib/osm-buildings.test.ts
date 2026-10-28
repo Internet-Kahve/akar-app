@@ -2,10 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   footprintRing,
+  hiddenBuildings,
+  interiorPoint,
   isHidden,
+  longestEdgeHeading,
   meanPoint,
   pointInRing,
   ringAreaM2,
+  ringCentroid,
+  setBuildingHidden,
   splitBuildings,
   visibleBuildings,
   type HideRule,
@@ -184,7 +189,138 @@ test("visible buildings carry height and base for the extrusion", () => {
   ]);
   const features = visibleBuildings(buildings, [model()]);
   assert.equal(features.length, 1);
-  assert.deepEqual(features[0]!.properties, { h: 14, b: 3 });
+  assert.deepEqual(features[0]!.properties, { h: 14, b: 3, i: 1 });
   assert.deepEqual(features[0]!.geometry.coordinates, [beside]);
   assert.equal(visibleBuildings(buildings, []).length, 2);
+});
+
+test("centroid of a ring follows its area, not its corner count", () => {
+  // An L shape with an extra corner on the long side: the mean of the corners drifts, the centroid does not.
+  const square = box(0, 0, 20, 10);
+  const [cx, cy] = ringCentroid(square);
+  assert.ok(Math.abs((cx - LNG) * M_LNG - 10) < 0.01);
+  assert.ok(Math.abs((cy - LAT) * M_LAT - 5) < 0.01);
+  const extra: Ring = [
+    square[0]!,
+    at(5, 0),
+    at(20, 0),
+    at(20, 10),
+    at(0, 10),
+    square[0]!,
+  ];
+  const [ex, ey] = ringCentroid(extra);
+  assert.ok(Math.abs((ex - LNG) * M_LNG - 10) < 0.01);
+  assert.ok(Math.abs((ey - LAT) * M_LAT - 5) < 0.01);
+  assert.deepEqual(ringCentroid([at(0, 0), at(0, 0)]), at(0, 0));
+});
+
+test("heading of the longest edge is reduced to a right angle", () => {
+  // Long side runs east-west: heading 90 → 0.
+  assert.ok(Math.abs(longestEdgeHeading(box(0, 0, 30, 10))) < 0.01);
+  // Long side runs north-south.
+  assert.ok(Math.abs(longestEdgeHeading(box(0, 0, 10, 30))) < 0.01);
+  // Turned 30° clockwise: the long side points 120° from north, which is 30° as a right-angle heading.
+  const a = (30 * Math.PI) / 180;
+  const turn = (east: number, north: number): LngLat =>
+    at(
+      east * Math.cos(a) + north * Math.sin(a),
+      -east * Math.sin(a) + north * Math.cos(a),
+    );
+  const turned: Ring = [
+    turn(0, 0),
+    turn(30, 0),
+    turn(30, 10),
+    turn(0, 10),
+    turn(0, 0),
+  ];
+  assert.ok(
+    Math.abs(longestEdgeHeading(turned) - 30) < 0.1,
+    String(longestEdgeHeading(turned)),
+  );
+  assert.equal(longestEdgeHeading([]), 0);
+});
+
+test("hiding and showing one building changes only the points that decide it", () => {
+  const footprint = box(-20, -20, 40, 40);
+  const rule: HideRule = { footprint, hiddenPoints: [], keptPoints: [] };
+  const small = box(0, 0, 10, 10);
+  const roof = box(-30, -30, 100, 100);
+  // Under the model the automatic rule hides the small building; a big roof stays.
+  assert.equal(isHidden(small, [rule]), true);
+  assert.equal(isHidden(roof, [rule]), false);
+
+  // Show the automatically hidden one: a kept point appears, no hidden point.
+  const shown = setBuildingHidden(small, rule, false, at(5, 5));
+  assert.deepEqual(shown.hiddenPoints, []);
+  assert.equal(shown.keptPoints.length, 1);
+  assert.equal(isHidden(small, [{ ...rule, ...shown }]), false);
+  // Hide it again: the kept point goes away and the rule hides it, nothing is added.
+  const back = setBuildingHidden(small, { ...rule, ...shown }, true, at(5, 5));
+  assert.deepEqual(back, { hiddenPoints: [], keptPoints: [] });
+
+  // Hide a roof by hand, then show it: the hidden point goes away, nothing is added.
+  const hiddenRoof = setBuildingHidden(roof, rule, true, at(40, 40));
+  assert.equal(hiddenRoof.hiddenPoints.length, 1);
+  assert.equal(isHidden(roof, [{ ...rule, ...hiddenRoof }]), true);
+  const shownRoof = setBuildingHidden(
+    roof,
+    { ...rule, ...hiddenRoof },
+    false,
+    at(40, 40),
+  );
+  assert.deepEqual(shownRoof, { hiddenPoints: [], keptPoints: [] });
+
+  // A hand-hidden building under the model: showing it needs both the removal and a kept point.
+  const both = setBuildingHidden(
+    small,
+    { ...rule, hiddenPoints: [point(2, 2)] },
+    false,
+    at(6, 6),
+  );
+  assert.deepEqual(both.hiddenPoints, []);
+  assert.equal(both.keptPoints.length, 1);
+  // Points inside other buildings stay.
+  const other = setBuildingHidden(
+    small,
+    { ...rule, hiddenPoints: [point(200, 200)] },
+    true,
+    at(5, 5),
+  );
+  assert.equal(other.hiddenPoints.length, 1);
+});
+
+test("hiddenBuildings is the complement of visibleBuildings", () => {
+  const rule: HideRule = {
+    footprint: box(-20, -20, 40, 40),
+    hiddenPoints: [],
+    keptPoints: [],
+  };
+  const buildings = splitBuildings([
+    tile(poly(box(0, 0, 10, 10))),
+    tile(poly(box(-30, -30, 100, 100))),
+    tile(poly(box(300, 300, 10, 10))),
+  ]);
+  assert.equal(hiddenBuildings(buildings, [rule]).length, 1);
+  assert.equal(visibleBuildings(buildings, [rule]).length, 2);
+});
+
+test("an interior point lies inside bent shapes too", () => {
+  assert.equal(
+    pointInRing(interiorPoint(box(0, 0, 20, 10)), box(0, 0, 20, 10)),
+    true,
+  );
+  // A "C": its centroid falls into the opening.
+  const c: Ring = [
+    at(0, 0),
+    at(30, 0),
+    at(30, 5),
+    at(5, 5),
+    at(5, 25),
+    at(30, 25),
+    at(30, 30),
+    at(0, 30),
+    at(0, 0),
+  ];
+  assert.equal(pointInRing(ringCentroid(c), c), false);
+  assert.equal(pointInRing(interiorPoint(c), c), true);
 });

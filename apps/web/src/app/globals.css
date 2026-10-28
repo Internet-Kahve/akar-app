@@ -4061,3 +4061,80 @@ td small {
 .admin-members th:first-child {
   width: 34%;
 }
+
+/* Editor: "Haritada göster" placement section */
+.placement {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.placement-map {
+  position: relative;
+  height: 380px;
+  margin: 12px 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.placement-map:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.placement-map-canvas {
+  position: absolute;
+  inset: 0;
+}
+.placement-handle {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow:
+    0 0 0 2px var(--primary),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+}
+.placement-tools,
+.placement-nudge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.placement-nudge span {
+  flex: 1 1 100%;
+  font-size: 12px;
+}
+.placement-buildings {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.placement-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 16px;
+  margin-top: 16px;
+}
+.editor-step-content .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 12px;
+}
+.editor-step-content .check input {
+  width: auto;
+  min-height: 0;
+}
+@media (max-width: 600px) {
+  .placement-map {
+    height: 300px;
+  }
+  .placement-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

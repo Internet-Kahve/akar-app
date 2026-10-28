@@ -139,3 +139,91 @@ test("demo sites with a model carry a placement; the mock serves default map set
   });
   assert.deepEqual(await c.refreshCatalog(), await c.getSnapshot());
 });
+
+test("mock: a placement is saved whole and survives a reload, saving the site keeps it, hiding it keeps the values, and bad values and sites without a model are refused", async () => {
+  const s = storage();
+  const c = createMockClient(s);
+  const before = (await c.getSnapshot()).sites.find(
+    (x) => x.id === "ulu-cami",
+  )!;
+  const placement = {
+    ...before.model!.placement!,
+    headingDeg: 180,
+    altitudeM: 2.5,
+    anchorNode: "Govde",
+    hiddenPoints: [{ lng: 29.06, lat: 40.18 }],
+    visible: true,
+  };
+  await c.dispatch({ type: "map-placement", siteId: "ulu-cami", placement });
+  assert.deepEqual(await c.getMapPlacement("ulu-cami"), placement);
+  assert.deepEqual(
+    await createMockClient(s).getMapPlacement("ulu-cami"),
+    placement,
+  );
+
+  // The editor's copy of the model still has the old placement: saving the site does not bring it back.
+  const saved = await c.saveSite({ ...before, description: "Yeni açıklama" });
+  assert.equal(saved.site.model?.placement?.headingDeg, 180);
+
+  // Hidden: kept with its values; the map draws only placements that are not hidden.
+  await c.dispatch({
+    type: "map-placement",
+    siteId: "ulu-cami",
+    placement: { ...placement, visible: false },
+  });
+  assert.deepEqual(await c.getMapPlacement("ulu-cami"), {
+    ...placement,
+    visible: false,
+  });
+
+  await assert.rejects(
+    c.dispatch({
+      type: "map-placement",
+      siteId: "ulu-cami",
+      placement: { ...placement, scale: 11 },
+    }),
+    /Ölçek/,
+  );
+  const bare = (await c.getSnapshot()).sites.find((x) => !x.model)!;
+  await assert.rejects(
+    c.dispatch({
+      type: "map-placement",
+      siteId: bare.id,
+      placement,
+    }),
+    /3B modeli yok/,
+  );
+  await assert.rejects(
+    c.dispatch({ type: "map-placement", siteId: "yok", placement }),
+    /bulunamadı/,
+  );
+  assert.equal(await c.getMapPlacement(bare.id), null);
+});
+
+test("mock: a draft site with a model can be placed", async () => {
+  const c = createMockClient(storage());
+  const draft = {
+    ...(await c.getSnapshot()).sites.find((x) => x.id === "ulu-cami")!,
+    id: "taslak",
+    status: "draft" as const,
+  };
+  delete draft.model!.placement;
+  const { site } = await c.saveSite(draft);
+  assert.equal(site.model?.placement, undefined);
+  await c.dispatch({
+    type: "map-placement",
+    siteId: "taslak",
+    placement: {
+      lng: 29.06,
+      lat: 40.18,
+      headingDeg: 0,
+      scale: 1,
+      altitudeM: 0,
+      anchorNode: null,
+      hiddenPoints: [],
+      keptPoints: [],
+      visible: true,
+    },
+  });
+  assert.equal((await c.getMapPlacement("taslak"))?.lat, 40.18);
+});

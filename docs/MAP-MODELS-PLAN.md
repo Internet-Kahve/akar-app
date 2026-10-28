@@ -132,7 +132,7 @@ Prototipteki yerleşimler (OSM ve uyduya göre düzeltilmiş konum ve yön, `haz
 
 1. API: migration `0014`, üçgen sayımı ve sınırı, yerleşim ucu, `SiteDetail` ve yönetici detayı alanları, OpenAPI, karar kaydı. Migration canlı veritabanına PR birleştirilmeden önce uygulanır.
 2. Web A: `@akar/api-client` + `@akar/domain` (tipler, harita ayarları, yenileme), taban noktası fonksiyonu, harita model katmanı, OSM bina katmanı ve gizleme kuralı.
-3. Web B: panel yerleşim bölümü (yerleşim komutu dahil).
+3. Web B: panel yerleşim bölümü (yerleşim komutu dahil). Yapıldı: eser düzenleyicinin Model adımında "Haritada göster". Yerleşim kendi düğmesiyle kaydedilir (`map-placement` komutu); sunucu modeli ve eseri bilmeden kaydedilemez, bu yüzden yeni eserde önce "Taslak kaydet" gerekir (açık kalan yerleşim o kayıtla birlikte gider). Gizli yerleşimin değerleri düzenleyici açılırken yönetici detayından okunur.
 4. Başlangıç verisinin panelden girilmesi, telefonda uçtan uca deneme.
 
 ## Kapsam dışı

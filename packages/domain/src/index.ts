@@ -38,6 +38,11 @@ export interface MapPlacement {
   hiddenPoints: Array<{ lng: number; lat: number }>;
   /** One point of each automatically hidden OSM building the editor asked back. */
   keptPoints: Array<{ lng: number; lat: number }>;
+  /**
+   * Panel only: `false` = saved but not drawn on the visitors' map (the public API returns no placement then).
+   * Absent means shown.
+   */
+  visible?: boolean;
 }
 /** `GET /v1/map-settings`: values the administrator tunes. */
 export interface MapSettings {
@@ -182,6 +187,8 @@ export type Command =
       reason?: string;
     }
   | { type: "site"; site: HeritageSite }
+  /** Saves the whole placement of a site's model (the site and its model must already be saved). */
+  | { type: "map-placement"; siteId: string; placement: MapPlacement }
   | { type: "catalog-routes"; routes: HeritageRoute[] }
   | { type: "photo"; photo: SitePhoto; source: SiteSource }
   | { type: "import-sites"; sites: HeritageSite[] };
@@ -243,6 +250,39 @@ export function validateSite(site: HeritageSite) {
     throw new Error("Geçerli enlem ve boylam gir.");
   if (site.status === "published" && !site.source.trim())
     throw new Error("Yayınlamak için kaynak bilgisi ekle.");
+}
+/** Value ranges of a placement; the API refuses the same ones (`MapPlacementBody`). */
+export const placementLimits = {
+  scale: { min: 0.1, max: 10 },
+  altitudeM: { min: -50, max: 200 },
+  anchorNodeLength: 200,
+  points: 50,
+} as const;
+/** The panel's first check of a placement before it is sent; the server checks the city's bounds too. */
+export function validatePlacement(p: MapPlacement) {
+  const within = (x: number, min: number, max: number) =>
+    Number.isFinite(x) && x >= min && x <= max;
+  if (!within(p.lng, -180, 180) || !within(p.lat, -90, 90))
+    throw new Error("Geçerli enlem ve boylam gir.");
+  if (!Number.isFinite(p.headingDeg) || p.headingDeg < 0 || p.headingDeg >= 360)
+    throw new Error("Yön 0 ile 360 derece arasında olmalı.");
+  const { scale, altitudeM, anchorNodeLength, points } = placementLimits;
+  if (!within(p.scale, scale.min, scale.max))
+    throw new Error(`Ölçek ${scale.min} ile ${scale.max} arasında olmalı.`);
+  if (!within(p.altitudeM, altitudeM.min, altitudeM.max))
+    throw new Error(
+      `Yükseklik ${altitudeM.min} ile ${altitudeM.max} metre arasında olmalı.`,
+    );
+  if ((p.anchorNode?.length ?? 0) > anchorNodeLength)
+    throw new Error("Ana parça adı çok uzun.");
+  for (const list of [p.hiddenPoints, p.keptPoints])
+    if (
+      list.length > points ||
+      list.some((x) => !within(x.lng, -180, 180) || !within(x.lat, -90, 90))
+    )
+      throw new Error(
+        `Gizle ve geri göster listeleri en çok ${points} nokta tutar.`,
+      );
 }
 /** Used by both the editor checklist and the mock command boundary. */
 export function publicationIssues(site: HeritageSite): string[] {
@@ -323,6 +363,7 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
   const next = structuredClone(state);
   if (
     "siteId" in command &&
+    command.type !== "map-placement" &&
     !state.sites.some(
       (s) => s.id === command.siteId && s.status === "published",
     )
@@ -455,12 +496,32 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
       next.memories.splice(at, 1);
       break;
     }
-    case "site":
+    case "site": {
       validateSite(command.site);
-      next.sites = next.sites.some((s) => s.id === command.site.id)
-        ? next.sites.map((s) => (s.id === command.site.id ? command.site : s))
-        : [...next.sites, command.site];
+      const incoming = structuredClone(command.site);
+      const before = state.sites.find((s) => s.id === incoming.id);
+      // The placement is saved by its own command; saving the site never rewrites it.
+      if (incoming.model) {
+        if (before?.model?.placement)
+          incoming.model.placement = structuredClone(before.model.placement);
+        else delete incoming.model.placement;
+      }
+      next.sites = before
+        ? next.sites.map((s) => (s.id === incoming.id ? incoming : s))
+        : [...next.sites, incoming];
       break;
+    }
+    case "map-placement": {
+      const site = next.sites.find((s) => s.id === command.siteId);
+      if (!site) throw new Error("Eser bulunamadı.");
+      if (!site.model)
+        throw new Error(
+          "Eserin 3B modeli yok; haritada yerleşim için önce model bağla.",
+        );
+      validatePlacement(command.placement);
+      site.model.placement = structuredClone(command.placement);
+      break;
+    }
   }
   return next;
 }

@@ -3,10 +3,13 @@ import type {
   GeoJSONSource,
   Map as MapLibreMap,
   MapSourceDataEvent,
+  PointLike,
 } from "maplibre-gl";
 import {
+  hiddenBuildings,
   splitBuildings,
   visibleBuildings,
+  type Building,
   type HideRule,
 } from "./osm-buildings";
 
@@ -16,6 +19,10 @@ const TILE_LAYER = "building";
 const STYLE_LAYER = "building_3d";
 const SOURCE_ID = "akar-bina";
 const LAYER_ID = "akar-bina-3d";
+/** Panel preview: the buildings the rules leave out, drawn red and half see-through. */
+const HIDDEN_SOURCE_ID = "akar-bina-gizli";
+const HIDDEN_LAYER_ID = "akar-bina-gizli-3d";
+const HIDDEN_COLOR = "#d93025";
 /** Tiles arrive in bursts; the buildings are rebuilt once things settle. */
 const DEBOUNCE_MS = 350;
 
@@ -26,10 +33,13 @@ const DEBOUNCE_MS = 350;
  */
 export class OsmBuildingLayer {
   private timer: number | undefined;
+  /** Every building of the last rebuild, hidden ones included. */
+  private buildings: Building[] = [];
 
   private constructor(
     private readonly map: MapLibreMap,
     private readonly rules: () => readonly HideRule[],
+    private readonly showHidden: boolean,
   ) {
     map.on("sourcedata", this.onSourceData);
     this.schedule();
@@ -39,6 +49,7 @@ export class OsmBuildingLayer {
   static install(
     map: MapLibreMap,
     rules: () => readonly HideRule[],
+    options: { showHidden?: boolean } = {},
   ): OsmBuildingLayer | null {
     if (!map.getSource(TILE_SOURCE)) return null;
     const style = map.getLayer(STYLE_LAYER);
@@ -88,8 +99,39 @@ export class OsmBuildingLayer {
       // Where the style drew its own buildings: under the roads and labels.
       at >= 0 ? layers[at + 1]?.id : undefined,
     );
+    if (options.showHidden) {
+      map.addSource(HIDDEN_SOURCE_ID, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer(
+        {
+          id: HIDDEN_LAYER_ID,
+          type: "fill-extrusion",
+          source: HIDDEN_SOURCE_ID,
+          minzoom: style?.minzoom ?? 15,
+          paint: {
+            "fill-extrusion-color": HIDDEN_COLOR,
+            "fill-extrusion-opacity": 0.55,
+            "fill-extrusion-height": ["get", "h"],
+            "fill-extrusion-base": ["get", "b"],
+          },
+        },
+        at >= 0 ? layers[at + 1]?.id : undefined,
+      );
+    }
     if (style) map.setLayoutProperty(STYLE_LAYER, "visibility", "none");
-    return new OsmBuildingLayer(map, rules);
+    return new OsmBuildingLayer(map, rules, options.showHidden ?? false);
+  }
+
+  /** The building drawn at a screen point (pixels from the map's top left), hidden ones included; `null` over open ground. */
+  pick(point: PointLike): Building | null {
+    const layers = [LAYER_ID, HIDDEN_LAYER_ID].filter((id) =>
+      this.map.getLayer(id),
+    );
+    const hit = this.map.queryRenderedFeatures(point, { layers })[0];
+    const index = Number(hit?.properties?.i);
+    return (hit && this.buildings[index]) || null;
   }
 
   /** Rebuilds the layer shortly: after tiles loaded, or a model appeared, left or moved. */
@@ -103,6 +145,10 @@ export class OsmBuildingLayer {
     this.map.off("sourcedata", this.onSourceData);
     if (this.map.getLayer(LAYER_ID)) this.map.removeLayer(LAYER_ID);
     if (this.map.getSource(SOURCE_ID)) this.map.removeSource(SOURCE_ID);
+    if (this.map.getLayer(HIDDEN_LAYER_ID))
+      this.map.removeLayer(HIDDEN_LAYER_ID);
+    if (this.map.getSource(HIDDEN_SOURCE_ID))
+      this.map.removeSource(HIDDEN_SOURCE_ID);
     if (this.map.getLayer(STYLE_LAYER))
       this.map.setLayoutProperty(STYLE_LAYER, "visibility", "visible");
   }
@@ -117,9 +163,16 @@ export class OsmBuildingLayer {
     const features = this.map.querySourceFeatures(TILE_SOURCE, {
       sourceLayer: TILE_LAYER,
     });
+    this.buildings = splitBuildings(features);
+    const rules = this.rules();
     source.setData({
       type: "FeatureCollection",
-      features: visibleBuildings(splitBuildings(features), this.rules()),
+      features: visibleBuildings(this.buildings, rules),
     });
+    if (this.showHidden)
+      this.map.getSource<GeoJSONSource>(HIDDEN_SOURCE_ID)?.setData({
+        type: "FeatureCollection",
+        features: hiddenBuildings(this.buildings, rules),
+      });
   };
 }

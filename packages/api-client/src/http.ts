@@ -1,5 +1,6 @@
 import {
   defaultMapSettings,
+  validatePlacement,
   validateSite,
   type Command,
   type HeritageRoute,
@@ -198,6 +199,13 @@ interface CameraPoseDto {
   elevationDeg: number;
   distanceM: number;
 }
+/** `AdminSiteDetail.mapPlacement`: the saved placement in every case (also while hidden); `lng`/`lat` are null while the model stands on the site's own location. */
+interface AdminPlacementDto extends Omit<MapPlacement, "lng" | "lat"> {
+  lng: number | null;
+  lat: number | null;
+  visible: boolean;
+  updatedAt: string;
+}
 /** `AdminSiteDetail`: the public detail plus status; a draft may lack type and location. */
 interface AdminSiteDetailDto extends Omit<
   SiteDetailDto,
@@ -207,6 +215,8 @@ interface AdminSiteDetailDto extends Omit<
   coordinates: [number, number] | null;
   status: "draft" | "published";
   openingCamera: CameraPoseDto | null;
+  /** The saved placement; `null` while none was saved; absent on older API versions. */
+  mapPlacement?: AdminPlacementDto | null;
   /** Per-site place inside each source ("s. 42"); the domain source has no such field. */
   sourceLinks: Array<{ sourceId: string; locator: string | null }>;
 }
@@ -408,18 +418,44 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
   };
 }
 
+/** The panel's placement: the saved one with `visible`, on the site's own location where none was stored. */
+const mapAdminPlacement = (
+  p: AdminPlacementDto,
+  at: [number, number],
+): MapPlacement => ({
+  lng: p.lng ?? at[0],
+  lat: p.lat ?? at[1],
+  headingDeg: p.headingDeg,
+  scale: p.scale,
+  altitudeM: p.altitudeM,
+  anchorNode: p.anchorNode,
+  hiddenPoints: p.hiddenPoints,
+  keptPoints: p.keptPoints,
+  visible: p.visible,
+});
+
 /** Panel view of an admin detail. A draft without a type shows "cami"; one without a location shows `placeholder` (decision log §11.23). */
 const mapAdminSite = (
   d: AdminSiteDetailDto,
   placeholder: [number, number],
-): HeritageSite => ({
-  ...mapSite({
-    ...d,
-    kind: d.kind ?? "cami",
-    coordinates: d.coordinates ?? placeholder,
-  }),
-  status: d.status,
-});
+): HeritageSite => {
+  const at = d.coordinates ?? placeholder;
+  const site = mapSite({ ...d, kind: d.kind ?? "cami", coordinates: at });
+  return {
+    ...site,
+    status: d.status,
+    // The panel sees the placement also while it is hidden (`visible: false`).
+    ...(site.model &&
+      d.mapPlacement !== undefined && {
+        model: {
+          ...site.model,
+          placement: d.mapPlacement
+            ? mapAdminPlacement(d.mapPlacement, at)
+            : null,
+        },
+      }),
+  };
+};
 
 const mapRoute = (r: RouteDto): HeritageRoute => ({
   id: r.id,
@@ -1346,7 +1382,11 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   ) {
     const photos = site.photos ?? [];
     const sourcesChanged = !same(site.sources ?? [], cur.sources ?? []);
-    const modelChanged = !same(site.model, cur.model);
+    // The placement has its own command; a stale copy on the model is no model change.
+    const modelChanged = !same(
+      site.model && { ...site.model, placement: undefined },
+      cur.model && { ...cur.model, placement: undefined },
+    );
     const photosChanged =
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
@@ -1565,7 +1605,12 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   async function run(command: Command): Promise<boolean> {
     const cat = await loadCatalog();
     user = await ensureUser(cat);
-    if ("siteId" in command && !cat.sites.some((s) => s.id === command.siteId))
+    if (
+      "siteId" in command &&
+      // A placement is also saved for drafts, which the published catalog does not list.
+      command.type !== "map-placement" &&
+      !cat.sites.some((s) => s.id === command.siteId)
+    )
       throw new Error("Eser bulunamadı.");
     switch (command.type) {
       case "save": {
@@ -1690,6 +1735,31 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       case "site":
         await updateSite(command.site);
         return false;
+      case "map-placement": {
+        validatePlacement(command.placement);
+        const p = command.placement;
+        const id = createdIds.get(command.siteId) ?? command.siteId;
+        await call(
+          "PUT",
+          `/v1/admin/sites/${encodeURIComponent(id)}/map-placement`,
+          {
+            body: {
+              lng: p.lng,
+              lat: p.lat,
+              headingDeg: p.headingDeg,
+              scale: p.scale,
+              altitudeM: p.altitudeM,
+              anchorNode: p.anchorNode,
+              hiddenPoints: p.hiddenPoints,
+              keptPoints: p.keptPoints,
+              visible: p.visible ?? true,
+            },
+          },
+        );
+        // The answer is the admin detail; the catalog entry (and the visitor's placement in it) is re-read.
+        await refreshAdminSite(id);
+        return false;
+      }
       case "catalog-routes":
         await updateRoutes(command.routes);
         return false;
@@ -1757,6 +1827,18 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           ? s.maxVisibleModels!
           : defaultMapSettings.maxVisibleModels,
       };
+    },
+    // Live state, not queued behind commands: the editor reads it when it opens.
+    getMapPlacement: async (siteId) => {
+      const id = createdIds.get(siteId) ?? siteId;
+      const d = await call<AdminSiteDetailDto>(
+        "GET",
+        `/v1/admin/sites/${encodeURIComponent(id)}`,
+        { cache: "no-store" },
+      );
+      return d.mapPlacement
+        ? mapAdminPlacement(d.mapPlacement, d.coordinates ?? [0, 0])
+        : null;
     },
     getModerationPage: (status, cursor) =>
       enqueue(async () => {

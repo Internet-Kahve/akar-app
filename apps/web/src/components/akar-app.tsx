@@ -40,6 +40,7 @@ import {
   normalize,
   type Command,
   type HeritageSite,
+  type MapPlacement,
   type MapSettings,
   type Role,
   type Snapshot,
@@ -277,6 +278,27 @@ export function AkarApp() {
   const commit = useCallback(
     async (command: Command) => (await run(command)) === null,
     [run],
+  );
+  const loadPlacement = useCallback<AkarClient["getMapPlacement"]>(
+    async (siteId) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.getMapPlacement(siteId);
+    },
+    [],
+  );
+  // Not through `run`: the editor shows the error next to the values it refused.
+  const savePlacement = useCallback(
+    async (siteId: string, placement: MapPlacement) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      setState(
+        await client.current.dispatch({
+          type: "map-placement",
+          siteId,
+          placement,
+        }),
+      );
+    },
+    [],
   );
   const saveSite = useCallback(async (site: HeritageSite) => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
@@ -582,6 +604,8 @@ export function AkarApp() {
               changeMemberRole={changeMemberRole}
               currentUserId={account?.id ?? "demo-admin"}
               saveSite={saveSite}
+              loadPlacement={loadPlacement}
+              savePlacement={savePlacement}
               live={live}
             />
           )}
