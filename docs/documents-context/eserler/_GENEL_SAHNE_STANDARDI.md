@@ -39,10 +39,16 @@ sun.data.energy = 1.25; sun.data.angle = math.radians(35); sun.rotation_euler = 
 ```
 
 - Güneş yumuşak (angle 35°). Sert, siyah gölge yok. Işık eserler arasında **değişmez**: aynı yön, aynı güç. Böylece eserler yan yana tutarlı görünür.
+- **28 Ekim 2026:** köşe rengi AO'su kaldırıldı (COLOR_0 yok). AO ikinci UV `UV_AO`'ya dokuya pişirilir (glTF occlusionTexture, texCoord 1, 0,5 + 0,5 × AO) ve `Yer_Golgesi` saydam düzlemi eklenir. Hat: `_kutuphane/renk_ao_v3/`. Aşağıdaki köşe rengi kuralı eski sürümler içindir.
+- **29 Ekim 2026 (geçerli):** pişmiş AO kalır ama küçük: tek kanal JPEG, kalite 80; Ulucami ve Koza Han 1024 px, diğerleri 512 px. `Yer_Golgesi` düzlemi modelden çıkarıldı; yer gölgesini web çiziyor. GLB'ler yalnız Blender'dan üretilir: her eserin `build/build_vXX.py` betiği ve `_kutuphane/blend_hat/`. `renk_ao_v3/` bir kerelik geçişti, yeniden kullanılmaz.
 - Vertex AO: **21 Ekim 2026 (uygulama modelleri):** köşe rengi yalnız gri AO (R=G=B). Yönlü gölge pişirilmez. AO tabanı 0,875, kubbe/alem/kasnak ≈ 0,94, ardından yükseklik gradyanı `*= 0,92 + 0,08·y/H`; en koyu köşe ≥ 0,80 (iş emrindeki 0,84 tabanı gradyanla 0,77 verdiği için 0,875 seçildi). Renk malzemenin baseColor'unda durur. Eski değerler (0,70 / 0,85) yalnız eski sürümler içindir.
 - Standart kontrol kamerası: izometriğe yakın, yükseklik açısı ≈ 32°, yatay ≈ 45°, ortografik. Kullanıcıyla karşılaştırma için her eserde `havadan.png` (1800 × 1600) bu açıdan alınır.
 
 ## 3. Ortak malzeme paleti (canlı ve aydınlık)
+
+> **28 Ekim 2026 (kullanıcı kararı; bu bölümün tablosunun yerine geçer):** uygulama modellerinin rengi fotoğraftan ölçülür. Tek kaynak `_kutuphane/malzeme-paleti.json` (rol → hex, malzeme eşlemesi, eser istisnaları); ölçüm `_kutuphane/RENK_OLCUM_RAPORU.md`. Aşağıdaki tablo ve «V ≥ 0,80» kuralı yalnız 21 Ekim sürümleri için tarihî kayıttır. Paletin dışında kalan roller (ölçülemeyenler) mevcut renkte durur.
+>
+> **28 Ekim 2026, gece (geçerli; yukarıdaki kararın yerine geçer):** fotoğraf renkleri haritada cansız bulundu. 21 Ekim pastel renkleri geri geldi. `malzeme-paleti.json`'daki "hex" alanları pastel değerlerdir; fotoğraf ölçümü "foto_olcum" alanında yalnız kayıt olarak durur. Parlaklık ve doygunluk ayarı web'de yapılır (şehir kaydı `harita_isik`).
 
 **21 Ekim 2026 (tek kaynak):** uygulama modelleri büyük yüzeyde «açık ton» sütununu, küçük ayrıntıda «ana» sütununu kullanır; kalın yazılan değerler yedi modelde aynıdır. Ek: kiremit `#D07E57`, sarı sıva `#F2E2A8`, küçük soğan kurşun `#9AA2A7`, kurşun dikiş `#98A1A8`, ahşap kapı `#7A5134`, krem sıva `#E8DFCB`, harç `#E9DFCB`, almaşık düz `#DDBD9C`. Avlu/çıplak zemin dokuları uygulama modelinde `#D2C3A4` ortalamasına açıldı (V ≥ 0,80); kullanıcı 21 Ekim 2026'da onayladı. §1'deki avlu `#B3A590` yalnız sunum/eski sürümlerde kalır, uygulama modelinde (Koza Han v14, Emir Hanı v04 ve diğerleri) geçerli olan `#D2C3A4`'tür. Geniş yüzeyde V ≥ 0,80; pencere, kapı, koyu ahşap, demir bu kuralın dışındadır. **Kurşun da bu kuralın dışındadır (kullanıcı kararı, 21 Ekim 2026):** kurşun `#BCC2C6` (V ≈ 0,78), dokulu kurşun malzemelerinde etkin V biraz daha düşüktür; diğer bütün roller için V ≥ 0,80 aynen geçerlidir.
 

@@ -1,0 +1,296 @@
+{
+ "_durum": "GEÇERLİ: 21 Ekim pastel renkleri (karar 28 Ekim gece). Fotoğraf ölçümleri «foto_olcum» ve «eser_istisna_foto_olcum» alanlarında saklı.",
+ "_yontem": "Fotoğraftaki düz bölgelerin piksel ortancası; yalnız doğrudan güneşli (G) örnekler. Ortak hex: Ulucami'nin karara bağlı değeri (yoksa eserlerin ortancası); üyeler ondan ±0,05 açıklık ve ±6° ton içinde (doygunluk < 0,12 ise ton bakılmaz). Ulucami değerleri 28 Ekim kararı (yeniden ölçülmedi). Burada olmayan roller: mevcut model rengi kalır.",
+ "_rapor": "eserler/_kutuphane/RENK_OLCUM_RAPORU.md",
+ "kursun": {
+  "hex": "#BCC2C6",
+  "kaynak": [
+   "eserler/ulu-cami/3d/kontrol/renk-olcumu_2026-10-28.png",
+   "eserler/yildirim-bayezid-bedesteni/3d/kontrol/renk-olcumu_2026-10-28.png",
+   "eserler/orhan-gazi-turbesi/3d/kontrol/renk-olcumu_2026-10-28.png"
+  ],
+  "malzemeler": [
+   "Bant_Cati",
+   "Cati",
+   "Kubbe",
+   "Kubbe.001",
+   "Kursun"
+  ],
+  "uyeler": "hepsi",
+  "foto_olcum": "#BCC2C6",
+  "karar": "28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de",
+  "pastel_kaynak": {
+   "ulu-cami": "ulu-cami referans sürüm / Cati",
+   "yildirim-bayezid-bedesteni": "yildirim-bayezid-bedesteni referans sürüm / Cati",
+   "koza-han": "koza-han referans sürüm / Cati_Kursun",
+   "orhan-bey-kulliyesi": "orhan-bey-kulliyesi referans sürüm / Kubbe",
+   "orhan-bey-hamami": "orhan-bey-hamami referans sürüm / Kubbe",
+   "emir-han": "emir-han referans sürüm / Cati_Kursun",
+   "orhan-gazi-turbesi": "orhan-gazi-turbesi referans sürüm / Kursun"
+  }
+ },
+ "kasnak_sari_siva": {
+  "hex": "#F2E2A8",
+  "kaynak": [
+   "eserler/ulu-cami/3d/kontrol/renk-olcumu_2026-10-28.png"
+  ],
+  "malzemeler": [
+   "Kasnak.001"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "foto_olcum": "#D2B276",
+  "karar": "28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de",
+  "pastel_kaynak": {
+   "ulu-cami": "ulu-cami referans sürüm / Kasnak.001"
+  }
+ },
+ "duvar": {
+  "hex": "#E5D0AE",
+  "kaynak": [
+   "eserler/ulu-cami/3d/kontrol/renk-olcumu_2026-10-28.png",
+   "eserler/yildirim-bayezid-bedesteni/3d/kontrol/renk-olcumu_2026-10-28.png"
+  ],
+  "malzemeler": [
+   "Duvar",
+   "Tas_Orgusu_Hafif",
+   "Tas_Orgusu_Nis"
+  ],
+  "uyeler": [
+   "ulu-cami",
+   "yildirim-bayezid-bedesteni"
+  ],
+  "foto_olcum": "#AF9A7D",
+  "karar": "28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de",
+  "pastel_kaynak": {
+   "ulu-cami": "ulu-cami referans sürüm / Tas_Orgusu_Hafif",
+   "yildirim-bayezid-bedesteni": "yildirim-bayezid-bedesteni referans sürüm / Duvar",
+   "koza-han": "koza-han referans sürüm / Duvar_Almasik",
+   "orhan-bey-kulliyesi": "orhan-bey-kulliyesi referans sürüm / Duvar",
+   "orhan-bey-hamami": "orhan-bey-hamami referans sürüm / Duvar",
+   "emir-han": "emir-han referans sürüm / Duvar_Almasik"
+  }
+ },
+ "tugla": {
+  "hex": "#CF7F55",
+  "kaynak": [
+   "eserler/ulu-cami/3d/kontrol/renk-olcumu_2026-10-28.png"
+  ],
+  "malzemeler": [
+   "Minare_Tugla_Derzi"
+  ],
+  "uyeler": "hepsi",
+  "not": "Yedi eserde ortak (Ulucami minare ölçümü). Tek küçük bölgeden gelen eser tuğla ölçümleri güvenilir bulunmadı, istisna yapılmadı.",
+  "foto_olcum": "#8E6A4E",
+  "karar": "28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de",
+  "pastel_kaynak": {
+   "ulu-cami": "ulu-cami referans sürüm / Minare_Tugla_Derzi",
+   "yildirim-bayezid-bedesteni": "yildirim-bayezid-bedesteni referans sürüm / Tugla",
+   "koza-han": "koza-han referans sürüm / Tugla",
+   "orhan-bey-kulliyesi": "orhan-bey-kulliyesi referans sürüm / Tugla",
+   "orhan-bey-hamami": "orhan-bey-hamami referans sürüm / Tugla",
+   "emir-han": "emir-han referans sürüm / Tugla"
+  }
+ },
+ "mermer": {
+  "hex": "#F5F4F0",
+  "kaynak": [
+   "eserler/ulu-cami/3d/kontrol/renk-olcumu_2026-10-28.png"
+  ],
+  "malzemeler": [
+   "Mermer",
+   "Minare_Kaide_Mermer",
+   "Sad_Mermer"
+  ],
+  "uyeler": "hepsi",
+  "foto_olcum": "#E6E2D6",
+  "karar": "28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de",
+  "pastel_kaynak": {
+   "ulu-cami": "ulu-cami referans sürüm / Mermer",
+   "yildirim-bayezid-bedesteni": "yildirim-bayezid-bedesteni referans sürüm / Kitabe",
+   "koza-han": "koza-han referans sürüm / Mermer_Beyaz",
+   "orhan-bey-kulliyesi": "orhan-bey-kulliyesi referans sürüm / Mermer",
+   "orhan-bey-hamami": "orhan-bey-hamami referans sürüm / Mermer",
+   "emir-han": "emir-han referans sürüm / Sad_Mermer",
+   "orhan-gazi-turbesi": "orhan-gazi-turbesi referans sürüm / Mermer"
+  }
+ },
+ "acik_sorular": {},
+ "eser_malzeme": {
+  "_aciklama": "Blender malzeme adı → rol. {'rol':..,'goreli':M}: hedef renge çekilmez; M malzemesine uygulanan doğrusal çarpan aynen uygulanır (desenin ve iki malzeme arasındaki farkın korunması için). Listede olmayan malzeme: renk değişmez.",
+  "ulu-cami": {
+   "Cati": "kursun",
+   "Kubbe.001": "kursun",
+   "Kasnak.001": "kasnak_sari_siva",
+   "Tas_Orgusu_Hafif": "duvar",
+   "Tas_Orgusu_Nis": {
+    "rol": "duvar",
+    "goreli": "Tas_Orgusu_Hafif"
+   },
+   "Minare_Tugla_Derzi": "tugla",
+   "Mermer": "mermer",
+   "Minare_Kaide_Mermer": "mermer",
+   "Sad_Mermer": "mermer",
+   "Ic_Mermer": "mermer"
+  },
+  "yildirim-bayezid-bedesteni": {
+   "Cati": "kursun",
+   "Kubbe": "kursun",
+   "Bant_Cati": "kursun",
+   "Duvar": "duvar",
+   "Tugla": "tugla",
+   "Kitabe": "mermer"
+  },
+  "koza-han": {
+   "Cati_Kursun": "kursun",
+   "Kursun": "kursun",
+   "Cati_Metal": "kursun",
+   "Sacak": "kursun",
+   "Baca_Kulah": "kursun",
+   "Tugla": "tugla",
+   "Baca_Tugla": "tugla",
+   "Disli_Tugla": "tugla",
+   "Mermer_Beyaz": "mermer",
+   "Duvar_Almasik": "duvar"
+  },
+  "orhan-bey-kulliyesi": {
+   "Kubbe": "kursun",
+   "Duvar": "duvar",
+   "Almasik_Revak": {
+    "rol": "duvar",
+    "goreli": "Duvar"
+   },
+   "Kasnak": {
+    "rol": "duvar",
+    "goreli": "Duvar"
+   },
+   "Tugla": "tugla",
+   "Kirpi": "tugla",
+   "Minare": "tugla",
+   "Alinlik_Baklava": "tugla",
+   "Mermer": "mermer"
+  },
+  "orhan-bey-hamami": {
+   "Kubbe": "kursun",
+   "Kursun": "kursun",
+   "Duvar": "duvar",
+   "Kasnak": {
+    "rol": "duvar",
+    "goreli": "Duvar"
+   },
+   "Tugla": "tugla",
+   "Kirpi": "tugla",
+   "Mermer": "mermer"
+  },
+  "emir-han": {
+   "Cati_Kursun": "kursun",
+   "Duvar_Almasik": "duvar",
+   "Tugla": "tugla",
+   "Baca_Tugla": "tugla",
+   "Kirpi_Sacak": "tugla",
+   "Sad_Mermer": "mermer"
+  },
+  "orhan-gazi-turbesi": {
+   "Kursun": "kursun",
+   "Mermer": "mermer",
+   "Cephe_Krem": "krem_siva"
+  }
+ },
+ "krem_siva": {
+  "hex": "#E8DFCB",
+  "kaynak": [
+   "veri/bursa-foto/I. ve II. Cilt - Osmangazi/Türbeler Klasörü/08_1.jpg (güneş lekeleri: bölgelerin parlak %15'i; 3 bölge #EDDCC2–#FCEDD4)"
+  ],
+  "malzemeler": [
+   "Cephe_Krem"
+  ],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "Şimdilik yalnız Türbe; diğer eserlerin krem sıvaları ölçülmedi, mevcut renkte.",
+  "foto_olcum": "#F5E4C9",
+  "karar": "28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de",
+  "pastel_kaynak": {
+   "orhan-gazi-turbesi": "orhan-gazi-turbesi referans sürüm / Cephe_Krem"
+  }
+ },
+ "kararlar_28_ekim": {
+  "emir-han.cati": "KURŞUN KALIR. Envanter (E cilt-1, envanter_c1.md s.151): «üzeri kurşunla kaplıdır; ancak bir dönem kiremitle örtüldüğü bilinmektedir». 2024 dron fotoğrafındaki gri/yeşil/mavi kaplamalar geçici ya da onarım katmanı; çatı sokaktan görünmez. Kaynak + yedi eserde tutarlılık + değişen bir kaplamaya bağlanmamak.",
+  "koza-han.duvar": "#8E887F. DJI_20241023135706_0377 (Koza kaynak dizininde: kozahan_arsiv_012_almasik_pencere_detay): pencereler arası iki saf almaşık bölge ortancası #827D74; doğrudan güneş yok, pozlama aynı karedeki beyaz harçla (#DBD9D4) güneşli fotoğraflardaki harca (#EDEBE9) eşitlenerek düzeltildi (doğrusal çarpan 1,21). Koza'nın gölgede çekilmiş diğer fotoğraflarıyla (#848079, #78736B) tutarlı: Koza duvarı Ulucami'den belirgin gri.",
+  "orhan-gazi-turbesi.krem_siva": "#F5E4C9. 08_1 fotoğrafında duvar ağaç gölgesi altında; güneş alan lekeler (bölgedeki en parlak %15) ölçüldü, 3 bölge tutarlı. Model #E8DFCB ile aynı açıklık, biraz daha sıcak krem."
+ },
+ "eser_istisna_foto_olcum": {
+  "orhan-bey-kulliyesi": {
+   "duvar": "#C4B08C"
+  },
+  "orhan-bey-hamami": {
+   "duvar": "#C69D80"
+  },
+  "emir-han": {
+   "duvar": "#AC9483"
+  },
+  "koza-han": {
+   "duvar": "#8E887F"
+  }
+ },
+ "eser_istisna": {
+  "yildirim-bayezid-bedesteni": {
+   "duvar": "#E3DDBE"
+  },
+  "koza-han": {
+   "duvar": "#DCC8A6"
+  },
+  "orhan-bey-kulliyesi": {
+   "duvar": "#E5DAB9"
+  },
+  "orhan-bey-hamami": {
+   "duvar": "#E3D8B8"
+  },
+  "emir-han": {
+   "duvar": "#E7D7AF"
+  }
+ },
+ "karar": "28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de",
+ "eser_doku": {
+  "_aciklama": "Dokulu malzemenin geçerli (pastel) dokusu; yol eserler/<eser>/3d/ altına göre. Düz malzemede renk rol hex'inden (eser_istisna önce).",
+  "ulu-cami": {
+   "Tas_Orgusu_Hafif": "build/doku_palet_v2/Tas_Orgusu_Hafif_palet_v2.png",
+   "Tas_Orgusu_Nis": "build/doku_palet_v2/Tas_Orgusu_Nis_palet_v2.png",
+   "Minare_Tugla_Derzi": "build/doku_palet_v2/Minare_Tugla_Derzi_palet_v2.png"
+  },
+  "yildirim-bayezid-bedesteni": {
+   "Kubbe": "build/doku_palet_v2/Kubbe_palet_v2.png",
+   "Bant_Cati": "build/doku_palet_v2/Bant_Cati_palet_v2.png",
+   "Duvar": "build/doku_palet_v2/Duvar_palet_v2.png"
+  },
+  "koza-han": {
+   "Baca_Tugla": "build/doku_palet_v2/Baca_Tugla_palet_v2.png",
+   "Disli_Tugla": "build/doku_palet_v2/Disli_Tugla_palet_v2.png",
+   "Duvar_Almasik": "build/doku_palet_v2/Duvar_Almasik_palet_v2.png"
+  },
+  "orhan-bey-kulliyesi": {
+   "Kubbe": "build/doku_palet_v2/Kubbe_palet_v2.png",
+   "Duvar": "build/doku_palet_v2/Duvar_palet_v2.png",
+   "Almasik_Revak": "build/doku_palet_v2/Almasik_Revak_palet_v2.png",
+   "Kasnak": "build/doku_palet_v2/Kasnak_palet_v2.png",
+   "Kirpi": "build/doku_palet_v2/Kirpi_palet_v2.png",
+   "Minare": "build/doku_palet_v2/Minare_palet_v2.png",
+   "Alinlik_Baklava": "build/doku_palet_v2/Alinlik_Baklava_palet_v2.png"
+  },
+  "orhan-bey-hamami": {
+   "Kubbe": "build/doku_palet_v2/Kubbe_palet_v2.png",
+   "Duvar": "build/doku_palet_v2/Duvar_palet_v2.png",
+   "Kasnak": "build/doku_palet_v2/Kasnak_palet_v2.png",
+   "Kirpi": "build/doku_palet_v2/Kirpi_palet_v2.png"
+  },
+  "emir-han": {
+   "Duvar_Almasik": "build/doku_palet_v2/Duvar_Almasik_palet_v2.png",
+   "Baca_Tugla": "build/doku_palet_v2/Baca_Tugla_palet_v2.png",
+   "Kirpi_Sacak": "build/doku_palet_v2/Kirpi_Sacak_palet_v2.png"
+  },
+  "orhan-gazi-turbesi": {
+   "Kursun": "build/doku_palet_v2/Kursun_palet_v2.png"
+  }
+ }
+}
