@@ -11,7 +11,7 @@ Rota eseri: 8 cümle (~1 dk). Klasör adı `orhan-bey-kulliyesi`; içerik camini
 | 3 | Külliyeden bugüne cami, Emir Hanı ve Orhan Hamamı ulaştı. | 04_tepeden.jpg | hayır | — | E cilt-1 PDF s.96 | Doğrulanmış |
 | 4 | 1360 tarihli vakfiyeyle Orhan Hamamı, külliyenin imaretine vakfedildi. | 10_akar-orhan-hamami.jpg | evet | — | E cilt-1 PDF s.97, s.104 | Doğrulanmış |
 | 5 | 1413'teki Karaman kuşatmasında yanan cami, 1417'de yeniden yapıldı. | 09_cumle-kapisi.jpg | evet | Cami_SonCemaat | E cilt-1 PDF s.97 | Doğrulanmış |
-| 6 | Son cemaat yerinin yanları, ikişer kemerle dışarıya açılır. | 05_revak-ikiz-kemer.jpg | hayır | Revak_Kemerler | E cilt-1 PDF s.98 | Doğrulanmış |
+| 6 | Son cemaat yerinin yanları, ikişer kemerle dışarıya açılır. | 05_revak-ikiz-kemer.jpg | hayır | Cami_SonCemaat | E cilt-1 PDF s.98 | Doğrulanmış |
 | 7 | Alçı mihrabı, Bursa'da sonra yapılan sultan camilerine örnek oldu. | 03_mihrap.jpg | evet | Cami_Mihrap | E cilt-1 PDF s.102 | Doğrulanmış |
 | 8 | Avludaki şadırvan, 2020–2023 restorasyonunda özgün haline kavuşturuldu. | 08_avlu-sadirvan.jpg | hayır | Sadirvan | E cilt-1 PDF s.103 | Doğrulanmış |
 
@@ -33,6 +33,6 @@ Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model d
 | 2–3 | Merkez | 0° | 75° | bütün yapı | Kubbe dizisi tepeden |
 | 4 | — | (3'te kalır) |  |  | Kart hamamı gösterir |
 | 5 | Cami_SonCemaat | 0° | 10° | yakın | Cümle kapısı |
-| 6 | Revak_Kemerler | 300° (kuzeybatı) | 15° | yakın | Yan cephedeki ikiz kemer |
+| 6 | Cami_SonCemaat | 300° (kuzeybatı) | 15° | yakın | Yan cephedeki ikiz kemer |
 | 7 | Cami_Mihrap | 180° (güney) | 35° | orta | Mihrap bölümü güneyde (hedef vurguyla aynı parça) |
 | 8 | Sadirvan | 0° | 30° | şadırvan + son cemaat cephesi | Avlu tarafı; kapak fotoğrafıyla aynı yön |

@@ -702,3 +702,60 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
   Blender eşitlemesinden sonra verilecek.
 - **OSM binaları (prototip):** önizleme v3'teki kural prototipe de geçti. Modele, 1 m iz payı ve 3 m boşlukla birlikte değen bina bütünüyle kalkar. Eskiden bina kesilip artanı bırakılıyordu. Test ortamında harita karosu olmadığı için görsel olarak sınanamadı; Redmi denemesinde bakılacak.
 - Sınama (Playwright): Ulucami önce/sonra; Koza Han yer gölgesi; cepheye fareyle gelince dört cephe ile pencereler birlikte yanıyor; kart açılıyor; hata yok. Yedek: `.onbellek/_yedek_app_2026-10-29b.js`.
+
+## 56. Yedi eserin kök parça yapısı sadeleştirildi (3D; parça sadeleştirme)
+
+- İş emri: kullanıcının yapıştırdığı «AKAR 3D: yedi eserin parça yapısını sadeleştir» prompt'u (§55'teki plan). Renk, doku, AO ve görünüm değişmedi; yalnız kök parçaların bölünüşü ve adları değişti. İş Blender'da yapıldı (`blend_hat`).
+- **Yeni:**
+  - `eserler/_kutuphane/blend_hat/parca_plan.json`: veri olarak eser başına ayır / dağıt / birleştir / ad adımları. `blend_cikti.py` planı dışa aktarmadan önce uygular. Konum kayması plandan önce hesaplanır; birleştirmeden önce UV katman adları eşitlenir (UV_AO, TEXCOORD_1'de kalır). Uygulama GLB'si artık web'deki kuralla seçiliyor: sunum ekleri hariç.
+  - `parca_dogrula.mjs`: denetim.
+  - Her eserde `build/build_v09|v17|v10|v08|v08|v05.py`.
+- **Kök parça sayısı (sunum ekleri hariç):**
+  - Bedesten v08→v09: 8 → 4
+  - Koza Han v16→v17: 15 → 9
+  - Orhan Bey Camii v09→v10: 12 → 8
+  - Orhan Bey Hamamı v07→v08: 11 → 5
+  - Emir Hanı v07→v08: 7 → 5
+  - Orhan Gazi Türbesi v04→v05: 8 → 3
+  - **Ulucami: değişiklik yok, yeni sürüm açılmadı.** Adların hepsi kart, hikâye, okuma ya da örtü gruplarında kullanılıyor. Hiçbir yerde geçmeyen dört parça (`Govde`, `Ic_Zemin`, `Mermer_Bant`, `Silme_Ust`) da `parcalar.md`'nin «kartı olmayan» bölümünde adlarıyla geçiyor ve zaten tıklanmıyor. Yanlış birleşme yok.
+- **Eşlemeler:**
+  - Koza:
+    - Avlu_Mescit + Mescit_Kubbe + Mescit_Dikis → Mescit
+    - Avlu_Cephe → Avlu_Revak
+    - Avlu_Halka → Avlu_Zemin
+    - Silme_Kat → Cephe
+    - Baca → Cati
+    - Kubbe_Avlu → Revak_Kubbeleri
+    - Cephe ayrı kaldı: Govde_Dis'e katılsaydı ana parçanın merkezi 2,4 m kayardı.
+  - Bedesten:
+    - Pencereler → Govde
+    - Dukkan_Kapilari, Cati ve Sacak → Dukkanlar
+  - Orhan:
+    - Revak_Cephe, Revak_Kemerler ve Kubbe_SonCemaat → Cami_SonCemaat
+    - Kubbe_Tabhane_B + D → Kubbe_Tabhaneler
+    - Minare_1 → Minare
+  - Hamam:
+    - Hamam_Detay her bölüme dağıtıldı.
+    - Kubbe_Sogukluk_* kendi soğukluğuna katıldı.
+    - Kubbe_Sicaklik, Kubbe_Iliklik ve Kubbe_Halvetler → Hamam_Sicaklik.
+  - Emir:
+    - Bacalar ve Dis_Cephe → Emir_Hani
+    - Girisler ayrı kaldı (merkezi 2,1 m kaydırırdı).
+  - Türbe:
+    - Pencereler ve Pilastr_Silme → Govde
+    - Kapi → Giris_Holu
+    - Kasnak ve Cati_Etek → Kubbe
+  - Gerekçeler her eserin `kontrol/<sürüm>/parca_envanteri.md` dosyasında.
+- **Yanlış birleşme:**
+  - Koza `Avlu_Mescit` içindeki 4,4 m çaplı mermer nesne, İç Koza (ikinci avlu) ortasındaki 12 kenarlı havuz. `build_v13.py`'de «Street View 04, ölçüler T» notuyla üretilip mescide birleştirilmiş. Ayrıldı, `Ic_Koza`'ya katıldı. Varlığı yalnız fotoğrafa dayanıyor; envanterde geçmiyor.
+  - Hamam `Hamam_Detay`: 268 adalı, bütün yapıya yayılmış bir ayrıntı torbası. Bölgelere dağıtıldı: erkek soğukluğu 873 yüz, kadın soğukluğu 1.002, sıcak bölüm 483; atanamayan yok.
+  - Diğer uzak kümeler tasarım gereği tekrar eden öğeler: alemler, pencereler, dört kapı, iki kanattaki bacalar.
+- **Referanslar:** hikâye tablolarındaki Vurgu ve kamera sütunları yeni adlara çevrildi: Koza 4, Orhan 2, Hamam 2. Notlardaki tarihsel ad anmalarına dokunulmadı (metin). `model.json`'larda yalnız glb değişti; ana_parca adları aynı.
+- **«tiklanmaz»:** gerek çıkmadı. Sadeleştirmeden sonra kalan her parça anlamlı bir birim (avlu zeminleri hikâye vurgusu); `model.json`'a eklenmedi.
+- **Doğrulama:** altı eserde de b, c ve d geçti.
+  - (b) Toplam üçgen ve köşe aynı, renk farkı 0, UV kanalları ve AO aynı.
+  - (c) İçerik ve model.json'daki her ad uygulama ve sunum GLB'sinde var; eksik 0. Ulucami de denetlendi, eksik 0.
+  - (d) Ana parçanın yatay merkezi aynı. Türbe'de 43 cm düşey kayma oldu; harita düşeyde tabanı kullandığı için etkisiz.
+  - Normal render farkı %0,002–0,048 (> 8/255 piksel). Tıklama haritası: `kontrol/<sürüm>/tiklama_haritasi.png`.
+- **Kart taslağı:** altı eserde `icerik/parcalar_taslak.md` (Parçalar | Önerilen başlık | Not; metin yok).
+- Bağlama: `model.json` glb → yeni sürümler; `modelleri-gom.py` çalıştı; önizleme v1, v2 ve v3 7 modeli hatasız yüklüyor. test-redmi9t-v2 `hazirla.py` çalıştırılınca yeni modellere geçer (çalıştırılmadı). Eski dosyalar silinmedi.
