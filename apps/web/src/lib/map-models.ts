@@ -1,4 +1,9 @@
-import type { HeritageSite, MapPlacement, MapSettings } from "@akar/domain";
+import {
+  defaultMapSettings,
+  type HeritageSite,
+  type MapPlacement,
+  type MapSettings,
+} from "@akar/domain";
 import type {
   CustomLayerInterface,
   CustomRenderMethodInput,
@@ -85,7 +90,7 @@ export class MapModelLayer implements CustomLayerInterface {
   private readonly projection = new THREE.Matrix4();
   private rendered = false;
   private sites = new Map<string, MapModelSite>();
-  private settings: MapSettings = { modelMinZoom: 16, maxVisibleModels: 5 };
+  private settings: MapSettings = { ...defaultMapSettings };
   private readonly loaded = new Map<string, Entry>();
   private readonly loading = new Map<string, { src: string; token: object }>();
   /** `site id` → source that failed to load; not retried until the source changes. */

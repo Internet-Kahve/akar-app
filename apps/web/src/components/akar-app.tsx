@@ -331,6 +331,13 @@ export function AkarApp() {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
   }, []);
+  /** Admin panel: the saved values become this tab's map settings at once. */
+  const saveMapSettings = useCallback(async (next: MapSettings) => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    const saved = await client.current.setMapSettings(next);
+    setMapSettings(saved);
+    return saved;
+  }, []);
   const signOut = () => {
     void getSupabase()?.auth.signOut();
     setToast("Çıkış yaptın.");
@@ -607,6 +614,8 @@ export function AkarApp() {
               loadPlacement={loadPlacement}
               savePlacement={savePlacement}
               live={live}
+              mapSettings={mapSettings}
+              saveMapSettings={saveMapSettings}
             />
           )}
           {view === "history" && site && (
