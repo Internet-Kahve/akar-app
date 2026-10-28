@@ -65,7 +65,8 @@ const PIN_IKON = {
   turbe:'<path d="M6.5 10C6.5 6.5 9 5 12 3.5C15 5 17.5 6.5 17.5 10H6.5Z"/><path d="M3 11H21V12.5H3V11Z"/><path fill-rule="evenodd" d="M5 13.5H19C17.6667 13.5 17 14.1667 17 15.5V21H7V15.5C7 14.1667 6.33333 13.5 5 13.5ZM10.5 21V18C10.5 17 11 16.1667 12 15.5C13 16.1667 13.5 17 13.5 18V21H10.5Z"/>',
 };
 const ROL_RENK = { dini:'#2E7D32', su:'#2A6FB0', egitim:'#25477B', akar:'#9A5B2E' };
-const ROL_AD = { dini:'Dinî', su:'Su', egitim:'Eğitim', akar:'Akar' };
+const ROL_AD = { dini:'Dinî', su:'Su', egitim:'Eğitim', akar:'Ticari (akar)' };   // «Akar» tek başına uygulamanın adıyla karışıyordu
+const ROL_ACIKLAMA = { dini:'Cami, mescit, türbe', su:'Çeşme, sebil, hamam suyu', egitim:'Medrese, mektep', akar:'Vakfa gelir getiren yapılar: han, bedesten, hamam, dükkân' };
 const kemerSvg = (ikon, renk) => `<path d="${KEMER_YOL}" fill="${renk}" stroke="#FFFFFF" stroke-width="2"/><g transform="translate(10 13) scale(0.8333)" fill="#FFFFFF">${PIN_IKON[ikon]}</g>`;
 const TAMAM_ROZET = '<circle cx="35" cy="5" r="6" fill="#C9A13B" stroke="#FFFFFF" stroke-width="2"/><path d="M32 5L34 7L38 3" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
 const pinSvg = (ikon, renk, tamam = false, boy = 2) => `<svg xmlns="http://www.w3.org/2000/svg" width="${44 * boy}" height="${50 * boy}" viewBox="-2 -2 44 50">${kemerSvg(ikon, renk)}${tamam ? TAMAM_ROZET : ''}</svg>`;
@@ -124,9 +125,7 @@ try { stil = await (await fetch('akar-style.json')).json(); } catch { stil = { v
 /* Renk ayrımı (28 Ekim 2026): eser modelleri sıcak taş rengi (bej, kurşuni kubbe). Ortak stilde (design/harita, v1 de kullanıyor) zemin ve
    binalar da bej olduğundan eserler binalara karışıyordu; bu prototipte zemin ve OSM binaları serin, açık griye çekilir (binalar açık gri, yarı saydam).
    Stil dosyasına dokunulmaz, renkler burada yüklendikten sonra değişir. */
-const SERIN = { background:{ 'background-color':'#F2F3F2' }, landuse_residential:{ 'fill-color':'#E9ECEC' },
-  building:{ 'fill-color':'#E3E5E7', 'fill-outline-color':'#CDD1D4', 'fill-opacity':0.7 }, road_area_pier:{ 'fill-color':'#F2F3F2' }, road_pier:{ 'line-color':'#F2F3F2' } };
-for (const l of stil.layers || []) if (SERIN[l.id]) Object.assign(l.paint = l.paint || {}, SERIN[l.id]);
+/* 29 Ekim 2026: zemin ve bina renkleri artık kullanıcının stil dosyasından (sunucu.sh → design/harita/akar-style-ozel-v2.json); burada geçersiz kılınmaz */
 stil.projection = { type:'globe' };
 stil.sky = { 'sky-color':'#C9DCEB', 'horizon-color':'#F3F5F5', 'sky-horizon-blend':0.6, 'fog-color':'#F3F5F5', 'horizon-fog-blend':0.4, 'fog-ground-blend':1,
   'atmosphere-blend':['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 8, 0] };
@@ -139,7 +138,7 @@ const IZLER = [];   // model taban izleri (lng/lat çokgen), bina gizleme ve dok
 
 /* Hikâyesi sonuna kadar dinlenen eser cihazda «bitti» olarak saklanır; pini Tamamlandı (✓) çizilir */
 const bittiMi = (id) => yerel('akar.bitti.' + id) === '1';
-const eserNoktalari = () => ({ type:'FeatureCollection', features:VERI.eserler.map((e) => ({ type:'Feature', geometry:{ type:'Point', coordinates:[e.lon, e.lat] }, properties:{ id:e.id, ad:e.ad, ikon:e.ikon, rol:e.rol, bitti:bittiMi(e.id) } })) });
+const eserNoktalari = () => ({ type:'FeatureCollection', features:VERI.eserler.map((e) => ({ type:'Feature', geometry:{ type:'Point', coordinates:[e.lon, e.lat] }, properties:{ id:e.id, ad:e.ad, ikon:e.ikon, rol:e.rol, sira:e.sira || 999, bitti:bittiMi(e.id) } })) });
 async function haritaPinleriKur() {
   if (harita.getSource('eserler')) return;
   for (const ikon of ['cami', 'han', 'hamam', 'turbe']) {
@@ -151,14 +150,20 @@ async function haritaPinleriKur() {
   if (harita.getSource('eserler')) return;
   harita.addSource('eserler', { type:'geojson', data:eserNoktalari() });
   const glif = !!harita.getStyle().glyphs;
-  harita.addLayer({ id:'pin', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, layout:Object.assign({ 'icon-image':['concat', ['case', ['get', 'bitti'], 'pin-tamam-', 'pin-'], ['get', 'ikon']], 'icon-anchor':'bottom', 'icon-allow-overlap':true, 'icon-size':0.8 },
-    glif ? { 'text-field':['step', ['zoom'], '', 15.2, ['get', 'ad']], 'text-font':['Noto Sans Bold'], 'text-size':12, 'text-line-height':1.333, 'text-anchor':'left', 'text-offset':[1.3, -1.6], 'text-optional':true } : {}),
+  harita.addLayer({ id:'pin', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, layout:Object.assign({ 'icon-image':['concat', ['case', ['get', 'bitti'], 'pin-tamam-', 'pin-'], ['get', 'ikon']], 'icon-anchor':'bottom', 'icon-allow-overlap':true, 'icon-size':['interpolate', ['linear'], ['zoom'], 16, 0.8, 18, 0.66], 'symbol-sort-key':['get', 'sira'] },
+    glif ? { 'text-field':['step', ['zoom'], '', 15.2, ['get', 'ad']], 'text-font':['Noto Sans Bold'], 'text-size':12, 'text-line-height':1.333, 'text-variable-anchor-offset':['left', [1.3, -1.6], 'right', [-1.3, -1.6], 'top', [0, 0.4], 'bottom', [0, -3.4]], 'text-justify':'auto', 'text-optional':true } : {}),
     paint:{ 'text-color':'#25477B', 'text-halo-color':'#fff', 'text-halo-width':2 } });
   harita.addLayer({ id:'pin-secili', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, filter:['==', ['get', 'id'], ''], layout:{ 'icon-image':['concat', 'pin-secili-', ['get', 'ikon']], 'icon-anchor':'bottom', 'icon-offset':[0, 2], 'icon-allow-overlap':true, 'icon-size':1 } });
   filtreUygula();
 }
 
 /* --- modellerimiz: MapLibre özel katmanı + three.js (aynı GL bağlamı). Yerleşim test.html ile aynı. --- */
+/* ışık şehir kaydından (veri/sehir/<şehir>.json → harita_isik; önizleme v3 «Pişmiş»). Yoksa eski varsayılanlar.
+   Köşe kararması (AO) modellerde pişmiş; gerçek zamanlı gölge yok. Yer gölgesi web'de: kodla üretilen tek bulanık doku, her modelin altında. */
+const ISIK = Object.assign({ ortam:2.3, gunes:1.3, dolgu:0.5, yon:216, yukseklik:46, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
+const YG_DOKU = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.filter = 'blur(13px)'; x.fillStyle = '#000';
+  x.beginPath(); if (x.roundRect) x.roundRect(26, 26, 76, 76, 14); else x.rect(26, 26, 76, 76); x.fill(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+const yerGolgesiMi = (o) => { for (let x = o; x; x = x.parent) if (/^Yer_Golgesi/.test(x.name || '')) return true; return false; };   // eski modellerdeki pişmiş düzlem
 const yapiKatman = {
   id:'yapilar', type:'custom', renderingMode:'3d', items:[],
   onAdd(m, gl) { this.map = m; this.kamera = new THREE.Camera(); this.r = new THREE.WebGLRenderer({ canvas:m.getCanvas(), context:gl, antialias:true }); this.r.autoClear = false; VERI.eserler.forEach((e) => this.yukle(e)); },
@@ -166,15 +171,25 @@ const yapiKatman = {
     try {
       const gltf = await glbCoz(e.glb);
       /* OSM merkezine ana gövdenin ortası oturur (yan yapılar, avlu ve İç Koza kutuyu kaydırmasın) */
-      const kutu = new THREE.Box3().setFromObject(gltf.scene);
+      /* taban izi yalnız yapıdan (pişmiş «Yer_Golgesi» düzlemi girerse çevredeki OSM binaları da silinir); renk doygunluğu şehir ayarından */
+      gltf.scene.updateMatrixWorld(true); const kutu = new THREE.Box3(), hsl = {};
+      gltf.scene.traverse((o) => { if (!o.isMesh) return; if (yerGolgesiMi(o)) { o.visible = false; return; } kutu.expandByObject(o);
+        if (ISIK.doygunluk !== 1) for (const m of [].concat(o.material)) if (m.color && !m.userData.doy) { m.userData.doy = 1; m.color.getHSL(hsl); m.color.setHSL(hsl.h, Math.min(1, hsl.s * ISIK.doygunluk), hsl.l); } });
       const anaAd = e.model && e.model.ana_parca, anaObj = anaAd && gltf.scene.getObjectByName(anaAd);
       const c = (anaObj ? new THREE.Box3().setFromObject(anaObj) : kutu).getCenter(new THREE.Vector3());
       const grup = new THREE.Group(); gltf.scene.position.set(-c.x, -kutu.min.y, -c.z); grup.add(gltf.scene);
       grup.rotation.y = -THREE.MathUtils.degToRad(e.yaw || 0);
       const sahne = new THREE.Scene(); sahne.add(grup);
-      sahne.add(new THREE.HemisphereLight(0xffffff, 0xeef0f4, 2.3));
-      const gunes = new THREE.DirectionalLight(0xffffff, 1.3); gunes.position.set(-0.5, 1, 0.7); sahne.add(gunes);
-      const dolgu = new THREE.DirectionalLight(0xfff4e6, 0.5); dolgu.position.set(0.7, 0.55, -0.8); sahne.add(dolgu);
+      const a = THREE.MathUtils.degToRad(ISIK.yon), y = THREE.MathUtils.degToRad(ISIK.yukseklik);   // model ekseni: x doğu, y yukarı, z güney
+      const yon = new THREE.Vector3(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y));
+      sahne.add(new THREE.HemisphereLight(0xffffff, 0xb8b0a2, ISIK.ortam));
+      const gunes = new THREE.DirectionalLight(0xfff6ea, ISIK.gunes); gunes.position.copy(yon); sahne.add(gunes);
+      const dolgu = new THREE.DirectionalLight(0xdfe8f2, ISIK.dolgu); dolgu.position.set(-yon.x, 0.5, -yon.z); sahne.add(dolgu);
+      if (ISIK.yer_golgesi > 0) {   // dokunun koyu iç dikdörtgeni (76/128) taban izini biraz aşar; model ile döner
+        const boy = kutu.getSize(new THREE.Vector3()), kc = kutu.getCenter(new THREE.Vector3()), k1 = 1 / 0.59;
+        const yg = new THREE.Mesh(new THREE.PlaneGeometry(boy.x * k1 + 2, boy.z * k1 + 2), new THREE.MeshBasicMaterial({ map:YG_DOKU, transparent:true, opacity:ISIK.yer_golgesi, depthWrite:false, toneMapped:false, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:8 }));
+        yg.rotation.x = -Math.PI / 2; yg.position.set(kc.x - c.x, 0.03, kc.z - c.z); yg.renderOrder = -1; grup.add(yg);
+      }
       const mc = maplibregl.MercatorCoordinate.fromLngLat([e.lon, e.lat], 0), k = mc.meterInMercatorCoordinateUnits();
       const l = new THREE.Matrix4().makeTranslation(mc.x, mc.y, mc.z).scale(new THREE.Vector3(k, -k, k)).multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
       this.items.push({ id:e.id, sahne, l });
@@ -243,8 +258,9 @@ function binaKatmaniKur() {
   harita.addSource('akar-bina', { type:'geojson', data:{ type:'FeatureCollection', features:[] } });
   const duz = (stil.layers || []).find((l) => l.id === 'building');
   if (duz && harita.getLayer('building')) { harita.addLayer({ id:'akar-bina-duz', type:'fill', source:'akar-bina', minzoom:duz.minzoom || 12, paint:duz.paint }, 'building'); harita.setPaintProperty('building', 'fill-opacity', 0); }   // gizlenmez: gizli katmanın verisi yüklenmez, querySourceFeatures boş döner
+  const b3 = (stil.layers || []).find((l) => l.id === 'building_3d')?.paint || {};   // renk ve opaklık stilden
   harita.addLayer({ id:'akar-bina-3d', type:'fill-extrusion', source:'akar-bina', minzoom:15, paint:{
-    'fill-extrusion-color':'#D9DCDF', 'fill-extrusion-opacity':0.4, 'fill-extrusion-vertical-gradient':true,
+    'fill-extrusion-color':b3['fill-extrusion-color'] || '#D9DCDF', 'fill-extrusion-opacity':b3['fill-extrusion-opacity'] ?? 0.4, 'fill-extrusion-vertical-gradient':true,
     'fill-extrusion-height':['interpolate', ['linear'], ['zoom'], 15, 0, 15.6, ['get', 'h']], 'fill-extrusion-base':['get', 'b'] } });
   if (harita.getLayer('building_3d')) harita.setLayoutProperty('building_3d', 'visibility', 'none');
 }
@@ -336,7 +352,8 @@ $('#b-konum').onclick = () => {
 
 /* filtre çipleri (vakıf rolü) */
 function ciplerHTML(masaustuPanel) {
-  const rol = ['dini', 'su', 'egitim', 'akar'].map((r) => `<button class="cip filtre" data-rol="${r}" aria-pressed="${durum.filtre.has(r)}"><span class="nokta" style="background:${ROL_RENK[r]}"></span>${ROL_AD[r]}</button>`).join('');
+  /* yalnız bu şehirde eseri olan roller (boş filtre jüriye boş liste gösterirdi) */
+  const rol = ['dini', 'su', 'egitim', 'akar'].filter((r) => VERI.eserler.some((e) => e.rol === r)).map((r) => `<button class="cip filtre" data-rol="${r}" aria-pressed="${durum.filtre.has(r)}" title="${esc(ROL_ACIKLAMA[r])}"><span class="nokta" style="background:${ROL_RENK[r]}"></span>${ROL_AD[r]}</button>`).join('');
   return masaustuPanel ? `<button class="cip koyu" data-rol="hepsi">Tümü</button>${rol}` : `<button class="cip koyu" id="cip-konum">${ic('navigation', 14)}Yakınımda ${ic('chevron-down', 14)}</button>${rol}`;
 }
 function filtreUygula() {
@@ -672,7 +689,7 @@ function altEnAz() {
 function eserListe() {
   return VERI.eserler.filter((e) => durum.filtre.has(e.rol) && (!durum.arama || e.ad.toLocaleLowerCase('tr').includes(durum.arama) || (e.uzun_ad || '').toLocaleLowerCase('tr').includes(durum.arama)));
 }
-const eserSatir = (e) => `<li class="eser-satir${durum.secili === e.id ? ' secili' : ''}" data-eser="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta">${esc(meta(e))}</div><span class="etiket">3D</span></div><button class="arti" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('plus', 16)}</button></li>`;
+const eserSatir = (e) => `<li class="eser-satir${durum.secili === e.id ? ' secili' : ''}" data-eser="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta">${esc(meta(e))}</div>${e.glb && !VERI.eserler.every((x) => x.glb) ? '<span class="etiket">3D</span>' : ''}</div><button class="arti" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('plus', 16)}</button></li>`;
 function rotaKart() {
   const ilerleme = JSON.parse(yerel('akar.rota') || 'null');
   const durumMetni = ilerleme ? `<span class="rozet-durum devam">Devam et · ${ilerleme.i + 1} / ${ROTA.duraklar.length}</span>` : '<span class="rozet-durum">Başlanmadı</span>';
