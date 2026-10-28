@@ -58,3 +58,6 @@ hackathon/
 
 # Redmi prototipi: küçültülmüş fotoğraf önbelleği (hazirla.py üretir)
 design/test-redmi9t/.onbellek/
+design/test-redmi9t-v2/.onbellek/
+# Geçmişi Gör eşleştirme kontrol sayfaları (yalnız gözle kontrol için, 28 Ekim 2026)
+eserler/*/gecmisi-gor/kontrol/

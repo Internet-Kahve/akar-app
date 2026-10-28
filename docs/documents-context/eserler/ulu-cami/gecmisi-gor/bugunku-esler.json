@@ -1,0 +1,25 @@
+{
+  "_aciklama": "Eski fotoğrafların bugünkü eşleri (ekip seçti). gecmisi-gor.json'u üreten betik bu dosyaya dokunmaz. Görseller bugun/ klasöründe; design/test-redmi9t-v2/_araclar/bugunku_es_uret.py kaynakDosya + kirpma'dan üretir (genislik/yukseklik'i de o yazar).",
+  "esler": [
+    {
+      "fotoAtlasId": 14286,
+      "gorsel": "bugun/es-14286.webp",
+      "kucuk": "bugun/es-14286_k.webp",
+      "genislik": 904,
+      "yukseklik": 1150,
+      "aciBenzerligi": "yakin",
+      "aciNotu": "İkisi de mihrabı önden çekiyor; eski fotoğraf biraz daha yakından ve hafif soldan çekilmiş, bugünkü tam eksende ve daha uzaktan (kırpılarak yaklaştırıldı).",
+      "kaynakDosya": "veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/ERD05161-Geliştirilmiş-NR kopya-2.jpg",
+      "kirpma": {
+        "x": 398,
+        "y": 600,
+        "w": 904,
+        "h": 1150
+      },
+      "kaynakSatiri": "Fotoğraf: Bursa Vakıf Eserleri Envanteri",
+      "lisans": "Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -016). Proje için verildi; kullanılabilir.",
+      "ekleyen": "AKAR ekibi",
+      "eklendi": "2026-10-28"
+    }
+  ]
+}

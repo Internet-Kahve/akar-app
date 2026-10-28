@@ -1,0 +1,29 @@
+{
+  "_aciklama": "İz Bırak katkıları. Üründe katki tablosu; prototipte yalnız onaylanmış örnekler. ornek=true olan kayıt gerçek bir kullanıcıdan değil, ekipten gelir ve arayüzde «Örnek katkı» diye işaretlenir. kaynakDosya/kirpma yalnız arşivden alınmış örnek için (görseli _araclar/bugunku_es_uret.py üretir).",
+  "izler": [
+    {
+      "id": "iz-ulu-001",
+      "kullanici": "AKAR ekibi",
+      "ornek": true,
+      "metin": "Eski fotoğraftaki havuz ve mihrap ekseni, bugün kuzey mahfilinden.",
+      "gorsel": "izler/iz-ulu-001.webp",
+      "kucuk": "izler/iz-ulu-001_k.webp",
+      "genislik": 1400,
+      "yukseklik": 1170,
+      "durum": "onaylandi",
+      "tarih": "2026-10-28",
+      "ayniAciFotoAtlasId": 25044,
+      "aciBenzerligi": "yakin",
+      "aciNotu": "Aynı eksen (havuz, iki paye arasından mihrap); eski fotoğraf yerden, bugünkü kuzey mahfilinden, yani daha yüksekten çekildi.",
+      "kaynakDosya": "veri/bursa-foto/I. ve II. Cilt - Osmangazi/Ulucamii Klasörü/DJI_20241210051038_0350_D_ODAK-2.jpg",
+      "kirpma": {
+        "x": 500,
+        "y": 380,
+        "w": 1400,
+        "h": 1170
+      },
+      "kaynakSatiri": "Fotoğraf: Bursa Vakıf Eserleri Envanteri (örnek katkı olarak gösteriliyor)",
+      "lisans": "Vakıf Katılım, Bursa Vakıf Eserleri Envanteri fotoğraf arşivi (zip -016). Proje için verildi; kullanılabilir."
+    }
+  ]
+}
