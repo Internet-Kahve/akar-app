@@ -34,6 +34,7 @@ Fikir, 42 İstanbul Şekerhan 3D görüntüleyicisinin kat açma animasyonundan 
   - Kitap listesi `veri/sehir/bursa.json` → `envanter_adi`, `envanter_yayinci` alanlarından.
 - **28 Ekim · harita pinleri Figma'daki gibi** (akar-yeni «Harita pini» 1:544): sivri kemer, haritada 32 × 38; seçili 40 × 48 ve altın halka; hikâyesi biten eserde altın ✓ (cihazda `akar.bitti.<eser>`). Etiket `--primary`, 12 px. `app.js` → `KEMER_YOL`, `pinSvg`, `pinSeciliSvg`, `eserNoktalari`. Gizli hâl yok (veride alan yok).
 - **28 Ekim · «Eser hakkında» (2. tur):** masaüstünde sağdaki «Bu eserde» kartı kaldırıldı; metin tek sütun ortada, en üstte «‹ <eser>» Geri düğmesi (eser detayına döner), yol satırı yanında; kitap listesi sayfa sonunda «Kaynaklar» bölümü. Figma «D · Eser hakkında» (1:3130) da aynı şekilde güncellendi.
+- **28 Ekim · «Eser hakkında» okuma düzeni (3. tur):** kapak (fotoğraf, ad, okuma süresi) → üstte yapışık bölüm sekmeleri ve okuma çubuğu → her bölümde kapak fotoğrafı, «Kitaptan» özet cümleleri, rakam kartları (altında kitaptaki ifade), büyük alıntı, zaman çizelgesi ve «Derinine in» ile envanterin tam metni (tırnakla başlayan paragraflar kitabe kartı, fotoğraflar yana kaydırılan şerit, dokununca büyür; altı noktalı terime dokununca kitaptaki tanım) → sonda Hikâyeyi dinle · Geçmişi Gör · Bulmaca ve kaynaklar. Masaüstünde solda metin, sağda yapışık 3D: okunan bölümün açısına döner, ilgili parçalar parlar. Seçmeler `eserler/<eser>/icerik/eser-hakkinda-okuma.md`'de; `hazirla.py` her birinin kitap metninde birebir geçtiğini denetler, geçmeyeni atlar ve uyarı yazar. Dosyası olmayan eserde tam metin doğrudan görünür.
   - **Kitaptaki fotoğraflar:** `eserler/<eser>/icerik/kitap-fotograflari.md` (Ulucami: envanter Cilt 1 s.18–40'taki bütün fotoğraflar). `hazirla.py` → `kitap_fotolari`: her fotoğraf, kitapta kendi sayfasına kadar gelen son paragrafın arkasına konur; 3'ten fazlaysa ızgara. Kitabın fotoğrafları olan eserde ayrı kapak gösterilmez (ilk fotoğraf kapaktır).
 - **28 Ekim · Geçmişi Gör · bugünkü eşler (A1b, Figma 89:2732 mobil / 97:3046 masaüstü).**
   - Dosyalar (eser başına, `eserler/<eser>/gecmisi-gor/`): `bugunku-esler.json` (ekibin seçtiği eşler, görseller `bugun/`), `izler.json` (İz Bırak katkıları, görseller `izler/`; `ornek: true` = ekipten örnek, arayüzde «Örnek katkı»). `gecmisi-gor.json`'a ve onu üreten `veri/fotoatlas/gecmisi_gor_uret.py`'ye dokunulmadı; o betik yalnız `gorseller/` ve json'u yazar.
@@ -125,3 +126,15 @@ Betik yalnız bu klasörün sayfalarını, harita stilini, 14 GLB'yi (7 normal +
 - **İlerleme:** Bu cihazda (`localStorage`) tutulur: `akar.gorev.<id>` = `evden` | `yerinde`, `akar.rozet.<id>` = tarih. Profilde «Bu cihazdaki ilerlemeyi sil» var; demo öncesi sıfırlamak için.
 - **Bilerek yok:** puan, süre, seviye, cezalandırma, cami içinde görev.
 - **Üründe:** İlerleme `kullanici_ilerleme` tablosuna gider. Misafirken biriken ilerleme girişten sonra hesaba taşınır.
+
+## Küre ve şehirler · 28 Ekim 2026
+
+- **MapLibre 4.7 → 6.15:** Ürünle (`apps/web`) aynı sürüm. 6.x yalnız ES modülü olarak geliyor; `index.html`'deki import map'te `maplibre-gl` adıyla yükleniyor, `app.js` en üstte `import * as maplibregl from 'maplibre-gl'` ile alıyor. `test.html` (performans testi) 4.7'de kaldı, ona dokunulmadı.
+- **3D katman:** 5. sürümden beri özel katmanın `render(gl, girdi)` ikinci parametresi bir nesne. Matris `girdi.defaultProjectionData.mainMatrix`. Küre, geçiş sürerken `fallbackMatrix`'e düşer. Modeller zoom 14,5'in altında zaten çizilmiyor; bu yakınlıkta küre tamamen düz haritaya dönmüş oluyor.
+- **Küre:** `stil.projection = { type:'globe' }` ve hafif bir gökyüzü/atmosfer (`stil.sky`; atmosfer yalnız zoom 8'in altında). `minZoom` 6 → 1,2. Şehir ölçeğinde görüntü değişmedi.
+- **Şehirler:** Zoom 9'un altında eser pinleri gizlenir; bunların yerine `veri/sehir/*.json`'daki şehirler görünür.
+  - Eseri olan şehirde altın nokta ve «n eser» yazar; dokununca o şehre uçar.
+  - Eseri olmayan şehirde gri nokta ve «Yakında» yazar; dokununca envanter yılı ve eser sayısı gösterilir.
+  - Zoom 3,2'nin altında yalnız eseri olan şehrin adı kalır, ötekiler nokta olur (etiketler üst üste binmesin).
+  - Mobilde «Bursa ▾», masaüstünde üst çubuktaki «Bursa» düğmesi haritayı şehirlere uzaklaştırır.
+- **Şehir verisi:** `veri/sehir/` dosyaları: Bursa (`varsayilan: true`, harita burada açılır), Hatay, Konya, Kütahya. Envanter yılı ve eser sayıları KÖK&KOD envanter bilgi notundan. Konum yaklaşık il merkezi; yalnız işaret için. Bir şehre eser eklenince (`eser.json` → `il`) işareti kendiliğinden «n eser» olur. Kodda şehre özel değer yok.

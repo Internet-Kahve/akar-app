@@ -1,7 +1,8 @@
 {
-  "_aciklama": "Şehir kaydı (28 Ekim 2026). Prototipte harita açılış noktası ve şehir düzeyindeki künyeler buradan gelir; yeni şehir = yeni dosya.",
+  "_aciklama": "Şehir kaydı (28 Ekim 2026). Prototipte harita açılış noktası ve şehir düzeyindeki künyeler buradan gelir; yeni şehir = yeni dosya. varsayilan: harita bu şehirde açılır. envanter_*: küre görünümündeki şehir işareti için.",
   "id": "bursa",
   "ad": "Bursa",
+  "varsayilan": true,
   "merkez": [
     29.0628,
     40.1846
@@ -11,5 +12,14 @@
   "foto_kunye": "Fotoğraf: Bursa Vakıf Eserleri Envanteri",
   "kaynakca": "Bursa Vakıf Eserleri Envanteri, Cilt 1–2 (Vakıf Katılım, 2026).",
   "envanter_adi": "Bursa Vakıf Eserleri Envanteri",
-  "envanter_yayinci": "Vakıf Katılım, 2026"
+  "envanter_yayinci": "Vakıf Katılım, 2026",
+  "envanter_yili": 2025,
+  "envanter_eser_sayisi": 385,
+  "_kaynak": "KÖK&KOD Vakıf Eserleri Envanter Projesi Bilgi Notu (hackathon/KOKKOD_Envanter_Projesi_Bilgi_Notu.pdf): şehir, envanter yılı ve belgelenen eser sayısı.",
+  "kimlik": {
+    "zemin": "#22566E",
+    "desen_renk": "#A4D8E0",
+    "desen": "desen-bursa-sekiz-yildiz.svg",
+    "_not": "tokens.css --sehir-bursa-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
+  }
 }
