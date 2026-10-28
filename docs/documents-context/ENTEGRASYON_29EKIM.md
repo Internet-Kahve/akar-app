@@ -143,9 +143,9 @@ Yapının taban izi boyutunda bir düzleme konur: `boy / 0,59 + 2 m`. Opaklık `
 ## 4. OSM binaları: kural farkı
 
 - **Ürün:** ortası taban izine düşen ve küçük olan bina gizlenir. Panelden `hidden_points` / `kept_points` ile düzeltilir.
-- **Prototip:** modele (1 m iz + 3 m boşluk) değen bina bütünüyle gizlenir. Panel yok.
+- **Prototip (29 Ekim'den beri):** ürünle aynı otomatik kural; panel yok.
 
-**Öneri:** Ürünün bugünkü hâli kalsın: otomatik kural, artı panelde binaya tıklayıp «Gizle / Geri göster». Prototipin kuralını almayın; prototipte panel olmadığı için daha sert bir kural seçilmişti. Prototipte görülen asıl sorun şuydu: bina kesilip artanı bırakılınca modelin dibinde ince şeritler kalıyordu. Ürün binayı kesmediği için bu sorun ürünü etkilemez.
+**Karar:** Ürünün bugünkü hâli kalsın: otomatik kural, artı panelde binaya tıklayıp «Gizle / Geri göster». Prototipte bir süre «modele değen bina bütünüyle kalkar» kuralı denendi. Bu kural çevredeki çarşı bloklarını da sildiği için bırakıldı. Prototipte görülen asıl sorun şuydu: bina kesilip artanı bırakılınca modelin dibinde ince şeritler kalıyordu. Ürün binayı kesmediği için bu sorun ürünü etkilemez.
 
 Yerleşim girilirken kontrol edilecek yerler:
 - Bedesten ve Koza Han'ın çevresindeki çarşı çatıları;

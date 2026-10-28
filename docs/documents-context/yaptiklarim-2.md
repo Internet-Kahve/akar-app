@@ -700,7 +700,11 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
   - Ulucami'de kullanılan adlar korunur;
   - tıklama haritası render'ı ve referans denetimi.
   Blender eşitlemesinden sonra verilecek.
-- **OSM binaları (prototip):** önizleme v3'teki kural prototipe de geçti. Modele, 1 m iz payı ve 3 m boşlukla birlikte değen bina bütünüyle kalkar. Eskiden bina kesilip artanı bırakılıyordu. Test ortamında harita karosu olmadığı için görsel olarak sınanamadı; Redmi denemesinde bakılacak.
+- **OSM binaları (prototip), aynı gece ikinci karar:**
+  - Önce önizleme v3'ün kuralı (modele değen bina bütünüyle kalkar) prototipe alındı. Bu kural modellerin çevresindeki çarşı bloklarını da sildi; kullanıcı «bazı 3D'ler yok» dedi.
+  - Prototip şimdi ürünün kuralını kullanıyor (`apps/web` `osm-buildings.ts` → `isHidden`). Bina, köşelerinin ortalaması modelin taban izine (döndürülmüş sınır kutusu + 3 m) düşüyorsa ve alanı o izin 1,6 katından küçükse çizilmez. Bina kesilmez; büyük çarşı çatıları kalır.
+  - Üründe yanlış kalan binalar panelden «Gizle / Geri göster» ile düzeltilir; prototipte panel yok.
+  - Görsel sınama yapılamadı (test ortamında harita karosu yok); Redmi denemesinde bakılacak.
 - Sınama (Playwright): Ulucami önce/sonra; Koza Han yer gölgesi; cepheye fareyle gelince dört cephe ile pencereler birlikte yanıyor; kart açılıyor; hata yok. Yedek: `.onbellek/_yedek_app_2026-10-29b.js`.
 
 ## 56. Yedi eserin kök parça yapısı sadeleştirildi (3D; parça sadeleştirme)

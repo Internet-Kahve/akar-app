@@ -193,7 +193,7 @@ const yapiKatman = {
       const mc = maplibregl.MercatorCoordinate.fromLngLat([e.lon, e.lat], 0), k = mc.meterInMercatorCoordinateUnits();
       const l = new THREE.Matrix4().makeTranslation(mc.x, mc.y, mc.z).scale(new THREE.Vector3(k, -k, k)).multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
       this.items.push({ id:e.id, sahne, l });
-      const kes = tabanIzi(e, kutu.min.x - c.x, kutu.max.x - c.x, kutu.min.z - c.z, kutu.max.z - c.z, 1 + 3);   // 1 m iz payı + 3 m boşluk (önizleme v3 «Model çevresi boşluk»)
+      const kes = tabanIzi(e, kutu.min.x - c.x, kutu.max.x - c.x, kutu.min.z - c.z, kutu.max.z - c.z, 1);
       IZLER.push({ id:e.id, cokgen:tabanIzi(e, kutu.min.x - c.x, kutu.max.x - c.x, kutu.min.z - c.z, kutu.max.z - c.z, 3), kes:turf.polygon([[...kes, kes[0]]]), ana:anaObj ? new THREE.Box3().setFromObject(anaObj).getSize(new THREE.Vector3()) : kutu.getSize(new THREE.Vector3()) });
       binalariGuncelle(); this.map.triggerRepaint();
     } catch (err) { console.warn('model yüklenemedi', e.id, err); }
@@ -223,7 +223,7 @@ function tabanIzi(e, x0, x1, z0, z1, pay) {
 const icinde = (p, c) => { let ic2 = false; for (let i = 0, j = c.length - 1; i < c.length; j = i++) { const [xi, yi] = c[i], [xj, yj] = c[j]; if ((yi > p[1]) !== (yj > p[1]) && p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi) ic2 = !ic2; } return ic2; };
 /* OSM 3D binaları kendi katmanımızdan çizilir: harita karoları bu bölgede binaları birleştirilmiş gruplar (MultiPolygon)
    olarak veriyor, yani stilin building_3d katmanında tek bir binayı süzgeçle gizlemek mümkün değil (ya grubun hepsi ya hiçbiri).
-   Yüklenen gruplar tek tek binalara ayrılır; modelin taban izine (1 m pay + 3 m boşluk) değen bina bütünüyle gider (29 Ekim 2026; önizleme v3 ile aynı). Düz bina izi (stilin «building»i) de aynı süzgeçten geçer (akar-bina-duz). Kalanlar aynı yükseklikle, eserlerden ayrışan nötr gri tonda çizilir. */
+   Yüklenen gruplar tek tek binalara ayrılır; ortası modelin taban izine (+3 m) düşen küçük bina çizilmez (29 Ekim 2026; ürünün kuralıyla aynı, aşağıda). Düz bina izi (stilin «building»i) de aynı süzgeçten geçer (akar-bina-duz). Kalanlar aynı yükseklikle, eserlerden ayrışan nötr gri tonda çizilir. */
 let binaZ;
 function binalariGuncelle() {
   clearTimeout(binaZ);
@@ -239,9 +239,13 @@ function binalariGuncelle() {
         const anahtar = halka.length + ':' + m[0].toFixed(6) + ',' + m[1].toFixed(6);   // karo sınırında aynı bina iki kez gelmesin
         if (gorulen.has(anahtar)) continue; gorulen.add(anahtar);
         let bina; try { bina = turf.polygon(c); } catch { continue; }
-        /* 29 Ekim 2026 (önizleme v3 ile aynı kural): modele (3 m boşluğuyla) değen OSM binası BÜTÜNÜYLE kalkar; parça parça kesilmez.
-           Eski kural (kesip artanı bırakmak) modelin dibinde ince bina artıkları bırakıyordu. */
-        if (IZLER.some((iz) => turf.booleanIntersects(bina, iz.kes))) continue;
+        /* 29 Ekim 2026: ürünle (apps/web osm-buildings.ts isHidden) aynı kural. Köşelerinin ortalaması bir modelin taban izine
+           (döndürülmüş sınır kutusu + 3 m) düşen VE alanı o izin 1,6 katından küçük bina çizilmez; büyük çarşı çatıları kalır.
+           Bina kesilmez. (Bir önceki «modele değen bina bütünüyle kalkar» kuralı çevredeki çarşı bloklarını da siliyordu.) */
+        const kose = halka[0][0] === halka[halka.length - 1][0] && halka[0][1] === halka[halka.length - 1][1] ? halka.slice(0, -1) : halka;
+        const orta = kose.reduce((a, p) => [a[0] + p[0] / kose.length, a[1] + p[1] / kose.length], [0, 0]);
+        let alan;
+        if (IZLER.some((iz) => icinde(orta, iz.cokgen) && (alan ??= turf.area(bina)) < 1.6 * turf.area(turf.polygon([[...iz.cokgen, iz.cokgen[0]]])))) continue;
         binalar.push({ type:'Feature', properties:{ h, b }, geometry:bina.geometry });
       }
     }
