@@ -16,6 +16,7 @@ import {
   memoryPermissions,
   type Command,
   type HeritageSite,
+  type MapPlacement,
   type Role,
   type Snapshot,
 } from "@akar/domain";
@@ -312,6 +313,8 @@ export function Admin({
   changeMemberRole,
   currentUserId,
   saveSite,
+  loadPlacement,
+  savePlacement,
   live,
 }: {
   state: Snapshot;
@@ -323,6 +326,8 @@ export function Admin({
   changeMemberRole: AkarClient["setMemberRole"];
   currentUserId: string;
   saveSite: (site: HeritageSite) => Promise<HeritageSite>;
+  loadPlacement: AkarClient["getMapPlacement"];
+  savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
   live: boolean;
 }) {
   const canEdit = role === "editor" || role === "admin";
@@ -543,6 +548,8 @@ export function Admin({
             catalogRoutes={state.catalogRoutes}
             onClose={() => setEditing(null)}
             onSave={saveSite}
+            loadPlacement={loadPlacement}
+            savePlacement={savePlacement}
             live={live}
           />
         ) : tab === "members" && role === "admin" ? (

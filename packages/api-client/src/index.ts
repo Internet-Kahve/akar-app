@@ -2,6 +2,7 @@ import {
   reduceSnapshot,
   defaultMapSettings,
   type Command,
+  type MapPlacement,
   type MapSettings,
   type Snapshot,
   type HeritageSite,
@@ -91,6 +92,11 @@ export interface AkarClient {
   refreshCatalog(): Promise<Snapshot>;
   /** `GET /v1/map-settings`: when the map loads models and how many it draws. */
   getMapSettings(): Promise<MapSettings>;
+  /**
+   * The placement saved for a site's model, `visible: false` included (the catalog hides it then); `null`
+   * when none was saved. Panel read: the editor asks when it opens.
+   */
+  getMapPlacement(siteId: string): Promise<MapPlacement | null>;
   dispatch(command: Command): Promise<Snapshot>;
   /** Save and return the canonical site, including server ids and media URLs. */
   saveSite(
@@ -240,6 +246,11 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     },
     async getMapSettings() {
       return { ...defaultMapSettings };
+    },
+    async getMapPlacement(siteId) {
+      return structuredClone(
+        state.sites.find((s) => s.id === siteId)?.model?.placement ?? null,
+      );
     },
     async dispatch(command) {
       return persist(reduceSnapshot(state, command));

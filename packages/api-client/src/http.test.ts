@@ -2354,3 +2354,200 @@ test("refreshCatalog re-reads the catalog, shares concurrent reads and keeps the
     45,
   );
 });
+
+test("the placement command PUTs the whole placement with an Idempotency-Key, re-reads the site, and the panel read keeps a placement the catalog hides", async () => {
+  let stored: Record<string, unknown> | null = null;
+  const withModel = () =>
+    detail("a", {
+      coordinates: [29.06, 40.18],
+      media: [media("glb", "model", { parts: ["Govde"], triangles: 100 })],
+    });
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [withModel()], nextCursor: null }),
+    "GET /v1/admin/sites/a": () => ({
+      ...withModel(),
+      status: "published",
+      openingCamera: null,
+      sourceLinks: [],
+      // What a visitor sees: nothing once `visible` is off.
+      placement: stored && stored.visible ? { ...stored, lng: 29.0619 } : null,
+      // What the panel sees: the saved values in every case; lng/lat null = the site's own location.
+      mapPlacement: stored && {
+        ...stored,
+        lng: stored.lng ?? null,
+        lat: stored.lat ?? null,
+        updatedAt: "2026-10-28T10:00:00Z",
+      },
+    }),
+    "PUT /v1/admin/sites/a/map-placement": (c) => {
+      stored = c.body as Record<string, unknown>;
+      return {};
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  await client.getSnapshot();
+  assert.equal(await client.getMapPlacement("a"), null);
+
+  const hidden = {
+    lng: 29.0625,
+    lat: 40.1841,
+    headingDeg: 90,
+    scale: 1,
+    altitudeM: 1.5,
+    anchorNode: "Govde",
+    hiddenPoints: [{ lng: 29.06, lat: 40.18 }],
+    keptPoints: [],
+    visible: false,
+  };
+  const snap = await client.dispatch({
+    type: "map-placement",
+    siteId: "a",
+    placement: hidden,
+  });
+  const put = api.calls.find((c) => c.method === "PUT")!;
+  assert.equal(put.path, "/v1/admin/sites/a/map-placement");
+  assert.ok(put.headers["idempotency-key"]);
+  assert.deepEqual(put.body, hidden);
+  // The catalog re-read hides it from the map; the panel read still has every value.
+  assert.equal(snap.sites.find((s) => s.id === "a")!.model?.placement, null);
+  assert.deepEqual(await client.getMapPlacement("a"), hidden);
+
+  // A placement without `visible` (the visitor view of one) is sent as shown; a bad value is refused before any request.
+  const { visible: _visible, ...asPublic } = hidden;
+  await client.dispatch({
+    type: "map-placement",
+    siteId: "a",
+    placement: asPublic,
+  });
+  assert.equal(
+    (
+      api.calls.filter((c) => c.method === "PUT").at(-1)!.body as {
+        visible: boolean;
+      }
+    ).visible,
+    true,
+  );
+  const puts = api.calls.filter((c) => c.method === "PUT").length;
+  await assert.rejects(
+    client.dispatch({
+      type: "map-placement",
+      siteId: "a",
+      placement: { ...hidden, headingDeg: 360 },
+    }),
+    /Yön/,
+  );
+  assert.equal(api.calls.filter((c) => c.method === "PUT").length, puts);
+});
+
+test("a placement is saved for a draft too, a model left unchanged is no model change, and API errors reach the editor with their field messages", async () => {
+  const model = () => media("glb", "model", { parts: ["Govde"] });
+  const draft = () => ({
+    ...detail("d1", { media: [model()] }),
+    status: "draft",
+    openingCamera: null,
+    sourceLinks: [],
+    mapPlacement: {
+      lng: null,
+      lat: null,
+      headingDeg: 10,
+      scale: 1,
+      altitudeM: 0,
+      anchorNode: null,
+      hiddenPoints: [],
+      keptPoints: [],
+      visible: true,
+      updatedAt: "2026-10-28T10:00:00Z",
+    },
+  });
+  let answer: Response | null = null;
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/admin/site-details": () => ({
+      items: [draft()],
+      nextCursor: null,
+    }),
+    "GET /v1/admin/sites/d1": () => draft(),
+    "PUT /v1/admin/sites/d1/map-placement": () => answer ?? {},
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const d1 = (await client.getSnapshot()).sites.find((s) => s.id === "d1")!;
+  // The draft shows its saved placement; no location stored = the site's own (the placeholder here).
+  assert.equal(d1.model?.placement?.headingDeg, 10);
+  assert.deepEqual(
+    [d1.model?.placement?.lng, d1.model?.placement?.lat],
+    d1.coordinates,
+  );
+  assert.equal(d1.model?.placement?.visible, true);
+
+  // A site save carrying a stale placement on its model writes nothing about the model.
+  await client.dispatch({
+    type: "site",
+    site: {
+      ...d1,
+      model: {
+        ...d1.model!,
+        placement: { ...d1.model!.placement!, headingDeg: 99 },
+      },
+    },
+  });
+  assert.deepEqual(
+    api.calls.filter((c) => c.method !== "GET").map((c) => c.path),
+    [],
+  );
+
+  answer = Response.json(
+    {
+      error: {
+        code: "VALIDATION_FAILED",
+        message: "Girdi doğrulanamadı.",
+        fieldErrors: { lng: ["Konum Bursa sınırları dışında."] },
+        requestId: "r",
+      },
+    },
+    { status: 400 },
+  );
+  await assert.rejects(
+    client.dispatch({
+      type: "map-placement",
+      siteId: "d1",
+      placement: d1.model!.placement!,
+    }),
+    (e) =>
+      e instanceof ApiError &&
+      e.status === 400 &&
+      e.fieldErrors.lng?.[0] === "Konum Bursa sınırları dışında.",
+  );
+  answer = Response.json(
+    {
+      error: {
+        code: "CONFLICT",
+        message:
+          "Eserin 3B modeli yok; haritada yerleşim için önce model bağla.",
+        fieldErrors: {},
+        requestId: "r",
+      },
+    },
+    { status: 409 },
+  );
+  await assert.rejects(
+    client.dispatch({
+      type: "map-placement",
+      siteId: "d1",
+      placement: d1.model!.placement!,
+    }),
+    (e) => e instanceof ApiError && e.status === 409,
+  );
+});

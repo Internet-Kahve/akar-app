@@ -21,11 +21,13 @@ import {
   type SitePhoto,
   type SiteSource,
   type StoryBlock,
+  type MapPlacement,
   type Trust,
 } from "@akar/domain";
 import { routes } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
+import { PlacementSection, usePlacementEditor } from "./admin-placement";
 import { prepareModel } from "../lib/editor-media";
 const steps = ["Model", "Bilgiler", "Kaynaklar", "Hikâye", "Yayın"];
 function prepareSite(site: HeritageSite): HeritageSite {
@@ -60,12 +62,21 @@ function prepareSite(site: HeritageSite): HeritageSite {
         : []),
   };
 }
+/** The site as the editor compares it: the placement has its own save and is not part of it. */
+const siteKey = (site: HeritageSite) =>
+  JSON.stringify(
+    site.model
+      ? { ...site, model: { ...site.model, placement: undefined } }
+      : site,
+  );
 export function SiteEditor({
   site,
   sites,
   catalogRoutes = routes,
   onClose,
   onSave,
+  loadPlacement,
+  savePlacement,
   live,
 }: {
   site: HeritageSite;
@@ -73,6 +84,10 @@ export function SiteEditor({
   catalogRoutes?: typeof routes;
   onClose: () => void;
   onSave: (s: HeritageSite) => Promise<HeritageSite>;
+  /** The placement saved for the site's model, hidden or not (`AkarClient.getMapPlacement`). */
+  loadPlacement: (siteId: string) => Promise<MapPlacement | null>;
+  /** Saves the whole placement of the site's model (the `map-placement` command). */
+  savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
   live: boolean;
 }) {
   const [draft, setDraft] = useState(() => prepareSite(site));
@@ -85,8 +100,18 @@ export function SiteEditor({
     [photoEdit, setPhotoEdit] = useState<SitePhoto>();
   const [preview, setPreview] = useState(false),
     [closing, setClosing] = useState(false);
-  const [baseline, setBaseline] = useState(() => JSON.stringify(draft));
-  const dirty = JSON.stringify(draft) !== baseline;
+  const [baseline, setBaseline] = useState(() => siteKey(draft));
+  // The server has the site and its model: what a placement needs (409 otherwise).
+  const persisted = Boolean(sites.find((s) => s.id === draft.id)?.model);
+  const placement = usePlacementEditor({
+    siteId: draft.id,
+    initial: site.model?.placement,
+    coordinates: draft.coordinates,
+    persisted,
+    load: loadPlacement,
+    onSave: savePlacement,
+  });
+  const dirty = siteKey(draft) !== baseline || placement.dirty;
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -148,7 +173,7 @@ export function SiteEditor({
     try {
       const canonical = await onSave(next);
       setDraft(canonical);
-      setBaseline(JSON.stringify(canonical));
+      setBaseline(siteKey(canonical));
       setSaved(
         live
           ? canonical.status === "published"
@@ -158,7 +183,14 @@ export function SiteEditor({
             ? "Eser demo keşfinde yayında."
             : "Taslak bu tarayıcıya kaydedildi.",
       );
-      if (exit) onClose();
+      // The placement has its own save; one still open goes out with the site, now that the server has the model.
+      const refused =
+        placement.dirty && canonical.model
+          ? await placement.save(canonical.id)
+          : null;
+      if (refused)
+        setError(`Eser kaydedildi, yerleşim kaydedilemedi: ${refused}`);
+      else if (exit) onClose();
     } catch (error) {
       setError(
         error instanceof Error
@@ -300,6 +332,8 @@ export function SiteEditor({
                     <Tag>
                       {(draft.model.bytes / 1024 / 1024).toFixed(2)} MB ·{" "}
                       {draft.model.parts.length} parça
+                      {draft.model.triangles != null &&
+                        ` · ${draft.model.triangles.toLocaleString("tr-TR")} üçgen`}
                     </Tag>
                     <button
                       className="btn secondary"
@@ -336,6 +370,13 @@ export function SiteEditor({
                       ))}
                     </ul>
                   </details>
+                  <PlacementSection
+                    editor={placement}
+                    siteId={draft.id}
+                    modelSrc={draft.model.src}
+                    parts={draft.model.parts}
+                    persisted={persisted}
+                  />
                 </>
               )}
               <Notice>

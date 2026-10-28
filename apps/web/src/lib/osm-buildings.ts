@@ -41,8 +41,8 @@ export interface TileFeature {
   properties?: Record<string, unknown> | null;
 }
 
-const M_PER_DEG_LNG = 111_320;
-const M_PER_DEG_LAT = 110_540;
+export const M_PER_DEG_LNG = 111_320;
+export const M_PER_DEG_LAT = 110_540;
 /** Margin around the model's footprint, in metres. */
 export const FOOTPRINT_PAD_M = 3;
 /** A building this much larger than a model's footprint is a roof spanning more than the model (a bazaar); it stays. */
@@ -177,16 +177,114 @@ export function isHidden(outer: Ring, rules: readonly HideRule[]): boolean {
   });
 }
 
-/** GeoJSON features for the buildings that stay, with `h` and `b` for the extrusion. */
+/** GeoJSON feature of a building: `h` and `b` for the extrusion, `i` its place in `buildings` (what a click on it names). */
+const feature = (b: Building, i: number): GeoJSON.Feature<GeoJSON.Polygon> => ({
+  type: "Feature",
+  properties: { h: b.height, b: b.base, i },
+  geometry: { type: "Polygon", coordinates: b.polygon },
+});
+
+/** GeoJSON features for the buildings that stay. */
 export function visibleBuildings(
   buildings: readonly Building[],
   rules: readonly HideRule[],
 ): GeoJSON.Feature<GeoJSON.Polygon>[] {
-  return buildings
-    .filter((b) => !isHidden(b.polygon[0]!, rules))
-    .map((b) => ({
-      type: "Feature",
-      properties: { h: b.height, b: b.base },
-      geometry: { type: "Polygon", coordinates: b.polygon },
-    }));
+  return buildings.flatMap((b, i) =>
+    isHidden(b.polygon[0]!, rules) ? [] : [feature(b, i)],
+  );
+}
+
+/** GeoJSON features for the buildings the rules leave out: the panel preview paints them red. */
+export function hiddenBuildings(
+  buildings: readonly Building[],
+  rules: readonly HideRule[],
+): GeoJSON.Feature<GeoJSON.Polygon>[] {
+  return buildings.flatMap((b, i) =>
+    isHidden(b.polygon[0]!, rules) ? [feature(b, i)] : [],
+  );
+}
+
+/** Centre of gravity of a ring (the mean of the corners when the ring has no area). */
+export function ringCentroid(ring: Ring): LngLat {
+  // Relative to the first corner: degrees are large next to the building, products would lose it.
+  const [ox, oy] = ring[0] ?? [0, 0];
+  let area = 0;
+  let cx = 0;
+  let cy = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xj = ring[j]![0] - ox;
+    const yj = ring[j]![1] - oy;
+    const xi = ring[i]![0] - ox;
+    const yi = ring[i]![1] - oy;
+    const cross = xj * yi - xi * yj;
+    area += cross;
+    cx += (xj + xi) * cross;
+    cy += (yj + yi) * cross;
+  }
+  return Math.abs(area) < 1e-18
+    ? meanPoint(ring)
+    : [ox + cx / (3 * area), oy + cy / (3 * area)];
+}
+
+/**
+ * Direction of a ring's longest edge as a heading (clockwise from north), reduced to 0 ≤ x < 90: a
+ * building's long side says which of the four right-angle headings the model has, not which one.
+ */
+export function longestEdgeHeading(ring: Ring): number {
+  const cos = Math.cos(((ring[0]?.[1] ?? 0) * Math.PI) / 180);
+  let best = 0;
+  let heading = 0;
+  for (let i = 1; i < ring.length; i++) {
+    const east = (ring[i]![0] - ring[i - 1]![0]) * M_PER_DEG_LNG * cos;
+    const north = (ring[i]![1] - ring[i - 1]![1]) * M_PER_DEG_LAT;
+    const length = Math.hypot(east, north);
+    if (length <= best) continue;
+    best = length;
+    heading = (Math.atan2(east, north) * 180) / Math.PI;
+  }
+  return ((heading % 90) + 90) % 90;
+}
+
+/**
+ * The hand-picked points after the editor hides or shows one building (`outer`, clicked at `at`):
+ * the points inside it that say the opposite are dropped, and a point is added only when the rules
+ * would still leave the building in the wrong state.
+ */
+export function setBuildingHidden(
+  outer: Ring,
+  rule: HideRule,
+  hide: boolean,
+  at: LngLat,
+): Pick<HideRule, "hiddenPoints" | "keptPoints"> {
+  const inside = (p: MapPoint) => pointInRing([p.lng, p.lat], outer);
+  const point = { lng: at[0], lat: at[1] };
+  let { hiddenPoints, keptPoints } = rule;
+  if (hide) keptPoints = keptPoints.filter((p) => !inside(p));
+  else hiddenPoints = hiddenPoints.filter((p) => !inside(p));
+  const hidden = isHidden(outer, [{ ...rule, hiddenPoints, keptPoints }]);
+  if (hide && !hidden) hiddenPoints = [...hiddenPoints, point];
+  if (!hide && hidden) keptPoints = [...keptPoints, point];
+  return { hiddenPoints, keptPoints };
+}
+
+/** A point inside the ring: its centroid, or for a bent shape the middle of the widest stretch on the centroid's latitude. */
+export function interiorPoint(ring: Ring): LngLat {
+  const centroid = ringCentroid(ring);
+  if (pointInRing(centroid, ring)) return centroid;
+  const y = centroid[1];
+  const xs: number[] = [];
+  for (let i = 1; i < ring.length; i++) {
+    const [x0, y0] = ring[i - 1]!;
+    const [x1, y1] = ring[i]!;
+    if (y0 > y !== y1 > y) xs.push(x0 + ((y - y0) * (x1 - x0)) / (y1 - y0));
+  }
+  xs.sort((a, b) => a - b);
+  let best: LngLat = ring[0] ?? centroid;
+  let width = -1;
+  for (let i = 0; i + 1 < xs.length; i += 2)
+    if (xs[i + 1]! - xs[i]! > width) {
+      width = xs[i + 1]! - xs[i]!;
+      best = [(xs[i]! + xs[i + 1]!) / 2, y];
+    }
+  return best;
 }
