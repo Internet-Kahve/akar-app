@@ -700,4 +700,5 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
   - Ulucami'de kullanılan adlar korunur;
   - tıklama haritası render'ı ve referans denetimi.
   Blender eşitlemesinden sonra verilecek.
+- **OSM binaları (prototip):** önizleme v3'teki kural prototipe de geçti. Modele, 1 m iz payı ve 3 m boşlukla birlikte değen bina bütünüyle kalkar. Eskiden bina kesilip artanı bırakılıyordu. Test ortamında harita karosu olmadığı için görsel olarak sınanamadı; Redmi denemesinde bakılacak.
 - Sınama (Playwright): Ulucami önce/sonra; Koza Han yer gölgesi; cepheye fareyle gelince dört cephe ile pencereler birlikte yanıyor; kart açılıyor; hata yok. Yedek: `.onbellek/_yedek_app_2026-10-29b.js`.
