@@ -14,7 +14,7 @@
 | # | İş | Kim | Not |
 |---|---|---|---|
 | 1 | `git push origin docs` | Muhammed (terminal) | Bu bağlantıdan push yapılamıyor (sanal makinede SSH anahtarı yok). Sonra PR: https://github.com/Internet-Kahve/akar-app/pull/new/docs |
-| 2 | Blender eşitleme işinin bitmesini bekle, raporunu kontrol et | 3D ajanı → Claude | Prompt: `design/test-redmi9t-v2/_promptlar/PROMPT_blend_kaynagi_esitle_7_eser.md`. Bitince 3D dosyalarının commit'i (karar bekliyor: reddedilen fotoğraf renkli ara sürümler — Ulucami v28, Koza v15 vb., ≈ 10 MB — git'e girmesin; diskte kalsın). |
+| 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `_promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
 | 3 | Redmi 9T denemesi | Muhammed | Aşağıdaki kontrol listesi. |
 | 4 | Diğer 6 esere görev/bulmaca ve Geçmişi Gör | Talha | Prompt'lar: `_promptlar/PROMPT_gorevler_diger_eserler.md`, `PROMPT_gecmisi_gor_diger_eserler.md`. Bitince raporu getir: sorular envanter metniyle karşılaştırılacak. Model parça adları değişmedi, «3D modelde bul» görevleri yeni modellerde çalışır. |
 
@@ -68,7 +68,7 @@ Değerlendirme: tasarım ve teknik güçlü; **zayıf yanlar bütünlük/demo ve
 ## 5. Teknik borç
 
 - [ ] Modellerde zemin katmanlarını ayır (≥ 3 cm) — `yaptiklarim-2.md` §22.
-- [ ] `eserler/_kutuphane/renk_ao_v3/` bir kerelik geçiş betikleri; kaynak artık Blender + `malzeme-paleti.json` (eşitleme işi bitince kesinleşir).
+- [x] Kaynak artık Blender + `malzeme-paleti.json` (eşitleme bitti); `renk_ao_v3/` yeniden kullanılmaz.
 - [ ] `design/test-redmi9t-v2/.onbellek/` içindeki geçici dosyalar (`_zemin_denemesi_*`, `_yedek_*`) silinebilir (git dışında).
 - [ ] `test.html` (performans testi) MapLibre 4.7'de kaldı.
 - [ ] v1 önizleme (`design/harita/akar-harita-onizleme.html`): döndürünce süzülmemiş OSM 3D katmanı açılıyor (v2/v3'te düzeltildi). v1 kullanılmıyorsa önemsiz.
