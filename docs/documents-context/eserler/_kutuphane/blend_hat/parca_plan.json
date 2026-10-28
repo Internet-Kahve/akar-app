@@ -1,0 +1,50 @@
+{
+ "_aciklama": "Kök parça bölünüşü (29 Ekim 2026, PROMPT parça sadeleştirme). blend_cikti.py bu planı dışa aktarmadan önce uygular; kaynakları bulunmayan adım atlanır (zaten uygulanmış blend'de plan etkisizdir). Sıra: ayir → dagit → birlestir → ad. ayir: kaynak parçanın dünya koordinatında kutu içindeki yüzleri hedefe taşınır. dagit: kaynak parçanın bağlantısız adaları, merkezi (x, y) en küçük kapsayan bölge kutusundaki hedefe gider (bölge kutuları değişiklikten önceki parçalardan). birlestir: hedef ← kaynaklar (malzemeler korunur). ad: eski → yeni. Ulucami'de değişiklik yok (bkz. 3d/kontrol/v29/parca_envanteri.md).",
+ "koza-han": {
+  "ayir": [{"kaynak": "Avlu_Mescit", "kutu": {"xmin": 40.0}, "hedef": "Ic_Koza", "neden": "İç Koza (ikinci avlu) ortasındaki 12 kenarlı mermer havuz (build_v13.py: «Street View 04», ölçüler T) yanlışlıkla mescide birleştirilmişti; ikinci avlunun parçası."}],
+  "birlestir": {
+   "Mescit": ["Avlu_Mescit", "Mescit_Kubbe", "Mescit_Dikis"],
+   "Avlu_Revak": ["Avlu_Revak", "Avlu_Cephe"],
+   "Avlu_Zemin": ["Avlu_Zemin", "Avlu_Halka"],
+   "Cephe": ["Cephe", "Silme_Kat"],
+   "Cati": ["Cati", "Baca"]
+  },
+  "ad": {"Kubbe_Avlu": "Revak_Kubbeleri"}
+ },
+ "yildirim-bayezid-bedesteni": {
+  "birlestir": {
+   "Govde": ["Govde", "Pencereler"],
+   "Dukkanlar": ["Dukkanlar", "Dukkan_Kapilari", "Cati", "Sacak"]
+  }
+ },
+ "orhan-bey-kulliyesi": {
+  "birlestir": {
+   "Cami_SonCemaat": ["Cami_SonCemaat", "Revak_Cephe", "Revak_Kemerler", "Kubbe_SonCemaat"],
+   "Kubbe_Tabhaneler": ["Kubbe_Tabhane_B", "Kubbe_Tabhane_D"]
+  },
+  "ad": {"Minare_1": "Minare"}
+ },
+ "orhan-bey-hamami": {
+  "dagit": [{"kaynak": "Hamam_Detay", "bolgeler": {
+   "Hamam_Sogukluk_Erkek": ["Hamam_Sogukluk_Erkek", "Kubbe_Sogukluk_Erkek"],
+   "Hamam_Sogukluk_Kadin": ["Hamam_Sogukluk_Kadin", "Kubbe_Sogukluk_Kadin"],
+   "Hamam_Sicaklik": ["Hamam_Sicaklik", "Kubbe_Sicaklik", "Kubbe_Iliklik", "Kubbe_Halvetler"],
+   "Hamam_Giris": ["Hamam_Giris"],
+   "Hamam_Giris_Kadin": ["Hamam_Giris_Kadin"]}}],
+  "birlestir": {
+   "Hamam_Sogukluk_Erkek": ["Hamam_Sogukluk_Erkek", "Kubbe_Sogukluk_Erkek"],
+   "Hamam_Sogukluk_Kadin": ["Hamam_Sogukluk_Kadin", "Kubbe_Sogukluk_Kadin"],
+   "Hamam_Sicaklik": ["Hamam_Sicaklik", "Kubbe_Sicaklik", "Kubbe_Iliklik", "Kubbe_Halvetler"]
+  }
+ },
+ "emir-han": {
+  "birlestir": {"Emir_Hani": ["Emir_Hani", "Bacalar", "Dis_Cephe"]}
+ },
+ "orhan-gazi-turbesi": {
+  "birlestir": {
+   "Govde": ["Govde", "Pencereler", "Pilastr_Silme"],
+   "Giris_Holu": ["Giris_Holu", "Kapi"],
+   "Kubbe": ["Kubbe", "Kasnak", "Cati_Etek"]
+  }
+ }
+}
