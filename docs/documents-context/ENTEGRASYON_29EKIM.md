@@ -13,6 +13,18 @@
 - rota rozeti;
 - anılar.
 
+**Ana referans Ulucami.** Ulucami bütün özellikleriyle neredeyse hazır:
+- hikâye ve kamera;
+- parça kartları;
+- «İçini göster»;
+- «Eser hakkında» okuma düzeni ve kapak;
+- Geçmişi Gör ve izler;
+- görevler ve rozetler.
+
+Veritabanı şeması, içe aktarma ve UX kararları için örnek Ulucami. Bir alanın biçimi ya da bir etkileşimin nasıl davranacağı belirsizse Ulucami'nin dosyasına ve prototipteki Ulucami ekranlarına bakılsın.
+
+Diğer altı eserin aynı dosyaları Talha'nın elinde (bkz. `YAPILACAKLAR.md` → «Talha'nın işleri»); dosyalar geldikçe biçim Ulucami ile aynı olacak. Bu yüzden şema Ulucami'ye göre kurulursa diğer eserler sonradan yalnız veri olarak eklenir.
+
 **İlke:** Prototipte esere ya da şehre özel değer kodda yazılmaz; her şey aşağıdaki veri dosyalarından okunur. Ürüne de böyle taşınmalı.
 
 Yollar `docs/documents-context/` altına göredir.
