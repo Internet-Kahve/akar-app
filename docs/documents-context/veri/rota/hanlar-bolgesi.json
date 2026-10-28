@@ -1,0 +1,16 @@
+{
+  "_aciklama": "Rota kaydı (28 Ekim 2026). Süre ve mesafe üründe hesaplanır; prototipte elle.",
+  "id": "hanlar-bolgesi",
+  "sehir": "bursa",
+  "ad": "Hanlar Bölgesi Vakıf Yürüyüşü",
+  "zorluk": "Kolay",
+  "sure": "~10 dk",
+  "mesafe": "0,5 km",
+  "aciklama": "Ulucami’den Bedesten’e, Koza Hanı’na ve Orhan Bey Camii’ne: Bursa’nın vakıf çarşısı.",
+  "duraklar": [
+    "ulu-cami",
+    "yildirim-bayezid-bedesteni",
+    "koza-han",
+    "orhan-bey-kulliyesi"
+  ]
+}

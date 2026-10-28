@@ -1,0 +1,17 @@
+{
+  "_aciklama": "Eserin kimlik kaydı (28 Ekim 2026). Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. Sıra: listede ve haritada varsayılan sıra.",
+  "id": "orhan-bey-hamami",
+  "sira": 5,
+  "ad": "Orhan Bey Hamamı",
+  "yil": "1340",
+  "yaptiran": "Orhan Bey",
+  "tur": "Hamam",
+  "ikon": "hamam",
+  "rol": "akar",
+  "kisa": "Orhan Bey’in külliyesine yaptırdığı çifte hamam; bugün Aynalı Çarşı.",
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "lat": 40.184466,
+  "lon": 29.062931,
+  "_kaynak": "Kimlik: E cilt-1 PDF s.104. İlçe: kayıtta yok; aynı külliyedeki Orhan Bey Camii kaydından. Konum: OSM way merkezi."
+}

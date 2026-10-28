@@ -1,0 +1,48 @@
+{
+  "_aciklama": "Ulucami · görevler ve rozetler (28 Ekim 2026, taslak; uygulamaya henüz bağlı değil). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Cami içinde görev yok. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden; kaynak sayfası her kayıtta.",
+  "gorevler": [
+    {
+      "id": "ulu-soru-kundekari",
+      "tur": "soru",
+      "baslik": "Minberin sırrı",
+      "soru": "Ulucami'nin ahşap minberi hangi teknikle yapıldı?",
+      "secenekler": ["Kündekâri", "Çini", "Kalem işi", "Mukarnas"],
+      "dogru": 0,
+      "ipuclari": [
+        "Minberin parçalarına bak: aralarında çivi ya da tutkal yok, birbirine geçiyorlar.",
+        "Cevap «K» harfiyle başlıyor."
+      ],
+      "dogru_metin": "Kündekâri: ahşap parçalar çivi, tutkal ya da başka bir bağlayıcı kullanılmadan birbirine geçirilir. Ulucami minberi bu tekniğin en özgün örneklerinden biridir.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "23_minber-yandan.jpg",
+      "parca": "Minber",
+      "kaynak": "E cilt-1 PDF s.27",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    },
+    {
+      "id": "ulu-saha-sahaflar",
+      "tur": "saha",
+      "baslik": "Sahaflar Kapısı",
+      "gorev": "Caminin kuzey cephesindeki mermer taç kapıyı bul. Halk arasında adı «Sahaflar Kapısı».",
+      "yerinde": {
+        "yap": "Kapının önüne gel ve «Buradayım»a dokun. İstersen fotoğrafını çekip İz Bırak'a ekle.",
+        "konum_yaricap_m": 80,
+        "_not": "Konum eserin noktasından ölçülür (eser.json lat/lon). Kapının kendi koordinatı ölçülmedi; 80 m caminin çevresini kapsar."
+      },
+      "evden": {
+        "yap": "3D modelde Sahaflar Kapısı'na dokun.",
+        "parca": "Tac_Kapi"
+      },
+      "tamam_metin": "Ulucami'ye üç kapıdan girilir: kuzeyde Sahaflar Kapısı, doğuda Çarşı Kapısı, batıda Müftülük ya da Mahkeme Kapısı.",
+      "gorsel": "08_tac-kapi.jpg",
+      "kaynak": "E cilt-1 PDF s.25",
+      "guven": "Doğrulanmış"
+    }
+  ],
+  "rozetler": [
+    { "id": "ulu-hikaye", "ad": "Ulucami'yi dinledin", "metin": "Ulucami'nin hikâyesini sonuna kadar dinledin ya da okudun.", "kosul": { "hikaye_bitti": true } },
+    { "id": "ulu-kundekari", "ad": "Kündekâri", "metin": "Minberin çivisiz, birbirine geçen parçalarını öğrendin.", "kosul": { "gorev": "ulu-soru-kundekari" } },
+    { "id": "ulu-sahaflar", "ad": "Sahaflar Kapısı", "metin": "Ulucami'nin kuzeydeki taç kapısını buldun.", "kosul": { "gorev": "ulu-saha-sahaflar" }, "yerinde_etiketi": true }
+  ]
+}

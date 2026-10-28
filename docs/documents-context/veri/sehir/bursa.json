@@ -1,0 +1,15 @@
+{
+  "_aciklama": "Şehir kaydı (28 Ekim 2026). Prototipte harita açılış noktası ve şehir düzeyindeki künyeler buradan gelir; yeni şehir = yeni dosya.",
+  "id": "bursa",
+  "ad": "Bursa",
+  "merkez": [
+    29.0628,
+    40.1846
+  ],
+  "zoom": 16.3,
+  "zoom_masaustu": 16.7,
+  "foto_kunye": "Fotoğraf: Bursa Vakıf Eserleri Envanteri",
+  "kaynakca": "Bursa Vakıf Eserleri Envanteri, Cilt 1–2 (Vakıf Katılım, 2026).",
+  "envanter_adi": "Bursa Vakıf Eserleri Envanteri",
+  "envanter_yayinci": "Vakıf Katılım, 2026"
+}

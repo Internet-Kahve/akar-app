@@ -1,0 +1,17 @@
+{
+  "_aciklama": "Eserin kimlik kaydı (28 Ekim 2026). Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. Sıra: listede ve haritada varsayılan sıra.",
+  "id": "emir-han",
+  "sira": 6,
+  "ad": "Emir Hanı",
+  "yil": "1339–40",
+  "yaptiran": "Orhan Bey",
+  "tur": "Han",
+  "ikon": "han",
+  "rol": "akar",
+  "kisa": "Orhan Bey’in külliyesinin parçası olan, Bursa’nın ilk bedesteni sayılan han.",
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "lat": 40.184537,
+  "lon": 29.062346,
+  "_kaynak": "Kimlik: E cilt-1 PDF s.108. İlçe: kayıtta yok; aynı külliyedeki Orhan Bey Camii kaydından. Konum: uydu görüntüsünden ölçüldü (22 Ekim 2026); OSM'de adlı çokgeni yok (seçilen way 1271724730 batıdaki başka bir binaydı)."
+}

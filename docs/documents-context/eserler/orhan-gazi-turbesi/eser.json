@@ -1,0 +1,17 @@
+{
+  "_aciklama": "Eserin kimlik kaydı (28 Ekim 2026). Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. Sıra: listede ve haritada varsayılan sıra.",
+  "id": "orhan-gazi-turbesi",
+  "sira": 7,
+  "ad": "Orhan Gazi Türbesi",
+  "yil": "",
+  "yaptiran": "Hisar içi",
+  "tur": "Türbe",
+  "ikon": "turbe",
+  "rol": "dini",
+  "kisa": "Orhan Gazi’nin ve ailesinin gömülü olduğu kare planlı türbe.",
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "lat": 40.186786,
+  "lon": 29.057715,
+  "_kaynak": "Kimlik: E cilt-2 PDF s.115–116. İlçe: E cilt-2 PDF s.115. Konum: OSM merkezi (veri/bursa/osm_secilen.csv; 20 Ekim 2026)."
+}

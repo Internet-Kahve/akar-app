@@ -1,0 +1,17 @@
+{
+  "_aciklama": "Eserin kimlik kaydı (28 Ekim 2026). Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. Sıra: listede ve haritada varsayılan sıra.",
+  "id": "orhan-bey-kulliyesi",
+  "sira": 4,
+  "ad": "Orhan Bey Camii",
+  "yil": "1339–40",
+  "yaptiran": "Orhan Bey",
+  "tur": "Cami",
+  "ikon": "cami",
+  "rol": "dini",
+  "kisa": "Orhan Bey’in külliyesiyle birlikte yaptırdığı cami.",
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "lat": 40.1839745,
+  "lon": 29.0641131,
+  "_kaynak": "Kimlik: E cilt-1 PDF s.96. İlçe: aynı kayıt. Konum: OSM way merkezi."
+}
