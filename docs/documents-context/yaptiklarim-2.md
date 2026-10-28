@@ -633,3 +633,37 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
 
 - v3'ün gömülü stiline `design/harita/akar-style-ozel-v2.json`'daki farklar işlendi (dosya tamamıyla karşılaştırıldı; yalnız 5 fark): background #F5F2EA → #f3f1ed, building #fde2c9 → #ede0d4, building_3d #d0c6b4 → #ddd5c6, road_area_pier ve road_pier #F5F2EA → #f3f1ed. «Sıfırla» bu renklere döner. Sınama: modeller ve harita hatasız.
 - 3D ajanı GLB üzerinde çalıştığı için blend/build fotoğraf renklerinde kalmıştı (kaynak–çıktı ayrışması). Prompt: `design/test-redmi9t-v2/_promptlar/PROMPT_blend_kaynagi_esitle_7_eser.md` (blend + build palet dosyasından, Yer_Golgesi silinir, AO küçültme dışa aktarma betiğine; Blender çıktısı şimdiki GLB ile a–g ölçütleriyle birebir doğrulanınca yerine yazılır, geçmezse dokunulmaz). Henüz çalıştırılmadı.
+
+## 53. Blend kaynağı GLB'lerle eşitlendi — doğrulamada bugünkü teslimde iki hata çıktı, DURULDU (3D)
+
+- İş emri: `design/test-redmi9t-v2/_promptlar/PROMPT_blend_kaynagi_esitle_7_eser.md`.
+- **Yeni kaynak hattı** `eserler/_kutuphane/blend_hat/` (renk_ao_v3'ün yerine; artık tek doğruluk kaynağı blend + `malzeme-paleti.json`):
+  - `blend_cikti.py` (Blender): palette renk ve doku; Yer_Golgesi temizliği; yeni blend; ham GLB.
+  - `blend_son.mjs`: AO tek kanal JPEG q80 (Ulucami ve Koza 1024 px, diğerleri 512 px, ~1 px bulanık); COLOR_0 temizliği; Draco iki tur (bugünkü dosyaların sıfır alanlı üçgen atımlarıyla birebir aynı).
+  - `uret.py`: zincir (ref → Blender → son adım → glb_temizle).
+  - `dogrula.mjs`: a–f ölçütleri.
+  - `eserler.json`.
+  - Palete `eser_doku` eklendi (dokulu malzemenin doku_palet_v2 dosyası).
+  - Her eserde `build/build_v29|v08|v16|v09|v07|v07|v04.py` (ince sarmalayıcı; renk sabiti yok).
+- **Blend'ler:** `ulu-cami_v29`, `bedesten_v08`, `koza-han_v16`, `orhan-bey-camii_v09`, `orhan-bey-hamami_v07`, `emir-hani_v07`, `orhan-gazi-turbesi_v04` (palet renkleri, Yer_Golgesi yok, pişmiş AO duruyor). Eskileri silinmedi.
+- **Doğrulama** (Blender çıktısı `export/_esitleme/` ↔ bugünkü teslim):
+  - **Uygulama GLB'leri (7):** a–f hepsi geçti; renk farkı 0 ton; kutu ≤ 1,5 mm (nicemleme); üçgen eşit; AO aynı boyut ve kanal; boyut farkı 0.
+  - (g) Render farkı Ulucami, Bedesten, Orhan, Hamam, Emir ve Türbe'de > 8/255 piksel %0.
+  - **Koza Han'da %1,7 fark** (aşağıda, hata 2).
+  - **Sunum GLB'leri:** Ulucami, Bedesten, Koza ve Türbe geçti. Orhan Camii, Hamam ve Emir (b) ölçütünde geçmedi (hata 1).
+- **Hata 1 (bugünkü teslimde; benim §51'deki işim):** `pastel_kucuk.mjs`, sunum dosyalarında rengi köşe renginde duran çevre malzemelerinin (Agac, Agac_Govde_Doku, Duz) köşe rengini malzemeye çarptı, ama köşe rengini silmedi. Renk iki kez uygulandı; ağaç ve zemin koyulaştı (ör. Orhan Agac G 0,34 → 0,12 doğrusal). Blender çıktısı pastel referansla (v07/v05/v05 sunum) birebir aynı. Uygulama GLB'leri etkilenmedi (çevre yok).
+- **Hata 2 (bugünkü teslimde; §47'deki işim):** Koza Han v14'te Govde_Dis ve Ic_Koza dokuları ikinci UV kanalını (texCoord 1) kullanıyordu; birinci kanal boş bir yer tutucuydu. `renk_ao.py` yer tutucuyu silip UV_AO'yu ikinci kanala koydu, ama malzemeler texCoord 1'de kaldı. Böylece Duvar_Almasik, Moloz, Disli_Tugla ve Pencere_Izgara dokuları AO atlasının UV'siyle örneklendi (v15 ve v16). `dogrula.mjs` ortanca renge baktığı için yakalamadı; render yakaladı. Blender çıktısı texCoord 0 kullanıyor ve pastel v14 ile ışıksız render farkı %0,001; bugünkü v16'da %2,9.
+- **Prompt kuralı gereği bugünkü GLB'lere dokunulmadı.** Geçici çıktılar `eserler/<eser>/3d/export/_esitleme/` altında; karşılaştırma görseli `kontrol/<sürüm>/esitleme.png`. README ve model.json değişmedi; `modelleri-gom.py` çalıştırılmadı.
+- `renk_ao_v3/` betiklerinin başına «bir kerelik geçiş işiydi; yeniden kullanma» notu eklendi.
+- Açık (kullanıcı onayı): Blender çıktısı yedi uygulama ve yedi sunum GLB'sinin yerine yazılsın mı? Hata 1 ve 2'yi düzeltir, diğerlerinde görsel değişiklik yok.
+
+## 54. Prototipe v3 ayarları, pin/filtre düzeltmeleri, YAPILACAKLAR.md (test-redmi9t-v2)
+
+- **Işık veriden:** `veri/sehir/bursa.json → harita_isik` (ortam 2, güneş 1, karşı 1, yön 315°, yükseklik 45°, doygunluk 1,25, yer_golgesi 0,18; + `_harita_isik_not`). `app.js` `ISIK` (yoksa eski varsayılanlar); haritadaki model katmanında ışıklar, malzeme doygunluğu ve web yer gölgesi (`YG_DOKU`, kodla üretilen bulanık doku; önizleme v3 ile aynı). Taban izi «Yer_Golgesi»siz (`yerGolgesiMi`).
+- **Yer gölgesi azaltıldı** (kullanıcı): 0,28 → 0,18; önizleme v3 «Pişmiş» hazır ayarında da.
+- **Stil:** `sunucu.sh` prototipe `design/harita/akar-style-ozel-v2.json`'ı `akar-style.json` adıyla bağlar (ortak `akar-style.json`'a v1 bağlı, dokunulmadı). `SERIN` geçersiz kılması kaldırıldı; OSM 3D bina rengi/opaklığı stilin `building_3d`'sinden.
+- **Pinler:** etiket `text-variable-anchor-offset` ile yer bulamazsa sağa/üste/alta geçer; `symbol-sort-key` = eser sırası; pin zoom 16 → 18'de 0,8 → 0,66 küçülür. Test ortamında yazı tipi indirilemediği için etiketler görsel olarak sınanamadı.
+- **Filtre:** «Akar» → «Ticari (akar)» (uygulamanın adıyla karışıyordu); her filtrede açıklama (title); yalnız şehirde eseri olan roller gösterilir (Bursa'da «Su», «Eğitim» yok). Listede «3D» etiketi yalnız bütün eserlerde 3D yoksa.
+- Emir Hanı ve Orhan Bey Camii'nin aynı tarihi (1339–40) kontrol edildi: ikisi de envanterde aynı külliyenin parçası (E cilt-1 s.96, s.108); doğru.
+- `YAPILACAKLAR.md` (documents-context): durum, hemen yapılacaklar, Redmi kontrol listesi, tasarım/Figma, ekip notları, jüri ve sunum, teknik borç.
+- Sınama (Playwright, masaüstü): 7 yeni model yüklendi, filtreler «Dinî», «Ticari (akar)»; 3D etiketi yok; hata yok. Yedek: `.onbellek/_yedek_*_2026-10-29.*`.

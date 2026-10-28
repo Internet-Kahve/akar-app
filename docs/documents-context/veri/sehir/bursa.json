@@ -24,5 +24,15 @@
     "sahne_alt": "#A7B4B7",
     "_sahne_not": "3D eser sahnesinin zemini (28 Ekim 2026): yukarıdan aşağı geçiş; Bursa tonuna hafif çalan nötr gri. ISO 3664 nötr çevre ilkesi: doygun zemin model renklerini kaydırır, bu yüzden düşük doygunluk; alt ton koyu ki kaide zeminden ayrılsın.",
     "_not": "tokens.css --sehir-bursa-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
-  }
+  },
+  "harita_isik": {
+    "ortam": 2,
+    "gunes": 1,
+    "dolgu": 1,
+    "yon": 315,
+    "yukseklik": 45,
+    "doygunluk": 1.25,
+    "yer_golgesi": 0.18
+  },
+  "_harita_isik_not": "Haritadaki 3D eserlerin ışığı (29 Ekim 2026): design/harita/akar-harita-onizleme-v3.html «Pişmiş» hazır ayarı, kullanıcının seçimi. ortam = HemisphereLight, gunes/dolgu = yönlü ışıklar, yon = kuzeyden saat yönüne derece, yukseklik = güneşin ufuktan açısı, doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Gölge ve köşe kararması (AO) modellerde pişmiş."
 }
