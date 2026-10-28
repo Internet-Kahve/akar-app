@@ -1,0 +1,19 @@
+{
+  "_aciklama": "Şehir kaydı (28 Ekim 2026). Envanteri var, uygulamaya henüz eklenmedi: küre görünümünde «Yakında» olarak görünür; eserleri eklenince kendiliğinden «n eser» olur. merkez yaklaşık il merkezidir (yalnız harita işareti için).",
+  "id": "konya",
+  "ad": "Konya",
+  "merkez": [
+    32.4846,
+    37.8714
+  ],
+  "zoom": 14,
+  "envanter_yili": 2024,
+  "envanter_eser_sayisi": 289,
+  "_kaynak": "KÖK&KOD Vakıf Eserleri Envanter Projesi Bilgi Notu (hackathon/KOKKOD_Envanter_Projesi_Bilgi_Notu.pdf): şehir, envanter yılı ve belgelenen eser sayısı.",
+  "kimlik": {
+    "zemin": "#3D8285",
+    "desen_renk": "#E8DD7A",
+    "desen": "desen-konya-on-iki-gulbezek.svg",
+    "_not": "tokens.css --sehir-konya-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
+  }
+}

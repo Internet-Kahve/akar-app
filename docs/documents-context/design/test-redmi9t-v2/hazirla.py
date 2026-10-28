@@ -233,6 +233,61 @@ def kitap_fotolari(eid, bolumler, cikti):
         (onceki[-1].setdefault('fotolar', []) if onceki else bolumler[0].setdefault('fotolar', [])).append(f)
 
 
+def okuma_oku(eid, bolumler):
+    """icerik/eser-hakkinda-okuma.md: «Eser hakkında» okuma katmanı (özet, rakam, alıntı, zaman, terim, 3D açısı) bölüme `okuma` olarak eklenir.
+    Yeni metin yazılmaz: özet cümlesi, alıntı, kanıt ve terim tanımı envanter metninde birebir geçmeli; geçmeyen satır atlanır ve uyarı yazılır."""
+    yol = os.path.join(ESER, eid, 'icerik', 'eser-hakkinda-okuma.md')
+    if not os.path.exists(yol):
+        return []
+    bol = {b['baslik']: b for b in bolumler}
+    tum = ' '.join(p['metin'] for b in bolumler for p in b['paragraflar'])
+    uyari = []
+    terimler = []
+    def var(parca, metin, ne):
+        if parca and parca in metin:
+            return True
+        uyari.append(f'{ne}: «{parca[:60]}»')
+        return False
+    for parca in re.split(r'(?m)^## ', oku(yol))[1:]:
+        baslik, _, govde = parca.partition('\n')
+        b = bol.get(baslik.strip())
+        if not b:
+            continue
+        metin = ' '.join(p['metin'] for p in b['paragraflar'])
+        o = dict(ozet=[], rakam=[], alinti=[], zaman=[], ucd=None)
+        ozette = False
+        for satir in govde.splitlines():
+            satir = satir.rstrip()
+            if satir.startswith('Özet:'):
+                ozette = True; continue
+            if ozette and satir.startswith('- '):
+                c = satir[2:].strip()
+                if var(c, metin, f'{baslik.strip()} özet'):
+                    o['ozet'].append(c)
+                continue
+            ozette = False
+            ad, _, deger = satir.partition(':')
+            alan = [x.strip() for x in deger.split('|')]
+            if ad == 'Rakam' and len(alan) == 3 and var(alan[2], metin, f'{baslik.strip()} rakam kanıtı'):
+                o['rakam'].append(dict(deger=alan[0], etiket=alan[1], kanit=alan[2]))
+            elif ad == 'Alıntı' and alan[0] and var(alan[0], metin, f'{baslik.strip()} alıntı'):
+                kim = alan[1] if len(alan) > 1 else ''
+                if kim and not any(alan[0] in p['metin'] and kim in p['metin'] for p in b['paragraflar']):
+                    uyari.append(f'{baslik.strip()} alıntı sahibi aynı paragrafta yok: «{kim}»'); kim = ''
+                o['alinti'].append(dict(metin=alan[0], kim=kim))
+            elif ad == 'Zaman' and len(alan) == 2 and var(alan[1], metin, f'{baslik.strip()} zaman kanıtı'):
+                o['zaman'].append(dict(yil=alan[0], kanit=alan[1]))
+            elif ad == 'Terim' and len(alan) == 2 and var(alan[0], tum, 'terim') and var(alan[1], tum, f'terim tanımı ({alan[0]})'):
+                terimler.append(dict(kelime=alan[0], tanim=alan[1]))
+            elif ad == '3D' and len(alan) == 5:
+                o['ucd'] = dict(parcalar=[x.strip() for x in alan[0].split(',') if x.strip()], azimut=float(alan[1]), egim=float(alan[2]),
+                                uzaklik=alan[3], ici=alan[4].lower().startswith('e'))
+        b['okuma'] = o
+    for u in uyari:
+        print(f'  ! {eid} eser-hakkinda-okuma.md kitapta birebir yok, atlandı → {u}')
+    return terimler
+
+
 def gecmis_oku(eid, cikti):
     """eserler/<eser>/gecmisi-gor/ paketi (Foto Atlas, gecmisi_gor_uret.py yazar): fotoğraflar + WebP'ler gg/<eser>/'e."""
     yol = os.path.join(ESER, eid, 'gecmisi-gor', 'gecmisi-gor.json')
@@ -302,7 +357,7 @@ def main():
         sys.exit('Kullanım: python3 hazirla.py <çıktı klasörü>')
     cikti = sys.argv[1]
     sehirler = klasor_jsonlari('sehir')
-    veri = dict(eserler=[], rotalar=klasor_jsonlari('rota'), sehir=sehirler[0] if sehirler else None, sehirler=sehirler)
+    veri = dict(eserler=[], rotalar=klasor_jsonlari('rota'), sehir=next((x for x in sehirler if x.get('varsayilan')), sehirler[0] if sehirler else None), sehirler=sehirler)
     for e in eserleri_bul():
         eid = e['id']
         model = model_oku(eid)
@@ -324,10 +379,11 @@ def main():
         hikaye = hikaye_oku(eid)
         hakkinda = hakkinda_oku(eid)
         kitap_fotolari(eid, hakkinda, cikti)
+        terimler = okuma_oku(eid, hakkinda)
         for b in hakkinda:
             for p in b['paragraflar']:
                 p.pop('_sayfa', None)
-        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda, gecmis=gecmis_oku(eid, cikti), izler=izler_oku(eid, cikti), parcalar=parcalar_oku(eid), model=model,
+        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda, terimler=terimler, gecmis=gecmis_oku(eid, cikti), izler=izler_oku(eid, cikti), parcalar=parcalar_oku(eid), model=model,
                      gorevler=gorevler_oku(eid)[0], rozetler=gorevler_oku(eid)[1],
                      sure=max(1, round(sum(len(c['metin'].split()) for c in hikaye) / 130)) if hikaye else 0)
         veri['eserler'].append(kayit)

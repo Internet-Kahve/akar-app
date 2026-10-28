@@ -144,3 +144,210 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
 - **Bulmaca:** Prototipte bulmaca sayfası yok; kısayol ve masaüstü panelindeki yeni «Bulmaca» satırı (`data-bulmaca`) şimdilik bildirim gösteriyor («Bulmaca prototipte henüz yok…»), İz Bırak'taki gibi.
 - **Figma** (📱 Mobil bölümü, «B · Eser detay / 3D» satırının sağı; bölüm 6250 px'e genişletildi): «B · Eser detay / 3D · kart kapalı» (221:2781), «· kart açık» (221:2862), «· rotada» (221:2958), altlarında notlar. Kart auto-layout, Inter + Cormorant Garamond, ikonlar lucide. Eski «B · Eser detay / 3D» ve «B · Eser detay» (fotoğraf) ekranlarına dokunulmadı.
 - Sınama (390 × 844, dokunmatik): kapalı 170 → 150 px çekince 300 (açık) → tutamağa dokun 170 / 300 / 170; Bulmaca bildirimi çıktı; Geçmiş → `#/gecmis/ulu-cami/0`, Hakkında → `#/hakkinda/ulu-cami`; rotada 222 px; 3D görünümde kart doğru. Masaüstü panel: Eser hakkında · Geçmişi Gör · Bulmaca. Konsolda hata yok.
+
+## 12. «Eser hakkında» okuma düzeni: kitaba sadık, kaydırdıkça açılan sayfa (test-redmi9t-v2 + Figma)
+
+- **Sorun:** Sayfa envanter metnini ve 119 fotoğrafı alt alta diziyordu; mobilde ~28.700 px tek duvar, bölüm geçişi ve ilerleme yoktu, masaüstünde fotoğraflar ekranı kaplıyordu, kitabeler düz paragraftı, alttaki sabit «dinle» düğmesi metni kapatıyordu.
+- **Yeni düzen** (scrollytelling + katmanlı okuma):
+  - Kapak: eserin kapak fotoğrafı, ad, yıl · yaptıran · tür, okuma süresi (≈200 kelime/dk), «Kısa anlatımı dinle».
+  - Üstte yapışık bölüm sekmeleri (okunan bölüm işaretlenir, dokununca o bölüme kayar) ve altın okuma çubuğu.
+  - Her bölüm: kapak fotoğrafı, no + başlık + süre · paragraf · sayfa; «Kitaptan» özet; rakam kartları; büyük alıntı; (Onarımlar'da) zaman çizelgesi; «Derinine in» ile tam metin.
+  - Tam metinde: tırnakla başlayan paragraf kitabe/ayet kartı (Mealen altında), fotoğraflar kitap sırasıyla yana kaydırılan şerit (dokununca büyür, ‹ › ile gezilir), «kündekâri» ve «zirâ» gibi terimlere dokununca kitaptaki tanım.
+  - Sonda Hikâyeyi dinle · Geçmişi Gör · Bulmaca (`#/gorev/`, başka oturumda eklenen görev ekranı) ve kaynaklar.
+  - Öğeler ekrana girince yumuşakça belirir; hareket azaltma tercihinde hemen görünür.
+  - Masaüstü: kapak tam genişlik; solda metin (680 px), sağda yapışık 3D. Okunan bölüme göre döner, ilgili parçalar parlar, Minber/Mihrap/şadırvanda kubbeler kalkar. 3D'siz eserde bölümün fotoğrafı.
+- **Kitaba sadakat:** Yeni dosya `eserler/ulu-cami/icerik/eser-hakkinda-okuma.md`. Özet cümleleri, alıntılar, rakam «kanıtı», zaman ifadeleri ve terim tanımları envanter metninden kelimesi kelimesine seçme; kendi sözümüz yalnız rakam kartlarının kısa etiketi (ör. «kubbe») ve yazıyla sayının rakama çevrilmesi («Yirmi» → «20»). `hazirla.py` `okuma_oku` her seçmenin o bölümün metninde birebir geçtiğini, alıntı sahibinin aynı paragrafta olduğunu denetler; geçmeyeni atlar ve uyarı yazar (sahte veriyle sınandı: uydurma özet, uydurma rakam ve yanlış alıntı sahibi atlandı). Envanter metninin tamamı sayfada duruyor (bütün paragraflar DOM'da, sınandı). Sayfa sonunda bunu söyleyen bir not var.
+- **Kod:** `app.js` «Eser hakkında» bloğu yeniden yazıldı (`hkBolum`, `hkTamMetin`, `hkSerit`, `hkTerimli`, `hkSec`, `hkSahne`, `hkGozle`, ışık kutusu, terim kartı); `app.css` `.hk*` bloğu yenilendi; `hazirla.py` `okuma_oku` + `terimler`. Okuma dosyası olmayan eserde (Bedesten, Koza Hanı, Türbe…) tam metin doğrudan görünür.
+- **Sınama:** mobil (390 × 844) ve masaüstü (1440 × 900). Sayfa kapalı hâlde 28.718 → 9.392 px. 7 kitabe kartı, terim kartı (kaydırınca kapanır), ışık kutusu (Esc kapatır), sekmeler ve okuma çubuğu çalışıyor. Masaüstü 3D: Tarihçe 0°/30° kubbeler yerinde → Minber 0°/45° kubbeler kalkık → Mimari 0°/70°. Diğer eserler hatasız. Konsolda hata yok.
+- **Figma:** 📱 Mobil bölümünün altına (y≈10684) dört ekran: «B · Eser hakkında · 1 kapak / 2 bölüm / 3 tam metin açık / 4 zaman çizelgesi ve son», notlarıyla. 🖥 Masaüstü bölümünün altına «D · Eser hakkında · okuma düzeni (yapışık 3D)». Büyük görseller dosyanın kuralına göre gri yer tutucu. Eski «Eser hakkında» ekranlarına dokunulmadı.
+- **Not:** Bu iş sırasında `app.js`'e başka bir oturumda görev/bulmaca ekranı eklenmişti; yalnız «Eser hakkında» bloğu değiştirildi, o değişikliklere dokunulmadı.
+
+## 13. «Eser hakkında»: dağınık kutular toplandı, «Derinine in» → «Tam metni oku» (test-redmi9t-v2 + Figma)
+
+- **Sorun:** Gri zemin üstünde beyaz özet kutusu, ayrı ayrı mavi rakam kutuları ve beyaz kenarlıklı «Derinine in» kutusu; bölüm parça parça görünüyordu. «Derinine in» bir bilgi kartı gibi duruyordu; altında metin olduğu belli değildi.
+- **Düzeltme:**
+  - Sayfa zemini beyaz (`.hk` `--surface`); bölümler arasında ince ayırıcı çizgi; yapışık sekme çubuğu da beyaz.
+  - «Kitaptan» özet kutusuz, yalnız soldaki altın çizgiyle.
+  - Rakamlar tek çerçevede bitişik hücreler (aralarında 1 px çizgi); tek sayıda kart olunca son kart satırı doldurur.
+  - «Derinine in» yerine «devamını oku» kalıbı: tam metnin ilk ~190 px'i alta doğru solarak görünür, altında tam genişlikte koyu mavi «Tam metni oku · 21 paragraf · 3 dk ⌄» düğmesi. Açılınca düğme «Metni kısalt ⌃» olur ve okurken ekranın altında yapışık durur; kısaltınca metnin başına döner. Kapalıyken gizli kısım odak almaz (`inert`), düğmede `aria-expanded`/`aria-controls`. `<details>` kaldırıldı.
+- **Sınama** (390 × 844 ve 1440 × 900): açınca 10.618 → 15.308 px, düğme ekranın altında yapışık (y 776–832), kısaltınca bölümün başına döndü. Konsolda hata yok.
+- **Figma:** «B · Eser hakkında · 1–4» ve «D · Eser hakkında · okuma düzeni» beyaz zemine alındı; özet kutusuz, rakamlar bitişik, «Tam metni oku» düğmesi (üstünde solan önizleme) ve altta yapışık «Metni kısalt».
+
+## 14. «Eser hakkında» envanter kitabının tasarımından ilhamla yeniden (test-redmi9t-v2 + Figma)
+
+- **Kitaptan çıkan tasarım dili** (Bursa Vakıf Eserleri Envanteri Cilt 1, PDF s.19–40 incelendi): açılışta büyük fotoğraf + petrol mavisi panel (kitaptan ölçülen #085971; projede aynı renk `--sehir-bursa-zemin` #22566E / `--sehir-bursa-desen` #A4D8E0), aralıklı büyük harfle ilçe («O S M A N G A Z İ»), serif eser adı; bölüm başlıkları büyük harfli kalın sans; gövde beyaz sayfada kutusuz, havadar tek sütun; kitabeler italik, «Mealen:» düz; kenardan kenara fotoğraflar; kutu, kenarlık, renkli zemin yok.
+- **Kural denetimi (tokens.css):** önceki sürümde Cormorant 18–19 px özet ve kitabe metninde kullanılıyordu; kural «serif yalnız 22 px+ başlık». Düzeltildi: özet Inter 19, kitabe Inter italik (index.html'de Inter italik 400 yüklendi). Altın yalnız süsleme; bölüm araları `SUSLEME` (kuralın izin verdiği yer). Gövde 17/1.75 (masaüstü 18), mobil kenar boşluğu 20 px. Kontrast: beyaz/petrol ~7.6:1, #A4D8E0/petrol ~5:1.
+- **Değişenler:**
+  - Kapak: mobilde 4:3 fotoğraf + petrol panel; masaüstünde %62 fotoğraf / %38 panel (kitabın çift sayfası gibi).
+  - Bölüm başlığı: «02» + büyük harfli kalın sans, `--sehir-aksan`; kapak fotoğrafı kenardan kenara.
+  - «Kitaptan» özet kutusuz; rakamlar kutusuz, üst çizgili sütunlar; alıntı serif 28 (italik değil: Cormorant italik yüklü değil).
+  - Kitabe kartları kaldırıldı → kitaptaki gibi italik paragraf.
+  - «Tam metni oku» petrol çerçeveli, büyük harfli düğme (solan önizleme ve yapışık «Metni kısalt» korunarak).
+  - Sekmeler, okuma çubuğu, zaman çizelgesi, terim çizgisi şehir renginde.
+  - `app.css`'e `--sehir-acik:#A4D8E0` eklendi (`--sehir-aksan` yanında).
+- **Sınama:** mobil ve masaüstü; aç/kısalt, yapışık düğme, terim kartı, ışık kutusu, 7 kitabe, diğer eserler. Yatay taşma yok, konsolda hata yok.
+- **Figma:** «B · Eser hakkında · 1–4» ve «D · Eser hakkında · okuma düzeni» yeni dille yeniden kuruldu (eskiler silindi, aynı yerde); notlar güncellendi.
+
+## 15. «Eser hakkında» kapağı: Dinle düğmesi kaldırıldı, Bursa deseniyle süslendi (test-redmi9t-v2 + Figma)
+
+- **Dinle düğmesi:** Kapaktaki «Kısa anlatımı dinle» kaldırıldı (sayfa sonundaki «Hikâyeyi dinle» duruyor).
+- **Desen:** `design/desenler/desen-bursa-sekiz-yildiz.svg` (kendi ürettiğimiz 8 kollu yıldız; BENIOKU kuralı: başlık arkasında %6–10). Petrol panelde açık su yeşili (#A4D8E0), %10 opaklık, 88 px karo, sağ üstten sola doğru solar (CSS mask + gradient). Alt kenarda 20 px'lik ince desen şeridi (%35).
+- **Esere/şehre özel değer kodda değil:** `veri/sehir/bursa.json` ve `konya.json`'a `kimlik` eklendi (zemin, desen_renk, desen dosyası; değerler tokens.css'teki şehir token'larıyla aynı). `hakkinda()` kapağa `--sehir-aksan`, `--sehir-acik`, `--hk-desen`'i bu veriden verir; `kimlik` olmayan şehirde desen çıkmaz, CSS'teki varsayılan renk kalır.
+- `sunucu.sh` artık `design/desenler/` klasörünü de paylaşıyor (`desenler/`).
+- Sınama: desen dosyası 200 image/svg+xml; mobil ve masaüstünde kapakta desen görünüyor, Dinle düğmesi yok; konsolda hata yok.
+- **Figma:** «B · Eser hakkında · 1 kapak» ve «D · Eser hakkında · okuma düzeni» kapak panelinden Dinle düğmesi kaldırıldı; «Desen / Bursa · sekiz kollu yıldız» (1:866) örnekleriyle desen alanı (%10) ve alt kenar şeridi eklendi; not güncellendi.
+
+## 16. «Eser hakkında»: altın süsler (test-redmi9t-v2 + Figma)
+
+- Mevcut tasarımdaki gibi altın yalnız süs (tokens.css: «--gold SADECE dekor/ikon, yazı değil»); yazı renkleri değişmedi.
+  - Kapak: başlığın altında kısa altın süs (`HK_ALTIN`: SUSLEME'nin baklava motifi, 120 px, iki yanda kısa çizgi); alt kenardaki desen şeridi açık su yeşilinden altına (%75).
+  - Bölüm numaralarının önünde küçük altın baklava (`.hk-no::before`).
+  - Rakamların üst çizgisinin başında 28 px altın vurgu (`.hk-rakam::before`).
+  - Alıntıların üstünde aynı kısa altın süs.
+  - Zaman çizelgesi noktaları ve okuma çubuğu altın.
+  - Bölüm aralarındaki SUSLEME zaten altın.
+- Sınama: mobil ve masaüstü; konsolda hata yok.
+- Figma: «B · Eser hakkında · 1 / 2 / 4» ve «D · Eser hakkında» ekranlarına aynı süsler eklendi (kapak altın süs + altın şerit, numara baklavası, rakam vurgusu, alıntı süsü, zaman noktaları).
+
+---
+
+# Bu oturumun tamamı (Claude, 27–28 Ekim 2026) · yeni sohbet için devir notu
+
+*Aşağıdaki 17–31 numaralı işler aynı Claude oturumunda yapıldı. 1–16 numaralı işler ise başka bir oturumda yapıldı ve aynı dosyaların üstüne eklendi; iki oturumun değişiklikleri birbirini ezmedi (28 Ekim 18:47'de kontrol edildi). Kod ve veri: `design/test-redmi9t-v2/` (+ `BENIOKU.md`). Prompt'lar: `design/test-redmi9t-v2/_promptlar/`.*
+
+## 17. Şekerhan 3D incelemesi ve yöntem kararı
+- «42 İstanbul — Şekerhan 3D» incelendi. Unity'den dışa aktarılmış bir Three.js görüntüleyici; içinde katları açıp gösteren bir özellik var.
+- Karar: model Blender'da kurulur (.glb), Three.js'te gösterilir. Şekerhan'daki fikir Ulucami'ye «İçini göster» olarak uyarlandı (kubbeleri ve çatıyı kaldırır, içi gösterir).
+- Hat yazıları için karar: Arapça yazı **asla üretilmez**. 3D modelde yazısız levha yer tutucuları var; yazının kendisi fotoğraflarda gösterilir.
+
+## 18. Ulucami 3D v27 (Blender)
+- Dosyalar: `eserler/ulu-cami/3d/blend/ulu-cami_v27.blend`; `export/ulu-cami_v27.glb` (571 KB) ve `ulu-cami_v27_sunum.glb` (650 KB); `build/build_v27.py`, `render_v27.py`, `glb_draco.mjs`; `kontrol/v27/`. v26 dosyaları silinmedi (v1 prototip hâlâ onları kullanıyor).
+- Gövdenin içi boşaltıldı. Eklenenler: 12 serbest + 14 duvar payesi, 31 sivri kemer, mihrap (5,13 × 8,11 × 0,29 m), minber, 64 yazısız levha, iç zemin.
+- Blender'ın Draco köprüsü çalışmadığı için sıkıştırma gltf-transform ile yapıldı. 8 açık kenar hatası düzeltildi.
+- `README.md` ve `ulu-cami_notlar.md` güncellendi.
+- **Blend ve build dosyaları repoya girmez**, Drive'da tutulmalı.
+
+## 19. test-redmi9t-v2 prototipi kuruldu (v1'e dokunulmadı)
+- **Parça vurgusu:** «Tıklanabilir parçalar» düğmesi, parçaları tek sarı renkle ve dağınık sırayla yakıp söndürür. Önceki rengârenk hâl beğenilmedi («pavyon gibi»).
+- **Parça kartı:** 3D'de bir parçaya dokununca büyük bir kart açılır. İçinde yana kaydırılan fotoğraflar, aşağı kaydırılan metin ve ses düğmesi var (tarayıcının Türkçe sesi; anlatımı duraklatır). Esc, X ya da dışına dokunmak kartı kapatır.
+- **Hikâye kartları büyütüldü:** mobilde 380 px, masaüstünde 520 px.
+- **«İçini göster / Dışını göster»:** Örtü katmanları sırayla, yaylanarak kalkar ve iner. Hikâyede iç mekân cümlelerinde (5, 7, 8, 9) kendiliğinden açılır.
+
+## 20. Ölçeklenebilirlik: kodda esere özel değer yok
+- Eser bilgileri: `eserler/<eser>/eser.json` (kimlik, konum, sıra) ve `3d/model.json` (glb adı, yön, ana parça, kaydırma, örtü grupları, sunum ekleri).
+- Şehir ve rota bilgileri: `veri/sehir/*.json` ve `veri/rota/*.json`.
+- `hazirla.py` eserleri klasörlerden kendisi bulur. `sunucu.sh` hangi GLB'lerin paylaşılacağını `model.json`'dan okur.
+- Yeni eser eklemek için yalnız bir klasör açmak yeter.
+
+## 21. Ulucami içeriği güncellendi
+- **`icerik/parcalar.md`:** 17 parça kartı. Her kartta başlık, metin, fotoğraflar, kaynak ve güven etiketi var. Gövde ve zemin gibi parçalar tıklanmaz.
+- **`icerik/hikaye.md`:** Yeni «İç mekân (3D)» sütunu.
+- **`icerik/fotograflar.md`:** 15–35 numaralı fotoğraflar arşivden eklendi.
+- **`icerik/eser-hakkinda.md`:** Envanter metninin tamamı (Cilt 1 PDF s.19–39, 69 paragraf). Eski özet `eser-hakkinda-ozet.md`'de duruyor.
+- «Eser hakkında» sayfası Figma'ya göre tam sayfa yapıldı. Bu sayfa daha sonra başka oturumda (madde 3, 12–16) yeniden tasarlandı.
+
+## 22. Zemin titremesi (z-fighting)
+- **Neden:** Zemin katmanları 2–6 mm arayla üst üste duruyor. Derinlik tamponu bu farkı ayırt edemiyor; Draco sıkıştırması da yükseklikleri yaklaşık 7 mm'lik adımlara yuvarlıyor. Sorun olan modeller: Koza Hanı, Orhan Gazi Türbesi, Bedesten, Orhan Bey Camii ve az da olsa Ulucami.
+- **Düzeltme (`app.js`):**
+  - `zeminKatmanlari()` tabandaki ince parçaları bulur, yüksekliklerine göre sıralar ve üsttekilere `polygonOffset` verir.
+  - Kamera `near` değeri yarıçap/100 yapıldı (önceden /200).
+- **Model kuralı (bundan sonra):** Üst üste binen zemin katmanları arasında en az 3 cm.
+- **Açık iş:** Modellerin kendisinin düzeltilmesi önerildi, henüz yapılmadı. Ürün (`apps/web`) prototipteki bu düzeltmeyi kullanmıyor.
+
+## 23. Oyunlaştırma: bulmaca, saha görevi, rozetler, profil
+- **Değerlendirme:** Questo'nun mekaniği alındı (soru çözünce içerik açılır, kademeli ipucu, fotoğraf görevi). Ekonomisi alınmadı: puan, seviye, süre ve liderlik tablosu yok.
+- Arkadaşların notlarından kesilenler:
+  - Haritada başkalarını görmek (KVKK ve güvenlik riski).
+  - Blog (Yaşayan hafıza bu işi zaten görüyor).
+  - «Vakfa destek ol» (bağış çağrışımı).
+  - 360° görüntü (yeni iş yükü; verilen bağlantı da 360° değildi).
+  - Fotoğraf puanlama.
+- Notlarda düzeltilen bilgiler:
+  - Kündekâri halı değil, ahşap minber tekniği.
+  - «Beşinci makam» bir rivayet; soru değil hikâye kartı olur.
+- **Ulucami için `icerik/gorevler.json`:**
+  - Soru: minberin tekniği, doğru cevap kündekâri (E cilt-1 s.27).
+  - Saha görevi: Sahaflar Kapısı (s.25). Yerinde «Buradayım» ile (80 m), evden 3D'de `Tac_Kapi` parçasına dokunarak.
+  - 3 rozet: hikâyeyi bitirmek, soru, saha görevi.
+- **Kod:**
+  - `hazirla.py` → `gorevler_oku`.
+  - `app.js` → `#/gorev/<eser>/<i>`, `#/profil`, rozet bildirimi, `rozetKontrol`, «3D modelde bul» şeridi, ilerlemeyi silme düğmesi.
+  - Görünüm Figma'ya göre: WF · Bulmaca 1:7147, Doğru 1:7169, Yanlış 1:7204, D · Bulmaca 1:3292, Rozet bildirimi 1:6181, Profil 1:7372 / 1:3591.
+- **İlerleme:** Yalnız cihazda (`localStorage`): `akar.gorev.*`, `akar.rozet.*`.
+- **Figma:** Bütün «puan» ifadeleri kaldırıldı («1.240 puan · 4 rozet» → «4 rozet», «+10 puan» → «İlk rozetin» / «Yeni rozet»); tasarım notları da düzeltildi.
+- **Sınırlar:** «Buradayım» konumu yalnız https'te çalışır (yerel ağda «konum alınamadı» der). Redmi'de denenmedi.
+
+## 24. Küre harita ve şehirler (MapLibre 4.7 → 6.15)
+- Ürünle (`apps/web`) aynı sürüme geçildi. 6.x yalnız ES modülü olarak geliyor; `index.html`'deki import map'e `maplibre-gl` eklendi.
+- 3D katmanın çizim fonksiyonu yeni sürüme uyarlandı: `girdi.defaultProjectionData`; geçiş sırasında `fallbackMatrix`.
+- `stil.projection = { type:'globe' }` ve hafif bir gökyüzü/atmosfer eklendi. En uzak yakınlaştırma (`minZoom`) 6'dan 1,2'ye indi.
+- **Şehirler:** Zoom 9'un altında eser pinleri yerine şehirler görünür (`veri/sehir/*.json`):
+  - Bursa: altın nokta, «7 eser»; dokununca oraya uçar.
+  - Hatay, Konya, Kütahya: «Yakında»; dokununca envanter yılı ve eser sayısı gösterilir (KÖK&KOD bilgi notundan).
+  - Mobilde «Bursa ▾», masaüstünde «Bursa» düğmesi haritayı şehirlere uzaklaştırır.
+- **Denenmeyenler:** Harita karoları (test ortamında internet yoktu) ve Redmi'de akıcılık. `test.html` (performans testi) 4.7'de kaldı.
+
+## 25. Geçmişi Gör: diğer yapay zekâya verilen prompt'lar
+- **`PROMPT_gecmisi_gor_bugunku_es.md`:** Ulucami'nin bugünkü eşleri ve örnek İz Bırak. Uygulandı; sonucu madde 4'te.
+- **`PROMPT_gecmisi_gor_diger_eserler.md`:** Koza Hanı, Orhan Bey Külliyesi ve Orhan Gazi Türbesi'ne eş ve örnek iz; Bedesten, Emir Hanı ve Hamam için yalnız rapor. **Henüz çalıştırılmadı.**
+
+## 26. Bulmaca ve görevler: öbür 6 eser için prompt
+- **`PROMPT_gorevler_diger_eserler.md`:** Her esere 1 soru, 1 saha görevi ve rozetler. Sorular yalnız «Doğrulanmış» kaynaklı paragraflardan. Orhan Gazi Türbesi'nde hikâye rozeti yok. 3D parça adlarını listeleyen betik içinde. **Henüz çalıştırılmadı.**
+- Diğer yapay zekâ bitirince raporunu sohbete getir: sorular envanterle karşılaştırılacak.
+
+## 27. Eski fotoğraf kaynakları (Bedesten, Emir Hanı, Aynalı Çarşı)
+- Foto Atlas'taki 10.214 kayıtta bu üç yapıya ait **hiç kayıt yok** (hiçbir izin durumunda).
+- **İzni olan arşivler; yeni fotoğraf için kurumdan teyit alınmalı:**
+  - İÜ Nadir Eserler, Yıldız Albümleri. Katalog olarak IRCICA'nın Bursa albümü kullanılabilir.
+  - Albert Gabriel arşivi (POP sitesinde «Brousse» diye aranır).
+- **İzin gereken:** SALT Araştırma, Ülgen Ailesi arşivi. İçinde Bedesten 1960 ve Orhan Hamamı 1934 var. Lisans CC BY-NC-ND; yazılı izin `salt.research@saltonline.org`'dan alınır ve fotoğraf kırpılamaz.
+- **İzin gerektirmeyen:** Library of Congress, Abdul Hamid II koleksiyonu (kamu malı).
+- **Sorulacak kurumlar:** VGM / Bursa Vakıflar Bölge Müdürlüğü, Bursa Büyükşehir Kent Arşivi.
+- **Fotoğraf bulunursa:** Foto Atlas dışı kaynaklar için ayrı bir veri yolu kurulması gerekir.
+
+## 28. Git
+- `.gitignore`'a eklenenler: `design/test-redmi9t-v2/.onbellek/` ve `eserler/*/gecmisi-gor/kontrol/`.
+- `docs` branch'i push edildi (commit `1c2ad04`, 171 dosya). **PR henüz açılmadı:** https://github.com/Internet-Kahve/akar-app/pull/new/docs
+- O commit'ten **sonraki** değişiklikler (küre, bu dosyadaki 1–16 ve sonrası) henüz commit edilmedi.
+- `design/ilk-prototip-kılıç-ali-pasa-düz-stil/` (157 MB) repoya alınmadı. Kimin olduğu ekiple konuşulacak.
+- Not: Bu bağlantıdan git komutu çalıştırılamıyor (kilit dosyaları silinemiyor); commit ve push'u kullanıcı kendi terminalinden yapıyor.
+
+## 29. Drive (Tamer için)
+- **`veri/bursa-foto/`:** Tamamı yerine yalnız Osmangazi cildinden 4 klasör (toplam ~315 MB):
+  - `Ulucamii Klasörü`
+  - `Ticari Yapılar Klasörü`
+  - `Orhan Bey Külliyesi Klasörü`
+  - `Türbeler Klasörü`
+  - Ayrıca `_manifest.csv` ve `README.md`.
+  - `Camiler ve Hazireler 2 Klasörü`'nden yalnız Koza Hanı'nın kullandığı 2 dosya: `DJI_20241023131734_0288_D_ODAK-Edit.jpg`, `ERD04309 kopya-2.jpg`.
+- **`veri/fotoatlas/`:** Tamamı.
+- **Ulucami modeli:** `ulu-cami_v27.blend` ve `3d/build/`.
+- **Envanter metni çıkarılacaksa:** Bursa envanter PDF'leri.
+- **Yollar ve klasör adları birebir aynı olmalı;** betikler dosyaları bu yollardan arıyor.
+
+## 30. Açık işler (öncelik sırasıyla)
+1. PR'ı aç; sonraki değişiklikleri commit edip push et.
+2. Redmi 9T'de deneme: küre, 3D, «İçini göster», parça kartı, bulmaca, ses.
+3. İki prompt'u çalıştır (Geçmişi Gör diğer eserler; görevler diğer eserler) ve raporları kontrol et.
+4. Modellerdeki zemin katmanlarını ayır (en az 3 cm); ürün tarafı için gerekli.
+5. Frontend/backend ekip notları («en son hazırlarız» denmişti): veri dosyaları, görev/rozet şeması, küre, zemin kuralı.
+6. İsteğe bağlı: envanterin İngilizce metni, gravürler, Bedesten/Emir/Hamam için eski fotoğraf izinleri.
+
+## 31. Çalışma kuralları (kullanıcının istekleri)
+- `apps/` klasörüne ve frontend/backend koduna dokunulmaz. Claude çıktıları `docs/` ve Figma'ya gider.
+- Tasarım kararları uygulanmadan önce konuşulur.
+- Bir şey yapılması istendiğinde nedeni de anlatılır («şunu şu sebepten», öğreterek).
+- Kodda esere ya da şehre özel değer olmaz; her şey veriden gelir.
+- Uydurma bilgi yok; her bilginin kaynak sayfası ve güven etiketi var.
+- Yapay zekâyla tarihî görsel üretilmez.
+- v1 (`test-redmi9t/`) değiştirilmez.
+
+## 32. Harita: binalar ve zemin serin griye çekildi, eserler öne çıktı (test-redmi9t-v2)
+
+- Sorun: eser modelleri sıcak taş rengi (bej duvar, kurşuni kubbe). Haritanın zemini (#F5F2EA), 2D bina izleri (#fde2c9, şeftali) ve 3D OSM binaları (#d0c6b4) da bej olduğu için eserler binalara karışıyordu.
+- Ortak stil dosyası `design/harita/akar-style.json` v1 tarafından da kullanıldığı için ona dokunulmadı. Renkler `app.js`'te stil yüklendikten sonra değiştiriliyor (`SERIN` tablosu, katman adına göre).
+  - Zemin `#F2F3F2`, konut alanları `#E9ECEC`.
+  - 2D bina izleri `#DDE3E7` (kenar `#C2CCD3`, %80).
+  - 3D binalar (`akar-bina-3d`) `#C9D2D9`, opaklık %55 → %60.
+- Eserlerin renkleri, pinler, park ve su renkleri değişmedi.
+- Sınama: masaüstü 1440×900 ve mobil 390×800, Ulucami–Koza Hanı çevresi zoom 17, eğik görünüm; konsolda hata yok.

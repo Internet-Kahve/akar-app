@@ -7,16 +7,16 @@
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>AKAR · Bursa</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<link rel="stylesheet" href="app.css?v=20261023">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="app.css?v=20261028">
 </head>
 <body>
 <div id="app">
   <!-- masaüstü üst çubuk -->
   <header id="ust" class="masaustu">
     <a class="logo" href="#/">AKAR</a>
-    <label class="arama"><span data-ic="search"></span><input id="arama-d" type="search" placeholder="Eser, şehir veya rota ara" autocomplete="off"><span class="sehir">Bursa</span></label>
+    <label class="arama"><span data-ic="search"></span><input id="arama-d" type="search" placeholder="Eser, şehir veya rota ara" autocomplete="off"><button type="button" class="sehir" data-sehirler title="Şehirler">Bursa</button></label>
     <span class="avatar">MT</span>
   </header>
 
@@ -52,8 +52,7 @@
   <div id="toast" role="status" hidden></div>
 </div>
 
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-<script type="module" src="app.js?v=20261023"></script>
+<script type="importmap">{"imports":{"maplibre-gl":"https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs","three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module" src="app.js?v=20261028"></script>
 </body>
 </html>

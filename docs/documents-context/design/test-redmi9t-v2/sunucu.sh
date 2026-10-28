@@ -18,6 +18,7 @@ for f in index.html test.html app.js app.css; do ln -s "$PWD/$f" "$TMP/$f"; done
 echo "İçerik hazırlanıyor (ilk çalıştırmada fotoğraflar küçültülür)…"
 python3 "$PWD/hazirla.py" "$TMP"
 ln -s "$DC/design/harita/akar-style.json" "$TMP/akar-style.json"
+ln -s "$DC/design/desenler" "$TMP/desenler"   # şehir desenleri (SEHIR.kimlik.desen)
 # GLB listesi koddan değil veriden: modeli olan her eserin 3d/model.json → glb (normal + _sunum)
 python3 - "$DC" <<'PY' | while IFS= read -r f; do [ -f "$f" ] && ln -s "$f" "$TMP/modeller/$(basename "$f")" || echo "UYARI: $f yok"; done
 import json, os, sys
