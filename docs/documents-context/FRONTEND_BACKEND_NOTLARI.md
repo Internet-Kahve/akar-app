@@ -2,6 +2,10 @@
 
 *13 Ekim 2026, güncelleme 15 Ekim 2026 (bkz. §0 ve §10). Ekip için. Figma: `akar-yeni` (https://www.figma.com/design/HGTgq5vRXVqhVO9TcR9wBe/akar-yeni; 20 Ekim'den beri esas dosya). Önceki dosya `akar-app` (https://www.figma.com/design/Bd3m8xYrCiVK6440POHN39/akar-app); 15 Ekim ekranları oraya eklenmişti; PNG kopyaları: `design/ekranlar-15ekim/`. Bu not ile çelişen eski bir belge varsa bu not geçerlidir. Güncelleme 22 Ekim 2026: bkz. §0.2 ve §12.*
 
+## 0.3 · 29 Ekim: entegrasyon notu
+
+Prototipten ürüne neyin taşınacağı, içe aktarmanın v1'e bağlı olması, ışık/yer gölgesi, parça kartları, «İçini göster», okuma düzeni, görevler ve şehir kaydı: **[`ENTEGRASYON_29EKIM.md`](ENTEGRASYON_29EKIM.md)**. Aşağıdaki eski bölümlerle çelişirse o dosya geçerlidir.
+
 ## 0.2 · 22 Ekim: kısaca ne değişti (önce bunu oku)
 
 Ayrıntı: §12. Figma: `akar-yeni` (https://www.figma.com/design/HGTgq5vRXVqhVO9TcR9wBe/akar-yeni). Mobil ve masaüstü bölümlerinde ilgili satırlara yerleştirildi; değiştirilen eski ekranlar «Eski sürümler (22 Ekim)» bölümünde duruyor.
