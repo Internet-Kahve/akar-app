@@ -351,3 +351,285 @@ Arşiv kopyalarında EXIF/GPS yok; karar yalnız gözle verildi. Kural: «ayni»
   - 3D binalar (`akar-bina-3d`) `#C9D2D9`, opaklık %55 → %60.
 - Eserlerin renkleri, pinler, park ve su renkleri değişmedi.
 - Sınama: masaüstü 1440×900 ve mobil 390×800, Ulucami–Koza Hanı çevresi zoom 17, eğik görünüm; konsolda hata yok.
+
+## 33. Harita binaları daha opak ve nötr gri (test-redmi9t-v2)
+
+- İstek: binaların opaklığını açmak ya da rengini griye götürmek. İkisi birden yapıldı (`app.js`).
+  - 3D binalar: `#C9D2D9` %60 → `#C3C6C9` (nötr gri) %85.
+  - 2D bina izleri: `#DDE3E7` %80 → `#DADCDE` %90, kenar `#BCC0C4`.
+- Sınama: masaüstü ve mobil, zoom 17 eğik görünüm; eserler gri binaların arasında net seçiliyor, konsolda hata yok.
+
+## 34. Harita binaları geri açıldı: daha açık gri, daha saydam (test-redmi9t-v2)
+
+- Kullanıcı: §33 fazla gri ve fazla opak oldu; opaklığın azalması gerekiyordu.
+  - 3D binalar: `#C3C6C9` %85 → `#D9DCDF` %40 (ilk hâli %55'ti).
+  - 2D bina izleri: `#DADCDE` %90 → `#E3E5E7` %70, kenar `#CDD1D4`.
+- Sınama: masaüstü ve mobil, zoom 17 eğik görünüm; binalar hafif ve saydam, eserler öne çıkıyor; konsolda hata yok.
+
+## 35. Harita önizlemesine (renk paneli) bizim 3D modeller eklendi (design/harita)
+
+- İstek: §32–34'teki renkler beğenilmedi; renkleri kullanıcı `design/harita/akar-harita-onizleme.html` panelinden kendisi seçecek, modeller orada görünmeli.
+- Eski hâli `design/harita/_eski/akar-harita-onizleme_2026-10-28_modelsiz.html` olarak saklandı (kopya).
+- `design/harita/modelleri-gom.py` (yeni): eser.json + 3d/model.json'ı olan her eserin GLB'sini base64 olarak `akar-harita-modeller.js`'e (3,3 MB) yazar. Sayfa file:// ile açıldığı için GLB fetch edilemez, bu yüzden gömüldü. Konum hesabı (kaydirma_m) hazirla.py ile aynı; eser listesi veriden. Model değişince yeniden çalıştırılmalı.
+- `akar-harita-onizleme.html`:
+  - Açılışta Bursa (Ulucami–Koza Hanı), eğik görünüm. Panelde «Bursa · modeller» ve «İstanbul · pinler» düğmeleri.
+  - three.js özel katmanı (`yapilar`) 7 modeli v2 ile aynı yerleşimle çizer; modellerin altındaki OSM binaları v2'deki gibi ayıklanır (`akar-bina-3d`, stilin `building_3d`'si gizli).
+  - Paneldeki «Bina (3D)» rengi ve «Bina 3D opaklık» sürgüsü bu katmana da uygulanır. «Stili indir» çıktısına bizim katmanlar/kaynak girmez.
+- Sınama (Playwright, file://): 7 model yüklendi, 401 bina; renk ve opaklık değişimi binalara geçiyor; sayfa hatası yok.
+- v2 prototipindeki §34 renkleri yerinde duruyor; kullanıcı önizlemeden renkleri seçince v2'ye işlenecek.
+
+## 36. Modellerin altında kalan OSM binaları temizlendi (design/harita önizleme + test-redmi9t-v2)
+
+- Sorun: eski kural yalnız merkezi model izine düşen ve modelden en çok 1,6 kat büyük binaları siliyordu. Ize kısmen giren bloklar kalıyordu (Kapalıçarşı şeridi, Emir Hanı ile hamam arası, Ulucami güney kenarı); modellerin altındaki düz bina izleri (stilin `building` katmanı) hiç süzülmüyordu.
+- Yeni kural (turf 7.1, `turf.difference`):
+  - Model izine (1 m paylı) giren kısım binadan kesilir; komşu binanın dışarıda kalan kısmı yerinde durur.
+  - Kesildikten sonra alanının %60'ı kalmayan bina bütünüyle gider (ör. Bedesten'in OSM çizimi modelden geniş, halka kalıyordu).
+  - 4 m'den ince artık şeritler atılır (`turf.buffer` −2 m).
+  - Düz bina izi de aynı süzülmüş veriden çizilir (`akar-bina-duz`). Stilin `building` katmanı gizlenmez, saydam yapılır: gizli katmanın verisi yüklenmiyor ve `querySourceFeatures` boş dönüyordu (ilk denemede v2'de bütün binalar kaybolmuştu, böyle düzeldi).
+- Dokunma ve imleç için kullanılan 3 m paylı iz (`cokgen`) değişmedi; kesme için ayrı 1 m paylı iz (`kes`) eklendi.
+- Önizlemede «Stili indir» düz binanın gerçek opaklığını yazar, bizim katmanlar çıktıya girmez.
+- Sınama: önizleme (file://) ve v2 (masaüstü + mobil), zoom 17,3–17,8, düz ve eğik görünüm; modellerin içinde OSM binası kalmadı, komşu binalar yerinde; hata yok.
+
+## 37. Harita önizleme v2: modeller daha belirgin (ışık, gölge, kenar, renk) (design/harita)
+
+- İstek: Yandex (Galata Kulesi) ve Şekerhan 3D'deki modeller belirgin; bizimkiler haritada soluk. `akar-harita-onizleme.html`'e dokunmadan `akar-harita-onizleme-v2.html` yapıldı.
+- Teşhis: ortam ışığı (Hemisphere 2,3) güneşten (1,3) güçlüydü; bütün yüzler neredeyse aynı aydınlıkta, çatı ile duvar ayrışmıyordu. Gölge ve kenar yoktu. Güneş güneybatıdaydı, kamera güneyden baktığı için görünen cepheler hep güneşteydi. Malzemeler de açık (çoğu açıklık %76–95, kurşun `#BCC2C6`) ama asıl sebep ışık.
+- v2 panelinde «Eser modelleri (3D)»: «Mevcut» (v1 ışığı) / «Belirgin» hazır ayarı; ortam, güneş, karşı ışık, güneş yönü ve yüksekliği, gölge + yerdeki gölge koyuluğu, kenar çizgisi + koyuluk, renk parlaklığı, doygunluk; «Ayarları kopyala» (JSON).
+- «Belirgin»: ortam 0,8 · güneş 3 · karşı 0,4 · yön 315° (kuzeybatı, haritacılık kuralı) · yükseklik 45° · gölge açık (%30) · kenar %30 · parlaklık 0,9 · doygunluk 1,15.
+- Gölge: her modelde kutusuna göre güneş gölge kamerası (2048 px), `shadow.autoUpdate=false`, yalnız ayar değişince yeniden çizilir; yerdeki gölge `ShadowMaterial` düzlemi (derinlikte geri itilmiş). Kenar: `EdgesGeometry` 35°; zoom 16,5'te görünmez, 18'de tam (uzakta modeli karartıyordu).
+- Temel: §36'daki güncel `akar-harita-onizleme.html` (OSM binası temizliği dahil); v2 onun üstüne kuruldu.
+- Düzeltme: `map.loaded()` karoları da beklediği için «load» modülden önce geçerse modeller hiç eklenmiyordu; v2'de `map.isStyleLoaded()`. v1'de aynı açık duruyor.
+- Düzeltme (modellerin altında «bazen gelip bazen giden» binalar): 3D düğmesinin `guncelle()` fonksiyonu her eğme/döndürmede stilin **süzülmemiş** `building_3d` katmanını görünür yapıyordu; gizleyen `binaGorunum()` ise yalnız `pitch` olayına bağlıydı. Açılışta ve döndürünce eski binalar modellerin altında beliriyordu. v2'de `guncelle()` artık `building_3d`'ye dokunmuyor, `binaGorunum()`'ü çağırıyor; sınamada açılış, döndürme ve eğmede `building_3d` hep gizli. v1 önizlemede (`akar-harita-onizleme.html`) aynı hata duruyor. Prototip (`test-redmi9t-v2/app.js`) etkilenmiyor: orada `building_3d` yalnız gizleniyor.
+- Düzeltme (Ulucami önü, Orhan Bey ve Koza Han altında beyaz kaide gibi duran binalar): 36. maddenin kesme kuralı, modelin izine kısmen giren yan binanın dışarıdaki kısmını bırakıyordu (≥%60 dışarıda ve 4 m'den kalınsa). v2'de varsayılan: modelin izine, boşluk payıyla (panel, varsayılan 3 m) değen OSM binası bütünüyle kaldırılır. Panelde «Model çevresindeki OSM binaları»: «tamamen kaldır» aç/kapa (kapalıyken eski kesme kuralı) ve «boşluk (m)» 0–15. Sınama: sahte vektör karolarla (geojson-vt + vt-pbf) Ulucami çevresine kaide, izine 5 m giren yan bina, yakın ve uzak bina konuldu; eski kuralda yan binanın 20 m'si kalıyordu, yenisinde gidiyor; uzak bina duruyor. Gerçek OSM verisinde bakılmadı.
+- «Canlı» hazır ayarı (varsayılan): kullanıcı bir minarenin beyaza patladığını, ötekinin canlı durduğunu gördü; hedef «bütün bina canlı ve doygun, gölge hafif». Sebep: aydınlık ≈ renk × (ortam + güneş × açı); «Belirgin»'de güneşe bakan yüzde ≈ 3,8, «Mevcut»'ta ≈ 3,6 → açık renkler beyaza patlıyor. «Canlı»: ortam 1 · güneş 1,4 · karşı 0,3 · yön 315° · yükseklik 45° · gölge %18 · kenar %15 · parlaklık 1 · doygunluk 1,25. Panele ton eşleme (yok / ACES / AgX) ve pozlama eklendi; denendi: AgX renkleri soldurdu, ACES kubbeleri parlattı, ışığı dengelemek daha iyi oldu.
+- Sağda ayrı «Işık ve renk · 3D eserler» paneli (kullanıcı «renk mi ışık mı koyu» ayırt edemedi): teşhis modları «Normal / Yalnız renk (ışıksız MeshBasicMaterial) / Yalnız ışık (beyaz kil)»; aydınlık ölçüsü (güneşli duvar, gölgeli duvar, çatı ≈ renk × sayı; iyi 0,8–1,3, 1,6 üstü patlar, 0,7 altı koyu); sürgüler başlıklı (Işık · Renk · Gölge ve kenar · İleri · Model çevresi); «Genel parlaklık» (pozlama) artık ton eşleme kapalıyken de çalışıyor (0 = LinearToneMapping; NoToneMapping pozlamayı yok sayıyordu). İlk bulgu: «Yalnız renk»te malzemeler açık ve canlı; koyuluk ışıktan. Kurşun çatı/kubbe malzemeleri metalik (0,2) ve sahnede ortam yansıması (environment map) olmadığı için ayrıca koyulaşıyor.
+- Renk ölçümü (Ulucami, dron fotoğrafları `veri/bursa-foto/…/Ulucamii Klasörü/` 0387, 0291, 0510; ölçülen noktalar gözle kontrol edildi; fotoğraflar düzenlenmiş ve ışık içeriyor, değerler yaklaşık): kurşun kubbe/çatı foto #ACB7BA–#C6C7C1, model #BCC2C6 → aynı. Kasnak foto #CCAC6F–#DAB575 (L≈0,65), model #F2E2A8 (L 0,80, S 0,74) → çok açık, limon sarısı. Duvar taşı foto #A69479–#B39D7F (L≈0,58), model dokusu ort. #E5D0AE (L 0,79) → çok açık, fazla sarı. Minare tuğla foto #7F5E47–#9F754C (L≈0,43), model dokusu #CF7F55 → fazla turuncu ve açık. Mermer foto #E1DDCA, model #F5F4F0 → biraz açık. Görsel: `eserler/ulu-cami/3d/kontrol/renk-olcumu_2026-10-28.png`. Öneri (onay bekliyor): düzeltme Blender malzemelerinde/dokularında yapılsın (kaynak), web ışığıyla değil.
+- KARAR (28 Ekim, kullanıcı onayladı; yedi eser): renkler fotoğraftan ölçülür (21 Ekim'deki pastel / V ≥ 0,80 kararının yerine); Blender'da yalnız AO (glTF occlusionTexture, ikinci UV) ve saydam yer gölgesi düzlemi («Yer_Golgesi», alfa ≈ %10–15) pişirilir, köşe rengi AO'su kaldırılır; güneşin yönü pişirilmez (ileride gündüz/gece için); web'de gerçek zamanlı gölge ve kenar kapanacak, ışık ≈ 1–1,4'e inecek. Araştırma: Mapbox «sembolik gerçekçilik», Apple simge yapıları çevreden biraz koyu, glTF pişmiş AO'yu destekler (lightmap'i desteklemez). Kullanıcının beğendiği ışık (ortam 2, güneş 1, karşı 1, gölge %10, kenar 0) ve `design/harita/akar-style-ozel-v2.json` not edildi; ışık renkler düzelince yeniden ayarlanacak. Prompt: `design/test-redmi9t-v2/_promptlar/PROMPT_foto_renk_ve_ao_pisirme_7_eser.md` (iki aşama: ölçüm ve rapor → onay → Blender). Henüz çalıştırılmadı.
+- (eski not) Konuşulan (karar verilmedi): AO ve yerdeki gölgeyi Blender'da pişirmek (bake). Öneri: önce yalnız Ulucami'de AO (ikinci UV + doku) ve saydam PNG yer gölgesi; güneşin yönü pişirilmez, web'de kalır. Gerçek zamanlı gölge haritası Redmi'de en pahalı kısım.
+- Sınama (Playwright, karolar boş: test ortamında internet yok): 7 model yüklendi, iki hazır ayar zoom 16,8 ve 18'de karşılaştırıldı (`_eski/karsilastirma-v1-v2_2026-10-28.png`), sayfa hatası yok. Gerçek harita ve Redmi'de bakılmadı.
+- Açık: (1) Kullanıcı ayarı seçip «Ayarları kopyala» çıktısını verince v2 prototipine (`test-redmi9t-v2/app.js`, `yapiKatman`) işlenecek; değerler koda değil veriye (ör. `veri/sehir/*.json` ya da ayrı bir harita ayar dosyası) konmalı. (2) Redmi için gölge haritası 1024 px'e indirilip akıcılık ölçülmeli; yetmezse gölge yalnız masaüstünde. (3) Öneri: çevre OSM binaları bej yerine açık gri (taş rengi modeller bejle karışıyor).
+
+## 38. Önizlemede modeller ve bina temizliği bazen hiç kurulmuyordu (design/harita)
+
+- Kullanıcı: modellerin altında hâlâ MapLibre binaları var.
+- Neden: önizlemenin model betiği (`type="module"`, three.js ve turf CDN'den) haritadan sonra yüklenir. Kurulum `map.loaded() ? kur() : map.once("load", kur)` ile yapılıyordu; `map.loaded()` karolar yüklenirken de false döner ve «load» olayı bir daha gelmez. Sayfa yavaş açılınca modeller ve bina süzgeci hiç kurulmuyor, stilin OSM binaları modellerin yerinde olduğu gibi kalıyordu.
+- Düzeltme: stil hazır olana kadar (`map.isStyleLoaded()`) 200 ms aralıkla beklenip kurulur.
+- Sınama: 7 eserin her biri zoom 18,3, eğik, önizleme (file://) ve v2'de tek tek bakıldı; modellerin içinde OSM binası yok, hata yok.
+- Ek düzeltme (§37'deki notla bulundu): sayfanın `guncelle()` fonksiyonu döndürmede de stilin süzülmemiş `building_3d` katmanını açıyordu; gizleyen `binaGorunum()` yalnız `pitch`'e bağlıydı. Artık `rotate`'e de bağlı, döndürünce eski binalar modellerin altında belirmiyor.
+- Not: başka bir oturum aynı anda `akar-harita-onizleme-v2.html`'i yaptı (§37); bu bölüm v1 önizlemeyi (`akar-harita-onizleme.html`) anlatıyor.
+
+## 39. Yedi eserde fotoğraftan renk ölçümü (1. aşama; Blender'a geçilmedi, onay bekliyor)
+
+- İş emri: `design/test-redmi9t-v2/_promptlar/PROMPT_foto_renk_ve_ao_pisirme_7_eser.md`. Yalnız 1. aşama yapıldı (ölçüm ve rapor); prompt gereği burada duruldu. GLB, blend ve build betiklerine dokunulmadı.
+- Son sürümler doğrulandı, prompt'takiyle aynı: Ulucami v27, Bedesten v06, Koza Han v14, Orhan Bey Camii v07, Hamam v05, Emir Hanı v05, Türbe v02.
+- Yöntem: `veri/bursa-foto/` arşivinden her eser için 3–5 gündüz dış cephe fotoğrafı seçildi. Her malzeme rolü için düz bölgelerin piksel ortancası alındı ve her kırpıntı gözle kontrol edildi; gölgeye, pencereye ya da ağaca düşenler atıldı. Ulucami yeniden ölçülmedi (§37 kararı).
+- Model rengi GLB'den okundu: malzeme rengi × doku ortancası × köşe rengi.
+- Bulgu: modellerin taş ve duvar renkleri her eserde fotoğraftan belirgin açık (açıklık farkı +0,12 ile +0,24 arası; yalnız gölgede ölçülen rollerde daha da fazla). Kurşun `#BCC2C6`, güneşli fotoğraflarda Ulucami, Bedesten ve Türbe ile uyuşuyor.
+- Önemli: gölgede ya da revak içinde çekilen fotoğraflar malzemeyi koyu gösteriyor (Emir Hanı'nın beyaz sıva tonozu `#A5A1A0` çıktı). Bu yüzden öneri yalnız güneşli örneklerden alındı; güneşli örneği olmayan roller «düşük güven» işaretli ve palete girmedi.
+- Ortak öneri:
+  - kurşun `#BCC2C6`;
+  - duvar `#AF9A7D` (Ulucami ve Bedesten);
+  - kasnak sarı sıva `#D2B276`;
+  - tuğla `#8E6A4E`;
+  - mermer `#E6E2D6`;
+  - istisnalar: Orhan Bey Camii duvarı `#C4B08C`, Hamam duvarı `#C69D80`, Emir Hanı duvarı `#AC9483`.
+- Açık sorular (kullanıcıya):
+  - Emir Hanı çatısı fotoğrafta kurşun değil; gri beton/membran, yeşil ve mavi kaplama var. Model kurşun.
+  - Koza Han'ın güneşli fotoğrafı yok; ortak duvar rengi ona da uygulansın mı?
+  - Kurşunda istisna olsun mu (Hamam `#A4ABB1`)?
+  - Türbe'nin krem sıvası alçak güneşte doymuş çıktı; kullanılmadı.
+  - Ulucami'de v23'te kullanıcı kararıyla seçilen minare tuğlası `#986B4D`, yeni ölçüme (`#8E6A4E`) çok yakın.
+- Çıktılar:
+  - `eserler/<eser>/3d/kontrol/renk-olcumu_2026-10-28.png` (altı eser; Ulucami'deki dosyaya dokunulmadı);
+  - `…_kirpintilar.jpg` (kırmızı çizgili kırpıntılar atılanlar);
+  - `eserler/_kutuphane/RENK_OLCUM_RAPORU.md` (her bölgenin fotoğrafı, koordinatı, ışığı, değeri);
+  - `eserler/_kutuphane/malzeme-paleti.json` (`_durum: ÖNERİ`).
+- Ölçüm betikleri oturumun geçici klasöründe; repoya konmadı.
+
+## 40. 3D eser sahnesinin zemini: Bursa tonuna çalan nötr gri geçiş (test-redmi9t-v2)
+
+- İstek: Şekerhan'daki gibi renkli zemin, Bursa'nın rengiyle. Prototipte üç seçenek çekildi (`design/karsilastirma/3d-zemin-A-bursa-petrol.png`, `-B-gecis.png`, `-C-simdiki.png`). Araştırma: ISO 3664 renk değerlendirmede nötr gri çevre ister (Munsell N8, yansıtma ≤ %60); doygun zemin eşzamanlı renk kontrastıyla model renklerini kaydırır (sıcak taş/tuğla petrol zeminde daha turuncu görünür). Smithsonian Voyager gibi müze görüntüleyicileri düz ve geçişli zemin kullanıyor. Kullanıcı D seçeneğini seçti: nötre yakın, Bursa tonuna hafif çalan geçiş; alt koyu ki kaide zeminden ayrılsın.
+- Veri: `veri/sehir/bursa.json` → `kimlik.sahne_ust` #DDE4E5, `kimlik.sahne_alt` #A7B4B7 (+ `_sahne_not`). Konya'da yok → nötr gri kalır.
+- Kod: `app.js` şehir kaydından `--sahne-ust` / `--sahne-alt` değişkenlerini kurar; `Sahne3D` tuvali saydam (`alpha:true`, `setClearColor(0,0)`); `app.css` `.sahne3d` zemini `linear-gradient(180deg, var(--sahne-ust,#DCE3E4), var(--sahne-alt,#C3CBCD))`. Kodda şehre özel renk yok.
+- Sınama (Playwright, karolar boş): masaüstü 1440×860 ve mobil 390×844 eser 3D, «Eser hakkında» yapışık 3D; üçünde de geçiş uygulanıyor, sayfa hatası yok. Redmi'de bakılmadı.
+- Açık: Figma ekranları henüz güncellenmedi. Bursa kimliği isteğe bağlı küçük vurgu olarak (kaide kenarı ya da alt desen şeridi) eklenebilir; karar verilmedi.
+
+## 41. «Eser hakkında»: geri düğmesi kapağın sol üst köşesine (test-redmi9t-v2)
+
+- İstek: masaüstü kapağında petrol panelin ortasındaki «‹ Ulucami» düğmesi sol köşeye.
+- `app.js` `hakkinda()`: düğme panelden çıkarıldı, kapağın (`hk-kapak`) ilk öğesi oldu. `app.css`: `.hk-kapak` `position:relative`; `.hk-geri` mutlak konum (üst 20, sol 24 px), fotoğraf üstünde okunsun diye yarı saydam koyu zemin (`rgba(20,27,43,.55)` + bulanıklık), 36 px, odak çerçevesi; `.hk-d .hk-geri{align-self}` kaldırıldı. Mobil değişmedi (geri düğmesi yapışık sekme çubuğunda).
+- Sınama (Playwright, fotoğraflı): masaüstü 1440×860 kapakta düğme sol üstte, panel metni dikey ortada kaldı; mobil aynı; hata yok. Figma güncellenmedi.
+- Tasarım incelemesi yapıldı (öneriler sohbette; karar bekliyor): sekme çubuğunda 9 bölümün 5'i görünüyor, kaydırılabildiği belli değil; masaüstünde aşağı inince geri yolu yok; «Kitaptan» özeti ile tam metnin ilk cümlesi tekrar ediyor; yapışık 3D kartında model küçük, üst boşluk fazla; ilk bölüm kapağın hemen altında ince bir fotoğraf şeridiyle başlıyor.
+
+## 42. «Eser hakkında» iyileştirmeleri: sekme okları, masaüstü geri, tekrar eden cümle, 3D kartı, bölüm başı, süs (test-redmi9t-v2)
+
+- Kullanıcı §41'deki incelemenin hepsini uygulattı. Yedek: `design/test-redmi9t-v2/.onbellek/_yedek_app_2026-10-28.js/.css`.
+- **Sekmeler:** 9 bölümün 5'i görünüyordu. Şerit taşınca devamı olan yanda kenar solar (`sol-var` / `sag-var` maske); masaüstünde ‹ › okları (`hk-sekme-ok`, `data-hk-kay`, şeridi %70 kaydırır; uçta gizlenir; `hkSekmeOk()`). Mobilde ok yok (parmakla kaydırılır), solma var.
+- **Masaüstü geri:** kapak ekrandan çıkınca (IntersectionObserver → `#hk-kaydir.kapak-gecti`) sekme çubuğunun solunda «‹ Ulucami» hap düğmesi (beyaz, şehir renginde kenar; seçili sekmeyle ve kaydırma okuyla karışmasın diye adıyla). Mobil geri düğmesi aynı (yalnız simge).
+- **Tekrar eden cümle:** «Kitaptan» özetindeki cümleyi taşıyan paragraf `hk-ozette` sınıfı alır; kapalı önizlemede gizli, «Tam metni oku» açılınca yerinde (envanter metninin tamamı DOM'da kalır). `hkTamMetin(b, baskin, kapakUrl, ozet)`.
+- **3D kartı:** `.hk-sahne.uc` yüksekliği `min(100vh − 112px, 620px)`; ızgara boşluğu 64 → 48 px, en geniş 1280 → 1360 px. 1440 px ekranda kart 480×748 → 576×620; model belirgin büyük.
+- **Bölüm başı:** başlık (no, ad, süre) fotoğraftan önce; ilk bölümde üst boşluk 24 px. Bölüm artık kapağın altında yarım fotoğraf şeridiyle başlamıyor.
+- **Süs:** yalnız alıntıların üstündeki altın süs kaldırıldı (§16'da kullanıcı istemişti; kapak süsü, bölüm araları, numara baklavası, rakam vurgusu duruyor).
+- Sınama (Playwright, fotoğraflı, 1440×860 ve 390×844): oklar taşmaya göre çıkıyor, tıklayınca kayıyor; masaüstü geri kapakta gizli, aşağıda görünür; 15 özet paragrafı önizlemede gizli; alıntı süsü 0; hata yok. Redmi'de ve Figma'da bakılmadı.
+
+## 43. «Eser hakkında»: fotoğraf şeridinin kaydırılabildiği belli oldu (test-redmi9t-v2)
+
+- Sorun (kullanıcı ekran görüntüsü): tam metindeki kitap fotoğrafı şeridinde sağda yalnız ince bir dilim görünüyor, yana kaydırılabildiği anlaşılmıyor.
+- `app.js` `hkSerit()`: birden çok fotoğrafta şerit `.hk-serit-ic` içine alınır; ‹ › düğmeleri (`data-hk-serit-kay`, şeridi %80 kaydırır, uçta gizlenir) ve «1 / 4» sayacı (`.hk-serit-sayac`). `hkSeritDurum(r)`: devamı olan kenar `sol-var`/`sag-var` (maske ile %25'e solar), okların görünürlüğü, sayaç. Kaydırma olayı belgede yakalanır (capture); açılışta ve fotoğraflar yüklenince de hesaplanır. Tek fotoğrafta değişiklik yok.
+- `app.css`: `.hk-serit-ic`, solma maskeleri, 44 px yuvarlak oklar (gölgeli, odak çerçeveli), sayaç rozeti. Mobilde ok yok (parmakla kaydırılır), sayaç ve solma var.
+- Sınama (Playwright, 1440×860 ve 390×844, Tarihçe tam metni açık): 2 fotoğraflı şerit «1 / 2», sağ ok görünür → tıklayınca «2 / 2», sol ok görünür, sağ ok gizli; hata yok.
+
+## 44. «Eser hakkında»: fotoğraflar kırpılmadan, kendi oranında (test-redmi9t-v2)
+
+- Ölçüm (öncesi, Playwright, bütün tam metinler açık): şerit 111 fotoğrafın masaüstünde 31'i ≥ %10, 9'u ≥ %30 kırpılıyordu (en çok %55); mobilde 44 / 20 (en çok %72). Bölüm başı 8 fotoğrafın 6'sı ≥ %10, 4'ü ≥ %30 (en çok %64, dikey fotoğraf 3:2 kutuda). Sebepler: şeritte sabit yükseklik + en çok %88 genişlik (4:1'lik hat levhalarının uçları kesiliyordu), kitaptaki oran (`--oran`, kitabın sayfa düzenindeki kırpma) kullanılıyordu, bölüm başı hep 3:2.
+- Kullanıcı kararı: fotoğraflar orijinal oranında, tam görünsün (ör. Tarihçe başındaki «Envanter Cilt 1 · s. 18» besmele levhası).
+- `app.js`: fotoğraf yüklenince kutunun `--oran`'ı dosyanın gerçek oranından yazılır (belgede yakalanan `load` olayı); bölüm başı fotoğrafına da `--oran`.
+- `app.css`: şerit öğesi `width:min(260px|300px × oran, 100%)`, `aspect-ratio:oran`, `height:auto`; şerit `align-items:center` (öğeler en uzun fotoğrafa gerilmesin); tek fotoğraf ve bölüm başı `width:min(100%, min(70vh,640px) × oran)`, ortalı (dikey fotoğraf ekranın %70'ini geçmez); bölüm başı esnek kutu, tam genişlikteki fotoğraf mobilde kenardan kenara.
+- Sınama: kırpma masaüstü ve mobilde 111 şerit + 8 bölüm başı fotoğrafında %0; s.18 levhası tam; şerit okları/sayaç çalışıyor; hata yok.
+- Konuşulan, yapılmadı: fotoğrafın büyütülebildiğini gösteren küçük «büyüt» simgesi (mobilde imleç yok).
+
+## 45. Galeri fotoğrafları tıklanır, galeri boşluğu sabit, 3D'de fareyle parça vurgusu, «büyüt» simgesi (test-redmi9t-v2)
+
+- Yedek: `.onbellek/_yedek_app_2026-10-28b.js/.css`.
+- **Galeri (eser detay · Fotoğraf):** her fotoğraf `button.galeri-f[data-isik]`; tıklayınca «Eser hakkında»daki ışık kutusu açılır, galerinin bütün fotoğrafları arasında ‹ › ile gezilir, künye «başlık · kaynak» (ör. «2 / 12 · İç mekân · Envanter Cilt 1 · s. 26»), Esc kapatır. `hkIsikAc` grubu artık `.hk-serit, .galeri`.
+- **Galeri boşluğu:** kaydırınca ilk fotoğraf kenara sıfır boşlukla yapışıyordu (başta 24 px). `scroll-padding-inline` (mobil 16, masaüstü 24 px) → her adımda 24 px (yalnız galerinin sonunda içerik bittiği için fazla).
+- **3D fare vurgusu (masaüstü):** `Sahne3D.isaretci` `pointermove` (yalnız fare, tuş basılı değilken, kare başına bir ışın): tıklanabilir parçanın üstünde `ustte` → `boya()` parçayı hafif sarı yakar (seçiliden hafif, 0,24), imleç el, `title` parça kartının başlığı; boş alanda ve `pointerleave`'de söner. Mobilde değişiklik yok («Tıklanabilir parçalar» düğmesi).
+- **«Büyüt» simgesi:** `BUYUT()` (`expand` simgesi, sağ alt köşede yarı saydam koyu daire) galeri, «Eser hakkında» şerit ve bölüm başı fotoğraflarında; `(hover:hover)` olan cihazda fare üstüne gelince simge koyulaşır, fotoğraf %3 büyür; hareket azaltma tercihinde geçiş yok.
+- Sınama (Playwright 1440×860 ve 390×844): galeri boşluğu 24/24/24, ışık kutusu açılıp geziliyor ve kapanıyor; 3D'de minarenin üstünde imleç el + «Doğu minaresi · Güdük Minare», boş alanda normal; simgeler görünür; hata yok. Redmi'de bakılmadı.
+
+## 46. «Eser hakkında» kapağı envanterdeki açılış fotoğrafıyla (test-redmi9t-v2)
+
+- İstek: kapakta PDF'teki gibi fotoğraf. Envanterde Ulucami kaydının açılış fotoğrafı E cilt-1 PDF s.19: akşam, ışıklı minare, hilal = arşiv `DJI_20241205174916_0088_D_ODAK.jpg` = galerideki `19_minareler-aksam.jpg` (`icerik/kitap-fotograflari.md` satırıyla doğrulandı).
+- Veri: `eserler/ulu-cami/eser.json` → `"hakkinda_kapak": "19_minareler-aksam.jpg"` (+ `_hakkinda_kapak` kaynak notu). `hazirla.py` eser.json alanlarını olduğu gibi aktarıyor; kod değişmedi.
+- Kod: `app.js` `hakkinda()` kapak = `e.hakkinda_kapak`'taki fotoğraf, yoksa galerinin ilki. Kodda esere özel değer yok; öbür eserlere aynı alan eklenince onların kapağı da değişir.
+- Sınama: masaüstü ve mobil kapakta akşam fotoğrafı; hata yok. Yerleşim (fotoğraf %62, panel) değişmedi.
+
+## 47. Yedi eser: fotoğraf rengi + dokuya pişmiş AO + yer gölgesi (2. aşama; §39'un devamı)
+
+- Kullanıcı §39'daki öneriyi onayladı: kurşun `#BCC2C6`, mermer `#E6E2D6` ve tuğla `#8E6A4E` yedi eserde ortak; duvar esere göre (Ulucami ve Bedesten `#AF9A7D`, Orhan Bey Camii `#C4B08C`, Hamam `#C69D80`, Emir Hanı `#AC9483`). Ölçülemeyen roller eski rengini korudu: Koza Han'ın duvarı, Emir Hanı çatısı (kurşun kaldı), Türbe'nin krem sıvası.
+- Palet `eserler/_kutuphane/malzeme-paleti.json`: `_durum: ONAYLANDI` ve `eser_malzeme` (Blender malzemesi → rol) eklendi. Kodda renk sabiti yok. `_GENEL_SAHNE_STANDARDI.md` §3 ve §2 bu dosyaya yönlendirildi.
+- Ortak hat `eserler/_kutuphane/renk_ao_v3/`. Her eserin `build/build_vXX.py` dosyası yalnız bu hattı çağırıyor.
+  - `renk_ao.py` (Blender):
+    - düz malzemede renk hedef hex'e çekiliyor; dokulu malzemede doku doğrusal uzayda çarpılıyor, desen korunuyor (`build/doku_palet_v3/`);
+    - köşe rengi 1,0 yapılıyor;
+    - ikinci UV `UV_AO` açılıyor ve AO pişiriliyor; doku 0,5 + 0,5 × AO olarak kaydediliyor;
+    - glTF Material Output'un Occlusion girişine bağlanıyor;
+    - `Yer_Golgesi` ekleniyor: taban + 5 m, alfa = (1 − AO) × 0,15, kenarda sıfıra iniyor.
+  - `son_adim.mjs`: Yer_Golgesi unlit ve blend; AO dokusu JPG 85; COLOR_0 siliniyor; Draco; denetim.
+  - `hepsi.sh`: bütün hat.
+- İş emrinden sapmalar (gerekçeli):
+  - (1) Lightmap Pack, çok yüzlü modellerde yüzlerin çoğunu 1 pikselden küçük alana sıkıştırdı. Ulucami'de 52 337 yüzün 31 865'ine AO hiç yazılmadı ve kubbeler simsiyah çıktı. Yerine yapı parçalarının birleştirilmiş geçici kopyasında Smart UV Project kullanıldı; UV'ler yüz etiketiyle asıl mesh'lere geri yazıldı.
+  - (2) Bazı modellerde kaplama yüzleri alttaki kabuğun 0–3 cm üstünde duruyor. Cycles bunları tamamen örtülü saydı (Türbe çatısındaki lekeler). Bu yüzler yalnız pişirme kopyasından çıkarıldı; doku beyazla başladığı için «açık» kaldılar. Geometri değişmedi.
+  - (3) AO, 0,5 + 0,5 × AO ile sıkıştırıldı: hedef «en koyu ≈ 0,45–0,55» tutuyor.
+  - (4) Koza Han atlası 2048 değil 1024 px; 2048'de dosya 1,9 MB'tı ve 1,5 MB sınırını aşıyordu.
+- Kabul (hepsi geçti):
+  - (a) her hedefli malzemenin rengi paletle aynı (sapma 0 ton);
+  - (b) yapı parçalarında COLOR_0 yok;
+  - (c) her yapı malzemesinde occlusionTexture.texCoord = 1; Yer_Golgesi unlit ve BLEND;
+  - (d) uygulama GLB'sinde her parçanın üçgen sayısı ve sınır kutusu eskiyle aynı (fark 0 mm), parça adları aynı. Sunum GLB'lerinde 4 eserde birkaç üçgen fark var; bunlar eski sunum dosyalarının uygulama dosyasından daha eski bir blend'den yazılmasından geliyor, yeni sunum eski uygulamayla birebir aynı;
+  - (e) Ulucami kasnak `#D2B276`, duvar `#AF9A7D`, minare `#8E6A4E`: ölçülen ortancalar;
+  - (f) hepsi ≤ 1,5 MB.
+
+  | Eser | Sürüm | Kurşun | Duvar (ilk) | Tuğla (ilk) | AO en koyu / ortanca | Uygulama GLB |
+  |---|---|---|---|---|---|---|
+  | Ulucami | v27→v28 | `#BCC2C6`→`#BCC2C6` | `#E5D0AE`→`#AF9A7D` | `#CF7F55`→`#8E6A4E` | 0.5 / 0.74 | 557 → 1348 KB |
+  | Bedesten | v06→v07 | `#BCC2C6`→`#BCC2C6` | `#E3DDBE`→`#AF9A7D` | `#CF7F55`→`#8E6A4E` | 0.5 / 0.75 | 167 → 796 KB |
+  | Koza Han | v14→v15 | `#BCC2C6`→`#BCC2C6` | — | `#CF7F55`→`#8E6A4E` | 0.5 / 0.8 | 828 → 1246 KB |
+  | Orhan Bey Camii | v07→v08 | `#BCC2C6`→`#BCC2C6` | `#E5DAB9`→`#C4B08C` | `#CF7F55`→`#8E6A4E` | 0.5 / 0.78 | 267 → 526 KB |
+  | Orhan Bey Hamamı | v05→v06 | `#BCC2C6`→`#BCC2C6` | `#E3D8B8`→`#C69D80` | `#CF7F55`→`#8E6A4E` | 0.5 / 0.82 | 203 → 435 KB |
+  | Emir Hanı | v05→v06 | `#BCC2C6`→`#BCC2C6` | `#E7D7AF`→`#AC9483` | `#CF7F55`→`#8E6A4E` | 0.5 / 0.75 | 136 → 736 KB |
+  | Orhan Gazi Türbesi | v02→v03 | `#BCC2C6`→`#BCC2C6` | — | — | 0.5 / 0.53 | 253 → 479 KB |
+- Dosyalar 2–5 kat büyüdü; büyük kısmı AO dokusu ve ikinci UV. Redmi'de açılış süresine bakılmadı.
+- Uygulamaya bağlama:
+  - 7 `3d/model.json` dosyasında yalnız `glb` alanı yeni sürüme çevrildi;
+  - `design/harita/modelleri-gom.py` çalıştırıldı (`akar-harita-modeller.js` 3,3 → 7,6 MB);
+  - iki harita önizlemesi 7 modeli hatasız yüklüyor (Playwright).
+  - v1 (`test-redmi9t/`) kendi `modeller/` kopyasını kullanıyor, değişmedi.
+  - test-redmi9t-v2, `hazirla.py` yeniden çalıştırılınca yeni modellere geçer (çalıştırılmadı).
+- Web için açık (iş emrine göre ayrı oturum): `Yer_Golgesi` taban izinden (OSM bina kesme kutusu) çıkarılmalı. Çıkarılmazsa iz 5 m büyür ve modellerin çevresinde fazladan OSM binası silinir. Ayrıca ışık 1–1,4'e inmeli; yeni renkler eskisinden belirgin koyu.
+- Kontrol:
+  - her eserde `kontrol/<sürüm>/havadan.png`: eski | yeni | yalnız AO, aynı kamera ve web ışığı;
+  - `duz_foto.png`: ışıksız yeni model | fotoğraf ölçümü;
+  - `renkler.json`, `kontrol_rapor.json`;
+  - README sürüm satırları.
+- Eski sürümlerin blend ve GLB dosyaları silinmedi (v1 eski GLB'leri kullanıyor).
+
+## 48. Açık üç renk kararı verildi: Emir Hanı çatısı, Koza Han duvarı, Türbe sıvası
+
+- Kullanıcı: «bunlara sen karar ver en iyi sonuç için».
+- **Emir Hanı çatısı kurşun kalır** (`#BCC2C6`, model değişmedi).
+  - Kaynak: envanter cilt 1, «üzeri kurşunla kaplıdır; ancak bir dönem kiremitle örtüldüğü bilinmektedir».
+  - 2024 dron fotoğrafındaki gri, yeşil ve mavi kaplamalar geçici ya da onarım katmanı; çatı sokaktan da görünmüyor.
+  - Gerekçe: kaynağa sadakat ve yedi eserde aynı kurşun.
+- **Koza Han duvarı `#DCC8A6` → `#8E887F`** (eser istisnası).
+  - Fotoğraf: `DJI_20241023135706_0377`; Koza kaynak dizininde almaşık pencere detayı olarak geçiyor. Pencereler arasındaki saf almaşık bölgelerin ortancası `#827D74`.
+  - Doğrudan güneş yok. Pozlama, aynı karedeki beyaz harç (`#DBD9D4`) güneşli fotoğraflardaki harca (`#EDEBE9`) eşitlenerek düzeltildi (doğrusal ×1,21).
+  - Gölgedeki ERD fotoğraflarıyla tutarlı. Koza duvarı Ulucami'den belirgin gri.
+- **Orhan Gazi Türbesi krem sıva `#E8DFCB` → `#F5E4C9`.**
+  - Fotoğraf: `08_1.jpg`. Ağaç gölgesi benekli duvarda yalnız güneş alan pikseller ölçüldü (bölgenin en parlak %15'i); üç bölge tutarlı (`#EDDCC2`–`#FCEDD4`).
+- Koza Han v15 ve Türbe v03, aynı sürüm numarasıyla yeniden üretildi (hat `renk_ao_v3`). Kabul ölçütleri yine geçti:
+  - geometri aynı;
+  - texCoord 1;
+  - renk sapması 0;
+  - Koza 1247 KB, Türbe 479 KB.
+- Güncellenen dosyalar:
+  - `akar-harita-modeller.js` yeniden üretildi.
+  - Kontrol görselleri ve README satırları yenilendi.
+  - `malzeme-paleti.json`: `kararlar_28_ekim` eklendi; `acik_sorular` boşaldı.
+  - `RENK_OLCUM_RAPORU.md`: sonuna ek tablo eklendi.
+
+## 49. Harita önizleme v3: yeni modeller (fotoğraf renkleri + pişmiş AO), «Pişmiş» ışık, yer gölgesi taban izinden hariç (design/harita)
+
+- `akar-harita-onizleme-v3.html` = v2 + aşağıdakiler; modeller `akar-harita-modeller.js`'ten (3D ajanı yeniledi: Ulucami v28, Bedesten v07, Koza v15, Orhan Camii v08, Hamam v06, Emir v06, Türbe v03).
+- **Düzeltme (v2):** bilgisayardaki v2'de «Işık ve renk» paneli yoktu; kaydederken kopyalama ve diske yazma aynı anda başlatılmış, eski sürüm yazılmıştı. Panelli v2 yeniden kaydedildi.
+- **Yer_Golgesi:** taban izi (`kutu`) artık yalnız yapı meshlerinden (`yerGolgesi()` adı «Yer_Golgesi» ile başlayan nesne ya da üstü); kenar çizgisi, gölge atma/alma, renk ayarı ve görünüm modlarına girmez. Ölçüm: yeni modellerle v2'de taban izleri 3924/11963/2114/2259/1005/6824/4016 m², v3'te 2766/9830/1291/1384/468/5268/2792 m² (v2, modellerin 5 m çevresindeki OSM binalarını da siliyordu).
+- **«Pişmiş» hazır ayarı (varsayılan):** kullanıcının seçtiği ışık (ortam 2, güneş 1, karşı 1, yön 315°, yükseklik 45°, doygunluk 1,25); gerçek zamanlı gölge ve kenar kapalı (pişmiş gölgenin üstüne binip görüntüyü çamurlaştırıyordu; kenar çizgisi yer gölgesi düzleminin çerçevesini de çiziyordu). Pişmiş AO ve kurşunun metalikliği yüzeyleri koyulaştırdığı için yüksek ortam ışığı doğru sonuç veriyor (önceki tahminim yanlıştı).
+- Sınama (Playwright, karolar boş): 7 model yüklendi, dikdörtgen çizgiler yok, hata yok. Gözlem: pişmiş yer gölgesi (alfa ≈ %15) açık zeminde neredeyse görünmüyor.
+- Açık: dosya boyutu (yedi model 2,4 → 5,6 MB; artışın kaynağı AO resmi ve 1024 px kayıpsız PNG yer gölgesi). Kullanıcı yer gölgesini web'de çizmeyi soruyor. test-redmi9t-v2 prototipinde Yer_Golgesi hariç tutma henüz yapılmadı.
+
+## 50. Fotoğraf renkleri geri alınıyor (plan B), web yer gölgesi (design/harita v3 + prompt)
+
+- Kullanıcı yeni (fotoğraftan ölçülen) duvar, tuğla ve kasnak renklerini haritada beğenmedi: «canlılığı öldürmüş». Çatı/kurşun zaten değişmemişti. Karar: **plan B** — 21 Ekim pastel renkleri geri, pişmiş AO kalır. Eski renkler biraz açık bulunursa ton ayarı web'de (panel: renk parlaklığı/doygunluk), modele yazılmaz.
+- Dosya boyutu (5,6 MB) için karar: pişmiş «Yer_Golgesi» PNG'si modelden çıkar (açık zeminde neredeyse görünmüyordu, 7 modelde ≈ 1,6 MB); AO tek kanal JPEG, Ulucami/Koza 1024 px, diğerleri 512 px. Hedef toplam ≤ 2,8 MB.
+- Prompt: `design/test-redmi9t-v2/_promptlar/PROMPT_eski_renk_ao_kucuk_7_eser.md` (renk referansı v27/v06/v14/v07/v05/v05/v02 aynı adlı malzeme; köşe rengindeki eski renkler malzemeye; palette «foto_olcum» saklanır, «karar» yazılır; yeni sürümler v29/v08/v16/v09/v07/v07/v04; model.json + modelleri-gom.py). Henüz çalıştırılmadı.
+- **Web yer gölgesi (v3):** kodla bir kez üretilen 128 px bulanık doku (`YG_DOKU`, indirme yok); her modelin altına taban izi boyutunda düzlem (grup içinde, modelle döner), `webGolge` opaklığı panelde («Yer gölgesi (yumuşak, web)», «Pişmiş» hazır ayarında 0,28). Modelde «Yer_Golgesi» varsa gizlenir. «Gölge» sürgüsü «Gerçek zamanlı gölge» olarak adlandırıldı.
+- Sınama: zoom 18,2 yakın görünümde yapıyı zemine oturtan yumuşak leke; kapalıyken yok; hata yok.
+
+## 51. Yedi eser: pastel renkler geri, pişmiş AO küçüldü, yer gölgesi modelden çıktı (3D)
+
+- İş emri: `design/test-redmi9t-v2/_promptlar/PROMPT_eski_renk_ao_kucuk_7_eser.md` (§50 kararı).
+- Yöntem: Blender'da yeniden üretim yok; GLB üzerinde `eserler/_kutuphane/renk_ao_v3/pastel_kucuk.mjs` (toplu: `pastel_hepsi.sh`). Geometri ve UV_AO aynen taşındı.
+  - Renk: her malzemeye referans pastel sürümdeki (v27/v06/v14/v07/v05/v05/v02) aynı adlı malzemenin rengi ve dokusu (doku_palet_v2) kopyalandı. Kaynak dosya ve malzeme adı her eserin `kontrol/<sürüm>/renkler.json` dosyasında.
+  - Köşe rengi: referanslarda bütün malzemelerde gri (R=G=B), yani AO idi. «Köşe renginde renk» durumu bu sürümlerde yoktu (o v06/v04/v01'deydi), bu yüzden çarpılmadı; pişmiş AO onun yerini alıyor.
+- Ölçüt: renk sapması bütün malzemelerde 0 ton. Malzeme adları referansla birebir; fazla ya da eksik malzeme yok.
+- AO yeniden pişirilmedi: mevcut doku ~1 px bulanıklaştırılıp küçültüldü ve tek kanal JPEG q80 olarak kaydedildi (Ulucami ve Koza 1024 px, diğerleri 512 px). texCoord 1 ve UV_AO aynı.
+- Yer_Golgesi uygulama ve sunum GLB'lerinden çıkarıldı; KHR_materials_unlit de düştü.
+
+  | Eser | Sürüm | Duvar (foto→pastel) | Tuğla | Kasnak / sıva | AO | Uygulama GLB |
+  |---|---|---|---|---|---|---|
+  | Ulucami | v28→v29 | `#AF9A7D`→`#E5D0AE` | `#8E6A4E`→`#CF7F55` | `#D2B276`→`#F2E2A8` | 1024 px, 487→117 KB | 1349 → 768 KB |
+  | Bedesten | v07→v08 | `#AF9A7D`→`#E3DDBE` | `#8E6A4E`→`#CF7F55` | — | 512 px, 182→38 KB | 796 → 161 KB |
+  | Koza Han | v15→v16 | `#8E887F`→`#DCC8A6` | `#8E6A4E`→`#CF7F55` | — | 1024 px, 263→163 KB | 1248 → 899 KB |
+  | Orhan Bey Camii | v08→v09 | `#C4B08C`→`#E5DAB9` | `#8E6A4E`→`#CF7F55` | `#C7B495`→`#E9DFC4` | 512 px, 209→45 KB | 526 → 260 KB |
+  | Orhan Bey Hamamı | v06→v07 | `#C69D80`→`#E3D8B8` | `#8E6A4E`→`#CF7F55` | `#C09878`→`#DCD1AD` | 512 px, 176→38 KB | 436 → 189 KB |
+  | Emir Hanı | v06→v07 | `#AC9483`→`#E7D7AF` | `#8E6A4E`→`#CF7F55` | — | 512 px, 252→49 KB | 736 → 168 KB |
+  | Orhan Gazi Türbesi | v03→v04 | — | — | `#F5E4C9`→`#E8DFCB` | 512 px, 135→28 KB | 479 → 264 KB |
+  Toplam: 5570 → **2709 KB** (hedef ≤ 2,8 MB; pastel referanslar ≈ 2,4 MB). Kurşun her yerde `#BCC2C6`; Emir Hanı çatısı kurşun.
+- Sapma: Draco yeniden yazımı sıfır alanlı üçgenleri attı (girdide sayıldı):
+  - Koza Avlu_Revak 288, Ic_Koza 38;
+  - Orhan Cami_SonCemaat 40;
+  - Emir_Hani 2;
+  - Bedesten sunum Zemin_Derz 1.984.
+  Sınır kutuları aynı, sayılar pastel referansla aynı. Diğer bütün parçalar birebir.
+- Palet (`malzeme-paleti.json`): «hex» artık pastel değer. Fotoğraf ölçümleri «foto_olcum» ve «eser_istisna_foto_olcum» alanlarında saklı; «karar» yazıldı. `RENK_OLCUM_RAPORU.md` başına karar notu eklendi.
+- Uygulamaya bağlama:
+  - 7 `model.json` yeni sürümleri gösteriyor;
+  - `modelleri-gom.py` çalıştı (`akar-harita-modeller.js` 7,6 → 3,7 MB);
+  - önizleme v1, v2 ve v3 7 modeli hatasız yüklüyor (Playwright).
+- Kontrol: `kontrol/<sürüm>/havadan.png` dosyasında pastel referans | yeni ve önceki AO | küçültülmüş AO; küçültme farkı gözle seçilmiyor. Ayrıca `renkler.json`, `kontrol_rapor.json` ve README satırları.
+- Not: blend dosyaları (v28/v07/…) fotoğraf renkli kaldı. Yeni sürümler GLB son adımıyla üretildi; Blender'dan yeniden üretilecek bir sonraki sürümde önce `pastel_kucuk.mjs`'in renk kopyası uygulanmalı. Eski dosyalar silinmedi.
+
+## 52. Harita önizleme v3'e kullanıcının stili (akar-style-ozel-v2.json) + Blender eşitleme prompt'u
+
+- v3'ün gömülü stiline `design/harita/akar-style-ozel-v2.json`'daki farklar işlendi (dosya tamamıyla karşılaştırıldı; yalnız 5 fark): background #F5F2EA → #f3f1ed, building #fde2c9 → #ede0d4, building_3d #d0c6b4 → #ddd5c6, road_area_pier ve road_pier #F5F2EA → #f3f1ed. «Sıfırla» bu renklere döner. Sınama: modeller ve harita hatasız.
+- 3D ajanı GLB üzerinde çalıştığı için blend/build fotoğraf renklerinde kalmıştı (kaynak–çıktı ayrışması). Prompt: `design/test-redmi9t-v2/_promptlar/PROMPT_blend_kaynagi_esitle_7_eser.md` (blend + build palet dosyasından, Yer_Golgesi silinir, AO küçültme dışa aktarma betiğine; Blender çıktısı şimdiki GLB ile a–g ölçütleriyle birebir doğrulanınca yerine yazılır, geçmezse dokunulmaz). Henüz çalıştırılmadı.
