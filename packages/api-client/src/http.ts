@@ -1828,6 +1828,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           : defaultMapSettings.maxVisibleModels,
       };
     },
+    setMapSettings: (settings) =>
+      call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
     // Live state, not queued behind commands: the editor reads it when it opens.
     getMapPlacement: async (siteId) => {
       const id = createdIds.get(siteId) ?? siteId;

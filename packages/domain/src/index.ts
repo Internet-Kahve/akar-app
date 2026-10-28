@@ -54,7 +54,7 @@ export interface MapSettings {
 /** Used until the settings are read, and by the demo. */
 export const defaultMapSettings: MapSettings = {
   modelMinZoom: 16,
-  maxVisibleModels: 5,
+  maxVisibleModels: 10,
 };
 export interface SiteModel {
   name: string;

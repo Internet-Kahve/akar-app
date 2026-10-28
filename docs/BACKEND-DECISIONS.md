@@ -402,3 +402,9 @@ Karar: [Haritada 3B modeller planı](MAP-MODELS-PLAN.md) Muhammed Talay'ın (Red
 Neden: prototip OSM karolarının binaları birleşik gruplar hâlinde verdiğini ve kalıcı kimlik taşımadığını gösterdi; bugünkü GLB'lerde başlangıç noktası tutarsız. Ekip çalışmayı hızlandırmak için inceleme yükünü backend tarafına aldı.
 Karar veren / tarih: Weissman, 28 Eki (planı onayladı; UI PR'larını kendimiz deneyip birleştirme, Tamer'i yalnız bilgi için ekleme, API PR'larında inceleyici beklememe, canlı migration'ı kendimiz uygulama).
 Nasıl değiştirilir: plan belgesi güncellenir; inceleme kuralı için bu bölüm güncellenir.
+
+**11.36 Haritada aynı anda en çok 10 model; harita ayarları yönetim panelinde.**
+Karar: `maxVisibleModels` başlangıç değeri 5'ten 10'a çıkar (`@akar/domain` `defaultMapSettings`, `map_settings` sütun varsayılanı). Migration `0015` varsayılanı değiştirir ve satırı, yönetici hiç değiştirmediyse (`updated_by` boş, değer 5) 10 yapar; yöneticinin seçtiği değere dokunmaz. Yönetim panelinde yalnız `admin` rolüne "Harita ayarları" sekmesi eklenir: aynı anda en çok model (0–50 tam sayı, 0 haritadaki 3B'yi kapatır) ve model yükleme yakınlaştırması (0–24); `PUT /v1/admin/map-settings` ile kaydeder. Ziyaretçiler bu ayarı kendileri değiştiremez.
+Neden: canlı katalogda 7 yerleştirilmiş model var; 5 sınırı Hanlar bölgesinde ikisini yüklemeden bırakıyordu. Değeri değiştirmek için API'yi elle çağırmak yerine panel kullanılır.
+Karar veren / tarih: Weissman, 28 Eki.
+Nasıl değiştirilir: değer panelden; başlangıç değeri `packages/domain/src/index.ts` ve `services/api/src/db/schema/settings.ts` (yeni migration). Ziyaretçiye ayar açmak yeni karar ister.

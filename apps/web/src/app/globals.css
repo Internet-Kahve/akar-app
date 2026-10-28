@@ -3993,6 +3993,16 @@ td small {
   border-radius: 3px;
 }
 
+/* Map settings (admin) */
+.admin-map-settings > p,
+.admin-map-settings form {
+  max-width: 60ch;
+}
+.admin-map-settings .field small {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
 /* Member administration */
 .admin-members > p {
   max-width: 75ch;

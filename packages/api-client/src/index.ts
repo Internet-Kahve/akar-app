@@ -92,6 +92,8 @@ export interface AkarClient {
   refreshCatalog(): Promise<Snapshot>;
   /** `GET /v1/map-settings`: when the map loads models and how many it draws. */
   getMapSettings(): Promise<MapSettings>;
+  /** `PUT /v1/admin/map-settings`, admin only: returns the saved values. */
+  setMapSettings(settings: MapSettings): Promise<MapSettings>;
   /**
    * The placement saved for a site's model, `visible: false` included (the catalog hides it then); `null`
    * when none was saved. Panel read: the editor asks when it opens.
@@ -237,6 +239,8 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       throw new Error("Bulmaca bulunamadı.");
     return { siteId, quiz };
   };
+  // Demo: a change lasts until the page reloads, like the demo member roles.
+  let mapSettings: MapSettings = { ...defaultMapSettings };
   return {
     async getSnapshot() {
       return structuredClone(state);
@@ -245,7 +249,11 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       return structuredClone(state);
     },
     async getMapSettings() {
-      return { ...defaultMapSettings };
+      return { ...mapSettings };
+    },
+    async setMapSettings(settings) {
+      mapSettings = { ...settings };
+      return { ...mapSettings };
     },
     async getMapPlacement(siteId) {
       return structuredClone(

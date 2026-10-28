@@ -12,7 +12,7 @@ export const mapSettings = pgTable(
     /** 3D models load only at this map zoom or closer. */
     modelMinZoom: doublePrecision("model_min_zoom").notNull().default(16),
     /** Upper bound on 3D models drawn at once; 0 turns 3D off on the map. */
-    maxVisibleModels: integer("max_visible_models").notNull().default(5),
+    maxVisibleModels: integer("max_visible_models").notNull().default(10),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     updatedBy: text("updated_by"),
   },

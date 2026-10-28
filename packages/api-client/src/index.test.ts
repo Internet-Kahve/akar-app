@@ -135,7 +135,7 @@ test("demo sites with a model carry a placement; the mock serves default map set
   }
   assert.deepEqual(await c.getMapSettings(), {
     modelMinZoom: 16,
-    maxVisibleModels: 5,
+    maxVisibleModels: 10,
   });
   assert.deepEqual(await c.refreshCatalog(), await c.getSnapshot());
 });
