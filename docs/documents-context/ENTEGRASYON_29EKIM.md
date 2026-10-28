@@ -64,6 +64,23 @@ Görev, parça ve izlerdeki eser kimlikleri de çevrilmeli.
 
 Sürüm numarasını hiçbir yere elle yazmayın. Her zaman `model.json → glb` okunsun.
 
+**Parça adları değişti, model ile içerik birlikte güncellenmeli (çakışma riski).** Parça sadeleştirmesi 29 Ekim'de bitti:
+- yeni sürümler: Bedesten v09, Koza Han v17, Orhan Bey Camii v10, Orhan Bey Hamamı v08, Emir Hanı v08, Orhan Gazi Türbesi v05;
+- Ulucami değişmedi (v29).
+
+Bazı eski parça adları artık yok. Örneğin Koza Han'da `Avlu_Mescit` + `Mescit_Kubbe` + `Mescit_Dikis` → `Mescit`. Ürünün veritabanındaki hikâye vurguları (`story_blocks.highlights`) ve quiz parçaları eski içe aktarmadan geldiği için eski adları taşıyor.
+
+Yalnız model dosyası panelden yenilenirse:
+- bu vurgular boşa düşer (hata vermez, sadece hiçbir şey yanmaz);
+- quiz'deki «3D modelde bul» görevi çalışmaz.
+
+Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → yeni ad eşlemesi `eserler/_kutuphane/blend_hat/parca_plan.json` dosyasında; hikâye dosyaları yeni adlara çevrildi. Ana parça adları (`placement.anchorNode`) değişmedi:
+- Ulucami ve Bedesten `Govde`;
+- Koza Han `Govde_Dis`;
+- Orhan Bey Camii `Cami_Govde`;
+- Emir Hanı `Emir_Hani`;
+- Orhan Gazi Türbesi `Govde`.
+
 ## 2. 3D modeller: dosya kuralları
 
 - **Eser başına tek model (§11.2) ile uyum.** Prototip haritada hafif dosyayı (`<glb>.glb`), detayda sunum dosyasını (`_sunum`) kullanıyor. Ürünün kararı tek dosya. Öneri: yalnız `_sunum` yüklensin; haritada sunum parçaları çizilmesin (0969e22 bunu yapıyor).
@@ -116,7 +133,7 @@ Yapının taban izi boyutunda bir düzleme konur: `boy / 0,59 + 2 m`. Opaklık `
 - **Ürün:** ortası taban izine düşen ve küçük olan bina gizlenir. Panelden `hidden_points` / `kept_points` ile düzeltilir.
 - **Prototip:** modele (1 m iz + 3 m boşluk) değen bina bütünüyle gizlenir. Panel yok.
 
-**Öneri:** Ürünün kuralı ve panel düzeltmesi daha iyi; prototipinkini almayın. Prototipte görülen asıl sorun şuydu: bina kesilip artanı bırakılınca modelin dibinde ince şeritler kalıyordu. Ürün binayı kesmediği için bu sorun ürünü etkilemez.
+**Öneri:** Ürünün bugünkü hâli kalsın: otomatik kural, artı panelde binaya tıklayıp «Gizle / Geri göster». Prototipin kuralını almayın; prototipte panel olmadığı için daha sert bir kural seçilmişti. Prototipte görülen asıl sorun şuydu: bina kesilip artanı bırakılınca modelin dibinde ince şeritler kalıyordu. Ürün binayı kesmediği için bu sorun ürünü etkilemez.
 
 Yerleşim girilirken kontrol edilecek yerler:
 - Bedesten ve Koza Han'ın çevresindeki çarşı çatıları;
