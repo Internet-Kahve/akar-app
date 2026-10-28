@@ -256,6 +256,14 @@ Yerleşim girilirken kontrol edilecek yerler:
   - `rol: akar` arayüzde «Ticari (akar)»; «Akar» uygulamanın adıyla karışıyordu;
   - şehirde eseri olmayan rol gösterilmez.
 
+### 5.9 Yükleme ekranları (şehrin deseniyle)
+- **Açılış ekranı:** tam ekran; arkada şehrin deseni silik (%6–10); ortada altın amblem çizgi çizgi çizilir; «AKAR», şehir adı, «Vakıf eserleri yükleniyor». Harita ilk kez çizilince kalkar.
+- **3D yükleniyor:** kart; amblem; «3D model yükleniyor · %NN»; ilerleme çubuğu; «x MB / y MB. Bu sırada Dinle ya da Oku ile başlayabilirsin…». Yüzde ve MB gerçek indirmeden gelir (akış okunur). Kart açıkken panel kullanılabilir.
+- **Kaynak:**
+  - Figma `akar-yeni`: «Amblem» 1:913, «Desenler» 1:863–958, «D · Eser detay / 3D yükleniyor» 1:4794, «Bileşen · Durum ekranları» 1:7615;
+  - prototip `index.html` `#acilis`, `app.js` `yuklemeKart` / `glbAl`.
+- **Desen ve renk şehir kaydından gelir:** `kimlik.desen` (`design/desenler/*.svg`), `kimlik.zemin`, `kimlik.desen_renk`. Kodda şehir adı ya da desen yazılmaz.
+
 ## 6. Repoda olup ürüne alınmayacaklar
 
 - `design/test-redmi9t/` (v1): donmuş. İçe aktarma v2'ye geçince eski GLB'lerle birlikte silinecek:

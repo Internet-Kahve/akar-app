@@ -82,6 +82,27 @@ const SEHIR = VERI.sehir || { ad:'', merkez:[0, 0], zoom:16, foto_kunye:'', kayn
 /* 3D sahne zemini şehrin kimliğinden (kimlik.sahne_ust / sahne_alt); yoksa app.css'teki nötr gri kalır */
 if (SEHIR.kimlik?.sahne_ust) document.documentElement.style.setProperty('--sahne-ust', SEHIR.kimlik.sahne_ust);
 if (SEHIR.kimlik?.sahne_alt) document.documentElement.style.setProperty('--sahne-alt', SEHIR.kimlik.sahne_alt);
+/* şehrin rengi ve deseni bütün sayfaya (açılış ekranı, yükleme kartları); veri/sehir/<şehir>.json → kimlik */
+{ const km = SEHIR.kimlik || {}, kok = document.documentElement.style;
+  if (km.zemin) kok.setProperty('--sehir-aksan', km.zemin);
+  if (km.desen_renk) kok.setProperty('--sehir-acik', km.desen_renk);
+  if (km.desen) kok.setProperty('--sehir-desen', `url('desenler/${km.desen}')`);
+  const ac = document.getElementById('acilis');
+  if (ac) { ac.classList.toggle('desenli-zemin', !!km.desen); document.getElementById('acilis-sehir').textContent = SEHIR.ad || ''; document.getElementById('acilis-alt').textContent = 'Vakıf eserleri yükleniyor'; } }
+const AMBLEM_D = document.querySelector('#acilis .amblem path')?.getAttribute('d') || '';
+/* 3D yükleme kartı: amblem çizilir, gerçek indirme yüzdesi ve MB; arkada şehrin deseni silik */
+const mbYaz = (b) => (b / 1048576).toLocaleString('tr-TR', { minimumFractionDigits:1, maximumFractionDigits:1 });
+const yuklemeKart = (alt) => `<div class="yukleniyor yukleme desenli-zemin"><div class="yk-kart"><svg class="amblem" viewBox="-84 -84 168 168" aria-hidden="true"><path pathLength="1" d="${AMBLEM_D}"/></svg><b class="yk-baslik" role="status">3D model yükleniyor</b><div class="yk-cubuk belirsiz"><i></i></div><p class="yk-alt"><span class="yk-mb"></span>${esc(alt)}</p></div></div>`;
+function yuklemeIzle(kap, dosya) {
+  const k = kap && kap.querySelector('.yukleme'); if (!k) return;
+  glbIzle(dosya, (n, top) => {
+    if (!k.isConnected || !top) return;
+    const y = Math.min(100, Math.round(n / top * 100));
+    k.querySelector('.yk-baslik').textContent = `3D model yükleniyor · %${y}`;
+    const c = k.querySelector('.yk-cubuk'); c.classList.remove('belirsiz'); c.style.setProperty('--yuzde', y + '%');
+    k.querySelector('.yk-mb').textContent = `${mbYaz(n)} MB / ${mbYaz(top)} MB. `;
+  });
+}
 const SEHIR_ESIK = 9;   // bu zoomun altında eser pinleri yerine şehirler görünür (küre görünümü)
 const galeriFoto = (e) => e.fotolar.filter((f) => f.sira).sort((a, b) => a.sira - b.sira);
 const kapak = (e) => galeriFoto(e)[0] || e.fotolar[0];
@@ -112,7 +133,22 @@ function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; 
 const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
 const yukleyici = new GLTFLoader().setDRACOLoader(draco);
 const glbTampon = new Map();
-const glbAl = (dosya) => { if (!glbTampon.has(dosya)) glbTampon.set(dosya, fetch(`modeller/${dosya}.glb`).then((r) => { if (!r.ok) throw new Error(dosya + ' ' + r.status); return r.arrayBuffer(); })); return glbTampon.get(dosya); };
+/* GLB indirme ilerlemesi (yükleme kartındaki % ve MB; Figma notu: «Yüzde ve MB gerçek indirmeden gelir») */
+const glbDinleyici = new Map(), glbSon = new Map();
+const glbBildir = (dosya, n, top) => { glbSon.set(dosya, [n, top]); for (const f of glbDinleyici.get(dosya) || []) f(n, top); };
+const glbIzle = (dosya, f) => { if (!glbDinleyici.has(dosya)) glbDinleyici.set(dosya, new Set()); glbDinleyici.get(dosya).add(f); if (glbSon.has(dosya)) f(...glbSon.get(dosya)); };
+const glbAl = (dosya) => {
+  if (!glbTampon.has(dosya)) glbTampon.set(dosya, (async () => {
+    const r = await fetch(`modeller/${dosya}.glb`); if (!r.ok) throw new Error(dosya + ' ' + r.status);
+    const top = +r.headers.get('content-length') || 0;
+    if (!r.body || !r.body.getReader) { const b = await r.arrayBuffer(); glbBildir(dosya, b.byteLength, b.byteLength); return b; }
+    const rd = r.body.getReader(), parcalar = []; let n = 0;
+    for (;;) { const { done, value } = await rd.read(); if (done) break; parcalar.push(value); n += value.length; glbBildir(dosya, n, Math.max(top, n)); }
+    const tam = new Uint8Array(n); let k = 0; for (const p of parcalar) { tam.set(p, k); k += p.length; }
+    glbBildir(dosya, n, n); return tam.buffer;
+  })());
+  return glbTampon.get(dosya);
+};
 const glbCoz = async (dosya) => { const b = await glbAl(dosya); return new Promise((res, rej) => yukleyici.parse(b.slice(0), '', res, rej)); };
 
 /* =====================================================================
@@ -134,6 +170,10 @@ const harita = new maplibregl.Map({
   minZoom:1.2, maxZoom:19.5, maxPitch:65, attributionControl:false, fadeDuration:0,
 });
 window.akarHarita = harita;
+/* açılış ekranı harita ilk kez çizilince kalkar ('load'; 'idle' model katmanı yeniden çizim istedikçe gecikebilir), en geç 8 sn */
+{ const ac = document.getElementById('acilis'); let k = false;
+  const kaldir = () => { if (k || !ac) return; k = true; ac.classList.add('bitti'); setTimeout(() => ac.remove(), 400); };
+  if (harita.loaded()) kaldir(); else harita.once('load', kaldir); setTimeout(kaldir, 8000); }
 const IZLER = [];   // model taban izleri (lng/lat çokgen), bina gizleme ve dokunma için
 
 /* Hikâyesi sonuna kadar dinlenen eser cihazda «bitti» olarak saklanır; pini Tamamlandı (✓) çizilir */
@@ -805,9 +845,10 @@ function gorunumCiz() {
   s3dKapat();
   if (durum.gorunum === 'foto') { alan.innerHTML = galeriHTML(e); galeriYukseklik(); }
   else {
-    alan.innerHTML = `<div class="sahne3d" id="s3d"><div class="yukleniyor">3D model yükleniyor…</div></div><div class="ipucu">${ic('move', 14)}${durum.masaustu ? 'Sürükle: döndür · Tekerlek: yakınlaştır · Dokun: parça' : 'Sürükle: döndür · İki parmak: yakınlaştır · Dokun: parça'}</div><span class="guven temsili temsili-etiket" id="temsili">3D model · Temsili<span class="i">ⓘ</span></span><div class="parca-ad" id="parca-ad" hidden></div><button class="kubbe-dugme" id="kubbe-dugme" data-kubbe aria-pressed="false" hidden>${ic('chevron-up', 16)}<span>İçini göster</span></button>`;
+    alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Bu sırada Dinle ya da Oku ile başlayabilirsin; model gelince sahne kendiliğinden açılır.')}</div><div class="ipucu">${ic('move', 14)}${durum.masaustu ? 'Sürükle: döndür · Tekerlek: yakınlaştır · Dokun: parça' : 'Sürükle: döndür · İki parmak: yakınlaştır · Dokun: parça'}</div><span class="guven temsili temsili-etiket" id="temsili">3D model · Temsili<span class="i">ⓘ</span></span><div class="parca-ad" id="parca-ad" hidden></div><button class="kubbe-dugme" id="kubbe-dugme" data-kubbe aria-pressed="false" hidden>${ic('chevron-up', 16)}<span>İçini göster</span></button>`;
     temsiliKonum();
     s3d = new Sahne3D($('#s3d'), { onParca:parcaSecildi, altBosluk:() => (durum.masaustu ? 0 : (eaSinir()[0] || 0) + 12) });   // kart açılsa da kadraj kapalı boya göre
+    yuklemeIzle($('#s3d'), e.glb + '_sunum');
     s3d.yukle(e).then(() => { $('#s3d .yukleniyor')?.remove(); if (s3d && s3d.kalkan) $('#kubbe-dugme').hidden = false; }).catch((err) => { $('#s3d .yukleniyor').textContent = '3D model açılamadı: ' + err.message; });
   }
   $$('[data-gorunum]').forEach((b) => b.setAttribute('aria-checked', b.dataset.gorunum === durum.gorunum));
@@ -978,8 +1019,9 @@ function anlatSahne() {
   $('#ilerleme').classList.toggle('acik', !koyu);
   if (koyu) alan.innerHTML = `<div class="foto-sahne${durum.doldur ? ' doldur' : ''}" id="foto-sahne"><img class="bulanik" alt=""><img class="ana" alt=""><div class="ust-golge"></div><div class="alt-bilgi"><span id="foto-guven"></span><span class="kunye">${esc(SEHIR.foto_kunye)}</span></div></div>`;
   else {
-    alan.innerHTML = `<div class="sahne3d" id="s3d"><div class="yukleniyor">3D model yükleniyor…</div></div><div class="kart3d" id="kart3d" style="opacity:0"></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
+    alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Model gelince sahne kendiliğinden açılır.')}</div><div class="kart3d" id="kart3d" style="opacity:0"></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
     s3d = new Sahne3D($('#s3d'), { onParca:parcaSecildi, altBosluk:() => (!durum.masaustu && !anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) });
+    yuklemeIzle($('#s3d'), anlat.eser.glb + '_sunum');
     s3d.yukle(anlat.eser).then(() => { $('#s3d .yukleniyor')?.remove(); sahneUygula(false); }).catch((err) => { $('#s3d .yukleniyor').textContent = '3D açılamadı: ' + err.message; });
   }
   $$('[data-gorunum]').forEach((b) => b.setAttribute('aria-checked', b.dataset.gorunum === durum.gorunum));
@@ -1198,10 +1240,11 @@ function hakkinda(id) {
     document.body.classList.add('tam-sayfa');
     const ucd = e.glb && e.hakkinda.some((b) => b.okuma?.ucd);
     gorusAc(`<div class="hk hk-d" id="hk-kaydir">${kapakH}<div class="hk-izgara"><article class="hk-sol">${nav}${bolumler}${son}</article>
-      <aside class="hk-sag" aria-label="${ucd ? '3D model: okunan bölüm' : 'Bölümün fotoğrafı'}"><div class="hk-sahne${ucd ? ' uc' : ''}">${ucd ? '<div class="sahne3d" id="hk-s3d"><div class="yukleniyor">3D model yükleniyor…</div></div>' : '<img id="hk-sag-foto" alt="">'}
+      <aside class="hk-sag" aria-label="${ucd ? '3D model: okunan bölüm' : 'Bölümün fotoğrafı'}"><div class="hk-sahne${ucd ? ' uc' : ''}">${ucd ? `<div class="sahne3d" id="hk-s3d">${yuklemeKart('Bu sırada okumaya devam edebilirsin; model gelince sahne kendiliğinden açılır.')}</div>` : '<img id="hk-sag-foto" alt="">'}
         <div class="hk-sahne-etiket" id="hk-sahne-etiket"></div>${ucd ? '<span class="guven temsili hk-temsili">3D model · Temsili</span>' : ''}</div></aside></div></div>`);
     if (ucd) {
       s3d = new Sahne3D($('#hk-s3d'), { onParca:parcaSecildi });
+      yuklemeIzle($('#hk-s3d'), e.glb + '_sunum');
       s3d.yukle(e).then(() => { $('#hk-s3d .yukleniyor')?.remove(); hkSahne(hk.aktif ?? 0, false); }).catch((err) => { const y = $('#hk-s3d .yukleniyor'); if (y) y.textContent = '3D model açılamadı: ' + err.message; });
     }
   } else {

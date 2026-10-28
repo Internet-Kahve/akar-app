@@ -4,7 +4,7 @@
 
 ## Şu anki durum (bir bakışta)
 
-- **Prototip** (`design/test-redmi9t-v2/`): harita + 7 eser 3D, «Eser hakkında» okuma düzeni (yalnız Ulucami), Geçmişi Gör (Ulucami), bulmaca/rozet (Ulucami), rota. Masaüstü tarayıcıda sınandı; **telefonda hiç denenmedi**.
+- **Prototip** (`design/test-redmi9t-v2/`): harita + 7 eser 3D, «Eser hakkında» okuma düzeni (yalnız Ulucami), Geçmişi Gör (Ulucami), bulmaca/rozet (Ulucami), rota. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
 - **Modeller:** pastel renkler + pişmiş AO, yer gölgesi web'de. Toplam ≈ 2,7 MB.
 - **Harita önizlemesi:** `design/harita/akar-harita-onizleme-v3.html` (ışık/renk paneli, «Pişmiş» hazır ayarı).
 - **Git:** `docs` dalında commit var, **push edilmedi**.
@@ -15,7 +15,7 @@
 |---|---|---|---|
 | 1 | `git push origin docs` | Muhammed (terminal) | Bu bağlantıdan push yapılamıyor (sanal makinede SSH anahtarı yok). Sonra PR: https://github.com/Internet-Kahve/akar-app/pull/new/docs |
 | 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `_promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
-| 3 | Redmi 9T denemesi | Muhammed | Aşağıdaki kontrol listesi. |
+| 3 | ~~Redmi 9T denemesi~~ yapıldı (29 Ekim, Muhammed): sorun yok. | — | — |
 | 4 | Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları | Talha | Ayrıntı aşağıda: «Talha'nın işleri». |
 
 ### Talha'nın işleri (7 eserin hepsi Ulucami seviyesine)
@@ -34,20 +34,6 @@ Notlar:
 - **Geçmişi Gör:** Bedesten, Emir Hanı ve Hamam için Foto Atlas'ta kayıt yok; yalnız rapor (izin durumu §4).
 - **Sıra önerisi (demo için):** önce Koza Han ve Bedesten (jüri haritada en çok bunlara tıklar), sonra diğerleri.
 - Her iş bitince raporu Claude'a getir. Sorular ve kartlar envanter metniyle karşılaştırılır, sonra commit.
-
-### Redmi 9T kontrol listesi
-
-`bash docs/documents-context/design/test-redmi9t-v2/sunucu.sh` → telefonda yazılan adres (aynı Wi-Fi).
-
-- [ ] Açılış süresi (ilk açılış ve ikinci açılış, saniye)
-- [ ] Harita: kaydırma ve eğme akıcı mı; 7 model görünüyor mu; yer gölgesi; pin etiketleri birbirine binmeden çıkıyor mu
-- [ ] Küre görünümü (uzaklaş) ve şehre geri dönüş
-- [ ] Eser 3D: döndürme, «İçini göster», parça kartı, «Tıklanabilir parçalar» düğmesi
-- [ ] Eser hakkında: kaydırma, sekmeler, «Tam metni oku», fotoğraf şeridi kaydırma, fotoğraf büyütme
-- [ ] Geçmişi Gör kaydırıcısı (Ulucami)
-- [ ] Bulmaca ve rozet; «Buradayım» (konum yerel ağda çalışmaz, https gerekir — beklenen)
-- [ ] Ses (Dinle)
-- [ ] Takılma/ısınma var mı; varsa hangi ekranda
 
 ## 2. Tasarım
 
