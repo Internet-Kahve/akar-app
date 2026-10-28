@@ -408,3 +408,9 @@ Karar: `maxVisibleModels` başlangıç değeri 5'ten 10'a çıkar (`@akar/domain
 Neden: canlı katalogda 7 yerleştirilmiş model var; 5 sınırı Hanlar bölgesinde ikisini yüklemeden bırakıyordu. Değeri değiştirmek için API'yi elle çağırmak yerine panel kullanılır.
 Karar veren / tarih: Weissman, 28 Eki.
 Nasıl değiştirilir: değer panelden; başlangıç değeri `packages/domain/src/index.ts` ve `services/api/src/db/schema/settings.ts` (yeni migration). Ziyaretçiye ayar açmak yeni karar ister.
+
+**11.37 Rotalarda yürüme yolu: öneri ekip görüşüne açıldı.**
+Karar: [Rotalarda yürüme yolu planı](ROUTE-WALKING-PLAN.md) PR olarak açılır, ekip yorumlarıyla güncellenir; onaylanmadan kod yazılmaz. Öneri: yürüme yolu rota kaydında bir kez dış servisten (openrouteservice ücretsiz anahtar) hesaplanıp saklanır, yol tarifi durak durak telefonun harita uygulamasına ("Haritada aç") bırakılır; uygulama içi navigasyon yok.
+Neden: bugünkü düz çizgi binaların üzerinden geçer, yol, süre ve mesafe göstermez. Canlı navigasyon küçük bir ekip için ağır; Google/Apple Haritalar bunu zaten iyi yapar.
+Karar veren / tarih: Weissman, 28 Eki (öneri); onay ekipten bekleniyor.
+Nasıl değiştirilir: PR yorumlarıyla plan güncellenir; onaylanınca bu madde "onaylandı" olarak yenilenir.
