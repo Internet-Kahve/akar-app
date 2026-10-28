@@ -14,6 +14,7 @@ import {
   publishSite,
   setHistoryImages,
   setLocation,
+  setMapPlacement,
   setModel,
   setPhotos,
   setSections,
@@ -36,6 +37,7 @@ import {
   CreateSiteBody,
   HistoryImagesBody,
   LocationBody,
+  MapPlacementBody,
   ModelBody,
   SectionsBody,
   SiteInfoBody,
@@ -176,6 +178,22 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => write(req, 200, (tx, ctx) => setModel(tx, ctx, req.params.id, req.body)),
+  );
+
+  app.put(
+    "/v1/admin/sites/:id/map-placement",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary:
+          "Modelin haritadaki yerleşimi (konum, yön, ölçek, yükseklik, ana parça, gizlenen binalar), bütün alanlarla değiştirilir. Modeli olmayan eserde 409; konum ve noktalar eserin şehri dışındaysa 400. Yerleşim model değişince korunur",
+        params: IdParams,
+        body: MapPlacementBody,
+        response: { 200: AdminSiteDetail },
+      },
+    },
+    async (req) => write(req, 200, (tx, ctx) => setMapPlacement(tx, ctx, req.params.id, req.body)),
   );
 
   app.put(

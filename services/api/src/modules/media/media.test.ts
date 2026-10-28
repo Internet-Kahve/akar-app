@@ -16,6 +16,8 @@ import type { AuthUser } from "../../platform/auth.ts";
 import type { InlineJobQueue } from "../../platform/jobs.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
+import { backfillTriangles } from "./backfill-triangles.ts";
+import { MAX_MODEL_TRIANGLES } from "./glb.ts";
 import { MEDIA_LIMITS } from "./magic.ts";
 import { mediaRoutes } from "./routes.ts";
 import type { MediaItem, UploadTicket } from "./schemas.ts";
@@ -25,6 +27,7 @@ import {
   DAILY_UPLOAD_QUOTA,
   discardUnsavedObjects,
   expireUploads,
+  GLB_PARTS_JOB,
   MAX_OPEN_UPLOADS,
   MEDIA_REFERENCES,
 } from "./service.ts";
@@ -64,6 +67,16 @@ function glb(gltf: object | string, version = 2): Buffer {
   header.write("JSON", 16, "latin1");
   return Buffer.concat([header, json]);
 }
+
+/** A GLB whose one mesh draws exactly `triangles` triangles (mode 4 over a POSITION accessor, no indices). */
+const glbOfTriangles = (triangles: number) =>
+  glb({
+    asset: { version: "2.0" },
+    accessors: [{ count: triangles * 3 }],
+    meshes: [{ name: "Govde", primitives: [{ attributes: { POSITION: 0 } }] }],
+    nodes: [{ name: "Govde", mesh: 0 }],
+    scenes: [{ nodes: [0] }],
+  });
 
 // ── app ──────────────────────────────────────────────────────────────────────
 
@@ -263,6 +276,8 @@ const mismatches = [
   { name: "a PNG declared as JPEG", user: () => visitor, kind: "photo", type: "image/jpeg", file: PNG },
   { name: "a text file declared as GLB", user: () => editor, kind: "model", type: "model/gltf-binary", file: Buffer.from("this is not a model") },
   { name: "a GLB of version 1 declared as GLB", user: () => editor, kind: "model", type: "model/gltf-binary", file: glb({}, 1) },
+  { name: "a GLB whose JSON chunk is broken", user: () => editor, kind: "model", type: "model/gltf-binary", file: glb('{"nodes": [{"name": "Kub') },
+  { name: "a GLB with an unknown primitive mode", user: () => editor, kind: "model", type: "model/gltf-binary", file: glb({ accessors: [{ count: 9 }], meshes: [{ primitives: [{ attributes: { POSITION: 0 }, mode: 9 }] }], nodes: [{ mesh: 0 }] }) },
   { name: "a PNG declared as MP3", user: () => editor, kind: "audio", type: "audio/mpeg", file: PNG },
 ];
 for (const c of mismatches) {
@@ -687,15 +702,82 @@ test("a GLB's part names are extracted by the background job: distinct, non-empt
   assert.equal(audit?.actorId, editor.id);
 });
 
-test("a GLB whose JSON chunk is broken ends as failed instead of staying pending", async () => {
-  const ticket = await upload(editor, "model", "model/gltf-binary", glb('{"nodes": [{"name": "Kub'));
-  const res = await complete(editor, ticket.uploadId, metadataFor(editor));
-  assert.equal(res.statusCode, 201, res.body);
+test("a GLB whose JSON chunk breaks after upload ends as failed instead of staying pending", async () => {
+  // `complete` refuses unreadable files, so this is a file that went bad in the media bucket afterwards.
+  const mediaId = randomUUID();
+  const storageKey = `model/2026/10/${mediaId}.glb`;
+  await storage.media.put(storageKey, glb('{"nodes": [{"name": "Kub'), "model/gltf-binary");
+  await app.deps.db.insert(media).values({
+    id: mediaId, kind: "model", mime: "model/gltf-binary", url: storage.media.publicUrl(storageKey), license: "CC0", trust: "verified", storageKey, partsStatus: "pending",
+  });
+  await jobs.send(GLB_PARTS_JOB, { mediaId });
 
   await jobs.drain();
-  const [row] = await app.deps.db.select().from(media).where(eq(media.id, res.json<MediaItem>().id));
-  assert.equal(row?.partsStatus, "failed");
-  assert.deepEqual(row?.parts, []);
+  const row = await mediaRow(mediaId);
+  assert.equal(row.partsStatus, "failed");
+  assert.deepEqual(row.parts, []);
+});
+
+test("a model's triangles are counted on complete and stored; a model exactly at the limit passes and a photo has none", async () => {
+  const ticket = await upload(editor, "model", "model/gltf-binary", glbOfTriangles(MAX_MODEL_TRIANGLES));
+  const res = await complete(editor, ticket.uploadId, metadataFor(editor));
+  assert.equal(res.statusCode, 201, res.body);
+  const created = res.json<MediaItem>();
+  assert.equal(created.triangles, MAX_MODEL_TRIANGLES);
+  assert.equal((await mediaRow(created.id)).triangles, MAX_MODEL_TRIANGLES);
+
+  // The library and a repeated complete show it too.
+  assert.equal((await complete(editor, ticket.uploadId, metadataFor(editor))).json<MediaItem>().triangles, MAX_MODEL_TRIANGLES);
+
+  const photoTicket = await upload(editor, "photo", "image/jpeg", JPEG);
+  const photo = (await complete(editor, photoTicket.uploadId, metadataFor(editor))).json<MediaItem>();
+  assert.equal(photo.triangles, null);
+});
+
+test("a model one triangle over the limit is refused with 413 and a Turkish message, its object deleted and the upload rejected", async () => {
+  const ticket = await upload(editor, "model", "model/gltf-binary", glbOfTriangles(MAX_MODEL_TRIANGLES + 1));
+  const { storageKey } = await uploadRow(ticket.uploadId);
+  const before = await mediaCount();
+
+  const res = await complete(editor, ticket.uploadId, metadataFor(editor));
+  assert.equal(res.statusCode, 413, res.body);
+  assert.equal(errorOf(res).code, "PAYLOAD_TOO_LARGE");
+  assert.equal(errorOf(res).message, "Model en çok 139.152 üçgen olabilir; bu dosyada 139.153 var.");
+
+  const row = await uploadRow(ticket.uploadId);
+  assert.equal(row.status, "rejected");
+  assert.equal(row.rejectReason, errorOf(res).message);
+  assert.equal(await storage.uploads.head(storageKey), null);
+  assert.equal(await mediaCount(), before, "nothing was published");
+  assert.equal((await storage.media.head(storageKey)), null);
+  assert.equal((await complete(editor, ticket.uploadId, metadataFor(editor))).statusCode, 409, "a rejected upload is final");
+});
+
+test("backfill counts stored models without a count, skips what it cannot read, and a second run changes nothing", async () => {
+  const db = app.deps.db;
+  const seed = async (id: string, file: Buffer | null, withKey = true) => {
+    const storageKey = withKey ? `model/2026/10/${id}.glb` : null;
+    if (storageKey && file) await storage.media.put(storageKey, file, "model/gltf-binary");
+    await db.insert(media).values({ id, kind: "model", mime: "model/gltf-binary", url: `https://cdn.akar.test/${id}.glb`, license: "CC0", trust: "verified", storageKey });
+  };
+  const ids = { ok: `bf-ok-${randomUUID()}`, heavy: `bf-heavy-${randomUUID()}`, broken: `bf-broken-${randomUUID()}`, gone: `bf-gone-${randomUUID()}`, unkeyed: `bf-unkeyed-${randomUUID()}` };
+  await seed(ids.ok, glbOfTriangles(1234));
+  await seed(ids.heavy, glbOfTriangles(MAX_MODEL_TRIANGLES + 500));
+  await seed(ids.broken, glb('{"nodes": [{"name": "Kub'));
+  await seed(ids.gone, null);
+  await seed(ids.unkeyed, null, false);
+  const mine = new Set(Object.values(ids));
+  const triangles = async () => Object.fromEntries(await Promise.all(Object.entries(ids).map(async ([name, id]) => [name, (await mediaRow(id)).triangles])));
+
+  const lines: string[] = [];
+  const first = await backfillTriangles({ db, storage: storage.media, log: (line) => lines.push(line) }, 2);
+  assert.deepEqual(await triangles(), { ok: 1234, heavy: MAX_MODEL_TRIANGLES + 500, broken: null, gone: null, unkeyed: null });
+  assert.ok(first.counted >= 2 && first.unreadable >= 1 && first.withoutObject >= 1 && first.withoutKey >= 1, JSON.stringify(first));
+  assert.ok(lines.filter((l) => mine.has(l.split(":")[0]!)).length >= 5, "every model is accounted for in the log");
+
+  const second = await backfillTriangles({ db, storage: storage.media, log: () => {} }, 2);
+  assert.equal(second.counted, 0, "counted models are not read again");
+  assert.deepEqual(await triangles(), { ok: 1234, heavy: MAX_MODEL_TRIANGLES + 500, broken: null, gone: null, unkeyed: null });
 });
 
 // ── the panel ────────────────────────────────────────────────────────────────

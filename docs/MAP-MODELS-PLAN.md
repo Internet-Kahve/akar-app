@@ -67,9 +67,9 @@ Draw call ve doku boyutu için sınır konmaz.
   - `kept_points` (jsonb, varsayılan `[]`): otomatik gizlenip geri istenen binalar, aynı biçim, en çok 50
   - `visible` (haritada göster), `updated_by`, `updated_at`
 
-**Okuma (herkese açık):** yeni uç yok. `SiteDetail.model` (`/v1/site-details`, `/v1/sites/:id`) iki alan kazanır: `triangles` ve `placement` (`{ lng, lat, headingDeg, scale, altitudeM, anchorNode, hiddenPoints, keptPoints }`). `placement` yalnız eser yayındayken, modeli varken ve `visible` açıkken döner. Bu okumalar zaten `public, no-cache` (§11.24).
+**Okuma (herkese açık):** yeni uç yok. API'de model, eserin `media` listesindeki `kind=model` kaydıdır; o kayıt `triangles` alanını kazanır. `SiteDetail` (`/v1/site-details`, `/v1/sites/:id`) eser düzeyinde `placement` kazanır (`{ lng, lat, headingDeg, scale, altitudeM, anchorNode, hiddenPoints, keptPoints }`). Alan her zaman gelir; yerleşim yoksa, `visible` kapalıysa ya da eserin modeli yoksa `null`. Bu okumalar zaten `public, no-cache` (§11.24).
 
-**Okuma (panel):** yönetici detayı (`/v1/admin/sites/:id`, `/v1/admin/site-details`) kayıtlı yerleşimi **her durumda** `visible` ile birlikte döner. Böylece "gizle → paneli yeniden aç → yerleşimi koruyarak tekrar göster" akışı çalışır.
+**Okuma (panel):** yönetici detayı (`/v1/admin/sites/:id`, `/v1/admin/site-details`) kayıtlı yerleşimi `mapPlacement` alanında **her durumda** `visible` ile birlikte döner. Böylece "gizle → paneli yeniden aç → yerleşimi koruyarak tekrar göster" akışı çalışır.
 
 **Yazma (panel, editör):**
 
@@ -81,7 +81,7 @@ Draw call ve doku boyutu için sınır konmaz.
 
 ## İstemci (`@akar/api-client`, `@akar/domain`)
 
-- `SiteModel` tipine `triangles` ve `placement`. Demo (mock) istemci aynı alanları üretir.
+- İstemcinin `SiteModel` tipi `triangles` ve `placement`'ı API'nin `media[].triangles` ve `placement` alanlarından kurar. Demo (mock) istemci aynı alanları üretir.
 - `GET /v1/map-settings` okunur ve web'e verilir.
 - Yerleşim kaydı için yeni komut (`dispatch`).
 - Katalog 5 dakikada bir ve sekme yeniden öne geldiğinde yeniden okunur.

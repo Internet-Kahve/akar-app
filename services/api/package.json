@@ -16,6 +16,7 @@
     "db:migrate": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env src/db/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env src/db/seed.ts",
     "ingest": "tsx --env-file-if-exists=.env src/modules/ingest/cli.ts",
+    "backfill:triangles": "tsx --env-file-if-exists=.env src/modules/media/backfill-triangles.ts",
     "staff:invite": "tsx --env-file-if-exists=.env src/modules/identity/cli.ts",
     "openapi": "tsx src/openapi.ts",
     "local": "bash scripts/local.sh up && npm run dev",

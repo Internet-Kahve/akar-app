@@ -6,7 +6,7 @@ import { parseArgs } from "node:util";
 import { and, eq, inArray, like } from "drizzle-orm";
 import { validateSite, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
 import { loadConfig } from "../config.ts";
-import { readGlbParts } from "../modules/media/glb.ts";
+import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts";
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
@@ -29,6 +29,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const root = await realpath(contentRoot);
   const files = new Map<string, { body: Buffer; key: string; mime: string }>();
   const mediaFiles = new Map<string, string>();
+  const triangles = new Map<string, number>();
   for (const site of manifest.sites) {
     validateSite({ ...site, historyImages: [] });
     const ids = new Set(site.photos.map((p) => p.id));
@@ -45,7 +46,9 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       mediaFiles.set(item.id, item.file);
     }
     const model = files.get(site.model.file)!;
-    site.model.parts = await readGlbParts(model.body.length, async ({ start, end }) => model.body.subarray(start, end + 1));
+    const gltf = await readGlbJson(model.body.length, async ({ start, end }) => model.body.subarray(start, end + 1));
+    site.model.parts = partNames(gltf);
+    triangles.set(`${site.id}-model`, countTriangles(gltf));
     site.model.bytes = model.body.length;
     site.stories.forEach((story) => {
       // Editorial group names may be prefixes, while GLB nodes carry numbered suffixes.
@@ -92,7 +95,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         for (const id of [...site.photos.map((p) => p.id), `${site.id}-model`]) {
           const file = files.get(mediaFiles.get(id)!)!;
           // Shared content-addressed files are seed-managed (storage_key stays null); deleting one site must not delete another's photo.
-          await tx.update(media).set({ bytes: file.body.length, ...(id.endsWith("-model") ? { partsStatus: "done" as const, license: "AKAR ekip üretimi · temsili model" } : {}) }).where(eq(media.id, id));
+          await tx.update(media).set({ bytes: file.body.length, ...(id.endsWith("-model") ? { triangles: triangles.get(id)!, partsStatus: "done" as const, license: "AKAR ekip üretimi · temsili model" } : {}) }).where(eq(media.id, id));
         }
       }
       // Hide only the original fictional fixtures. Preserve records/progress and any subsequently edited content.

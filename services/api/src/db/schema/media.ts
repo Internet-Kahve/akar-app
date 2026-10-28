@@ -25,6 +25,8 @@ export const media = pgTable(
     sourceId: text("source_id").references(() => sources.id),
     trust: trustEnum("trust").notNull(),
     bytes: integer("bytes"),
+    /** Triangle count of a GLB model (kind = model), counted from its JSON chunk; null for other kinds and models not counted yet. */
+    triangles: integer("triangles"),
     /** 3D model part names that story highlights may reference (kind = model). */
     parts: text("parts").array().notNull().default(sql`'{}'::text[]`),
     /** Background GLB part extraction state (kind = model). */
