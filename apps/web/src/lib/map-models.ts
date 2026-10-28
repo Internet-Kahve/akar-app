@@ -9,7 +9,7 @@ import type {
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { modelBase, type ModelBase } from "./model-anchor";
+import { modelBase, PRESENTATION_PARTS, type ModelBase } from "./model-anchor";
 import { OsmBuildingLayer } from "./map-buildings";
 import { footprintRing, type HideRule, type Ring } from "./osm-buildings";
 
@@ -34,6 +34,18 @@ interface Entry {
 const LAYER_ID = "akar-models";
 /** Models count as in view this far beyond the screen edge, as a share of the screen. */
 const VIEW_MARGIN = 0.25;
+/**
+ * The map draws the building only: presentation files carry ground discs, trees and scale figures that
+ * would cover the street and the OSM blocks around the model. Removed before the first render, so nothing
+ * of theirs reached the GPU; materials may be shared with the building and are left alone.
+ */
+function stripScenery(root: THREE.Object3D) {
+  const scenery: THREE.Object3D[] = [];
+  root.traverse((node) => {
+    if (node !== root && PRESENTATION_PARTS.test(node.name)) scenery.push(node);
+  });
+  for (const node of scenery) node.removeFromParent();
+}
 const disposeObject = (root: THREE.Object3D) =>
   root.traverse((item) => {
     if (!(item instanceof THREE.Mesh)) return;
@@ -307,6 +319,7 @@ export class MapModelLayer implements CustomLayerInterface {
         return;
       }
       this.loading.delete(site.id);
+      stripScenery(gltf.scene);
       const scene = new THREE.Scene();
       const group = new THREE.Group();
       group.add(gltf.scene);
