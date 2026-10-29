@@ -36,12 +36,10 @@ async function openGallery(page: Page, model: boolean) {
       alt: "Yalnız hikâyeye ait fotoğraf",
     },
   ];
-  site.stories = site.stories
-    .slice(0, 3)
-    .map((story, i) => ({
-      ...story,
-      photoId: i === 2 ? "missing-story-photo" : i ? "gallery-3" : "story-only",
-    }));
+  site.stories = site.stories.slice(0, 3).map((story, i) => ({
+    ...story,
+    photoId: i === 2 ? "missing-story-photo" : i ? "gallery-3" : "story-only",
+  }));
   await page.addInitScript(
     (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
     snapshot,
@@ -128,10 +126,29 @@ export function photoGalleryTests() {
             { intervals: [100] },
           )
           .toBe(true);
+        // Native momentum may advance more than one photo. Verify the actual snapped slide and
+        // matching counter, then return to the first photo for deterministic button navigation.
+        const index = await gallery.evaluate((el) =>
+          Math.round(el.scrollLeft / el.clientWidth),
+        );
+        expect(index).toBeGreaterThan(0);
+        expect(index).toBeLessThan(3);
+        await expect(figures.nth(index).locator("img")).toBeInViewport({
+          ratio: 0.9,
+        });
         await expect(
-          page.getByRole("status").filter({ hasText: "Fotoğraf 2 / 3" }),
+          page
+            .getByRole("status")
+            .filter({ hasText: `Fotoğraf ${index + 1} / 3` }),
         ).toBeVisible();
-        await page.getByRole("button", { name: "Önceki fotoğraf" }).click();
+        for (let current = index; current > 0; current--) {
+          await page.getByRole("button", { name: "Önceki fotoğraf" }).click();
+          await expect(
+            page
+              .getByRole("status")
+              .filter({ hasText: `Fotoğraf ${current} / 3` }),
+          ).toBeVisible();
+        }
         await expect(
           page.getByRole("status").filter({ hasText: "Fotoğraf 1 / 3" }),
         ).toBeVisible();

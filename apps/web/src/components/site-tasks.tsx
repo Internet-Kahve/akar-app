@@ -2,7 +2,7 @@
 import {
   useCallback,
   useEffect,
-  useRef,
+  useMemo,
   useState,
   type RefObject,
 } from "react";
@@ -51,33 +51,52 @@ export function useSiteProgress(
   client: RefObject<AkarClient | null>,
   ready: boolean,
   identity: string | null,
+  snapshotRevision = 0,
 ) {
-  const [progress, setProgress] = useState<SiteProgress>(emptyProgress);
-  const seen = useRef<Set<string> | null>(null);
+  // Each account/readiness cycle owns its requests. A late completion from an old cycle cannot
+  // publish private progress into the new account, and the latest refresh wins within a cycle.
+  const scope = useMemo(
+    () => ({ active: false, request: 0, seen: null as Set<string> | null }),
+    [client, ready, identity, snapshotRevision],
+  );
+  const [current, setCurrent] = useState<{
+    scope: typeof scope;
+    progress: SiteProgress;
+  } | null>(null);
   const refresh = useCallback(async () => {
     const c = client.current;
-    if (!c) return [];
+    if (!c || !scope.active) return [];
+    const request = ++scope.request;
     try {
       const next = await c.getSiteProgress();
+      if (!scope.active || request !== scope.request || c !== client.current)
+        return [];
       const ids = new Set(next.badges.map((b) => b.badgeId));
-      const fresh = seen.current
-        ? [...ids].filter((id) => !seen.current!.has(id))
+      const fresh = scope.seen
+        ? [...ids].filter((id) => !scope.seen!.has(id))
         : [];
-      seen.current = ids;
-      setProgress(next);
+      scope.seen = ids;
+      setCurrent({ scope, progress: next });
       return fresh;
     } catch {
       // Progress is a refinement of the page: a failed read keeps what is shown.
       return [];
     }
-  }, [client]);
+  }, [client, scope]);
   useEffect(() => {
     if (!ready) return;
-    seen.current = null;
-    setProgress(emptyProgress);
+    scope.active = true;
+    scope.seen = null;
     void refresh();
-  }, [ready, identity, refresh]);
-  return { progress, refresh };
+    return () => {
+      scope.active = false;
+      scope.request++;
+    };
+  }, [ready, scope, refresh]);
+  return {
+    progress: current?.scope === scope ? current.progress : emptyProgress,
+    refresh,
+  };
 }
 
 const kindLabel = (task: SiteTask) =>
@@ -282,9 +301,7 @@ export function QuizTaskDialog({
           </button>
         ))}
       </div>
-      {!result && wrongText && tried.length > 0 && (
-        <Notice>{wrongText}</Notice>
-      )}
+      {!result && wrongText && tried.length > 0 && <Notice>{wrongText}</Notice>}
       {quiz.hints.slice(0, hints).map((hint) => (
         <p className="hint task-hint" key={hint}>
           <Lightbulb size={14} /> {hint}

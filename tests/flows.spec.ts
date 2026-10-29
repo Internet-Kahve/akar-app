@@ -48,7 +48,12 @@ const pinsFollowSites = (page: Page) =>
     for (const { properties, geometry } of data.features) {
       const foot = map.project(geometry.coordinates);
       const [x, y] = [foot.x, foot.y - 19];
-      if (x < 20 || y < 20 || x > canvas.clientWidth - 20 || y > canvas.clientHeight - 20)
+      if (
+        x < 20 ||
+        y < 20 ||
+        x > canvas.clientWidth - 20 ||
+        y > canvas.clientHeight - 20
+      )
         continue;
       visible++;
       const hits = map.queryRenderedFeatures(
@@ -365,7 +370,9 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
         sources: {
           offline: {
             type: "raster",
-            tiles: ["https://tiles.openfreemap.org/unavailable/{z}/{x}/{y}.png"],
+            tiles: [
+              "https://tiles.openfreemap.org/unavailable/{z}/{x}/{y}.png",
+            ],
             tileSize: 256,
           },
         },
@@ -543,13 +550,31 @@ test("map pins stay on their sites through zoom and panel resize, and a click on
     page.evaluate(
       ([above, level]) => {
         const map = window.akarMap!;
-        return !map.isMoving() && (map.getZoom() > level) === above;
+        return !map.isMoving() && map.getZoom() > level === above;
       },
       [above, level] as const,
     );
   await page.getByRole("button", { name: "Yakınlaştır", exact: true }).click();
   await expect.poll(() => at(true, zoom + 0.9)).toBe(true);
   await expect.poll(() => pinsFollowSites(page)).toBe(true);
+  // Returning to the tab refreshes the catalog, but must preserve the visitor's camera.
+  // Observe the refreshed pin data so this assertion cannot pass before the refresh runs.
+  await page.evaluate(() => {
+    const source = window.akarMap!.getSource("pins")! as unknown as {
+      setData: (...args: unknown[]) => unknown;
+    };
+    const original = source.setData.bind(source);
+    source.setData = (...args) => {
+      document.body.dataset.pinsRefreshed = "true";
+      return original(...args);
+    };
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-pins-refreshed",
+    "true",
+  );
+  await expect.poll(() => at(true, zoom + 0.9)).toBe(true);
   await page.getByRole("button", { name: "Uzaklaştır", exact: true }).click();
   await expect.poll(() => at(false, zoom + 0.1)).toBe(true);
   await expect.poll(() => pinsFollowSites(page)).toBe(true);

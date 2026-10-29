@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { expect, test, type Browser, type BrowserContextOptions, type Page } from "@playwright/test";
+import { triangleGlb } from "../../../tests/support/triangle-glb.ts";
 
 const API = "http://127.0.0.1:4000";
 const MAILPIT = "http://127.0.0.1:54324";
@@ -437,6 +438,49 @@ test("map settings follow delayed reads without overwriting an edited field", as
   await expect(page.getByText("Harita ayarları kaydedildi.")).toBeVisible();
   expect(submitted).toEqual({ maxVisibleModels: 9, modelMinZoom: 19 });
   await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
+});
+
+test("cancelling a field task ignores its delayed completion", async ({ page }) => {
+  await page.route(`${API}/v1/site-details?*`, async (route) => {
+    const response = await route.fetch();
+    const catalog = await response.json();
+    const site = catalog.items.find((s: { id: string }) => s.id === "ulu-cami");
+    site.tasks = [{
+      id: "delayed-field-task", kind: "field", title: "Geciken görev", prompt: "Kapıya dokun.",
+      photoId: null, part: null, source: null, trust: "representative",
+      field: { onSite: { text: "Kapının önüne gel.", radiusM: 80 }, fromHome: { text: "Kapıya dokun.", part: "Tac_Kapi" } },
+    }];
+    site.media = [{ id: "task-model", kind: "model", url: "/delayed-task.glb", parts: ["Tac_Kapi"], title: "Görev modeli", trust: "representative" }];
+    await route.fulfill({ response, json: catalog });
+  });
+  await page.route("**/delayed-task.glb", (route) => route.fulfill({ contentType: "model/gltf-binary", body: triangleGlb("Tac_Kapi") }));
+  let release = () => {};
+  const pending = new Promise<void>((resolve) => { release = resolve; });
+  const path = `${API}/v1/site-tasks/delayed-field-task/complete`;
+  await page.route(path, async (route) => {
+    await pending;
+    await route.fulfill({ json: { doneText: "Kapı bulundu.", onSite: false, earnedBadges: [] } });
+  });
+  try {
+    await page.goto("/#view=detail&site=ulu-cami");
+    await page.getByRole("button", { name: "Geciken görev" }).click();
+    await page.getByRole("button", { name: "Evden yap", exact: true }).click();
+    await expect(page.locator(".model-status")).toHaveCount(0);
+    const request = page.waitForRequest(path);
+    await page.locator(".model-viewer canvas").click();
+    await request;
+    await page.locator(".task-pick-bar").getByRole("button", { name: "Vazgeç" }).click();
+    await expect(page.locator(".task-pick-bar")).toHaveCount(0);
+    const response = page.waitForResponse(path);
+    release();
+    await (await response).finished();
+    // Let the fetch continuation and React commit run before asserting the dialog stays dismissed.
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(page.getByRole("dialog", { name: "Geciken görev" })).toHaveCount(0);
+    await expect(page.locator(".task-pick-bar")).toHaveCount(0);
+  } finally {
+    release();
+  }
 });
 
 test("an admin finds a newly registered member, grants admin access and revokes it", async ({ browser, viewport, isMobile, hasTouch }, info) => {

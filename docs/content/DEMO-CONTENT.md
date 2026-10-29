@@ -16,6 +16,8 @@ Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`
 
 ## Yeniden hazırlama ve aktarım
 
+`icerik/gorevler.json` içindeki `_taslak: true` görevlerin içerik incelemesinin tamamlanmadığını belirtir. Hazırlama betiği bu durumda mevcut manifesti değiştirmeden durur. İçerik sorumlusu incelemeyi tamamladıktan sonra `_taslak: false` yapmalıdır; alanın bulunmadığı eski onaylı paketler çalışmaya devam eder. Taslakları boş görev listesine dönüştürmek mevcut rozet ve ilerlemeleri silebileceğinden dosyalar sessizce atlanmaz.
+
 İçerik paketini çalışma ağacına alın veya ayrı bir klasörde hazırlayın. İlk komut yalnız manifest üretir; ikinci komut yalnız yerel doğrulama ve boyut raporu verir:
 
 ```sh

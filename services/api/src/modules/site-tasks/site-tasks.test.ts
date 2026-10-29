@@ -247,6 +247,25 @@ test("finishing the story earns the story badge once; a guest earns none; the re
   assert.deepEqual((await send("POST", "/v1/stories/bos-cami/complete", { as: u })).json<{ earnedBadges: unknown[] }>().earnedBadges, []);
 });
 
+test("redeeming a guest story also earns its site badge, once and only for the redeeming account", async () => {
+  const guest = await app.inject({
+    method: "POST", url: "/v1/stories/ulu-cami/complete",
+    headers: { "x-device-id": randomUUID(), "x-forwarded-for": "10.200.0.2" },
+  });
+  assert.equal(guest.statusCode, 200);
+  const { receipt } = guest.json<{ receipt: string }>();
+  const u = user();
+  const redeem = (as: AuthUser) => send("POST", "/v1/me/receipts", { as }, { receipts: [receipt] });
+  assert.equal((await redeem(u)).statusCode, 200);
+  const first = await progress(u);
+  assert.deepEqual(first.badges.map((b) => b.badgeId), ["b-story"]);
+  await redeem(u);
+  assert.deepEqual(await progress(u), first, "a replay keeps the original badge and award date");
+  const other = user();
+  await redeem(other);
+  assert.deepEqual(await progress(other), { tasks: [], badges: [] });
+});
+
 test("/v1/me/site-progress needs an account, lists newest first, and hides a site that is no longer published", async () => {
   assert.equal((await send("GET", "/v1/me/site-progress")).statusCode, 401);
   const u = user();

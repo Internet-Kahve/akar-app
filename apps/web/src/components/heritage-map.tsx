@@ -243,6 +243,7 @@ export function HeritageMap({
           el.append(dot, name, count);
           el.onclick = () => {
             if (!city.siteCount) return setNotice(comingSoon(city));
+            moved.current = true;
             setNotice("");
             m.flyTo({
               ...cityView(city),
@@ -298,11 +299,13 @@ export function HeritageMap({
       });
     }
     // The pins draw over the route line; without them the schematic view keeps discovery usable.
-    syncPins(m, pinFeatures(sites, routeIds, selectedId), () => cancelled).catch(
-      () => {
-        if (!cancelled) setFailed(true);
-      },
-    );
+    syncPins(
+      m,
+      pinFeatures(sites, routeIds, selectedId),
+      () => cancelled,
+    ).catch(() => {
+      if (!cancelled) setFailed(true);
+    });
     return () => {
       cancelled = true;
     };
@@ -326,6 +329,7 @@ export function HeritageMap({
     return () => observer.disconnect();
   }, [collapsed]);
   function locate() {
+    moved.current = true;
     if (!navigator.geolocation) {
       setNotice("Tarayıcın konumu desteklemiyor.");
       return;
@@ -400,7 +404,10 @@ export function HeritageMap({
         <button
           className="icon-btn"
           aria-label="Yakınlaştır"
-          onClick={() => map.current?.zoomIn()}
+          onClick={() => {
+            moved.current = true;
+            map.current?.zoomIn();
+          }}
           disabled={!loaded}
         >
           <Plus size={20} />
@@ -408,7 +415,10 @@ export function HeritageMap({
         <button
           className="icon-btn"
           aria-label="Uzaklaştır"
-          onClick={() => map.current?.zoomOut()}
+          onClick={() => {
+            moved.current = true;
+            map.current?.zoomOut();
+          }}
           disabled={!loaded}
         >
           <Minus size={20} />
@@ -418,6 +428,7 @@ export function HeritageMap({
           aria-label="Harita eğimini değiştir"
           disabled={!loaded}
           onClick={() => {
+            moved.current = true;
             setTilt(!tilt);
             map.current?.easeTo({ pitch: tilt ? 0 : 50, duration: 500 });
           }}
@@ -429,6 +440,7 @@ export function HeritageMap({
         className="compass icon-btn"
         aria-label="Keşif bölgesine dön"
         onClick={() => {
+          moved.current = true;
           map.current?.easeTo({
             ...openingView(cities),
             bearing: 0,

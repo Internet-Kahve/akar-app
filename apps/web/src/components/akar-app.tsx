@@ -104,6 +104,7 @@ const CATALOG_REFRESH_MS = 5 * 60_000;
 export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
+    [snapshotRevision, setSnapshotRevision] = useState(0),
     [experimental, setExperimental] = useState(false),
     [storyLayout, setStoryLayout] = useState<"panel" | "subtitle">("panel"),
     [view, setView] = useState<View>("map"),
@@ -139,7 +140,9 @@ export function AkarApp() {
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
     accountId = useRef<string | null | undefined>(undefined);
-  const pickBusy = useRef(false);
+  const pickBusy = useRef<typeof pick>(null);
+  const currentPick = useRef(pick);
+  currentPick.current = pick;
   const live = !!apiUrl;
   const role: Role = state.role ?? (live ? "user" : "admin");
   const canManage = !live || (!!account && role !== "user");
@@ -150,6 +153,7 @@ export function AkarApp() {
     client,
     ready,
     account?.id ?? null,
+    snapshotRevision,
   );
   /**
    * Map settings and city records (§11.42, §11.45) are a refinement: when one cannot be read the map
@@ -168,6 +172,9 @@ export function AkarApp() {
     if (!loaded.current) setLoadError("");
     try {
       setState(await client.current.getSnapshot());
+      // Signing in may redeem guest story receipts while loading the snapshot. Read badges again
+      // afterwards, so an earlier auth-event read cannot hide the newly transferred story badge.
+      setSnapshotRevision((revision) => revision + 1);
       loaded.current = true;
       setReady(true);
       void loadMapSettings();
@@ -230,6 +237,8 @@ export function AkarApp() {
       }
     }).data.subscription;
     const readLocation = () => {
+      setTaskDialog(null);
+      setPick(null);
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
       if (
@@ -314,13 +323,17 @@ export function AkarApp() {
   /** The tap of pick mode: the part goes to the server; a wrong one keeps the model waiting. */
   async function pickPart(part: string) {
     const current = pick;
-    if (!current || pickBusy.current || !client.current) return;
-    pickBusy.current = true;
+    if (!current || pickBusy.current === current || !client.current) return;
+    const identity = accountId.current;
+    const stillCurrent = () =>
+      currentPick.current === current && accountId.current === identity;
+    pickBusy.current = current;
     try {
       const result = await client.current.completeSiteTask(current.task.id, {
         mode: "fromHome",
         part,
       });
+      if (!stillCurrent()) return;
       if (result.done) {
         setPick(null);
         setTaskDialog({ task: current.task, result });
@@ -331,9 +344,11 @@ export function AkarApp() {
           hint: "Bu başka bir parça. Başka bir yere dokunmayı dene.",
         });
     } catch (e) {
-      setPick({ ...current, hint: describeError(e, "Görev tamamlanamadı.") });
+      if (stillCurrent())
+        setPick({ ...current, hint: describeError(e, "Görev tamamlanamadı.") });
+    } finally {
+      if (pickBusy.current === current) pickBusy.current = null;
     }
-    pickBusy.current = false;
   }
   const loadPlacement = useCallback<AkarClient["getMapPlacement"]>(
     async (siteId) => {
@@ -1224,35 +1239,43 @@ export function AkarApp() {
           )}
         </>
       )}
-      {taskDialog && dialogTask && site && client.current && isQuizTask(dialogTask) && (
-        <QuizTaskDialog
-          key={dialogTask.id}
-          task={dialogTask}
-          client={client.current}
-          guest={guestPlayer}
-          done={progress.tasks.some((t) => t.taskId === dialogTask.id)}
-          onClose={() => setTaskDialog(null)}
-          onDone={taskFinished}
-          onSignIn={signInForBadges}
-        />
-      )}
-      {taskDialog && dialogTask && site && client.current && isFieldTask(dialogTask) && (
-        <FieldTaskDialog
-          key={dialogTask.id}
-          task={dialogTask}
-          site={site}
-          client={client.current}
-          guest={guestPlayer}
-          {...(taskDialog.result && { initial: taskDialog.result })}
-          onClose={() => setTaskDialog(null)}
-          onPickFromHome={() => {
-            setPick({ task: dialogTask, hint: "" });
-            setTaskDialog(null);
-          }}
-          onDone={taskFinished}
-          onSignIn={signInForBadges}
-        />
-      )}
+      {taskDialog &&
+        dialogTask &&
+        site &&
+        client.current &&
+        isQuizTask(dialogTask) && (
+          <QuizTaskDialog
+            key={dialogTask.id}
+            task={dialogTask}
+            client={client.current}
+            guest={guestPlayer}
+            done={progress.tasks.some((t) => t.taskId === dialogTask.id)}
+            onClose={() => setTaskDialog(null)}
+            onDone={taskFinished}
+            onSignIn={signInForBadges}
+          />
+        )}
+      {taskDialog &&
+        dialogTask &&
+        site &&
+        client.current &&
+        isFieldTask(dialogTask) && (
+          <FieldTaskDialog
+            key={dialogTask.id}
+            task={dialogTask}
+            site={site}
+            client={client.current}
+            guest={guestPlayer}
+            {...(taskDialog.result && { initial: taskDialog.result })}
+            onClose={() => setTaskDialog(null)}
+            onPickFromHome={() => {
+              setPick({ task: dialogTask, hint: "" });
+              setTaskDialog(null);
+            }}
+            onDone={taskFinished}
+            onSignIn={signInForBadges}
+          />
+        )}
       {overlay === "memory" && site && (
         <MemoryModal
           site={site}

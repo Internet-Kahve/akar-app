@@ -567,7 +567,10 @@ export async function redeemReceipts(tx: Tx, config: Config, userId: string, tok
 
   for (const siteId of unique(accepted.filter((p) => p.act === "story.complete").map((p) => p.sub))) {
     const total = lengths.get(siteId);
-    if (total) await markStoryCompleted(tx, userId, siteId, total);
+    if (total) {
+      await markStoryCompleted(tx, userId, siteId, total);
+      await awardStoryBadges(tx, userId, siteId);
+    }
   }
   const solved = unique(accepted.filter((p) => p.act === "quiz.correct").map((p) => p.sub));
   if (solved.length) {

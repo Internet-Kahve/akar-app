@@ -16,6 +16,11 @@ parser.add_argument('--content', type=Path, required=True, help='docs/documents-
 parser.add_argument('--output', type=Path, required=True)
 args = parser.parse_args()
 root = args.content.resolve()
+# Draft task packages must be reviewed before publication. Stop before generating/replacing a manifest;
+# silently skipping them would delete existing tasks, badges and their progress on the next import.
+for path in sorted(root.glob('eserler/*/icerik/gorevler.json')):
+    if json.loads(path.read_text()).get('_taslak', False) is not False:
+        raise ValueError(f'Unreviewed task file: {path.relative_to(root)}; review the content and set _taslak to false before preparing an import.')
 # Readers only: identity, model and placement come from each site's eser.json and 3d/model.json.
 spec = importlib.util.spec_from_file_location('editorial', root / 'design/test-redmi9t-v2/hazirla.py')
 editorial = importlib.util.module_from_spec(spec)
