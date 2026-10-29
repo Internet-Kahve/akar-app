@@ -10,6 +10,8 @@ Node sürümü `.nvmrc` içindedir. Repo kökünden `npm ci` ve `npm run dev` ç
 
 Bu repoda çalışma branch’leri için `tamerakdeniz/` ön eki kullanılır. Commit yazarı ve committer kimliği mevcut Tamer Akdeniz Git ayarlarıdır.
 
+PR, inceleme ve yorumlar `tamerakdeniz` hesabıyla yayımlanır. Dal, commit, PR ve yorum metinlerinde araç/ajan markası, otomatik üretim imzası veya ek ortak yazar atfı kullanılmaz.
+
 ```sh
 git switch main
 git pull --ff-only

@@ -15,7 +15,16 @@ const PNG = Buffer.from(
 );
 
 test.beforeAll(async () => {
-  const ready = await fetch(`${API}/ready`).catch(() => null);
+  let ready = await fetch(`${API}/ready`).catch(() => null);
+  // Desktop and mobile share localhost's guest quota. A fast preceding project (or a local rerun)
+  // can exhaust it before the next project signs in. Wait at setup, never retry a failed assertion
+  // or relax the application's rate limit. Reset is seconds until the current window ends.
+  const remaining = ready?.headers.get("x-ratelimit-remaining");
+  const reset = Number(ready?.headers.get("x-ratelimit-reset"));
+  if (remaining !== null && remaining !== undefined && Number(remaining) < 250 && reset > 0 && reset <= 60) {
+    await sleep(reset * 1000 + 100);
+    ready = await fetch(`${API}/ready`).catch(() => null);
+  }
   expect(ready?.ok, "API kapalı: önce repo kökünde `npm run api`").toBe(true);
   const mail = await fetch(`${MAILPIT}/api/v1/info`).catch(() => null);
   expect(mail?.ok, "Mailpit (yerel Supabase) kapalı: `npm run api`").toBe(true);
