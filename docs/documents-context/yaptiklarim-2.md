@@ -930,3 +930,16 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
   - başarılı 3D yüklemesi (Ulucami, İçini göster düğmesi).
   - Sayfa hatası yok.
 - Belgeler: `PROTOTIP_URUN_FARKI.md` §1, §2, §3, §5, §11; `ENTEGRASYON_29EKIM.md` §5.12; `YAPILACAKLAR.md` §2b.
+
+## 67. Akar akışı: anlatımda haritada altın gelir yolu (prototip v2)
+
+29 Ekim 2026. Karar: seçenek A, haritada altın yay (fikir: Kılıç Ali Paşa prototipindeki `flow`). Figma D 1:2893.
+- **Davranış:**
+  - Akar cümlesinde anlatım sahnesi saydamlaşır, altta harita görünür.
+  - Kamera iki yapıyı kadraja alır (gelir veren solda, alan sağda); yalnız iki pin kalır.
+  - Altın yay 2,2 sn'de çizilir, üç sikke akar, ortada etiket durur. Sol üstteki kartta yön ve güven etiketi var.
+  - Cümle değişince kamera ve pinler eski hâline döner.
+  - Uzak hedefte (Koza Han → İstanbul) yay o yöne kısa çizilir.
+- **Veri:** `hikaye.md` → «## Akar akışı» tablosu; `hazirla.py` cümleye `akis` yazar. Beş eserde satır dolduruldu: Ulucami 11, Bedesten 4, Orhan Bey Hamamı 2, Orhan Bey Camii 4, Koza Han 2. Hepsi envanterde Doğrulanmış.
+- **Kaynak kuralı:** Kılıç Ali Paşa'daki «Bakım · Aydınlatma · Görevliler» etiketleri kaynakta yok, kullanılmadı. İmaret bugün yok; yay külliyenin camisine gider, kart «(bugün yok)» der. İstanbul koordinatı yalnız yön içindir.
+- **Sınama:** Playwright, masaüstü ve mobil; Ulucami, hamam, Koza Han. Test ortamında MapLibre işçisi yabancı adresten yüklenemiyordu, kütüphane yerel kopyadan sunuldu. Haritaya dönünce pin süzgeci eski hâline dönüyor. Sayfa hatası yok.

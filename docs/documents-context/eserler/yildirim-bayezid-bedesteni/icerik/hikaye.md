@@ -46,3 +46,11 @@ Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model d
 | 11 | Merkez | 315° (kuzeybatı) | 35° | bütün yapı | Güneydoğuya, Koza Han yönüne bakış (Koza Han ~150 m güneydoğuda, OSM); kart Koza Han'ı gösterir |
 
 Yön kaynağı: `veri/bursa/osm_secilen.csv` (Bedesten 40.18517, 29.06205; Ulucami 40.18393, 29.06176). Eski tablodaki «Ulucami batıda» tahmini yanlıştı.
+
+## Akar akışı
+
+Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.
+
+| # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |
+|---|---|---|---|---|---|---|
+| 4 | yildirim-bayezid-bedesteni | ulu-cami | Ulucami | Gelir → Ulucami | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |

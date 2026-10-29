@@ -970,3 +970,19 @@ body.m .ka-baslik{font-size:31px;line-height:36px}
 body.m .ka-dugmeler{margin-top:auto;grid-template-columns:1fr}
 body.m .ka-son{flex-direction:column;gap:0}
 @media (prefers-reduced-motion:reduce){.karsilama,.yan-sayfa{transition:none}}
+
+/* 29 Ekim 2026 · Akar akışı: akar cümlesinde sahne saydamlaşır, altta harita ve altın gelir yolu (Figma D 1:2893) */
+#gorus.akis{background:transparent;pointer-events:none}
+#gorus.akis>*{pointer-events:auto}
+#gorus.akis .anlat-alan{visibility:hidden;pointer-events:none}
+#gorus.akis .anlat-ust{pointer-events:none}
+body:has(#gorus.akis) #harita-kontrol,body:has(#gorus.akis) #harita-ust{visibility:hidden}
+.akis-kart{position:absolute;left:24px;top:64px;z-index:6;max-width:min(440px,calc(100% - 48px));padding:12px 16px 14px;border-radius:16px;background:rgba(255,255,255,.96);box-shadow:var(--golge);display:grid;gap:4px;animation:akis-gel var(--sure-3) var(--egri)}
+.akis-kart .ak-ust{display:flex;align-items:center;gap:6px;font:600 11px/16px var(--font);letter-spacing:.06em;text-transform:uppercase;color:var(--gold-text)}
+.akis-kart b{font:600 22px/28px var(--font-display);font-variant-numeric:lining-nums}
+.akis-kart small{color:var(--text-muted);font-size:13px;line-height:18px}
+.akis-kart .guven{justify-self:start;margin-top:4px}
+#gorus:not(.akis) .akis-kart{display:none}
+body.m .akis-kart{left:12px;right:12px;top:calc(76px + var(--sat));max-width:none}
+@keyframes akis-gel{from{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.akis-kart{animation:none}}

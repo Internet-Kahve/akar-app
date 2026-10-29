@@ -336,7 +336,17 @@ Figma'da olup prototipte eksik olan dört ekran eklendi; ayrıntı ve ölçüler
 - **Tebrik kartında giriş satırı:** misafirse «Rozetlerini kaybetme · Giriş yap». Figma'daki ayrı «Giriş isteği (hikâye bitince)» penceresi yerine; iki pencere üst üste açılmaz. Girişte cihazdaki `akar.rozet.*`, `akar.bitti.*`, `akar.gorev.*` hesaba taşınmalı.
 - **Vakıf nedir? metni:** tanım cümlesi AKAR'ın açıklaması; alıntı envanter Cilt 1 girişinin «Ticari yapılar» paragrafından (basılı sayfa ~22; **PDF sayfa numarası doğrulanmadı**, bu yüzden kaynak satırında sayfa yazmıyor). Örnek cümle veriden seçilir (akar rolündeki eserin «vakfedil-» geçen hikâye cümlesi).
 - Kod: `app.js` → `yanSayfaAc`, `kaynakAc`, `vakifNedir`, `uc3Hata`, `s3dKur`, `konumKip`, `konumIste`, `konumMenu`, `karsilamaGoster`; `app.css` → `.yan-*`, `.ks-*`, `.vn-*`, `.uc-hata`, `.uh-*`, `.konum-menu`, `.karsilama*`, `.ka-*`, `.tb-giris`.
-- **Bekleyen karar: Akar akışı** (Figma D 1:2893): akar cümlesinde haritada kaynak → hayrat yayı. Seçenekler ve kaynak kuralı ekip kararından sonra buraya yazılacak.
+- **Akar akışı** (Figma D 1:2893; karar 29 Ekim: «A · haritada altın yay»). Hikâyede akar cümlesi gelince anlatım sahnesi saydamlaşır, altta **haritanın kendisi** görünür:
+  - kamera iki yapıyı birlikte kadraja alır (eğim 52°, gelir veren solda, alan sağda; panel ve hikâye kartı payı hesaplanır);
+  - yalnız iki yapının pini kalır;
+  - aralarına altın yay 2,2 sn'de çizilir (`line-gradient` + `line-progress`), ardından üç sikke yay boyunca akar; ortada etiket;
+  - sol üstte kart: «VAKIF DÜZENİ · GELİR YOLU», «Bedesten → Ulucami», güven etiketi (dokununca kaynak detayı);
+  - hedef 3 km'den uzaksa (Koza Han → İstanbul) yay o yöne 240 m çizilir, ucunda hedefin adı;
+  - cümle değişince harita eski kamerasına, pin süzgeci eski hâline döner; hareket azaltmada yay hemen tam, sikke yok.
+  - **Veri** (kod değil): `eserler/<eser>/icerik/hikaye.md` sonunda «## Akar akışı» tablosu `| # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |`. Hayrat bir eser kimliği ya da «enlem, boylam». `hazirla.py` bunu cümlenin `akis` alanına yazar: `{ kaynak_eser, hedef_eser, hedef_nokta, hedef_ad, etiket, kaynak, guven }`; olmayan eser kimliğinde uyarır.
+  - **Kural:** etikete yalnız kaynağın söylediği yazılır. Kılıç Ali Paşa prototipindeki «Bakım · Aydınlatma · Görevliler» kalemleri envanterde yok, kullanılmadı.
+  - Dolu satırlar (hepsi Doğrulanmış): Ulucami 11 ve Bedesten 4 (Bedesten → Ulucami, C1 s.11, C2 s.29); Orhan Bey Hamamı 2 ve Orhan Bey Camii 4 (hamam → Orhan Gazi İmareti, C1 s.97, 104; imaret bugün yok, yay külliyenin camisine çizilir ve kart bunu söyler); Koza Han 2 (→ II. Bayezid Külliyesi, İstanbul, C2 s.8; koordinat yalnız yön için).
+  - **Ürün:** `story_blocks`'a `flow` (ya da ayrı `story_flows` tablosu) eklenmeli; içe aktarma `akis` alanını taşımalı. Harita bileşeni (`heritage-map.tsx`) anlatım sırasında görünür kalabilmeli. Kod: `app.js` → `akisUygula`, `akisKapat`, `akisCiz`, `akisYol`, `akisKatmanlar`; `app.css` → `#gorus.akis`, `.akis-kart`.
 
 ## 6. Repoda olup ürüne alınmayacaklar
 

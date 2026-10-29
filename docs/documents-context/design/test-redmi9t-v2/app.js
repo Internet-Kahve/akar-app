@@ -1196,6 +1196,7 @@ function anlatSahne() {
 }
 function sahneUygula(gecis = true) {
   const e = anlat.eser, c = e && e.hikaye[anlat.i]; if (!c) return;
+  akisUygula(c.akis || null);   // akar cümlesi: sahne yerine harita, gelir yolu
   if (durum.gorunum === 'foto') {
     const f = foto(e, c.foto), fs = $('#foto-sahne'); if (!fs || !f) return;
     const ana = $('.ana', fs);
@@ -1209,6 +1210,93 @@ function sahneUygula(gecis = true) {
     else { k.style.opacity = 0; s3d.kartBagla(null); }
   }
 }
+/* ---------- Akar akışı (29 Ekim 2026; Figma D 1:2893 «Anlatım · Akar akışı», fikir: Kılıç Ali Paşa prototipi `flow`) ----------
+   Hikâyede akar cümlesi gelince (ör. «Yıldırım Bayezid, Ulucami'ye gelir sağlamak için Bedesten'i yaptırdı») sahne kenara çekilir, altta haritanın kendisi
+   görünür: kamera iki yapıyı birlikte kadraja alır (gelir veren solda, alan sağda), aralarına altın bir yay 2,2 sn'de çizilir, üstünden sikkeler akar,
+   yayın ortasında kaynağın söylediği etiket durur. Cümle değişince harita eski kamerasına döner.
+   Veri koddan değil içerikten: eserler/<eser>/icerik/hikaye.md → «## Akar akışı» tablosu (hazirla.py → cümlenin `akis` alanı).
+   Hedef bir eser kimliği ya da «enlem, boylam» olabilir; hedef 3 km'den uzaksa (Koza Han → İstanbul) yay o yöne kısa çizilir, ucunda hedefin adı.
+   Etikete yalnız kaynağın söylediği yazılır (envanterde «bakım, aydınlatma» gibi kalemler yok, uydurulmaz). Hareket azaltmada yay hemen tam, sikke yok. */
+const AKIS_ALTIN = '#E9C75A', AKIS_KOYU = '#B8892A';
+let akisSu = null;   // { anahtar, kamera, raf, t0 }
+const akisAnahtar = (a) => a && [a.kaynak_eser, a.hedef_eser || a.hedef_nokta, anlat.eser?.id, anlat.i].join('|');
+function akisYol(A, B) {   // A → B arasında sola (ekranda yukarı) kabaran yay; [lng, lat] noktaları
+  const k = Math.cos(A[1] * Math.PI / 180), mx = 111320 * k, my = 110540;
+  const bx = (B[0] - A[0]) * mx, by = (B[1] - A[1]) * my, L = Math.hypot(bx, by) || 1;
+  const cx = bx / 2 - by / L * L * 0.42, cy = by / 2 + bx / L * L * 0.42;   // kontrol noktası: ortanın solunda
+  const n = 64, yol = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t, x = 2 * u * t * cx + t * t * bx, y = 2 * u * t * cy + t * t * by; yol.push([A[0] + x / mx, A[1] + y / my]); }
+  return yol;
+}
+const akisNokta = (yol, t) => { const f = Math.min(yol.length - 1, Math.max(0, t * (yol.length - 1))), i = Math.floor(f), r = f - i, a = yol[i], b = yol[Math.min(i + 1, yol.length - 1)]; return [a[0] + (b[0] - a[0]) * r, a[1] + (b[1] - a[1]) * r]; };
+function akisRenk(p) {   // çizilen kısım altın, geri kalanı saydam (line-progress)
+  if (p >= 1) return ['interpolate', ['linear'], ['line-progress'], 0, AKIS_KOYU, 1, AKIS_ALTIN];
+  const a = Math.max(0.0001, p * 0.98);
+  return ['interpolate', ['linear'], ['line-progress'], 0, AKIS_KOYU, a, AKIS_ALTIN, a + 0.0001, 'rgba(233,199,90,0)', 1, 'rgba(233,199,90,0)'];
+}
+function akisKatmanlar() {
+  if (harita.getSource('akis')) return;
+  const bos = { type:'FeatureCollection', features:[] }, alt = harita.getLayer('pin') ? 'pin' : undefined;
+  harita.addSource('akis', { type:'geojson', data:bos, lineMetrics:true });
+  harita.addSource('akis-sikke', { type:'geojson', data:bos });
+  harita.addSource('akis-etiket', { type:'geojson', data:bos });
+  harita.addLayer({ id:'akis-isik', type:'line', source:'akis', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-width':18, 'line-blur':9, 'line-opacity':0.55, 'line-gradient':akisRenk(0) } }, alt);
+  harita.addLayer({ id:'akis-cizgi', type:'line', source:'akis', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-width':6, 'line-gradient':akisRenk(0) } }, alt);
+  harita.addLayer({ id:'akis-sikke', type:'circle', source:'akis-sikke', paint:{ 'circle-radius':6.5, 'circle-color':AKIS_ALTIN, 'circle-stroke-color':'#8A6A16', 'circle-stroke-width':1.5, 'circle-pitch-alignment':'viewport' } });
+  if (harita.getStyle().glyphs) harita.addLayer({ id:'akis-etiket', type:'symbol', source:'akis-etiket', layout:{ 'text-field':['get', 'ad'], 'text-font':['Noto Sans Bold'], 'text-size':13, 'text-offset':[0, -1.4], 'text-allow-overlap':true, 'text-ignore-placement':true },
+    paint:{ 'text-color':'#5C4508', 'text-halo-color':'#FFF8E1', 'text-halo-width':2.2 } });
+}
+function akisCiz(su) {   // her kare: yayın çizilen kısmı, sonra sikkeler
+  if (akisSu !== su || !harita.getSource('akis')) return;
+  const az = matchMedia('(prefers-reduced-motion: reduce)').matches, t = performance.now() - su.t0;
+  const p = az ? 1 : Math.min(1, t / 2200), e = 1 - Math.pow(1 - p, 3);
+  for (const l of ['akis-isik', 'akis-cizgi']) harita.setPaintProperty(l, 'line-gradient', akisRenk(e));
+  harita.getSource('akis-sikke').setData({ type:'FeatureCollection', features:p < 1 || az ? [] : [0, 1, 2].map((i) => ({ type:'Feature', geometry:{ type:'Point', coordinates:akisNokta(su.yol, ((t - 2200) / 2600 + i / 3) % 1) }, properties:{} })) });
+  if (harita.getLayer('akis-etiket') && p >= 1 && !su.etiketli) { su.etiketli = true; harita.getSource('akis-etiket').setData({ type:'FeatureCollection', features:su.etiketler }); }
+  if (!az) su.raf = requestAnimationFrame(() => akisCiz(su));
+}
+function akisUygula(a) {
+  const k = a && ESER[a.kaynak_eser], h = a && a.hedef_eser ? ESER[a.hedef_eser] : null;
+  if (!k || (!h && !a.hedef_nokta)) return akisKapat();
+  const anahtar = akisAnahtar(a); if (akisSu?.anahtar === anahtar) return;
+  const onceki = akisSu?.kamera; akisKapat(true);
+  const A = [k.lon, k.lat]; let B = h ? [h.lon, h.lat] : a.hedef_nokta;
+  const [m, yon] = mesafeYon({ lng:A[0], lat:A[1] }, { lng:B[0], lat:B[1] }), uzak = m > 3000;
+  if (uzak) { const r = 240 / 111320; B = [A[0] + r * Math.sin(yon * Math.PI / 180) / Math.cos(A[1] * Math.PI / 180), A[1] + r * Math.cos(yon * Math.PI / 180) * 111320 / 110540]; }
+  const yol = akisYol(A, B);
+  const etiketler = [{ type:'Feature', geometry:{ type:'Point', coordinates:akisNokta(yol, 0.5) }, properties:{ ad:a.etiket || '' } }];
+  if (uzak || !h) etiketler.push({ type:'Feature', geometry:{ type:'Point', coordinates:B }, properties:{ ad:`${a.hedef_ad || ''} →` } });
+  const su = akisSu = { anahtar, yol, etiketler, t0:0, kamera:onceki || { center:harita.getCenter(), zoom:harita.getZoom(), pitch:harita.getPitch(), bearing:harita.getBearing(), padding:harita.getPadding() } };
+  gorus.classList.add('akis');
+  if (harita.getLayer('pin')) harita.setFilter('pin', ['in', ['get', 'id'], ['literal', [k.id, h?.id].filter(Boolean)]]);   // yalnız iki yapının pini: etiketler karışmasın
+  /* kart: ne nereye gidiyor, kaynağı ve güveni (etikete dokununca «Bu bilgi nereden geliyor?») */
+  let kt = $('#akis-kart'); if (!kt) { kt = document.createElement('div'); kt.id = 'akis-kart'; kt.className = 'akis-kart'; gorus.appendChild(kt); }
+  kt.innerHTML = `<span class="ak-ust">${ic('landmark', 14)}Vakıf düzeni · gelir yolu</span><b aria-label="${esc(k.ad)}, gelirini ${esc(h ? h.ad : a.hedef_ad)} için verir">${esc(k.ad)} → ${esc(h ? h.ad : a.hedef_ad)}</b>${a.hedef_ad && h && a.hedef_ad !== h.ad ? `<small>${esc(a.hedef_ad)}</small>` : ''}${guven(a.guven, { alinti:a.etiket ? `${k.ad} → ${a.hedef_ad || h?.ad}: ${a.etiket}` : '', kaynak:a.kaynak })}`;
+  kt.hidden = false;
+  /* kadraj: görünen alan (sahne alanı, mobilde alttaki hikâye kartının üstü); gelir veren solda, alan sağda */
+  const hr = $('#harita').getBoundingClientRect(), al = $('#anlat-alan')?.getBoundingClientRect() || hr, kart = $('#hikaye-kart'), kr = kart && kart.offsetParent ? kart.getBoundingClientRect() : null;
+  const alt = Math.min(al.bottom, kr ? kr.top : al.bottom), pay = durum.masaustu ? 72 : 36;
+  const padding = { left:Math.max(0, al.left - hr.left) + pay, right:Math.max(0, hr.right - al.right) + pay, top:Math.max(0, al.top - hr.top) + (durum.masaustu ? 110 : 150), bottom:Math.max(0, hr.bottom - alt) + pay };
+  const sinir = new maplibregl.LngLatBounds(A, A); yol.forEach((p) => sinir.extend(p));
+  akisKatmanlar();
+  harita.getSource('akis').setData({ type:'Feature', geometry:{ type:'LineString', coordinates:yol }, properties:{} });
+  for (const l of ['akis-isik', 'akis-cizgi']) harita.setPaintProperty(l, 'line-gradient', akisRenk(0));
+  harita.getSource('akis-sikke').setData({ type:'FeatureCollection', features:[] }); harita.getSource('akis-etiket')?.setData({ type:'FeatureCollection', features:[] });
+  const az = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  harita.fitBounds(sinir, { padding, pitch:52, bearing:(yon - 90 + 360) % 360, maxZoom:18, duration:az ? 0 : 1400 });
+  const basla = () => { if (akisSu !== su) return; su.t0 = performance.now(); akisCiz(su); };
+  if (az) basla(); else harita.once('moveend', basla);
+}
+function akisKapat(gecis) {
+  const su = akisSu; if (!su) return; akisSu = null;
+  cancelAnimationFrame(su.raf);
+  for (const l of ['akis-sikke', 'akis-etiket']) harita.getSource(l)?.setData({ type:'FeatureCollection', features:[] });
+  harita.getSource('akis')?.setData({ type:'FeatureCollection', features:[] });
+  if (gecis) return;   // bir akıştan ötekine: kamera ve görünüm yerinde kalır
+  gorus.classList.remove('akis'); const kt = $('#akis-kart'); if (kt) kt.hidden = true; filtreUygula();
+  const c = su.kamera; harita.easeTo({ center:c.center, zoom:c.zoom, pitch:c.pitch, bearing:c.bearing, padding:c.padding, duration:matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 800 });
+}
+
 function cumleGit(i, konus = true) {
   const e = anlat.eser; if (!e) return;
   const n = e.hikaye.length;
@@ -1241,7 +1329,7 @@ function oynat(ac) {
   if (anlat.oynuyor) { if (anlat.mod === 'oku') { anlat.mod = 'dinle'; modSekme(); } seslendir(); gizleBaslat(); }
   else { anlat.jeton++; clearTimeout(anlat.zaman); if ('speechSynthesis' in window) speechSynthesis.cancel(); gorus.classList.remove('gizle'); }
 }
-function anlatDur(sessiz) { anlat.jeton++; clearTimeout(anlat.zaman); if ('speechSynthesis' in window) speechSynthesis.cancel(); anlat.oynuyor = false; if (!sessiz) anlat.eser = null; okuGozlemci && okuGozlemci.disconnect(); }
+function anlatDur(sessiz) { akisKapat(); anlat.jeton++; clearTimeout(anlat.zaman); if ('speechSynthesis' in window) speechSynthesis.cancel(); anlat.oynuyor = false; if (!sessiz) anlat.eser = null; okuGozlemci && okuGozlemci.disconnect(); }
 function modSekme() { $$('[data-mod]').forEach((b) => b.setAttribute('aria-selected', b.dataset.mod === anlat.mod)); $$('[data-mod-degis]').forEach((b) => { if (!durum.masaustu) b.textContent = anlat.mod === 'dinle' ? 'Oku' : 'Dinle'; }); yerel('akar.mod', anlat.mod); }
 function gizleBaslat() {
   clearTimeout(gizleZ); gorus.classList.remove('gizle');

@@ -123,6 +123,22 @@ def hikaye_oku(eid):
                                  azimut=int(az.group(1)) if az else None,
                                  egim=int(eg.group(1)) if eg else None,
                                  uzaklik=h[4])
+    # 29 Ekim 2026 · Akar akışı: «## Akar akışı» tablosu → cümlenin `akis` alanı (app.js akisUygula haritada gelir yolunu çizer)
+    # | # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |   Hayrat: eser kimliği ya da «enlem, boylam»
+    if '## Akar akışı' in metin:
+        for h in tablo(metin.split('## Akar akışı', 1)[1], '#'):
+            if len(h) < 7 or not h[0].strip().isdigit():
+                continue
+            m = re.match(r'\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$', h[2])
+            akis = dict(kaynak_eser=ham(h[1]), hedef_eser=None if m else ham(h[2]),
+                        hedef_nokta=[float(m.group(2)), float(m.group(1))] if m else None,
+                        hedef_ad=h[3], etiket=h[4], kaynak=kaynak_bicim(h[5]), guven=h[6])
+            for c in cumleler:
+                if c['no'] == int(h[0]):
+                    c['akis'] = akis
+            for k in (akis['kaynak_eser'], akis['hedef_eser']):
+                if k and not os.path.exists(os.path.join(ESER, k, 'eser.json')):
+                    print(f'UYARI: {eid} hikaye.md Akar akışı: «{k}» diye eser yok')
     onceki = None
     for c in cumleler:
         a = acilar.get(c['no'])

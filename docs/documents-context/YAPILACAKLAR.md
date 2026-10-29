@@ -49,8 +49,8 @@ Notlar:
 
 Figma `akar-yeni` ekranları prototiple tek tek karşılaştırıldı. Düğüm numaraları Figma'daki ekranlardır.
 
-**Demo için önerilen (prototipe eklenecek):** 2–5 yapıldı (29 Ekim akşamı; `yaptiklarim-2.md` §66). 1 karar bekliyor.
-1. ⏳ **Anlatım · Akar akışı** (D 1:2893, B 80:3004): «Yıldırım Bayezid, Ulucami'ye gelir sağlamak için Bedesten'i yaptırdı» cümlesinde harita Bedesten → Ulucami kesik çizgisini gösterir. Vakıf hikâyesinin özü; jüri için en önemli eksik.
+**Demo için önerilen (prototipe eklenecek):** Hepsi yapıldı (29 Ekim akşamı; `yaptiklarim-2.md` §66, §67).
+1. ✅ **Anlatım · Akar akışı** (karar: haritada altın yay; veri `hikaye.md` «## Akar akışı») (D 1:2893, B 80:3004): «Yıldırım Bayezid, Ulucami'ye gelir sağlamak için Bedesten'i yaptırdı» cümlesinde harita Bedesten → Ulucami kesik çizgisini gösterir. Vakıf hikâyesinin özü; jüri için en önemli eksik.
 2. ✅ **İlk açılış karşılama kartı** (D 1:4042, WF 1:5616): şehir deseni şeridi, «Şehrin hikâyesine karış.», üç madde (Dinle ya da oku · Geçmişini gör · Vakfı anla), «Evden gez» / «Konumumu kullan», «Vakıf nedir? ›». Yükleme ekranından sonra yalnız ilk girişte.
 3. ✅ **3D açılamadı / görsel kademe** (D 1:4853, 1:4911; B 1:7802, 1:7840): 3D açılmazsa gravür/fotoğrafa düşer, üstte «3D açılamadı, görsellerle gösteriliyor · Yeniden dene». Zayıf cihazda «Bu cihazda 3D ağır kaldı» (bu kısım yapılmadı).
 4. ✅ **Kaynak detayı** (D 1:3193, WF 1:7027): «Kaynak: … ›» dokununca kitap, sayfa ve güven bilgisi.
