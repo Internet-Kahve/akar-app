@@ -11,7 +11,8 @@ parser.add_argument('--content', type=Path, required=True, help='docs/documents-
 parser.add_argument('--output', type=Path, required=True)
 args = parser.parse_args()
 root = args.content.resolve()
-spec = importlib.util.spec_from_file_location('editorial', root / 'design/test-redmi9t/hazirla.py')
+# Readers only: identity, model and placement come from each site's eser.json and 3d/model.json.
+spec = importlib.util.spec_from_file_location('editorial', root / 'design/test-redmi9t-v2/hazirla.py')
 editorial = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(editorial)
 IDS = {'yildirim-bayezid-bedesteni': 'bedesten', 'orhan-bey-kulliyesi': 'orhan-gazi'}
@@ -24,7 +25,7 @@ def trust(value):
         raise ValueError('Unknown trust label: ' + value)
     return TRUST[value]
 
-for entry in editorial.ESERLER:
+for entry in editorial.eserleri_bul():
     folder = entry['id']
     sid = IDS.get(folder, folder)
     sources = []
@@ -75,12 +76,16 @@ for entry in editorial.ESERLER:
                             alt=image['altMetin'], license=image['lisans'], credit=image['kaynakSatiri'],
                             trust=credibility, sourceId=source(image['kaynakSatiri'], 'archive',
                             image.get('asilArsivUrl') or image['fotoAtlasUrl'], image.get('fotografci', ''), credibility)))
-    east, north = editorial.OSM_DUZELTME.get(folder, (0, 0))
+    model_info = editorial.model_oku(folder)
+    if not model_info:
+        raise ValueError('Missing 3d/model.json: ' + folder)
+    shift = model_info.get('kaydirma_m') or {}
+    east, north = shift.get('dogu', 0), shift.get('kuzey', 0)
     coords = [entry['lon'] + east/(111320*math.cos(math.radians(entry['lat']))), entry['lat'] + north/110540]
-    model = dict(name=entry['ad']+' · temsili 3B model', file=f'eserler/{folder}/3d/export/{entry["glb"]}_sunum.glb',
+    model = dict(name=entry['ad']+' · temsili 3B model', file=f'eserler/{folder}/3d/export/{model_info["glb"]}_sunum.glb',
                  src='', bytes=0, parts=[], trust='representative')
     gallery = sorted((p for p in photos if p['galleryPosition'] is not None), key=lambda p:p['galleryPosition'])
-    result['sites'].append(dict(id=sid, name=entry.get('uzun_ad', entry['ad']), city='Bursa',
+    result['sites'].append(dict(id=sid, name=entry.get('uzun_ad') or entry['ad'], city='Bursa',
         district='Hisar' if folder=='orhan-gazi-turbesi' else 'Hanlar Bölgesi', year=entry['yil'], architect='—',
         patron=entry['yaptiran'], kind=KINDS[entry['tur']], coordinates=coords, minutes=max(1,round(sum(len(s['text'].split()) for s in stories)/130)) if stories else 0,
         description=entry['kisa'], status='published', tier='Hero' if sid=='ulu-cami' else 'Tier 2',
