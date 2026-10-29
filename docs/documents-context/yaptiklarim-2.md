@@ -787,3 +787,35 @@ Yapılanlar:
 - `prefers-reduced-motion`: amblem çizim animasyonu kapalı, çizili durur.
 - Sınama (Playwright; GLB yavaşlatılarak): masaüstü kart «%43 · 0,4 MB / 1,0 MB», model gelince kart kalkıyor; açılış ekranı deseni ve amblemi; hata yok. Yedekler `.onbellek/_yedek_*_2026-10-29e.*`.
 - **Redmi 9T denemesi** (Muhammed, 29 Ekim): sorun yok; `YAPILACAKLAR.md`'den çıkarıldı.
+
+## 58. Figma `akar-yeni` prototiple eşitlendi (tasarım; 9 madde)
+
+29 Ekim 2026. Dosya: figma.com/design/HGTgq5vRXVqhVO9TcR9wBe/akar-yeni. Değişen her ekranın altında «29 Ekim: …» notu var (44 not, çakışma yok). Hiçbir ekran silinmedi; «Eser hakkında»nın beş ekranının eski hâli «Eski sürümler (22 Ekim)» bölümüne «· 28 Ekim öncesi» ekiyle kopyalandı.
+1. **Açılış ekranı**: «D · Açılış / yükleniyor» (`236:2893`) ve «WF · Açılış / yükleniyor» (`236:3203`) eklendi. İlk satırın başına kondukları için satırdaki ekranlar sağa kaydırıldı (masaüstü +1520, mobil +470).
+2. **3D yükleniyor**: kartın arkasına %8 desen; amblem 56 → 44 px; «Yükleme kartı · 3D» bileşeni (`237:3386`).
+3. **3D sahne zemini**: 14 sahnede dikey geçiş #DDE4E5 → #A7B4B7; renk örneği (`237:3402`).
+4. **Parça seçimi**: kural notu ve masaüstünde fare üstü örneği (`237:3407`).
+5. **Galeri**: «Büyüt düğmesi (fotoğraf)» bileşeni (`237:3415`), 10 fotoğrafta; ikon listesine «Büyüt → expand».
+6. **Eser hakkında**: geri hapı, sekme şeridi kenar solması ve okları, başlık fotoğraftan önce, kırpılmayan foto şeridi ve «1 / 4» sayacı, yapışık 3D alanı 620 px; mobilde «‹ Ulucami» hapı, altın süs kaldırıldı.
+7. **Filtreler**: bileşende «Ticari (akar)»; 21 ekrandan Su ve Eğitim çipleri ile «3D» etiketleri kaldırıldı (65 örnek).
+8. **Pin**: «Harita pini» yanına not (`240:3504`).
+9. **Tasarım sistemi**: desen kullanımı (`1:957`) ve amblem notu (`1:913`) güncellendi.
+
+Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle yazıldı. Açık kalan: «Harita lejantı» bileşeni (`1:563`) hâlâ Su / Eğitim / Akar gösteriyor (iş emrinde yoktu); kapak «en çok 640 px» yükseklik sınırı olarak okundu.
+
+## 59. Figma düzeltmeleri: mobil geri düğmesi, sol solma, lejant (tasarım)
+
+29 Ekim 2026, §58'in üstüne.
+- Mobil «Eser hakkında»: 231:2788'deki «Geri» elipsi (231:2791) 40 px yuvarlak düğme oldu (beyaz, #DAE1E2 çerçeve, içinde 20 px lucide chevron-left #141B2B; çerçeve 241:3316). 231:2813, 231:2854 ve 231:2877'deki «‹ Ulucami» hapları (240:3408, 240:3413, 240:3418) aynı düğmeyle değiştirildi (241:3319, 241:3323, 241:3327); sekme şeritleri 332 px oldu. Adlı hap yalnız masaüstünde (232:2788). Notlar 240:3474–3477 düzeltildi.
+- Sekme şeridi başta durduğu için dört mobil ekranda «Solma sol» gizlendi (240:3406, 240:3411, 240:3416, 240:3421); sağdaki solma kaldı. Masaüstünde sol solma ve ok duruyor.
+- Harita lejantı (1:563): «Akar» → «Ticari (akar)» (1:575); Su ve Eğitim duruyor.
+
+## 60. Küre görünümü: ortalama ve arka plan (test-redmi9t-v2)
+
+29 Ekim 2026.
+- **Küre sola kayıyordu.** Masaüstünde bir eser seçilince harita, sağdaki eser kartına yer açmak için `easeTo({ padding:{ right:380 } })` ile kayıyor. MapLibre'de `easeTo`/`flyTo`'ya verilen padding kalıcıdır; eser bırakılınca sıfırlanmıyordu. Şehirlere uzaklaşınca küre, görünür alanın ortasından yaklaşık 190 px sola kalıyordu.
+  - **Düzeltme:** «Şehirler» uçuşu padding'i sıfırlar. Fareyle uzaklaşırken de şehir görünümüne (zoom < 9) inildiğinde masaüstünde kalan padding 0,4 sn'de kaldırılır (`zoomend`).
+  - Sınandı: seçimden sonra padding `right:380`, uzaklaşınca `0`.
+- **Kürenin arkası:** Tuval kürenin dışında saydam; arkada sayfanın düz açık grisi görünüyordu. Artık `#harita` arka planı, 3D sahne zemininin aynı renkleri: şehir kaydından `kimlik.sahne_ust` → `sahne_alt` (#DDE4E5 → #A7B4B7), ortası açık, kenarları koyulaşan elips geçiş.
+  - Neden bu renk: ISO 3664 nötr çevre ilkesi (doygun zemin kürenin renklerini kaydırır); uygulamanın açık arayüzüyle uyumlu; 3D sahneyle aynı dil; şehir değişince renk de değişir.
+  - Koyu «uzay» zemini, açık panellerle çok sert kontrast yapacağı için seçilmedi.

@@ -69,7 +69,9 @@ svg.ic{display:block;flex:none}
 
 /* ---------- harita ---------- */
 #sahne{position:fixed;inset:0}
-#harita{position:absolute;inset:0}
+#harita{position:absolute;inset:0;
+  /* küre görünümünde kürenin arkası (tuval kürenin dışında saydam): 3D sahneyle aynı, şehrin kimliğinden gelen nötr gri; ortası açık, kenarlar koyulaşır */
+  background:radial-gradient(ellipse 75% 75% at 50% 50%,var(--sahne-ust,#DCE3E4) 0%,var(--sahne-alt,#C3CBCD) 100%)}
 .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{display:none}
 #harita-ust{position:absolute;left:0;right:0;top:0;padding:calc(12px + var(--sat)) 16px 0;pointer-events:none;z-index:3}
 #harita-ust>*{pointer-events:auto}

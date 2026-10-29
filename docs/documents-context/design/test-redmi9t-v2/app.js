@@ -329,8 +329,14 @@ function sehirGorunum() { const z = harita.getZoom(); document.body.classList.to
 harita.on('zoom', sehirGorunum);
 function sehirlereUzaklas() {
   eserSec(null);
-  harita.flyTo({ center:[34.5, 39.2], zoom:durum.masaustu ? 4.6 : 3.6, pitch:0, bearing:0, duration:2200, essential:true });
+  /* padding sıfırlanır: eser seçilince verilen sağ boşluk (masaüstü kartı için, easeTo padding kalıcıdır) küreyi sola kaydırıyordu */
+  harita.flyTo({ center:[34.5, 39.2], zoom:durum.masaustu ? 4.6 : 3.6, pitch:0, bearing:0, duration:2200, essential:true, padding:{ top:0, bottom:0, left:0, right:0 } });
 }
+/* fareyle uzaklaşınca da: şehir görünümüne (küre) inildiğinde masaüstünde kalan boşluk kaldırılır, küre ortada durur */
+harita.on('zoomend', () => {
+  if (!durum.masaustu || harita.getZoom() >= SEHIR_ESIK) return;
+  const p = harita.getPadding(); if (p.top || p.bottom || p.left || p.right) harita.easeTo({ padding:{ top:0, bottom:0, left:0, right:0 }, duration:400 });
+});
 document.addEventListener('click', (ev) => {
   if (ev.target.closest('[data-sehirler]')) { ev.preventDefault(); if (location.hash.length > 2) location.hash = '#/'; sehirlereUzaklas(); return; }
   const b = ev.target.closest('[data-sehir-git]'); if (!b) return;
