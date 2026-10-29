@@ -1,5 +1,5 @@
 import type {
-  CityScene,
+  CityRecord,
   HeritageRoute,
   HeritageSite,
   SiteBadge,
@@ -16,22 +16,45 @@ export const demoRegion = {
   center: [29.0619, 40.184] as [number, number],
   heroId: "ulu-cami",
 };
-/** Bursa's city record (`veri/sehir/bursa.json`), as the import stores it (§11.42). */
-export const demoCityScenes: Record<string, CityScene> = {
-  Bursa: {
-    light: {
-      ambient: 2,
-      sun: 1,
-      fill: 1,
-      azimuthDeg: 315,
-      elevationDeg: 45,
-      saturation: 1.25,
-      groundShadow: 0.18,
+/**
+ * City records (`veri/sehir/*.json`) as the import stores them (§11.42, §11.45); `siteCount` is counted from the
+ * demo catalog. Konya stands for the inventories not yet in the app («Yakında» on the globe).
+ */
+export const demoCities: Array<Omit<CityRecord, "siteCount">> = [
+  {
+    id: "bursa",
+    name: "Bursa",
+    isDefault: true,
+    map: { center: [29.0628, 40.1846], zoom: 16.3, zoomDesktop: 16.7 },
+    inventory: {
+      name: "Bursa Vakıf Eserleri Envanteri",
+      publisher: "Vakıf Katılım, 2026",
+      year: 2025,
+      siteCount: 385,
     },
-    backgroundTop: "#DDE4E5",
-    backgroundBottom: "#A7B4B7",
+    scene: {
+      light: {
+        ambient: 2,
+        sun: 1,
+        fill: 1,
+        azimuthDeg: 315,
+        elevationDeg: 45,
+        saturation: 1.25,
+        groundShadow: 0.18,
+      },
+      backgroundTop: "#DDE4E5",
+      backgroundBottom: "#A7B4B7",
+    },
   },
-};
+  {
+    id: "konya",
+    name: "Konya",
+    isDefault: false,
+    map: { center: [32.4846, 37.8714], zoom: 14, zoomDesktop: null },
+    inventory: { name: null, publisher: null, year: 2024, siteCount: 289 },
+    scene: null,
+  },
+];
 const story = (id: string, title: string, text: string): StoryBlock => ({
   id,
   title,

@@ -59,7 +59,12 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
     ],
   }));
   const scene = { light: { ambient: 2, sun: 1, fill: 1, azimuthDeg: 315, elevationDeg: 45, saturation: 1.25, groundShadow: 0.18 }, backgroundTop: "#DDE4E5", backgroundBottom: "#A7B4B7" };
-  const manifest = { version: 1, sites, routes: [], retireSiteIds: [], cities: [{ name: "Bursa", scene }] };
+  const bursa = { id: "bursa", name: "Bursa", isDefault: true, map: { center: [29.0628, 40.1846], zoom: 16.3, zoomDesktop: 16.7 },
+    inventory: { name: "Bursa Vakıf Eserleri Envanteri", publisher: null, year: 2025, siteCount: 385 }, scene };
+  // A city with no site in the app: on the globe as «Yakında», no scene.
+  const konya = { id: "konya", name: "Konya", isDefault: false, map: { center: [32.4846, 37.8714], zoom: 14, zoomDesktop: null },
+    inventory: { name: null, publisher: null, year: 2024, siteCount: 289 }, scene: null };
+  const manifest = { version: 1, sites, routes: [], retireSiteIds: [], cities: [bursa, konya] };
   const path = join(root, "manifest.json");
   scene.backgroundTop = "gri";
   await writeFile(path, JSON.stringify(manifest));
@@ -68,8 +73,19 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   await writeFile(path, JSON.stringify(manifest));
   assert.equal((await importDemoContent(path, root, false, {})).objects, 3);
   for (let i = 0; i < 2; i++) assert.equal((await importDemoContent(path, root, true, env)).objects, 3);
-  const city = (await ctx.app.inject({ url: "/v1/cities" })).json().items.find((c: { name: string }) => c.name === "Bursa");
+  const served = async () => (await ctx.app.inject({ url: "/v1/cities" })).json().items as Array<{ id: string; siteCount: number } & Record<string, unknown>>;
+  const city = (await served()).find((c) => c.id === "bursa")!;
   assert.deepEqual(city.scene, scene, "the city record's scene is served with the city");
+  assert.deepEqual([city.isDefault, city.map, city.inventory], [true, bursa.map, bursa.inventory]);
+  assert.deepEqual((await served()).find((c) => c.id === "konya"), { ...konya, siteCount: 0, routeCount: 0 }, "a city without sites is listed");
+  // Moving the default to another city in one import (the unique index allows one default at a time).
+  [bursa.isDefault, konya.isDefault] = [false, true];
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  assert.deepEqual((await served()).filter((c) => c.isDefault).map((c) => c.id), ["konya"]);
+  [bursa.isDefault, konya.isDefault] = [true, false];
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
   const res = await ctx.app.inject({ url: "/v1/sites/test-0" });
   assert.equal(res.statusCode, 200);
   const detail = res.json();

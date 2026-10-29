@@ -675,6 +675,60 @@ img {
   height: 38.4px;
   transition: none;
 }
+/* Globe view (§11.45): below the city threshold cities replace the site pins. */
+.city-mode .map-marker {
+  display: none;
+}
+.city-marker {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.94);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.city-marker i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #b8c2c4;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #b8c2c4;
+}
+.city-marker b {
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+.city-marker.ready i {
+  background: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.city-marker.ready small {
+  color: var(--primary);
+  font-weight: 600;
+}
+.city-mode .city-marker {
+  display: inline-flex;
+}
+.city-far .city-marker:not(.ready) {
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.city-far .city-marker:not(.ready) b,
+.city-far .city-marker:not(.ready) small {
+  display: none;
+}
 .map-pin {
   display: block;
   width: 32px;

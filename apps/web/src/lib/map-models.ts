@@ -1,4 +1,5 @@
 import {
+  CITY_MARKER_MAX_ZOOM,
   defaultMapSettings,
   type CityScene,
   type HeritageSite,
@@ -211,8 +212,15 @@ export class MapModelLayer implements CustomLayerInterface {
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput) {
     const renderer = this.renderer;
     if (!renderer || !this.map || !this.loaded.size) return;
-    if (this.map.getZoom() < this.settings.modelMinZoom) return;
-    this.projection.fromArray(options.defaultProjectionData.mainMatrix);
+    // Below the city threshold the map shows cities (globe view, §11.45), never models.
+    const zoom = this.map.getZoom();
+    if (zoom < this.settings.modelMinZoom || zoom < CITY_MARKER_MAX_ZOOM)
+      return;
+    // Mid globe-to-flat transition `mainMatrix` is the globe's; the Mercator fallback keeps models on the ground.
+    const d = options.defaultProjectionData;
+    this.projection.fromArray(
+      d.projectionTransition > 0 ? d.fallbackMatrix : d.mainMatrix,
+    );
     this.rendered = true;
     renderer.resetState();
     // The map may have resized its canvas since three.js saw it.

@@ -379,6 +379,24 @@ export const CityDto = z.object({
   siteCount: z.number().int().describe("Yayındaki eser sayısı"),
   routeCount: z.number().int().describe("Yayındaki rota sayısı"),
   scene: CitySceneDto.nullable().describe("null = istemci varsayılan ışığı ve zemini kullanır"),
+  isDefault: z.boolean().describe("Harita bu şehirde açılır (en çok bir şehir)"),
+  map: z
+    .object({
+      center: z.tuple([z.number(), z.number()]).describe("[boylam, enlem]"),
+      zoom: z.number(),
+      zoomDesktop: z.number().nullable().describe("Geniş ekranda açılış yakınlığı; null = zoom"),
+    })
+    .nullable()
+    .describe("Haritanın bu şehirde açıldığı nokta, küre görünümündeki şehir işareti; null = kürede yok (§11.45)"),
+  inventory: z
+    .object({
+      name: z.string().nullable(),
+      publisher: z.string().nullable(),
+      year: z.number().int().nullable(),
+      siteCount: z.number().int().nullable().describe("Envanterde belgelenen eser sayısı (uygulamadaki değil)"),
+    })
+    .nullable()
+    .describe("Şehrin Vakıf Eserleri Envanteri; eseri olmayan şehirde «Yakında» bilgisi"),
 });
 export type CityDto = z.infer<typeof CityDto>;
 

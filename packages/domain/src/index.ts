@@ -121,6 +121,46 @@ export function validateCityScene(scene: CityScene) {
   )
     throw new Error("Sahne zemini #RRGGBB biçiminde olmalı");
 }
+/** City record `map` (`GET /v1/cities`, §11.45): where the map opens in this city; the globe marker sits at `center`. */
+export interface CityMapView {
+  /** `[lng, lat]`. */
+  center: [number, number];
+  zoom: number;
+  /** Opening zoom on a wide screen; `null` = `zoom`. */
+  zoomDesktop: number | null;
+}
+/** City record `inventory`: the city's Vakıf Eserleri Envanteri, shown for a city with no site in the app yet. */
+export interface CityInventory {
+  name: string | null;
+  publisher: string | null;
+  year: number | null;
+  /** Sites documented in the inventory (not the app's published sites). */
+  siteCount: number | null;
+}
+/** `GET /v1/cities` item. */
+export interface CityRecord {
+  id: string;
+  name: string;
+  /** Published sites in the app. */
+  siteCount: number;
+  /** The map opens at this city's `map` (at most one city). */
+  isDefault: boolean;
+  /** `null` = not on the globe, never the opening city. */
+  map: CityMapView | null;
+  inventory: CityInventory | null;
+  scene: CityScene | null;
+}
+/** Below this map zoom the map shows cities instead of site pins and models (globe view, §11.45). */
+export const CITY_MARKER_MAX_ZOOM = 9;
+/** Throws on a view the map cannot open. */
+export function validateCityMap(map: CityMapView) {
+  const [lng, lat] = map.center ?? [];
+  if (!Number.isFinite(lng) || !Number.isFinite(lat) || lng! < -180 || lng! > 180 || lat! < -85 || lat! > 85)
+    throw new Error("Şehir merkezi [boylam, enlem] olmalı");
+  for (const z of [map.zoom, map.zoomDesktop ?? map.zoom])
+    if (!Number.isFinite(z) || z < CITY_MARKER_MAX_ZOOM || z > 22)
+      throw new Error(`Şehir açılış yakınlığı ${CITY_MARKER_MAX_ZOOM}–22 arasında olmalı`);
+}
 export interface SiteModel {
   name: string;
   bytes: number;
