@@ -12,9 +12,20 @@ import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts"
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
-import { cities, historyImages, media, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type QuizTaskDetails } from "./schema/index.ts";
+import { cities, historyAngleMatches, historyImages, media, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type HistoryAngleMatch, type QuizTaskDetails } from "./schema/index.ts";
 
-type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string };
+/**
+ * A photograph the visitor sees with its credit line and licence word for word (§11.47): the present-day pair of an
+ * archive photograph, or the photograph of a team-made İz Bırak sample.
+ */
+type CreditedPhoto = { id: string; file: string; alt: string; credit: string; license: string };
+type PresentPhoto = CreditedPhoto & { angleMatch: HistoryAngleMatch };
+type SampleTrace = CreditedPhoto & {
+  author: string; text: string; addedOn: string;
+  /** The site's archive photograph (`ArchiveEntry.id`) this shows the same view of; null = none. */
+  historyImageId: string | null; angleMatch: HistoryAngleMatch | null;
+};
+type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string; present?: PresentPhoto | null };
 type BookPhoto = { id: string; file: string; alt: string; title: string; description: string; license: string; trust: Trust; sourceId: string };
 type ContentTask = {
   id: string; kind: "quiz" | "field"; title: string; prompt: string; photoId: string | null; part: string | null; source: string | null; trust: Trust;
@@ -23,10 +34,12 @@ type ContentTask = {
   details: QuizTaskDetails | FieldTaskDetails;
 };
 type ContentBadge = { id: string; title: string; text: string; condition: "story" | "task"; taskId: string | null; onSiteLabel: boolean };
-type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "partCards" | "chapters" | "aboutCover" | "sections" | "tasks" | "badges"> & {
+type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "sampleTraces" | "partCards" | "chapters" | "aboutCover" | "sections" | "tasks" | "badges"> & {
   photos: Array<NonNullable<HeritageSite["photos"]>[number] & { file: string; galleryPosition: number | null }>;
   model: NonNullable<HeritageSite["model"]> & { file: string };
   historyImages: ArchiveEntry[];
+  /** Team-made İz Bırak samples (`gecmisi-gor/izler.json`, §11.47); empty for a site without any. */
+  sampleTraces: SampleTrace[];
   sections: Array<{
     id: string; kind: "history" | "architecture" | "waqf"; title: string; body: string; trust: Trust; sourceId: string;
     chapterId: string | null; photos: Array<{ id: string; aspect: number | null; alt: string }>;
@@ -69,6 +82,40 @@ function validateTasks(site: ContentSite, photoIds: Set<string>): void {
   }
 }
 
+const ANGLE_MATCHES: readonly string[] = historyAngleMatches;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Present-day photographs and İz Bırak samples of one site (§11.47): each photograph has its credit line, licence and
+ * description (shown to visitors as written), angle matches are known words, a sample's archive photograph is one of
+ * the site's own.
+ */
+function validateHistoryExtras(site: ContentSite): void {
+  const fail = (what: string, ...ids: string[]): never => { throw new Error(`${what}: ${[site.id, ...ids].join(" ")}`); };
+  const credited = (p: CreditedPhoto) => { if (!p.credit.trim() || !p.license.trim() || !p.alt.trim()) fail("Photograph without credit line, licence or description", p.id); };
+  for (const present of site.historyImages.flatMap((h) => (h.present ? [h.present] : []))) {
+    credited(present);
+    if (!ANGLE_MATCHES.includes(present.angleMatch)) fail("Unknown angle match", present.id);
+  }
+  const history = new Set(site.historyImages.map((h) => h.id));
+  for (const t of site.sampleTraces) {
+    credited(t);
+    if (!t.author.trim() || !t.text.trim()) fail("Sample trace without author or text", t.id);
+    if (!DAY.test(t.addedOn) || Number.isNaN(Date.parse(t.addedOn))) fail("Sample trace date is not YYYY-MM-DD", t.id);
+    if (t.historyImageId !== null && !history.has(t.historyImageId)) fail("Sample trace names no archive photograph of the site", t.id, t.historyImageId);
+    if (t.angleMatch !== null && !ANGLE_MATCHES.includes(t.angleMatch)) fail("Unknown angle match", t.id);
+  }
+}
+
+/** Present-day photographs and sample traces become `media` rows keyed by their ids, so no id may repeat another photograph's. */
+function checkExtraMediaIds(manifest: Manifest): void {
+  const taken = new Set(manifest.sites.flatMap((s) => [`${s.id}-model`, ...[...s.photos, ...s.bookPhotos, ...s.historyImages].map((x) => x.id)]));
+  for (const id of manifest.sites.flatMap((s) => [...s.historyImages.flatMap((h) => (h.present ? [h.present.id] : [])), ...s.sampleTraces.map((t) => t.id)])) {
+    if (taken.has(id)) throw new Error(`Media id used twice: ${id}`);
+    taken.add(id);
+  }
+}
+
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
 export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env) {
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
@@ -83,12 +130,13 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   if (manifest.cities.filter((c) => c.isDefault).length > 1) throw new Error("More than one default city");
   for (const site of manifest.sites)
     if (!manifest.cities.some((c) => c.name === site.city)) throw new Error(`Site ${site.id} has no city record (${site.city})`);
+  checkExtraMediaIds(manifest);
   const root = await realpath(contentRoot);
   const files = new Map<string, { body: Buffer; key: string; mime: string }>();
   const mediaFiles = new Map<string, string>();
   const triangles = new Map<string, number>();
   for (const site of manifest.sites) {
-    const { tasks: _tasks, badges: _badges, ...validated } = site;
+    const { tasks: _tasks, badges: _badges, sampleTraces: _traces, ...validated } = site;
     validateSite({ ...validated, historyImages: [], partCards: [], chapters: [], sections: site.sections.map(({ chapterId: _chapter, photos: _photos, ...section }) => section) });
     const ids = new Set(site.photos.map((p) => p.id));
     if (!ids.has(site.coverPhotoId ?? "") || site.stories.some((s) => !ids.has(s.photoId ?? ""))) throw new Error(`Unresolved photographs: ${site.id}`);
@@ -97,7 +145,8 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     const bookIds = new Set([...ids, ...site.bookPhotos.map((p) => p.id)]);
     if (site.aboutCoverPhotoId !== null && !ids.has(site.aboutCoverPhotoId)) throw new Error(`Unresolved about cover photograph: ${site.id}`);
     if (site.sections.some((s) => (s.chapterId !== null && !chapterIds.has(s.chapterId)) || s.photos.some((p) => !bookIds.has(p.id)))) throw new Error(`Unresolved chapter or section photographs: ${site.id}`);
-    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, { ...site.model, id: `${site.id}-model` }]) {
+    const extraPhotos = [...site.historyImages.flatMap((h) => (h.present ? [h.present] : [])), ...site.sampleTraces];
+    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, ...extraPhotos, { ...site.model, id: `${site.id}-model` }]) {
       const file = await realpath(resolve(root, item.file));
       if (!file.startsWith(root + sep)) throw new Error("Content path leaves the supplied root");
       if (!files.has(item.file)) {
@@ -126,9 +175,11 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !site.model.parts.includes(part));
     if (unknown.length) throw new Error(`Part card parts are not model parts: ${site.id} ${unknown.join(", ")}`);
     validateTasks(site, ids);
+    validateHistoryExtras(site);
   }
   const unique = new Map([...files.values()].map((f) => [f.key, f]));
-  const report = { sites: manifest.sites.length, objects: unique.size, bytes: [...unique.values()].reduce((n, f) => n + f.body.length, 0), applied: apply };
+  const presentPhotos = manifest.sites.reduce((n, s) => n + s.historyImages.filter((h) => h.present).length, 0);
+  const report = { sites: manifest.sites.length, objects: unique.size, bytes: [...unique.values()].reduce((n, f) => n + f.body.length, 0), presentPhotos, sampleTraces: manifest.sites.reduce((n, s) => n + s.sampleTraces.length, 0), applied: apply };
   if (!apply) return report;
   const config = loadConfig(env);
   const storage = storageFromConfig(config)?.media;
@@ -146,7 +197,13 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const { db, pool } = createDb(config.DATABASE_URL, 2, config.DATABASE_SSL_CA);
   try {
     await db.transaction(async (tx) => {
-      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes });
+      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sampleTraces: _traces, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes });
+      // A present-day photograph or a sample's photograph is a `media` row of its own, credited as the file says.
+      const upsertPhoto = async (p: CreditedPhoto, trust: Trust) => {
+        const file = files.get(p.file)!;
+        const row = { kind: "photo" as const, mime: file.mime, url: storage.publicUrl(file.key), alt: p.alt, title: p.alt, description: p.credit, license: p.license, trust, bytes: file.body.length };
+        await tx.insert(media).values({ id: p.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
+      };
       for (const site of manifest.sites) {
         // The seed includes every story photo; only editorial gallery entries belong in site_media.
         await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
@@ -159,8 +216,15 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           const row = { kind: "photo" as const, mime: file.mime, url: storage.publicUrl(file.key), alt: h.alt, title: h.caption,
             description: h.credit, license: h.license, sourceId: h.sourceId, trust: h.trust, bytes: file.body.length };
           await tx.insert(media).values({ id: h.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
-          await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, caption: h.caption,
-            dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust });
+          if (h.present) await upsertPhoto(h.present, "verified");
+          await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, presentMediaId: h.present?.id ?? null, presentAngleMatch: h.present?.angleMatch ?? null,
+            caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust });
+        }
+        // Samples replace the site's whole set; the archive photograph they point at was inserted just above.
+        await tx.delete(siteSampleTraces).where(eq(siteSampleTraces.siteId, site.id));
+        for (const [position, t] of site.sampleTraces.entries()) {
+          await upsertPhoto(t, "representative");
+          await tx.insert(siteSampleTraces).values({ id: t.id, siteId: site.id, position, author: t.author, text: t.text, mediaId: t.id, historyImageId: t.historyImageId, angleMatch: t.angleMatch, addedOn: t.addedOn });
         }
         for (const b of site.bookPhotos) {
           const file = files.get(b.file)!;

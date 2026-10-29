@@ -2275,6 +2275,58 @@ test("«Eser hakkında» chapters, paragraph photos and the cover reach the UI; 
   assert.equal(old!.aboutCover, undefined);
 });
 
+test("a present-day pair keeps its credit line and angle word, İz Bırak samples reach the UI beside the archive images and are never gallery photos; an older API has none", async () => {
+  const credit = "Fotoğraf: Bursa Vakıf Eserleri Envanteri";
+  const base = detail("pairs", {
+    coverMediaId: "cover",
+    media: [
+      media("cover", "photo"),
+      media("old", "photo", { description: "Fotoğraf: Eski fotoğrafçı" }),
+      media("now", "photo", { description: credit, license: "Proje için verildi" }),
+      media("old-2", "photo"),
+      media("iz", "photo", { description: `${credit} (örnek katkı olarak gösteriliyor)` }),
+      media("iz-lost", "model"),
+    ],
+    historyImages: [
+      { id: "h1", mediaId: "old", presentMediaId: "now", presentAngleMatch: "near", caption: "Eski", dateLabel: "1875–84", sourceId: null, trust: "verified" },
+      { id: "h2", mediaId: "old-2", presentMediaId: null, presentAngleMatch: null, caption: "Eski 2", dateLabel: "1930", sourceId: null, trust: "verified" },
+    ],
+    sampleTraces: [
+      { id: "iz1", author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "iz", historyImageId: "h2", angleMatch: "same", addedOn: "2026-10-28" },
+      { id: "iz2", author: "AKAR ekibi", text: "Avludan.", mediaId: "iz", historyImageId: null, angleMatch: null, addedOn: "2026-10-29" },
+      { id: "iz3", author: "AKAR ekibi", text: "Fotoğrafı yok.", mediaId: "iz-lost", historyImageId: null, angleMatch: null, addedOn: "2026-10-30" },
+    ],
+  });
+  // A version that sends samples but no gallery list leaves the gallery to the media list: a sample's photograph stays out of it.
+  const legacy = detail("legacy", {
+    coverMediaId: "cover",
+    media: [media("cover", "photo"), media("iz", "photo")],
+    sampleTraces: [{ id: "iz1", author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "iz", historyImageId: null, angleMatch: null, addedOn: "2026-10-28" }],
+  });
+  const older = detail("old", { coverMediaId: "cover", media: [media("cover", "photo")] });
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({ items: [{ ...base, photoIds: ["cover"] }, legacy, older], nextCursor: null }),
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: api.fetch });
+  const [site, mid, old] = (await client.getSnapshot()).sites;
+  const [paired, alone] = site!.historyImages!;
+  assert.deepEqual([paired!.presentPhoto?.id, paired!.presentPhoto?.description, paired!.presentAngleMatch], ["now", credit, "near"]);
+  assert.deepEqual([alone!.presentPhoto, alone!.presentAngleMatch], [undefined, undefined]);
+  assert.deepEqual(
+    site!.sampleTraces?.map((t) => [t.id, t.author, t.text, t.photo.id, t.photo.description, t.addedOn, t.historyImageId, t.angleMatch]),
+    [
+      ["iz1", "AKAR ekibi", "Aynı eksen.", "iz", `${credit} (örnek katkı olarak gösteriliyor)`, "2026-10-28", "h2", "same"],
+      ["iz2", "AKAR ekibi", "Avludan.", "iz", `${credit} (örnek katkı olarak gösteriliyor)`, "2026-10-29", undefined, undefined],
+    ],
+    "a sample whose photograph is not in the media list is left out; empty links stay off the object",
+  );
+  assert.deepEqual(site!.photos?.map((p) => p.id), ["cover"], "pair and sample photographs are not gallery photos");
+  assert.deepEqual(mid!.photos?.map((p) => p.id), ["cover"], "without a gallery list a sample's photograph is still not a gallery photo");
+  assert.equal(mid!.sampleTraces?.length, 1);
+  assert.equal(old!.sampleTraces, undefined);
+});
+
 test("member administration uses protected, uncached endpoints and sends the expected role", async () => {
   const member = {
     userId: "member-1",

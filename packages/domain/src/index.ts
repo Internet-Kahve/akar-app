@@ -201,14 +201,36 @@ export interface StoryBlock {
   /** "İç mekân (3D)": the model's cover groups lift for this sentence. */
   interior?: boolean;
 }
+/** How close a present-day photograph's view is to the old one: the same point and direction, or close but not the same point. */
+export type AngleMatch = "same" | "near";
 export interface HistoryImage {
   id: string;
   photo: SitePhoto;
+  /** The same view today. Its credit line is `description` and is shown word for word. */
   presentPhoto?: SitePhoto;
+  /** Set with `presentPhoto`; `near` makes the screen say the two were not taken from exactly the same point. */
+  presentAngleMatch?: AngleMatch;
   caption: string;
   dateLabel: string;
   sourceId: string;
   trust: Trust;
+}
+/**
+ * İz Bırak sample (decision §11.47): a photograph and a sentence the team wrote, credited to a name («AKAR ekibi»), not
+ * to an account. It is not a visitor's memory (no moderation, quota or points) and the screen always tags it «Örnek».
+ */
+export interface SampleTrace {
+  id: string;
+  author: string;
+  text: string;
+  /** Its credit line is `description` and is shown word for word. */
+  photo: SitePhoto;
+  /** Day it was added, `YYYY-MM-DD`. */
+  addedOn: string;
+  /** The archive photograph (`HistoryImage.id`) it shows the same view of. */
+  historyImageId?: string;
+  /** Set with `historyImageId`. */
+  angleMatch?: AngleMatch;
 }
 /** 3D part card: tapping any of `parts` (model node names) opens it; they are highlighted together. */
 export interface PartCard {
@@ -322,6 +344,8 @@ export interface HeritageSite {
   coverPhotoId?: string;
   model?: SiteModel;
   historyImages?: HistoryImage[];
+  /** İz Bırak samples in order; absent or empty = none. */
+  sampleTraces?: SampleTrace[];
   /** With cards, only their parts are tappable; absent or empty = every part shows its name. */
   partCards?: PartCard[];
   /** Tasks in order; absent or empty = the site has none. */

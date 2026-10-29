@@ -1310,6 +1310,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -1321,11 +1336,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -1788,7 +1864,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -1884,6 +1960,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -2805,6 +2882,21 @@
                                     }
                                   ],
                                   "description": "Bugünün görüntüsüyle hizalama açısı"
+                                },
+                                "presentAngleMatch": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "same",
+                                        "near"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                                 }
                               },
                               "required": [
@@ -2816,11 +2908,72 @@
                                 "dateLabel",
                                 "sourceId",
                                 "trust",
-                                "camera"
+                                "camera",
+                                "presentAngleMatch"
                               ],
                               "additionalProperties": false
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
+                          },
+                          "sampleTraces": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "author": {
+                                  "type": "string",
+                                  "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                                },
+                                "text": {
+                                  "type": "string"
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                                },
+                                "historyImageId": {
+                                  "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "angleMatch": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "same",
+                                        "near"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                                },
+                                "addedOn": {
+                                  "type": "string",
+                                  "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "author",
+                                "text",
+                                "mediaId",
+                                "historyImageId",
+                                "angleMatch",
+                                "addedOn"
+                              ],
+                              "additionalProperties": false,
+                              "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                            },
+                            "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                           },
                           "partCards": {
                             "type": "array",
@@ -3283,7 +3436,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                            "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                           },
                           "sources": {
                             "type": "array",
@@ -3379,6 +3532,7 @@
                           "chapters",
                           "cards",
                           "historyImages",
+                          "sampleTraces",
                           "partCards",
                           "tasks",
                           "badges",
@@ -5751,6 +5905,21 @@
                                     }
                                   ],
                                   "description": "Bugünün görüntüsüyle hizalama açısı"
+                                },
+                                "presentAngleMatch": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "same",
+                                        "near"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                                 }
                               },
                               "required": [
@@ -5762,11 +5931,72 @@
                                 "dateLabel",
                                 "sourceId",
                                 "trust",
-                                "camera"
+                                "camera",
+                                "presentAngleMatch"
                               ],
                               "additionalProperties": false
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
+                          },
+                          "sampleTraces": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "author": {
+                                  "type": "string",
+                                  "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                                },
+                                "text": {
+                                  "type": "string"
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                                },
+                                "historyImageId": {
+                                  "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "angleMatch": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "same",
+                                        "near"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                                },
+                                "addedOn": {
+                                  "type": "string",
+                                  "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "author",
+                                "text",
+                                "mediaId",
+                                "historyImageId",
+                                "angleMatch",
+                                "addedOn"
+                              ],
+                              "additionalProperties": false,
+                              "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                            },
+                            "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                           },
                           "partCards": {
                             "type": "array",
@@ -6229,7 +6459,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                            "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                           },
                           "sources": {
                             "type": "array",
@@ -6325,6 +6555,7 @@
                           "chapters",
                           "cards",
                           "historyImages",
+                          "sampleTraces",
                           "partCards",
                           "tasks",
                           "badges",
@@ -10773,6 +11004,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -10784,11 +11030,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -11251,7 +11558,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -11525,6 +11832,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -12506,6 +12814,21 @@
                                     }
                                   ],
                                   "description": "Bugünün görüntüsüyle hizalama açısı"
+                                },
+                                "presentAngleMatch": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "same",
+                                        "near"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                                 }
                               },
                               "required": [
@@ -12517,11 +12840,72 @@
                                 "dateLabel",
                                 "sourceId",
                                 "trust",
-                                "camera"
+                                "camera",
+                                "presentAngleMatch"
                               ],
                               "additionalProperties": false
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
+                          },
+                          "sampleTraces": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "author": {
+                                  "type": "string",
+                                  "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                                },
+                                "text": {
+                                  "type": "string"
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                                },
+                                "historyImageId": {
+                                  "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "angleMatch": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "same",
+                                        "near"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                                },
+                                "addedOn": {
+                                  "type": "string",
+                                  "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "author",
+                                "text",
+                                "mediaId",
+                                "historyImageId",
+                                "angleMatch",
+                                "addedOn"
+                              ],
+                              "additionalProperties": false,
+                              "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                            },
+                            "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                           },
                           "partCards": {
                             "type": "array",
@@ -12984,7 +13368,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                            "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                           },
                           "sources": {
                             "type": "array",
@@ -13258,6 +13642,7 @@
                           "chapters",
                           "cards",
                           "historyImages",
+                          "sampleTraces",
                           "partCards",
                           "tasks",
                           "badges",
@@ -14203,6 +14588,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -14214,11 +14614,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -14681,7 +15142,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -14955,6 +15416,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -16066,6 +16528,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -16077,11 +16554,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -16544,7 +17082,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -16818,6 +17356,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -17783,6 +18322,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -17794,11 +18348,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -18261,7 +18876,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -18535,6 +19150,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -19545,6 +20161,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -19556,11 +20187,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -20023,7 +20715,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -20297,6 +20989,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -21357,6 +22050,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -21368,11 +22076,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -21835,7 +22604,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -22109,6 +22878,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -23081,6 +23851,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -23092,11 +23877,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -23559,7 +24405,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -23833,6 +24679,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -24856,6 +25703,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -24867,11 +25729,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -25334,7 +26257,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -25608,6 +26531,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -26756,6 +27680,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -26767,11 +27706,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -27234,7 +28234,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -27508,6 +28508,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -28526,6 +29527,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -28537,11 +29553,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -29004,7 +30081,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -29278,6 +30355,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -29344,6 +30422,22 @@
                               "minLength": 1,
                               "maxLength": 100,
                               "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "presentAngleMatch": {
+                          "default": null,
+                          "description": "Bugünkü görüntünün açı benzerliği (same = aynı nokta ve yön, near = yakın açı); yalnız presentMediaId varken verilebilir",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "same",
+                                "near"
+                              ]
                             },
                             {
                               "type": "null"
@@ -30360,6 +31454,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -30371,11 +31480,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -30838,7 +32008,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -31112,6 +32282,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -32043,6 +33214,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -32054,11 +33240,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -32521,7 +33768,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -32795,6 +34042,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",
@@ -33726,6 +34974,21 @@
                               }
                             ],
                             "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
                           }
                         },
                         "required": [
@@ -33737,11 +35000,72 @@
                           "dateLabel",
                           "sourceId",
                           "trust",
-                          "camera"
+                          "camera",
+                          "presentAngleMatch"
                         ],
                         "additionalProperties": false
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
                     },
                     "partCards": {
                       "type": "array",
@@ -34204,7 +35528,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -34478,6 +35802,7 @@
                     "chapters",
                     "cards",
                     "historyImages",
+                    "sampleTraces",
                     "partCards",
                     "tasks",
                     "badges",

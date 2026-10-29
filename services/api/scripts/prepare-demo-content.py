@@ -5,7 +5,11 @@ import importlib.util
 import json
 import math
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import history_extras
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--content', type=Path, required=True, help='docs/documents-context directory')
@@ -20,6 +24,7 @@ IDS = {'yildirim-bayezid-bedesteni': 'bedesten', 'orhan-bey-kulliyesi': 'orhan-g
 KINDS = {'Cami': 'cami', 'Bedesten': 'bedesten', 'Han': 'han', 'Hamam': 'hamam', 'Türbe': 'turbe'}
 TRUST = {'Doğrulanmış': 'verified', 'Tarihsel çıkarım': 'inferred', 'Temsili içerik': 'representative'}
 result = {'version': 1, 'sites': [], 'routes': [], 'retireSiteIds': ['bursa-cesme-demo', 'bursa-mektep-demo']}
+skipped_traces = 0  # izler.json records that are not approved team samples; they are never imported
 
 def trust(value):
     if value not in TRUST:
@@ -195,6 +200,11 @@ for entry in editorial.eserleri_bul():
                             alt=image['altMetin'], license=image['lisans'], credit=image['kaynakSatiri'],
                             trust=credibility, sourceId=source(image['kaynakSatiri'], 'archive',
                             image.get('asilArsivUrl') or image['fotoAtlasUrl'], image.get('fotografci', ''), credibility)))
+    # Present-day pairs (bugunku-esler.json) and the team's İz Bırak samples (izler.json), §11.47.
+    sample_traces, skipped = history_extras.read_extras(
+        root / 'eserler' / folder / 'gecmisi-gor', f'eserler/{folder}/gecmisi-gor', sid,
+        {image['fotoAtlasId']: entry for image, entry in zip(archive['fotograflar'], history)})
+    skipped_traces += skipped
     model_info = editorial.model_oku(folder)
     if not model_info:
         raise ValueError('Missing 3d/model.json: ' + folder)
@@ -210,7 +220,7 @@ for entry in editorial.eserleri_bul():
         description=entry['kisa'], status='published', tier='Hero' if sid=='ulu-cami' else 'Tier 2',
         source='Bursa Vakıf Eserleri Envanteri · ekip tarafından hazırlanan kaynaklı içerik',
         role='akar' if entry['rol']=='akar' else 'hayrat', stories=stories, photos=photos, sources=sources,
-        coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sections=sections, chapters=chapters, bookPhotos=book_photos,
+        coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sampleTraces=sample_traces, sections=sections, chapters=chapters, bookPhotos=book_photos,
         aboutCoverPhotoId=by_name[cover_name]['id'] if cover_name else None, partCards=part_cards,
         tasks=tasks, badges=badges,
         relatedSiteId={'bedesten':'ulu-cami','orhan-bey-hamami':'orhan-gazi','emir-han':'orhan-gazi'}.get(sid)))
@@ -236,4 +246,5 @@ for path in sorted((root / 'veri/sehir').glob('*.json')):
         inventory=inventory if any(v is not None for v in inventory.values()) else None))
 args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps({'sites':len(result['sites']),'photos':sum(len(s['photos']) for s in result['sites']),
- 'stories':sum(len(s['stories']) for s in result['sites']),'tasks':sum(len(s['tasks']) for s in result['sites']),'history':sum(len(s['historyImages']) for s in result['sites'])}))
+ 'stories':sum(len(s['stories']) for s in result['sites']),'tasks':sum(len(s['tasks']) for s in result['sites']),'history':sum(len(s['historyImages']) for s in result['sites']),
+ 'presentPhotos':sum(1 for s in result['sites'] for h in s['historyImages'] if h['present']),'sampleTraces':sum(len(s['sampleTraces']) for s in result['sites']),'skippedTraces':skipped_traces}))

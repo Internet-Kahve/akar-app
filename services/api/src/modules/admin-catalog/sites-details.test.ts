@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
 import { eq } from "drizzle-orm";
-import { cities, media, siteAboutChapters, siteBadges, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, sources } from "../../db/schema/index.ts";
+import { cities, media, siteAboutChapters, siteBadges, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, sources } from "../../db/schema/index.ts";
 import type { ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -234,4 +234,27 @@ test("the admin detail carries the tasks and badges the public detail does, the 
   const edited = await send("PUT", `/v1/admin/sites/${site.id}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
   assert.equal(edited.tasks.length, 1);
   assert.equal(edited.badges.length, 1);
+});
+
+test("the admin detail carries the team's samples as the public detail does, a sample's photograph resolves from its media, and dropping its archive image keeps the sample", async () => {
+  const site = await publishedSite("Örnek Hanı");
+  const db = app.deps.db;
+  const base = `/v1/admin/sites/${site.id}`;
+  await db.insert(media).values({
+    id: "ph-trace", kind: "photo", mime: "image/webp", url: "https://cdn.test/ph-trace.webp", alt: "Aynı eksen.",
+    description: "Fotoğraf: Arşiv (örnek katkı olarak gösteriliyor)", license: "Proje için verildi", trust: "representative",
+  });
+  const imageId = site.historyImages[0]!.id;
+  await db.insert(siteSampleTraces).values({ id: `${site.id}-iz`, siteId: site.id, position: 0, author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "ph-trace", historyImageId: imageId, angleMatch: "near", addedOn: "2026-10-28" });
+
+  const admin = (await call<AdminSiteDetail>("GET", base, editor)).body;
+  const pub = (await call<AdminSiteDetail>("GET", `/v1/sites/${site.id}`)).body;
+  assert.deepEqual(admin.sampleTraces, pub.sampleTraces);
+  assert.deepEqual(admin.sampleTraces, [{ id: `${site.id}-iz`, author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "ph-trace", historyImageId: imageId, angleMatch: "near", addedOn: "2026-10-28" }]);
+  assert.equal(admin.media.find((m) => m.id === "ph-trace")?.description, "Fotoğraf: Arşiv (örnek katkı olarak gösteriliyor)");
+  const listed = await call<DetailPage>("GET", `/v1/admin/site-details?query=${encodeURIComponent("örnek hanı")}`, editor);
+  assert.deepEqual(listed.body.items.find((i) => i.id === site.id)?.sampleTraces, admin.sampleTraces);
+
+  const emptied = await send("PUT", `${base}/history-images`, { images: [] });
+  assert.deepEqual(emptied.sampleTraces.map((t) => [t.id, t.historyImageId]), [[`${site.id}-iz`, null]]);
 });

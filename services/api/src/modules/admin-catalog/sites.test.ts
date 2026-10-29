@@ -601,6 +601,29 @@ test("archive images keep their ids when saved again, so route stops that point 
   assert.equal(await stopImage(), null);
 });
 
+test("an archive image's present-day photograph keeps its angle word, and the word needs the photograph", async () => {
+  const site = await newDraft("Eş Hanı");
+  const base = `/v1/admin/sites/${site.id}/history-images`;
+  const saved = await send("PUT", base, {
+    images: [
+      { mediaId: "ph-1", presentMediaId: "ph-3", presentAngleMatch: "near", trust: "verified" },
+      { mediaId: "ph-2", presentMediaId: "ph-3", trust: "verified" },
+    ],
+  });
+  assert.deepEqual(saved.historyImages.map((h) => [h.presentMediaId, h.presentAngleMatch]), [["ph-3", "near"], ["ph-3", null]]);
+
+  const orphan = await call<ErrorBody>("PUT", base, editor, { images: [{ mediaId: "ph-1", presentAngleMatch: "same", trust: "verified" }] });
+  assert.equal(orphan.res.statusCode, 400);
+  assert.ok(orphan.body.error.fieldErrors["images.0.presentAngleMatch"]);
+  const unknown = await call<ErrorBody>("PUT", base, editor, { images: [{ mediaId: "ph-1", presentMediaId: "ph-3", presentAngleMatch: "far", trust: "verified" }] });
+  assert.equal(unknown.res.statusCode, 400);
+  // The refused saves changed nothing; dropping the photograph drops its word with it.
+  const read = async () => (await call<AdminSiteDetail>("GET", `/v1/admin/sites/${site.id}`, editor)).body.historyImages.map((h) => h.presentAngleMatch);
+  assert.deepEqual(await read(), ["near", null]);
+  await send("PUT", base, { images: [{ id: saved.historyImages[0]!.id, mediaId: "ph-1", trust: "verified" }] });
+  assert.deepEqual(await read(), [null]);
+});
+
 test("the panel list shows drafts with their issues and location source, filters, and pages without repeats or gaps", async () => {
   const names = ["Arasta A", "Arasta B", "Bedesten", "Çarşı"];
   const created = [];
