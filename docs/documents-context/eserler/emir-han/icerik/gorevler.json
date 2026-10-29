@@ -1,0 +1,76 @@
+{
+  "_aciklama": "Emir Hanı · görevler ve rozetler (30 Ekim 2026). TASLAK: içerik sorumlusu gözden geçirecek (`_taslak`). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta.",
+  "_taslak": true,
+  "gorevler": [
+    {
+      "id": "emir-soru-ayaklar",
+      "tur": "soru",
+      "baslik": "Revakları taşıyan ayaklar",
+      "soru": "Emir Hanı'nın avlusunu çeviren revaklar hangi malzemeden örülmüş geniş ayaklara oturur?",
+      "secenekler": [
+        "Kesme taş ve tuğla",
+        "Mermer",
+        "Ahşap",
+        "Kerpiç"
+      ],
+      "dogru": 0,
+      "ipuclari": [
+        "Fotoğraftaki kalın ayaklara bak: açık renk taş sıraların arasında kırmızımsı ince sıralar var.",
+        "İki malzeme birlikte kullanılmış; biri «tuğla»."
+      ],
+      "dogru_metin": "Revaklar, kesme taş ve tuğladan örülmüş geniş ayaklara oturur. Beden duvarlarında da iki sıra tuğla ve bir sıra küfeki taşı almaşık örülmüştür.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "03_revak-ayaklar.jpg",
+      "parca": "Avlu_Revaklari",
+      "kaynak": "E cilt-1 PDF s.108",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    },
+    {
+      "id": "emir-saha-sadirvan",
+      "tur": "saha",
+      "baslik": "Avludaki şadırvan",
+      "gorev": "Emir Hanı avlusunun ortasındaki fıskiyeli şadırvanı bul.",
+      "yerinde": {
+        "yap": "Avluya gir, şadırvanın yanına gel ve «Buradayım»a dokun.",
+        "konum_yaricap_m": 60,
+        "_not": "Konum eserin noktasından ölçülür (eser.json lat/lon). Emir Hanı çarşıda Ulucami ve öbür hanlarla çok yakın; komşu esere taşmasın diye yarıçap 60 m."
+      },
+      "evden": {
+        "yap": "3D modelde şadırvana dokun.",
+        "parca": "Sadirvan"
+      },
+      "tamam_metin": "Emir Hanı'nın yaklaşık 650 metrekarelik avlusu, fıskiyeli şadırvanı ve çınarlarıyla bugün de bir buluşma yeridir.",
+      "gorsel": "02_avlu-sadirvan.jpg",
+      "kaynak": "E cilt-1 PDF s.108, s.109",
+      "guven": "Doğrulanmış"
+    }
+  ],
+  "rozetler": [
+    {
+      "id": "emir-hikaye",
+      "ad": "Emir Hanı'nı dinledin",
+      "metin": "Emir Hanı'nın hikâyesini sonuna kadar dinledin ya da okudun.",
+      "kosul": {
+        "hikaye_bitti": true
+      }
+    },
+    {
+      "id": "emir-tas-tugla",
+      "ad": "Taş ve tuğla",
+      "metin": "Han revaklarının kesme taş ve tuğla ayaklarını tanıdın.",
+      "kosul": {
+        "gorev": "emir-soru-ayaklar"
+      }
+    },
+    {
+      "id": "emir-avlu",
+      "ad": "Han avlusu",
+      "metin": "Emir Hanı'nın şadırvanlı avlusunu buldun.",
+      "kosul": {
+        "gorev": "emir-saha-sadirvan"
+      },
+      "yerinde_etiketi": true
+    }
+  ]
+}

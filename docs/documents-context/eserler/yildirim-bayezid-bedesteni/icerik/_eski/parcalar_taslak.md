@@ -13,3 +13,6 @@
 | Ic_Dukkanlar | Otuz iki mahzen | İç mekân (v10). Kuzey ve güney duvarındaki mahzen ağızları; hikâye cümlesi 7'nin vurgusu. |
 | Ic_Sokak | Bedesten içi | İç mekân (v10). Salonun döşemesi. |
 | Sadirvan | Şadırvan | İç mekân (v10). Salonun ortasında; 1960 onarımından sonraki planlarda var. |
+| Ic_Duvarlar | Almaşık iç duvar | İç mekân (v11). Salonun iç yüzü; tuğla ve taş almaşık örgü (Ekinci 2025). |
+| Pandantifler, Kubbe_Ici | Kubbelere geçiş | İç mekân (v11). Kare bölmeden yuvarlak kubbeye geçen köşe üçgenleri ve kubbelerin sıvalı içi. |
+| Kitabe | Kelime-i Tevhid kitabesi | İç mekân (v11). Bugün şadırvanın doğusundaki ayağın batı yüzünde; özgün yeri güney kapısıydı (Baykal 1950, Ekinci 2025). |

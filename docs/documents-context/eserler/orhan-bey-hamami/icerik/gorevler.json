@@ -1,0 +1,76 @@
+{
+  "_aciklama": "Orhan Bey Hamamı · görevler ve rozetler (30 Ekim 2026). TASLAK: içerik sorumlusu gözden geçirecek (`_taslak`). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta.",
+  "_taslak": true,
+  "gorevler": [
+    {
+      "id": "obh-soru-aynali",
+      "tur": "soru",
+      "baslik": "Hamamın bugünkü adı",
+      "soru": "Orhan Bey Hamamı bugün hangi adla anılır?",
+      "secenekler": [
+        "Eski Aynalı Çarşı",
+        "Bedesten",
+        "Kapalıçarşı",
+        "Emir Hanı"
+      ],
+      "dogru": 0,
+      "ipuclari": [
+        "Fotoğraftaki girişin üstündeki yazıya bak.",
+        "Adında «ayna» geçiyor."
+      ],
+      "dogru_metin": "Hamamın erkekler bölümü 1958 Çarşı yangınından önce «Aynalı Çarşı» diye anılırdı; yapı bugün «Eski Aynalı Çarşı» olarak bilinir.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "01_giris-guney.jpg",
+      "parca": "Hamam_Giris",
+      "kaynak": "E cilt-1 PDF s.106",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    },
+    {
+      "id": "obh-saha-giris",
+      "tur": "saha",
+      "baslik": "Aynalı Çarşı girişi",
+      "gorev": "«Eski Aynalı Çarşı» yazılı girişlerden birini bul.",
+      "yerinde": {
+        "yap": "Girişin önüne gel ve «Buradayım»a dokun.",
+        "konum_yaricap_m": 60,
+        "_not": "Konum eserin noktasından ölçülür (eser.json lat/lon). Orhan Bey Hamamı çarşıda Ulucami ve öbür hanlarla çok yakın; komşu esere taşmasın diye yarıçap 60 m."
+      },
+      "evden": {
+        "yap": "3D modelde hamamın girişine dokun.",
+        "parca": "Hamam_Giris"
+      },
+      "tamam_metin": "Yapının biri kuzeyde, biri güneyde, biri batıda üç girişi vardır. Envantere göre kuzeydeki giriş özgündür, öbürleri sonradan açılmıştır.",
+      "gorsel": "01_giris-guney.jpg",
+      "kaynak": "E cilt-1 PDF s.106",
+      "guven": "Doğrulanmış"
+    }
+  ],
+  "rozetler": [
+    {
+      "id": "obh-hikaye",
+      "ad": "Orhan Bey Hamamı'nı dinledin",
+      "metin": "Orhan Bey Hamamı'nın hikâyesini sonuna kadar dinledin ya da okudun.",
+      "kosul": {
+        "hikaye_bitti": true
+      }
+    },
+    {
+      "id": "obh-aynali",
+      "ad": "Aynalı Çarşı",
+      "metin": "Hamamın bugün çarşı olarak anıldığı adı öğrendin.",
+      "kosul": {
+        "gorev": "obh-soru-aynali"
+      }
+    },
+    {
+      "id": "obh-uc-giris",
+      "ad": "Üç giriş",
+      "metin": "Eski Aynalı Çarşı'nın girişini buldun.",
+      "kosul": {
+        "gorev": "obh-saha-giris"
+      },
+      "yerinde_etiketi": true
+    }
+  ]
+}
