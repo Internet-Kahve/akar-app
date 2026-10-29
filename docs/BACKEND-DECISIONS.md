@@ -408,3 +408,9 @@ Karar: `maxVisibleModels` başlangıç değeri 5'ten 10'a çıkar (`@akar/domain
 Neden: canlı katalogda 7 yerleştirilmiş model var; 5 sınırı Hanlar bölgesinde ikisini yüklemeden bırakıyordu. Değeri değiştirmek için API'yi elle çağırmak yerine panel kullanılır.
 Karar veren / tarih: Weissman, 28 Eki.
 Nasıl değiştirilir: değer panelden; başlangıç değeri `packages/domain/src/index.ts` ve `services/api/src/db/schema/settings.ts` (yeni migration). Ziyaretçiye ayar açmak yeni karar ister.
+
+**11.38 Demo içerik aktarımı prototip v2 dosyalarından okur; canlı katalog paketle yeniden yazılır.**
+Karar: `prepare-demo-content.py` dondurulmuş v1 `design/test-redmi9t/hazirla.py` yerine v2 `design/test-redmi9t-v2/hazirla.py` okuyucularını kullanır. Eser listesi ve kimlik `eserler/<eser>/eser.json`, model dosyası (`<glb>_sunum.glb`) ve konum düzeltmesi (`kaydirma_m`) `3d/model.json`'dan gelir; sürüm numarası kodda yazılmaz. Ürün kimlikleri (`bedesten`, `orhan-gazi`), ilçe adları ve ürünün üç rotası değişmez (v2'deki tek `veri/rota` kaydı ürün rotalarının yerine geçmez). 29 Ekim paketi yeni parça adlı modelleri getirir (Ulucami v29, Bedesten v09, Koza Han v17, Orhan Bey Camii v10, Hamam v08, Emir Hanı v08, Türbe v05); hikâye vurgularının hepsi yeni modellerde bulunur. Canlıya aynı aktarımla (`import-demo.ts --apply`) model ve içerik birlikte yazılır; haritadaki yerleşimler (`site_map_placements`) korunur.
+Neden: v1 eski modelleri taşıyordu; yalnız modeli panelden yenilemek vurguları boşa düşürürdü (parça adları değişti).
+Karar veren / tarih: Weissman, 29 Eki (iş listesi 25'in ilk adımı; canlı panelde bu yedi eserde düzenleme yapılmadığı için paketle üzerine yazılabilir).
+Nasıl değiştirilir: içerik paketi `docs/documents-context/` altında güncellenip aktarım yeniden çalıştırılır; panelde yapılan düzenlemeler varsa önce pakete aktarılır.

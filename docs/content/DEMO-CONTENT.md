@@ -1,10 +1,10 @@
 # Bursa demo içerik paketi
 
-Kaynak: #36 ile birleştirilen `docs/documents-context/eserler/` ve `design/test-redmi9t/hazirla.py` içindeki ekip seçimi. Ham çalışma arşivi uygulama paketine alınmaz.
+Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`, `3d/model.json`, `icerik/`, `gecmisi-gor/`); okuyucular `design/test-redmi9t-v2/hazirla.py` içinde (§11.38). Ham çalışma arşivi uygulama paketine alınmaz.
 
 - 7 eser, 7 Draco sıkıştırmalı GLB; modeller temsili olarak etiketlenir.
 - 58 kaynaklı eser fotoğrafı, 36 tarihî fotoğraf eşleşmesi, 59 hikâye adımı.
-- Aynı içeriğin tek kopyasıyla 94 Storage nesnesi: 77.045.439 bayt (73,48 MiB).
+- Aynı içeriğin tek kopyasıyla 115 Storage nesnesi: 99.782.371 bayt (95,16 MiB; 29 Ekim paketi).
 - Güncel eser fotoğraflarının izin/künye alanları `icerik/fotograflar.md` dosyalarından, tarihî fotoğrafların kaynak/lisans alanları `gecmisi-gor.json` dosyalarından aynen aktarılır.
 - Arşiv görselleri kırpılmadan gösterilir. Eşlenmiş bugünkü fotoğraf yokken karşılaştırma varmış gibi sunulmaz. Dış arşiv/CDN'den hotlink yapılmaz.
 - Bedesten ve Orhan Bey Camii mevcut `bedesten` / `orhan-gazi` kimliklerini korur. Ziyaretçi kayıtları korunur; kurmaca çeşme/mektep kayıtları silinmeden taslağa alınır.
