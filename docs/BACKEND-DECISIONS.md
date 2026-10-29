@@ -409,6 +409,12 @@ Neden: canlı katalogda 7 yerleştirilmiş model var; 5 sınırı Hanlar bölges
 Karar veren / tarih: Weissman, 28 Eki.
 Nasıl değiştirilir: değer panelden; başlangıç değeri `packages/domain/src/index.ts` ve `services/api/src/db/schema/settings.ts` (yeni migration). Ziyaretçiye ayar açmak yeni karar ister.
 
+**11.37 Rotalarda yürüme yolu: inceleme notları plana işlendi; uygulama ayrı PR’larla yapılacak.**
+Karar: [Rotalarda yürüme yolu planı](ROUTE-WALKING-PLAN.md) tasarım kaydı olarak tutulur. Yaya profili doğrulaması, eksik hesap durumu, eski çizgilerin geçersizleştirilmesi, sürüm kontrolü, süre/istek bütçesi ve kabul testleri planın parçasıdır. İlk sürüm önerisi durak başına “Haritada aç”, Google bağlantısı ve iPhone’da Apple seçeneğidir; uygulama içi navigasyon yoktur.
+Neden: eski öneri eksik bacakların toplamını ve geç gelen hesapların daha yeni rota kaydını ezmesini açıkça tanımlamıyordu. Genel otomobil demosu yaya rotası kabul testi yerine kullanılamaz.
+Karar veren / tarih: ilk öneri Weissman, 28 Eki; teknik inceleme ve plan güncellemesi Tamer Akdeniz, 29 Eki. Belgenin birleştirilmesi servis hesabı/anahtarı veya canlı rota özelliğinin hazır olduğu anlamına gelmez; servis sorumlusu ve saha doğrulaması uygulamadan önce netleşir.
+Nasıl değiştirilir: plan belgesi güncellenir; API/Web uygulaması ve canlı veri aktarımı ayrı PR’larda doğrulanır.
+
 **11.38 Demo içerik aktarımı prototip v2 dosyalarından okur; canlı katalog paketle yeniden yazılır.**
 Karar: `prepare-demo-content.py` dondurulmuş v1 `design/test-redmi9t/hazirla.py` yerine v2 `design/test-redmi9t-v2/hazirla.py` okuyucularını kullanır. Eser listesi ve kimlik `eserler/<eser>/eser.json`, model dosyası (`<glb>_sunum.glb`) ve konum düzeltmesi (`kaydirma_m`) `3d/model.json`'dan gelir; sürüm numarası kodda yazılmaz. Ürün kimlikleri (`bedesten`, `orhan-gazi`), ilçe adları ve ürünün üç rotası değişmez (v2'deki tek `veri/rota` kaydı ürün rotalarının yerine geçmez). 29 Ekim paketi yeni parça adlı modelleri getirir (Ulucami v29, Bedesten v09, Koza Han v17, Orhan Bey Camii v10, Hamam v08, Emir Hanı v08, Türbe v05); hikâye vurgularının hepsi yeni modellerde bulunur. Canlıya aynı aktarımla (`import-demo.ts --apply`) model ve içerik birlikte yazılır; haritadaki yerleşimler (`site_map_placements`) korunur.
 Neden: v1 eski modelleri taşıyordu; yalnız modeli panelden yenilemek vurguları boşa düşürürdü (parça adları değişti).
