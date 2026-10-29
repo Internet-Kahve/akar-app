@@ -897,6 +897,36 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - Sınama (Playwright, örnek EN verisiyle): anlatımın ilk cümlesi İngilizce, başlık «Grand Mosque», TR'ye dönünce «Ulucami»; hata yok.
 - Ürün alanları ve eksikler ENTEGRASYON §5.11'de.
 
+## 65. Ulucami iç mekân ayrıntısı; eser başına iki model (3D; v30)
+
+29 Ekim 2026. İş emri: «AKAR 3D: iç mekânları dış kadar ayrıntılı yap; yalnız sunum GLB'si». Sıra Ulucami → Bedesten → Türbe → Orhan Bey Camii; bu madde yalnız Ulucami. Kullanıcı onayından sonra Bedesten'e geçilecek.
+- **İki model kuralı:**
+  - `blend_hat/blend_cikti.py`: `model.json → ic_parcalar` listesindeki parçalar harita (uygulama) GLB'sine girmez.
+  - `blend_hat/parca_dogrula.mjs`: içerikte ve `model.json`'da geçen her ad sunum GLB'sinde olmalı. Harita GLB'sinde iç parçalar dışındaki bütün yapı parçaları bulunmalı, iç parçalardan hiçbiri bulunmamalı.
+  - Ulucami `model.json`: `glb` `ulu-cami_v30`, `ic_parcalar` (7 parça), `_aciklama`'ya tek cümle.
+- **Model** `ulu-cami_v30` (`build/build_v30.py`, `doku_ic_v30.py`, `build_v30_ic.py`). Eklenenler:
+  - mihrap: 06 fotoğrafı, niş, 8 sıra mukarnas, sütunçeler;
+  - minber: Ürgen PDF 20 çizimi, kündekâri dokusu kodla;
+  - havuz bölmesine mermer döşeme ve korkuluk;
+  - halı: kodla üretilen doku;
+  - levhalara fotoğraf dokusu (22, 23, 07);
+  - kemer kalem işi bantları (yeni `Kemer_Kalem_Isi`);
+  - müezzin mahfili (Ürgen PDF 12–13);
+  - 19 halka avize.
+  - Ölçek insanları tek nesne oldu. Kaynak tablosu `3d/README.md` v30 bölümünde.
+- **Cam kubbe:** Havuzun cam kubbesinden iç mekân dışarıdan görünüyor. İlk denemede, iç parçalar haritadan çıkınca tepeden görünüşte fark %2,3 oldu. Bu yüzden şunlar haritada kaldı:
+  - Payeler, Kemerler ve Ic_Sadirvan_Havuz;
+  - Govde'nin iç döşemesi, halı dokusuyla.
+  
+  Bantlar Kemerler'e eklenince harita büyüdüğü için ayrı parça yapıldı. Sonuç: dış eşitlik en çok %0,051.
+- **Palet:** 8 yeni renk rolü (fotoğraftan ölçüldü; bölgeler `kaynak` alanında). `eser_doku`'ya halı ve kündekâri eklendi.
+- **Sayılar:**
+  - Sunum: 97 496 → 107 068 üçgen, 844 → 1268 KB, çizim çağrısı 125 → 129, doku 11 → 15.
+  - Harita: 92 008 → 90 254 üçgen, 768 → 760 KB.
+  - Sunumdaki çizim çağrısı ve doku sınırı (80 ve 8) v29'da zaten aşılmıştı; aşım raporda yazıldı.
+- **Kontrol:** `kontrol/v30/ic_detay.png`, `dis_esitlik.png`, `tiklama_haritasi.png`. Ara JPEG'ler `kontrol/v30/_eski/` altına taşındı. `modelleri-gom.py` çalıştırıldı.
+- **Atlananlar:** kubbe içleri (çatıda kasnak ağzı yok), kapıların iç yüzü, hünkâr mahfili, vaaz kürsüleri.
+
 ## 66. Figma'dan dört ekran ve tebrik kartında giriş satırı (prototip v2)
 
 29 Ekim 2026 akşamı. YAPILACAKLAR §2b'deki 2–5. maddeler ve tebrik/giriş çakışmasının çözümü. Akar akışı (1. madde) ekip kararı bekliyor.
@@ -943,3 +973,166 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - **Veri:** `hikaye.md` → «## Akar akışı» tablosu; `hazirla.py` cümleye `akis` yazar. Beş eserde satır dolduruldu: Ulucami 11, Bedesten 4, Orhan Bey Hamamı 2, Orhan Bey Camii 4, Koza Han 2. Hepsi envanterde Doğrulanmış.
 - **Kaynak kuralı:** Kılıç Ali Paşa'daki «Bakım · Aydınlatma · Görevliler» etiketleri kaynakta yok, kullanılmadı. İmaret bugün yok; yay külliyenin camisine gider, kart «(bugün yok)» der. İstanbul koordinatı yalnız yön içindir.
 - **Sınama:** Playwright, masaüstü ve mobil; Ulucami, hamam, Koza Han. Test ortamında MapLibre işçisi yabancı adresten yüklenemiyordu, kütüphane yerel kopyadan sunuldu. Haritaya dönünce pin süzgeci eski hâline dönüyor. Sayfa hatası yok.
+
+## 68. Ulucami v30 düzeltmesi: minber rengi ve müezzin mahfili (3D)
+
+29 Ekim 2026. Kullanıcı v30'u iki düzeltmeyle onayladı; cam kubbe istisnası (Payeler, Kemerler, havuz haritada) ve sunumdaki çizim çağrısı ile doku aşımı şimdilik kabul edildi.
+- **Minber:**
+  - Renk `05_minber.jpg`'nin aydınlık yüzlerinden yeniden ölçüldü: `kundekari_zemin` #241100 → #623E0E, `kundekari_cita` #452A11 → #925A00. Gece gölgesinden ölçülen eski değerler bırakıldı.
+  - Yeni rol `minber_altin` #E69925 (köşk panolarının yaldız çizgisi). Yan aynada üçgen, köşk altında dikdörtgen yaldız çerçeve.
+  - Kündekâri dokusunda çıta 14 → 18 px; geometrik desen seçiliyor.
+- **Müezzin mahfili** (Ürgen PDF 12–14 ve fotoğraf 25):
+  - mermer kaide, bilezik ve başlık;
+  - çevre ve ara kirişler, silme ve saçak;
+  - iki katta 0,52 m korkuluk (eski 0,8 m tahmindi; ölçü PDF 14);
+  - köşe ve ara babalar, merdiven korkuluğu.
+- **Sayılar:** sunum 112 402 üçgen, 1282 KB, 130 çizim çağrısı, 15 doku. Harita değişmedi: 760 KB, 90 254 üçgen. Dış eşitlik en çok %0,051. Doğrulamanın c ve d adımları geçti.
+- **Kontrol ve dosyalar:**
+  - `kontrol/v30/` görselleri yenilendi.
+  - İlk v30'un GLB'leri `export/_eski/*_ilk.glb`, görselleri `kontrol/v30/_eski/*_ilk.png` olarak saklandı.
+  - `modelleri-gom.py` çalıştırıldı.
+- **Kart önerileri** `parcalar.md`'ye yazılmadı; ayrı not: `eserler/ulu-cami/3d/kart_onerisi_v30.md` (Talha).
+
+## 69. Ulucami levhaları fotoğraftaki gibi çeşitlendi ve ayrıntılandı (3D; v31)
+
+29 Ekim 2026. v30 onaylandı; bu iş v31. v30 dosyalarına dokunulmadı: v30 blend'i açılıp `ulu-cami_v31.blend` olarak kaydedildi.
+- **Sorun:** v30'da 64 levha 3 hücreli atlastan geliyordu, ikisi vavdı; içeride her yönde vav görünüyordu.
+- **Atlas** `build/doku_ic_v31/levhalar.jpg` (2048 × 1024, q80) eskisinin yerine geçti; doku sayısı aynı kaldı.
+  - 18 farklı levha, hepsi fotoğraf kırpması (02, 07, 20, 21, 22, 23, 27, 29, 34): dikey ve daire istifler, yatay yazılar, iki koyu zeminli yatay levha, iki madalyon, iki vav.
+  - Eğik çekimler dört köşeden düzleştirildi, ışık eşitlendi, zeminler aynı krem tonuna çekildi.
+  - Kaynak ve kırpma koordinatları `kaynak.json`'da. Yazı üretilmedi, elle çizilmedi.
+- **Geometri:** `Levhalar` yeniden kuruldu (ad aynı).
+  - 2,5 cm önde ince levha ve koyu çerçeve.
+  - Silme ve oymalı taç: siluet 23'ten, alçak poligonlu ekstrüzyon.
+  - Duvarlara 14 yatay levha ve 6 madalyon; yerleri temsili (T).
+  - Taç ve madalyon aynı atlas malzemesinde; ayrı parça gerekmedi.
+- **Dağıtım:**
+  - Vav yalnız iki yerde: 07 kıble duvarında (yeri doğru), 22 tek paye yüzünde (yeri T).
+  - Aynı payenin dört yüzü farklı, karşılıklı yüzlerde aynı levha yok, hücre başına en çok 7 kullanım.
+- **Palet:** dört yeni rol: `levha_zemin`, `levha_cerceve`, `levha_tac`, `madalyon_altin`.
+- **Sayılar:**
+  - Sunum 112 402 → 119 834 üçgen, 1282 → 1683 KB, çizim çağrısı 130 → 128, doku 15.
+  - Harita değişmedi: 90 254 üçgen, 760 KB; v30 haritasıyla görüntü farkı %0,000.
+  - Dış eşitlik en çok %0,057. Doğrulamanın c ve d adımları geçti.
+- **Kayıt ve kontrol:**
+  - `model.json` → `ulu-cami_v31`. README'de v31 bölümü ve sürüm tablosu; v30 satırının eski sayıları da düzeltildi.
+  - `kontrol/v31/`: `levhalar.png`, `levha_atlas.png`, `ic_detay.png`, `dis_esitlik.png`, `tiklama_haritasi.png`, `parca_dogrulama.json`.
+  - `modelleri-gom.py` çalıştırıldı. Kartlara (`parcalar.md`) dokunulmadı.
+
+## 70. Ulucami kubbe ve çatısına kurşun ek dokusu (3D; v32)
+
+29 Ekim 2026. Kullanıcı v31'i beğendi ve çatıya Bedesten'deki gibi doku istedi. v31 dosyalarına dokunulmadı: v31 blend'i açılıp `ulu-cami_v32.blend` olarak kaydedildi.
+- **Doku** `build/doku_cati_v32/kursun_ek.png` (128 × 128): Bedesten kubbe dokusu gibi beyaz zemin üstünde koyu ek çizgileri, `kursun` rolüyle çarpılır. Ek koyuluğu Bedesten maskesinden; levha sırası eki ve levha başına hafif ton farkı (F 09).
+- **UV:** 19 kubbede 48 dilim eki ve 1,2 m levha sıraları (F 04, 09; sayılar T); çatıda eğim yönünde 0,6 m ekler. Geometri, parçalar, iç mekân aynı.
+- **Palet:** `eser_doku → ulu-cami`'ye `Cati` ve `Kubbe.001` eklendi (aynı doku). Yeni renk rolü yok.
+- **Sayılar:** üçgen ve çizim çağrısı aynı; harita 760 → 755 KB, doku 7 → 8; sunum 1683 → 1679 KB, doku 15 → 16. Dış eşitlik en çok %0,024. Doğrulamada c, d geçti (b: kurşunun ortalama rengi ek çizgileriyle biraz koyulaştı; beklenen).
+- **Kayıt ve kontrol:** `model.json` → `ulu-cami_v32`; README v32 bölümü ve sürüm satırı. `kontrol/v32/`: `cati.png`, `dis_esitlik.png`, `kursun_ek_doku.png`, `parca_dogrulama.json`. `modelleri-gom.py` çalıştırıldı.
+
+## 71. Bedesten iç mekânı dış kadar ayrıntılı (3D; v11, yalnız sunum)
+
+29 Ekim 2026. Ulucami v32'den sonra kullanıcının isteğiyle başlandı. v10 dosyalarına dokunulmadı: v10 blend'i açılıp `bedesten_v11.blend` olarak kaydedildi.
+- **İki dosya:** `model.json → ic_parcalar` eklendi (9 iç parça). Harita GLB'si yalnız dış: gövdenin iç yüzü `Ic_Duvarlar` olarak ayrıldı. `ortu_gruplari` [[Kubbeler, Kubbe_Ici], [Govde_Ortu]].
+- **Yeni ve değişen parçalar:**
+  - `Pandantifler`, `Kubbe_Ici`: sıvalı köşe üçgenleri, kuşak, kubbe içi.
+  - `Kemerler`: 18 duvar kemeri.
+  - `Ic_Dukkanlar`: 32 camekân cephesi (bugün).
+  - `Kitabe` (yeni): Kelime-i Tevhid kitabesi, doğudaki ayağın batı yüzünde (PDF 85; fotoğraf kırpması).
+  - Ayak çevresindeki 2007 camekânları önce eklendi, kullanıcıyla gözden geçirilince çıkarıldı (ayakları ve kitabeyi örtüyordu).
+  - `Ic_Sokak`: taş döşeme dokusu.
+  - `Sadirvan`: panolu havuz, sütun, tas, pirinç musluk.
+  - Kubbeler'in görünmeyen alt kapağı silindi.
+- **Kaynaklar:** Ekinci 2025 PDF 96, 98, 99, 103; foto 02; Alan Başkanlığı föyü s.8. Ölçülerin bir kısmı T; ayrıntı `3d/README.md` v11 tablosunda.
+- **Dokular ve renkler:**
+  - `ic_atlas.jpg` (1024 × 1024; kitabe hücresi fotoğraf kırpması) ve `zemin_tas.jpg` (512 × 512) kodla üretildi; renkleri fotoğraftan ölçüldü.
+  - Palete 11 yeni rol eklendi (`bedesten_ic_*`, `ic_zemin_*`, `camekan_*`, `musluk_pirinc`).
+- **Sayılar:**
+  - Harita: 25 814 → 23 314 üçgen, 197 → 179 KB.
+  - Sunum: 30 950 → 64 296 üçgen, 240 → 632 KB; doku 8, çizim çağrısı 40.
+  - Dış eşitlik en çok %0,006. Doğrulamada c ve d geçti.
+- **Kayıt:**
+  - `model.json` → `bedesten_v11`.
+  - README v11 bölümü ve sürüm satırı yazıldı.
+  - `parcalar_taslak.md`'ye 3 kart satırı eklendi (Ic_Duvarlar; Pandantifler + Kubbe_Ici; Kitabe).
+  - `kontrol/v11/` dolduruldu; `modelleri-gom.py` çalıştırıldı.
+
+## 72. Orhan Gazi Türbesi iç mekânı: «İçini göster» ve ayrıntı (3D; v06, iç parçalar yalnız sunumda)
+
+29 Ekim 2026. Bedesten v11 gözden geçirmesinden sonra kullanıcının isteğiyle. Türbenin temel iç mekânı yoktu; temel ve ayrıntı turu birlikte v06'da yapıldı. v05 dosyalarına dokunulmadı.
+- **Örtü ve gruplar:** `ortu_gruplari` [[Kubbe, Ic_Kubbe], [Dehliz]]; `ic_parcalar` 7 parça. Govde'nin yatay kapakları halkaya çevrildi; Kubbe'nin aşağı bakan alt kapaklarının yönü çevrildi (silinmedi; harita v05 ile aynı kalsın).
+- **İç parçalar:**
+  - `Orta_Kubbe_Sutunlar`: dört sütun, sivri kemerler, pandantifler.
+  - `Ic_Kubbe`: kalem işi kırpmalı orta kubbe içi.
+  - `Dehliz`: yarım beşik tonozlar.
+  - `Ic_Duvarlar`: 11 pencere, Hereke perdeleri, barok alınlıklar, zikzak kuşak.
+  - `Ic_Zemin`: kırık taş döşeme, ortak paletin nötr taş renkleriyle.
+  - `Orhan_Gazi_Sandukasi`: mermer kaide, pirinç sarısı sık çubuklu şebeke, puşide, kavuk.
+  - `Sandukalar`: 20 sanduka ve setler, desensiz düz petrol-yeşili örtü, ahşap korkuluk.
+- **Kaynaklar:** Envanter C2 PDF 116–117; plan Yurt 2024 PDF 224; fotoğraflar 02 ve 05 (sandukaların yeri 05'ten ölçekle); Yurt 2024 PDF 327–333.
+- **Doku:** tek atlas `build/doku_ic_v06/ic_atlas.jpg` (kod + fotoğraf kırpması). Palete 10 yeni rol eklendi; `turbe_zemin_*` dördü kullanılmıyor.
+- **Kullanıcı düzeltmesi (aynı gün):** sanduka örtülerindeki desen kaldırıldı, şebeke pirinç rengi ve sıklaştırıldı, döşeme nötr taş renklerine çekildi.
+- **Sayılar:**
+  - Harita: 8 282 → 8 342 üçgen, 260 → 262 KB.
+  - Sunum: 11 618 → 26 568 üçgen, 314 → 513 KB; doku 11, çizim çağrısı 42.
+  - Harita ↔ sunum en çok %0,001. Harita v05 ↔ v06 en çok %0,063 (80°, azimut 200, yakın).
+  - Doğrulamada c ve d geçti.
+- **Kayıt:**
+  - `model.json` → `orhan-gazi-turbesi_v06`; README v06 bölümü ve satırı.
+  - `parcalar_taslak.md`'ye 6 satır eklendi. `hikaye.md` yok, dokunulmadı.
+  - `kontrol/v06/` dolduruldu; `modelleri-gom.py` çalıştırıldı.
+
+## 73. Orhan Bey Camii iç mekânı: «İçini göster» ve ayrıntı (3D; v11, iç parçalar yalnız sunumda)
+
+29 Ekim 2026. Bedesten v11 ve Türbe v06 onayından sonra. v10 dosyalarına dokunulmadı.
+- **Örtü:** kurşun damlar `Cami_Ortu`, kasnak pencere söveleri ve alemler `Kubbe_Pencereler` olarak ayrıldı. Gruplar [kubbeler + `Kubbe_Pencereler` + `Ic_Kubbeler`] → [`Cami_Ortu`].
+- **Dış kabuk:** bloklar arasındaki iç yüzlerin odalara bakan kısımları silindi; kubbelerin iç diskleri yukarı çevrildi. Saçak altlarının dışa taşan şeridi gövdede kaldı; böylece Cami_Govde'nin kutusu ve haritadaki hizası değişmedi.
+- **İç parçalar:**
+  - mekânlar: `Orta_Mekan`, `Mihrap_Eyvani` (+0,63, dört basamak), `Tabhaneler` (sivri kemerle açılır), `Giris_Koridoru`;
+  - kubbeler: `Pandantifler` (mihrap kubbesinde tromp kırpması), `Ic_Kubbeler` (mihrap kubbesi 07 kırpması);
+  - `Ic_Zemin`: halı, kodla üretilen doku;
+  - `Ic_Mihrap`: 03 kırpması;
+  - `Minber`.
+- **Pencereler:** 20 duvar ve 14 kasnak penceresi içten, fotoğraf kırpmasıyla.
+- **Kaynaklar:** 1 m ızgaralı plan; envanter C1 PDF 101–103; fotoğraflar 02, 03, 07.
+- **Doku:** `ic_atlas.jpg` (1024 × 1024) ve `hali.jpg`. Palete 3 yeni rol.
+- **Sayılar:**
+  - Harita: 15 974 → 16 074 üçgen.
+  - Sunum: 20 662 → 28 550 üçgen, 542 KB, çizim çağrısı 84, doku 20.
+  - Harita ↔ sunum en çok %0,020; harita v10 ↔ v11 en çok %0,095.
+  - Doğrulamada c ve d geçti.
+- **Kayıt:**
+  - `model.json` → `orhan-bey-camii_v11`; README v11 bölümü.
+  - `parcalar_taslak.md`'ye 10 satır eklendi. `hikaye.md`'ye dokunulmadı.
+  - `kontrol/v11/` dolduruldu; `modelleri-gom.py` çalıştırıldı.
+
+## 74. Orhan Bey Camii minberi ve Türbe pirinç şebekesi düzeltmesi (3D)
+
+29 Ekim 2026. Orhan Bey Camii v11 onaylandı; çizim çağrısı 84 ve doku 20 kabul edildi.
+- **Minber (v11, aynı sürüm):**
+  - yan aynalar üçgen çerçeveli ve dikey panelli; korkuluk çubuklu, küpeşteli;
+  - köşk dört ince dikmeli; külah ince ve sivri;
+  - kapıya fotoğraf 02'den mavi zeminli yazılı pano, üstüne yazı kuşağı ve taç kırpıldı; turuncu kutu kaldırıldı;
+  - çıtalar için yeni rol `orhan_minber_cita` (fotoğraf 02'den ölçüldü).
+  - Sunum 28 550 → 29 490 üçgen. Dış eşitlik ve doğrulama aynı: harita ↔ sunum en çok %0,019, harita v10 ↔ v11 en çok %0,095; c ve d geçti.
+- **Türbe (v06, aynı sürüm):**
+  - şebeke ayrı malzeme `Turbe_Pirinc`; üst kuşakta topuzlar, köşelerde sivri tepelikler.
+  - Metalik 0,5, pürüzlülük 0,35. İstenen 0,8, ortam yansıması olmadığı için düz yüzleri koyu gösterdi; karşılaştırma `kontrol/v06/sebeke_metal.png`.
+  - Sunum 26 568 → 29 320 üçgen, çizim çağrısı 43. Harita değişmedi (v05 ↔ v06 en çok %0,063). c ve d geçti.
+- **Kontrol:** iki eserin `ic_detay.png` görseli yenilendi (minber ve şebeke kareleri fotoğraf kırpmasıyla yan yana). `modelleri-gom.py` çalıştırıldı.
+
+## 75. Altı eser Ulucami seviyesinde; asıl tema buzlu (30 Ekim 2026 gece, Claude)
+
+İstek (Talha): «7 eserin hepsinde tıklanan parçaya basınca kart, varsa iç yoksa dış; hepsine bulmaca; hepsinin envanter sayfası; hepsinin Geçmişi Gör fotoğrafları; asıl tema buzlu». Referans Ulucami; prompt'lar `_promptlar/PROMPT_parca_kartlari_diger_eserler.md`, `PROMPT_gorevler_diger_eserler.md`, `PROMPT_gecmisi_gor_diger_eserler.md`.
+
+- **Parça kartları** (`icerik/parcalar.md`): Emir Hanı 4, Koza Han 7, Orhan Bey Hamamı 4, Orhan Bey Camii 11, Orhan Gazi Türbesi 7, Bedesten 8 kart. Hikâyede vurgulanan bütün parçaların kartı var. İç mekânı olan üç eserde (Bedesten, Orhan Bey Camii, Orhan Gazi Türbesi) iç parçaların da kartı var; Emir Hanı, Koza Han ve Hamam'da iç mekân yok (yalnız dış). Kartı olmayan parçalar ve nedenleri her dosyanın sonunda. Eski taslaklar `icerik/_eski/parcalar_taslak.md`.
+- **Bulmaca, saha görevi, rozetler** (`icerik/gorevler.json`, **taslak**, `_taslak: true`): her eserde bir soru (4 şık, 2 ipucu, fotoğrafla çözülür) ve bir saha görevi (evden karşılığı 3D parçası). Rozet: hikâye (Orhan Gazi Türbesi'nde hikâye olmadığı için yok) + soru + saha. Toplam rozet: Ulucami 3 + diğer altı eser 17 = **20**. Cami ve türbe içinde görev yok. Çarşının ortasındaki Emir Hanı ve Hamam'da konum yarıçapı 60 m (komşu esere taşmasın), öbürlerinde 80 m.
+- **Eser hakkında = envanter metninin tamamı** (`icerik/eser-hakkinda.md`): Ulucami'deki gibi kitaptan kelimesi kelimesine (`_araclar/envanter_metni_cikar.py`), bölüm başlıkları kitabın sırası bozulmadan eklendi, rivayet/tahmin içeren paragraflar «Tarihsel çıkarım». Önceki özet metinler `eser-hakkinda-ozet.md`'ye taşındı (uygulama okumaz; «Vakıf ve akar» bölümü oradan aynen alındı). Sayfalar: Emir Hanı C1 s.108–109; Hamam C1 s.104–107; Orhan Bey Camii C1 s.96–103; Koza Han C2 s.8–11 + köşk mescit C1 s.194–195; Bedesten C2 s.27–29; Orhan Gazi Türbesi C2 s.115–117.
+- **Okuma katmanı** (`icerik/eser-hakkinda-okuma.md`): her bölüme özet cümleleri, rakam kartları, zaman çizelgesi, terimler ve masaüstü 3D açısı. `hazirla.py` hepsini kitap metninde birebir buldu (uyarı yok).
+- **Kitaptaki fotoğraflar** (`icerik/kitap-fotograflari.md` + `icerik/foto/kitap/`): Orhan Bey Camii 26, Hamam 14, Koza Han 12, Emir Hanı 6, Türbe 6, Bedesten 5. Kitabın PDF'inden kesildi (220 dpi, uzun kenar ≤ 1280 px); Ulucami'deki gibi arşiv eşleştirmesi yapılmadı, alt metinler geçici.
+- **Kapak** (`eser.json → hakkinda_kapak`): altı eserde de envanterin açılış fotoğrafı (Orhan Gazi Türbesi'nde açılış fotoğrafı galeride yok; dış fotoğraf seçildi).
+- **Geçmişi Gör:** Foto Atlas'ta izinli bütün kayıtlar tarandı. Koza Han'a 47676 «Koza Han Mescidi» (1908–34) eklendi (5 → 6; `veri/fotoatlas/eslesme_elle.csv`'ye onay, Git dışında). Bedesten, Emir Hanı ve Orhan Bey Hamamı için Foto Atlas'ta kullanılabilir (ya da izin bekleyen) **hiç kayıt yok**; bu eserlerde «eski görüntü henüz yok» ekranı kalır. Bugünkü eş ve örnek iz Ulucami dışında yapılmadı (`_promptlar/PROMPT_gecmisi_gor_diger_eserler.md` hâlâ açık).
+
+- **Yöntem:** Envanter metni `_araclar/envanter_metni_cikar.py` ile PDF'ten çıkarıldı, kelimesine dokunulmadı. Kart metinleri ve sorular yalnız bu metinden (ve kaynağı yazılı Alan Başkanlığı föyü, Ekinci 2025); kartlarda 2–4 cümle. Fotoğraflar tek tek bakılarak seçildi; parçayı göstermeyen fotoğraf konmadı (yoksa hücre boş, kart kapak fotoğrafını gösterir). Parça adları sunum GLB'lerinden okundu.
+- **Bilerek alınmayanlar:** Koza Han İç Koza'daki havuz (envanterde yok), üst kat revakının ahşap olduğu cümlesi (fotoğrafla çelişiyor), Orhan Bey Camii cephe süslemesinin tarihlendirmesi (çıkarım), Türbe'nin yeniden yapım yılı (kitapta iki farklı yıl), Evliya Çelebi anlatımları (kartlarda yok, tam metinde var).
+- **Kod:** `hazirla.py` → kitap fotoğrafı yerleşimi (aynı cilt; sondaki özet paragraf), `kucult` (`sips` yoksa kopya); `app.js` → hikâyesi olmayan eserde bulmaca alt yazısı; `index.html` → buzlu varsayılan tema. Esere özel değer yok.
+- **Denendi:** `hazirla.py` hatasız; okuma katmanında uyarı yok; bütün kart ve görev fotoğrafları klasörde. Tarayıcıda Orhan Bey Camii: dış parçaya dokununca kart, «İçini göster» sonrası iç parçaya dokununca kart, bulmaca ekranı (veri sayfaya enjekte edilerek; çalışan sunucu yeniden başlatılmadan).
+- **Açık kalan:** görevlerin içerik sorumlusunca gözden geçirilmesi; kitap fotoğraflarının alt metinleri; Ulucami dışındaki eserlerde bugünkü eş ve örnek iz; `eslesme_elle.csv`'deki 47676 onayının doğrulanması.

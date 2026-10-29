@@ -1,5 +1,43 @@
 # Redmi 9T prototipi ve performans testi · v2
 
+## 30 Ekim 2026 · asıl tema buzlu; altı eserin verisi Ulucami seviyesinde
+
+**Asıl tema buzlu.** Adres parametresi olmadan açılınca buzlu tema gelir (`index.html` baş betiği: `akar.tema` boşsa `buzlu`). `?tema=cam` akşam (koyu) kipi, `?tema=sade` eski sade görünüm. `sicak`, `il`, `bant` yalnız denemedir (buzlu + `data-ton`); ürüne buzlu taşınacak (bkz. `ENTEGRASYON_29EKIM.md` §0, §5.13).
+- Buzlu: ortak arayüz nötr (taş zemin `#EDEEEA`, mürekkep, altın vurgu), yüzen her şey cam yüzey (`--cam` + `backdrop-filter`). İle özgü renk ve motif yalnız `veri/sehir/<il>.json → kimlik`'ten gelir (aşağıda «Yeni il eklemek»). 29 Ekim'deki «petrol ana renk» kararı bununla değişti: petrol Bursa'nın yöre rengi, arayüzün değil.
+- Harita: `design/harita/akar-style-buzlu.json` (nötr gri) + kireç/taş tonları (`?harita=normal` eski gri).
+
+**Altı eserin verisi** (Bedesten, Koza Han, Orhan Bey Camii, Orhan Bey Hamamı, Emir Hanı, Orhan Gazi Türbesi). Kod değişmedi; hepsi veri:
+- **Parça kartları** (`icerik/parcalar.md`): Emir Hanı 4, Koza Han 7, Orhan Bey Hamamı 4, Orhan Bey Camii 11, Orhan Gazi Türbesi 7, Bedesten 8 kart. Hikâyede vurgulanan bütün parçaların kartı var. İç mekânı olan üç eserde (Bedesten, Orhan Bey Camii, Orhan Gazi Türbesi) iç parçaların da kartı var; Emir Hanı, Koza Han ve Hamam'da iç mekân yok (yalnız dış). Kartı olmayan parçalar ve nedenleri her dosyanın sonunda. Eski taslaklar `icerik/_eski/parcalar_taslak.md`.
+- **Bulmaca, saha görevi, rozetler** (`icerik/gorevler.json`, **taslak**, `_taslak: true`): her eserde bir soru (4 şık, 2 ipucu, fotoğrafla çözülür) ve bir saha görevi (evden karşılığı 3D parçası). Rozet: hikâye (Orhan Gazi Türbesi'nde hikâye olmadığı için yok) + soru + saha. Toplam rozet: Ulucami 3 + diğer altı eser 17 = **20**. Cami ve türbe içinde görev yok. Çarşının ortasındaki Emir Hanı ve Hamam'da konum yarıçapı 60 m (komşu esere taşmasın), öbürlerinde 80 m.
+- **Eser hakkında = envanter metninin tamamı** (`icerik/eser-hakkinda.md`): Ulucami'deki gibi kitaptan kelimesi kelimesine (`_araclar/envanter_metni_cikar.py`), bölüm başlıkları kitabın sırası bozulmadan eklendi, rivayet/tahmin içeren paragraflar «Tarihsel çıkarım». Önceki özet metinler `eser-hakkinda-ozet.md`'ye taşındı (uygulama okumaz; «Vakıf ve akar» bölümü oradan aynen alındı). Sayfalar: Emir Hanı C1 s.108–109; Hamam C1 s.104–107; Orhan Bey Camii C1 s.96–103; Koza Han C2 s.8–11 + köşk mescit C1 s.194–195; Bedesten C2 s.27–29; Orhan Gazi Türbesi C2 s.115–117.
+- **Okuma katmanı** (`icerik/eser-hakkinda-okuma.md`): her bölüme özet cümleleri, rakam kartları, zaman çizelgesi, terimler ve masaüstü 3D açısı. `hazirla.py` hepsini kitap metninde birebir buldu (uyarı yok).
+- **Kitaptaki fotoğraflar** (`icerik/kitap-fotograflari.md` + `icerik/foto/kitap/`): Orhan Bey Camii 26, Hamam 14, Koza Han 12, Emir Hanı 6, Türbe 6, Bedesten 5. Kitabın PDF'inden kesildi (220 dpi, uzun kenar ≤ 1280 px); Ulucami'deki gibi arşiv eşleştirmesi yapılmadı, alt metinler geçici.
+- **Kapak** (`eser.json → hakkinda_kapak`): altı eserde de envanterin açılış fotoğrafı (Orhan Gazi Türbesi'nde açılış fotoğrafı galeride yok; dış fotoğraf seçildi).
+- **Geçmişi Gör:** Foto Atlas'ta izinli bütün kayıtlar tarandı. Koza Han'a 47676 «Koza Han Mescidi» (1908–34) eklendi (5 → 6; `veri/fotoatlas/eslesme_elle.csv`'ye onay, Git dışında). Bedesten, Emir Hanı ve Orhan Bey Hamamı için Foto Atlas'ta kullanılabilir (ya da izin bekleyen) **hiç kayıt yok**; bu eserlerde «eski görüntü henüz yok» ekranı kalır. Bugünkü eş ve örnek iz Ulucami dışında yapılmadı (`_promptlar/PROMPT_gecmisi_gor_diger_eserler.md` hâlâ açık).
+
+**Kodda küçük, esere özel olmayan düzeltmeler:**
+- `hazirla.py` → `kitap_fotolari`: fotoğraf yalnız **aynı ciltteki** paragraflara göre yerleşir (Koza Han iki cilde yayılıyor) ve sondaki «Vakıf ve akar» özet paragrafı aynı sayfayı anıyorsa fotoğrafları kendine çekmez. Ulucami'nin yerleşimi değişmedi (denetlendi).
+- `hazirla.py` → `kucult`: `sips` yoksa (Linux) dosyayı küçültmeden kopyalar, önbelleğe yazmaz.
+- `app.js` → bulmaca: hikâyesi olmayan eserde (Orhan Gazi Türbesi) alt yazı «cevabı hikâyede de duydun» yerine «cevap «Eser hakkında»da da var».
+- Bu gece öncesi (29–30 Ekim) arayüzde yapılanların listesi: `ENTEGRASYON_29EKIM.md` §0 ve `PROTOTIP_URUN_FARKI.md` §13.
+
+**Sunucu:** veri `sunucu.sh` açılırken üretilir; veri değişince sunucu yeniden başlatılmalı (CSS/JS değişiklikleri anında yansır).
+
+## 29 Ekim 2026 · iki tema: buzlu ve cam (`?tema=`, 4. tur)
+
+`?tema=buzlu` (gün) ve `?tema=cam` (akşam, koyu); `?tema=sade` kapatır. **30 Ekim: buzlu varsayılan (asıl tema); renk kararı yukarıda.** Seçim cihazda kalır (`akar.tema`). Kurallar `temalar.css`'te, yalnız `html[data-tema=…]` altında.
+- Çıkış noktası harita kartının buzlu ve cam seçenekleri. Haritanın ve sayfanın üstünde yüzen her şey (arama, etiketler, düğmeler, alt sayfa, kartlar, masaüstü üst çubuk ve panel, okuma sekmeleri, görev ve profil kutuları) cam yüzey: `--cam` + `backdrop-filter`; tam sayfalar renk lekeli zeminde (`--zemin`). Bulanıklığı desteklemeyen tarayıcıda düz yarı saydam.
+- Renk: lacivert (#25477B) yerine petrol ailesi ana renk (buzlu #1E5B6E, cam turkuaz #5BC2C4), vurgu altın; ara tonlar sis, adaçayı, kum, gök (buzlu) · gece petrol, turkuaz, altın (cam). Güven etiketleri ve 3D sahne zemini de temaya uyar.
+- Harita: `design/harita/akar-style-buzlu.json`, `akar-style-cam.json` (sunucu.sh paylaşır). Harita kartı temaya göre kendiliğinden buzlu / cam; `?kart=cam|perde|buzlu|yok` ile değişir (`akar.kart`).
+- Önceki denemeler (galeri, vasa, minyatür) kaldırıldı; `ornek-vasa.html`, `tema-vakif.css`, `harita/akar-style-galeri.json` ve `akar-style-minyatur.json` kullanılmıyor (silinmedi).
+
+## 29 Ekim 2026 · logo ve eser başlığı bandı
+
+- **Logo:** `design/logo/logo.png` (800 px kopyası `logo-web.png`, sunucu `logo.png` olarak paylaşır): açılış ekranı, masaüstü üst çubuk, karşılama kartı.
+- **Eser detayı (masaüstü panel):** başlık «Eser hakkında» kapağıyla aynı bantta: şehrin rengi, silik desen (sağ üstten solar), fotoğraf, ad ve tarih. «‹ Harita» düğmesi de bandın içinde. `app.css` → `.eb-bas`.
+- **Altın desen şeridi kaldırıldı** («Eser hakkında» kapağının altındaki sarı sıra; bandın dibinde yarım kalıyordu).
+- Krem/kemerli «Vakıf» teması denendi, beğenilmedi; bağlantısı kaldırıldı (`tema-vakif.css` kullanılmıyor).
+
 ## v2 · 27 Ekim 2026: Ulucami v27 ve «Kubbeleri kaldır»
 
 Bu klasör `test-redmi9t/` klasörünün kopyasıdır; **v1'e dokunulmadı** (v1 hâlâ Ulucami v26'yı açar). Çalıştırma aynı, yalnız yol farklı:
@@ -8,7 +46,7 @@ Bu klasör `test-redmi9t/` klasörünün kopyasıdır; **v1'e dokunulmadı** (v1
 Fikir, 42 İstanbul Şekerhan 3D görüntüleyicisinin kat açma animasyonundan uyarlandı: Ulucami tek katlı olduğu için katlar yerine **örtü kalkar**.
 
 - **Model:** `eserler/ulu-cami/3d/export/ulu-cami_v27(_sunum).glb`. v26'da gövde dolu bir kutuydu; v27'de içi boş, içinde 12 paye + 14 duvar payesi, 31 sivri kemer, mihrap, minber ve 64 yazısız levha var (ayrıntı: `eserler/ulu-cami/3d/README.md`). Haritadaki konum v26 ile aynı.
-- **Eser detayı · 3D:** sağ altta «İçini göster» düğmesi (yalnız kalkan parçaları olan modelde görünür; şimdilik Ulucami). Önce alemler ve şadırvan iskeleti, sonra 20 kubbe ve kasnaklar, en son çatı kalkar; iniş tersten. Kamera alçaksa içi görünsün diye 58°'ye yükselir. Kalkan parçalar dokunmaya kapanır.
+- **Eser detayı · 3D:** sağ altta «İçini göster» düğmesi (yalnız kalkan parçaları olan modelde görünür: Ulucami, Bedesten, Orhan Bey Camii, Orhan Gazi Türbesi). Önce alemler ve şadırvan iskeleti, sonra 20 kubbe ve kasnaklar, en son çatı kalkar; iniş tersten. Kamera alçaksa içi görünsün diye 58°'ye yükselir. Kalkan parçalar dokunmaya kapanır.
 - **Anlatım · 3D:** 5, 7, 8 ve 9. cümlelerde kubbeler kendiliğinden kalkar, diğerlerinde iner. Bu cümlelerde vurgu ve açı `hazirla.py` içindeki `IC_MEKAN` tablosundan gelir (5 → `Payeler`, 7 → `Ic_Sadirvan_Havuz`, 8 → `Levhalar`, 9 → `Minber`). `eserler/ulu-cami/icerik/hikaye.md` değişmedi; deneme onaylanırsa tablo oraya işlenir.
 - **Levhalarda yazı yok.** Gerçek hat yazısı fotoğraf kartıyla gösterilir (cümle 8: «Vav harfi» kartı). Yapay zekâyla Arapça hat üretilmez.
 - Kod değişiklikleri `app.js`'te `KALKAN`, `Sahne3D.kubbeler()`, `kalkanAdim()`, `[data-kubbe]` aramasıyla bulunur; `app.css`'te `.kubbe-dugme`.
@@ -86,7 +124,7 @@ Betik yalnız bu klasörün sayfalarını, harita stilini, 14 GLB'yi (7 normal +
 
 - Ses, cihazın Türkçe TTS sesine bağlı; ses yoksa ya da `onend` gelmezse cümle tahmini süreyle ilerler. Gerçek ses dosyaları yok.
 - Mesafe ve süre (~10 dk, 0,5 km) hesaptır; kullanıcının konumuna göre mesafe gösterilmez.
-- Bugünkü eşi olan fotoğraf (A1b) şimdilik yalnız Ulucami'de, 2 tane (bkz. «Geçmişi Gör · bugünkü eşler»). İz Bırak gönderimi, Yaşayan hafıza, Profil ve giriş ekranları prototipte yok; izler yalnız veriden okunur.
+- Parça kartı, bulmaca, okuma düzeni ve kitap fotoğrafları 30 Ekim'den beri yedi eserin hepsinde. Bugünkü eşi olan fotoğraf (A1b) şimdilik yalnız Ulucami'de, 2 tane (bkz. «Geçmişi Gör · bugünkü eşler»). İz Bırak gönderimi, Yaşayan hafıza, Profil ve giriş ekranları prototipte yok; izler yalnız veriden okunur.
 - `test.html` eski yerleşimi (kutu ortası, düzeltmesiz OSM noktası) kullanır; yalnız performans ölçümü içindir.
 
 ## Performans testi (`test.html`)
@@ -125,6 +163,14 @@ Betik yalnız bu klasörün sayfalarını, harita stilini, 14 GLB'yi (7 normal +
   - Profil: «WF · Profil» 1:7372 ve «D · Profil» 1:3591. Keşfettiklerim ve Rozetler gösterilir.
 - **İlerleme:** Bu cihazda (`localStorage`) tutulur: `akar.gorev.<id>` = `evden` | `yerinde`, `akar.rozet.<id>` = tarih. Profilde «Bu cihazdaki ilerlemeyi sil» var; demo öncesi sıfırlamak için.
 - **Bilerek yok:** puan, süre, seviye, cezalandırma, cami içinde görev.
+- **30 Ekim 2026 · altı eser daha (taslak):** soru / saha görevi / rozetler.
+  - Bedesten: «Kaç kubbe?» (14) · «Dört kapıdan biri» (`Kapilar`) · rozetler «On dört kubbe», «Dört kapı».
+  - Koza Han: «Avludaki küçük yapı» (köşk mescit) · «Mescidin merdiveni» (`Mescit`) · «Köşk mescit», «On dört basamak».
+  - Orhan Bey Camii: «Mihrabın malzemesi» (alçı) · «İkiz kemerler» (`Cami_SonCemaat`) · «Alçı mihrap», «İkiz kemerler».
+  - Orhan Bey Hamamı: «Hamamın bugünkü adı» (Eski Aynalı Çarşı) · «Aynalı Çarşı girişi» (`Hamam_Giris`) · «Aynalı Çarşı», «Üç giriş».
+  - Emir Hanı: «Revakları taşıyan ayaklar» (kesme taş ve tuğla) · «Avludaki şadırvan» (`Sadirvan`) · «Taş ve tuğla», «Han avlusu».
+  - Orhan Gazi Türbesi: «Türbedeki sandukalar» (Nilüfer Hatun) · «Tek kubbeli türbe» (`Kubbe`) · «Nilüfer Hatun», «Tek kubbe» (hikâye rozeti yok).
+  - Hikâyesi olan beş esere ayrıca «… dinledin» rozeti. Toplam 20 rozet. İçerik sorumlusu gözden geçirince `_taslak` kaldırılır.
 - **Üründe:** İlerleme `kullanici_ilerleme` tablosuna gider. Misafirken biriken ilerleme girişten sonra hesaba taşınır.
 
 ## Küre ve şehirler · 28 Ekim 2026
@@ -138,3 +184,20 @@ Betik yalnız bu klasörün sayfalarını, harita stilini, 14 GLB'yi (7 normal +
   - Zoom 3,2'nin altında yalnız eseri olan şehrin adı kalır, ötekiler nokta olur (etiketler üst üste binmesin).
   - Mobilde «Bursa ▾», masaüstünde üst çubuktaki «Bursa» düğmesi haritayı şehirlere uzaklaştırır.
 - **Şehir verisi:** `veri/sehir/` dosyaları: Bursa (`varsayilan: true`, harita burada açılır), Hatay, Konya, Kütahya. Envanter yılı ve eser sayıları KÖK&KOD envanter bilgi notundan. Konum yaklaşık il merkezi; yalnız işaret için. Bir şehre eser eklenince (`eser.json` → `il`) işareti kendiliğinden «n eser» olur. Kodda şehre özel değer yok.
+
+## Yeni il eklemek: kodda il adı yok · 29 Ekim 2026
+Arayüzde ile özgü her şey veriden gelir. Yeni bir il eklemek için kod değişmez; `veri/sehir/<il>.json` dosyası ve eserlerin `eser.json → il` alanı yeter.
+Eserin ili (`il`) ile şehir kaydının adı (`ad`) eşleşir; eser sayfası, Eser hakkında, harita kartı ve rota o ilin kaydını kullanır.
+
+| Alan (`veri/sehir/<il>.json`) | Nerede görünür | Yoksa |
+|---|---|---|
+| `kimlik.zemin` | yöre rengi: aramadaki il rozeti / mobil il çipi, harita kontrollerinin simgeleri, eser başlığı bandı, Eser hakkında kapağı/başlıkları, tam metin kartı, Oku düğmesi, harita kartı üst kenarı, rota çizgisi ve yıldızları, sesli okuma vurgusu | temanın nötr mürekkep rengi |
+| `kimlik.desen_renk` | yöre renginin açık tonu (bant üstü yazılar, koyu temada vurgular) | nötr açık ton |
+| `kimlik.desen` | `design/desenler/` içindeki desen: bantlar, tam metin kartı, il rozeti/çipi motifi | desensiz (motif görünmez) |
+| `envanter_adi`, `envanter_yayinci` | Eser hakkında kapağı ve kaynakça, araç satırındaki künye | «Envanter» |
+| `foto_kunye` | parça kartı fotoğraf künyesi | boş |
+| `rota.json → sehir` | rotanın rengi (çizgi, yıldızlar) | ilk durağın ili |
+
+Renklerin kaynağı: ilin envanter cildinin kapağı (Bursa #22566E petrol, Konya #3D8285 firuze, Hatay #7A6340 bronz). Beyaz yazı taşıyacağı için
+`zemin` beyaza karşı en az 4.5:1 olmalı. Ortak arayüz (taş zemin, mürekkep, altın vurgu) hiçbir ile ait değildir; temalar.css'te.
+Eser adları haritada Cormorant ile çizilir (harita yazı tipi sunucusunda serif yok; app.js → eserAdlariKur). Harita varsayılan olarak kireç/taş tonlarında (`?harita=normal` eski gri). «Aktif il»: harita durunca merkeze en yakın il kaydı (merkez, ≈60 km); çerçeve onun rengini alır, eser seçiliyse eserin ili önceliklidir.

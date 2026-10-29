@@ -4,7 +4,7 @@
 
 ## Şu anki durum (bir bakışta)
 
-- **Prototip** (`design/test-redmi9t-v2/`): harita + 7 eser 3D, «Eser hakkında» okuma düzeni (yalnız Ulucami), Geçmişi Gör (Ulucami), bulmaca/rozet (Ulucami), rota. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
+- **Prototip** (`design/test-redmi9t-v2/`): harita + 7 eser 3D, asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (Ulucami dışındakiler taslak), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
 - **Modeller:** pastel renkler + pişmiş AO, yer gölgesi web'de. Toplam ≈ 2,7 MB.
 - **Harita önizlemesi:** `design/harita/akar-harita-onizleme-v3.html` (ışık/renk paneli, «Pişmiş» hazır ayarı).
 - **Git:** `docs` dalında commit var, **push edilmedi**.
@@ -16,7 +16,7 @@
 | 1 | `git push origin docs` | Muhammed (terminal) | Bu bağlantıdan push yapılamıyor (sanal makinede SSH anahtarı yok). Sonra PR: https://github.com/Internet-Kahve/akar-app/pull/new/docs |
 | 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `_promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
 | 3 | ~~Redmi 9T denemesi~~ yapıldı (29 Ekim, Muhammed): sorun yok. | — | — |
-| 4 | Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları | Talha | Ayrıntı aşağıda: «Talha'nın işleri». |
+| 4 | ~~Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları~~ yapıldı (30 Ekim gece, Claude; `yaptiklarim-2.md` §75). Kalan: görevlerin gözden geçirilmesi (`_taslak`), bugünkü eş / örnek iz (Koza Han, Orhan Bey Camii, Türbe) | Talha | Ayrıntı aşağıda. |
 
 ### Talha'nın işleri (7 eserin hepsi Ulucami seviyesine)
 
@@ -37,12 +37,15 @@ Notlar:
 
 ## 2. Tasarım
 
+- [x] **Asıl tema buzlu** (30 Ekim, Talha): prototipte varsayılan; ürüne taşınacak (`ENTEGRASYON_29EKIM.md` §5.13). Deneme tonları (`sicak`, `il`, `bant`) ve kullanılmayan tema dosyaları temizlenebilir.
+
 - [x] **Figma güncellemesi** (29 Ekim, `_promptlar/PROMPT_figma_guncelle_29ekim.md`): dokuz madde işlendi, Claude ekran görüntülerinden kontrol etti. Kalan küçük düzeltmeler (mobil geri düğmesi, sekme solması, lejant) ikinci prompt'la verildi.
 - [ ] **3D eser ekranı, masaüstünde sol panelin alt yarısı boş** (karar bekliyor): kısa künye (yaptıran, malzeme, envanter sayfası) ya da «İçini göster / parçalara dokun» ipucu.
 - [ ] **Pin çakışması:** düzeltildi (etiket yer bulamazsa öbür yana geçer, önemli eser önce çizilir, yakında pin küçülür) ama **etiketler test ortamında çizilemedi** (yazı tipi indirilemiyor). Gerçek haritada ve Redmi'de bak.
-- [ ] **Diğer eserlerin kapak fotoğrafı:** `eser.json → hakkinda_kapak` yalnız Ulucami'de (envanterdeki açılış fotoğrafı). Diğer 6 eser için envanterdeki açılış fotoğrafı bulunup yazılmalı.
+- [x] **Diğer eserlerin kapak fotoğrafı:** 30 Ekim'de altı esere de yazıldı (envanterin açılış fotoğrafı; Türbe'de galeride olmadığı için dış fotoğraf).
 - [ ] **Ulucami ana referans.** Tasarım, UX kararları ve veri biçimi için örnek Ulucami. Diğer eserlerde bir şey eksikse Ulucami'deki karşılığına bakılır. Bunlar: okuma düzeni, parça kartları, «İçini göster», görev, Geçmişi Gör, kapak.
-- [ ] **Eser hakkında okuma düzeni yalnız Ulucami'de** (`icerik/eser-hakkinda-okuma.md`: özet, rakam, alıntı, zaman çizelgesi, 3D açıları). Diğer eserlerde tam metin düz görünüyor. En azından Koza Han ve Bedesten için yapılmalı (demo).
+- [x] **Eser hakkında okuma düzeni** yedi eserde (30 Ekim): envanter metninin tamamı + `eser-hakkinda-okuma.md` + kitap fotoğrafları.
+- [ ] **Kitap fotoğraflarının alt metinleri** (altı eser, geçici: «s. N, k. fotoğraf») ve arşivdeki yüksek çözünürlüklü asıllarla eşleştirme (Ulucami'deki gibi).
 - [ ] **Renk ince ayarı:** pastel renkler biraz açık bulunursa önizleme v3 sağ panelinde «Renk parlaklığı / Doygunluk» → «Ayarları kopyala» → `veri/sehir/bursa.json → harita_isik`.
 
 ## 2b. Figma'da olup prototipte olmayanlar (29 Ekim taraması)

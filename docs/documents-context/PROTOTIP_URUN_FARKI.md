@@ -1,4 +1,4 @@
-# AKAR · Prototipte olup üründe olmayanlar: ekran ekran tam liste (29 Ekim 2026)
+# AKAR · Prototipte olup üründe olmayanlar: ekran ekran tam liste (29 Ekim 2026; ek §13: 30 Ekim)
 
 **Kim için:** Tamer, Burak. Bu belge [`ENTEGRASYON_29EKIM.md`](ENTEGRASYON_29EKIM.md)'nin ekidir. O belge veriyi, içe aktarmayı ve şemayı anlatır. Bu belge arayüzü anlatır: her ekranda hangi düğme nerede, ne yapar ve üründe bugün ne var.
 
@@ -9,7 +9,7 @@
 
 **Tasarım kaynağı:** Figma `akar-yeni` (`HGTgq5vRXVqhVO9TcR9wBe`). 29 Ekim'de prototiple eşitlendi; değişen ekranların altında «29 Ekim: …» notu var.
 - Ölçüler ve renkler prototipin `app.css` dosyasında ve `design/tokens.css`'te.
-- **Ana referans Ulucami.** Bütün özellikler Ulucami'de dolu; diğer eserlerin verisi geldikçe aynı arayüz kendiliğinden dolar.
+- **Ana referans Ulucami.** 30 Ekim'den beri yedi eserin hepsinde parça kartı, bulmaca, Eser hakkında (tam metin + okuma düzeni) dolu; değişenler §13.
 
 **Kısaltmalar:**
 - **M** = masaüstü (genişlik > 900 px), **m** = mobil.
@@ -163,3 +163,22 @@ Hepsi gerekmiyor. Jürinin göreceği akışa göre öneri:
 5. Eser hakkında okuma düzeni (§6).
 6. Geçmişi Gör kaydırıcısı ve mini harita (§7). Kamera ve «Çekildi» telefonda demo için iyi, ama en son.
 7. Görev, rozet, profil (§8–9). Puan kararı önce konuşulsun.
+
+## 13. 30 Ekim 2026 eklemeleri
+
+| Öğe | Prototip | Ürün |
+|---|---|---|
+| Tema | **Asıl tema buzlu** (adres parametresiz açılış). Ortak arayüz nötr: taş zemin, mürekkep, altın vurgu; yüzen her şey cam yüzey. İlin rengi ve motifi yalnız veriden (`veri/sehir/<il>.json → kimlik`). `?tema=cam` koyu kip. Ayrıntı `ENTEGRASYON_29EKIM.md` §5.13. | farklı: tek tema, il kimliği yok |
+| İl rozeti (M) / il çipi (m) | Aramanın sağ ucunda il adı + ilin motifi, ilin renginde. Haritada «aktif il» değişince (merkeze en yakın il) rozet de değişir. | yok |
+| Seçili eser (liste ve harita kartı) | Seçili satırın solunda ilin renginde ince çizgi ve açık ton zemin; harita kartının üst kenarı ilin renginde. Seçili pinin altındaki daire kaldırıldı. | yok |
+| Harita kontrolleri ve pusula | Simgeler ilin renginde. 2D/3D düğmesi pusulayla tek daire: kadran (K/D/G/B, 8 çentik), kuzey üçgeni haritanın yönüyle döner, ortada gidilecek kip yazar («3D» / «2D»). Harita elle döndürüldüyse ilk basış yalnız kuzeyi yukarı getirir. | farklı |
+| Harita tonları | Kireç/taş zemin, yumuşak su, zoom'a göre kabartma; eser adları serif (Cormorant). Küre uzaktayken yavaşça döner; dokununca durur. | farklı |
+| Eser detayı · mobil alt kart | Ad, «Kısa hikâye · N dk», ilerleme noktaları; **Dinle** (ana) + **Oku**; altında «Tam metin · Envanterden · Eser hakkında» kartı (ilin deseni), «Keşfet»te Geçmişi Gör ve Bulmaca satırları, en altta yıl, süsleme ve kısa metin. Tutamakla ya da sürükleyerek açılır/kapanır; açıklık yüksekliği serbest. | farklı |
+| Alt kartın silik geçişi | Kart kapalıyken alttan bir sonraki öğenin (Eser hakkında kartı) üst kısmı görünür; içerik kartın alt kenarına doğru **silikleşir** (CSS maske, beyaz örtü yok). Kart yarı açıkken geçiş kartın o anki kenarını izler; tam açılınca kalkar. `app.js` → `eaSis`, `.ea-detay` `--g`. | yok |
+| «Temsili» etiketi, parça adı, «İçini göster» | Mobilde kartın hemen üstünde durur; kart açılıp kapanırken ve sürüklenirken onunla birlikte kalkar/iner (`temsiliKonum`). | yok |
+| 3D parça kartı | **Yedi eserin hepsinde.** Parçaya dokununca kart: fotoğraf şeridi, başlık, güven etiketi, sesli dinle, kaynak. Kartı olmayan parça tıklanmaz. İç mekânı olan dört eserde iç parçaların da kartı var. | yok |
+| «İçini göster» | Ulucami, Bedesten, Orhan Bey Camii, Orhan Gazi Türbesi. Düğme `model.json → ortu_gruplari` doluysa görünür. | yok |
+| Bulmaca ve saha görevi | Yedi eserde (Ulucami dışındakiler taslak). Hikâyesi olmayan eserde alt yazı «cevap «Eser hakkında»da da var». | farklı (§8) |
+| Eser hakkında | Yedi eserde envanter metninin tamamı, okuma düzeni (özet, rakam, zaman, terim, 3D açısı), kitaptaki fotoğraflar ve kapak. Sesli dinleme oynatıcısı (tarayıcı sesi): oynat/durdur, önceki/sonraki paragraf, hız, «Okunan yere dön», ilerleme çizgisi; okunan paragraf ilin renginde vurgulanır. Mobilde ekranın altında, masaüstünde metin sütununun altında. | farklı (§6) |
+| Geçmişi Gör · mobil | Fotoğraf üstte sabit, altında tarih, kaynak ve «Bugün» kartı; harita en altta. «Kamerayı aç» fotoğrafın üstünden kaldırıldı; «Doğrulanmış» etiketi küçük. Masaüstünde mini harita hep açık. | farklı (§7) |
+| Rota · yalnız rotada cümleler | Sonraki durağa yönlendiren hikâye cümleleri (`hikaye.md` → `## Yalnız rotada`) eser rotadan açılmazsa okunmaz. Rota çizgisi ve yıldızlar rotanın ilinin renginde. | yok |
