@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { cardKinds, publishStatuses, sectionKinds, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
+import { cardKinds, historyAngleMatches, publishStatuses, sectionKinds, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
 import { PageQuery, pageResponse } from "../../platform/pagination.ts";
 import { CardDto, KindSchema, MapPlacementDto, SiteDetail, TrustSchema } from "../catalog/schemas.ts";
 
@@ -232,6 +232,11 @@ const HistoryImageInput = z.object({
   id: Id.optional().describe("Verilirse görselin kimliği korunur (rota durakları buna bağlanır)"),
   mediaId: Id.describe("kind=photo; eski görsel"),
   presentMediaId: Id.nullable().default(null).describe("kind=photo; aynı açıdan bugünün görüntüsü"),
+  presentAngleMatch: z
+    .enum(historyAngleMatches)
+    .nullable()
+    .default(null)
+    .describe("Bugünkü görüntünün açı benzerliği (same = aynı nokta ve yön, near = yakın açı); yalnız presentMediaId varken verilebilir"),
   caption: text(500).default(""),
   captionEn: nullableText(500).optional(),
   dateLabel: text(100).default(""),

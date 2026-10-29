@@ -9,6 +9,7 @@ import {
   historyImages,
   media,
   siteMedia,
+  siteSampleTraces,
   siteSections,
   siteSources,
   sites as siteTable,
@@ -111,6 +112,8 @@ async function seedV2(db: App["deps"]["db"]) {
     mediaRow("m-hist-old", "photo", { sourceId: "src-media" }),
     mediaRow("m-hist-now", "photo"),
     mediaRow("m-hist-2", "photo"),
+    mediaRow("m-trace", "photo"),
+    mediaRow("m-trace-2", "photo"),
     mediaRow("m-other", "photo"),
   ]);
   await db.insert(cards).values([
@@ -156,9 +159,16 @@ async function seedV2(db: App["deps"]["db"]) {
       sourceId: "src-history",
       trust: "verified",
       camera: pose,
+      presentAngleMatch: "same",
     },
     { id: "hist-cami", siteId: "isik-cami", position: 0, mediaId: "m-hist-2", trust: "inferred" },
     { id: "hist-taslak", siteId: "taslak", position: 0, mediaId: "m-hist-2", trust: "inferred" },
+  ]);
+  // Inserted out of order on purpose: the API orders by position. The draft's sample never shows.
+  await db.insert(siteSampleTraces).values([
+    { id: "trace-b", siteId: "iznik-han", position: 1, author: "AKAR ekibi", text: "Avludan.", mediaId: "m-trace-2", addedOn: "2026-10-29" },
+    { id: "trace-a", siteId: "iznik-han", position: 0, author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "m-trace", historyImageId: "hist-1", angleMatch: "near", addedOn: "2026-10-28" },
+    { id: "trace-taslak", siteId: "taslak", position: 0, author: "AKAR ekibi", text: "Taslak.", mediaId: "m-trace", addedOn: "2026-10-28" },
   ]);
 
   const period = (id: string, periodId: string) => db.update(siteTable).set({ periodId }).where(eq(siteTable.id, id));
@@ -417,6 +427,11 @@ test("detail returns sections, cards and archive images, and every media and sou
   assert.deepEqual(body.photoIds, [], "card/history references are separate from the gallery");
   assert.deepEqual(body.sections.map((s) => s.id), ["sec-history", "sec-arch", "sec-waqf"]);
   assert.deepEqual(body.historyImages.map((h) => h.id), ["hist-1", "hist-2"]);
+  assert.deepEqual(body.historyImages.map((h) => [h.id, h.presentMediaId, h.presentAngleMatch]), [["hist-1", "m-hist-now", "same"], ["hist-2", null, null]]);
+  assert.deepEqual(body.sampleTraces, [
+    { id: "trace-a", author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "m-trace", historyImageId: "hist-1", angleMatch: "near", addedOn: "2026-10-28" },
+    { id: "trace-b", author: "AKAR ekibi", text: "Avludan.", mediaId: "m-trace-2", historyImageId: null, angleMatch: null, addedOn: "2026-10-29" },
+  ]);
   // Three sentences share two cards: each is listed once, in the order the story first uses it.
   assert.deepEqual(body.stories.map((s) => s.cardId), ["card-b", "card-a", "card-b"]);
   assert.deepEqual(body.cards.map((c) => c.id), ["card-b", "card-a"]);
@@ -435,6 +450,8 @@ test("detail returns sections, cards and archive images, and every media and sou
     "m-hist-old",
     "m-hist-now",
     "m-hist-2",
+    "m-trace",
+    "m-trace-2",
   ]);
   assert.equal(body.media.find((m) => m.id === "m-audio-tr")?.kind, "audio");
   assert.deepEqual(body.sources.map((s) => s.id), ["src-site", "src-story", "src-section", "src-card", "src-history", "src-media"]);
@@ -448,7 +465,7 @@ test("detail returns sections, cards and archive images, and every media and sou
   // No content at all: empty lists, not an error.
   const bare = await get<SiteDetail>("/v1/sites/han-b");
   assert.equal(bare.res.statusCode, 200);
-  assert.deepEqual([bare.body.sections, bare.body.cards, bare.body.historyImages, bare.body.media, bare.body.sources], [[], [], [], [], []]);
+  assert.deepEqual([bare.body.sections, bare.body.cards, bare.body.historyImages, bare.body.sampleTraces, bare.body.media, bare.body.sources], [[], [], [], [], [], []]);
   assert.equal(bare.body.openingCamera, null);
 });
 
@@ -482,4 +499,15 @@ test("loading the same catalog twice creates no duplicates", async () => {
   assert.equal(detail.body.stories.length, 1);
   const r = await get<RouteDto>("/v1/routes/sirali");
   assert.equal(r.body.stops.length, 3);
+});
+
+/** True when Postgres rejected the statement because of the named CHECK constraint. */
+const violates = (constraint: string) => (e: unknown) =>
+  e instanceof Error && typeof e.cause === "object" && e.cause !== null && "constraint" in e.cause && e.cause.constraint === constraint;
+
+test("the database itself refuses an angle word without a present-day photograph, and a word that is not same or near", async () => {
+  const db = app.deps.db;
+  await assert.rejects(db.update(historyImages).set({ presentAngleMatch: "near" }).where(eq(historyImages.id, "hist-2")), violates("history_images_present_match_needs_photo"));
+  await assert.rejects(db.update(historyImages).set({ presentAngleMatch: "far" as "near" }).where(eq(historyImages.id, "hist-1")), violates("history_images_present_angle_check"));
+  await assert.rejects(db.update(siteSampleTraces).set({ angleMatch: "far" as "near" }).where(eq(siteSampleTraces.id, "trace-a")), violates("site_sample_traces_angle_check"));
 });

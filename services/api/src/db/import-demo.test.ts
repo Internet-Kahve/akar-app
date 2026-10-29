@@ -26,6 +26,7 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   glb.writeUInt32LE(json.length, 12); glb.writeUInt32LE(0x4e4f534a, 16); json.copy(glb, 20);
   await writeFile(join(root, "model.glb"), glb); await writeFile(join(root, "photo.jpg"), Buffer.from([255, 216, 255, 217]));
   await writeFile(join(root, "book.jpg"), Buffer.from([255, 216, 255, 1, 217]));
+  await writeFile(join(root, "present.webp"), Buffer.from([82, 73, 70, 70, 1])); await writeFile(join(root, "trace.webp"), Buffer.from([82, 73, 70, 70, 2]));
   const sites = Array.from({ length: 7 }, (_, i) => ({
     id: `test-${i}`, name: `Eser ${i}`, city: "Bursa", district: "Hanlar", year: "1400", architect: "—", kind: "cami",
     coordinates: [29.06, 40.18], minutes: 1, description: "Kaynaklı içerik", status: "published", tier: "Tier 2", source: "Envanter",
@@ -36,7 +37,9 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
       { id: `detail-${i}`, file: "photo.jpg", src: "", alt: "Kubbe", title: "Kubbe", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: null },
     ],
     coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative" },
-    historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}` }], sections: [
+    // The archive photograph has a present-day pair (the team's choice) credited as its file says.
+    historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}`,
+      present: { id: `present-${i}`, file: "present.webp", alt: "Bugünkü görünüm: Eski eser", credit: "Fotoğraf: Proje arşivi", license: "Proje için verildi; kullanılabilir.", angleMatch: "near" } as Record<string, unknown> | null }], sections: [
       { id: `sec-${i}-1`, kind: "history", title: "Tarihçe", body: "Cami 1399 yılında açıldı.", trust: "verified", sourceId: `source-${i}`, chapterId: `chapter-${i}`,
         photos: [{ id: `photo-${i}`, aspect: 1.5, alt: "Dış görünüş" }, { id: `book-${i}`, aspect: null, alt: "Kitap sayfası" }] },
       { id: `sec-${i}-2`, kind: "architecture", title: "Mimari", body: "Kubbeli.", trust: "verified", sourceId: `source-${i}`, chapterId: null, photos: [] },
@@ -57,6 +60,11 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
       { id: `badge-s-${i}`, title: "Hikâye", text: "Dinledin", condition: "story", taskId: null, onSiteLabel: false },
       { id: `badge-f-${i}`, title: "Kapı", text: "Buldun", condition: "task", taskId: `task-f-${i}`, onSiteLabel: true },
     ],
+    // Two team-made İz Bırak samples: one shows the archive photograph's view, one belongs to no photograph.
+    sampleTraces: [
+      { id: `iz-${i}-1`, author: "AKAR ekibi", text: "Aynı eksen, bugünden.", alt: "Aynı eksen, bugünden.", file: "trace.webp", credit: "Fotoğraf: Proje arşivi (örnek katkı olarak gösteriliyor)", license: "Proje için verildi; kullanılabilir.", addedOn: "2026-10-28", historyImageId: `archive-${i}`, angleMatch: "same" },
+      { id: `iz-${i}-2`, author: "AKAR ekibi", text: "Avludan bir kare.", alt: "Avludan bir kare.", file: "trace.webp", credit: "Fotoğraf: Proje arşivi (örnek katkı olarak gösteriliyor)", license: "Proje için verildi; kullanılabilir.", addedOn: "2026-10-29", historyImageId: null, angleMatch: null },
+    ] as Array<Record<string, unknown>>,
   }));
   const scene = { light: { ambient: 2, sun: 1, fill: 1, azimuthDeg: 315, elevationDeg: 45, saturation: 1.25, groundShadow: 0.18 }, backgroundTop: "#DDE4E5", backgroundBottom: "#A7B4B7" };
   const bursa = { id: "bursa", name: "Bursa", isDefault: true, map: { center: [29.0628, 40.1846], zoom: 16.3, zoomDesktop: 16.7 },
@@ -71,8 +79,9 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   await assert.rejects(importDemoContent(path, root, false, {}), /#RRGGBB/);
   scene.backgroundTop = "#DDE4E5";
   await writeFile(path, JSON.stringify(manifest));
-  assert.equal((await importDemoContent(path, root, false, {})).objects, 3);
-  for (let i = 0; i < 2; i++) assert.equal((await importDemoContent(path, root, true, env)).objects, 3);
+  const dryRun = await importDemoContent(path, root, false, {});
+  assert.deepEqual([dryRun.objects, dryRun.presentPhotos, dryRun.sampleTraces, dryRun.applied], [5, 7, 14, false]);
+  for (let i = 0; i < 2; i++) assert.equal((await importDemoContent(path, root, true, env)).objects, 5);
   const served = async () => (await ctx.app.inject({ url: "/v1/cities" })).json().items as Array<{ id: string; siteCount: number } & Record<string, unknown>>;
   const city = (await served()).find((c) => c.id === "bursa")!;
   assert.deepEqual(city.scene, scene, "the city record's scene is served with the city");
@@ -92,6 +101,19 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.equal(detail.historyImages[0].dateLabel, "1900");
   assert.equal(detail.media.find((m: { id: string }) => m.id === "archive-0").description, "Fotoğrafçı · Arşiv");
   assert.deepEqual(detail.photoIds, ["photo-0"]);
+  // The archive photograph's present-day pair and the team's samples come back credited as the files say (credit line and
+  // licence word for word) with their angle words; none of them is a gallery photograph.
+  assert.deepEqual([detail.historyImages[0].presentMediaId, detail.historyImages[0].presentAngleMatch], ["present-0", "near"]);
+  const mediaOf = (id: string) => detail.media.find((m: { id: string }) => m.id === id);
+  assert.deepEqual([mediaOf("present-0").description, mediaOf("present-0").license, mediaOf("present-0").alt, mediaOf("present-0").trust],
+    ["Fotoğraf: Proje arşivi", "Proje için verildi; kullanılabilir.", "Bugünkü görünüm: Eski eser", "verified"]);
+  assert.deepEqual(detail.sampleTraces, [
+    { id: "iz-0-1", author: "AKAR ekibi", text: "Aynı eksen, bugünden.", mediaId: "iz-0-1", historyImageId: "archive-0", angleMatch: "same", addedOn: "2026-10-28" },
+    { id: "iz-0-2", author: "AKAR ekibi", text: "Avludan bir kare.", mediaId: "iz-0-2", historyImageId: null, angleMatch: null, addedOn: "2026-10-29" },
+  ]);
+  assert.deepEqual([mediaOf("iz-0-1").description, mediaOf("iz-0-1").license, mediaOf("iz-0-1").trust],
+    ["Fotoğraf: Proje arşivi (örnek katkı olarak gösteriliyor)", "Proje için verildi; kullanılabilir.", "representative"]);
+  assert.deepEqual(detail.photoIds, ["photo-0"], "present-day and sample photographs are not gallery photographs");
   assert.deepEqual(detail.media.find((m: { kind: string }) => m.kind === "model").parts, ["kubbe_1"]);
   assert.equal(detail.media.find((m: { kind: string }) => m.kind === "model").triangles, 0, "the model's triangles are counted from its file");
   assert.deepEqual(detail.partCards.map((c: { parts: string[]; photoIds: string[] }) => [c.parts, c.photoIds]), [[["kubbe_1"], ["detail-0", "photo-0"]]]);
@@ -142,6 +164,14 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual((await db.select({ id: siteBadges.id }).from(siteBadges).where(eq(siteBadges.siteId, "test-0"))).map((b) => b.id), ["badge-s-0"]);
   assert.deepEqual((await db.select({ id: userSiteTasks.taskId }).from(userSiteTasks)).map((t) => t.id), ["task-q-0"], "only the vanished task's progress goes");
   assert.deepEqual((await db.select({ id: userSiteBadges.badgeId }).from(userSiteBadges)).map((b) => b.id), ["badge-s-0"]);
+  // A reimport brings the samples and the present-day pair to the manifest: a vanished sample is gone, a vanished pair clears its angle word.
+  sites[0]!.sampleTraces.pop();
+  sites[0]!.historyImages[0]!.present = null;
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  const slim = (await ctx.app.inject({ url: "/v1/sites/test-0" })).json();
+  assert.deepEqual([slim.historyImages[0].presentMediaId, slim.historyImages[0].presentAngleMatch], [null, null]);
+  assert.deepEqual(slim.sampleTraces.map((t: { id: string; historyImageId: string | null }) => [t.id, t.historyImageId]), [["iz-0-1", "archive-0"]]);
   sites[1]!.tasks[1]!.details = { onSite: { text: "Önüne gel", radiusM: 80 }, fromHome: { text: "Dokun", part: "yok" }, doneText: "Bulundu" };
   await writeFile(path, JSON.stringify(manifest));
   await assert.rejects(importDemoContent(path, root, false, {}), /Task part is not a model part: test-1 task-f-1 yok/);
@@ -162,6 +192,24 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   await writeFile(path, JSON.stringify(manifest));
   await assert.rejects(importDemoContent(path, root, false, {}), /not model parts: test-1 yok/);
   sites[1]!.partCards[0]!.parts = ["kubbe_1"];
+  // Present-day photographs and samples: a missing credit line or licence, an unknown angle word, a date that is not a day, an archive
+  // photograph of another site or an id another photograph already has stops the import before anything is written.
+  const attempt = async (record: Record<string, unknown>, change: Record<string, unknown>, expected: RegExp) => {
+    const before = { ...record };
+    Object.assign(record, change);
+    await writeFile(path, JSON.stringify(manifest));
+    await assert.rejects(importDemoContent(path, root, false, {}), expected);
+    Object.assign(record, before);
+  };
+  const present1 = sites[1]!.historyImages[0]!.present!, trace1 = sites[1]!.sampleTraces[0]!;
+  await attempt(present1, { credit: "  " }, /Photograph without credit line, licence or description: test-1 present-1/);
+  await attempt(present1, { angleMatch: "far" }, /Unknown angle match: test-1 present-1/);
+  await attempt(trace1, { license: "" }, /Photograph without credit line, licence or description: test-1 iz-1-1/);
+  await attempt(trace1, { angleMatch: "far" }, /Unknown angle match: test-1 iz-1-1/);
+  await attempt(trace1, { addedOn: "28 Ekim" }, /Sample trace date is not YYYY-MM-DD: test-1 iz-1-1/);
+  await attempt(trace1, { historyImageId: "archive-0" }, /Sample trace names no archive photograph of the site: test-1 iz-1-1 archive-0/);
+  await attempt(trace1, { id: "iz-0-1" }, /Media id used twice: iz-0-1/);
+  await attempt(trace1, { id: "photo-1" }, /Media id used twice: photo-1/);
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified", chapterId: null, photos: [] }];
   await writeFile(path, JSON.stringify(manifest));

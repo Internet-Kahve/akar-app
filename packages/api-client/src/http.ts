@@ -3,6 +3,7 @@ import {
   validatePlacement,
   validateSite,
   type AboutChapter,
+  type AngleMatch,
   type SiteBadge,
   type CameraPose,
   type Command,
@@ -218,6 +219,19 @@ interface SiteDetailDto {
     dateLabel?: string;
     sourceId?: string | null;
     trust?: Trust;
+    /** Absent on older API versions. */
+    presentAngleMatch?: AngleMatch | null;
+  }>;
+  /** Team-made İz Bırak samples; absent on older API versions. */
+  sampleTraces?: Array<{
+    id: string;
+    author: string;
+    text: string;
+    /** Resolves in `media`. */
+    mediaId: string;
+    historyImageId: string | null;
+    angleMatch: AngleMatch | null;
+    addedOn: string;
   }>;
   /** Absent on older API versions. */
   partCards?: Array<{
@@ -393,6 +407,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     [
       ...d.cards.map((c) => c.mediaId),
       ...d.historyImages.flatMap((h) => [h.mediaId, h.presentMediaId]),
+      ...(d.sampleTraces ?? []).map((t) => t.mediaId),
       ...(d.partCards ?? []).flatMap((c) => c.photoIds),
       ...(d.sections ?? []).flatMap((s) => (s.photos ?? []).map((p) => p.mediaId)),
     ].filter(present),
@@ -479,9 +494,31 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           dateLabel: h.dateLabel ?? "Tarih bilinmiyor",
           sourceId: h.sourceId ?? image.sourceId ?? "",
           trust: h.trust ?? image.trust,
-          ...(current ? { presentPhoto: toPhoto(current) } : {}),
+          ...(current
+            ? {
+                presentPhoto: toPhoto(current),
+                ...(present(h.presentAngleMatch) && {
+                  presentAngleMatch: h.presentAngleMatch,
+                }),
+              }
+            : {}),
         },
       ];
+    }),
+    ...(d.sampleTraces?.length && {
+      sampleTraces: d.sampleTraces.flatMap(({ mediaId, historyImageId, angleMatch, ...trace }) => {
+        const m = d.media.find((x) => x.id === mediaId && x.kind === "photo");
+        return m
+          ? [
+              {
+                ...trace,
+                photo: toPhoto(m),
+                ...(present(historyImageId) && { historyImageId }),
+                ...(present(angleMatch) && { angleMatch }),
+              },
+            ]
+          : [];
+      }),
     }),
     ...(d.partCards?.length && {
       partCards: d.partCards.map(({ photoIds, sourceId, ...card }) => ({

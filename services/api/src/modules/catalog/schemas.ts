@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   cardKinds,
+  historyAngleMatches,
   mediaKinds,
   sectionKinds,
   siteBadgeConditions,
@@ -250,7 +251,29 @@ export const HistoryImageDto = z.object({
   sourceId: z.string().nullable(),
   trust: TrustSchema,
   camera: CameraPoseDto.nullable().describe("Bugünün görüntüsüyle hizalama açısı"),
+  presentAngleMatch: z
+    .enum(historyAngleMatches)
+    .nullable()
+    .describe("Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"),
 });
+
+export const SampleTraceDto = z
+  .object({
+    id: z.string(),
+    author: z.string().describe("Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"),
+    text: z.string(),
+    mediaId: z.string().describe("Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"),
+    historyImageId: z.string().nullable().describe("Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null"),
+    angleMatch: z
+      .enum(historyAngleMatches)
+      .nullable()
+      .describe("Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"),
+    addedOn: z.string().describe("Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"),
+  })
+  .describe(
+    "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir",
+  );
+export type SampleTraceDto = z.infer<typeof SampleTraceDto>;
 
 export const PartCardDto = z.object({
   id: z.string(),
@@ -337,6 +360,7 @@ export const SiteDetail = SiteSummary.extend({
   chapters: z.array(ChapterDto).describe("Eser hakkında okuma bölümleri, sıralı; boş = paragraflar başlıklarıyla düz gösterilir"),
   cards: z.array(CardDto).describe("Hikâye cümlelerinin kullandığı kartlar; ilk kullanım sırasıyla, tekrarsız"),
   historyImages: z.array(HistoryImageDto).describe("Geçmişi Gör görselleri, sıralı"),
+  sampleTraces: z.array(SampleTraceDto).describe("İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"),
   partCards: z
     .array(PartCardDto)
     .describe("3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"),
@@ -348,7 +372,7 @@ export const SiteDetail = SiteSummary.extend({
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
   media: z
     .array(MediaDto)
-    .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
+    .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"),
   sources: z
     .array(SourceDto)
     .describe("Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"),

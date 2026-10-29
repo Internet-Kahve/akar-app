@@ -55,6 +55,7 @@ import {
   type PlacementRow,
   type SectionPhotoRow,
 } from "../catalog/service.ts";
+import { loadSampleTraces, sampleTraceDto, type SampleTraceRow } from "../catalog/sample-traces.ts";
 import { badgeDto, loadBadges, loadTasks, taskDto, type BadgeRow, type TaskRow } from "../catalog/tasks.ts";
 import { CITIES } from "../ingest/cities.ts";
 import { APPROXIMATE_SOURCES } from "../ingest/geocode.ts";
@@ -255,6 +256,8 @@ export type SiteAggregate = {
   sectionPhotos: SectionPhotoRow[];
   tasks: TaskRow[];
   badges: BadgeRow[];
+  /** Team-made İz Bırak samples (§11.47), ordered by position. */
+  sampleTraces: SampleTraceRow[];
   /** `site_media` in display order. */
   mediaIds: string[];
   /** `site_sources` in display order. */
@@ -297,6 +300,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const sectionPhotoRows = await loadSectionPhotos(q, ids);
   const taskRows = await loadTasks(q, ids);
   const badgeRows = await loadBadges(q, ids);
+  const traceRows = await loadSampleTraces(q, ids);
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
@@ -309,6 +313,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...partCardRows.flatMap((c) => c.photoIds),
     ...sectionPhotoRows.map((p) => p.mediaId),
     ...taskRows.map((t) => t.mediaId),
+    ...traceRows.map((t) => t.mediaId),
   ]);
   const mediaRows = mediaIds.length ? await q.select().from(media).where(inArray(media.id, mediaIds)) : [];
   const sourceIds = distinct([
@@ -334,6 +339,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const sectionPhotosOf = groupBy(sectionPhotoRows, (r) => r.siteId);
   const tasksOf = groupBy(taskRows, (r) => r.siteId);
   const badgesOf = groupBy(badgeRows, (r) => r.siteId);
+  const tracesOf = groupBy(traceRows, (r) => r.siteId);
   const mediaOf = groupBy(mediaLinks, (r) => r.siteId);
   const sourcesOf = groupBy(sourceLinks, (r) => r.siteId);
 
@@ -350,6 +356,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
         sectionPhotos: sectionPhotosOf.get(site.id) ?? [],
         tasks: tasksOf.get(site.id) ?? [],
         badges: badgesOf.get(site.id) ?? [],
+        sampleTraces: tracesOf.get(site.id) ?? [],
         mediaIds: (mediaOf.get(site.id) ?? []).map((l) => l.mediaId),
         sourceLinks: (sourcesOf.get(site.id) ?? []).map((l) => ({ sourceId: l.sourceId, locator: l.locator })),
         cards: cardById,
@@ -470,6 +477,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       ...a.partCards.flatMap((c) => c.photoIds),
       ...a.sectionPhotos.map((p) => p.mediaId),
       ...a.tasks.map((t) => t.mediaId),
+      ...a.sampleTraces.map((t) => t.mediaId),
     ]).map((id) => a.media.get(id)),
   );
   // Cards in the order the story first uses them (several sentences may share one card).
@@ -574,7 +582,9 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: h.sourceId,
       trust: h.trust,
       camera: h.camera,
+      presentAngleMatch: h.presentAngleMatch,
     })),
+    sampleTraces: a.sampleTraces.map(sampleTraceDto),
     partCards: a.partCards.map((c) => ({
       id: c.id,
       parts: c.parts,
@@ -1356,6 +1366,7 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
       rows.forEach((r, i) => {
         checkMedia(errors, `images.${i}.mediaId`, r.mediaId, kinds, "photo");
         checkMedia(errors, `images.${i}.presentMediaId`, r.presentMediaId, kinds, "photo");
+        if (r.presentAngleMatch && !r.presentMediaId) errors.add(`images.${i}.presentAngleMatch`, "Açı benzerliği için önce bugünkü görüntüyü seç.");
         if (r.sourceId && !sourceIds.has(r.sourceId)) errors.add(`images.${i}.sourceId`, "Kaynak bulunamadı.");
       });
       errors.throwIfAny();
@@ -1387,6 +1398,7 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
         const values = {
           mediaId: r.mediaId,
           presentMediaId: r.presentMediaId,
+          presentAngleMatch: r.presentMediaId ? r.presentAngleMatch : null,
           caption: r.caption,
           captionEn: r.captionEn || null,
           dateLabel: r.dateLabel,

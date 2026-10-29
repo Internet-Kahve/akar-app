@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  date,
   doublePrecision,
   foreignKey,
   index,
@@ -404,6 +405,10 @@ export const storyBlocks = pgTable(
   ],
 );
 
+/** How close a present-day photograph's view is to the old one: `same` = same point and direction, `near` = close, but not the same point. */
+export const historyAngleMatches = ["same", "near"] as const;
+export type HistoryAngleMatch = (typeof historyAngleMatches)[number];
+
 /** "Geçmişi Gör": archival image with optional present-day pair and alignment pose. */
 export const historyImages = pgTable(
   "history_images",
@@ -425,9 +430,46 @@ export const historyImages = pgTable(
     trust: trustEnum("trust").notNull(),
     /** Alignment pose ("hizalama açısı") for matching the present-day view. */
     camera: jsonb("camera").$type<CameraPose>(),
+    /** The present-day photograph's view against the old one; null while there is no present-day photograph. */
+    presentAngleMatch: text("present_angle_match", { enum: historyAngleMatches }),
   },
-  (t) => [unique("history_images_order_uq").on(t.siteId, t.position)],
+  (t) => [
+    unique("history_images_order_uq").on(t.siteId, t.position),
+    check("history_images_present_angle_check", sql`${t.presentAngleMatch} in ('same', 'near')`),
+    check("history_images_present_match_needs_photo", sql`${t.presentAngleMatch} is null or ${t.presentMediaId} is not null`),
+  ],
 );
+
+/**
+ * "İz Bırak" sample added by the team (decision §11.47): a photograph and a sentence credited to a name the team wrote
+ * («AKAR ekibi»), not to an account. It is not a visitor's memory (no moderation, quota, points or erasure) and is always
+ * shown with the «Örnek» tag. `history_image_id` names the old photograph it shows the same view of.
+ */
+export const siteSampleTraces = pgTable(
+  "site_sample_traces",
+  {
+    id: text("id").primaryKey(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    author: text("author").notNull(),
+    text: text("text").notNull(),
+    mediaId: text("media_id")
+      .notNull()
+      .references(() => media.id),
+    historyImageId: text("history_image_id").references(() => historyImages.id, { onDelete: "set null" }),
+    angleMatch: text("angle_match", { enum: historyAngleMatches }),
+    /** Day the sample was added, `YYYY-MM-DD`; the newest one stands in for a missing present-day photograph. */
+    addedOn: date("added_on", { mode: "string" }).notNull(),
+  },
+  (t) => [
+    unique("site_sample_traces_order_uq").on(t.siteId, t.position),
+    check("site_sample_traces_angle_check", sql`${t.angleMatch} in ('same', 'near')`),
+    index("site_sample_traces_media_idx").on(t.mediaId),
+    index("site_sample_traces_history_idx").on(t.historyImageId),
+  ],
+).enableRLS();
 
 /** 3D part card ("parça kartı"): tapping any of `parts` (model node names) opens it; all of them light up together. */
 export const sitePartCards = pgTable(
