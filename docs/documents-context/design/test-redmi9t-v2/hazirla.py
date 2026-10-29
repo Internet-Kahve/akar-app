@@ -123,6 +123,13 @@ def hikaye_oku(eid):
                                  azimut=int(az.group(1)) if az else None,
                                  egim=int(eg.group(1)) if eg else None,
                                  uzaklik=h[4])
+    # 29 Ekim 2026 · «## Yalnız rotada» tablosu: rotanın sonraki durağına yönlendiren cümleler; app.js rotadan gelinmediyse atlar (`rota` alanı)
+    if '## Yalnız rotada' in metin:
+        for h in tablo(metin.split('## Yalnız rotada', 1)[1], '#'):
+            if h and h[0].strip().isdigit():
+                for c in cumleler:
+                    if c['no'] == int(h[0]):
+                        c['rota'] = True
     # 29 Ekim 2026 · Akar akışı: «## Akar akışı» tablosu → cümlenin `akis` alanı (app.js akisUygula haritada gelir yolunu çizer)
     # | # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |   Hayrat: eser kimliği ya da «enlem, boylam»
     if '## Akar akışı' in metin:
@@ -245,8 +252,15 @@ def kitap_fotolari(eid, bolumler, cikti):
     ilk, son = min(f['sayfa'] for f in fotolar), max(f['sayfa'] for f in fotolar)
     sirali = [p for b in bolumler for p in b['paragraflar'] if p['_sayfa'] and p['_sayfa'][0] in ciltler and ilk <= p['_sayfa'] <= son]
     for f in fotolar:
-        onceki = [p for p in sirali if p['_sayfa'] <= f['sayfa']]
-        (onceki[-1].setdefault('fotolar', []) if onceki else bolumler[0].setdefault('fotolar', [])).append(f)
+        onceki = [p for p in sirali if p['_sayfa'][0] == f['sayfa'][0] and p['_sayfa'] <= f['sayfa']]   # aynı ciltte (eser iki cilde yayılabilir, ör. Koza Han C2 + köşk mescit C1)
+        hedef = None
+        if onceki:   # o sayfaya kadar gelen en büyük sayfanın ilk kesintisiz paragraf dizisinin sonuncusu (sondaki özet «Vakıf ve akar» paragrafı aynı sayfayı anarsa fotoğrafları kendine çekmesin)
+            enb = max(p['_sayfa'] for p in onceki)
+            i = next(k for k, p in enumerate(sirali) if p['_sayfa'] == enb)
+            while i + 1 < len(sirali) and sirali[i + 1]['_sayfa'] == enb:
+                i += 1
+            hedef = sirali[i]
+        (hedef.setdefault('fotolar', []) if hedef else bolumler[0].setdefault('fotolar', [])).append(f)
 
 
 def okuma_oku(eid, bolumler):
@@ -415,6 +429,9 @@ def kucult(kaynak, hedef):
     os.makedirs(os.path.dirname(hedef), exist_ok=True)
     anahtar = os.path.join(ONBELLEK, os.path.relpath(kaynak, ESER))
     if not os.path.exists(anahtar) or os.path.getmtime(anahtar) < os.path.getmtime(kaynak):
+        if not shutil.which('sips'):   # macOS dışı (Linux): küçültmeden kopyalar, önbelleğe yazmaz (Mac'te sonra küçültülsün)
+            shutil.copyfile(kaynak, hedef)
+            return
         os.makedirs(os.path.dirname(anahtar), exist_ok=True)
         r = subprocess.run(['sips', '-Z', '1280', '-s', 'format', 'jpeg', '-s', 'formatOptions', '72',
                             kaynak, '--out', anahtar], capture_output=True)

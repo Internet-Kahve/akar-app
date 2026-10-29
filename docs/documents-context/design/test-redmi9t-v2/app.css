@@ -137,7 +137,8 @@ body.m #eser-kart{touch-action:none;transition:transform var(--sure-2,.2s) var(-
 /* ---------- masaüstü düzen ---------- */
 body.d .masaustu{display:block}
 body.d #ust{position:fixed;left:0;right:0;top:0;height:64px;z-index:6;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:24px;padding:0 24px}
-body.d #ust .logo{font:700 20px/1 var(--font);letter-spacing:.04em}
+body.d #ust .logo{display:block;line-height:0}
+body.d #ust .logo img{display:block;height:24px;width:auto}
 body.d #ust .arama{width:420px;height:40px;box-shadow:none;border:1px solid var(--border);padding-right:4px}
 body.d #ust .arama .sehir{padding:4px 10px;border-radius:999px;background:var(--primary-light);color:var(--primary);font:600 12px var(--font)}
 body.d #ust .dil-sec{margin-left:auto}
@@ -217,7 +218,7 @@ body.d .ipucu{top:16px}
 #acilis.bitti{opacity:0;pointer-events:none}
 .acilis-ic{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .acilis-ic .amblem{width:96px;height:96px;color:var(--gold);margin-bottom:14px}
-.acilis-logo{font:700 15px/20px var(--font);letter-spacing:.32em;color:var(--text);padding-left:.32em}
+.acilis-logo{display:block;height:22px;width:auto}
 .acilis-sehir{font-size:34px;line-height:40px;color:var(--sehir-aksan);min-height:40px}
 .acilis-alt{color:var(--text-muted);font-size:13px}
 .yukleme{background:none;z-index:3}
@@ -251,6 +252,42 @@ body.d .ipucu{top:16px}
 .eser-alt .dugmeler{margin-top:12px}
 .eser-alt .sonraki-m{margin-top:8px;min-height:44px}
 .eser-alt .dugmeler .btn{min-height:44px}
+/* masaüstü eser paneli başlığı: «Eser hakkında» kapağıyla aynı (şehrin rengi + silik desen, sağ üstten solar); Harita düğmesi de bandın içinde */
+.eb-bas{position:relative;isolation:isolate;overflow:hidden;margin:-20px -24px 0;padding:20px 24px 24px;background:var(--sehir-aksan);color:#fff}
+.eb-bas.desenli::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--sehir-acik);opacity:.1;
+  -webkit-mask:var(--sehir-desen) 0 0/88px auto repeat,linear-gradient(240deg,#000 20%,transparent 75%);-webkit-mask-composite:source-in;
+  mask:var(--sehir-desen) 0 0/88px auto repeat,linear-gradient(240deg,#000 20%,transparent 75%);mask-composite:intersect}
+.eb-bas .geri{background:none;color:#fff}
+.eb-bas .ikon-btn{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff}
+.eb-govde{display:flex;gap:16px;align-items:flex-end;margin-top:18px}
+.eb-foto{flex:none;width:88px;height:112px;border-radius:12px;overflow:hidden;background:#2A3346}
+.eb-foto img,.eb-foto .gorsel-yok{width:100%;height:100%;object-fit:cover;display:block}
+.eb-bas .panel-baslik{color:#fff;text-wrap:balance}
+.eb-bas .panel-meta{color:rgba(255,255,255,.85)}
+/* keşif yolları (eser detayı · masaüstü): Eser hakkında · Geçmişi Gör · Bulmaca tek kartta; ipucu: okuma süresi, en eski fotoğraf, görev halkası */
+.kesif-yollari{margin-top:16px;border-top:1px solid var(--border);display:grid}
+.ky{display:grid;grid-template-columns:48px 1fr auto;gap:14px;align-items:center;width:100%;padding:12px 2px;border-bottom:1px solid var(--border);text-align:left;color:var(--text);transition:transform var(--sure-2) var(--egri)}
+.ky-yazi b{display:block;font:600 19px/22px var(--font-display);font-variant-numeric:lining-nums}
+.ky-yazi small{display:block;color:var(--text-muted);font-size:12.5px;line-height:17px;margin-top:1px}
+.ky-ok{color:var(--primary);transition:transform var(--sure-2) var(--egri)}
+.ky-ik{display:grid;place-items:center;width:48px;height:48px;transition:transform var(--sure-2) var(--egri)}
+.ky-daire{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--primary-light);color:var(--primary)}
+.ky-foto{position:relative;width:44px;height:44px;border-radius:10px;overflow:hidden;background:#C9BBA0;box-shadow:0 1px 2px rgba(20,27,43,.12)}
+.ky-foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:sepia(.55) contrast(1.05)}
+.ky-foto img.bugun{filter:none;opacity:0;transition:opacity var(--sure-3)}
+.gorev-halka{position:relative;display:grid;place-items:center;flex:none;color:var(--gold-text)}
+.gorev-halka .halka-iz{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.halka-iz circle{fill:var(--surface);stroke:var(--border);stroke-width:4}
+.halka-iz circle.dolu{fill:none;stroke:var(--gold);stroke-linecap:round;stroke-dasharray:1;transition:stroke-dashoffset var(--sure-3) var(--egri)}
+.gorev-halka .ic{position:relative}
+.gorev-halka.bitti{color:var(--trust-verified)}
+.ky:hover .ky-ok,.ky:focus-visible .ky-ok{transform:translateX(3px)}
+.ky:hover .ky-ik,.ky:focus-visible .ky-ik{transform:scale(1.06)}
+.ky:hover .ky-foto img.bugun,.ky:focus-visible .ky-foto img.bugun{opacity:1}
+.ky:active{transform:scale(.985)}
+@media (prefers-reduced-motion:reduce){.ky,.ky-ok,.ky-ik,.ky-foto img.bugun,.halka-iz circle.dolu{transition:none}}
+.ea-kisayol .ek-foto{width:20px;height:20px;border-radius:5px;object-fit:cover;filter:sepia(.55)}
+.yuvarlak-ok,.ka-koleksiyon{display:none}
 .satir-link{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:12px;margin-top:12px;cursor:pointer}
 .satir-link b{display:block;font-weight:600}
 .satir-link small{color:var(--text-muted);font-size:12px}
@@ -557,8 +594,6 @@ body.d.tam-sayfa #sahne{left:0}
 .hk-kapak-panel.desenli::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--sehir-acik);opacity:.1;
   -webkit-mask:var(--hk-desen) 0 0/88px auto repeat,linear-gradient(240deg,#000 20%,transparent 75%);-webkit-mask-composite:source-in;
   mask:var(--hk-desen) 0 0/88px auto repeat,linear-gradient(240deg,#000 20%,transparent 75%);mask-composite:intersect}
-.hk-kapak-panel.desenli::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;z-index:-1;background:var(--gold);opacity:.75;
-  -webkit-mask:var(--hk-desen) 0 0/20px auto repeat-x;mask:var(--hk-desen) 0 0/20px auto repeat-x}
 .hk-ilce{display:block;font:600 13px/18px var(--font);letter-spacing:.42em;text-transform:uppercase;color:var(--sehir-acik)}
 .hk-h1{margin:6px 0 4px;font:600 40px/1.05 var(--font-display);font-variant-numeric:lining-nums;text-wrap:balance}
 .hk-altin{display:flex;align-items:center;gap:8px;width:120px;color:var(--gold);margin:4px 0 12px}
@@ -947,6 +982,8 @@ body.m .uc-hata{align-items:start;padding-top:max(96px,18dvh)}
 .karsilama>*{position:relative}
 .ka-serit{height:88px;border-radius:12px;background:var(--sehir-aksan);overflow:hidden;margin-bottom:16px}
 .ka-serit::before{content:"";position:absolute;inset:0;background:var(--sehir-acik);opacity:.55;-webkit-mask:var(--sehir-desen) 0 0/72px auto repeat;mask:var(--sehir-desen) 0 0/72px auto repeat}
+.ka-logo{display:block;height:22px;width:auto;margin-bottom:12px}
+body.m .ka-logo{margin:0 auto 12px}
 .ka-ust{font:600 11px/16px var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
 .ka-baslik{margin:6px 0 4px;font:600 34px/40px var(--font-display);font-variant-numeric:lining-nums}
 .ka-alt{margin:0;color:var(--text-muted)}
@@ -986,3 +1023,261 @@ body:has(#gorus.akis) #harita-kontrol,body:has(#gorus.akis) #harita-ust{visibili
 body.m .akis-kart{left:12px;right:12px;top:calc(76px + var(--sat));max-width:none}
 @keyframes akis-gel{from{opacity:0;transform:translateY(-6px)}}
 @media (prefers-reduced-motion:reduce){.akis-kart{animation:none}}
+
+/* ---------- hikâye bloğu (29 Ekim 2026): birleşik Dinle | Oku, altında «Tamamını oku: Eser hakkında»; etkinlikler «Keşfet» altında */
+.hb-bas,.kesif-bas{display:flex;align-items:center;gap:8px;font:600 12px/16px var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.hikaye-blok{margin-top:4px}
+.ikili{--h:48px;display:flex;margin-top:8px}
+.ikili button{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:var(--h);border-radius:999px;font:600 15px/1 var(--font);transition:transform var(--sure-1)}
+.ikili button:active{transform:scale(.98)}
+/* sol yarım: sağ ucu sağdaki hapın yuvarlağına içbükey oturur (maske ::before'da, ✓ işareti kırpılmasın) */
+.ik-sol{flex:1;color:var(--on-primary,#fff)}
+.ik-sol::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:999px 0 0 999px;background:var(--primary);
+  -webkit-mask:radial-gradient(circle at calc(100% + 8px) 50%,transparent calc(var(--h) / 2 + 3.5px),#000 calc(var(--h) / 2 + 4px));
+  mask:radial-gradient(circle at calc(100% + 8px) 50%,transparent calc(var(--h) / 2 + 3.5px),#000 calc(var(--h) / 2 + 4px))}
+.ik-sol:active::before{background:var(--primary-dark)}
+.ik-sol .bitti-tik{right:auto;left:-7px}
+.ik-sag{flex:none;margin-left:-16px;padding:0 24px;background:var(--yore-tint,var(--primary-light));color:var(--yore-yazi,var(--primary))}
+.eser-alt .ikili{--h:44px}
+.tamami{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:8px 2px;text-align:left;color:var(--text);font:500 15px/20px var(--font)}
+.tamami b{font-weight:600;color:var(--yore-yazi,var(--sehir-aksan))}
+.tamami small{display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:13px;line-height:18px}
+.tm-yazi{flex:1}
+.tm-ok{color:var(--primary);transition:transform var(--sure-2) var(--egri)}
+.tamami:hover .tm-ok,.tamami:focus-visible .tm-ok{transform:translateX(3px)}
+.kesif-bas{margin-top:22px}
+.kesif-bas+.kesif-yollari{margin-top:8px}
+.ea-kisayol.iki{grid-template-columns:repeat(2,1fr)}
+/* seçenek b (?detay=derinlik): uzunluk çubuğu, 5 dilim; dolu dilim ≈ 3 dk */
+.derinlik{display:inline-flex;gap:2px;margin-left:2px}
+.derinlik i{width:5px;height:10px;border-radius:2px;background:var(--border)}
+.derinlik i.d{background:var(--gold)}
+/* seçenek c (?detay=kopru): hikâye bitince tebrik kartında «Eser hakkında»ya köprü */
+.tb-kopru{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:12px;width:100%;margin:14px 0 4px;padding:12px 16px;border:1.5px solid var(--sehir-aksan);border-radius:16px;text-align:left;color:var(--text)}
+.tb-kopru small{grid-column:1;color:var(--text-muted);font-size:12.5px}
+.tb-kopru b{grid-column:1;font:600 19px/24px var(--font-display);color:var(--sehir-aksan)}
+.tb-kopru span{grid-column:1;color:var(--text-muted);font-size:13px}
+.tb-kopru i{grid-column:2;grid-row:1 / span 3;display:grid;color:var(--sehir-aksan)}
+
+/* ---------- Eserler | Rotalar sekmesi (29 Ekim 2026): kayan seçili zemin, yönlü içerik geçişi, sabit yerleşim */
+body.d #panel-ic{scrollbar-gutter:stable}          /* kaydırma çubuğu çıkınca içerik daralmasın */
+body.d #panel-ic>*{flex-shrink:0}                  /* uzun listede filtre satırı ezilip kaybolmasın */
+.sekme-grup.kayan{position:relative;isolation:isolate}
+.sekme-grup.kayan::before{content:"";position:absolute;z-index:-1;top:4px;bottom:4px;left:4px;width:calc(50% - 6px);border-radius:999px;background:var(--surface);box-shadow:0 1px 3px rgba(20,27,43,.12);transition:transform var(--sure-3) var(--egri)}
+.sekme-grup.kayan[data-i="1"]::before{transform:translateX(calc(100% + 4px))}
+.sekme-grup.kayan button[aria-selected="true"]{background:transparent;box-shadow:none}
+.sekme-grup.kayan button{transition:color var(--sure-2)}
+.sekme-icerik[data-yon]{animation:sekme-gir var(--sure-3) var(--egri) both}
+.sekme-icerik[data-yon="sol"]{--sekme-dx:-28px}
+@keyframes sekme-gir{from{opacity:0;transform:translateX(var(--sekme-dx,28px))}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.sekme-grup.kayan::before{transition:none}.sekme-icerik[data-yon]{animation:none}}
+
+/* ---------- tam metin kartı (29 Ekim 2026): kısa hikâyenin altında «Eser hakkında»ya güçlü giriş; sayfanın kapağıyla aynı yöre rengi ve desen */
+.tam-kart{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;width:100%;margin-top:12px;padding:14px 16px 14px 18px;border-radius:18px;background:var(--sehir-aksan);color:#fff;text-align:left;box-shadow:0 8px 22px color-mix(in srgb,var(--sehir-aksan) 30%,transparent);transition:transform var(--sure-2) var(--egri)}
+.tam-kart.desenli::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--sehir-acik);opacity:.14;
+  -webkit-mask:var(--sehir-desen) 0 0/72px auto repeat,linear-gradient(250deg,#000 15%,transparent 70%);-webkit-mask-composite:source-in;
+  mask:var(--sehir-desen) 0 0/72px auto repeat,linear-gradient(250deg,#000 15%,transparent 70%);mask-composite:intersect}
+.tam-kart:active{transform:scale(.985)}
+.tk-yazi small{display:block;font:600 11px/14px var(--font);letter-spacing:.12em;text-transform:uppercase;color:var(--sehir-acik)}
+.tk-yazi b{display:block;margin-top:2px;font:600 24px/28px var(--font-display);color:#fff}
+.tk-alt{display:flex;align-items:center;gap:8px;margin-top:2px;font-size:13px;color:rgba(255,255,255,.82)}
+.tk-alt .derinlik i{background:rgba(255,255,255,.25)}
+.tk-alt .derinlik i.d{background:var(--gold)}
+.tk-ok{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);transition:transform var(--sure-2) var(--egri)}
+.tam-kart:hover .tk-ok,.tam-kart:focus-visible .tk-ok{transform:translateX(3px)}
+.eser-alt .tam-kart{padding:10px 14px}
+.eser-alt .tk-yazi b{font-size:20px;line-height:24px}
+.eser-alt .tk-ok{width:38px;height:38px}
+/* tebrik kartı: kaydırma çubuğu ince, kartın rengine karışır */
+.tebrik{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 22%,transparent) transparent}
+.tebrik::-webkit-scrollbar{width:6px}.tebrik::-webkit-scrollbar-track{background:transparent}.tebrik::-webkit-scrollbar-thumb{border-radius:3px;background:color-mix(in srgb,var(--text) 22%,transparent)}
+/* ---------- Eser hakkında (29 Ekim 2026): açık metinde yapışan «Metni kısalt» küçük, sağda duran bir hap; büyük çift satırlı düğme göz yoruyordu */
+.hk-derin.acik .hk-derin-dugme{display:flex;align-items:center;gap:6px;width:max-content;margin:8px 0 0 auto;padding:0 14px 0 16px;height:40px;border-width:1px;
+  background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 4px 14px rgba(20,27,43,.14)}
+.hk-derin.acik .hk-derin-dugme span{font:600 14px/18px var(--font);letter-spacing:0;text-transform:none}
+.hk-derin.acik .hk-derin-dugme small{display:none}
+/* ---------- mobil kart ↔ liste dönüşümü (View Transitions): ikisi aynı anda görünmez, aynı adı taşır → tarayıcı biri ötekine büyütür/küçültür */
+body.m #alt:not([hidden]),body.m #eser-kart:not([hidden]){view-transition-name:alt-yuzey}
+.vt-yuzey body.m #alt{transition:none}                       /* yükseklik geçişi dönüşümle üst üste binmesin */
+::view-transition-old(root),::view-transition-new(root){animation:none}   /* harita ve gerisi yerinde kalır, yalnız yüzey hareket eder */
+::view-transition-group(alt-yuzey){animation-duration:.46s;animation-timing-function:cubic-bezier(.2,.8,.2,1);overflow:hidden;border-radius:20px}
+::view-transition-old(alt-yuzey),::view-transition-new(alt-yuzey){height:100%;width:100%;object-fit:cover;object-position:top center}
+::view-transition-old(alt-yuzey){animation:yuzey-sol .16s ease-out both}
+::view-transition-new(alt-yuzey){animation:yuzey-gel .3s .12s ease-out both}
+@keyframes yuzey-sol{to{opacity:0}}
+@keyframes yuzey-gel{from{opacity:0}}
+/* Oku: cam alt kartın üstünde soluk kalıyordu → düz yüzey, yöre renginde ince kenar ve yazı (Dinle'nin eşi olduğu belli olsun) */
+.ik-sag{background:var(--surface);color:var(--yore-yazi,var(--sehir-aksan));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--yore-yazi,var(--sehir-aksan)) 55%,transparent),0 2px 8px rgba(20,27,43,.08)}
+.ik-sag:active{background:var(--yore-tint,var(--primary-light))}
+/* ---------- kaydırma çubukları (29 Ekim 2026): kalın gri şerit yerine ince, zeminine karışan çubuk; yalnız tutamak görünür */
+*{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 20%,transparent) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{border-radius:4px;border:2px solid transparent;background:color-mix(in srgb,var(--text) 20%,transparent) padding-box}
+::-webkit-scrollbar-thumb:hover{background-color:color-mix(in srgb,var(--text) 35%,transparent)}
+/* ---------- Eser hakkında okunabilirlik (29 Ekim 2026) */
+.hk-rakam span{font-size:15px;line-height:21px}
+.hk-rakam small{font-size:14px;line-height:20px}                        /* kaynak alıntısı 13 px'te zor okunuyordu */
+.hk-p,.hk-ozet p{max-width:66ch}                                           /* satır uzunluğu ~65 karakter: göz satır başını kaçırmasın */
+.hk-p{color:color-mix(in srgb,var(--text) 92%,var(--bg))}                  /* uzun metinde tam siyah yerine bir tık yumuşak mürekkep */
+/* ---------- mobil eser kartı (29 Ekim 2026): tutamak belirgin, yukarı çekilebildiği yazıyla ve hafif zıplayan okla belli; içerde kaydırma çubuğu yok */
+.eser-alt .tutamak i,#alt .tutamak i{width:44px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--text) 28%,transparent)}
+.ea-ipucu{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:10px;padding:4px 0 0;font:600 13px/18px var(--font);color:var(--text-muted)}
+.ea-ipucu .ic{transition:transform var(--sure-2) var(--egri);animation:ea-zipla 1.6s ease-in-out .8s 3}
+.ea-ip-kapa{display:none}
+.eser-alt.acik .ea-ip-ac{display:none}.eser-alt.acik .ea-ip-kapa{display:inline}
+.eser-alt.acik .ea-ipucu .ic{transform:rotate(180deg);animation:none}
+@keyframes ea-zipla{0%,60%,100%{transform:none}30%{transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.ea-ipucu .ic{animation:none}}
+.eser-alt,body.m #alt-ic{scrollbar-width:none}
+.eser-alt::-webkit-scrollbar,body.m #alt-ic::-webkit-scrollbar{display:none}
+/* mobil eser kartı açıkken harita kontrolleri kartın üstüne çıkar (alt sayfa gizliyken --alt-h kartı hesaba katmıyordu) */
+body.m:has(#eser-kart:not([hidden])) #harita-kontrol{bottom:calc(var(--kart-h,300px) + 12px + 16px + var(--sab))}
+/* Eser hakkında mobil yana kayma (29 Ekim 2026): bölüm kapak fotoğrafı iki yana eşit taşacaktı ama «margin:auto» esnek kutuda taşan öğeyi
+   başa yaslıyordu → yalnız sağa 20 px taşıp sayfayı yana kaydırıyordu. Ortalamayı align-items yapar; sayfa yatayda asla kaymaz */
+.hk-bkapak-f{margin:0}
+#hk-kaydir{overflow-x:clip}
+
+/* ---------- Eser hakkında sesli okuma (29 Ekim 2026) */
+.hk-dinle{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:16px;height:44px;padding:0 20px 0 16px;border-radius:999px;background:#fff;color:var(--sehir-aksan);font:600 15px/1 var(--font);box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.hk-dinle:active{transform:scale(.98)}
+.hk-b-dinle{display:inline-flex;align-items:center;gap:6px;margin-top:10px;height:32px;padding:0 14px 0 10px;border-radius:999px;border:1.5px solid color-mix(in srgb,var(--sehir-aksan) 45%,transparent);color:var(--sehir-aksan);font:600 13px/1 var(--font)}
+.hk-b-dinle .ic{fill:currentColor}
+.hk-b-dinle:hover{background:color-mix(in srgb,var(--sehir-aksan) 8%,transparent)}
+/* okunan paragraf: yer değiştirmeden vurgu (gölge kenar boşluğu taklit eder) */
+.hk-p,.hk-k-meal{transition:background var(--sure-2),box-shadow var(--sure-2);border-radius:8px}
+.hk-okunan{background:color-mix(in srgb,var(--sehir-aksan) 10%,transparent);box-shadow:0 0 0 8px color-mix(in srgb,var(--sehir-aksan) 10%,transparent),-8px 0 0 8px var(--sehir-aksan)}
+/* oynatıcı */
+.hk-oyn{position:relative;display:flex;align-items:center;gap:10px;font:500 13px/18px var(--font);color:var(--text)}
+.hko-bilgi{min-width:0;flex:1;display:flex;flex-direction:column}
+.hko-bilgi b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hko-bilgi small{color:var(--text-muted);font-size:12px}
+.hko-dugmeler{display:flex;align-items:center;gap:4px;flex:none}
+.hko-dugmeler button{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--text)}
+.hko-dugmeler button:hover{background:color-mix(in srgb,var(--text) 8%,transparent)}
+.hko-dugmeler .hko-ana{width:44px;height:44px;background:var(--sehir-aksan);color:#fff}
+.hko-dugmeler .hko-ana:hover{background:var(--sehir-aksan)}
+.hko-ana .ic{fill:currentColor}
+.hko-hiz{width:auto!important;padding:0 8px;border-radius:999px!important;font:600 13px/1 var(--font)}
+.hko-don{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 12px;border-radius:999px;background:var(--sehir-aksan);color:#fff;font:600 13px/1 var(--font);white-space:nowrap;box-shadow:0 4px 12px rgba(20,27,43,.2)}
+.hko-cizgi{position:absolute;left:16px;right:16px;bottom:0;height:3px;border-radius:2px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden}
+.hko-cizgi i{display:block;height:100%;width:0;background:var(--gold);transition:width var(--sure-3)}
+/* mobil: altta yüzen çubuk */
+body.m .hk-oyn,body:not(.d) > .hk-oyn{position:fixed;left:12px;right:12px;bottom:calc(12px + var(--sab));z-index:30;padding:10px 10px 12px 16px;border-radius:20px;background:color-mix(in srgb,var(--surface) 90%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);box-shadow:0 10px 30px rgba(20,27,43,.2),inset 0 0 0 1px rgba(255,255,255,.5)}
+body.hk-dinleniyor .hk-derin.acik .hk-derin-dugme{bottom:calc(12px + var(--sab) + 76px)}
+body.m.hk-dinleniyor #hk-kaydir{padding-bottom:96px}
+/* masaüstü: sekme çubuğunun sağ ucu */
+body.d .hk-nav .hk-oyn{flex:0 0 auto;width:min(420px,40%);margin-left:12px;padding:0 0 6px 14px;border-left:1px solid var(--border)}
+body.d .hk-nav .hko-cizgi{left:14px;right:0;bottom:-6px}
+body.d .hk-nav .hko-don{bottom:auto;top:calc(100% + 14px)}
+@media (prefers-reduced-motion:reduce){.hko-cizgi i,.hk-p,.hk-k-meal{transition:none}}
+/* hikâye ekranı üst düğmeleri (×, tam ekran): simge yuvarlağın ortasında (flex'te yatay ortalama yoktu, simge 10 px sola kayıyordu) */
+.yuvarlak.ust-kontrol{justify-content:center;align-items:center;padding:0}
+/* ---------- sesli okuma, 2. tur (29 Ekim 2026) */
+/* bölüm başlığı: «Dinle · n dk» başlığın sağında, başlık + künye ile aynı blokta dikey ortalı */
+.hk-bkapak-yazi{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:center}
+.hk-bkapak-yazi>:not(.hk-b-dinle){grid-column:1}
+.hk-b-dinle{grid-column:2;grid-row:1 / span 2;margin:0;align-self:end;height:36px;padding:0 16px 0 12px;font-size:14px}
+/* okunan paragraf: hafif zemin + solda ince yöre şeridi (önceki kalın blok yerine) */
+.hk-okunan{background:color-mix(in srgb,var(--sehir-aksan) 8%,var(--bg));box-shadow:0 0 0 8px color-mix(in srgb,var(--sehir-aksan) 8%,var(--bg)),-11px 0 0 0 var(--sehir-aksan)}
+/* masaüstü oynatıcı: sekme çubuğundan çıktı → metin sütununun altına yapışan yüzen çubuk (mobildekiyle aynı) */
+body.d .hk-sol>.hk-oyn{position:sticky;bottom:20px;z-index:4;margin:24px -12px 0;padding:10px 10px 12px 16px;border-radius:20px;background:color-mix(in srgb,var(--surface) 90%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);box-shadow:0 10px 30px rgba(20,27,43,.18),inset 0 0 0 1px rgba(255,255,255,.5)}
+/* «Metni kısalt»: metnin üstünde yüzmez; açılan metnin sonunda, sağda sabit durur */
+.hk-derin.acik .hk-derin-dugme,body.hk-dinleniyor .hk-derin.acik .hk-derin-dugme{position:static;margin:4px 0 0 auto;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;background:transparent}
+/* oynatıcı: bilgi solda, geri · oynat · ileri tam ortada, hız ve kapat sağda (üç eşit bölge) */
+.hk-oyn{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px}
+.hko-orta{justify-self:center}
+.hko-sag{justify-self:end}
+/* masaüstü sekme çubuğu: metin sütunundan çıktı, iki sütunun (metin + sahne) üstüne yayılır */
+.hk-d>.hk-nav{max-width:1360px;margin:0 auto;padding:12px 48px;box-sizing:border-box}
+/* ---------- masaüstü eser görünümü (29 Ekim 2026): Fotoğraf | 3D seçici fotoğrafların üstünde sağda yüzüyordu (fotoğrafı kesiyor, bakışın
+   başladığı panelden uzak). Artık galerinin üstünde kendi satırında: solda ‹ panel düğmesinin yanında seçici, sağda parça seçici; fotoğraf altta, hiçbir şey üstüne binmez */
+body.d .gorus-ust{justify-content:flex-start;padding:16px 24px 0 60px}
+body.d .gorus-ust .ust-kontrol{flex:1}
+body.d .gorus-ust .yuvarlak.parca{margin-left:auto}
+body.d .galeri{top:72px;padding-top:0}
+/* araç satırı ile galerinin sol kenarı aynı hizada (‹ panel düğmesinin 12 px sağı) */
+body.d .gorus-ust{padding-left:36px}
+body.d .galeri{padding-left:36px;scroll-padding-inline:36px 24px}
+/* parça seçici yalnız 3D'de (fotoğrafta işlevi yok, sağ üstte tek başına kalıyordu) */
+#gorus:has([data-gorunum="foto"][aria-checked="true"]) .gorus-ust .yuvarlak.parca{visibility:hidden}
+/* galeri okları: sol ok fotoğrafın kenarına yarı taşmasın; galeri araç satırının altından başladığı için dikey orta 36 px aşağıda */
+body.d .galeri-ok{top:calc(50% + 24px)}
+body.d .galeri-ok[data-kaydir="-1"]{left:52px!important}
+
+/* ---------- masaüstü araç satırı: [Fotoğraf | 3D]  ·  1–3 / 12 fotoğraf · künye (3D'de: kullanım ipucu)  ·  ‹ › (3D'de: parça seçici) */
+body.d .gorus-ust .ust-kontrol{display:flex;align-items:center;gap:16px}
+.arac-bilgi{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:6px;font:500 13px/18px var(--font);color:var(--text-muted);white-space:nowrap;overflow:hidden}
+.arac-bilgi b{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.arac-bilgi span{overflow:hidden;text-overflow:ellipsis}
+.arac-oklar{display:flex;gap:8px}
+.arac-oklar button:disabled{opacity:.35;cursor:default}
+body.d .gorus-ust .yuvarlak.parca{order:3;margin-left:0}
+/* fotoğrafta parça seçici yok, oklar var; 3D'de tersi */
+#gorus:has([data-gorunum="foto"][aria-checked="true"]) .gorus-ust .yuvarlak.parca{display:none}
+#gorus:has([data-gorunum="3d"][aria-checked="true"]) .arac-oklar{display:none}
+body.d #gorus-alan .ipucu{display:none}   /* 3D ipucu artık araç satırında */
+.arac-bilgi b{margin-right:2px}
+/* harita kartı ikincil eylemi: tek satırlık metin düğmesi (ana düğmenin altında, kartı büyütmeden) */
+.kart-ikinci{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:4px 2px;font:600 14px/20px var(--font);color:var(--yore-yazi,var(--sehir-aksan))}
+.kart-ikinci:hover .ic:last-child{transform:translateX(2px)}
+.kart-ikinci .ic:last-child{transition:transform var(--sure-2)}
+[data-kart="cam"] .kart-ikinci{margin:0 10px 10px;padding:0 16px 12px}
+[data-kart="perde"] .kart-ikinci{margin:0 18px 16px;color:#fff}
+
+/* listedeki küçük resimler kemer biçiminde (haritadaki pinle aynı dil) */
+.eser-satir img,.eser-satir .gorsel-yok{border-radius:32px 32px 8px 8px}
+.rota-kart img,.rota-kart .gorsel-yok{border-radius:36px 36px 8px 8px}
+[data-tema] .eser-satir img,[data-tema] .eser-satir .gorsel-yok{border-radius:32px 32px 10px 10px}
+/* «Metni kısalt» (3. tur): kaydırırken yine görünür ama küçük, sağ altta, buzlu hap; metni örtmesin diye hafif ve dar.
+   Sesli okuma açıksa oynatıcının üstünde durur */
+.hk-derin.acik .hk-derin-dugme,body.hk-dinleniyor .hk-derin.acik .hk-derin-dugme{position:sticky;bottom:calc(16px + var(--sab, 0px));z-index:3;display:flex;align-items:center;gap:4px;width:max-content;height:36px;margin:8px 0 0 auto;padding:0 10px 0 14px;border:1px solid color-mix(in srgb,var(--sehir-aksan) 40%,transparent);border-radius:999px;
+  background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:0 4px 14px rgba(20,27,43,.12)}
+.hk-derin.acik .hk-derin-dugme span{font:600 13px/16px var(--font)}
+.hk-derin.acik .hk-derin-dugme .ic{width:16px;height:16px}
+body.m.hk-dinleniyor .hk-derin.acik .hk-derin-dugme{bottom:-8px}   /* kaydırma alanının 96 px alt boşluğu (oynatıcı payı) yapışmayı zaten yükseltiyor; hap oynatıcının ~10 px üstünde durur */
+body.d.hk-dinleniyor .hk-derin.acik .hk-derin-dugme{bottom:100px}
+body.d .hk-derin.acik .hk-derin-dugme{margin-right:-20px}   /* masaüstünde metin sütununun sağ kenarına, satır sonlarının dışına doğru */
+
+/* ---------- mobil eser kartı sade (29 Ekim 2026): tutamak + küçük zıplayan ok; üç eşit kutu, Hakkında il tonunda */
+.eser-alt .tutamak{height:auto;padding:8px 0 2px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
+.eser-alt .tutamak .ic{color:var(--text-muted);opacity:.8;transition:transform var(--sure-2) var(--egri);animation:ea-zipla 1.6s ease-in-out .8s 3}
+.eser-alt.acik .tutamak .ic{transform:rotate(180deg);animation:none}
+@media (prefers-reduced-motion:reduce){.eser-alt .tutamak .ic{animation:none}}
+.eser-alt .ikili{margin-top:12px}
+.gg-d .gg-ac{display:none}   /* masaüstünde harita hep açık: aç/kapa düğmesi yok */
+
+/* mobil kartın açılan kısmı: tam metin kartı, Geçmiş · Bulmaca, künye */
+.ea-detay .tam-kart{margin-top:2px}
+.ea-detay .kesif-yollari{margin-bottom:14px}
+.ea-detay .kesif-bas{margin-top:18px}
+
+/* ---------- Geçmişi Gör mobil akış (29 Ekim 2026): yapışık fotoğraf, altından akan bilgi · bugün kartı · şerit · sabit harita */
+.gg-akis .gg-kaydir{bottom:0;padding-bottom:calc(24px + var(--sab, 0px))}
+.gg-akis .gg-foto{position:sticky;top:0;z-index:3;box-shadow:0 -20px 0 0 var(--bg),0 10px 24px rgba(20,27,43,.18)}
+.gg-akis .gg-foto.kucuk{height:200px}
+.gg-akis .gg-yer{margin-top:20px}
+.gg-akis .gg-yer .gg-ac{display:none}
+.gg-akis .gg-yer .gg-harita-kap{height:280px;flex:none;margin-top:12px;min-height:0}
+.gg-akis .gg-lejant{margin-top:8px}
+/* bugün kartı */
+.gg-bugun{display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:12px;align-items:start;margin-top:14px;padding:14px;border-radius:16px;background:var(--surface);box-shadow:0 2px 10px rgba(20,27,43,.08)}
+.gg-bugun .gb-ik{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--yore-tint,var(--primary-light));color:var(--yore-yazi,var(--primary))}
+.gg-bugun b{display:block;font:600 15px/20px var(--font)}
+.gg-bugun small{display:block;margin-top:2px;color:var(--text-muted);font-size:13px;line-height:18px}
+.gg-bugun .btn{grid-column:1 / -1;min-height:48px}
+.gg-bugun.var{grid-template-columns:auto 1fr auto;align-items:center}
+.gg-bugun.var .metin-btn{font-weight:600;color:var(--yore-yazi,var(--primary))}
+/* şerit: bugünü olmayan fotoğrafta küçük kamera işareti; başlık altında çağrı */
+.gg-serit button{position:relative}
+.gg-cek-isaret{position:absolute;top:6px;right:6px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.9);color:var(--yore-yazi,var(--primary));box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.gg-cagri{display:flex;align-items:center;gap:6px;margin:-2px 0 8px;font-size:13px;color:var(--yore-yazi,var(--primary));font-weight:500}
+/* Geçmişi Gör fotoğrafı (29 Ekim 2026): «Kamerayı aç» fotoğrafın üstünden kalktı (kamera artık «Bugününü sen çek» kartında); güven etiketi küçük */
+.gg-akis .gg-foto .gg-kamera{display:none}
+.gg-foto .gg-guven .guven{height:20px;padding:0 8px 0 7px;font-size:11px;line-height:15px;gap:4px}
+.gg-foto .gg-guven .guven .i,.gg-foto .gg-guven .guven svg{width:11px;height:11px;font-size:11px}
+/* mobil eser kartı (30 Ekim 2026): kapalıyken altta sonraki öğe hafifçe görünür, kart sisle kaybolur; «Temsili» ve «İçini göster» kartla birlikte hareket eder */
+/* alttan görünen içerik kartın kenarına doğru silikleşir (içinden çıkıyormuş gibi); kart tamamen açılınca maske kalkar */
+.eser-alt:not(.tam) .ea-detay{-webkit-mask-image:linear-gradient(180deg,#000 0,#000 calc(var(--g,44px) - 72px),rgba(0,0,0,.14) var(--g,44px));mask-image:linear-gradient(180deg,#000 0,#000 calc(var(--g,44px) - 72px),rgba(0,0,0,.14) var(--g,44px))}
+body.m #temsili,body.m #kubbe-dugme,body.m #parca-ad{transition:bottom var(--sure-3) var(--egri)}
+#gorus:has(.eser-alt.surukle) #temsili,#gorus:has(.eser-alt.surukle) #kubbe-dugme,#gorus:has(.eser-alt.surukle) #parca-ad{transition:none}

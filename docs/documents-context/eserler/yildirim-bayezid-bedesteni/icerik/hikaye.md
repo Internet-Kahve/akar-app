@@ -54,3 +54,10 @@ Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan g
 | # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |
 |---|---|---|---|---|---|---|
 | 4 | yildirim-bayezid-bedesteni | ulu-cami | Ulucami | Gelir → Ulucami | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |
+
+## Yalnız rotada
+Bu cümleler rotanın bir sonraki durağına yönlendirir; eser rotadan açılmadıysa hikâyede atlanır (29 Ekim 2026; design/test-redmi9t-v2/hazirla.py → cümlenin `rota` alanı).
+
+| # |
+|---|
+| 11 |

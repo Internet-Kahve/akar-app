@@ -12,6 +12,10 @@ import * as turf from 'https://cdn.jsdelivr.net/npm/@turf/turf@7.1.0/+esm';   //
 const $ = (s, k = document) => k.querySelector(s);
 const $$ = (s, k = document) => [...k.querySelectorAll(s)];
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+/* eser detayı seçenekleri (29 Ekim 2026, karar bekliyor): ?detay=derinlik,kopru · ?detay= boş bırakılırsa kapanır; seçim cihazda kalır (akar.detay).
+   derinlik: kısa hikâye ve «Eser hakkında»nın yanında uzunluk çubuğu · kopru: kısa hikâye bitince tebrik kartında «Eser hakkında»ya köprü */
+const DETAY = (() => { try { const q = new URLSearchParams(location.search).get('detay'); if (q !== null) localStorage.setItem('akar.detay', q); return new Set((q ?? localStorage.getItem('akar.detay') ?? '').split(',').map((x) => x.trim()).filter(Boolean)); } catch { return new Set(); } })();
+const derinlikCubuk = (dk) => !DETAY.has('derinliksiz') ? `<span class="derinlik" aria-hidden="true">${[1, 2, 3, 4, 5].map((n) => `<i${n <= Math.min(5, Math.max(1, Math.round(dk / 3))) ? ' class="d"' : ''}></i>`).join('')}</span>` : '';
 const yerel = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
 
 /* ---------- ikonlar (lucide, strokeWidth 2) ---------- */
@@ -20,6 +24,7 @@ const IK = {
   'chevron-left':'<path d="m15 18-6-6 6-6"/>', 'chevron-right':'<path d="m9 18 6-6-6-6"/>', 'chevron-down':'<path d="m6 9 6 6 6-6"/>',
   x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', check:'<path d="M20 6 9 17l-5-5"/>',
   headphones:'<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+  'book-open-text':'<path d="M12 7v14"/><path d="M16 12h2"/><path d="M16 8h2"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/><path d="M6 12h2"/><path d="M6 8h2"/>',
   'book-open':'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
   image:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
   box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
@@ -79,12 +84,16 @@ const svgResim = (svg) => new Promise((r) => { const i = new Image(); i.onload =
 /* ---------- veri ---------- */
 const VERI = await (await fetch('veri.json', { cache:'no-store' })).json();   // önbellekteki eski veri yeni kodla açılmasın
 VERI.eserler.forEach((e) => { e.gecmis ||= []; });
+/* rota cümleleri (hikaye.md → «Yalnız rotada», 29 Ekim 2026): «Sonraki durak…» gibi cümleler yalnız rotadan gelindiyse okunur.
+   e.hikaye her okunduğunda o anki rota durumuna göre süzülür (rotada değilse `rota` işaretli cümleler yok) */
+VERI.eserler.forEach((e) => { const tam = e.hikaye || []; if (!tam.some((c) => c.rota)) return;
+  Object.defineProperty(e, 'hikaye', { configurable:true, get() { let r = false; try { r = durum.rotada; } catch {} return r ? tam : tam.filter((c) => !c.rota); } }); });
 const ESER = Object.fromEntries(VERI.eserler.map((e) => [e.id, e]));
 const ROTA = VERI.rotalar[0];
 const SEHIR = VERI.sehir || { ad:'', merkez:[0, 0], zoom:16, foto_kunye:'', kaynakca:'' };   // şehir kaydı: veri/sehir/<sehir>.json
 /* 3D sahne zemini şehrin kimliğinden (kimlik.sahne_ust / sahne_alt); yoksa app.css'teki nötr gri kalır */
-if (SEHIR.kimlik?.sahne_ust) document.documentElement.style.setProperty('--sahne-ust', SEHIR.kimlik.sahne_ust);
-if (SEHIR.kimlik?.sahne_alt) document.documentElement.style.setProperty('--sahne-alt', SEHIR.kimlik.sahne_alt);
+if (SEHIR.kimlik?.sahne_ust && !document.documentElement.dataset.tema) document.documentElement.style.setProperty('--sahne-ust', SEHIR.kimlik.sahne_ust);
+if (SEHIR.kimlik?.sahne_alt && !document.documentElement.dataset.tema) document.documentElement.style.setProperty('--sahne-alt', SEHIR.kimlik.sahne_alt);
 /* şehrin rengi ve deseni bütün sayfaya (açılış ekranı, yükleme kartları); veri/sehir/<şehir>.json → kimlik */
 { const km = SEHIR.kimlik || {}, kok = document.documentElement.style;
   if (km.zemin) kok.setProperty('--sehir-aksan', km.zemin);
@@ -92,6 +101,18 @@ if (SEHIR.kimlik?.sahne_alt) document.documentElement.style.setProperty('--sahne
   if (km.desen) kok.setProperty('--sehir-desen', `url('desenler/${km.desen}')`);
   const ac = document.getElementById('acilis');
   if (ac) { ac.classList.toggle('desenli-zemin', !!km.desen); document.getElementById('acilis-sehir').textContent = SEHIR.ad || ''; document.getElementById('acilis-alt').textContent = 'Vakıf eserleri yükleniyor'; } }
+/* yöre rengi (29 Ekim 2026): esere ait yüzeyler eserin ilinin envanter rengini alır (eser.json → il; veri/sehir/<il>.json → kimlik).
+   Bir ilin kimliği yoksa varsayılan şehrinki, o da yoksa temanın nötr rengi kalır. Şehre özel kod yok */
+/* eserin il kaydı: renk, desen, envanter adı, yayıncı, fotoğraf künyesi hep buradan (eser.json → il ↔ veri/sehir/<il>.json → ad). Kodda il adı yok */
+const ilSehir = (e) => (e && (VERI.sehirler || []).find((s) => s.ad && s.ad.toLocaleLowerCase('tr') === (e.il || '').toLocaleLowerCase('tr'))) || SEHIR;
+const aktifSehir = () => { try { return ilSehir(anlat.eser || ESER[durum.secili]); } catch { return SEHIR; } };   // açılışta (anlat henüz tanımsızken) varsayılan şehir
+const ilKimlik = (e) => (e && (VERI.sehirler || []).find((s) => s.ad && s.ad.toLocaleLowerCase('tr') === (e.il || '').toLocaleLowerCase('tr'))?.kimlik) || SEHIR.kimlik || null;
+function yoreUygula(e) {
+  const km = ilKimlik(e) || {}, kok = document.documentElement.style;
+  const koy = (ad, v) => (v ? kok.setProperty(ad, v) : kok.removeProperty(ad));
+  koy('--sehir-aksan', km.zemin); koy('--sehir-acik', km.desen_renk); koy('--sehir-desen', km.desen ? `url('desenler/${km.desen}')` : '');
+}
+$$('.il-ad').forEach((b) => { b.textContent ||= SEHIR.ad || ''; });   // aktif il adı (harita durunca haritaIliGuncelle günceller)
 const AMBLEM_D = document.querySelector('#acilis .amblem path')?.getAttribute('d') || '';
 /* 3D yükleme kartı: amblem çizilir, gerçek indirme yüzdesi ve MB; arkada şehrin deseni silik */
 const mbYaz = (b) => (b / 1048576).toLocaleString('tr-TR', { minimumFractionDigits:1, maximumFractionDigits:1 });
@@ -194,9 +215,9 @@ function yanSayfaAc(baslik, govde) {
 }
 function yanSayfaKapat() { const k = $('#yan-sayfa'); if (!k || k.hidden) return; k.classList.remove('acik'); setTimeout(() => { k.hidden = true; k.innerHTML = ''; k._donus?.focus?.({ preventScroll:true }); }, 220); }
 /* «Envanter Cilt 1 · s. 25, 36; Ürgen s.10» → kitap satırları (envanterin adı ve yayıncısı şehir kaydından) */
-const kaynakSatirlari = (k) => String(k || '').split(/\s*;\s*/).filter(Boolean).map((x) => {
+const kaynakSatirlari = (k, sh = aktifSehir()) => String(k || '').split(/\s*;\s*/).filter(Boolean).map((x) => {   // envanter adı ve yayıncı eserin ilinden
   const m = x.match(/^Envanter\s+Cilt\s*(\d+)\s*(?:·\s*)?(.*)$/i);
-  return m ? { baslik:`${SEHIR.envanter_adi || 'Envanter'}, Cilt ${m[1]}`, alt:[SEHIR.envanter_yayinci, m[2]].filter(Boolean).join(' · ') } : { baslik:x, alt:'' };
+  return m ? { baslik:`${sh.envanter_adi || 'Envanter'}, Cilt ${m[1]}`, alt:[sh.envanter_yayinci, m[2]].filter(Boolean).join(' · ') } : { baslik:x, alt:'' };
 });
 function kaynakAc(g, k = {}) {
   const kay = kaynakSatirlari(k.kaynak), alinti = String(k.alinti || '');
@@ -263,7 +284,9 @@ const glbCoz = async (dosya) => { const b = await glbAl(dosya); return new Promi
    HARİTA: AKAR stili, OSM 3D binaları, modellerimiz ve pinler
    ===================================================================== */
 let stil;
-try { stil = await (await fetch('akar-style.json')).json(); } catch { stil = { version:8, sources:{ osm:{ type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256 } }, layers:[{ id:'osm', type:'raster', source:'osm' }] }; }
+/* temanın kendi harita stili varsa o (harita/akar-style-<tema>.json; sunucu.sh paylaşır), yoksa ortak stil */
+const temaStil = { buzlu:'akar-style-buzlu.json', cam:'akar-style-cam.json' }[document.documentElement.dataset.tema];
+try { stil = await (await fetch(temaStil || 'akar-style.json')).json(); } catch { stil = { version:8, sources:{ osm:{ type:'raster', tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize:256 } }, layers:[{ id:'osm', type:'raster', source:'osm' }] }; }
 /* Küre (28 Ekim 2026): uzaklaşınca dünya yuvarlak görünür, yaklaştıkça MapLibre kendiliğinden düz haritaya geçer (şehir ölçeğinde fark yok).
    Gökyüzü ve atmosfer yalnız uzakta görünür; şehirde eğik bakışta ufuk açık renkte kalır */
 /* Renk ayrımı (28 Ekim 2026): eser modelleri sıcak taş rengi (bej, kurşuni kubbe). Ortak stilde (design/harita, v1 de kullanıyor) zemin ve
@@ -271,7 +294,30 @@ try { stil = await (await fetch('akar-style.json')).json(); } catch { stil = { v
    Stil dosyasına dokunulmaz, renkler burada yüklendikten sonra değişir. */
 /* 29 Ekim 2026: zemin ve bina renkleri artık kullanıcının stil dosyasından (sunucu.sh → design/harita/akar-style-ozel-v2.json); burada geçersiz kılınmaz */
 stil.projection = { type:'globe' };
-stil.sky = { 'sky-color':'#C9DCEB', 'horizon-color':'#F3F5F5', 'sky-horizon-blend':0.6, 'fog-color':'#F3F5F5', 'horizon-fog-blend':0.4, 'fog-ground-blend':1,
+/* küre görünümünde etiket kalabalığı (29 Ekim 2026): uzakta yalnız ülke ve deniz adları; küçük yerleşim adları yaklaştıkça açılır,
+   böylece göz uygulamanın il işaretlerine gider. Bütün temalar */
+{ const ESIK = { label_country_3:3, label_state:5.5, label_city_capital:4.5, label_city:6, label_town:8, label_village:10, label_other:10 };
+  stil.layers.forEach((l) => { if (ESIK[l.id] != null) l.minzoom = Math.max(l.minzoom || 0, ESIK[l.id]); }); }
+/* ?harita=sicak (deneme, 29 Ekim 2026): soğuk gri zemin yerine kireç/taş tonları; eserlerin sıcak taşıyla uyumlu. Seçim cihazda kalır (akar.harita), ?harita=normal kapatır */
+try { const q = new URLSearchParams(location.search).get('harita'); if (q) localStorage.setItem('akar.harita', q);
+  if ((q || localStorage.getItem('akar.harita')) !== 'normal' && document.documentElement.dataset.tema !== 'cam') {   // sıcak tonlar varsayılan
+    const R = { background:'#F9F8F4', landuse_residential:'#F6F4EF', building:'#E3DCD0', building_3d:'#E1D9CC', road_area_pier:'#F9F8F4', road_pier:'#F9F8F4',
+      highway_path:'#FFFFFF', highway_minor:'#FFFFFF', highway_major_inner:'#FFFFFF', highway_minor_casing:'#DFD9CE', highway_major_casing:'#DFD9CE', highway_major_subtle:'#DFD9CE', highway_motorway_casing:'#DFD9CE',
+      water:'#A9CBD3', waterway:'#A9CBD3', park:'#B8D3A4', landcover_grass:'#B8D3A4', landcover_wood:'#B8D3A4', landuse_spor:'#B8D3A4', landuse_mezarlik:'#C7D9B8' };
+    stil.layers.forEach((l) => { const r = R[l.id]; if (!r || !l.paint) return; for (const k of ['background-color', 'fill-color', 'line-color', 'fill-extrusion-color']) if (k in l.paint) l.paint[k] = r; if (l.id === 'building' && 'fill-outline-color' in l.paint) l.paint['fill-outline-color'] = '#D1C7B7'; });
+    /* deniz yakınlığa göre: uzakta (küre) canlı okyanus mavisi, şehre indikçe sakin su mavisi; küre kabartması biraz daha canlı (29 Ekim 2026) */
+    /* küre (29 Ekim 2026, 2. tur, Yandex örneği): düz renkler. Okyanus parlak mavi, kara açık yeşil (zemin rengi uzakta yeşil, şehre inince
+       kireç), kabartma yalnız silik bir doku (çöller ve dağlar seçilsin diye). Şehir ölçeğinde su sakin mavi */
+    const su = ['interpolate', ['linear'], ['zoom'], 0, '#5FAAEC', 5, '#6DB3EE', 9, '#93C6E8', 13, '#A3CFE2'];
+    const kara = ['interpolate', ['linear'], ['zoom'], 0, '#D9EBC6', 5, '#DFEDCD', 8, '#F2F1EA', 10, '#F9F8F4'];
+    stil.layers.forEach((l) => { if (!l.paint) return;
+      if (l.id === 'background') l.paint['background-color'] = kara;
+      if (l.id === 'water') l.paint['fill-color'] = su;
+      if (l.id === 'waterway') l.paint['line-color'] = '#A3CFE2';
+      if (l.type === 'raster' && l.id === 'kabartma') Object.assign(l.paint, { 'raster-opacity':['interpolate', ['linear'], ['zoom'], 0, 0.42, 6, 0.3, 9, 0], 'raster-saturation':-0.1, 'raster-contrast':-0.15, 'raster-brightness-min':0.25 }); });
+  } } catch {}
+const gok = { buzlu:['#9ACBF0', '#F4F2EA', '#F4F2EA'],   /* küre: açık gök mavisi, ufukta ılık ışık (29 Ekim 2026) */ cam:['#0B0F12', '#1E262B', '#13191D'] }[document.documentElement.dataset.tema] || ['#C9DCEB', '#F3F5F5', '#F3F5F5'];
+stil.sky = { 'sky-color':gok[0], 'horizon-color':gok[1], 'sky-horizon-blend':0.6, 'fog-color':gok[2], 'horizon-fog-blend':0.4, 'fog-ground-blend':1,
   'atmosphere-blend':['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 8, 0] };
 const harita = new maplibregl.Map({
   container:'harita', style:stil, center:SEHIR.merkez, zoom: durum.masaustu ? (SEHIR.zoom_masaustu || SEHIR.zoom) : SEHIR.zoom, pitch:55, bearing:-12,
@@ -287,6 +333,48 @@ const IZLER = [];   // model taban izleri (lng/lat çokgen), bina gizleme ve dok
 /* Hikâyesi sonuna kadar dinlenen eser cihazda «bitti» olarak saklanır; pini Tamamlandı (✓) çizilir */
 const bittiMi = (id) => yerel('akar.bitti.' + id) === '1';
 const eserNoktalari = () => ({ type:'FeatureCollection', features:VERI.eserler.map((e) => ({ type:'Feature', geometry:{ type:'Point', coordinates:[e.lon, e.lat] }, properties:{ id:e.id, ad:e.ad, ikon:e.ikon, rol:e.rol, sira:e.sira || 999, bitti:bittiMi(e.id) } })) });
+/* ---------- Haritada ruh (29 Ekim 2026) ----------
+   1) Eser adları uygulamanın başlık yazısıyla (Cormorant): harita yazı tipi sunucusunda (openfreemap) serif yok; her ad tuvale
+      çizilip resim olarak eklenir, etiket katmanı onu metin içinde gösterir (çakışma ve yer seçimi metindeki gibi çalışır).
+   (Tarihî çekirdek alanı denendi, beğenilmedi, kaldırıldı · 29 Ekim 2026) */
+/* Haritanın baktığı il (29 Ekim 2026): harita durunca merkeze en yakın il kaydı (≈60 km içinde) «aktif il» olur; arayüz çerçevesi
+   (üst çubuk şeridi, aramadaki il rozeti, mobilde il çipi) o ilin rengini ve motifini alır. Eser seçiliyse eserin ili önceliklidir */
+let haritaIli = null;
+function haritaIliGuncelle() {
+  if (typeof harita === 'undefined' || harita.getZoom() < SEHIR_ESIK) return;
+  const c = harita.getCenter(), kx = Math.cos(c.lat * Math.PI / 180);
+  let en = null, d = Infinity;
+  for (const s of VERI.sehirler || []) { if (!Array.isArray(s.merkez)) continue; const dd = Math.hypot((s.merkez[0] - c.lng) * kx, s.merkez[1] - c.lat); if (dd < d) { d = dd; en = s; } }
+  if (!en || d > 0.55 || en === haritaIli) return;
+  haritaIli = en; document.documentElement.dataset.il = en.id || '';
+  $$('.il-ad').forEach((b) => { b.textContent = en.ad; });
+  if (!durum.secili && !location.hash.slice(2)) yoreUygula({ il:en.ad });
+}
+const kokRenk = (ad, yedek) => getComputedStyle(document.documentElement).getPropertyValue(ad).trim() || yedek;
+async function eserAdlariKur() {
+  try {
+    const yazi = '600 34px "Cormorant Garamond"';
+    await document.fonts.load(yazi, VERI.eserler.map((e) => e.ad).join(''));
+    if (!document.fonts.check(yazi)) return false;
+    const koyu = document.documentElement.dataset.tema === 'cam';
+    const renk = koyu ? '#ECEFF0' : kokRenk('--text', '#1A2328'), hale = koyu ? 'rgba(18,23,27,.92)' : 'rgba(255,255,255,.95)';
+    for (const e of VERI.eserler) {
+      const c = document.createElement('canvas'), x = c.getContext('2d'); x.font = yazi;
+      const w = Math.ceil(x.measureText(e.ad).width) + 16, h = 46; c.width = w; c.height = h;
+      x.font = yazi; x.textBaseline = 'middle'; x.lineJoin = 'round';
+      x.lineWidth = 7; x.strokeStyle = hale; x.strokeText(e.ad, 8, h / 2 + 1);
+      x.fillStyle = renk; x.fillText(e.ad, 8, h / 2 + 1);
+      const ad = 'ad-' + e.id; if (harita.hasImage(ad)) harita.removeImage(ad);
+      harita.addImage(ad, x.getImageData(0, 0, w, h), { pixelRatio:2 });
+    }
+    return true;
+  } catch { return false; }
+}
+/* seçili pin filtresi tek yerden (liste üzerine gelme, eser seçimi, rota). Pinin altındaki madalyon denendi, kaldırıldı · 29 Ekim 2026 */
+function pinSeciliFiltre(id) {
+  const f = ['==', ['get', 'id'], id || ''];
+  if (harita.getLayer('pin-secili')) harita.setFilter('pin-secili', f);
+}
 async function haritaPinleriKur() {
   if (harita.getSource('eserler')) return;
   for (const ikon of ['cami', 'han', 'hamam', 'turbe']) {
@@ -298,8 +386,9 @@ async function haritaPinleriKur() {
   if (harita.getSource('eserler')) return;
   harita.addSource('eserler', { type:'geojson', data:eserNoktalari() });
   const glif = !!harita.getStyle().glyphs;
+  const adEtiket = glif && await eserAdlariKur();   // serif eser adları (resim olarak; harita yazı tipi sunucusunda serif yok)
   harita.addLayer({ id:'pin', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, layout:Object.assign({ 'icon-image':['concat', ['case', ['get', 'bitti'], 'pin-tamam-', 'pin-'], ['get', 'ikon']], 'icon-anchor':'bottom', 'icon-allow-overlap':true, 'icon-size':['interpolate', ['linear'], ['zoom'], 16, 0.8, 18, 0.66], 'symbol-sort-key':['get', 'sira'] },
-    glif ? { 'text-field':['step', ['zoom'], '', 15.2, ['get', 'ad']], 'text-font':['Noto Sans Bold'], 'text-size':12, 'text-line-height':1.333, 'text-variable-anchor-offset':['left', [1.3, -1.6], 'right', [-1.3, -1.6], 'top', [0, 0.4], 'bottom', [0, -3.4]], 'text-justify':'auto', 'text-optional':true } : {}),
+    glif ? { 'text-field':['step', ['zoom'], '', 15.2, adEtiket ? ['format', ['image', ['concat', 'ad-', ['get', 'id']]]] : ['get', 'ad']], 'text-font':['Noto Sans Bold'], 'text-size':12, 'text-line-height':1.333, 'text-variable-anchor-offset':['left', [1.3, -1.6], 'right', [-1.3, -1.6], 'top', [0, 0.4], 'bottom', [0, -3.4]], 'text-justify':'auto', 'text-optional':true } : {}),
     paint:{ 'text-color':'#25477B', 'text-halo-color':'#fff', 'text-halo-width':2 } });
   harita.addLayer({ id:'pin-secili', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, filter:['==', ['get', 'id'], ''], layout:{ 'icon-image':['concat', 'pin-secili-', ['get', 'ikon']], 'icon-anchor':'bottom', 'icon-offset':[0, 2], 'icon-allow-overlap':true, 'icon-size':1 } });
   filtreUygula();
@@ -427,6 +516,7 @@ function sehirleriKur() {
   harita._sehirIsaret = (VERI.sehirler || []).filter((s) => Array.isArray(s.merkez)).map((s) => {
     const n = sehirEserSayisi(s), el = document.createElement('button');
     el.className = 'sehir-isaret' + (n ? ' hazir' : ''); el.type = 'button'; el.dataset.sehirGit = s.id;
+    if (/^#[0-9a-f]{6}$/i.test(s.kimlik?.zemin || '')) el.style.setProperty('--il', s.kimlik.zemin);   // her şehir kendi envanter renginde parlar
     el.setAttribute('aria-label', n ? `${s.ad}: ${n} eser, haritada aç` : `${s.ad}: envanter ${s.envanter_yili || ''}, uygulamaya ekleniyor`);
     el.innerHTML = `<i aria-hidden="true"></i><b>${esc(s.ad)}</b><small>${n ? `${n} eser` : 'Yakında'}</small>`;
     return new maplibregl.Marker({ element:el, anchor:'left', offset:[-7, 0] }).setLngLat(s.merkez).addTo(harita);
@@ -435,6 +525,19 @@ function sehirleriKur() {
 }
 function sehirGorunum() { const z = harita.getZoom(); document.body.classList.toggle('sehir-modu', z < SEHIR_ESIK); document.body.classList.toggle('sehir-cok-uzak', z < 3.2); }   // çok uzakta yalnız noktalar (etiketler üst üste binmesin), eseri olan şehrin adı kalır
 harita.on('zoom', sehirGorunum);
+/* Küre yavaşça döner (29 Ekim 2026): uzak (küre) görünümde, kimse dokunmuyorsa ~1,5°/sn doğuya döner; dokunma, sürükleme, tekerlek ya da
+   tuşta durur, 4 sn sessizlikten sonra yeniden başlar. Uçuş sırasında, sayfa gizliyken ve hareket azaltma tercihinde dönmez */
+{ let son = performance.now(), dokunus = 0;
+  const azalt = matchMedia('(prefers-reduced-motion: reduce)');
+  ['mousedown', 'touchstart', 'wheel', 'keydown'].forEach((t) => harita.getCanvasContainer().addEventListener(t, () => { dokunus = performance.now(); }, { passive:true }));
+  const don = (t) => {
+    const dt = Math.min(t - son, 100); son = t;
+    if (!azalt.matches && document.visibilityState === 'visible' && harita.getZoom() < SEHIR_ESIK && !harita.isMoving() && t - dokunus > 4000 && !location.hash.slice(2)) {
+      const c = harita.getCenter(); c.lng += dt * 0.0015; harita.setCenter(c);
+    }
+    requestAnimationFrame(don);
+  };
+  requestAnimationFrame(don); }
 function sehirlereUzaklas() {
   eserSec(null);
   /* padding sıfırlanır: eser seçilince verilen sağ boşluk (masaüstü kartı için, easeTo padding kalıcıdır) küreyi sola kaydırıyordu */
@@ -454,6 +557,7 @@ document.addEventListener('click', (ev) => {
 });
 harita.on('sourcedata', (e) => { if (e.sourceId === 'openmaptiles' && e.isSourceLoaded) binalariGuncelle(); });
 harita.on('pitchend', binaGorunum);
+harita.on('moveend', haritaIliGuncelle); harita.once('idle', haritaIliGuncelle);
 /* HaritaDaire (Figma): etiket gideceği modu yazar (düzken «3D», eğikken «2D»), halkadaki kuzey üçgeni bearing ile döner.
    Kullanıcı haritayı döndürdüyse (iki parmak, sağ tık, halkayı sürükleme) ilk basış yalnız kuzeyi yukarı getirir */
 let elleDondu = false;
@@ -544,7 +648,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#konu
 function ciplerHTML(masaustuPanel) {
   /* yalnız bu şehirde eseri olan roller (boş filtre jüriye boş liste gösterirdi) */
   const rol = ['dini', 'su', 'egitim', 'akar'].filter((r) => VERI.eserler.some((e) => e.rol === r)).map((r) => `<button class="cip filtre" data-rol="${r}" aria-pressed="${durum.filtre.has(r)}" title="${esc(ROL_ACIKLAMA[r])}"><span class="nokta" style="background:${ROL_RENK[r]}"></span>${ROL_AD[r]}</button>`).join('');
-  return masaustuPanel ? `<button class="cip koyu" data-rol="hepsi">Tümü</button>${rol}` : `<button class="cip koyu" id="cip-konum" aria-haspopup="menu" aria-expanded="false">${konumCipIc()}</button>${rol}`;
+  return masaustuPanel ? `<button class="cip koyu" data-rol="hepsi">Tümü</button>${rol}` : `<button class="cip il-cip" data-sehirler title="Şehirler"><i class="il-motif" aria-hidden="true"></i><span class="il-ad">${esc(SEHIR.ad || '')}</span></button><button class="cip koyu" id="cip-konum" aria-haspopup="menu" aria-expanded="false">${konumCipIc()}</button>${rol}`;
 }
 function filtreUygula() {
   if (harita.getLayer('pin')) harita.setFilter('pin', ['in', ['get', 'rol'], ['literal', [...durum.filtre]]]);
@@ -877,7 +981,7 @@ function altEnAz() {
 (() => {
   let y0 = null, h0 = 0, tutamak = false;
   alt.addEventListener('pointerdown', (e) => {
-    const t = e.target.closest('#alt-tutamak, #alt-ic > .sekme-grup, #alt-ic > .baslik-satir'); if (!t) return;
+    const t = e.target.closest('#alt-tutamak, #alt-ic > .sekme-grup, #alt-ic > .sekme-icerik > .baslik-satir'); if (!t) return;
     y0 = e.clientY; h0 = alt.getBoundingClientRect().height; tutamak = t.id === 'alt-tutamak'; alt.classList.add('surukle');
   });
   alt.addEventListener('pointermove', (e) => {
@@ -916,19 +1020,32 @@ function eserListe() {
   return n ? l.map((e) => [mesafeYon(n, { lng:e.lon, lat:e.lat })[0], e]).sort((a, b) => a[0] - b[0]).map((x) => x[1]) : l;
 }
 const listeAdi = (tur) => (durum.konum === 'yakin' ? `Yakınındaki ${tur}` : `${yerEki(SEHIR.ad)}ki ${tur}`);   // Yakınındaki eserler · Bursa'daki eserler
-const eserSatir = (e) => `<li class="eser-satir${durum.secili === e.id ? ' secili' : ''}" data-eser="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta">${esc(meta(e))}</div>${e.glb && !VERI.eserler.every((x) => x.glb) ? '<span class="etiket">3D</span>' : ''}</div><button class="arti" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('plus', 16)}</button></li>`;
+const eserSatir = (e) => `<li class="eser-satir${durum.secili === e.id ? ' secili' : ''}" data-eser="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta"><span class="rol-nokta" style="background:${ROL_RENK[e.rol] || 'var(--border)'}" title="${esc(ROL_AD[e.rol] || '')}"></span>${esc(meta(e))}</div>${e.glb && !VERI.eserler.every((x) => x.glb) ? '<span class="etiket">3D</span>' : ''}</div><button class="arti" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('plus', 16)}</button></li>`;
 function rotaKart() {
   const ilerleme = JSON.parse(yerel('akar.rota') || 'null');
   const durumMetni = ilerleme ? `<span class="rozet-durum devam">Devam et · ${ilerleme.i + 1} / ${ROTA.duraklar.length}</span>` : '<span class="rozet-durum">Başlanmadı</span>';
   return `<div class="rota-kart" data-rota="${ROTA.id}">${resim(kapak(ESER[ROTA.duraklar[0]]))}<div><h3>${esc(ROTA.ad)}</h3><div class="soluk">${ROTA.duraklar.length} durak · ${ROTA.sure} · ${ROTA.mesafe}</div>${durumMetni}</div></div>`;
 }
+/* Eserler | Rotalar (29 Ekim 2026): seçili zemin sekmeler arasında kayar, içerik geldiği yönden girer; listede sağa/sola kaydırınca sekme değişir.
+   Başlık iki sekmede de aynı yerde (filtre etiketleri başlığın altında), panelin kaydırma çubuğu yeri sabit → yazılar yer değiştirmez */
+const SEKMELER = ['eserler', 'rotalar'];
+function sekmeGec(yeni) {
+  if (!SEKMELER.includes(yeni) || yeni === durum.sekme) return;
+  durum.sekmeOnce = durum.sekme; durum.sekmeYon = SEKMELER.indexOf(yeni) > SEKMELER.indexOf(durum.sekme) ? 'sag' : 'sol';
+  durum.sekme = yeni; kesif();
+}
+function sekmeKaydir() {   // yeni çizilen grupta seçili zemini eski yerinden yenisine kaydır
+  $$('.sekme-grup.kayan').forEach((g) => { g.offsetWidth; g.dataset.i = SEKMELER.indexOf(durum.sekme); });
+  durum.sekmeOnce = null; durum.sekmeYon = null;
+}
 function kesifIcerik(masaustu) {
-  const sekme = `<div class="sekme-grup" role="tablist"><button role="tab" data-sekme="eserler" aria-selected="${durum.sekme === 'eserler'}">Eserler</button><button role="tab" data-sekme="rotalar" aria-selected="${durum.sekme === 'rotalar'}">Rotalar</button></div>`;
-  if (durum.sekme === 'rotalar') return `${sekme}<div class="baslik-satir"><h2>${listeAdi('rotalar')}</h2><a>Tümünü gör (${VERI.rotalar.length}) ›</a></div>${rotaKart()}`;
+  const i0 = SEKMELER.indexOf(durum.sekmeOnce || durum.sekme), yon = durum.sekmeYon ? ` data-yon="${durum.sekmeYon}"` : '';
+  const sekme = `<div class="sekme-grup kayan" data-i="${i0}" role="tablist"><button role="tab" data-sekme="eserler" aria-selected="${durum.sekme === 'eserler'}">Eserler</button><button role="tab" data-sekme="rotalar" aria-selected="${durum.sekme === 'rotalar'}">Rotalar</button></div>`;
+  if (durum.sekme === 'rotalar') return `${sekme}<div class="sekme-icerik"${yon}><div class="baslik-satir"><h2>${listeAdi('rotalar')}</h2><a>Tümünü gör (${VERI.rotalar.length}) ›</a></div>${rotaKart()}</div>`;
   const liste = eserListe();
-  const ust = masaustu ? `<div class="cipler" style="margin-top:12px">${ciplerHTML(true)}</div><div class="baslik-satir"><h2>${listeAdi('eserler')} · ${liste.length}</h2><a>Tümünü gör (${VERI.eserler.length}) ›</a></div>`
+  const ust = masaustu ? `<div class="baslik-satir"><h2>${listeAdi('eserler')} · ${liste.length}</h2><a>Tümünü gör (${VERI.eserler.length}) ›</a></div>`   /* rol filtreleri yalnız haritanın üstünde (panelde ikinci kopya vardı) */
     : `<div class="baslik-satir" style="margin-top:12px"><a style="color:var(--primary)" href="#/" data-sehirler>${esc(SEHIR.ad)} ▾ · ${liste.length} eser${durum.konum === 'yakin' ? ' yakında' : ''}</a></div>`;
-  return `${sekme}${ust}<ul class="liste">${liste.map(eserSatir).join('') || '<li class="soluk" style="padding:16px 0">Sonuç yok. Yazımı kontrol et ya da filtreleri temizle.</li>'}</ul>`;
+  return `${sekme}<div class="sekme-icerik"${yon}>${ust}<ul class="liste">${liste.map(eserSatir).join('') || '<li class="soluk" style="padding:16px 0">Sonuç yok. Yazımı kontrol et ya da filtreleri temizle.</li>'}</ul></div>`;
 }
 function kesif() {
   rotaKaldir();
@@ -936,29 +1053,71 @@ function kesif() {
   else { altIc.innerHTML = kesifIcerik(false); alt.hidden = !!durum.secili; altYukseklik(typeof durum.altH === 'number' || ['kapali', 'yarim', 'tam'].includes(durum.altH) ? durum.altH : 'kapali'); }
   gorusKapat();
   eserKartiCiz();
+  sekmeKaydir();
 }
+/* listede yatay kaydırma: sola → sonraki sekme, sağa → önceki (dikey kaydırmaya karışmasın diye yatay hareket baskın olmalı) */
+{ let t0 = null;
+  document.addEventListener('touchstart', (e) => { t0 = e.target.closest('.sekme-icerik') && e.touches.length === 1 ? [e.touches[0].clientX, e.touches[0].clientY] : null; }, { passive:true });
+  document.addEventListener('touchend', (e) => {
+    if (!t0) return; const t = e.changedTouches[0], dx = t.clientX - t0[0], dy = t.clientY - t0[1]; t0 = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) sekmeGec(SEKMELER[SEKMELER.indexOf(durum.sekme) + (dx < 0 ? 1 : -1)]);
+  }, { passive:true }); }
 document.addEventListener('click', (e) => {
-  const s = e.target.closest('[data-sekme]'); if (s) { durum.sekme = s.dataset.sekme; kesif(); return; }
+  const s = e.target.closest('[data-sekme]'); if (s) { sekmeGec(s.dataset.sekme); return; }
   const r = e.target.closest('[data-rotama]'); if (r) { e.stopPropagation(); toast(`${ESER[r.dataset.rotama].ad} Rotam'a eklendi`); return; }
   const es = e.target.closest('[data-eser]'); if (es) { eserSec(es.dataset.eser, true); return; }   // mobilde de eser sayfası açılmaz: harita esere gider, pindeki gibi kısa kart çıkar
   const ro = e.target.closest('[data-rota]'); if (ro) { location.hash = '#/rota/' + ro.dataset.rota; return; }
 });
 
 /* eser seçimi: haritada büyüt, kartı aç */
+/* Mobil kart ↔ liste (29 Ekim 2026): eser kartı ile Eserler/Rotalar alt sayfası aynı yüzey gibi birbirine dönüşür (View Transitions).
+   Çarpı → kart kenarlara doğru büyür, içi solup liste gelir; listede esere dokununca tersi. Desteklemeyen tarayıcıda anlık değişir */
+const yuzeyGecis = (fn) => {
+  const sade = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (durum.masaustu || location.hash.slice(2) || sade || !document.startViewTransition) return fn();
+  document.documentElement.classList.add('vt-yuzey');
+  const g = document.startViewTransition(fn);
+  g.ready.catch(() => {}); g.updateCallbackDone.catch(() => {});   // üst üste dokunuşta tarayıcı geçişi iptal edebilir; sorun değil, durum yine güncellenir
+  g.finished.catch(() => {}).finally(() => document.documentElement.classList.remove('vt-yuzey'));
+};
+/* listede satırın üzerine gelince haritada o eserin pini seçili gibi vurgulanır (liste ↔ harita bağı); ayrılınca seçili esere döner */
+document.addEventListener('pointerover', (ev) => {
+  if (!durum.masaustu || !harita.getLayer('pin-secili')) return;
+  const li = ev.target.closest('.eser-satir'), onceki = ev.relatedTarget?.closest?.('.eser-satir');
+  if (li === onceki) return;
+  pinSeciliFiltre(li?.dataset.eser || durum.secili);
+});
 function eserSec(id, ucus) {
-  durum.secili = id;
-  if (harita.getLayer('pin-secili')) harita.setFilter('pin-secili', ['==', ['get', 'id'], id || '']);
+  const onceki = durum.secili;
+  durum.secili = id; yoreUygula(id ? ESER[id] : (haritaIli ? { il:haritaIli.ad } : null));
+  pinSeciliFiltre(id);
   if (id && ucus) { const e = ESER[id]; harita.easeTo({ center:[e.lon, e.lat], zoom:Math.max(harita.getZoom(), 17), duration:700, padding:durum.masaustu ? { right:380 } : { bottom:240 } }); }
-  if (!location.hash.slice(2)) { if (durum.masaustu) $$('.eser-satir').forEach((li) => li.classList.toggle('secili', li.dataset.eser === id)); else alt.hidden = !!id; }
-  eserKartiCiz();
+  const ciz = () => { if (!location.hash.slice(2)) { if (durum.masaustu) $$('.eser-satir').forEach((li) => li.classList.toggle('secili', li.dataset.eser === id)); else alt.hidden = !!id; } eserKartiCiz(); };
+  (!!onceki !== !!id) ? yuzeyGecis(ciz) : ciz();   // yalnız kart ↔ liste değişiminde; kart açıkken başka esere geçişte içerik yerinde değişir
+}
+/* Harita kartının düğmeleri (29 Ekim 2026): kart bir ön izleme, ana düğme kullanıcının eserle ilişkisine göre değişir.
+   Dinlemediyse: «Dinle · n dk» (en hızlı tanışma) + «Eseri incele ›».
+   Dinlediyse: «Eseri incele» (fotoğraf, 3D, tam metin) + kalan bulmaca varsa «Bulmaca · n görev ›», yoksa sıradaki eser.
+   Aynı bir dakikayı yeniden önermek yerine yeni bir şey gösterilir; yeniden dinlemek eser sayfasından yapılır */
+function kartDugmeler(e) {
+  const bitti = bittiMi(e.id), kalan = (e.gorevler || []).filter((g) => !gorevDurum(g)).length;
+  const sonraki = sonrakiDurak(e) || VERI.eserler.find((x) => x.id !== e.id && !bittiMi(x.id));
+  const isaret = `<button class="ikon-btn" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('bookmark-plus')}</button>`;
+  const incele = (ana) => ana ? `<button class="btn ana" data-detay="${e.id}">${ic('book-open-text')}Eseri incele</button>` : `<button class="kart-ikinci" data-detay="${e.id}">Eseri incele ${ic('chevron-right', 16)}</button>`;
+  if (!bitti && e.hikaye.length) return `<div class="kart-alt"><button class="btn ana" data-baslat="${e.id}">${ic('headphones')}Dinle · ${e.sure} dk</button>${isaret}</div>${incele(false)}`;
+  const ikinci = kalan ? `<button class="kart-ikinci" data-git="#/gorev/${e.id}">${ic('puzzle', 16)}Bulmaca · ${kalan} görev ${ic('chevron-right', 16)}</button>`
+    : sonraki ? `<button class="kart-ikinci" data-eser="${sonraki.id}">Sonraki eser: ${esc(sonraki.ad)} ${ic('chevron-right', 16)}</button>` : '';
+  return `<div class="kart-alt">${incele(true)}${isaret}</div>${ikinci}`;
 }
 function eserKartiCiz() {
   const e = durum.secili && ESER[durum.secili], acik = e && !location.hash.slice(2);
   const ic2 = e ? `<div class="kart-ust" data-detay="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta">${esc(meta(e))}</div>${guven('Doğrulanmış')}</div><button class="kapat" data-kapat aria-label="Kapat">${ic('x', 18)}</button></div>`
     + (durum.masaustu ? `<p>${esc(e.kisa)}</p>` : '')
-    + `<div class="kart-alt"><button class="btn ana${bittiMi(e.id) ? ' bitti' : ''}" data-baslat="${e.id}" ${e.hikaye.length ? '' : 'disabled'}>${ic('headphones')}${e.hikaye.length ? `${bittiMi(e.id) ? 'Yeniden dinle' : 'Hikâyeyi başlat'} · ${e.sure} dk` : 'Hikâye hazırlanıyor'}${bittiMi(e.id) ? `<span class="bitti-tik" title="Hikâye tamamlandı">${ic('check', 12)}</span>` : ''}</button><button class="ikon-btn" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('bookmark-plus')}</button></div>` : '';
+    + kartDugmeler(e) : '';
   if (durum.masaustu) { pop.hidden = !acik; pop.innerHTML = ic2; kartEl.hidden = true; popKonum(); }
   else { kartEl.hidden = !acik; kartEl.innerHTML = ic2; pop.hidden = true; if (!location.hash.slice(2)) { alt.hidden = !!acik; if (!acik) altYukseklik(durum.altH || 'kapali'); } }
+  /* mobilde kart açıkken harita kontrolleri (2D, +, −, konum) kartın üstünde dursun; fotoğraf yüklenince kart uzayabilir, bir kare sonra yeniden ölç */
+  if (!durum.masaustu && acik) { const olc = () => document.documentElement.style.setProperty('--kart-h', kartEl.offsetHeight + 'px'); olc(); requestAnimationFrame(olc); kartEl.querySelector('img')?.addEventListener('load', olc, { once:true }); }
 }
 function popKonum() {
   if (pop.hidden || !durum.secili) return;
@@ -975,35 +1134,65 @@ document.addEventListener('click', (e) => {
 function gorusAc(html, sinif = '') { s3dKapat(); gorus.className = sinif; gorus.innerHTML = html; gorus.hidden = false; kartEl.hidden = true; pop.hidden = true; if (!durum.masaustu) alt.hidden = true; }
 function gorusKapat() { s3dKapat(); anlatDur(); gorus.hidden = true; gorus.innerHTML = ''; }
 
-const seciciHTML = (koyu) => `<div class="ust-kontrol gizlenir${koyu ? ' koyu-zemin' : ''}"><div class="secici" role="radiogroup" aria-label="Görünüm"><button role="radio" data-gorunum="foto" aria-checked="${durum.gorunum === 'foto'}">${ic('image', 16)}Fotoğraf</button><button role="radio" data-gorunum="3d" aria-checked="${durum.gorunum === '3d'}">${ic('box', 16)}3D</button></div><button class="yuvarlak parca" data-parcalar aria-label="Tıklanabilir parçaları göster" title="Tıklanabilir parçaları göster">${ic('pointer', 18)}</button></div>`;
+const seciciHTML = (koyu) => `<div class="ust-kontrol gizlenir${koyu ? ' koyu-zemin' : ''}"><div class="secici" role="radiogroup" aria-label="Görünüm"><button role="radio" data-gorunum="foto" aria-checked="${durum.gorunum === 'foto'}">${ic('image', 16)}Fotoğraf</button><button role="radio" data-gorunum="3d" aria-checked="${durum.gorunum === '3d'}">${ic('box', 16)}3D</button></div><button class="yuvarlak parca" data-parcalar aria-label="Tıklanabilir parçaları göster" title="Tıklanabilir parçaları göster">${ic('pointer', 18)}</button>${durum.masaustu && !koyu ? `<div class="arac-bilgi" id="arac-bilgi" aria-live="polite"></div><div class="arac-oklar"><button class="yuvarlak" data-kaydir="-1" id="arac-geri" aria-label="Önceki fotoğraflar">${ic('chevron-left', 18)}</button><button class="yuvarlak" data-kaydir="1" id="arac-ileri" aria-label="Sonraki fotoğraflar">${ic('chevron-right', 18)}</button></div>` : ''}</div>`;
 
 function galeriHTML(e) {
   const f = galeriFoto(e);
   return `<div class="galeri" id="galeri">${f.map((x, i) => `<figure class="${i % 3 === 0 ? 'buyuk' : 'kucuk'}"><button class="galeri-f" data-isik="${esc(x.url)}" data-kunye="${esc([x.baslik, x.kaynak].filter(Boolean).join(' · '))}" aria-label="Fotoğrafı büyüt: ${esc(x.alt)}">${resim(x)}${BUYUT()}</button>${i === 0 ? guven(x.guven, { alinti:x.baslik, kaynak:x.kaynak }) : ''}</figure>`).join('')}</div>`
-    + (durum.masaustu ? `<button class="yuvarlak galeri-ok" style="right:24px" data-kaydir="1" aria-label="Sonraki fotoğraflar">${ic('chevron-right', 18)}</button><button class="yuvarlak galeri-ok" style="left:24px" data-kaydir="-1" aria-label="Önceki fotoğraflar">${ic('chevron-left', 18)}</button>` : '');
+    ;   /* masaüstünde oklar fotoğrafların üstünde değil, araç satırının sağında (seciciHTML → arac-oklar) */
+}
+/* eser detayının keşif yolları (Eser hakkında · Geçmişi Gör · Bulmaca): her satır kendi içeriğinden bir ipucu gösterir.
+   Geçmişi Gör: en eski fotoğrafın küçüğü (sepya), üzerine gelince bugünkü fotoğraf. Bulmaca: tamamlanan görev oranı altın halka. */
+const enEskiFoto = (e) => e.gecmis.filter((f) => f.tarih?.enErken).sort((a, b) => a.tarih.enErken - b.tarih.enErken)[0] || e.gecmis[0];
+const bulmacaHalka = (e, boy) => {
+  const g = e.gorevler || [], tamam = g.filter(gorevDurum).length, bitti = g.length && tamam === g.length;
+  return `<span class="gorev-halka${bitti ? ' bitti' : ''}" style="width:${boy}px;height:${boy}px"><svg class="halka-iz" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/><circle class="dolu" cx="24" cy="24" r="21" pathLength="1" style="stroke-dashoffset:${g.length ? 1 - tamam / g.length : 1}"/></svg>${ic(bitti ? 'check' : 'puzzle', Math.round(boy * (boy < 32 ? .56 : .42)))}</span>`;
+};
+const adParca = (ad) => { const [a, ...b] = String(ad).split(' '); return `<span class="ad-1">${esc(a)}</span>${b.length ? ` <span class="ad-2">${esc(b.join(' '))}</span>` : ''}`; };
+function kesifYollari(e) {
+  const eski = enEskiFoto(e), bugun = kapak(e), g = e.gorevler || [], tamam = g.filter(gorevDurum).length;
+  const hkDk = e.hakkinda?.length ? hkDakika(e.hakkinda.reduce((n, b) => n + hkKelime(b), 0)) : 0;
+  const yol = (hedef, ikon, baslik, alt) => `<button class="ky" ${hedef}><span class="ky-ik">${ikon}</span><span class="ky-yazi"><b>${baslik}</b><small>${alt}</small></span><span class="ky-ok">${ic('chevron-right', 18)}</span></button>`;
+  const gecmisIk = eski ? `<span class="ky-foto"><img src="${esc(eski.kucuk)}" alt="" loading="lazy">${bugun ? `<img class="bugun" src="${esc(bugun.url)}" alt="" loading="lazy">` : ''}</span>` : `<span class="ky-daire">${ic('history', 22)}</span>`;
+  /* «Eser hakkında» burada değil: kısa hikâyenin tamamı olduğu için hikâye bloğunda (hikayeBlok). Bu liste yalnız etkinlikler */
+  return `<div class="kesif-bas" id="kesif-bas">Keşfet</div><nav class="kesif-yollari" aria-labelledby="kesif-bas">
+    ${yol(`data-git="#/gecmis/${e.id}"`, gecmisIk, 'Geçmişi Gör', e.gecmis.length ? `${e.gecmis.length} eski fotoğraf${eski?.tarih?.enErken ? ` · ${eski.tarih.enErken}'den` : ''}` : 'Eski görüntü henüz yok')}
+    ${yol('data-bulmaca', bulmacaHalka(e, 44), 'Bulmaca', g.length ? (tamam === g.length ? `${g.length} görevin hepsi tamam` : `${g.length} görev · ${tamam} tamam`) : 'Görev henüz yok')}
+  </nav>`;
+}
+/* Hikâye bloğu (29 Ekim 2026): Dinle ve Oku aynı kısa hikâyenin iki yolu → tek birleşik düğme, süre üstte bir kez.
+   Altında aynı bloğun içinde «Tamamını oku: Eser hakkında» (envanterden tam metin): özet ile tamamı yan yana, etkinliklerden ayrı */
+const hkToplamDk = (e) => (e.hakkinda?.length ? hkDakika(e.hakkinda.reduce((n, b) => n + hkKelime(b), 0)) : 0);
+function hikayeBlok(e, tamamiYok = false) {   // tamamiYok: mobilde tam metin kartı açılan kısımda (aşağıda ayrı çizilir)
+  const bitti = bittiMi(e.id), tik = bitti ? `<span class="bitti-tik" title="Hikâye tamamlandı">${ic('check', 12)}</span>` : '';   // hikâye bittiyse düğmenin köşesinde ✓
+  const hkDk = hkToplamDk(e);
+  /* tam metin kartı: «Eser hakkında» sayfasının kapağının küçüğü (yöre renginde, desenli). Kısa hikâye ↔ tam metin aynı dille: süre + uzunluk çubuğu */
+  let tamami = hkDk ? `<button class="tam-kart${ilKimlik(e)?.desen ? ' desenli' : ''}" data-git="#/hakkinda/${e.id}" aria-label="Tam metin: Eser hakkında, ${hkDk} dakika, envanterden"><span class="tk-yazi"><small>Tam metin · envanterden</small><b>Eser hakkında</b><span class="tk-alt">${hkDk} dk · ${e.hakkinda.length} bölüm${derinlikCubuk(hkDk)}</span></span><span class="tk-ok">${ic('arrow-right', 20)}</span></button>` : '';
+  if (tamamiYok) tamami = '';
+  if (!e.hikaye.length) return `<p class="soluk">Bu eserin hikâyesi henüz hazırlanmadı.</p>${tamami}`;
+  return `<div class="hikaye-blok"><div class="hb-bas">Kısa hikâye · ${e.sure} dk${derinlikCubuk(e.sure)}</div>
+    <div class="ikili" role="group" aria-label="Kısa hikâye, ${e.sure} dakika"><button class="ik-sol${bitti ? ' bitti' : ''}" data-anlat="dinle" ${bitti ? 'aria-label="Dinle, hikâye tamamlandı"' : ''}>${ic('headphones')}Dinle${tik}</button><button class="ik-sag" data-anlat="oku">${ic('book-open')}Oku</button></div>${tamami}</div>`;
 }
 function eserBilgi(e, masaustu) {
   const sd = sonrakiDurak(e);
-  const bitti = bittiMi(e.id), tik = bitti ? `<span class="bitti-tik" title="Hikâye tamamlandı">${ic('check', 12)}</span>` : '';   // hikâye bittiyse Dinle düğmesinin köşesinde ✓
-  const dugme = e.hikaye.length ? `<div class="dugmeler"><button class="btn ana${bitti ? ' bitti' : ''}" data-anlat="dinle" ${bitti ? 'aria-label="Dinle, hikâye tamamlandı"' : ''}>${ic('headphones')}Dinle · ${e.sure} dk${tik}</button><button class="btn ikincil" data-anlat="oku">${ic('book-open')}Oku</button></div>` : '<p class="soluk">Bu eserin hikâyesi henüz hazırlanmadı.</p>';
-  const hik = e.hikaye.length ? `<div class="soluk" style="font-size:13px">Yapının hikâyesi · ${e.hikaye.length} bölüm</div>` : '';
+  const dugme = hikayeBlok(e), hik = '';
   const sonraki = sd ? `<button class="btn cerceve tam" style="margin-top:12px" data-git="#/eser/${sd.id}" data-rotada>Sonraki durak: ${esc(sd.ad)} ${ic('arrow-right', 16)}</button>` : '';
   const gecmis = `<button class="gg-link" data-git="#/gecmis/${e.id}">${ic('history', 16)}Geçmişi Gör · ${e.gecmis.length ? `${e.gecmis.length} eski fotoğraf` : 'eski görüntü henüz yok'} ›</button>`;
-  if (masaustu) return `<button class="geri" data-git="#/" style="height:auto;padding:0;border:0;gap:12px"><span class="ikon-btn" style="width:32px;height:32px">${ic('chevron-left', 16)}</span><span class="soluk" style="font-weight:500">Harita</span></button>
-    <h1 class="panel-baslik" style="margin-top:16px">${esc(e.ad)}</h1><div class="panel-meta">${esc(meta(e))}</div>${SUSLEME}<p style="margin:0 0 14px">${esc(e.kisa)}</p>${hik}${dugme}
-    <div class="satir-link" data-git="#/hakkinda/${e.id}"><div><b>Eser hakkında</b><small>Tarihçe, mimari, kaynaklar</small></div>${ic('chevron-right', 18)}</div>
-    <div class="satir-link" data-git="#/gecmis/${e.id}"><div><b>Geçmişi Gör</b><small>${e.gecmis.length ? `${e.gecmis.length} eski fotoğraf` : 'Eski görüntü henüz yok'}</small></div>${ic('chevron-right', 18)}</div>
-    <div class="satir-link" data-bulmaca><div><b>Bulmaca</b><small>${e.gorevler?.length ? `${e.gorevler.length} görev · ${e.gorevler.filter(gorevDurum).length} tamam` : 'Görev henüz yok'}</small></div>${ic('chevron-right', 18)}</div><div class="panel-alt">${sonraki}</div>`;
+  if (masaustu) return `<header class="eb-bas${ilKimlik(e)?.desen ? ' desenli' : ''}"><button class="geri" data-git="#/" style="height:auto;padding:0;border:0;gap:12px"><span class="ikon-btn" style="width:32px;height:32px">${ic('chevron-left', 16)}</span><span style="font-weight:500">Harita</span></button>
+    <div class="eb-govde"><div class="eb-foto">${resim(kapak(e))}</div><div><h1 class="panel-baslik">${adParca(e.ad)}</h1><div class="panel-meta">${esc(meta(e))}</div></div></div></header>${SUSLEME}<div class="kisa-satir"><p style="margin:0 0 14px">${esc(e.kisa)}</p><button class="yuvarlak-ok" data-git="#/hakkinda/${e.id}" aria-label="Eser hakkında">${ic('arrow-right', 22)}</button></div>${hik}${dugme}
+    ${kesifYollari(e)}<div class="panel-alt">${sonraki}</div>`;
   /* mobil kart = sürüklenen alt sayfa. Kapalı: ad, Dinle | Oku, Hakkında · Geçmiş · Bulmaca, rotadaysa Sonraki durak.
      Yukarı çekilince altta tarih, süsleme, kısa açıklama ve bölüm sayısı açılır (masaüstü paneliyle aynı içerik) */
   const sonrakiM = sd ? `<button class="btn cerceve tam sonraki-m" data-git="#/eser/${sd.id}" data-rotada>Sonraki durak: ${esc(sd.ad)} ${ic('arrow-right', 16)}</button>` : '';
-  const kisayol = `<div class="ea-kisayol"><button data-git="#/hakkinda/${e.id}">${ic('info', 18)}Hakkında</button><button data-git="#/gecmis/${e.id}">${ic('history', 18)}Geçmiş${e.gecmis.length ? `<small>${e.gecmis.length}</small>` : ''}</button><button data-bulmaca>${ic('puzzle', 18)}Bulmaca${e.gorevler?.length ? `<small>${e.gorevler.length}</small>` : ''}</button></div>`;
-  return `<div class="eser-alt" id="eser-alt"><div class="ea-ust"><div class="tutamak" id="ea-tutamak" role="button" tabindex="0" aria-label="Eser bilgisini aç" aria-expanded="false"><i></i></div><h1>${esc(e.ad)}</h1>${dugme}${kisayol}${sonrakiM}</div>
-    <div class="ea-detay"><div class="meta">${esc(meta(e))}</div>${SUSLEME}<p>${esc(e.kisa)}</p>${hik}</div></div>`;
+  /* mobil kart (29 Ekim 2026, kullanıcı kararı): kapalıyken sade — ad, «Kısa hikâye · n dk», Dinle | Oku. Yukarı çekince sırayla:
+     tam metin kartı (Eser hakkında), Keşfet satırları (masaüstündekiyle aynı), künye ve kısa açıklama. Tutamaktaki küçük ok açılabildiğini söyler */
+  const tamamiM = hikayeBlok(e).match(/<button class="tam-kart[\s\S]*?<\/button>/)?.[0] || '';
+  return `<div class="eser-alt" id="eser-alt"><div class="ea-ust"><div class="tutamak" id="ea-tutamak" role="button" tabindex="0" aria-label="Eser bilgisini aç" aria-expanded="false"><i></i>${ic('chevron-up', 14)}</div><h1>${adParca(e.ad)}</h1>${hikayeBlok(e, true)}${sonrakiM}</div>
+    <div class="ea-detay">${tamamiM}${kesifYollari(e)}<div class="meta">${esc(meta(e))}</div>${SUSLEME}<p>${esc(e.kisa)}</p>${hik}</div></div>`;
 }
 function eserDetay(id) {
   const e = ESER[id]; if (!e) return (location.hash = '#/');
-  durum.secili = id; rotaKaldir();
+  durum.secili = id; rotaKaldir(); yoreUygula(e);
   const ust = durum.masaustu ? `<div class="gorus-ust">${seciciHTML(false)}</div>` : `<div class="gorus-ust"><button class="geri" data-git="#/">‹ Harita</button>${seciciHTML(false)}</div>`;
   gorusAc(`${ust}<div id="gorus-alan"></div>${durum.masaustu ? '' : eserBilgi(e, false)}`);
   if (!durum.masaustu) eaYukseklik(0);   // kapalı başlar
@@ -1022,6 +1211,21 @@ function gorunumCiz() {
       gorunumCiz, () => { if (s3d && s3d.kalkan) $('#kubbe-dugme').hidden = false; });
   }
   $$('[data-gorunum]').forEach((b) => b.setAttribute('aria-checked', b.dataset.gorunum === durum.gorunum));
+  $('#galeri')?.addEventListener('scroll', aracGuncelle, { passive:true });
+  $$('#galeri img').forEach((i) => i.addEventListener('load', aracGuncelle, { once:true }));   // fotoğraflar yüklenince galeri genişler: oklar yeniden değerlendirilsin
+  aracGuncelle();
+}
+/* Masaüstü araç satırı (29 Ekim 2026): [Fotoğraf | 3D] · bilgi · oklar. Fotoğrafta: görünen fotoğraflar «1–3 / 12 fotoğraf» ve künye, sağda ‹ ›;
+   3D'de: kullanım ipucu ve parça seçici. Böylece fotoğrafların ve modelin üstünde hiçbir düğme kalmaz */
+function aracGuncelle() {
+  const b = $('#arac-bilgi'); if (!b) return;
+  const g = $('#galeri');
+  if (durum.gorunum !== 'foto' || !g) { b.innerHTML = `${ic('move', 14)}<span>Sürükle: döndür · Tekerlek: yakınlaştır · Dokun: parça</span>`; return; }
+  const sh = aktifSehir(), f = [...g.querySelectorAll('figure')], kunye = sh.envanter_adi || sh.foto_kunye || '';
+  b.innerHTML = `<b>${f.length} fotoğraf</b><span>${kunye ? `· ${esc(kunye)}` : ''}</span>`;   // aralık («4–6 / 12») gereksiz bulundu: yalnız toplam ve künye
+  const geri = $('#arac-geri'), ileri = $('#arac-ileri');
+  if (geri) geri.disabled = g.scrollLeft < 4;
+  if (ileri) ileri.disabled = g.scrollLeft + g.clientWidth > g.scrollWidth - 4;
 }
 function galeriYukseklik() {
   if (durum.masaustu) return;
@@ -1030,10 +1234,12 @@ function galeriYukseklik() {
 }
 function temsiliKonum() {
   const t = $('#temsili'), a = $('#eser-alt'); if (!t) return;
-  if (durum.masaustu) { t.style.left = '24px'; t.style.top = '16px'; }
-  else { t.style.left = '16px'; t.style.bottom = ((a ? eaSinir()[0] : 260) + 22) + 'px'; }
-  const p = $('#parca-ad'); if (p) p.style.bottom = durum.masaustu ? '24px' : ((a ? eaSinir()[0] : 260) + 58) + 'px';
-  const k = $('#kubbe-dugme'); if (k) { k.style.right = durum.masaustu ? '24px' : '16px'; if (durum.masaustu) { k.style.top = ''; k.style.bottom = '24px'; } else k.style.bottom = ((a ? eaSinir()[0] : 260) + 16) + 'px'; }
+  if (durum.masaustu) { t.style.left = '36px'; t.style.top = ''; t.style.bottom = '24px'; }   // sol üst artık araç satırı: etiket sahnenin sol altında
+  /* mobil: kartın o anki yüksekliği (açılıp kapandıkça «Temsili», parça adı ve «İçini göster» kartla birlikte kalkar/iner; eaYukseklik çağırır) */
+  const kh = a ? (parseFloat(a.style.height) || eaSinir()[0]) : 260;
+  if (!durum.masaustu) { t.style.left = '16px'; t.style.bottom = (kh + 22) + 'px'; }
+  const p = $('#parca-ad'); if (p) p.style.bottom = durum.masaustu ? '24px' : (kh + 58) + 'px';
+  const k = $('#kubbe-dugme'); if (k) { k.style.right = durum.masaustu ? '24px' : '16px'; if (durum.masaustu) { k.style.top = ''; k.style.bottom = '24px'; } else k.style.bottom = (kh + 16) + 'px'; }
 }
 function parcaGoster(ad) { const p = $('#parca-ad'); if (!p) return; p.hidden = !ad; p.textContent = ad ? (parcaBilgi(ad)?.baslik || ad.replace(/_/g, ' ')) : ''; }
 /* v2 · parçaya dokununca büyük kart: üstte yana kaydırılan fotoğraflar, altta kayan metin, ses düğmesi */
@@ -1063,7 +1269,7 @@ function parcaKartAc(ad) {
     <div class="pk-fotolar" id="pk-fotolar">${fl.map((f) => `<figure>${resim(f)}<figcaption>${esc(f.baslik)}</figcaption></figure>`).join('')}</div>${nokta}
     <button class="yuvarlak pk-kapat" data-pk-kapat aria-label="Kartı kapat">${ic('x', 18)}</button>
     <div class="pk-bas"><div><h2 id="pk-baslik">${esc(b.baslik)}</h2>${guven(b.guven, { alinti:b.metin, kaynak:b.kaynak })}</div><button class="yuvarlak pk-ses" id="pk-ses" data-pk-ses aria-pressed="false" aria-label="Sesli dinle">${ic('volume-2', 20)}</button></div>
-    <div class="pk-metin" id="pk-metin"><p>${esc(b.metin)}</p>${b.kaynak ? `<div class="pk-kaynak">Kaynak: ${esc(b.kaynak)}</div>` : ''}<div class="pk-kunye">${esc(SEHIR.foto_kunye)}</div></div>
+    <div class="pk-metin" id="pk-metin"><p>${esc(b.metin)}</p>${b.kaynak ? `<div class="pk-kaynak">Kaynak: ${esc(b.kaynak)}</div>` : ''}<div class="pk-kunye">${esc(aktifSehir().foto_kunye || '')}</div></div>
   </section>`;
   k.hidden = false; k.dataset.ad = ad; k._bilgi = b;
   const sh = $('#pk-fotolar');
@@ -1081,12 +1287,24 @@ document.addEventListener('click', (e) => {
 });
 /* mobil eser kartı sürükleme: tutamak ya da başlık parmağı izler, bırakılan yükseklikte kalır (en az: üst bölüm, en çok: içerik ya da ekranın %75'i);
    kenara 40 px'ten yakınsa oraya oturur. Tutamağa dokunmak kapalı ↔ tam açık */
-function eaSinir() { const a = $('#eser-alt'), u = a && a.querySelector('.ea-ust'); if (!u) return [0, 0]; const cs = getComputedStyle(a), p = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom); return [u.offsetHeight + p, Math.min(innerHeight * 0.75, u.offsetHeight + a.querySelector('.ea-detay').scrollHeight + p)]; }
+function eaSinir() { const a = $('#eser-alt'), u = a && a.querySelector('.ea-ust'); if (!u) return [0, 0]; const cs = getComputedStyle(a), p = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom); const goz = a.querySelector('.ea-detay')?.children.length ? 44 : 0;   /* kapalıyken sonraki öğeden 44 px görünür (altı sisli) */ return [u.offsetHeight + p + goz, Math.min(innerHeight * 0.75, u.offsetHeight + a.querySelector('.ea-detay').scrollHeight + p)]; }
+/* «Künye ve açıklama ⌃» ipucu: kartın yukarı çekilebildiğini gösterir; dokununca açar / küçültür (sürüklemeyle aynı sonuç) */
+document.addEventListener('click', (ev) => { if (!ev.target.closest('[data-ea-ac]')) return; const a = $('#eser-alt'); if (!a) return; const [az, cok] = eaSinir(); eaYukseklik(a.classList.contains('acik') ? az : cok); });
+/* kartın alt kenarındaki geçiş: içerik kartın içinden çıkıyormuş gibi kenara doğru silikleşir (beyaz örtü yok). --g = .ea-detay içinde kartın görünen alt sınırı */
+function eaSis() {
+  const a = $('#eser-alt'), d = a && a.querySelector('.ea-detay'); if (!d) return;
+  const g = a.clientHeight + a.scrollTop - d.offsetTop - (parseFloat(getComputedStyle(a).paddingBottom) || 0);
+  d.style.setProperty('--g', Math.round(g) + 'px');
+}
+let eaSisRaf = 0;
+function eaSisIzle() { cancelAnimationFrame(eaSisRaf); const t0 = performance.now(); const ad = () => { eaSis(); if (performance.now() - t0 < 360) eaSisRaf = requestAnimationFrame(ad); }; ad(); }
+document.addEventListener('scroll', (ev) => { if (ev.target && ev.target.id === 'eser-alt') eaSis(); }, true);
 function eaYukseklik(h) {
   const a = $('#eser-alt'); if (!a) return; const [az, cok] = eaSinir();
   const v = h == null ? null : Math.max(az, Math.min(cok, h));
   a.style.height = v == null ? '' : v + 'px';
-  const acik = v != null && v > az + 8; a.classList.toggle('acik', acik);
+  temsiliKonum();
+  const acik = v != null && v > az + 8; a.classList.toggle('acik', acik); a.classList.toggle('tam', v != null && v >= cok - 8); eaSisIzle();
   $('#ea-tutamak')?.setAttribute('aria-expanded', acik); $('#ea-tutamak')?.setAttribute('aria-label', acik ? 'Eser bilgisini kapat' : 'Eser bilgisini aç');
 }
 (() => {
@@ -1403,6 +1621,7 @@ function tebrikGoster() {
     <h2 id="tb-baslik" class="tb-baslik">${ana ? `Rozet kazandın: ${esc(ana.ad)}` : `${esc(ilgi(e.ad))} hikâyesini bitirdin`}</h2>
     <p class="tb-metin soluk">${esc(ana ? ana.metin : 'Hikâyeyi sonuna kadar dinledin ya da okudun.')}</p>
     ${rozetler.length ? `<div class="tb-rozetler"><div class="tb-rozet-bas"><b>${esc(ilgi(e.ad))} rozetleri</b><span class="sayac">${kazanilan} / ${rozetler.length}</span></div><ul>${rozetSira}</ul></div>` : ''}
+    ${DETAY.has('kopru') && e.hakkinda?.length ? `<button class="tb-kopru" data-tebrik-git="#/hakkinda/${e.id}"><small>Devamını merak ettin mi?</small><b>Eser hakkında</b><span>Tamamı · envanterden · ${hkToplamDk(e)} dk</span><i aria-hidden="true">${ic('chevron-right', 18)}</i></button>` : ''}
     <div class="tb-dugmeler">${dugmeler}</div>
     <button class="metin-btn tb-profil" data-tebrik-git="#/profil">Bütün rozetlerime bak ›</button>
     ${yerel('akar.giris') ? '' : '<p class="tb-giris">Rozetlerini kaybetme · <button class="metin-btn" data-giris>Giriş yap</button></p>'}
@@ -1439,7 +1658,8 @@ function hikayeSonrasi(id) {
 const hkKitaplar = (e) => {   // paragraf kaynaklarından kitap listesi: «Envanter Cilt 1 · s. 19» → [1] <envanter adı>, Cilt 1 (<yayıncı>)
   const k = new Set();
   e.hakkinda.forEach((b) => b.paragraflar.forEach((p) => (p.kaynak.match(/Cilt \d/g) || []).forEach((c) => k.add(c))));
-  return [...k].sort().map((c) => `${SEHIR.envanter_adi || 'Envanter'}, ${c}${SEHIR.envanter_yayinci ? ` (${SEHIR.envanter_yayinci})` : ''}`);
+  const sh = ilSehir(e);
+  return [...k].sort().map((c) => `${sh.envanter_adi || 'Envanter'}, ${c}${sh.envanter_yayinci ? ` (${sh.envanter_yayinci})` : ''}`);
 };
 const hkKelime = (b) => b.paragraflar.reduce((n, p) => n + p.metin.split(/\s+/).length, 0);
 const hkDakika = (kelime) => Math.max(1, Math.round(kelime / 200));   // ortalama okuma hızı ~200 kelime/dk
@@ -1491,7 +1711,7 @@ function hkBolum(b, i) {
   const kapakF = (b.fotolar || [])[0] || b.paragraflar.find((p) => p.fotolar)?.fotolar[0];
   const no = String(i + 1).padStart(2, '0'), dk = hkDakika(hkKelime(b));
   /* başlık fotoğraftan önce: bölüm yarım bir fotoğraf şeridiyle başlamasın, okur önce nerede olduğunu görsün */
-  const bas = `<header class="hk-bkapak hk-gir"><div class="hk-bkapak-yazi"><h2 class="hk-h2" id="hk-b${i}"><span class="hk-no">${no}</span>${esc(b.baslik)}</h2><small>${dk} dk okuma · ${b.paragraflar.length} paragraf${hkSayfalar(b) ? ` · Envanter ${hkSayfalar(b)}` : ''}</small></div>
+  const bas = `<header class="hk-bkapak hk-gir"><div class="hk-bkapak-yazi"><h2 class="hk-h2" id="hk-b${i}"><span class="hk-no">${no}</span>${esc(b.baslik)}</h2><small>${dk} dk okuma · ${b.paragraflar.length} paragraf${hkSayfalar(b) ? ` · Envanter ${hkSayfalar(b)}` : ''}</small>${'speechSynthesis' in window ? `<button class="hk-b-dinle" data-hk-dinle="${i}" aria-label="${esc(b.baslik)} bölümünü dinle, ${dk} dakika">${ic('play', 14)}Dinle · ${dk} dk</button>` : ''}</div>
     ${kapakF ? `<button class="hk-bkapak-f" style="--oran:${+kapakF.oran || 1.5}" data-isik="${esc(kapakF.url)}" data-kunye="${esc(kapakF.kunye)}" aria-label="Fotoğrafı büyüt"><img src="${esc(kapakF.url)}" alt="${esc(kapakF.alt)}" loading="lazy" decoding="async">${BUYUT()}</button>` : ''}</header>`;
   const ozetH = ozet.length ? `<div class="hk-ozet hk-gir"><span class="hk-etiket">Kitaptan</span><p>${ozet.map(esc).join(' ')}</p></div>` : '';
   const rakamH = o.rakam?.length ? `<div class="hk-rakamlar">${o.rakam.map((r) => `<div class="hk-rakam hk-gir"><b>${esc(r.deger)}</b><span>${esc(r.etiket)}</span><small>«${esc(r.kanit)}»</small></div>`).join('')}</div>` : '';
@@ -1507,9 +1727,85 @@ function hkBolum(b, i) {
     <div class="hk-alt">${guven(baskin)}<button class="hk-kaynak-ac" data-hk-kaynak="${i}" aria-expanded="false" aria-controls="hk-k${i}">Kaynaklar (${kaynaklar.length}) ›</button></div>
     <ul class="hk-kaynak-liste" id="hk-k${i}" hidden>${kaynaklar.map((k) => `<li>${esc(k)}</li>`).join('')}</ul></section>`;
 }
+/* ---------- Eser hakkında sesli okuma (29 Ekim 2026)
+   Giriş: kapakta «Dinle · n dk» (baştan) ve her bölüm başlığında «Dinle · n dk» (o bölümden). Bölüm bitince sıradakine geçer.
+   Okunan paragraf vurgulanır, sayfa onu izler; kullanıcı elle kaydırırsa izleme durur, oynatıcıda «Okunan yere dön» çıkar.
+   Kitabe/ayet aslı (hk-k-ozgun) okunmaz, yalnız «Mealen» kısmı okunur (Türkçe ses Arapça/Osmanlıca metni bozar).
+   Oynatıcı: mobilde altta yüzen çubuk, masaüstünde sekme çubuğunun sağ ucu. Ses: tarayıcı sesi (speechSynthesis); eser için
+   hazır ses dosyası eklenirse aynı oynatıcıdan çalınabilir (henüz yok). */
+const hkSes = { bolum:0, i:0, oynuyor:false, hiz:1, jeton:0, izle:true };
+const HK_HIZ = [1, 1.25, 1.5];
+const hkSesParcalar = (b) => [...document.querySelectorAll(`.hk-bolum[data-hk-bolum="${b}"] .hk-derin-ic :is(.hk-p, .hk-k-meal)`)];
+function hkSesBaslat(bolum) {
+  if (!hk.e || !('speechSynthesis' in window)) return;
+  pkSesDur?.(); speechSynthesis.cancel();
+  Object.assign(hkSes, { bolum, i:0, oynuyor:true, izle:true }); hkSes.jeton++;
+  hkOynaticiCiz(); hkSesCal();
+}
+function hkSesCal() {
+  const b = hk.e.hakkinda[hkSes.bolum]; if (!b) return hkSesDur();
+  const kap = document.querySelector(`.hk-bolum[data-hk-bolum="${hkSes.bolum}"] .hk-derin-dugme[aria-expanded="false"]`); if (kap) kap.click();   // kapalı tam metni aç: okunan yer görünsün
+  const el = hkSesParcalar(hkSes.bolum);
+  if (hkSes.i >= el.length) { if (hkSes.bolum + 1 < hk.e.hakkinda.length) { hkSes.bolum++; hkSes.i = 0; return hkSesCal(); } return hkSesDur(); }
+  const p = el[hkSes.i], jeton = ++hkSes.jeton;
+  $$('.hk-okunan').forEach((x) => x.classList.remove('hk-okunan')); p.classList.add('hk-okunan');
+  if (hkSes.izle) p.scrollIntoView({ block:'center', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  hkOynaticiGuncelle();
+  if (!hkSes.oynuyor) return;
+  speechSynthesis.cancel();
+  const metin = (hkSes.i === 0 ? `${b.baslik}. ` : '') + p.textContent.replace(/^\s*Mealen:\s*/, 'Mealen: ').trim();
+  const u = new SpeechSynthesisUtterance(metin); sesAyarla(u, 'tr'); u.rate = hkSes.hiz;
+  u.onend = () => { if (jeton !== hkSes.jeton || !hkSes.oynuyor) return; hkSes.i++; hkSesCal(); };
+  speechSynthesis.speak(u);
+}
+function hkSesDur() {
+  hkSes.oynuyor = false; hkSes.jeton++; if ('speechSynthesis' in window) speechSynthesis.cancel();
+  $$('.hk-okunan').forEach((x) => x.classList.remove('hk-okunan')); $('#hk-oyn')?.remove(); document.body.classList.remove('hk-dinleniyor');
+}
+function hkOynaticiCiz() {
+  $('#hk-oyn')?.remove();
+  const el = document.createElement('div'); el.id = 'hk-oyn'; el.className = 'hk-oyn'; el.setAttribute('role', 'region'); el.setAttribute('aria-label', 'Sesli okuma');
+  el.innerHTML = `<div class="hko-bilgi"><b id="hko-bas"></b><small id="hko-alt"></small></div>
+    <button class="hko-don" data-hko="don" hidden>${ic('chevron-down', 14)}Okunan yere dön</button>
+    <div class="hko-dugmeler hko-orta"><button data-hko="geri" aria-label="Önceki paragraf">${ic('skip-back', 18)}</button><button class="hko-ana" data-hko="oynat" aria-label="Durdur">${ic('pause', 20)}</button><button data-hko="ileri" aria-label="Sonraki paragraf">${ic('skip-forward', 18)}</button></div>
+    <div class="hko-dugmeler hko-sag"><button class="hko-hiz" data-hko="hiz" aria-label="Okuma hızı">1×</button><button data-hko="kapat" aria-label="Sesli okumayı kapat">${ic('x', 16)}</button></div>
+    <i class="hko-cizgi" aria-hidden="true"><i id="hko-dolu"></i></i>`;
+  /* mobilde ekranın altında yüzer; masaüstünde metin sütununun sonuna eklenir ve sütunun altına yapışır (aynı çubuk, sütun genişliğinde) */
+  const sutun = durum.masaustu && document.querySelector('.hk-sol');
+  (sutun || document.body).appendChild(el); document.body.classList.add('hk-dinleniyor');
+}
+function hkOynaticiGuncelle() {
+  const b = hk.e?.hakkinda[hkSes.bolum]; if (!b || !$('#hk-oyn')) return;
+  const n = hkSesParcalar(hkSes.bolum).length || 1;
+  $('#hko-bas').textContent = `${String(hkSes.bolum + 1).padStart(2, '0')} · ${b.baslik}`;
+  $('#hko-alt').textContent = `${Math.min(hkSes.i + 1, n)} / ${n} paragraf`;
+  $('#hko-dolu').style.width = `${Math.round(100 * Math.min(hkSes.i + 1, n) / n)}%`;
+  const o = $('[data-hko="oynat"]'); o.innerHTML = ic(hkSes.oynuyor ? 'pause' : 'play', 20); o.setAttribute('aria-label', hkSes.oynuyor ? 'Durdur' : 'Devam et');
+  $('[data-hko="hiz"]').textContent = String(hkSes.hiz).replace('.', ',') + '×';
+  $('[data-hko="don"]').hidden = hkSes.izle;
+}
+document.addEventListener('click', (ev) => {
+  const d = ev.target.closest('[data-hk-dinle]'); if (d) { hkSesBaslat(+d.dataset.hkDinle); return; }
+  const k = ev.target.closest('[data-hko]'); if (!k) return;
+  const ne = k.dataset.hko, n = hkSesParcalar(hkSes.bolum).length;
+  if (ne === 'kapat') return hkSesDur();
+  if (ne === 'oynat') { hkSes.oynuyor = !hkSes.oynuyor; hkSes.jeton++; if (!hkSes.oynuyor) { speechSynthesis.cancel(); hkOynaticiGuncelle(); } else hkSesCal(); return; }
+  if (ne === 'hiz') { hkSes.hiz = HK_HIZ[(HK_HIZ.indexOf(hkSes.hiz) + 1) % HK_HIZ.length]; hkSesCal(); return; }   // yeni hız paragrafın başından
+  if (ne === 'don') { hkSes.izle = true; $('.hk-okunan')?.scrollIntoView({ block:'center', behavior:'smooth' }); hkOynaticiGuncelle(); return; }
+  if (ne === 'geri') { if (hkSes.i > 0) hkSes.i--; else if (hkSes.bolum > 0) { hkSes.bolum--; hkSes.i = Math.max(0, hkSesParcalar(hkSes.bolum).length - 1); } hkSes.izle = true; hkSesCal(); return; }
+  if (ne === 'ileri') { hkSes.i = Math.min(hkSes.i + 1, n); hkSes.izle = true; hkSesCal(); }
+});
+/* kullanıcı kendisi kaydırınca (tekerlek, dokunma, klavye) izleme durur; programın kaydırması saymaz */
+['wheel', 'touchmove', 'keydown'].forEach((t) => addEventListener(t, (ev) => {
+  if (!document.body.classList.contains('hk-dinleniyor') || !hkSes.izle || ev.target.closest?.('#hk-oyn')) return;
+  if (t === 'keydown' && !['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(ev.key)) return;
+  hkSes.izle = false; hkOynaticiGuncelle();
+}, { passive:true }));
+addEventListener('hashchange', () => { if (!location.hash.startsWith('#/hakkinda/')) hkSesDur(); });
 function hakkinda(id) {
+  hkSesDur();
   const e = ESER[id]; if (!e) return (location.hash = '#/');
-  durum.secili = id; rotaKaldir(); hk.e = e;
+  durum.secili = id; rotaKaldir(); hk.e = e; yoreUygula(e);
   const toplamDk = hkDakika(e.hakkinda.reduce((n, b) => n + hkKelime(b), 0));
   /* kapak fotoğrafı veriden (eser.json → hakkinda_kapak: envanterde eser kaydının açılış fotoğrafı); yoksa galerinin ilki */
   const kapakF = (e.hakkinda_kapak && e.fotolar.find((f) => f.dosya === e.hakkinda_kapak)) || kapak(e);
@@ -1518,11 +1814,12 @@ function hakkinda(id) {
   /* geri düğmesi: mobilde hep, masaüstünde kapak ekrandan çıkınca (kapakta kendi düğmesi var). Sekme şeridi taşıyorsa kenar solar, masaüstünde ‹ › okları çıkar */
   const nav = `<nav class="hk-nav" aria-label="Bölümler"><button class="yuvarlak hk-nav-geri" data-git="#/eser/${id}" aria-label="Geri: ${esc(e.ad)}">${ic('chevron-left', 20)}<span>${esc(e.ad)}</span></button><div class="hk-sekme-kap"><button class="hk-sekme-ok sol" data-hk-kay="-1" aria-label="Önceki bölümler" hidden>${ic('chevron-left', 18)}</button><div class="hk-sekmeler">${sekmeler}</div><button class="hk-sekme-ok sag" data-hk-kay="1" aria-label="Sonraki bölümler" hidden>${ic('chevron-right', 18)}</button></div><div class="hk-ilerleme" aria-hidden="true"><i></i></div></nav>`;
   /* kapak, envanterdeki eser açılışı gibi: büyük fotoğraf + şehir renginde panel (aralıklı büyük harfle ilçe, serif eser adı, büyük harfle künye) */
-  const km = SEHIR.kimlik, kmStil = km ? ` style="--sehir-aksan:${esc(km.zemin)};--sehir-acik:${esc(km.desen_renk)};--hk-desen:url('desenler/${esc(km.desen)}')"` : '';   // şehrin rengi ve deseni veriden
+  const km = ilKimlik(e), kmStil = km ? ` style="--sehir-aksan:${esc(km.zemin)};--sehir-acik:${esc(km.desen_renk || '')}${km.desen ? `;--hk-desen:url('desenler/${esc(km.desen)}')` : ''}"` : '';   // eserin ilinin rengi ve deseni veriden
   /* geri düğmesi kapağın sol üst köşesinde, fotoğrafın üstünde (sayfanın okuma yönü sol üstten başlar; mobilde geri yapışık sekme çubuğunda) */
   const kapakH = `<header class="hk-kapak"${kmStil}>${durum.masaustu ? `<button class="hk-geri" data-git="#/eser/${id}">${ic('chevron-left', 18)}${esc(e.ad)}</button>` : ''}${kapakF ? `<div class="hk-kapak-f">${resim(kapakF)}</div>` : ''}<div class="hk-kapak-panel${km?.desen ? ' desenli' : ''}">
       ${e.ilce ? `<span class="hk-ilce">${esc(e.ilce)}</span>` : ''}<h1 class="hk-h1">${esc(e.uzun_ad || e.ad)}</h1>${HK_ALTIN}<p class="hk-kunye-ust">${meta2}</p>
-      <p class="hk-kapak-meta">Eser hakkında · ${toplamDk} dk okuma · ${e.hakkinda.length} bölüm<br>${esc(SEHIR.envanter_adi || 'Envanter')}</p></div></header>`;
+      <p class="hk-kapak-meta">Eser hakkında · ${toplamDk} dk okuma · ${e.hakkinda.length} bölüm<br>${esc(ilSehir(e).envanter_adi || 'Envanter')}</p>
+      ${'speechSynthesis' in window ? `<button class="hk-dinle" data-hk-dinle="0">${ic('headphones', 18)}Dinle · ${toplamDk} dk</button>` : ''}</div></header>`;
   const kitaplar = hkKitaplar(e).map((k, i) => `<li>[${i + 1}] ${esc(k)}</li>`).join('');
   const son = `<section class="hk-son hk-gir">${SUSLEME}<h2 class="hk-h2">Okudun. Şimdi ne yapalım?</h2><div class="hk-son-dugmeler">
       ${e.hikaye.length ? `<button class="btn ana" data-git="#/anlat/${id}/dinle">${ic('headphones')}Hikâyeyi dinle</button>` : ''}
@@ -1533,7 +1830,7 @@ function hakkinda(id) {
   if (durum.masaustu) {
     document.body.classList.add('tam-sayfa');
     const ucd = e.glb && e.hakkinda.some((b) => b.okuma?.ucd);
-    gorusAc(`<div class="hk hk-d" id="hk-kaydir">${kapakH}<div class="hk-izgara"><article class="hk-sol">${nav}${bolumler}${son}</article>
+    gorusAc(`<div class="hk hk-d" id="hk-kaydir">${kapakH}${nav}<div class="hk-izgara"><article class="hk-sol">${bolumler}${son}</article>
       <aside class="hk-sag" aria-label="${ucd ? '3D model: okunan bölüm' : 'Bölümün fotoğrafı'}"><div class="hk-sahne${ucd ? ' uc' : ''}">${ucd ? `<div class="sahne3d" id="hk-s3d">${yuklemeKart('Bu sırada okumaya devam edebilirsin; model gelince sahne kendiliğinden açılır.')}</div>` : '<img id="hk-sag-foto" alt="">'}
         <div class="hk-sahne-etiket" id="hk-sahne-etiket"></div>${ucd ? '<span class="guven temsili hk-temsili">3D model · Temsili</span>' : ''}</div></aside></div></div>`);
     if (ucd) {
@@ -1672,13 +1969,16 @@ function rotaKaldir() {
 }
 function rotaOnizleme(id) {
   gorusKapat(); durum.secili = null; eserKartiCiz(); rotaKaldir(); rotaModu = true;
-  if (harita.getLayer('pin-secili')) { harita.setFilter('pin-secili', ['==', ['get', 'id'], '']); }
+  pinSeciliFiltre(null);
   if (!durum.masaustu) { document.body.classList.add('rota-modu'); $('#sahne').insertAdjacentHTML('beforeend', `<button class="ikon-btn" id="rota-geri" data-git="#/" aria-label="Geri" style="box-shadow:var(--golge)">${ic('chevron-left')}</button>`); }
   const duraklar = ROTA.duraklar.map((d) => ESER[d]);
+  /* rota da bir ile ait: rota.json → sehir (yoksa ilk durağın ili); çizgi, yıldızlar ve panel o ilin yöre rengini alır */
+  const rotaIl = (VERI.sehirler || []).find((s) => s.id === ROTA.sehir || s.ad === ROTA.sehir)?.ad || duraklar[0]?.il;
+  yoreUygula({ il:rotaIl }); const rotaRenk = ilKimlik({ il:rotaIl })?.zemin || getComputedStyle(document.documentElement).getPropertyValue('--sehir-aksan').trim() || '#2F3B41';
   const ciz = () => {
     if (harita.getSource('rota')) return;
     harita.addSource('rota', { type:'geojson', data:{ type:'Feature', geometry:{ type:'LineString', coordinates:duraklar.map((e) => [e.lon, e.lat]) } } });
-    harita.addLayer({ id:'rota-cizgi', type:'line', source:'rota', paint:{ 'line-color':'#22566E', 'line-width':4, 'line-dasharray':[1.2, 1.2] } });
+    harita.addLayer({ id:'rota-cizgi', type:'line', source:'rota', paint:{ 'line-color':rotaRenk, 'line-width':4, 'line-dasharray':[1.2, 1.2] } });
     harita.setLayoutProperty('pin', 'visibility', 'none');
   };
   harita.isStyleLoaded() ? ciz() : harita.once('idle', ciz);
@@ -1738,7 +2038,7 @@ function ggUzaktan(e) {
 function gecmisSayfa(id, i) {
   const e = ESER[id]; if (!e) return (location.hash = '#/');
   durum.secili = id; rotaKaldir(); ggTemizle();
-  Object.assign(gg, { eser:e, i:Math.min(Math.max(0, +i || 0), Math.max(0, e.gecmis.length - 1)), acik:durum.masaustu ? gg.acik && gg.eser === e : false });
+  Object.assign(gg, { eser:e, i:Math.min(Math.max(0, +i || 0), Math.max(0, e.gecmis.length - 1)), acik:true });   // «Nereden çekildi?» haritası masaüstünde ve mobilde hep açık (29 Ekim 2026)
   const bas = `<div class="gg-bas"><button class="ikon-btn" data-git="#/eser/${id}" aria-label="Geri">${ic('chevron-left', 18)}</button><div class="gg-baslik"><b>Geçmişi Gör</b><small>${esc(e.ad)}</small></div></div>`;
   if (!e.gecmis.length) return ggBos(e, bas);
   const n = e.gecmis.length;
@@ -1748,8 +2048,9 @@ function gecmisSayfa(id, i) {
     <span class="gg-sayac" id="gg-sayac"></span><span class="gg-guven" id="gg-guven"></span>
     ${durum.masaustu ? `<button class="yuvarlak gg-ok" style="left:16px" data-gg-adim="-1" aria-label="Önceki">${ic('chevron-left', 18)}</button><button class="yuvarlak gg-ok" style="right:16px" data-gg-adim="1" aria-label="Sonraki">${ic('chevron-right', 18)}</button>`
       : `<button class="gg-kamera" data-gg-kamera>${ic('camera', 18)}Kamerayı aç</button>`}</div>`;
-  const serit = `<div class="gg-serit-bas"><b>Eski fotoğraflar${durum.masaustu ? ` · ${n}` : ''}</b>${durum.masaustu ? '' : `<span class="soluk">${n} fotoğraf</span>`}</div>
-    <div class="gg-serit" id="gg-serit">${e.gecmis.map((f, k) => `<button data-gg-sec="${k}"><img src="${esc(f.kucuk)}" alt="" loading="lazy"><b>${esc(f.tarih.etiket)}</b><span>${ggTur(f)}${f.bugun ? '<i class="gg-bugunu-var" title="Bugünkü eşi var"></i><span class="gizli-metin">, bugünkü eşi var</span>' : ''}</span></button>`).join('')}</div>`;
+  const bugunsuz = e.gecmis.filter((f) => !f.bugun).length;
+  const serit = `<div class="gg-serit-bas"><b>Eski fotoğraflar${durum.masaustu ? ` · ${n}` : ''}</b>${durum.masaustu ? '' : `<span class="soluk">${n} fotoğraf</span>`}</div>${bugunsuz ? `<p class="gg-cagri">${ic('camera', 14)}${bugunsuz === n ? 'Hiçbirinin bugünkü hali yok' : `${bugunsuz} tanesinin bugünkü hali yok`}; ilkini sen çek.</p>` : ''}
+    <div class="gg-serit" id="gg-serit">${e.gecmis.map((f, k) => `<button data-gg-sec="${k}"><img src="${esc(f.kucuk)}" alt="" loading="lazy">${f.bugun ? '' : `<i class="gg-cek-isaret" title="Bugünkü hali yok">${ic('camera', 11)}</i>`}<b>${esc(f.tarih.etiket)}</b><span>${ggTur(f)}${f.bugun ? '<i class="gg-bugunu-var" title="Bugünkü eşi var"></i><span class="gizli-metin">, bugünkü eşi var</span>' : ''}</span></button>`).join('')}</div>`;
   const yakinNot = '<p class="gg-yakin" id="gg-yakin" hidden>Yakın açı: iki fotoğraf birebir aynı noktadan çekilmedi.</p>';
   const nereden = `<div class="gg-nereden" id="gg-nereden"><span class="pin">${ic('map-pin', 18)}</span><div><b>Nereden çekildi?</b><small id="gg-nereden-alt"></small></div><button class="gg-ac" data-gg-ac aria-label="Haritayı aç">${ic('chevron-up', 20)}</button></div>`;
   const haritaAlan = `<div class="gg-harita-kap" id="gg-harita-kap"><div id="gg-harita"></div><div class="gg-bilinmiyor" id="gg-bilinmiyor" hidden>${ic('map-pin-off', 36)}<b>Bu fotoğrafın çekim yeri bilinmiyor</b><span>Kamerayı açıp eski fotoğrafı yine de hizalayabilirsin.</span></div></div>
@@ -1759,8 +2060,11 @@ function gecmisSayfa(id, i) {
     gorusAc(`<div class="gg gg-d">${bas.replace('gg-baslik', 'gg-baslik serif-baslik')}<div class="gg-izgara"><div class="gg-sol">${fotoKutu}${yakinNot}${serit}</div>
       <aside class="gg-kart"><div id="gg-bilgi"></div><hr>${nereden}<div class="gg-kart-harita" id="gg-kart-harita" hidden>${haritaAlan}</div><p class="gg-not">Yerindeysen telefonundan açıp eski fotoğrafı kamerada hizalayabilirsin.</p></aside></div></div>`, 'gg-gorus');
   } else {
-    gorusAc(`<div class="gg gg-m" id="gg-kok">${bas}<div class="gg-kaydir">${fotoKutu}${yakinNot}<div id="gg-bilgi"></div>${serit}</div>
-      <div class="gg-alt" id="gg-alt"><div class="tutamak" data-gg-ac><i></i></div>${nereden}<div class="gg-alt-govde">${haritaAlan}<button class="btn ana tam gg-kamera-btn" data-gg-kamera>${ic('camera', 20)}Kamerayı aç</button></div></div></div>`, 'gg-gorus');
+    /* mobil (29 Ekim 2026): alttaki çekmece kalktı. Büyük fotoğraf üstte yapışık (kaydırınca küçülür); altından bilgi, «bugün» kartı,
+       eski fotoğraflar şeridi ve hep açık «Nereden çekildi?» haritası yukarı akar */
+    gorusAc(`<div class="gg gg-m gg-akis" id="gg-kok">${bas}<div class="gg-kaydir" id="gg-kaydir">${fotoKutu}${yakinNot}<div id="gg-bilgi"></div><div id="gg-bugun"></div>${serit}<section class="gg-yer">${nereden}${haritaAlan}</section></div></div>`, 'gg-gorus');
+    const kd = $('#gg-kaydir'), fk = $('#gg-foto');
+    kd?.addEventListener('scroll', () => { const t = kd.scrollTop; if (t > 80) fk.classList.add('kucuk'); else if (t < 10) fk.classList.remove('kucuk'); }, { passive:true });
   }
   ggKaydirma(!durum.masaustu);
   ggSec(gg.i, false); ggAcKapa(gg.acik);
@@ -1789,10 +2093,23 @@ function ggSec(i, kaydir = true) {
   $('#gg-bilgi').innerHTML = `<h2 class="gg-ad">${esc(f.baslik)}</h2><div class="gg-meta">${esc(ggMeta(f))}</div><div class="gg-kaynak">${esc(ggKaynak(f))}${f.bugun ? ` · Bugünkü fotoğraf: ${esc(f.bugun.kaynakSatiri.replace(/^Fotoğraf:\s*/, ''))}` : ''}</div><div class="gg-kisa">${esc(f.tarih.etiket)} · ${esc(f.baslik)}</div>`;
   $$('#gg-serit button').forEach((b, k) => b.setAttribute('aria-current', k === gg.i));
   if (kaydir) ggSeritOrtala();
+  ggBugunKart(f);
   const yer = !!f.cekimNoktasi;
   $('#gg-nereden-alt').textContent = yer ? (gg.acik && !durum.masaustu ? 'Fotoğrafçı burada durup yeşil koninin yönüne bakmış' : `Çekim noktası ve bakış yönü${durum.masaustu ? '' : ' haritada'}`) : 'Konum Foto Atlas\'ta işaretlenmemiş';
   $('#gg-bilinmiyor').hidden = yer; $('#gg-harita').style.visibility = yer ? 'visible' : 'hidden'; $('#gg-lejant').style.visibility = yer ? 'visible' : 'hidden';
   ggHaritaGuncelle();
+}
+/* «Bugün» kartı (29 Ekim 2026): seçili eski fotoğrafın bugünkü eşi yoksa kullanıcıyı aynı açıdan çekmeye çağırır; çekim noktası biliniyorsa
+   haritayı ve (konum izni varsa) uzaklığı söyler. Eşi varsa karşılaştırmaya yönlendirir. Kamera akışı mevcut (data-gg-kamera) */
+const uzYaz = (m) => (m < 1000 ? `${Math.max(10, Math.round(m / 10) * 10)} m` : `${(m / 1000).toLocaleString('tr-TR', { maximumFractionDigits:1 })} km`);
+function ggBugunKart(f) {
+  const k = $('#gg-bugun'); if (!k) return;
+  if (f.bugun) { k.innerHTML = `<div class="gg-bugun var"><span class="gb-ik">${ic('history', 18)}</span><div><b>Bugünkü hali var</b><small>Fotoğraftaki kaydırıcıyla o gün ↔ bugün karşılaştır.</small></div><button class="metin-btn" data-gg-kamera>Sen de çek ›</button></div>`; return; }
+  const uz = f.cekimNoktasi && durum.konumNokta ? mesafeYon(durum.konumNokta, f.cekimNoktasi)[0] : null;
+  const alt = f.icMekan ? 'Bu fotoğraf içeride çekilmiş. İçeride aynı açıyı bulup çekebilirsin.'
+    : f.cekimNoktasi ? `Fotoğrafçının durduğu yer aşağıdaki haritada${uz != null ? ` · sana ${uzYaz(uz)}` : ''}. Oraya git; eski fotoğraf kamerada saydam görünür, hizalayıp çek.`
+    : 'Çekim yeri bilinmiyor; benzer açıyı bulup çekebilirsin.';
+  k.innerHTML = `<div class="gg-bugun yok"><span class="gb-ik">${ic('camera', 18)}</span><div><b>Bu açının bugünkü hali yok</b><small>${alt}</small></div><button class="btn ana tam" data-gg-kamera>${ic('camera', 18)}Bugününü sen çek</button></div>`;
 }
 function ggSeritOrtala() {   // seçili küçük resmi şeridin içinde ortala; scrollIntoView sayfa kabını da yana kaydırıyordu (son fotoğrafta kenarda boşluk)
   const s = $('#gg-serit'), b = s && s.children[gg.i]; if (!b) return;
@@ -1800,8 +2117,9 @@ function ggSeritOrtala() {   // seçili küçük resmi şeridin içinde ortala; 
   s.scrollTo({ left:s.scrollLeft + br.left - sr.left - (s.clientWidth - br.width) / 2, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 function ggAcKapa(ac) {
+  ac = true;   // harita hep açık (masaüstü ve mobil akış)
   gg.acik = ac;
-  const kok = $('#gg-kok'); kok && kok.classList.toggle('acik', ac);
+  const kok = $('#gg-kok'); kok && kok.classList.toggle('acik', ac && !kok.classList.contains('gg-akis'));
   $('#gg-kart-harita') && ($('#gg-kart-harita').hidden = !ac);
   $$('[data-gg-ac].gg-ac').forEach((b) => { b.innerHTML = ic(ac ? 'chevron-down' : 'chevron-up', 20); b.setAttribute('aria-label', ac ? 'Haritayı kapat' : 'Haritayı aç'); });
   if (gg.eser?.gecmis.length) ggSec(gg.i, false);
@@ -2046,7 +2364,7 @@ function gorevSayfa(id, i) {
     const secenek = g.secenekler.map((s, k) => `<button role="radio" class="gv-secenek" data-gv-sec="${k}" aria-checked="${gv.secim === k}">${esc(s)}</button>`).join('');
     const ipucu = (g.ipuclari || []).map((p, k) => `<button class="btn ${k > gv.ipucu ? 'ikincil gv-kilitli' : 'cerceve'}${k < gv.ipucu ? ' acildi' : ''}" data-gv-ipucu="${k}" ${k > gv.ipucu ? 'aria-disabled="true"' : ''}>İpucu ${k + 1}${k > gv.ipucu ? `<small>${k}. ipucundan sonra açılır</small>` : ''}</button>`).join('');
     const acik = (g.ipuclari || []).slice(0, gv.ipucu).map((p, k) => `<p class="gv-ipucu-metin"><b>İpucu ${k + 1}:</b> ${esc(p)}</p>`).join('');
-    govde = `<h1 class="gv-soru">${esc(g.soru)}</h1><p class="gv-alt soluk">Fotoğrafa bak; cevabı hikâyede de duydun.</p>
+    govde = `<h1 class="gv-soru">${esc(g.soru)}</h1><p class="gv-alt soluk">${e.hikaye?.length ? 'Fotoğrafa bak; cevabı hikâyede de duydun.' : 'Fotoğrafa bak; cevap «Eser hakkında»da da var.'}</p>
       <div class="gv-secenekler" role="radiogroup" aria-label="Seçenekler">${secenek}</div>
       <div class="gv-ipuclari">${ipucu}</div>${acik}
       <div class="gv-alt-dugme"><button class="btn ana tam" data-gv-cevapla ${gv.secim === null ? 'disabled' : ''}>Cevapla</button>
@@ -2184,9 +2502,10 @@ function karsilamaGoster() {
   const f = kapak(ESER[ROTA?.duraklar?.[0]] || VERI.eserler[0]);
   const madde = (ikon, b, a) => `<li><span class="ka-ik">${ic(ikon, 18)}</span><div><b>${b}</b><small>${a}</small></div></li>`;
   k.innerHTML = `<section class="karsilama${durum.masaustu ? '' : ' desenli-zemin'}" role="dialog" aria-modal="true" aria-labelledby="ka-baslik">
-    ${durum.masaustu ? '<div class="ka-serit" aria-hidden="true"></div>' : `<div class="ka-foto">${resim(f)}</div>`}<div class="ka-ust">Vakıf eserlerini keşfet</div>
+    ${durum.masaustu ? '<div class="ka-serit" aria-hidden="true"></div>' : `<div class="ka-foto">${resim(f)}</div>`}<img class="ka-logo" src="logo.png" alt="AKAR" width="800" height="237"><div class="ka-ust">Vakıf eserlerini keşfet</div>
     <h2 id="ka-baslik" class="ka-baslik">Şehrin hikâyesine karış.</h2>
     <p class="ka-alt">Geçmişi gör. Hikâyesini dinle. İzini bırak.</p>${SUSLEME}
+    <div class="ka-koleksiyon"><div><b>${esc(SEHIR.ad || '')} vakıf eserleri</b><small>${VERI.eserler.length} eser, hikâyesi ve kaynağıyla</small></div><span class="ka-yuvarlar">${VERI.eserler.slice(0, 3).map((x) => resim(kapak(x))).join('')}</span></div>
     <ul class="ka-maddeler">${madde('headphones', 'Dinle ya da oku', 'Her eserin kısa, kaynaklı hikâyesi')}${madde('history', 'Geçmişini gör', 'Eski fotoğrafı bugünle karşılaştır')}${madde('landmark', 'Vakfı anla', 'Bu yapıyı yüzyıllardır ne ayakta tuttu?')}</ul>
     <div class="ka-dugmeler"><button class="btn ana" data-ka="ev">${ic('house', 18)}Evden gez</button><button class="btn ikincil" data-ka="yakin">${ic('map-pin', 18)}Konumumu kullan</button></div>
     <div class="ka-son"><small>Konumun sadece cihazında kullanılır.</small><button class="metin-btn" data-vakif-nedir>Vakıf nedir? ›</button></div>
