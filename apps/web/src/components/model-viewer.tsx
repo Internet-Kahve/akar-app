@@ -1,12 +1,20 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { CameraPose, PartCard, SiteModel, SiteSource } from "@akar/domain";
+import type {
+  CameraPose,
+  CityScene,
+  PartCard,
+  SiteModel,
+  SiteSource,
+} from "@akar/domain";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { PartCardDialog, partLabel } from "./part-card";
+import { PRESENTATION_PARTS } from "../lib/model-anchor";
+import { addSceneLights, groundShadow, saturate } from "../lib/scene-light";
 
 const TWEEN_MS = 900;
 /** One cover group's rise; the next group follows once the one before has passed `LIFT_GAP`. */
@@ -27,11 +35,13 @@ const TAP_MS = 600;
  * x east, y up, z south; azimuth 0 looks from the north, clockwise. `interior` (story) lifts the
  * model's cover groups or sets them down; absent = leave them as the visitor left them.
  * Parts: with `partCards`, only their parts respond to a tap and open the card (all of a card's
- * parts glow together); without cards every part shows its name.
+ * parts glow together); without cards every part shows its name. `scene` is the city's light and
+ * background (§11.42), the same light the map uses.
  */
 export default function ModelViewer({
   model,
   name,
+  scene: cityScene,
   pose,
   interior,
   partCards = [],
@@ -39,6 +49,7 @@ export default function ModelViewer({
 }: {
   model: SiteModel;
   name: string;
+  scene: CityScene;
   pose?: CameraPose;
   interior?: boolean;
   partCards?: PartCard[];
@@ -62,6 +73,7 @@ export default function ModelViewer({
   const [inside, setInside] = useState<boolean | null>(null);
   const heading = model.placement?.headingDeg ?? 0;
   const groupsKey = JSON.stringify(model.coverGroups ?? []);
+  const lightKey = JSON.stringify(cityScene.light);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -90,7 +102,7 @@ export default function ModelViewer({
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      // No tone mapping: the map draws the same light without it.
       renderer.domElement.setAttribute(
         "aria-label",
         `${name} 3B modeli. Döndürmek için sürükle, yakınlaştırmak için iki parmağını kullan.`,
@@ -99,10 +111,7 @@ export default function ModelViewer({
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 10000);
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x80715c, 2.4));
-      const sunlight = new THREE.DirectionalLight(0xffffff, 3);
-      sunlight.position.set(70, 100, 50);
-      scene.add(sunlight);
+      addSceneLights(scene, JSON.parse(lightKey));
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enablePan = false;
       controls.maxPolarAngle = Math.PI * 0.49;
@@ -132,6 +141,8 @@ export default function ModelViewer({
             return;
           }
           object = gltf.scene;
+          const light: CityScene["light"] = JSON.parse(lightKey);
+          saturate(object, light.saturation);
           // Turned like on the map, so a pose's azimuth (0 = from the north) means the real north.
           object.rotation.y = -THREE.MathUtils.degToRad(heading);
           object.updateMatrixWorld(true);
@@ -140,6 +151,39 @@ export default function ModelViewer({
           const size = box.getSize(new THREE.Vector3());
           object.position.sub(center);
           scene.add(object);
+          if (light.groundShadow > 0) {
+            // Under the building only: the presentation ground disc and trees do not size it.
+            object.updateMatrixWorld(true);
+            const toModel = object.matrixWorld.clone().invert();
+            const building = new THREE.Box3();
+            object.traverse((item) => {
+              if (!(item instanceof THREE.Mesh)) return;
+              for (
+                let node: THREE.Object3D | null = item;
+                node && node !== object;
+                node = node.parent
+              )
+                if (PRESENTATION_PARTS.test(node.name)) return;
+              building.union(
+                new THREE.Box3().setFromObject(item).applyMatrix4(toModel),
+              );
+            });
+            if (!building.isEmpty()) {
+              const shadow = groundShadow(
+                {
+                  minX: building.min.x,
+                  maxX: building.max.x,
+                  minZ: building.min.z,
+                  maxZ: building.max.z,
+                },
+                building.min.y + 0.05,
+                light.groundShadow,
+                { factor: -6, units: -30 },
+              );
+              shadow.renderOrder = 1;
+              object.add(shadow);
+            }
+          }
           const root = object;
           const radius = Math.max(size.x, size.y, size.z, 1);
           const sphere = size.length() / 2 || 1;
@@ -448,7 +492,7 @@ export default function ModelViewer({
       renderer?.forceContextLoss();
       renderer?.domElement.remove();
     };
-  }, [model.src, name, heading, groupsKey, partsKey]);
+  }, [model.src, name, heading, groupsKey, partsKey, lightKey]);
   useEffect(() => {
     if (pose) aim.current?.(pose);
   }, [pose]);
@@ -467,7 +511,15 @@ export default function ModelViewer({
     return () => clearTimeout(timer);
   }, [picked]);
   return (
-    <div className="model-viewer">
+    <div
+      className="model-viewer"
+      style={
+        {
+          "--scene-top": cityScene.backgroundTop,
+          "--scene-bottom": cityScene.backgroundBottom,
+        } as React.CSSProperties
+      }
+    >
       <div className="model-canvas" ref={host} />
       {status && (
         <p className="model-status" role="status">

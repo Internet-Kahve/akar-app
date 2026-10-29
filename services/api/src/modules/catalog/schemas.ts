@@ -279,11 +279,28 @@ export type SiteDetail = z.infer<typeof SiteDetail>;
 
 export const SiteDetailListResponse = pageResponse(SiteDetail);
 
+export const CitySceneDto = z
+  .object({
+    light: z.object({
+      ambient: z.number().describe("Ortam (yarıküre) ışığı"),
+      sun: z.number().describe("Güneş ışığı"),
+      fill: z.number().describe("Karşı (dolgu) ışık"),
+      azimuthDeg: z.number().describe("Güneş yönü, kuzeyden saat yönünde derece"),
+      elevationDeg: z.number().describe("Güneşin ufuktan yüksekliği, derece"),
+      saturation: z.number().describe("Malzeme renklerinin doygunluk çarpanı"),
+      groundShadow: z.number().describe("Modelin altındaki yumuşak yer gölgesinin opaklığı (0 = yok)"),
+    }),
+    backgroundTop: z.string().describe("Eser 3B sahnesi zemini, üst renk (#RRGGBB)"),
+    backgroundBottom: z.string().describe("Eser 3B sahnesi zemini, alt renk (#RRGGBB)"),
+  })
+  .describe("Haritadaki ve eser sayfasındaki 3B modellerin ışığı ve sahne zemini (§11.42)");
+
 export const CityDto = z.object({
   id: z.string(),
   name: z.string(),
   siteCount: z.number().int().describe("Yayındaki eser sayısı"),
   routeCount: z.number().int().describe("Yayındaki rota sayısı"),
+  scene: CitySceneDto.nullable().describe("null = istemci varsayılan ışığı ve zemini kullanır"),
 });
 export type CityDto = z.infer<typeof CityDto>;
 

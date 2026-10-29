@@ -5,6 +5,7 @@ import { colors } from "@akar/design-tokens";
 import type { HeritageSite, MapSettings } from "@akar/domain";
 import type { Map as MapType, Marker as MarkerType } from "maplibre-gl";
 import type { MapModels } from "../lib/map-models";
+import { useCityScenes } from "./city-scenes";
 import {
   LocateFixed,
   Plus,
@@ -39,18 +40,19 @@ export function HeritageMap({
   /** Without settings the map draws no models (the route preview in the panel). */
   mapSettings?: MapSettings;
 }) {
+  const scenes = useCityScenes();
   const container = useRef<HTMLDivElement>(null),
     map = useRef<MapType | null>(null),
     markers = useRef<MarkerType[]>([]),
     models = useRef<MapModels | null>(null),
     selectRef = useRef(onSelect),
-    latest = useRef({ sites, mapSettings });
+    latest = useRef({ sites, mapSettings, scenes });
   const [loaded, setLoaded] = useState(false),
     [failed, setFailed] = useState(false),
     [tilt, setTilt] = useState(false),
     [locationError, setLocationError] = useState("");
   selectRef.current = onSelect;
-  latest.current = { sites, mapSettings };
+  latest.current = { sites, mapSettings, scenes };
   useEffect(() => {
     let disposed = false;
     import("maplibre-gl")
@@ -87,6 +89,7 @@ export function HeritageMap({
                   models.current.update(
                     latest.current.sites,
                     latest.current.mapSettings,
+                    latest.current.scenes,
                   );
               })
               .catch(() => {});
@@ -178,8 +181,8 @@ export function HeritageMap({
     };
   }, [sites, selectedId, routeIds, loaded]);
   useEffect(() => {
-    if (mapSettings) models.current?.update(sites, mapSettings);
-  }, [sites, mapSettings, loaded]);
+    if (mapSettings) models.current?.update(sites, mapSettings, scenes);
+  }, [sites, mapSettings, scenes, loaded]);
   useEffect(() => {
     const site = sites.find((s) => s.id === selectedId);
     if (site && loaded)

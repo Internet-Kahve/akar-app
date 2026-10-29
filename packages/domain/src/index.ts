@@ -56,6 +56,71 @@ export const defaultMapSettings: MapSettings = {
   modelMinZoom: 16,
   maxVisibleModels: 10,
 };
+/** Light of the 3D models of a city, on the map and in the site viewer (decision §11.42). */
+export interface SceneLight {
+  /** Hemisphere (ambient) light intensity. */
+  ambient: number;
+  /** Sun (directional) light intensity. */
+  sun: number;
+  /** Fill light from the opposite side. */
+  fill: number;
+  /** Sun direction: degrees clockwise from north. */
+  azimuthDeg: number;
+  /** Sun height above the horizon in degrees. */
+  elevationDeg: number;
+  /** Material colour saturation multiplier (1 = unchanged). */
+  saturation: number;
+  /** Opacity of the soft ground shadow drawn under each model (0 = none). */
+  groundShadow: number;
+}
+/** City record `scene` (`GET /v1/cities`): model light and the site viewer's background gradient. */
+export interface CityScene {
+  light: SceneLight;
+  /** Viewer background, top and bottom of a vertical gradient, `#RRGGBB`. */
+  backgroundTop: string;
+  backgroundBottom: string;
+}
+/** Used for a city without a saved scene, and until the cities are read. */
+export const defaultCityScene: CityScene = {
+  light: {
+    ambient: 2.3,
+    sun: 1.3,
+    fill: 0.5,
+    azimuthDeg: 216,
+    elevationDeg: 46,
+    saturation: 1,
+    groundShadow: 0,
+  },
+  backgroundTop: "#DCE3E4",
+  backgroundBottom: "#C3CBCD",
+};
+const HEX_COLOUR = /^#[0-9A-Fa-f]{6}$/;
+/** Throws on values the renderer cannot use; ranges are wide on purpose (designers tune them). */
+export function validateCityScene(scene: CityScene) {
+  const l = scene.light;
+  const ranges: Array<[keyof SceneLight, number, number]> = [
+    ["ambient", 0, 10],
+    ["sun", 0, 10],
+    ["fill", 0, 10],
+    ["azimuthDeg", 0, 360],
+    ["elevationDeg", 0, 90],
+    ["saturation", 0, 3],
+    ["groundShadow", 0, 1],
+  ];
+  for (const [key, min, max] of ranges)
+    if (
+      typeof l[key] !== "number" ||
+      !Number.isFinite(l[key]) ||
+      l[key] < min ||
+      l[key] > max
+    )
+      throw new Error(`Sahne ışığı ${key} ${min}–${max} arasında olmalı`);
+  if (
+    !HEX_COLOUR.test(scene.backgroundTop) ||
+    !HEX_COLOUR.test(scene.backgroundBottom)
+  )
+    throw new Error("Sahne zemini #RRGGBB biçiminde olmalı");
+}
 export interface SiteModel {
   name: string;
   bytes: number;

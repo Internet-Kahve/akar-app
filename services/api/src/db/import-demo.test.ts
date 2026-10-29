@@ -35,10 +35,18 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
     historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}` }], sections: [] as unknown[],
     partCards: [{ id: `part-${i}`, parts: ["kubbe_1"], title: "Kubbe", body: "Kaynaklı metin", photoIds: [`detail-${i}`, `photo-${i}`], trust: "verified", sourceId: `source-${i}` }],
   }));
-  const manifest = { version: 1, sites, routes: [], retireSiteIds: [] };
-  const path = join(root, "manifest.json"); await writeFile(path, JSON.stringify(manifest));
+  const scene = { light: { ambient: 2, sun: 1, fill: 1, azimuthDeg: 315, elevationDeg: 45, saturation: 1.25, groundShadow: 0.18 }, backgroundTop: "#DDE4E5", backgroundBottom: "#A7B4B7" };
+  const manifest = { version: 1, sites, routes: [], retireSiteIds: [], cities: [{ name: "Bursa", scene }] };
+  const path = join(root, "manifest.json");
+  scene.backgroundTop = "gri";
+  await writeFile(path, JSON.stringify(manifest));
+  await assert.rejects(importDemoContent(path, root, false, {}), /#RRGGBB/);
+  scene.backgroundTop = "#DDE4E5";
+  await writeFile(path, JSON.stringify(manifest));
   assert.equal((await importDemoContent(path, root, false, {})).objects, 2);
   for (let i = 0; i < 2; i++) assert.equal((await importDemoContent(path, root, true, env)).objects, 2);
+  const city = (await ctx.app.inject({ url: "/v1/cities" })).json().items.find((c: { name: string }) => c.name === "Bursa");
+  assert.deepEqual(city.scene, scene, "the city record's scene is served with the city");
   const res = await ctx.app.inject({ url: "/v1/sites/test-0" });
   assert.equal(res.statusCode, 200);
   const detail = res.json();

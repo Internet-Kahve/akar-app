@@ -23,6 +23,7 @@ import {
   type Ring,
 } from "../lib/osm-buildings";
 import { arrowStep, type PlacementDraft } from "../lib/placement";
+import { useCityScene } from "./city-scenes";
 
 /** What a click on the map does. */
 export type PlacementMode = "none" | "fit" | "buildings";
@@ -105,6 +106,8 @@ export const PlacementMap = forwardRef<
   PlacementMapHandle,
   {
     modelSrc: string;
+    /** The site's city: model light as on the public map. */
+    city: string;
     placement: PlacementDraft;
     satellite: boolean;
     mode: PlacementMode;
@@ -283,18 +286,20 @@ export const PlacementMap = forwardRef<
   }, []);
 
   const { modelSrc, placement, satellite, mode } = props;
+  // Light as on the visitors' map (§11.42).
+  const { light } = useCityScene(props.city);
   useEffect(() => {
     const m = map.current;
     if (!ready || !m) return;
     // A site being filled in may have no location yet.
     if (!Number.isFinite(placement.lng) || !Number.isFinite(placement.lat))
       return;
-    layer.current?.setSites([{ id: SITE_ID, src: modelSrc, placement }]);
+    layer.current?.setSites([{ id: SITE_ID, src: modelSrc, placement, light }]);
     if (!dragging.current)
       marker.current?.setLngLat([placement.lng, placement.lat]);
     if (!m.getBounds().contains([placement.lng, placement.lat]))
       m.easeTo({ center: [placement.lng, placement.lat], duration: 400 });
-  }, [ready, modelSrc, placement]);
+  }, [ready, modelSrc, placement, light]);
   useEffect(() => {
     const m = map.current;
     if (!ready || !m) return;

@@ -390,8 +390,8 @@ test("cities count only published sites and routes", async () => {
   const { body } = await get<{ items: { id: string; name: string; siteCount: number; routeCount: number }[] }>("/v1/cities");
   // Bursa also holds the draft site `taslak` and the draft route `taslak-rota`.
   assert.deepEqual(body.items, [
-    { id: "bursa", name: "Bursa", siteCount: 6, routeCount: 1 },
-    { id: "izmir", name: "İzmir", siteCount: 1, routeCount: 0 },
+    { id: "bursa", name: "Bursa", siteCount: 6, routeCount: 1, scene: null },
+    { id: "izmir", name: "İzmir", siteCount: 1, routeCount: 0, scene: null },
   ]);
 });
 

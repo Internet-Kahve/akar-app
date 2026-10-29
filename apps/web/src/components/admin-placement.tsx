@@ -233,12 +233,15 @@ const nudges = [
 export function PlacementSection({
   editor,
   siteId,
+  city,
   modelSrc,
   parts,
   persisted,
 }: {
   editor: PlacementEditor;
   siteId: string;
+  /** The site's city: the preview uses its model light. */
+  city: string;
   modelSrc: string;
   parts: string[];
   /** The server has the site with its model. */
@@ -319,6 +322,7 @@ export function PlacementSection({
           <PlacementMap
             ref={map}
             modelSrc={modelSrc}
+            city={city}
             placement={p}
             satellite={satellite}
             mode={mode}

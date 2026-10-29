@@ -11,6 +11,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import type { CameraPose, HeritageSite } from "@akar/domain";
+import { useCityScene } from "./city-scenes";
 const ModelViewer = dynamic(() => import("./model-viewer"), {
   ssr: false,
   loading: () => <p role="status">3B görünüm hazırlanıyor…</p>,
@@ -73,6 +74,7 @@ export function Scene({
   interior?: boolean;
   onHotspot: (id: string) => void;
 }) {
+  const cityScene = useCityScene(site.city);
   // A model site opens on the model, also in the story (its camera follows the sentences).
   const [mode, setMode] = useState<"photo" | "model">(
     photoId && !site.model ? "photo" : "model",
@@ -111,6 +113,7 @@ export function Scene({
               key={site.model.src}
               model={site.model}
               name={site.name}
+              scene={cityScene}
               pose={pose}
               interior={interior}
               partCards={site.partCards}
