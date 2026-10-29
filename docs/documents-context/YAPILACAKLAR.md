@@ -45,6 +45,35 @@ Notlar:
 - [ ] **Eser hakkında okuma düzeni yalnız Ulucami'de** (`icerik/eser-hakkinda-okuma.md`: özet, rakam, alıntı, zaman çizelgesi, 3D açıları). Diğer eserlerde tam metin düz görünüyor. En azından Koza Han ve Bedesten için yapılmalı (demo).
 - [ ] **Renk ince ayarı:** pastel renkler biraz açık bulunursa önizleme v3 sağ panelinde «Renk parlaklığı / Doygunluk» → «Ayarları kopyala» → `veri/sehir/bursa.json → harita_isik`.
 
+## 2b. Figma'da olup prototipte olmayanlar (29 Ekim taraması)
+
+Figma `akar-yeni` ekranları prototiple tek tek karşılaştırıldı. Düğüm numaraları Figma'daki ekranlardır.
+
+**Demo için önerilen (prototipe eklenecek):**
+1. **Anlatım · Akar akışı** (D 1:2893, B 80:3004): «Yıldırım Bayezid, Ulucami'ye gelir sağlamak için Bedesten'i yaptırdı» cümlesinde harita Bedesten → Ulucami kesik çizgisini gösterir. Vakıf hikâyesinin özü; jüri için en önemli eksik.
+2. **İlk açılış karşılama kartı** (D 1:4042, WF 1:5616): şehir deseni şeridi, «Şehrin hikâyesine karış.», üç madde (Dinle ya da oku · Geçmişini gör · Vakfı anla), «Evden gez» / «Konumumu kullan», «Vakıf nedir? ›». Yükleme ekranından sonra yalnız ilk girişte.
+3. **3D açılamadı / görsel kademe** (D 1:4853, 1:4911; B 1:7802, 1:7840): 3D açılmazsa gravür/fotoğrafa düşer, üstte «3D açılamadı, görsellerle gösteriliyor · Yeniden dene». Zayıf cihazda «Bu cihazda 3D ağır kaldı».
+4. **Kaynak detayı** (D 1:3193, WF 1:7027): «Kaynak: … ›» dokununca kitap, sayfa ve güven bilgisi.
+5. **Evden gez kipi ve konum seçimi** (D 1:4428, 1:4685; WF 1:5742, 1:7694): «Yakınımda ▾» menüsünde «Evden gez»; liste «Bursa'daki eserler», mesafe yok.
+
+**Üründe zaten olan (prototipe eklemeye gerek yok, ürün ekibi Figma'ya göre bitirir):**
+- İz Bırak akışı (1:3328, 1:3364, 1:3409; WF 1:7236, 1:7254, 1:7267, 108:2856).
+- Yaşayan hafıza (82:2735, 86:2733; WF 108:2765, 108:2807).
+- Giriş, e-posta kodu, KVKK, avatar menüsü, girişli profil (1:3055, 1:3816, 80:2930, 1:2065; WF 1:6960, 1:7672, 1:7544, 1:7372).
+- Rota akışı: Rotam, Rota aktif, Vardın, Rota tamamlandı, Tüm rotalar, Bana rota oluştur, Rota önerisi (1:2447, 1:2494, 80:2764, 80:2826, 1:3938, 80:2557, 80:2668; WF karşılıkları).
+- Arama ekranı ve sonuç yok (1:2141, 1:4522; WF 1:5925).
+- Tüm eserler + filtre (1:2296; WF 1:6065, 1:6119).
+- Bağlantı yok ve durum ekranları (1:4577, 1:7615).
+
+**Bilinçli fark (değiştirme):**
+- Şehir seçici (WF 1:5839): prototipte küre görünümü.
+- Anlatım altyazı düzeni (1:2730): alternatif; panel düzeni seçildi.
+- Birlikte Gez (1:3500; WF 1:7330, 1:7355): üründe de deneysel; kapsam kararı bekliyor.
+
+**Tersi (prototipte olup Figma'da olmayan, Figma'ya işlenecek):** hikâye bitince tebrik kartı (Hikâye sonrası 1:2991 / 1:6925 yerine), TR \| EN dil seçici.
+
+**Çakışma:** Figma'da «Giriş isteği (hikâye bitince)» var; prototipte hikâye bitince tebrik kartı çıkıyor. Öneri: misafirse tebrik kartının altına «Rozetlerini kaybetme · Giriş yap» satırı. İki ayrı pencere üst üste açılmasın.
+
 ## 3. Ekip notları (frontend / backend)
 
 «En son hazırlarız» denmişti; ürün (`apps/web`) prototipteki düzeltmeleri kullanmıyor. Yazılacak not (`docs/` altında) şunları kapsamalı:
