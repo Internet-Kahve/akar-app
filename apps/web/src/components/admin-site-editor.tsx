@@ -373,6 +373,7 @@ export function SiteEditor({
                   <PlacementSection
                     editor={placement}
                     siteId={draft.id}
+                    city={draft.city}
                     modelSrc={draft.model.src}
                     parts={draft.model.parts}
                     persisted={persisted}

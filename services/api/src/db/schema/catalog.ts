@@ -1,3 +1,4 @@
+import type { CityScene } from "@akar/domain";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -67,6 +68,8 @@ export const periods = pgTable("periods", {
 export const cities = pgTable("cities", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  /** 3D model light and viewer background (§11.42); null = clients use `defaultCityScene`. */
+  scene: jsonb("scene").$type<CityScene>(),
   ...timestamps,
 });
 

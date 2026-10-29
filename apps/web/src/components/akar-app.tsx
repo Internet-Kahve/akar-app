@@ -42,10 +42,12 @@ import {
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
+  type CityScene,
   type Role,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
+import { CityScenes } from "./city-scenes";
 import { Architecture, Scene } from "./scene";
 import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
@@ -109,6 +111,7 @@ export function AkarApp() {
     [signIn, setSignIn] = useState<string | null>(null);
   const [mapSettings, setMapSettings] =
     useState<MapSettings>(defaultMapSettings);
+  const [cityScenes, setCityScenes] = useState<Record<string, CityScene>>({});
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -117,11 +120,17 @@ export function AkarApp() {
   const role: Role = state.role ?? (live ? "user" : "admin");
   const canManage = !live || (!!account && role !== "user");
   const showExperimental = !live && experimental;
-  /** Map settings are a refinement: when they cannot be read the map keeps the values it has. */
+  /**
+   * Map settings and city scenes (§11.42) are a refinement: when one cannot be read the map and the
+   * viewer keep the values they have.
+   */
   const loadMapSettings = useCallback(async () => {
-    try {
-      if (client.current) setMapSettings(await client.current.getMapSettings());
-    } catch {}
+    const c = client.current;
+    if (!c) return;
+    await Promise.all([
+      c.getMapSettings().then(setMapSettings, () => {}),
+      c.getCityScenes().then(setCityScenes, () => {}),
+    ]);
   }, []);
   const load = useCallback(async () => {
     if (!client.current) return;
@@ -447,7 +456,7 @@ export function AkarApp() {
       )}
     </div>
   );
-  return (
+  const shell = (
     <div className="app-shell">
       <a
         className="skip-link"
@@ -1402,6 +1411,7 @@ export function AkarApp() {
       </nav>
     </div>
   );
+  return <CityScenes.Provider value={cityScenes}>{shell}</CityScenes.Provider>;
 }
 function PlusIcon() {
   return <span className="plus-circle">+</span>;

@@ -4,13 +4,13 @@ import { extname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { and, eq, inArray, like } from "drizzle-orm";
-import { validateSite, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
+import { validateCityScene, validateSite, type CityScene, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
 import { loadConfig } from "../config.ts";
 import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts";
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
-import { historyImages, media, siteMedia, sitePartCardPhotos, sitePartCards, siteSections, sites } from "./schema/index.ts";
+import { cities, historyImages, media, siteMedia, sitePartCardPhotos, sitePartCards, siteSections, sites } from "./schema/index.ts";
 
 type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string };
 type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "partCards"> & {
@@ -20,13 +20,17 @@ type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "pa
   sections: Array<{ id: string; kind: "history" | "architecture" | "waqf"; title: string; body: string; trust: Trust; sourceId: string }>;
   partCards: Array<{ id: string; parts: string[]; title: string; body: string; photoIds: string[]; trust: Trust; sourceId: string }>;
 };
-type Manifest = { version: number; sites: ContentSite[]; routes: HeritageRoute[]; retireSiteIds: string[] };
+type Manifest = { version: number; sites: ContentSite[]; routes: HeritageRoute[]; retireSiteIds: string[]; cities: Array<{ name: string; scene: CityScene }> };
 const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".glb": "model/gltf-binary" };
 
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
 export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env) {
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
   if (manifest.version !== 1 || manifest.sites.length !== 7) throw new Error("Expected the reviewed seven-site manifest (version 1)");
+  for (const city of manifest.cities) {
+    if (!manifest.sites.some((s) => s.city === city.name)) throw new Error(`City ${city.name} has no site in the manifest`);
+    validateCityScene(city.scene);
+  }
   const root = await realpath(contentRoot);
   const files = new Map<string, { body: Buffer; key: string; mime: string }>();
   const mediaFiles = new Map<string, string>();
@@ -112,8 +116,9 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           await tx.update(media).set({ bytes: file.body.length, ...(id.endsWith("-model") ? { triangles: triangles.get(id)!, partsStatus: "done" as const, license: "AKAR ekip üretimi · temsili model" } : {}) }).where(eq(media.id, id));
         }
       }
-      // Hide only the original fictional fixtures. Preserve records/progress and any subsequently edited content.
       await tx.update(sites).set({ status: "draft" }).where(and(inArray(sites.id, manifest.retireSiteIds), like(sites.sourceSummary, "15 Ekim AKAR ürün notları%")));
+      // loadCatalog created the city rows from the sites; the scene comes from the city record (§11.42).
+      for (const city of manifest.cities) await tx.update(cities).set({ scene: city.scene }).where(eq(cities.name, city.name));
     });
   } finally { await pool.end(); }
   return report;

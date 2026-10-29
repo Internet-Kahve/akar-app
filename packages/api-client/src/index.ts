@@ -1,6 +1,7 @@
 import {
   reduceSnapshot,
   defaultMapSettings,
+  type CityScene,
   type Command,
   type MapPlacement,
   type MapSettings,
@@ -9,7 +10,7 @@ import {
   type Memory,
   type Role,
 } from "@akar/domain";
-import { createSeed, demoQuizzes } from "./seed";
+import { createSeed, demoCityScenes, demoQuizzes } from "./seed";
 export { routes, createSeed, demoRegion, demoQuizzes } from "./seed";
 export {
   createHttpClient,
@@ -94,6 +95,8 @@ export interface AkarClient {
   getMapSettings(): Promise<MapSettings>;
   /** `PUT /v1/admin/map-settings`, admin only: returns the saved values. */
   setMapSettings(settings: MapSettings): Promise<MapSettings>;
+  /** `GET /v1/cities`: 3D light and viewer background by city name; a city without a saved scene is absent. */
+  getCityScenes(): Promise<Record<string, CityScene>>;
   /**
    * The placement saved for a site's model, `visible: false` included (the catalog hides it then); `null`
    * when none was saved. Panel read: the editor asks when it opens.
@@ -254,6 +257,9 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     async setMapSettings(settings) {
       mapSettings = { ...settings };
       return { ...mapSettings };
+    },
+    async getCityScenes() {
+      return structuredClone(demoCityScenes);
     },
     async getMapPlacement(siteId) {
       return structuredClone(

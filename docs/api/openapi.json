@@ -2563,13 +2563,85 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991,
                             "description": "Yayındaki rota sayısı"
+                          },
+                          "scene": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "light": {
+                                    "type": "object",
+                                    "properties": {
+                                      "ambient": {
+                                        "type": "number",
+                                        "description": "Ortam (yarıküre) ışığı"
+                                      },
+                                      "sun": {
+                                        "type": "number",
+                                        "description": "Güneş ışığı"
+                                      },
+                                      "fill": {
+                                        "type": "number",
+                                        "description": "Karşı (dolgu) ışık"
+                                      },
+                                      "azimuthDeg": {
+                                        "type": "number",
+                                        "description": "Güneş yönü, kuzeyden saat yönünde derece"
+                                      },
+                                      "elevationDeg": {
+                                        "type": "number",
+                                        "description": "Güneşin ufuktan yüksekliği, derece"
+                                      },
+                                      "saturation": {
+                                        "type": "number",
+                                        "description": "Malzeme renklerinin doygunluk çarpanı"
+                                      },
+                                      "groundShadow": {
+                                        "type": "number",
+                                        "description": "Modelin altındaki yumuşak yer gölgesinin opaklığı (0 = yok)"
+                                      }
+                                    },
+                                    "required": [
+                                      "ambient",
+                                      "sun",
+                                      "fill",
+                                      "azimuthDeg",
+                                      "elevationDeg",
+                                      "saturation",
+                                      "groundShadow"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "backgroundTop": {
+                                    "type": "string",
+                                    "description": "Eser 3B sahnesi zemini, üst renk (#RRGGBB)"
+                                  },
+                                  "backgroundBottom": {
+                                    "type": "string",
+                                    "description": "Eser 3B sahnesi zemini, alt renk (#RRGGBB)"
+                                  }
+                                },
+                                "required": [
+                                  "light",
+                                  "backgroundTop",
+                                  "backgroundBottom"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Haritadaki ve eser sayfasındaki 3B modellerin ışığı ve sahne zemini (§11.42)"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "null = istemci varsayılan ışığı ve zemini kullanır"
                           }
                         },
                         "required": [
                           "id",
                           "name",
                           "siteCount",
-                          "routeCount"
+                          "routeCount",
+                          "scene"
                         ],
                         "additionalProperties": false
                       }

@@ -1,4 +1,5 @@
 import type {
+  CityScene,
   HeritageRoute,
   HeritageSite,
   SiteModel,
@@ -12,6 +13,22 @@ export const demoRegion = {
   district: "Hanlar Bölgesi",
   center: [29.0619, 40.184] as [number, number],
   heroId: "ulu-cami",
+};
+/** Bursa's city record (`veri/sehir/bursa.json`), as the import stores it (§11.42). */
+export const demoCityScenes: Record<string, CityScene> = {
+  Bursa: {
+    light: {
+      ambient: 2,
+      sun: 1,
+      fill: 1,
+      azimuthDeg: 315,
+      elevationDeg: 45,
+      saturation: 1.25,
+      groundShadow: 0.18,
+    },
+    backgroundTop: "#DDE4E5",
+    backgroundBottom: "#A7B4B7",
+  },
 };
 const story = (id: string, title: string, text: string): StoryBlock => ({
   id,

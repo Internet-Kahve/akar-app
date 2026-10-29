@@ -3914,7 +3914,12 @@ td small {
 .model-viewer {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, #efe9dd, #d8d4c9);
+  /* The city's scene background (§11.42); the defaults are `defaultCityScene`. */
+  background: linear-gradient(
+    180deg,
+    var(--scene-top, #dce3e4),
+    var(--scene-bottom, #c3cbcd)
+  );
 }
 .model-viewer canvas {
   display: block;

@@ -1,6 +1,6 @@
 # Bursa demo içerik paketi
 
-Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`, `3d/model.json`, `icerik/`, `gecmisi-gor/`); okuyucular `design/test-redmi9t-v2/hazirla.py` içinde (§11.38). Ham çalışma arşivi uygulama paketine alınmaz.
+Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`, `3d/model.json`, `icerik/`, `gecmisi-gor/`); okuyucular `design/test-redmi9t-v2/hazirla.py` içinde (§11.38). Şehrin 3B ışığı ve eser sahnesi zemini `veri/sehir/<şehir>.json` dosyasından (`harita_isik`, `kimlik.sahne_ust / sahne_alt`, §11.42). Ham çalışma arşivi uygulama paketine alınmaz.
 
 - 7 eser, 7 Draco sıkıştırmalı GLB; modeller temsili olarak etiketlenir.
 - 58 kaynaklı eser fotoğrafı, 36 tarihî fotoğraf eşleşmesi, 59 hikâye adımı.

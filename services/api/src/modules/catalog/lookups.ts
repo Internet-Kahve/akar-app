@@ -12,7 +12,7 @@ import { published } from "./service.ts";
  */
 export async function listCities(db: Db): Promise<CityDto[]> {
   const [cityRows, siteCounts, routeCounts] = await Promise.all([
-    db.select({ id: cities.id, name: cities.name }).from(cities),
+    db.select({ id: cities.id, name: cities.name, scene: cities.scene }).from(cities),
     db.select({ cityId: sites.cityId, n: sql<number>`count(*)::int` }).from(sites).where(published).groupBy(sites.cityId),
     db
       .select({ cityId: catalogRoutes.cityId, n: sql<number>`count(*)::int` })

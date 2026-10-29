@@ -117,6 +117,18 @@ result['routes'] = [
  dict(id='hanlar',name='Hanlar Bölgesi Vakıf Yürüyüşü',description='Ulucami, Bedesten, Koza Hanı ve Orhan Bey Camii arasında vakıf mirası.',siteIds=['ulu-cami','bedesten','koza-han','orhan-gazi'],theme='Vakıf kültürü',minutes=0,distance=''),
  dict(id='akar-hayrat',name='Akar ve Hayrat',description='Gelir sağlayan yapılar ile hizmet sunan yapılar arasındaki ilişki.',siteIds=['bedesten','ulu-cami','emir-han','orhan-gazi','orhan-bey-hamami'],theme='Vakıf kültürü',minutes=0,distance=''),
  dict(id='hanlar-ticaret',name='Hanların İzinde',description='Bedesten, Emir Hanı ve Koza Hanı arasında bir yürüyüş.',siteIds=['bedesten','emir-han','koza-han'],theme='Ticaret yapıları',minutes=0,distance='')]
+# City scene (§11.42): model light from veri/sehir/<city>.json harita_isik, viewer background from kimlik.
+# A city record without both keeps scene null in the database (clients use the default light).
+LIGHT = dict(ambient='ortam', sun='gunes', fill='dolgu', azimuthDeg='yon', elevationDeg='yukseklik',
+             saturation='doygunluk', groundShadow='yer_golgesi')
+result['cities'] = []
+for path in sorted((root / 'veri/sehir').glob('*.json')):
+    record = json.loads(path.read_text())
+    light, identity = record.get('harita_isik'), record.get('kimlik') or {}
+    if record['ad'] not in {s['city'] for s in result['sites']} or not light or not identity.get('sahne_ust') or not identity.get('sahne_alt'):
+        continue
+    result['cities'].append(dict(name=record['ad'], scene=dict(light={k: light[v] for k, v in LIGHT.items()},
+        backgroundTop=identity['sahne_ust'], backgroundBottom=identity['sahne_alt'])))
 args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps({'sites':len(result['sites']),'photos':sum(len(s['photos']) for s in result['sites']),
  'stories':sum(len(s['stories']) for s in result['sites']),'history':sum(len(s['historyImages']) for s in result['sites'])}))
