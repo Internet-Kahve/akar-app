@@ -132,7 +132,19 @@
    "Mermer": "mermer",
    "Minare_Kaide_Mermer": "mermer",
    "Sad_Mermer": "mermer",
-   "Ic_Mermer": "mermer"
+   "Ic_Mermer": "mermer",
+   "Ic_Hali_Doku": "hali_zemin",
+   "Kemer_Cizgi": "kemer_kalem",
+   "Kemer_Bant": "kemer_bant",
+   "Minber_Kundekari": "kundekari_zemin",
+   "Minber_Ahsap": "kundekari_zemin",
+   "Minber_Altin": "minber_altin",
+   "Mihrap_Mukarnas": "mukarnas_altin",
+   "Avize_Pirinc": "mukarnas_altin",
+   "Mahfil_Ceviz": "mahfil_ceviz",
+   "Ic_Mermer_v30": "mermer",
+   "Ic_Siva_v30": "krem_siva",
+   "Ic_Hali_Sinir": "hali_desen"
   },
   "yildirim-bayezid-bedesteni": {
    "Cati": "kursun",
@@ -145,7 +157,10 @@
    "Ic_Tas": "duvar",
    "Ic_Siva": "krem_siva",
    "Ic_Mermer": "mermer",
-   "Ic_Aciklik": "aciklik"
+   "Ic_Aciklik": "aciklik",
+   "Ic_Zemin_Tas": "ic_zemin_tas",
+   "Pandantif_Siva": "krem_siva",
+   "Sad_Pirinc": "musluk_pirinc"
   },
   "koza-han": {
    "Cati_Kursun": "kursun",
@@ -157,7 +172,11 @@
    "Baca_Tugla": "tugla",
    "Disli_Tugla": "tugla",
    "Mermer_Beyaz": "mermer",
-   "Duvar_Almasik": "duvar"
+   "Duvar_Almasik": "duvar",
+   "Revak_Siva": "krem_siva",
+   "Revak_Tugla": "tugla",
+   "Revak_Karo": "tugla",
+   "Seki_Ahsap": "mahfil_ceviz"
   },
   "orhan-bey-kulliyesi": {
    "Kubbe": "kursun",
@@ -174,7 +193,10 @@
    "Kirpi": "tugla",
    "Minare": "tugla",
    "Alinlik_Baklava": "tugla",
-   "Mermer": "mermer"
+   "Mermer": "mermer",
+   "Orhan_Ic_Atlas": "krem_siva",
+   "Orhan_Ic_Atlas_Cift": "krem_siva",
+   "Orhan_Hali": "orhan_hali"
   },
   "orhan-bey-hamami": {
    "Kubbe": "kursun",
@@ -199,7 +221,13 @@
   "orhan-gazi-turbesi": {
    "Kursun": "kursun",
    "Mermer": "mermer",
-   "Cephe_Krem": "krem_siva"
+   "Cephe_Krem": "krem_siva",
+   "Turbe_Ic_Atlas": "krem_siva",
+   "Ic_Siva": "krem_siva",
+   "Ic_Siva_Cift": "krem_siva",
+   "Ic_Sari_Siva": "kasnak_sari_siva",
+   "Ic_Mermer": "mermer",
+   "Turbe_Pirinc": "pirinc_sebeke"
   }
  },
  "krem_siva": {
@@ -232,6 +260,509 @@
    "yildirim-bayezid-bedesteni"
   ],
   "not": "29 Ekim 2026 («İçini göster»): iç mekândaki kapı ve mahzen açıklıkları (koyu boşluk). Fotoğraftan ölçülmedi; dış dükkân açıklıklarının mevcut rengi."
+ },
+ "hali_zemin": {
+  "hex": "#D7B299",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/34_ic-genel-2.jpg (bölge x 0.4–0.48, y 0.86–0.95 kesir; parlaklık yüzdeliği %60 çevresinin ortancası)"
+  ],
+  "malzemeler": [
+   "Ic_Hali_Doku"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): halı zemini (kodla üretilen halı dokusunun zemin rengi)."
+ },
+ "hali_desen": {
+  "hex": "#B38764",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/34_ic-genel-2.jpg (bölge x 0.4–0.44, y 0.86–0.9 kesir; parlaklık yüzdeliği %10 çevresinin ortancası)"
+  ],
+  "malzemeler": [
+   "Ic_Hali_Doku",
+   "Ic_Hali_Sinir"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): halının saf bandı ve küçük motifleri."
+ },
+ "kemer_kalem": {
+  "hex": "#230A00",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/26_ic-kemerler.jpg (bölge x 0.344–0.42, y 0.108–0.217 kesir; parlaklık yüzdeliği %6 çevresinin ortancası)"
+  ],
+  "malzemeler": [
+   "Kemer_Cizgi"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): kemer kenarındaki koyu kalem işi çizgisi."
+ },
+ "kemer_bant": {
+  "hex": "#C79762",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/26_ic-kemerler.jpg (bölge x 0.344–0.42, y 0.108–0.217 kesir; parlaklık yüzdeliği %30 çevresinin ortancası)"
+  ],
+  "malzemeler": [
+   "Kemer_Bant"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): kemer alnındaki rumi motifli kalem işi bandının ortalama tonu (motif çizilmedi)."
+ },
+ "kundekari_zemin": {
+  "hex": "#623E0E",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/05_minber.jpg (bölge x 0.646–0.727, y 0.367–0.417 kesir: yan aynanın üst, aydınlık kısmı; parlaklık yüzdeliği %90)"
+  ],
+  "malzemeler": [
+   "Minber_Kundekari",
+   "Minber_Ahsap"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): minber yan aynasının ve gövdesinin sıcak kahve ahşabı. Kullanıcı kararıyla (29 Ekim 2026) fotoğrafın aydınlık yüzlerinden ölçüldü; ilk v30 değeri #241100 gece gölgesinden ölçülmüştü ve çok koyuydu."
+ },
+ "kundekari_cita": {
+  "hex": "#925A00",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/05_minber.jpg (bölge x 0.646–0.727, y 0.367–0.417 kesir; parlaklık yüzdeliği %97: ışık alan geçme çıtaları)"
+  ],
+  "malzemeler": [
+   "Minber_Kundekari"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): kündekâri geçme çıtaları. İlk v30 değeri #452A11 (gece) idi; kullanıcı kararıyla açıldı."
+ },
+ "minber_altin": {
+  "hex": "#E69925",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/05_minber.jpg (bölge x 0.754–0.84, y 0.313–0.396 kesir: köşk panolarının yaldız çerçeve çizgileri; parlaklık yüzdeliği %97)"
+  ],
+  "malzemeler": [
+   "Minber_Altin"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): minber yan aynasını ve köşkü çerçeveleyen yaldız çizgi."
+ },
+ "mukarnas_altin": {
+  "hex": "#AA7C12",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/06_mihrap.jpg (bölge x 0.45–0.55, y 0.4–0.55 kesir; parlaklık yüzdeliği %50 çevresinin ortancası)"
+  ],
+  "malzemeler": [
+   "Mihrap_Mukarnas",
+   "Avize_Pirinc"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): mihrap kavsarasının yaldızlı mukarnası. Avizelerin rengi ölçülmedi (fotoğrafta yanan ampuller); aynı rol kullanıldı."
+ },
+ "mahfil_ceviz": {
+  "hex": "#763B10",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/25_mihrap-minber.jpg (bölge x 0.875–0.89, y 0.68–0.8 kesir; parlaklık yüzdeliği %50 çevresinin ortancası)"
+  ],
+  "malzemeler": [
+   "Mahfil_Ceviz"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, iç mekân ayrıntısı (yalnız sunum GLB'si): müezzin mahfilinin ceviz direk ve korkulukları (Ürgen PDF 12: «bütün aksamı ceviz»)."
+ },
+ "levha_zemin": {
+  "hex": "#D9BEA8",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/22_hat-levha-buyuk.jpg (x 0.03–0.968, y 0.025–0.975 kesir)",
+   "eserler/ulu-cami/icerik/foto/20_hat-duvar.jpg (x 0.033–0.971, y 0.066–0.662)",
+   "eserler/ulu-cami/icerik/foto/29_ic-kubbe-paye.jpg (x 0.538–0.658, y 0.625–0.888)",
+   "eserler/ulu-cami/icerik/foto/27_ic-paye-levhalar.jpg (x 0.306–0.363, y 0.471–0.56)",
+   "eserler/ulu-cami/icerik/foto/23_minber-yandan.jpg (x 0.285–0.714, y 0.259–0.445)"
+  ],
+  "yontem": "her bölgede parlaklık yüzdeliği %60–90 arası piksellerin kanal ortancası; beş fotoğrafın kanal ortancası",
+  "malzemeler": [
+   "Levha_Hat (atlas zemini; hücre zeminleri bu tona çekilir)"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, v31 levha atlası (yalnız sunum GLB'si): levhaların krem zemini; fotoğraflar arası ışık farkını eşitlemek için ortak hedef."
+ },
+ "levha_cerceve": {
+  "hex": "#140E02",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/20_hat-duvar.jpg (bölge x 0.015–0.026, y 0.199–0.529 kesir: büyük levhanın sol çerçevesi; en koyu %12,5'in ortancası)"
+  ],
+  "malzemeler": [
+   "Levha_Hat (atlas çerçeve bloğu ve hücre kenarı)"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, v31: levhaların ince koyu çerçevesi."
+ },
+ "levha_tac": {
+  "hex": "#654433",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/27_ic-paye-levhalar.jpg (bölge x 0.011–0.178, y 0.464–0.614 kesir: soldaki paye levhasının tepeliği; zeminden 45 birim koyu piksellerin ortancası)"
+  ],
+  "malzemeler": [
+   "Levha_Hat (atlas taç yanı bloğu)"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, v31: paye levhalarının oymalı tepeliğinin kahve-altın tonu (taçların yan ve arka yüzü)."
+ },
+ "madalyon_altin": {
+  "hex": "#977B4B",
+  "kaynak": [
+   "eserler/ulu-cami/icerik/foto/29_ic-kubbe-paye.jpg (bölge x 0.159–0.229, y 0.552–0.626 kesir: madalyonun kenar halkası; halkadaki açık yarının ortancası)"
+  ],
+  "malzemeler": [
+   "Levha_Hat (atlas madalyon kenarı bloğu)"
+  ],
+  "uyeler": [
+   "ulu-cami"
+  ],
+  "not": "29 Ekim 2026, v31: yuvarlak madalyonların altın kenarı."
+ },
+ "bedesten_ic_tugla": {
+  "hex": "#6A4A25",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (piksel 1600–2250 × 200–480: sağdaki kemer aynasının tuğla dolgusu; parlaklıkça üst %40 ortancası = tuğla yüzü)"
+  ],
+  "malzemeler": [
+   "Ic_Duvar (ic_atlas tuğla)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "bedesten_ic_derz": {
+  "hex": "#1F0B00",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (aynı bölge; parlaklıkça alt %25 ortancası = derz ve gölgesi)"
+  ],
+  "malzemeler": [
+   "Ic_Duvar (ic_atlas derz)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "ic_zemin_tas": {
+  "hex": "#AA9A84",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (piksel 200–2300 × 1250–1590: salon döşemesi; ortanca)"
+  ],
+  "malzemeler": [
+   "Ic_Sokak (zemin dokusu ortası)",
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni",
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "ic_zemin_acik": {
+  "hex": "#C8B7A1",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (aynı bölge; parlaklıkça %60–90 ortancası)"
+  ],
+  "malzemeler": [
+   "Ic_Sokak (açık levhalar)",
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni",
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "ic_zemin_koyu": {
+  "hex": "#89765B",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (aynı bölge; parlaklıkça %10–40 ortancası)"
+  ],
+  "malzemeler": [
+   "Ic_Sokak (koyu levhalar)",
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni",
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "ic_zemin_derz": {
+  "hex": "#59492E",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (aynı bölge; parlaklıkça alt %6 ortancası = levha araları)"
+  ],
+  "malzemeler": [
+   "Ic_Sokak (derz)",
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni",
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "camekan_tabela": {
+  "hex": "#1B0F07",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (piksel 1790–2370 × 600–640: sağdaki dükkânın tabela bandı; ortanca, yazı dahil)"
+  ],
+  "malzemeler": [
+   "Ic_Dukkanlar (tabela ve doğrama)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "camekan_vitrin": {
+  "hex": "#83908E",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (piksel 1900–2370 × 690–900: sağdaki camekânın içi; ortanca)"
+  ],
+  "malzemeler": [
+   "Ic_Dukkanlar (cam)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "camekan_altin": {
+  "hex": "#C98D3D",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (piksel 1090–1390 × 700–820: ayak çevresindeki camekânda altın raflar; ortanca)"
+  ],
+  "malzemeler": [
+   "Ic_Dukkanlar (raf sıraları)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "camekan_taban": {
+  "hex": "#624B2D",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/icerik/foto/02_ic-kuyumcular.jpg (piksel 1100–1400 × 1060–1120: ayak camekânının alt panelleri; ortanca)"
+  ],
+  "malzemeler": [
+   "Ic_Dukkanlar (camekân alt paneli; ölçüm ayak camekânının alt panelinden)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "musluk_pirinc": {
+  "hex": "#705434",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/ref/foto/ekinci2025_pdf096_sadirvan.png (piksel 568–578 × 305–345: tasın önündeki musluk; ortanca)"
+  ],
+  "malzemeler": [
+   "Sad_Pirinc (şadırvan muslukları)"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
+ },
+ "turbe_zemin_koyu": {
+  "hex": "#6C3315",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/05_ic-tepeden.jpg (piksel 684–828 × 300–1260: batıdaki kırık taş ve mozaik döşeme; parlaklıkça %5–30 ortancası)"
+  ],
+  "malzemeler": [],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026: v06 düzeltmesinde KULLANILMIYOR (kullanıcı: sıcak ışık yüzünden çok turuncu). Döşeme ortak nötr taş rolleri ic_zemin_* ve mermer ile çizilir."
+ },
+ "turbe_zemin_orta": {
+  "hex": "#975635",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/05_ic-tepeden.jpg (aynı bölge; %35–65 ortancası)"
+  ],
+  "malzemeler": [],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026: v06 düzeltmesinde KULLANILMIYOR (kullanıcı: sıcak ışık yüzünden çok turuncu). Döşeme ortak nötr taş rolleri ic_zemin_* ve mermer ile çizilir."
+ },
+ "turbe_zemin_acik": {
+  "hex": "#C78053",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/05_ic-tepeden.jpg (aynı bölge; %70–95 ortancası)"
+  ],
+  "malzemeler": [],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026: v06 düzeltmesinde KULLANILMIYOR (kullanıcı: sıcak ışık yüzünden çok turuncu). Döşeme ortak nötr taş rolleri ic_zemin_* ve mermer ile çizilir."
+ },
+ "turbe_zemin_derz": {
+  "hex": "#4C1700",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/05_ic-tepeden.jpg (aynı bölge; alt %4 ortancası = taş araları)"
+  ],
+  "malzemeler": [],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026: v06 düzeltmesinde KULLANILMIYOR (kullanıcı: sıcak ışık yüzünden çok turuncu). Döşeme ortak nötr taş rolleri ic_zemin_* ve mermer ile çizilir."
+ },
+ "sanduka_govde": {
+  "hex": "#013C47",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/02_ic-sanduka.jpg (piksel 396–576 × 948–1032: Şehzade Abdullah sandukasının kadife yan yüzü; ortanca)"
+  ],
+  "malzemeler": [
+   "Turbe_Ic_Atlas (sanduka gövdeleri)"
+  ],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, türbe v06: iç mekân (yalnız sunum GLB'si). Fotoğraf sıcak ışıkta çekilmiş; ölçüm olduğu gibi."
+ },
+ "turbe_korkuluk": {
+  "hex": "#421706",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/05_ic-tepeden.jpg (piksel 900–1400 × 390–410: kuzeydeki ahşap korkuluk; parlaklıkça alt %30 ortancası)"
+  ],
+  "malzemeler": [
+   "Turbe_Ic_Atlas (ahşap korkuluk, kapı içi)"
+  ],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, türbe v06: iç mekân (yalnız sunum GLB'si). Fotoğraf sıcak ışıkta çekilmiş; ölçüm olduğu gibi."
+ },
+ "puside_koyu": {
+  "hex": "#351402",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/05_ic-tepeden.jpg (piksel 1008–1320 × 720–882: Orhan Gazi sandukasının puşidesi; parlaklıkça alt %50 ortancası = işlemesiz zemin)"
+  ],
+  "malzemeler": [
+   "Turbe_Ic_Atlas (Orhan Gazi puşidesi)"
+  ],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, türbe v06: iç mekân (yalnız sunum GLB'si). Fotoğraf sıcak ışıkta çekilmiş; ölçüm olduğu gibi."
+ },
+ "turbe_ic_cam": {
+  "hex": "#E7F9FF",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/02_ic-sanduka.jpg (piksel 1540–1600 × 580–800: sağdaki pencere camı, gün ışığı; parlaklıkça üst %50 ortancası)"
+  ],
+  "malzemeler": [
+   "Turbe_Ic_Atlas (iç pencere camı)"
+  ],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, türbe v06: iç mekân (yalnız sunum GLB'si). Fotoğraf sıcak ışıkta çekilmiş; ölçüm olduğu gibi."
+ },
+ "sanduka_ortu": {
+  "hex": "#013D48",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/02_ic-sanduka.jpg (piksel 380–560 × 940–1000: Şehzade Abdullah sandukasının düz kumaş örtüsü; ortanca)"
+  ],
+  "malzemeler": [
+   "Turbe_Ic_Atlas (sanduka örtüleri, düz)"
+  ],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, türbe v06 düzeltmesi (kullanıcı): örtüler desensiz düz kumaş."
+ },
+ "pirinc_sebeke": {
+  "hex": "#B2772A",
+  "kaynak": [
+   "eserler/orhan-gazi-turbesi/icerik/foto/02_ic-sanduka.jpg (piksel 1300–1600 × 850–1240: Orhan Gazi sandukasının pirinç şebekesi; sarı tonlu (R > G > B, R − B > 60) piksellerin ortancası)"
+  ],
+  "malzemeler": [
+   "Turbe_Ic_Atlas (pirinç şebeke)",
+   "Turbe_Pirinc (v06 düzeltmesi: metalik 0,5, pürüzlülük 0,35)"
+  ],
+  "uyeler": [
+   "orhan-gazi-turbesi"
+  ],
+  "not": "29 Ekim 2026, türbe v06 düzeltmesi (kullanıcı): şebeke pirinç/altın sarısı."
+ },
+ "orhan_hali": {
+  "hex": "#24707A",
+  "kaynak": [
+   "eserler/orhan-bey-kulliyesi/icerik/foto/02_ic-harim.jpg (piksel 300–1500 × 1900–2150: harim halısının zemini; ortanca. Gün ışığında, beyaz duvar #B9B5AA ölçülüyor: ışık nötre yakın)"
+  ],
+  "malzemeler": [
+   "Orhan_Hali (zemin)"
+  ],
+  "uyeler": [
+   "orhan-bey-kulliyesi"
+  ],
+  "not": "29 Ekim 2026, orhan-bey-camii v11: iç mekân (yalnız sunum GLB'si)."
+ },
+ "orhan_hali_koyu": {
+  "hex": "#021424",
+  "kaynak": [
+   "eserler/orhan-bey-kulliyesi/icerik/foto/02_ic-harim.jpg (piksel 100–1800 × 2320–2390: ön kenardaki halı bordürü; parlaklıkça alt %20 ortancası)"
+  ],
+  "malzemeler": [
+   "Orhan_Hali (saf çizgisi deseni)"
+  ],
+  "uyeler": [
+   "orhan-bey-kulliyesi"
+  ],
+  "not": "29 Ekim 2026, orhan-bey-camii v11: iç mekân (yalnız sunum GLB'si)."
+ },
+ "orhan_minber": {
+  "hex": "#574A3D",
+  "kaynak": [
+   "eserler/orhan-bey-kulliyesi/icerik/foto/02_ic-harim.jpg (piksel 1400–1560 × 1300–1600: minber merdiven korkuluğu; ortanca)"
+  ],
+  "malzemeler": [
+   "Orhan_Ic_Atlas (minber)"
+  ],
+  "uyeler": [
+   "orhan-bey-kulliyesi"
+  ],
+  "not": "29 Ekim 2026, orhan-bey-camii v11: iç mekân (yalnız sunum GLB'si)."
+ },
+ "orhan_minber_cita": {
+  "hex": "#AE9989",
+  "kaynak": [
+   "eserler/orhan-bey-kulliyesi/icerik/foto/02_ic-harim.jpg (piksel 1400–1560 × 1300–1600: minber korkuluğu; parlaklıkça %70–95 ortancası = oyma çıtaların ışık alan yüzü)"
+  ],
+  "malzemeler": [
+   "Orhan_Ic_Atlas (minber çıtaları ve korkuluk çubukları)"
+  ],
+  "uyeler": [
+   "orhan-bey-kulliyesi"
+  ],
+  "not": "29 Ekim 2026, v11 minber düzeltmesi (kullanıcı: çıtalar bir ton açık)."
  },
  "kararlar_28_ekim": {
   "emir-han.cati": "KURŞUN KALIR. Envanter (E cilt-1, envanter_c1.md s.151): «üzeri kurşunla kaplıdır; ancak bir dönem kiremitle örtüldüğü bilinmektedir». 2024 dron fotoğrafındaki gri/yeşil/mavi kaplamalar geçici ya da onarım katmanı; çatı sokaktan görünmez. Kaynak + yedi eserde tutarlılık + değişen bir kaplamaya bağlanmamak.",
@@ -275,17 +806,24 @@
   "ulu-cami": {
    "Tas_Orgusu_Hafif": "build/doku_palet_v2/Tas_Orgusu_Hafif_palet_v2.png",
    "Tas_Orgusu_Nis": "build/doku_palet_v2/Tas_Orgusu_Nis_palet_v2.png",
-   "Minare_Tugla_Derzi": "build/doku_palet_v2/Minare_Tugla_Derzi_palet_v2.png"
+   "Minare_Tugla_Derzi": "build/doku_palet_v2/Minare_Tugla_Derzi_palet_v2.png",
+   "Ic_Hali_Doku": "build/doku_ic_v30/hali.jpg",
+   "Minber_Kundekari": "build/doku_ic_v30/kundekari.jpg",
+   "Cati": "build/doku_cati_v32/kursun_ek.png",
+   "Kubbe.001": "build/doku_cati_v32/kursun_ek.png"
   },
   "yildirim-bayezid-bedesteni": {
    "Kubbe": "build/doku_palet_v2/Kubbe_palet_v2.png",
    "Bant_Cati": "build/doku_palet_v2/Bant_Cati_palet_v2.png",
-   "Duvar": "build/doku_palet_v2/Duvar_palet_v2.png"
+   "Duvar": "build/doku_palet_v2/Duvar_palet_v2.png",
+   "Ic_Duvar": "build/doku_ic_v11/ic_atlas.jpg",
+   "Ic_Zemin_Tas": "build/doku_ic_v11/zemin_tas.jpg"
   },
   "koza-han": {
    "Baca_Tugla": "build/doku_palet_v2/Baca_Tugla_palet_v2.png",
    "Disli_Tugla": "build/doku_palet_v2/Disli_Tugla_palet_v2.png",
-   "Duvar_Almasik": "build/doku_palet_v2/Duvar_Almasik_palet_v2.png"
+   "Duvar_Almasik": "build/doku_palet_v2/Duvar_Almasik_palet_v2.png",
+   "Revak_Karo": "build/doku_ic_v18/karo.jpg"
   },
   "orhan-bey-kulliyesi": {
    "Kubbe": "build/doku_palet_v2/Kubbe_palet_v2.png",
@@ -294,7 +832,10 @@
    "Kasnak": "build/doku_palet_v2/Kasnak_palet_v2.png",
    "Kirpi": "build/doku_palet_v2/Kirpi_palet_v2.png",
    "Minare": "build/doku_palet_v2/Minare_palet_v2.png",
-   "Alinlik_Baklava": "build/doku_palet_v2/Alinlik_Baklava_palet_v2.png"
+   "Alinlik_Baklava": "build/doku_palet_v2/Alinlik_Baklava_palet_v2.png",
+   "Orhan_Ic_Atlas": "build/doku_ic_v11/ic_atlas.jpg",
+   "Orhan_Ic_Atlas_Cift": "build/doku_ic_v11/ic_atlas.jpg",
+   "Orhan_Hali": "build/doku_ic_v11/hali.jpg"
   },
   "orhan-bey-hamami": {
    "Kubbe": "build/doku_palet_v2/Kubbe_palet_v2.png",
@@ -308,7 +849,8 @@
    "Kirpi_Sacak": "build/doku_palet_v2/Kirpi_Sacak_palet_v2.png"
   },
   "orhan-gazi-turbesi": {
-   "Kursun": "build/doku_palet_v2/Kursun_palet_v2.png"
+   "Kursun": "build/doku_palet_v2/Kursun_palet_v2.png",
+   "Turbe_Ic_Atlas": "build/doku_ic_v06/ic_atlas.jpg"
   }
  }
 }
