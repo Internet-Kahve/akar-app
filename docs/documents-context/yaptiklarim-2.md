@@ -819,3 +819,27 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - **Kürenin arkası:** Tuval kürenin dışında saydam; arkada sayfanın düz açık grisi görünüyordu. Artık `#harita` arka planı, 3D sahne zemininin aynı renkleri: şehir kaydından `kimlik.sahne_ust` → `sahne_alt` (#DDE4E5 → #A7B4B7), ortası açık, kenarları koyulaşan elips geçiş.
   - Neden bu renk: ISO 3664 nötr çevre ilkesi (doygun zemin kürenin renklerini kaydırır); uygulamanın açık arayüzüyle uyumlu; 3D sahneyle aynı dil; şehir değişince renk de değişir.
   - Koyu «uzay» zemini, açık panellerle çok sert kontrast yapacağı için seçilmedi.
+
+## 61. Hikâye bitince tebrik kartı (rozet), «hikâye sonrası» sayfası kalktı (test-redmi9t-v2)
+
+29 Ekim 2026, kullanıcı kararı: hikâye bitince ayrı sayfa yerine motive eden bir ödül kartı çıksın, sonra normal eser paneli gelsin; Dinle düğmesinde tamamlandı işareti olsun.
+
+- **Akış:** Hikâyenin son bölümü biter, eser detayına dönülür (normal panel) ve üstünde **tebrik kartı** açılır.
+  - Eski `#/son/<id>` adresi de esere yönlenir ve kartı açar.
+  - `hikayeSonrasi()` artık kullanılmıyor.
+- **Kart** (`tebrikGoster`), yukarıdan aşağı:
+  - × düğmesi;
+  - üstte şehir zemininde silik desen; arkada yavaşça dönen altın ışınlar; ortada 88 px rozet, «pop» animasyonuyla gelir;
+  - «✓ Hikâye tamamlandı · 12 / 12 bölüm»;
+  - başlık «Rozet kazandın: Ulucami'yi dinledin» (rozet yoksa «Ulucami'nin hikâyesini bitirdin»);
+  - rozet metni;
+  - «Ulucami'nin rozetleri k / n» ızgarası: yeni kazanılan sarı zeminli «Şimdi kazandın»; kazanılmayanlar soluk, altında koşulu («Görev: Minberin sırrı»);
+  - düğmeler: varsa «🧩 Bulmacayı çöz · N rozet daha» (ana); rotadaysa «Sonraki durak: X →»; «Devam et» (kartı kapatır);
+  - en altta «Bütün rozetlerime bak ›».
+- **Davranış:** Puan yok, ödül rozettir.
+  - Bu akışta alttaki rozet bandı çıkmaz (`rozetKontrol(e, true)`); rozeti kart gösterir.
+  - Esc, × ya da dışına dokunmak kartı kapatır; ilk düğmeye odaklanır.
+  - Hareket azaltılmışsa ışın ve pop animasyonu yok.
+- **Tamamlandı işareti:** Hikâyesi biten eserde iki düğmenin sağ üst köşesinde yeşil ✓ rozeti (22 px, `--trust-verified`, beyaz çerçeve) çıkar: eser panelindeki ve mobil karttaki «Dinle», haritadaki kısa karttaki «Hikâyeyi başlat». Kısa karttaki düğmenin yazısı da «Yeniden dinle» olur.
+- Sınama (Playwright, masaüstü ve mobil): Oku kipinde 12 bölüm ilerletildi. Kart açıldı, rozet 1/3 kazanıldı; Esc ile kapandı; panelde Dinle ✓; hata yok.
+- **Figma:** «D · Hikâye sonrası» (1:2991) ve «WF · Eser / Hikâye sonrası» (1:6925) bu karta göre güncellenmeli.

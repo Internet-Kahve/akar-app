@@ -792,7 +792,7 @@ function eserKartiCiz() {
   const e = durum.secili && ESER[durum.secili], acik = e && !location.hash.slice(2);
   const ic2 = e ? `<div class="kart-ust" data-detay="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta">${esc(meta(e))}</div>${guven('Doğrulanmış')}</div><button class="kapat" data-kapat aria-label="Kapat">${ic('x', 18)}</button></div>`
     + (durum.masaustu ? `<p>${esc(e.kisa)}</p>` : '')
-    + `<div class="kart-alt"><button class="btn ana" data-baslat="${e.id}" ${e.hikaye.length ? '' : 'disabled'}>${ic('headphones')}${e.hikaye.length ? `Hikâyeyi başlat · ${e.sure} dk` : 'Hikâye hazırlanıyor'}</button><button class="ikon-btn" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('bookmark-plus')}</button></div>` : '';
+    + `<div class="kart-alt"><button class="btn ana${bittiMi(e.id) ? ' bitti' : ''}" data-baslat="${e.id}" ${e.hikaye.length ? '' : 'disabled'}>${ic('headphones')}${e.hikaye.length ? `${bittiMi(e.id) ? 'Yeniden dinle' : 'Hikâyeyi başlat'} · ${e.sure} dk` : 'Hikâye hazırlanıyor'}${bittiMi(e.id) ? `<span class="bitti-tik" title="Hikâye tamamlandı">${ic('check', 12)}</span>` : ''}</button><button class="ikon-btn" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('bookmark-plus')}</button></div>` : '';
   if (durum.masaustu) { pop.hidden = !acik; pop.innerHTML = ic2; kartEl.hidden = true; popKonum(); }
   else { kartEl.hidden = !acik; kartEl.innerHTML = ic2; pop.hidden = true; if (!location.hash.slice(2)) { alt.hidden = !!acik; if (!acik) altYukseklik(durum.altH || 'kapali'); } }
 }
@@ -820,7 +820,8 @@ function galeriHTML(e) {
 }
 function eserBilgi(e, masaustu) {
   const sd = sonrakiDurak(e);
-  const dugme = e.hikaye.length ? `<div class="dugmeler"><button class="btn ana" data-anlat="dinle">${ic('headphones')}Dinle · ${e.sure} dk</button><button class="btn ikincil" data-anlat="oku">${ic('book-open')}Oku</button></div>` : '<p class="soluk">Bu eserin hikâyesi henüz hazırlanmadı.</p>';
+  const bitti = bittiMi(e.id), tik = bitti ? `<span class="bitti-tik" title="Hikâye tamamlandı">${ic('check', 12)}</span>` : '';   // hikâye bittiyse Dinle düğmesinin köşesinde ✓
+  const dugme = e.hikaye.length ? `<div class="dugmeler"><button class="btn ana${bitti ? ' bitti' : ''}" data-anlat="dinle" ${bitti ? 'aria-label="Dinle, hikâye tamamlandı"' : ''}>${ic('headphones')}Dinle · ${e.sure} dk${tik}</button><button class="btn ikincil" data-anlat="oku">${ic('book-open')}Oku</button></div>` : '<p class="soluk">Bu eserin hikâyesi henüz hazırlanmadı.</p>';
   const hik = e.hikaye.length ? `<div class="soluk" style="font-size:13px">Yapının hikâyesi · ${e.hikaye.length} bölüm</div>` : '';
   const sonraki = sd ? `<button class="btn cerceve tam" style="margin-top:12px" data-git="#/eser/${sd.id}" data-rotada>Sonraki durak: ${esc(sd.ad)} ${ic('arrow-right', 16)}</button>` : '';
   const gecmis = `<button class="gg-link" data-git="#/gecmis/${e.id}">${ic('history', 16)}Geçmişi Gör · ${e.gecmis.length ? `${e.gecmis.length} eski fotoğraf` : 'eski görüntü henüz yok'} ›</button>`;
@@ -1122,13 +1123,51 @@ document.addEventListener('keydown', (e) => {
 });
 if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {};
 
+/* 29 Ekim 2026 (kullanıcı kararı): hikâye bitince ayrı «hikâye sonrası» sayfası yerine eser detayına dönülür ve üstünde
+   tebrik kartı açılır: kazanılan rozet, eserin bütün rozetleri (kazanılmayanlar soluk, koşuluyla) ve bir sonraki rozete giden yol.
+   Puan yok; ödül rozettir. Kart kapanınca normal eser paneli; Dinle düğmesinde ✓ işareti hikâyenin bittiğini gösterir. */
 function hikayeBitti() {
-  const e = anlat.eser; anlatDur(); yerel('akar.ilerleme.' + e.id, '0'); yerel('akar.bitti.' + e.id, '1'); rozetKontrol(e);
+  const e = anlat.eser; anlatDur(); yerel('akar.ilerleme.' + e.id, '0'); yerel('akar.bitti.' + e.id, '1');
+  const yeni = rozetKontrol(e, true);
   harita.getSource('eserler')?.setData(eserNoktalari());
   const r = JSON.parse(yerel('akar.rota') || 'null'), i = ROTA.duraklar.indexOf(e.id);
   if (r && i >= 0) yerel('akar.rota', JSON.stringify({ i:Math.min(i + 1, ROTA.duraklar.length - 1) }));
-  location.hash = '#/son/' + e.id;
+  durum.tebrik = { id:e.id, yeni };
+  location.hash = '#/eser/' + e.id;
 }
+function tebrikGoster() {
+  const t = durum.tebrik; durum.tebrik = null; if (!t) return;
+  const e = ESER[t.id]; if (!e) return;
+  const rozetler = e.rozetler || [], kazanilan = rozetler.filter(rozetVar).length;
+  const ana = t.yeni[0];   // hikâye rozeti (varsa)
+  const sd = sonrakiDurak(e), gorevKalan = (e.gorevler || []).filter((g) => !gorevDurum(g)).length;
+  const rozetSira = rozetler.map((r) => { const v = rozetVar(r); return `<li class="${v ? '' : 'yok'}${t.yeni.includes(r) ? ' yeni' : ''}">${rozetIkon(v, 44)}<b>${esc(r.ad)}</b><small>${v ? (t.yeni.includes(r) ? 'Şimdi kazandın' : 'Kazanıldı') : esc(kosulMetni({ ...r, eser:e }))}</small></li>`; }).join('');
+  const dugmeler = [
+    gorevKalan ? `<button class="btn ana tam" data-tebrik-git="#/gorev/${e.id}">${ic('puzzle', 18)}Bulmacayı çöz · ${gorevKalan} rozet daha</button>` : '',
+    sd ? `<button class="btn ${gorevKalan ? 'cerceve' : 'ana'} tam" data-tebrik-git="#/eser/${sd.id}" data-rotada>Sonraki durak: ${esc(sd.ad)} ${ic('arrow-right', 16)}</button>` : '',
+    `<button class="btn ${gorevKalan || sd ? 'ikincil' : 'ana'} tam" data-tebrik-kapat>Devam et</button>`,
+  ].join('');
+  let k = $('#tebrik');
+  if (!k) { k = document.createElement('div'); k.id = 'tebrik'; k.className = 'tebrik-arka'; document.body.appendChild(k); }
+  k.innerHTML = `<section class="tebrik" role="dialog" aria-modal="true" aria-labelledby="tb-baslik">
+    <button class="yuvarlak tb-kapat" data-tebrik-kapat aria-label="Kapat">${ic('x', 18)}</button>
+    <div class="tb-sahne desenli-zemin"><div class="tb-isin" aria-hidden="true"></div><div class="tb-rozet">${rozetIkon(true, 88)}</div></div>
+    <span class="sayac">${ic('check', 14)} Hikâye tamamlandı · ${e.hikaye.length} / ${e.hikaye.length} bölüm</span>
+    <h2 id="tb-baslik" class="tb-baslik">${ana ? `Rozet kazandın: ${esc(ana.ad)}` : `${esc(ilgi(e.ad))} hikâyesini bitirdin`}</h2>
+    <p class="tb-metin soluk">${esc(ana ? ana.metin : 'Hikâyeyi sonuna kadar dinledin ya da okudun.')}</p>
+    ${rozetler.length ? `<div class="tb-rozetler"><div class="tb-rozet-bas"><b>${esc(ilgi(e.ad))} rozetleri</b><span class="sayac">${kazanilan} / ${rozetler.length}</span></div><ul>${rozetSira}</ul></div>` : ''}
+    <div class="tb-dugmeler">${dugmeler}</div>
+    <button class="metin-btn tb-profil" data-tebrik-git="#/profil">Bütün rozetlerime bak ›</button>
+  </section>`;
+  k.hidden = false; requestAnimationFrame(() => k.classList.add('acik'));
+  setTimeout(() => k.querySelector('.tb-dugmeler .btn')?.focus({ preventScroll:true }), 300);
+}
+function tebrikKapat() { const k = $('#tebrik'); if (!k || k.hidden) return; k.classList.remove('acik'); setTimeout(() => { k.hidden = true; k.innerHTML = ''; }, 200); }
+document.addEventListener('click', (e) => {
+  const g = e.target.closest('[data-tebrik-git]'); if (g) { if (g.hasAttribute('data-rotada')) durum.rotada = true; tebrikKapat(); location.hash = g.dataset.tebrikGit; return; }
+  if (e.target.closest('[data-tebrik-kapat]') || e.target.id === 'tebrik') tebrikKapat();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#tebrik') && !$('#tebrik').hidden) { e.stopImmediatePropagation(); tebrikKapat(); } }, true);
 function hikayeSonrasi(id) {
   const e = ESER[id]; durum.secili = id; rotaKaldir(); const sd = sonrakiDurak(e);
   const govde = `<div style="text-align:center;padding-top:6px"><span class="sayac">Hikâye tamamlandı</span><h1 class="panel-baslik" style="margin-top:10px">${esc(e.ad)}</h1><div class="panel-meta">${e.hikaye.length} / ${e.hikaye.length} bölüm · tamamlandı</div></div>${SUSLEME}
@@ -1711,13 +1750,15 @@ const rozetIkon = (var_, boy = 32) => `<svg class="rozet-ik${var_ ? '' : ' yok'}
 const kosulMetni = (r) => (r.kosul?.hikaye_bitti ? 'Hikâyeyi sonuna kadar dinle ya da oku.' : `Görev: ${r.eser.gorevler.find((g) => g.id === r.kosul?.gorev)?.baslik || ''}`);
 const gv = { eser:null, i:0, secim:null, ipucu:0, sonuc:null, bul:null, sifirla:false };
 
-function rozetKontrol(e) {
+function rozetKontrol(e, sessiz = false) {   // yeni kazanılan rozetleri döndürür; sessiz: alttaki bant çıkmaz (tebrik kartı gösterir)
+  const yeni = [];
   for (const r of e.rozetler || []) {
     if (rozetVar(r)) continue;
     const k = r.kosul || {};
     const tamam = (k.hikaye_bitti && bittiMi(e.id)) || (k.gorev && gorevDurum({ id:k.gorev }));
-    if (tamam) { yerel('akar.rozet.' + r.id, new Date().toISOString()); rozetBildir(r); }
+    if (tamam) { yerel('akar.rozet.' + r.id, new Date().toISOString()); yeni.push(r); if (!sessiz) rozetBildir(r); }
   }
+  return yeni;
 }
 let rozetSira = [], rozetZ = 0;
 function rozetBildir(r) {
@@ -1895,11 +1936,11 @@ function yonlendir() {
   if (!['gecmis', 'kamera', 'cekildi'].includes(ad)) { ggTemizle(); gg.eser = null; } else if (ad !== 'kamera') kameraKapat();
   if (!durum.masaustu && ad !== 'rota' && ['rota'].includes(durum.altH)) altYukseklik('kapali');
   switch (ad) {
-    case 'eser': eserDetay(id); return gorevBulGoster();
+    case 'eser': eserDetay(id); if (durum.tebrik?.id === id) setTimeout(tebrikGoster, 350); return gorevBulGoster();
     case 'gorev': return gorevSayfa(id, mod);
     case 'profil': return profilSayfa();
     case 'anlat': return anlatim(id, mod === 'oku' ? 'oku' : 'dinle');
-    case 'son': return hikayeSonrasi(id);
+    case 'son': durum.tebrik = { id, yeni:[] }; return location.replace('#/eser/' + id);   // eski «hikâye sonrası» adresi: eser + tebrik kartı
     case 'hakkinda': return hakkinda(id);
     case 'gecmis': return gecmisSayfa(id, mod);
     case 'kamera': return kameraSayfa(id, mod);

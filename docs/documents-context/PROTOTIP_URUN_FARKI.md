@@ -77,11 +77,13 @@
 | Klavye | Boşluk / ↓ ileri ya da oynat; ↑ geri; Esc çık. | denetlenmedi |
 | Kaldığı yerden | Hikâye son dinlenen bölümden açılır; ses Android'de takılırsa süre tahminiyle ilerler. | denetlenmedi |
 
-## 5. Hikâye sonrası
+## 5. Hikâye sonrası: tebrik kartı
 
 | Öğe | Prototip | Ürün |
 |---|---|---|
-| Ekran | Ortalı: «Hikâye tamamlandı» hapı, serif ad, «12 / 12 bölüm · tamamlandı», süsleme. Altında satır bağlantıları: Eser hakkında; Geçmişi Gör («Eski hâlini gör»); Bulmaca (N görev · k tamam); Hikâyeyi yeniden (Dinle · Oku). <br>• Rotadaysa ana düğme «Sonraki durak: X →»; rota bittiyse «Rota tamamlandı · Rotaya dön». <br>• En altta «Haritaya dön». <br>• **m:** üstte kapak fotoğrafı, altta kutu. **M:** panelde; sağda sahne. <br>• Hikâye bitince haritadaki pin ✓ olur ve rozet denetlenir. | farklı: toast «Hikâye tamamlandı.» ve detaya dönüş |
+| Akış | Son bölüm biter, **eser detayına dönülür** (normal panel) ve üstünde **tebrik kartı** açılır. Ayrı «hikâye sonrası» sayfası yok (29 Ekim kararı). | farklı: toast «Hikâye tamamlandı.» ve detaya dönüş |
+| Kart | Ortada modal (en çok 440 px; arkası karartılır), sağ üstte ×. <br>• Üstte 168 px sahne: şehir zemini, silik desen, yavaşça dönen altın ışınlar, ortada 88 px rozet («pop» ile gelir). <br>• «✓ Hikâye tamamlandı · 12 / 12 bölüm» hapı. <br>• Başlık (serif 26): «Rozet kazandın: Ulucami'yi dinledin». <br>• Rozet metni. <br>• **«Ulucami'nin rozetleri k / n»** ızgarası: yeni kazanılan sarı zeminli «Şimdi kazandın»; kazanılmayanlar soluk, altında koşulu. <br>• Düğmeler (alt alta, tam genişlik): «🧩 Bulmacayı çöz · N rozet daha» (ana, görev kaldıysa); «Sonraki durak: X →» (rotadaysa); «Devam et» (kapatır). <br>• «Bütün rozetlerime bak ›». <br>• Esc / × / dışına dokunma kapatır. Puan yok; ödül rozettir. Bu akışta alt rozet bandı çıkmaz. | yok |
+| Tamamlandı işareti | Hikâyesi biten eserde iki düğmenin **sağ üst köşesinde yeşil ✓** (22 px daire, beyaz çerçeve): <br>• «Dinle» (eser paneli, mobil kart); <br>• «Hikâyeyi başlat» (kısa kart); yazısı da «Yeniden dinle» olur. <br>Haritadaki pin de ✓ olur. | farklı: «Ziyaret edildi» / okundu bilgisi var, düğmede işaret yok |
 
 ## 6. Eser hakkında
 

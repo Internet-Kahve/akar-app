@@ -845,3 +845,31 @@ body.d #gv-bul{top:84px}
 body.sehir-modu .sehir-isaret{display:inline-flex}
 body.sehir-cok-uzak .sehir-isaret:not(.hazir){padding:0;background:none;border:0;box-shadow:none}
 body.sehir-cok-uzak .sehir-isaret:not(.hazir) b,body.sehir-cok-uzak .sehir-isaret:not(.hazir) small{display:none}
+
+/* 29 Ekim 2026 · hikâye bitince tebrik kartı (rozet) ve Dinle düğmesinde ✓ */
+.btn.bitti{position:relative}
+.bitti-tik{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--trust-verified);color:#fff;border:2px solid var(--surface);box-shadow:0 1px 3px rgba(20,27,43,.25)}
+.tebrik-arka{position:fixed;inset:0;z-index:70;background:rgba(20,27,43,.5);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity var(--sure-2)}
+.tebrik-arka.acik{opacity:1}
+.tebrik{position:relative;width:min(440px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--surface);border-radius:20px;padding:0 24px 20px;text-align:center;box-shadow:0 16px 48px rgba(20,27,43,.3);transform:translateY(16px) scale(.97);transition:transform var(--sure-3) var(--egri)}
+.tebrik-arka.acik .tebrik{transform:none}
+.tb-kapat{position:absolute;top:12px;right:12px;z-index:2}
+.tb-sahne{position:relative;margin:0 -24px 14px;height:168px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(180deg,var(--sahne-ust,#DDE4E5),#fff)}
+.tb-isin{position:absolute;width:420px;height:420px;border-radius:50%;background:repeating-conic-gradient(rgba(201,161,59,.16) 0 9deg,transparent 9deg 22.5deg);animation:tb-don 18s linear infinite}
+@keyframes tb-don{to{transform:rotate(360deg)}}
+.tb-rozet{position:relative;filter:drop-shadow(0 6px 14px rgba(138,106,22,.35));animation:tb-pop .7s var(--egri) both .15s}
+@keyframes tb-pop{0%{transform:scale(.3) rotate(-25deg);opacity:0}70%{transform:scale(1.12) rotate(4deg);opacity:1}100%{transform:none}}
+.tebrik .sayac{display:inline-flex;align-items:center;gap:4px}
+.tb-baslik{margin:10px 0 4px;font:600 26px/32px var(--font-display);font-variant-numeric:lining-nums}
+.tb-metin{margin:0 0 16px}
+.tb-rozetler{border:1px solid var(--border);border-radius:16px;padding:12px 12px 6px;margin-bottom:16px;text-align:left}
+.tb-rozet-bas{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tb-rozetler ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px}
+.tb-rozetler li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:8px 4px;border-radius:12px}
+.tb-rozetler li.yeni{background:#FFF7DD}
+.tb-rozetler li b{font:600 13px/17px var(--font)}
+.tb-rozetler li small{font-size:11px;line-height:14px;color:var(--text-muted)}
+.tb-rozetler li.yok b{color:var(--text-muted)}
+.tb-dugmeler{display:grid;gap:8px}
+.tb-profil{margin-top:10px}
+@media (prefers-reduced-motion:reduce){.tb-isin,.tb-rozet{animation:none}}
