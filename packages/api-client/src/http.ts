@@ -126,6 +126,8 @@ interface MediaDto {
   parts: string[];
   /** Triangle count of a model; absent on older API versions. */
   triangles?: number | null;
+  /** "İçini göster" groups of a model; absent on older API versions. */
+  coverGroups?: string[][];
 }
 interface SiteSummaryDto {
   id: string;
@@ -164,6 +166,8 @@ interface SiteDetailDto {
     showCard: boolean | null;
     highlights: string[];
     camera: CameraPose | null;
+    /** Absent on older API versions. */
+    interior?: boolean;
     /** Server-side only fields the domain does not carry; kept as they are on a story save. */
     cardId?: string | null;
     audioMediaId?: string | null;
@@ -321,6 +325,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     trust: s.trust,
     highlights: s.highlights,
     ...(present(s.camera) && { camera: s.camera }),
+    ...(s.interior && { interior: true }),
     ...(present(s.textEn) && { textEn: s.textEn }),
     ...(present(s.photoId) && { photoId: s.photoId }),
     ...(present(s.sourceId) && { sourceId: s.sourceId }),
@@ -408,6 +413,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         parts: model.parts,
         trust: model.trust,
         triangles: model.triangles ?? null,
+        ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
         placement: d.placement ?? null,
       },
     }),
@@ -1484,6 +1490,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               highlights: s.highlights ?? [],
               cardId: k?.cardId ?? null,
               camera: s.camera ?? null,
+              interior: s.interior ?? false,
               audioMediaId: k?.audioMediaId ?? null,
               audioEnMediaId: k?.audioEnMediaId ?? null,
             };

@@ -64,6 +64,8 @@ export interface SiteModel {
   trust: Trust;
   /** Triangle count the server counted on upload; `null` or absent when unknown. */
   triangles?: number | null;
+  /** "İçini göster": part-name groups lifted top to bottom (first group first); absent or empty = no button. */
+  coverGroups?: string[][];
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
 }
@@ -91,6 +93,8 @@ export interface StoryBlock {
   highlights?: string[];
   /** Absent = keep the previous sentence's view. */
   camera?: CameraPose;
+  /** "İç mekân (3D)": the model's cover groups lift for this sentence. */
+  interior?: boolean;
 }
 export interface HistoryImage {
   id: string;

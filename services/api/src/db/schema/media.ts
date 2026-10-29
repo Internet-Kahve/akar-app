@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, index, integer, jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { sources } from "./catalog.ts";
 import { mediaKindEnum, timestamps, trustEnum } from "./shared.ts";
 
@@ -29,6 +29,8 @@ export const media = pgTable(
     triangles: integer("triangles"),
     /** 3D model part names that story highlights may reference (kind = model). */
     parts: text("parts").array().notNull().default(sql`'{}'::text[]`),
+    /** "İçini göster" (kind = model): part-name groups lifted top to bottom, first group first; empty = no button. */
+    coverGroups: jsonb("cover_groups").$type<string[][]>().notNull().default(sql`'[]'::jsonb`),
     /** Background GLB part extraction state (kind = model). */
     partsStatus: partsStatusEnum("parts_status").notNull().default("none"),
     /** Bucket-relative object key; null for external/seed URLs. */

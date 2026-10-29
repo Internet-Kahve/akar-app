@@ -60,6 +60,7 @@ export function Scene({
   live = false,
   photoId,
   pose,
+  interior,
   onHotspot,
 }: {
   site: HeritageSite;
@@ -68,6 +69,8 @@ export function Scene({
   photoId?: string;
   /** Story sentence's camera view; the model stays mounted while it changes. */
   pose?: CameraPose;
+  /** Story sentence's "İç mekân (3D)": lift the model's cover groups. */
+  interior?: boolean;
   onHotspot: (id: string) => void;
 }) {
   // A model site opens on the model, also in the story (its camera follows the sentences).
@@ -109,6 +112,7 @@ export function Scene({
               model={site.model}
               name={site.name}
               pose={pose}
+              interior={interior}
             />
             <div className="scene-photo-credit">
               Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için

@@ -837,10 +837,10 @@ test("a full editor save goes through the step endpoints in reference order: new
   let model = "glb";
   let upload = 0;
   const camera = { target: null, azimuthDeg: 10, elevationDeg: 20, distance: 0.6 };
-  // The camera travels in the public detail and comes back unchanged through the domain site.
+  // The camera and the interior flag travel in the public detail and come back unchanged through the domain site.
   const published = () => {
     const site = siteA();
-    return { ...site, sources: [source1], stories: site.stories.map((s) => ({ ...s, camera })) };
+    return { ...site, sources: [source1], stories: site.stories.map((s) => ({ ...s, camera, interior: true })) };
   };
   const admin = () => {
     const base = published();
@@ -1048,6 +1048,7 @@ test("a full editor save goes through the step endpoints in reference order: new
               highlights: ["minare"],
               cardId: "card-1",
               camera: { target: null, azimuthDeg: 10, elevationDeg: 20, distance: 0.6 },
+              interior: true,
               audioMediaId: "voice",
               audioEnMediaId: null,
             },
@@ -1064,6 +1065,7 @@ test("a full editor save goes through the step endpoints in reference order: new
               highlights: [],
               cardId: null,
               camera: null,
+              interior: false,
               audioMediaId: null,
               audioEnMediaId: null,
             },
