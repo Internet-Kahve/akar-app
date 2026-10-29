@@ -13,6 +13,8 @@
 - rota rozeti;
 - anılar.
 
+**Ekran ekran tam liste:** her ekranda hangi düğmenin nerede olduğu, ne yaptığı ve üründe bugün ne olduğu → [`PROTOTIP_URUN_FARKI.md`](PROTOTIP_URUN_FARKI.md).
+
 **Ana referans Ulucami.** Ulucami bütün özellikleriyle neredeyse hazır:
 - hikâye ve kamera;
 - parça kartları;
