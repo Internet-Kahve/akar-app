@@ -37,11 +37,7 @@ Notlar:
 
 ## 2. Tasarım
 
-- [ ] **Figma güncellemesi** (prototipte yapıldı, Figma'da eski):
-  - 3D eser sahnesi zemini: Bursa tonuna çalan gri geçiş (#DDE4E5 → #A7B4B7)
-  - Eser hakkında: geri düğmesi kapağın sol üst köşesinde; aşağıda sekme çubuğunda «‹ Ulucami»; sekme şeridinde solma + ‹ › okları; bölüm başlığı fotoğraftan önce; alıntı üstündeki altın süs yok; fotoğraflar kırpılmadan (kendi oranında); fotoğraf şeridinde «1 / 4» sayacı ve oklar; «büyüt» simgesi; kapakta akşam fotoğrafı (envanter s.19)
-  - Galeri fotoğrafları tıklanır (ışık kutusu)
-  - Harita: filtre «Ticari (akar)», boş filtreler gizli, listede «3D» etiketi yok
+- [x] **Figma güncellemesi** (29 Ekim, `_promptlar/PROMPT_figma_guncelle_29ekim.md`): dokuz madde işlendi, Claude ekran görüntülerinden kontrol etti. Kalan küçük düzeltmeler (mobil geri düğmesi, sekme solması, lejant) ikinci prompt'la verildi.
 - [ ] **3D eser ekranı, masaüstünde sol panelin alt yarısı boş** (karar bekliyor): kısa künye (yaptıran, malzeme, envanter sayfası) ya da «İçini göster / parçalara dokun» ipucu.
 - [ ] **Pin çakışması:** düzeltildi (etiket yer bulamazsa öbür yana geçer, önemli eser önce çizilir, yakında pin küçülür) ama **etiketler test ortamında çizilemedi** (yazı tipi indirilemiyor). Gerçek haritada ve Redmi'de bak.
 - [ ] **Diğer eserlerin kapak fotoğrafı:** `eser.json → hakkinda_kapak` yalnız Ulucami'de (envanterdeki açılış fotoğrafı). Diğer 6 eser için envanterdeki açılış fotoğrafı bulunup yazılmalı.
