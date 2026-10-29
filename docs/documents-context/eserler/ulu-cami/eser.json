@@ -1,0 +1,19 @@
+{
+  "_aciklama": "Eserin kimlik kaydı (28 Ekim 2026). Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. Sıra: listede ve haritada varsayılan sıra.",
+  "id": "ulu-cami",
+  "sira": 1,
+  "ad": "Ulucami",
+  "yil": "1399",
+  "yaptiran": "Yıldırım Bayezid",
+  "tur": "Cami",
+  "ikon": "cami",
+  "rol": "dini",
+  "kisa": "Yıldırım Bayezid’in 1399’da yaptırdığı, yirmi kubbeli cami.",
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "lat": 40.183929,
+  "lon": 29.061759,
+  "hakkinda_kapak": "19_minareler-aksam.jpg",
+  "_hakkinda_kapak": "«Eser hakkında» kapak fotoğrafı (fotograflar.md dosya adı): envanterde Ulucami kaydının açılış fotoğrafı, E cilt-1 PDF s.19 (arşiv DJI_20241205174916_0088_D_ODAK.jpg). Yoksa galerinin ilk fotoğrafı.",
+  "_kaynak": "Kimlik: E cilt-1 PDF s.19–20. İlçe: E cilt-1 PDF s.19. Konum: OSM merkezi (veri/bursa/osm_secilen.csv; 20 Ekim 2026)."
+}

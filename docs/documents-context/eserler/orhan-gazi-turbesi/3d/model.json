@@ -1,0 +1,10 @@
+{
+  "_aciklama": "3D model ayarı (28 Ekim 2026). glb: export/ içindeki dosya adı (uzantısız; _sunum otomatik). yaw: Haritada kuzeye göre dönüş (derece). OSM yön açısı 90°'ye indirgendiği için 180° belirsizdir; Ulucami 22 Ekim'de 174 yapıldı. ana_parca: Haritada modeli konuma oturtmak için ortası alınan parça; avlu, şadırvan gibi ek yapılar kutuyu kaydırmaz. Boşsa bütün modelin kutusu kullanılır. kaydirma_m: 22 Ekim 2026: modelin ana gövdesi tepeden OSM bina sınırlarıyla karşılaştırılıp metre cinsinden kaydırıldı (doğu, kuzey). Pin de bu noktaya oturur.",
+  "glb": "orhan-gazi-turbesi_v05",
+  "yaw": 2,
+  "ana_parca": "Govde",
+  "kaydirma_m": {
+    "dogu": -1.8,
+    "kuzey": -1.1
+  }
+}

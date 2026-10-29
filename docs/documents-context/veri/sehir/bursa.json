@@ -1,0 +1,38 @@
+{
+  "_aciklama": "Şehir kaydı (28 Ekim 2026). Prototipte harita açılış noktası ve şehir düzeyindeki künyeler buradan gelir; yeni şehir = yeni dosya. varsayilan: harita bu şehirde açılır. envanter_*: küre görünümündeki şehir işareti için.",
+  "id": "bursa",
+  "ad": "Bursa",
+  "varsayilan": true,
+  "merkez": [
+    29.0628,
+    40.1846
+  ],
+  "zoom": 16.3,
+  "zoom_masaustu": 16.7,
+  "foto_kunye": "Fotoğraf: Bursa Vakıf Eserleri Envanteri",
+  "kaynakca": "Bursa Vakıf Eserleri Envanteri, Cilt 1–2 (Vakıf Katılım, 2026).",
+  "envanter_adi": "Bursa Vakıf Eserleri Envanteri",
+  "envanter_yayinci": "Vakıf Katılım, 2026",
+  "envanter_yili": 2025,
+  "envanter_eser_sayisi": 385,
+  "_kaynak": "KÖK&KOD Vakıf Eserleri Envanter Projesi Bilgi Notu (hackathon/KOKKOD_Envanter_Projesi_Bilgi_Notu.pdf): şehir, envanter yılı ve belgelenen eser sayısı.",
+  "kimlik": {
+    "zemin": "#22566E",
+    "desen_renk": "#A4D8E0",
+    "desen": "desen-bursa-sekiz-yildiz.svg",
+    "sahne_ust": "#DDE4E5",
+    "sahne_alt": "#A7B4B7",
+    "_sahne_not": "3D eser sahnesinin zemini (28 Ekim 2026): yukarıdan aşağı geçiş; Bursa tonuna hafif çalan nötr gri. ISO 3664 nötr çevre ilkesi: doygun zemin model renklerini kaydırır, bu yüzden düşük doygunluk; alt ton koyu ki kaide zeminden ayrılsın.",
+    "_not": "tokens.css --sehir-bursa-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
+  },
+  "harita_isik": {
+    "ortam": 2,
+    "gunes": 1,
+    "dolgu": 1,
+    "yon": 315,
+    "yukseklik": 45,
+    "doygunluk": 1.25,
+    "yer_golgesi": 0.18
+  },
+  "_harita_isik_not": "Haritadaki 3D eserlerin ışığı (29 Ekim 2026): design/harita/akar-harita-onizleme-v3.html «Pişmiş» hazır ayarı, kullanıcının seçimi. ortam = HemisphereLight, gunes/dolgu = yönlü ışıklar, yon = kuzeyden saat yönüne derece, yukseklik = güneşin ufuktan açısı, doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Gölge ve köşe kararması (AO) modellerde pişmiş."
+}

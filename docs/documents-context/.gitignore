@@ -58,3 +58,19 @@ hackathon/
 
 # Redmi prototipi: küçültülmüş fotoğraf önbelleği (hazirla.py üretir)
 design/test-redmi9t/.onbellek/
+design/test-redmi9t-v2/.onbellek/
+# Geçmişi Gör eşleştirme kontrol sayfaları (yalnız gözle kontrol için, 28 Ekim 2026)
+eserler/*/gecmisi-gor/kontrol/
+
+# --- 29 Ekim 2026: repoya girmeyecek ara çıktılar (diskte kalabilir) ---
+# Harita önizlemesinin model paketi: modelleri-gom.py her an yeniden üretir (3,7 MB, base64 GLB)
+design/harita/akar-harita-modeller.js
+# Fotoğraf rengi denemesinin (28 Ekim, kullanıcı reddetti) doku PNG'leri ve GLB'leri
+eserler/*/3d/export/doku/
+eserler/ulu-cami/3d/export/ulu-cami_v28*.glb
+eserler/yildirim-bayezid-bedesteni/3d/export/bedesten_v07*.glb
+eserler/koza-han/3d/export/koza-han_v15*.glb
+eserler/orhan-bey-kulliyesi/3d/export/orhan-bey-camii_v08*.glb
+eserler/orhan-bey-hamami/3d/export/orhan-bey-hamami_v06*.glb
+eserler/emir-han/3d/export/emir-hani_v06*.glb
+eserler/orhan-gazi-turbesi/3d/export/orhan-gazi-turbesi_v03*.glb

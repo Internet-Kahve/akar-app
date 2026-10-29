@@ -1,0 +1,10 @@
+{
+ "_aciklama": "renk_ao.py ayarı: eser → son sürüm (girdi) ve yeni sürüm. atlas: AO dokusu (px). ao_m: pişirmede AO mesafesi (m; dünya ışık ayarı). Yollar eserler/<eser>/3d/ altına göre.",
+ "ulu-cami":                   {"ad": "ulu-cami",           "eski": "v27", "yeni": "v28", "atlas": 2048, "ao_m": 2.5},
+ "yildirim-bayezid-bedesteni": {"ad": "bedesten",           "eski": "v06", "yeni": "v07", "atlas": 1024, "ao_m": 2.0},
+ "koza-han":                   {"ad": "koza-han",           "eski": "v14", "yeni": "v15", "atlas": 1024, "ao_m": 2.0},
+ "orhan-bey-kulliyesi":        {"ad": "orhan-bey-camii",    "eski": "v07", "yeni": "v08", "atlas": 1024, "ao_m": 2.0},
+ "orhan-bey-hamami":           {"ad": "orhan-bey-hamami",   "eski": "v05", "yeni": "v06", "atlas": 1024, "ao_m": 2.0},
+ "emir-han":                   {"ad": "emir-hani",          "eski": "v05", "yeni": "v06", "atlas": 1024, "ao_m": 2.0},
+ "orhan-gazi-turbesi":         {"ad": "orhan-gazi-turbesi", "eski": "v02", "yeni": "v03", "atlas": 1024, "ao_m": 1.5}
+}

@@ -77,7 +77,7 @@ const mediaRow = (id: string, kind: MediaInsert["kind"], over: Partial<MediaInse
   trust: "representative",
   ...over,
 });
-const pose = { label: "Giriş", azimuthDeg: 45, elevationDeg: 20, distanceM: 30 };
+const pose = { label: "Giriş", target: null, azimuthDeg: 45, elevationDeg: 20, distance: 0.6 };
 
 /**
  * Content the domain model cannot express (periods, audio, cards, sections, archive images). Matrix:
@@ -390,8 +390,8 @@ test("cities count only published sites and routes", async () => {
   const { body } = await get<{ items: { id: string; name: string; siteCount: number; routeCount: number }[] }>("/v1/cities");
   // Bursa also holds the draft site `taslak` and the draft route `taslak-rota`.
   assert.deepEqual(body.items, [
-    { id: "bursa", name: "Bursa", siteCount: 6, routeCount: 1 },
-    { id: "izmir", name: "İzmir", siteCount: 1, routeCount: 0 },
+    { id: "bursa", name: "Bursa", siteCount: 6, routeCount: 1, scene: null },
+    { id: "izmir", name: "İzmir", siteCount: 1, routeCount: 0, scene: null },
   ]);
 });
 

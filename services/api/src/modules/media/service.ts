@@ -14,6 +14,8 @@ import {
   mediaDeletions,
   memories,
   siteMedia,
+  sitePartCardPhotos,
+  siteSectionPhotos,
   sites,
   sources,
   staffMembers,
@@ -98,6 +100,7 @@ export function toMediaItem(row: MediaRow): MediaItem {
     trust: row.trust,
     parts: row.parts,
     triangles: row.triangles,
+    coverGroups: row.coverGroups,
     bytes: row.bytes,
     partsStatus: row.partsStatus,
     uploadedBy: row.uploadedBy,
@@ -585,6 +588,7 @@ export async function expireUploads(deps: { db: Db; storage: StorageBuckets }, o
  */
 export const MEDIA_REFERENCES = [
   sites.coverMediaId,
+  sites.aboutCoverMediaId,
   siteMedia.mediaId,
   cards.mediaId,
   storyBlocks.photoId,
@@ -592,6 +596,8 @@ export const MEDIA_REFERENCES = [
   storyBlocks.audioEnMediaId,
   historyImages.mediaId,
   historyImages.presentMediaId,
+  sitePartCardPhotos.mediaId,
+  siteSectionPhotos.mediaId,
   catalogRoutes.badgeMediaId,
   memories.mediaId,
 ] as const;

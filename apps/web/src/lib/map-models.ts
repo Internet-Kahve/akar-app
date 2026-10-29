@@ -1,8 +1,10 @@
 import {
   defaultMapSettings,
+  type CityScene,
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
+  type SceneLight,
 } from "@akar/domain";
 import type {
   CustomLayerInterface,
@@ -17,12 +19,15 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { modelBase, PRESENTATION_PARTS, type ModelBase } from "./model-anchor";
 import { OsmBuildingLayer } from "./map-buildings";
 import { footprintRing, type HideRule, type Ring } from "./osm-buildings";
+import { addSceneLights, groundShadow, saturate, sceneOf } from "./scene-light";
 
 /** A site whose model is drawn on the map. */
 export interface MapModelSite {
   id: string;
   src: string;
   placement: MapPlacement;
+  /** The city's model light (§11.42); a change reloads the model. */
+  light: SceneLight;
 }
 interface Entry {
   site: MapModelSite;
@@ -34,6 +39,8 @@ interface Entry {
   /** Model units (metres) → mercator coordinates. */
   matrix: THREE.Matrix4;
   footprint: Ring;
+  /** Soft ground shadow inside `group`; null when the city's light has none. */
+  shadow: THREE.Mesh | null;
 }
 
 const LAYER_ID = "akar-models";
@@ -73,6 +80,9 @@ const samePose = (a: MapPlacement, b: MapPlacement) =>
   a.altitudeM === b.altitudeM &&
   a.anchorNode === b.anchorNode;
 
+const sameLight = (a: SceneLight, b: SceneLight) =>
+  (Object.keys(a) as Array<keyof SceneLight>).every((k) => a[k] === b[k]);
+
 /**
  * MapLibre custom layer that draws the sites' GLB models with three.js in the map's own GL context.
  * Models load only at `modelMinZoom` and above, at most `maxVisibleModels` of them, the ones nearest the
@@ -92,7 +102,10 @@ export class MapModelLayer implements CustomLayerInterface {
   private sites = new Map<string, MapModelSite>();
   private settings: MapSettings = { ...defaultMapSettings };
   private readonly loaded = new Map<string, Entry>();
-  private readonly loading = new Map<string, { src: string; token: object }>();
+  private readonly loading = new Map<
+    string,
+    { src: string; light: SceneLight; token: object }
+  >();
   /** `site id` → source that failed to load; not retried until the source changes. */
   private readonly failed = new Map<string, string>();
 
@@ -283,7 +296,11 @@ export class MapModelLayer implements CustomLayerInterface {
     let changed = false;
     for (const [id, entry] of this.loaded) {
       const next = wanted.get(id);
-      if (!next || next.src !== entry.site.src) {
+      if (
+        !next ||
+        next.src !== entry.site.src ||
+        !sameLight(next.light, entry.site.light)
+      ) {
         disposeObject(entry.scene);
         this.loaded.delete(id);
         changed = true;
@@ -296,8 +313,11 @@ export class MapModelLayer implements CustomLayerInterface {
         changed = true;
       }
     }
-    for (const [id, pending] of this.loading)
-      if (wanted.get(id)?.src !== pending.src) this.loading.delete(id);
+    for (const [id, pending] of this.loading) {
+      const next = wanted.get(id);
+      if (next?.src !== pending.src || !sameLight(next.light, pending.light))
+        this.loading.delete(id);
+    }
     for (const [id, site] of wanted)
       if (
         !this.loaded.has(id) &&
@@ -315,7 +335,7 @@ export class MapModelLayer implements CustomLayerInterface {
     const loader = this.loader;
     if (!loader) return;
     const token = {};
-    this.loading.set(site.id, { src: site.src, token });
+    this.loading.set(site.id, { src: site.src, light: site.light, token });
     try {
       const gltf = await loader.loadAsync(site.src);
       if (this.loading.get(site.id)?.token !== token) {
@@ -324,18 +344,16 @@ export class MapModelLayer implements CustomLayerInterface {
         return;
       }
       this.loading.delete(site.id);
+      // Pose and building overrides can change while the same file is in flight. Reconcile keeps
+      // that download, so place its result from the current catalog rather than the request's copy.
+      site = this.sites.get(site.id)!;
       stripScenery(gltf.scene);
+      saturate(gltf.scene, site.light.saturation);
       const scene = new THREE.Scene();
       const group = new THREE.Group();
       group.add(gltf.scene);
       scene.add(group);
-      scene.add(new THREE.HemisphereLight(0xffffff, 0xeef0f4, 2.3));
-      const sun = new THREE.DirectionalLight(0xffffff, 1.3);
-      sun.position.set(-0.5, 1, 0.7);
-      scene.add(sun);
-      const fill = new THREE.DirectionalLight(0xfff4e6, 0.5);
-      fill.position.set(0.7, 0.55, -0.8);
-      scene.add(fill);
+      addSceneLights(scene, site.light);
       const entry: Entry = {
         site,
         scene,
@@ -343,6 +361,7 @@ export class MapModelLayer implements CustomLayerInterface {
         model: gltf.scene,
         matrix: new THREE.Matrix4(),
         footprint: [],
+        shadow: null,
       };
       this.applyOpacity(entry.model);
       this.place(entry, site);
@@ -381,12 +400,34 @@ export class MapModelLayer implements CustomLayerInterface {
       .scale(new THREE.Vector3(k, -k, k))
       .multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
     entry.footprint = footprintRing(p, base.footprint);
+    // The soft ground shadow turns and scales with the model, just above the map (§11.42).
+    if (entry.shadow) {
+      entry.group.remove(entry.shadow);
+      entry.shadow.geometry.dispose();
+      (entry.shadow.material as THREE.Material).dispose();
+      entry.shadow = null;
+    }
+    if (site.light.groundShadow > 0) {
+      entry.shadow = groundShadow(
+        base.footprint,
+        0.03,
+        site.light.groundShadow,
+        { factor: 2, units: 8 },
+      );
+      entry.shadow.renderOrder = -1;
+      entry.group.add(entry.shadow);
+      entry.scene.updateMatrixWorld(true);
+    }
   }
 }
 
 /** The map's models: `update` follows the catalog and settings, `dispose` removes both layers. */
 export interface MapModels {
-  update(sites: HeritageSite[], settings: MapSettings): void;
+  update(
+    sites: HeritageSite[],
+    settings: MapSettings,
+    scenes: Record<string, CityScene>,
+  ): void;
   dispose(): void;
 }
 
@@ -417,12 +458,23 @@ export function createMapModels(
   };
   map.on("click", click);
   return {
-    update(sites: HeritageSite[], settings: MapSettings) {
+    update(
+      sites: HeritageSite[],
+      settings: MapSettings,
+      scenes: Record<string, CityScene>,
+    ) {
       models.setSettings(settings);
       models.setSites(
         sites.flatMap((s) =>
           s.model?.placement && s.model.placement.visible !== false
-            ? [{ id: s.id, src: s.model.src, placement: s.model.placement }]
+            ? [
+                {
+                  id: s.id,
+                  src: s.model.src,
+                  placement: s.model.placement,
+                  light: sceneOf(s, scenes).light,
+                },
+              ]
             : [],
         ),
       );

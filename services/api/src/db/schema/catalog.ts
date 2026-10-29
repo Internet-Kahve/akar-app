@@ -1,3 +1,4 @@
+import type { CityScene } from "@akar/domain";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -7,6 +8,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgEnum,
   pgTable,
   primaryKey,
@@ -67,6 +69,8 @@ export const periods = pgTable("periods", {
 export const cities = pgTable("cities", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  /** 3D model light and viewer background (§11.42); null = clients use `defaultCityScene`. */
+  scene: jsonb("scene").$type<CityScene>(),
   ...timestamps,
 });
 
@@ -135,6 +139,8 @@ export const sites = pgTable(
     /** null = legacy record; 2 = editor v2, strict `publicationIssues` gate on publish. */
     editorVersion: integer("editor_version"),
     coverMediaId: text("cover_media_id").references(() => media.id),
+    /** Cover photograph of the "Eser hakkında" page; null = the gallery cover. */
+    aboutCoverMediaId: text("about_cover_media_id").references(() => media.id),
     /** "Açılış açısı": camera pose the 3D story opens with. */
     openingCamera: jsonb("opening_camera").$type<CameraPose>(),
     /** Null = "konum bulunamadı" import draft; required to publish. */
@@ -248,6 +254,37 @@ export const siteMapPlacements = pgTable(
 export const sectionKinds = ["history", "architecture", "waqf"] as const;
 export const sectionKindEnum = pgEnum("section_kind", sectionKinds);
 
+/** The reading layer of an "Eser hakkında" chapter, every string quoted verbatim from the chapter's paragraphs. */
+export type AboutReading = {
+  summary: string[];
+  figures: Array<{ value: string; label: string; evidence: string }>;
+  quotes: Array<{ text: string; by: string | null }>;
+  timeline: Array<{ year: string; evidence: string }>;
+  terms: Array<{ word: string; definition: string }>;
+  /** Desktop 3D view while the chapter is read; null = leave the model as it is. */
+  camera: CameraPose | null;
+  /** The model's cover groups lift while the chapter is read. */
+  interior: boolean;
+  /** Model parts lit while the chapter is read; empty = the whole building. */
+  focusParts: string[];
+};
+
+/** "Eser hakkında" chapter: one heading of the inventory text; its paragraphs are `site_sections` with this `chapter_id`. */
+export const siteAboutChapters = pgTable(
+  "site_about_chapters",
+  {
+    id: text("id").primaryKey(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    title: text("title").notNull(),
+    kind: sectionKindEnum("kind").notNull(),
+    reading: jsonb("reading").$type<AboutReading>().notNull(),
+  },
+  (t) => [unique("site_about_chapters_order_uq").on(t.siteId, t.position)],
+).enableRLS();
+
 /** "Eser hakkında" paragraphs: Tarihçe / Mimari / Vakıf ve akar, each with trust + source. */
 export const siteSections = pgTable(
   "site_sections",
@@ -257,6 +294,8 @@ export const siteSections = pgTable(
       .references(() => sites.id, { onDelete: "cascade" }),
     id: text("id").notNull(),
     position: integer("position").notNull(),
+    /** Null = a paragraph outside any reading chapter (e.g. one the panel added). */
+    chapterId: text("chapter_id").references(() => siteAboutChapters.id, { onDelete: "cascade" }),
     kind: sectionKindEnum("kind").notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
@@ -266,6 +305,27 @@ export const siteSections = pgTable(
   },
   (t) => [primaryKey({ columns: [t.siteId, t.id] }), unique("site_sections_order_uq").on(t.siteId, t.position)],
 );
+
+/** Book photographs shown after a paragraph, in order. They are not gallery photos (`site_media`). */
+export const siteSectionPhotos = pgTable(
+  "site_section_photos",
+  {
+    siteId: text("site_id").notNull(),
+    sectionId: text("section_id").notNull(),
+    position: integer("position").notNull(),
+    mediaId: text("media_id")
+      .notNull()
+      .references(() => media.id),
+    /** Width / height of the photograph as printed in the book; null = unknown. */
+    aspect: numeric("aspect", { precision: 6, scale: 3, mode: "number" }),
+    alt: text("alt").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.siteId, t.sectionId, t.position] }),
+    foreignKey({ columns: [t.siteId, t.sectionId], foreignColumns: [siteSections.siteId, siteSections.id], name: "site_section_photos_section_fk" }).onDelete("cascade"),
+    index("site_section_photos_media_idx").on(t.mediaId),
+  ],
+).enableRLS();
 
 export const cardKinds = ["portrait", "photo", "document"] as const;
 export const cardKindEnum = pgEnum("card_kind", cardKinds);
@@ -308,6 +368,8 @@ export const storyBlocks = pgTable(
     cardId: text("card_id").references(() => cards.id),
     /** Camera pose ("Açı"); null keeps the previous sentence's pose. */
     camera: jsonb("camera").$type<CameraPose>(),
+    /** "İç mekân (3D)": the model's cover groups lift for this sentence. */
+    interior: boolean("interior").notNull().default(false),
     highlights: text("highlights").array().notNull().default(sql`'{}'::text[]`),
     audioMediaId: text("audio_media_id").references(() => media.id),
     audioEnMediaId: text("audio_en_media_id").references(() => media.id),
@@ -342,4 +404,37 @@ export const historyImages = pgTable(
     camera: jsonb("camera").$type<CameraPose>(),
   },
   (t) => [unique("history_images_order_uq").on(t.siteId, t.position)],
+);
+
+/** 3D part card ("parça kartı"): tapping any of `parts` (model node names) opens it; all of them light up together. */
+export const sitePartCards = pgTable(
+  "site_part_cards",
+  {
+    id: text("id").primaryKey(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    parts: text("parts").array().notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    sourceId: text("source_id").references(() => sources.id),
+    trust: trustEnum("trust").notNull(),
+  },
+  (t) => [unique("site_part_cards_order_uq").on(t.siteId, t.position)],
+);
+
+/** A part card's photo strip, in order; the first is the cover. */
+export const sitePartCardPhotos = pgTable(
+  "site_part_card_photos",
+  {
+    cardId: text("card_id")
+      .notNull()
+      .references(() => sitePartCards.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    mediaId: text("media_id")
+      .notNull()
+      .references(() => media.id),
+  },
+  (t) => [primaryKey({ columns: [t.cardId, t.position] }), index("site_part_card_photos_media_idx").on(t.mediaId)],
 );

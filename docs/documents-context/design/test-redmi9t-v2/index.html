@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F5F5">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>AKAR · Bursa</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css">
+<link rel="stylesheet" href="app.css?v=20261028">
+</head>
+<body>
+<!-- açılış ekranı (Figma akar-yeni: «Amblem · açılış, 3D yükleniyor (çizgi çizgi çizilir)», desen «ilk açılış arka planı» %6–10).
+     Şehrin rengi ve deseni app.js'te şehir kaydından (veri/sehir/<şehir>.json → kimlik) konur; harita ilk kez hazır olunca kalkar. -->
+<div id="acilis" role="status" aria-label="AKAR yükleniyor"><div class="acilis-ic">
+  <svg class="amblem" viewBox="-84 -84 168 168" aria-hidden="true"><path pathLength="1" d="M-35.36 -35.36L-50.00 -41.42M-50.00 -41.42L-64.64 -35.36M-35.36 -64.64L-41.42 -50.00M-41.42 -50.00L-35.36 -35.36M-64.64 -35.36L-75.00 -10.36M-75.00 -10.36L-50.00 -0.00M-50.00 -0.00L-75.00 10.36M-75.00 10.36L-64.64 35.36M-64.64 35.36L-50.00 41.42M-50.00 41.42L-35.36 35.36M-35.36 35.36L-41.42 50.00M-41.42 50.00L-35.36 64.64M35.36 -64.64L10.36 -75.00M10.36 -75.00L0.00 -50.00M0.00 -50.00L-10.36 -75.00M-10.36 -75.00L-35.36 -64.64M64.64 -35.36L50.00 -41.42M50.00 -41.42L35.36 -35.36M35.36 -35.36L41.42 -50.00M41.42 -50.00L35.36 -64.64M35.36 35.36L10.36 25.00M10.36 25.00L0.00 50.00M0.00 50.00L-10.36 25.00M-10.36 25.00L-35.36 35.36M-35.36 35.36L-25.00 10.36M-25.00 10.36L-50.00 0.00M-50.00 0.00L-25.00 -10.36M-25.00 -10.36L-35.36 -35.36M-35.36 -35.36L-10.36 -25.00M-10.36 -25.00L-0.00 -50.00M-0.00 -50.00L10.36 -25.00M10.36 -25.00L35.36 -35.36M35.36 -35.36L25.00 -10.36M25.00 -10.36L50.00 -0.00M50.00 -0.00L25.00 10.36M25.00 10.36L35.36 35.36M35.36 64.64L41.42 50.00M41.42 50.00L35.36 35.36M35.36 35.36L50.00 41.42M50.00 41.42L64.64 35.36M-35.36 64.64L-10.36 75.00M-10.36 75.00L-0.00 50.00M-0.00 50.00L10.36 75.00M10.36 75.00L35.36 64.64M64.64 35.36L75.00 10.36M75.00 10.36L50.00 0.00M50.00 0.00L75.00 -10.36M75.00 -10.36L64.64 -35.36"/></svg>
+  <div class="acilis-logo">AKAR</div><div class="acilis-sehir serif" id="acilis-sehir"></div><div class="acilis-alt" id="acilis-alt">Harita hazırlanıyor</div>
+</div></div>
+<div id="app">
+  <!-- masaüstü üst çubuk -->
+  <header id="ust" class="masaustu">
+    <a class="logo" href="#/">AKAR</a>
+    <label class="arama"><span data-ic="search"></span><input id="arama-d" type="search" placeholder="Eser, şehir veya rota ara" autocomplete="off"><button type="button" class="sehir" data-sehirler title="Şehirler">Bursa</button></label>
+    <span class="avatar">MT</span>
+  </header>
+
+  <!-- masaüstü sol panel -->
+  <aside id="panel" class="masaustu" aria-label="Panel"><div id="panel-ic"></div>
+    <button id="panel-sekme" aria-label="Paneli kapat" title="Paneli kapat"><span data-ic="chevron-left" data-boy="16"></span></button>
+  </aside>
+
+  <main id="sahne">
+    <div id="harita" aria-label="Harita"></div>
+
+    <!-- mobil arama + çipler -->
+    <div id="harita-ust">
+      <label class="arama mobil"><span data-ic="search"></span><input id="arama-m" type="search" placeholder="Eser, şehir veya rota ara" autocomplete="off"><span class="avatar">MT</span></label>
+      <div class="cipler" id="cipler"></div>
+    </div>
+
+    <div id="harita-kontrol">
+      <button class="daire" id="b-3d" aria-label="2D haritaya geç"><span class="halka" aria-hidden="true"><i class="kuzey"></i><span class="k">K</span></span><b>2D</b></button>
+      <div class="zoom"><button id="b-yakin" aria-label="Yakınlaştır"><span data-ic="plus"></span></button><button id="b-uzak" aria-label="Uzaklaştır"><span data-ic="minus"></span></button></div>
+      <button class="daire kucuk" id="b-konum" aria-label="Konumuma git"><span data-ic="locate-fixed"></span></button>
+    </div>
+
+    <!-- eser detay / anlatım görünümü (masaüstünde sağ alan, mobilde tam ekran) -->
+    <section id="gorus" hidden></section>
+    <div id="eser-pop" class="masaustu" hidden></div>
+  </main>
+
+  <!-- mobil alt sayfa ve eser kartı -->
+  <section id="alt" class="mobil-k" aria-label="Eserler ve rotalar"><div class="tutamak" id="alt-tutamak"><i></i></div><div id="alt-ic"></div></section>
+  <section id="eser-kart" class="mobil-k" hidden></section>
+
+  <div id="toast" role="status" hidden></div>
+</div>
+
+<script type="importmap">{"imports":{"maplibre-gl":"https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs","three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module" src="app.js?v=20261028"></script>
+</body>
+</html>

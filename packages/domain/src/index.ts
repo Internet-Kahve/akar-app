@@ -56,6 +56,71 @@ export const defaultMapSettings: MapSettings = {
   modelMinZoom: 16,
   maxVisibleModels: 10,
 };
+/** Light of the 3D models of a city, on the map and in the site viewer (decision §11.42). */
+export interface SceneLight {
+  /** Hemisphere (ambient) light intensity. */
+  ambient: number;
+  /** Sun (directional) light intensity. */
+  sun: number;
+  /** Fill light from the opposite side. */
+  fill: number;
+  /** Sun direction: degrees clockwise from north. */
+  azimuthDeg: number;
+  /** Sun height above the horizon in degrees. */
+  elevationDeg: number;
+  /** Material colour saturation multiplier (1 = unchanged). */
+  saturation: number;
+  /** Opacity of the soft ground shadow drawn under each model (0 = none). */
+  groundShadow: number;
+}
+/** City record `scene` (`GET /v1/cities`): model light and the site viewer's background gradient. */
+export interface CityScene {
+  light: SceneLight;
+  /** Viewer background, top and bottom of a vertical gradient, `#RRGGBB`. */
+  backgroundTop: string;
+  backgroundBottom: string;
+}
+/** Used for a city without a saved scene, and until the cities are read. */
+export const defaultCityScene: CityScene = {
+  light: {
+    ambient: 2.3,
+    sun: 1.3,
+    fill: 0.5,
+    azimuthDeg: 216,
+    elevationDeg: 46,
+    saturation: 1,
+    groundShadow: 0,
+  },
+  backgroundTop: "#DCE3E4",
+  backgroundBottom: "#C3CBCD",
+};
+const HEX_COLOUR = /^#[0-9A-Fa-f]{6}$/;
+/** Throws on values the renderer cannot use; ranges are wide on purpose (designers tune them). */
+export function validateCityScene(scene: CityScene) {
+  const l = scene.light;
+  const ranges: Array<[keyof SceneLight, number, number]> = [
+    ["ambient", 0, 10],
+    ["sun", 0, 10],
+    ["fill", 0, 10],
+    ["azimuthDeg", 0, 360],
+    ["elevationDeg", 0, 90],
+    ["saturation", 0, 3],
+    ["groundShadow", 0, 1],
+  ];
+  for (const [key, min, max] of ranges)
+    if (
+      typeof l[key] !== "number" ||
+      !Number.isFinite(l[key]) ||
+      l[key] < min ||
+      l[key] > max
+    )
+      throw new Error(`Sahne ışığı ${key} ${min}–${max} arasında olmalı`);
+  if (
+    !HEX_COLOUR.test(scene.backgroundTop) ||
+    !HEX_COLOUR.test(scene.backgroundBottom)
+  )
+    throw new Error("Sahne zemini #RRGGBB biçiminde olmalı");
+}
 export interface SiteModel {
   name: string;
   bytes: number;
@@ -64,8 +129,21 @@ export interface SiteModel {
   trust: Trust;
   /** Triangle count the server counted on upload; `null` or absent when unknown. */
   triangles?: number | null;
+  /** "İçini göster": part-name groups lifted top to bottom (first group first); absent or empty = no button. */
+  coverGroups?: string[][];
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
+}
+/**
+ * 3D camera pose of a story sentence: looks at `target` (a model part; null = model centre) from
+ * `azimuthDeg` (0 = from the north, clockwise) and `elevationDeg`; `distance` 1 = whole model fits the view.
+ */
+export interface CameraPose {
+  label?: string;
+  target: string | null;
+  azimuthDeg: number;
+  elevationDeg: number;
+  distance: number;
 }
 export interface StoryBlock {
   id: string;
@@ -78,6 +156,10 @@ export interface StoryBlock {
   sourceId?: string;
   showCard?: boolean;
   highlights?: string[];
+  /** Absent = keep the previous sentence's view. */
+  camera?: CameraPose;
+  /** "İç mekân (3D)": the model's cover groups lift for this sentence. */
+  interior?: boolean;
 }
 export interface HistoryImage {
   id: string;
@@ -87,6 +169,46 @@ export interface HistoryImage {
   dateLabel: string;
   sourceId: string;
   trust: Trust;
+}
+/** 3D part card: tapping any of `parts` (model node names) opens it; they are highlighted together. */
+export interface PartCard {
+  id: string;
+  parts: string[];
+  title: string;
+  body: string;
+  /** Photo strip in order; the first is the cover. May be empty. */
+  photos: SitePhoto[];
+  sourceId?: string;
+  trust: Trust;
+}
+/** A book photograph placed after a paragraph of "Eser hakkında"; `aspect` = width / height of the file as printed (absent = unknown). */
+export interface AboutPhoto {
+  photo: SitePhoto;
+  aspect?: number;
+  alt: string;
+}
+/**
+ * "Eser hakkında" chapter (one `## heading` of the inventory text) with its reading layer. Everything in it is
+ * quoted verbatim from the chapter's paragraphs; the paragraphs themselves are `HeritageSite.sections` with this `id` as `chapterId`.
+ */
+export interface AboutChapter {
+  id: string;
+  title: string;
+  kind: "history" | "architecture" | "waqf";
+  /** Sentences picked from the text, shown before it. */
+  summary: string[];
+  /** Number cards: `value` (e.g. "1399"), short `label`, `evidence` = the phrase in the text. */
+  figures: Array<{ value: string; label: string; evidence: string }>;
+  quotes: Array<{ text: string; by?: string }>;
+  timeline: Array<{ year: string; evidence: string }>;
+  /** Words in the chapter text that open a definition when tapped. */
+  terms: Array<{ word: string; definition: string }>;
+  /** Desktop 3D view while this chapter is read; absent = leave the model as it is. */
+  camera?: CameraPose;
+  /** The model's cover groups lift while this chapter is read. */
+  interior: boolean;
+  /** Model parts lit while this chapter is read; empty = the whole building. */
+  focusParts: string[];
 }
 export interface HeritageSite {
   id: string;
@@ -116,7 +238,13 @@ export interface HeritageSite {
   coverPhotoId?: string;
   model?: SiteModel;
   historyImages?: HistoryImage[];
+  /** With cards, only their parts are tappable; absent or empty = every part shows its name. */
+  partCards?: PartCard[];
   storyPhotos?: SitePhoto[];
+  /** Cover photograph of "Eser hakkında"; absent = the gallery cover. */
+  aboutCover?: SitePhoto;
+  /** Reading chapters in order; absent or empty = the sections are shown as plain paragraphs under their titles. */
+  chapters?: AboutChapter[];
   sections?: Array<{
     id: string;
     kind: "history" | "architecture" | "waqf";
@@ -124,6 +252,10 @@ export interface HeritageSite {
     body: string;
     trust: Trust;
     sourceId: string;
+    /** `AboutChapter.id`, absent when the paragraph belongs to no chapter. */
+    chapterId?: string;
+    /** Book photographs shown after this paragraph, in order. */
+    photos?: AboutPhoto[];
   }>;
 }
 export interface HeritageRoute {
@@ -322,6 +454,8 @@ export function publicationIssues(site: HeritageSite): string[] {
       issues.push(`${i + 1}. cümleye fotoğraf bağla.`);
     if (story.highlights?.some((part) => !site.model?.parts.includes(part)))
       issues.push(`${i + 1}. cümlede modelde bulunmayan vurgu var.`);
+    if (story.camera?.target && !site.model?.parts.includes(story.camera.target))
+      issues.push(`${i + 1}. cümlenin kamera hedefi modelde yok.`);
   });
   return issues;
 }

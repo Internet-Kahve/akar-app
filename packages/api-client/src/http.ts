@@ -2,8 +2,11 @@ import {
   defaultMapSettings,
   validatePlacement,
   validateSite,
+  type AboutChapter,
+  type CameraPose,
   type Command,
   type HeritageRoute,
+  type CityScene,
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
@@ -125,6 +128,8 @@ interface MediaDto {
   parts: string[];
   /** Triangle count of a model; absent on older API versions. */
   triangles?: number | null;
+  /** "İçini göster" groups of a model; absent on older API versions. */
+  coverGroups?: string[][];
 }
 interface SiteSummaryDto {
   id: string;
@@ -162,9 +167,11 @@ interface SiteDetailDto {
     sourceId: string | null;
     showCard: boolean | null;
     highlights: string[];
+    camera: CameraPose | null;
+    /** Absent on older API versions. */
+    interior?: boolean;
     /** Server-side only fields the domain does not carry; kept as they are on a story save. */
     cardId?: string | null;
-    camera?: CameraPoseDto | null;
     audioMediaId?: string | null;
     audioEnMediaId?: string | null;
   }>;
@@ -175,6 +182,26 @@ interface SiteDetailDto {
     body: string;
     trust: Trust;
     sourceId: string | null;
+    /** Absent on older API versions. */
+    chapterId?: string | null;
+    /** Book photographs after the paragraph; `mediaId` resolves in `media`. Absent on older API versions. */
+    photos?: Array<{ mediaId: string; aspect: number | null; alt: string }>;
+  }>;
+  /** Absent on older API versions. */
+  aboutCoverMediaId?: string | null;
+  /** Absent on older API versions. */
+  chapters?: Array<{
+    id: string;
+    title: string;
+    kind: "history" | "architecture" | "waqf";
+    summary: string[];
+    figures: AboutChapter["figures"];
+    quotes: Array<{ text: string; by: string | null }>;
+    timeline: AboutChapter["timeline"];
+    terms: AboutChapter["terms"];
+    camera: CameraPose | null;
+    interior: boolean;
+    focusParts: string[];
   }>;
   cards: Array<{ mediaId: string }>;
   historyImages: Array<{
@@ -186,18 +213,22 @@ interface SiteDetailDto {
     sourceId?: string | null;
     trust?: Trust;
   }>;
+  /** Absent on older API versions. */
+  partCards?: Array<{
+    id: string;
+    parts: string[];
+    title: string;
+    body: string;
+    photoIds: string[];
+    sourceId: string | null;
+    trust: Trust;
+  }>;
   media: MediaDto[];
   /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
   placement?: MapPlacement | null;
   /** Explicit gallery relationship; absent on older API versions. */
   photoIds?: string[];
   sources: SiteSource[];
-}
-interface CameraPoseDto {
-  label?: string;
-  azimuthDeg: number;
-  elevationDeg: number;
-  distanceM: number;
 }
 /** `AdminSiteDetail.mapPlacement`: the saved placement in every case (also while hidden); `lng`/`lat` are null while the model stands on the site's own location. */
 interface AdminPlacementDto extends Omit<MapPlacement, "lng" | "lat"> {
@@ -214,7 +245,7 @@ interface AdminSiteDetailDto extends Omit<
   kind: string | null;
   coordinates: [number, number] | null;
   status: "draft" | "published";
-  openingCamera: CameraPoseDto | null;
+  openingCamera: CameraPose | null;
   /** The saved placement; `null` while none was saved; absent on older API versions. */
   mapPlacement?: AdminPlacementDto | null;
   /** Per-site place inside each source ("s. 42"); the domain source has no such field. */
@@ -325,6 +356,8 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     simple: s.simple,
     trust: s.trust,
     highlights: s.highlights,
+    ...(present(s.camera) && { camera: s.camera }),
+    ...(s.interior && { interior: true }),
     ...(present(s.textEn) && { textEn: s.textEn }),
     ...(present(s.photoId) && { photoId: s.photoId }),
     ...(present(s.sourceId) && { sourceId: s.sourceId }),
@@ -338,6 +371,8 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     [
       ...d.cards.map((c) => c.mediaId),
       ...d.historyImages.flatMap((h) => [h.mediaId, h.presentMediaId]),
+      ...(d.partCards ?? []).flatMap((c) => c.photoIds),
+      ...(d.sections ?? []).flatMap((s) => (s.photos ?? []).map((p) => p.mediaId)),
     ].filter(present),
   );
   const gallery = d.photoIds ? new Set(d.photoIds) : null;
@@ -348,6 +383,9 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         (gallery ? gallery.has(m.id) : used.has(m.id) || !other.has(m.id)),
     )
     .map(toPhoto);
+  const aboutCover = d.aboutCoverMediaId
+    ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
+    : undefined;
   const model = d.media.find((m) => m.kind === "model");
   return {
     id: d.id,
@@ -367,10 +405,39 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     tier: d.tier,
     photos,
     sources: d.sources,
-    sections: (d.sections ?? []).map((section) => ({
-      ...section,
-      sourceId: section.sourceId ?? "",
-    })),
+    sections: (d.sections ?? []).map(
+      ({ chapterId, photos: aboutPhotos, ...section }) => {
+        const placed = (aboutPhotos ?? []).flatMap((p) => {
+          const m = d.media.find((x) => x.id === p.mediaId && x.kind === "photo");
+          return m
+            ? [
+                {
+                  photo: toPhoto(m),
+                  alt: p.alt,
+                  ...(present(p.aspect) && { aspect: p.aspect }),
+                },
+              ]
+            : [];
+        });
+        return {
+          ...section,
+          sourceId: section.sourceId ?? "",
+          ...(present(chapterId) && { chapterId }),
+          ...(placed.length && { photos: placed }),
+        };
+      },
+    ),
+    ...(d.chapters?.length && {
+      chapters: d.chapters.map(({ camera, quotes, ...chapter }) => ({
+        ...chapter,
+        quotes: quotes.map(({ text, by }) => ({
+          text,
+          ...(present(by) && { by }),
+        })),
+        ...(present(camera) && { camera }),
+      })),
+    }),
+    ...(aboutCover && { aboutCover: toPhoto(aboutCover) }),
     storyPhotos: d.media
       .filter((m) => m.kind === "photo" && used.has(m.id))
       .map(toPhoto),
@@ -394,6 +461,16 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         },
       ];
     }),
+    ...(d.partCards?.length && {
+      partCards: d.partCards.map(({ photoIds, sourceId, ...card }) => ({
+        ...card,
+        photos: photoIds.flatMap((id) => {
+          const m = d.media.find((x) => x.id === id && x.kind === "photo");
+          return m ? [toPhoto(m)] : [];
+        }),
+        ...(present(sourceId) && { sourceId }),
+      })),
+    }),
     ...(d.editorVersion === 2 && { editorVersion: 2 as const }),
     ...(present(d.nameEn) && { nameEn: d.nameEn }),
     ...(present(d.descriptionEn) && { descriptionEn: d.descriptionEn }),
@@ -412,6 +489,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         parts: model.parts,
         trust: model.trust,
         triangles: model.triangles ?? null,
+        ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
         placement: d.placement ?? null,
       },
     }),
@@ -1392,7 +1470,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     const storiesChanged = !same(site.stories, cur.stories);
     if (!sourcesChanged && !modelChanged && !photosChanged && !storiesChanged)
       return;
-    // What the domain site does not carry: source locators, story cards, cameras and audio.
+    // What the domain site does not carry: source locators, story cards and audio.
     const before = await call<AdminSiteDetailDto>("GET", path);
 
     if (sourcesChanged) {
@@ -1487,7 +1565,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               showCard: s.showCard ?? null,
               highlights: s.highlights ?? [],
               cardId: k?.cardId ?? null,
-              camera: k?.camera ?? null,
+              camera: s.camera ?? null,
+              interior: s.interior ?? false,
               audioMediaId: k?.audioMediaId ?? null,
               audioEnMediaId: k?.audioEnMediaId ?? null,
             };
@@ -1830,6 +1909,14 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     },
     setMapSettings: (settings) =>
       call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
+    getCityScenes: async () => {
+      const { items } = await call<{
+        items: Array<{ name: string; scene: CityScene | null }>;
+      }>("GET", "/v1/cities");
+      return Object.fromEntries(
+        items.flatMap((c) => (c.scene ? [[c.name, c.scene]] : [])),
+      );
+    },
     // Live state, not queued behind commands: the editor reads it when it opens.
     getMapPlacement: async (siteId) => {
       const id = createdIds.get(siteId) ?? siteId;

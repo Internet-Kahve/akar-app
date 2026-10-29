@@ -1,0 +1,287 @@
+# AKAR · Prototipten ürüne entegrasyon notu (29 Ekim 2026)
+
+**Kim için:** Tamer, Burak.
+
+**Ne:** `design/test-redmi9t-v2/` prototipinde olup üründe (`main`: `apps/web`, `services/api`, `packages/`) henüz olmayanlar ve bunların veri kaynakları.
+
+**Nasıl karşılaştırıldı:** Ürün tarafı `origin/main` 50d873d (§11.36) ile karşılaştırıldı. Ürünün bugün yaptıkları burada tekrar anlatılmaz:
+- haritada GLB ve yerleşim (§11.35);
+- OSM bina katmanı;
+- hikâye vurgusu ve kamera alanı;
+- Geçmişi Gör (`history_images`);
+- eser düzeyinde quiz;
+- rota rozeti;
+- anılar.
+
+**Ana referans Ulucami.** Ulucami bütün özellikleriyle neredeyse hazır:
+- hikâye ve kamera;
+- parça kartları;
+- «İçini göster»;
+- «Eser hakkında» okuma düzeni ve kapak;
+- Geçmişi Gör ve izler;
+- görevler ve rozetler.
+
+Veritabanı şeması, içe aktarma ve UX kararları için örnek Ulucami. Bir alanın biçimi ya da bir etkileşimin nasıl davranacağı belirsizse Ulucami'nin dosyasına ve prototipteki Ulucami ekranlarına bakılsın.
+
+Diğer altı eserin aynı dosyaları Talha'nın elinde (bkz. `YAPILACAKLAR.md` → «Talha'nın işleri»); dosyalar geldikçe biçim Ulucami ile aynı olacak. Bu yüzden şema Ulucami'ye göre kurulursa diğer eserler sonradan yalnız veri olarak eklenir.
+
+**İlke:** Prototipte esere ya da şehre özel değer kodda yazılmaz; her şey aşağıdaki veri dosyalarından okunur. Ürüne de böyle taşınmalı.
+
+Yollar `docs/documents-context/` altına göredir.
+
+---
+
+## 1. Önce bu: içe aktarma eski prototipe bağlı (kritik)
+
+`services/api/scripts/prepare-demo-content.py`, `design/test-redmi9t/hazirla.py` dosyasını (**v1**) modül olarak yüklüyor. Oradan iki sabiti okuyor: `ESERLER` ve `OSM_DUZELTME`. v1 dondurulmuş bir dosya; içindeki model adları eski:
+- `ulu-cami_v26`;
+- `koza-han_v14`;
+- diğerleri de aynı dönemden.
+
+Bugünkü içe aktarma bu yüzden **eski modelleri** ve eski eser bilgisini taşıyor. Yeni modeller, ışık, parça kartları ve görevler hiçbir zaman gelmiyor.
+
+v2'de sabit liste yok; her şey dosyalardan okunuyor:
+
+| Ne | v1 (bugün okunan) | v2 (okunması gereken) |
+|---|---|---|
+| Eser kimliği (ad, yıl, yaptıran, tür, rol, kısa, konum, sıra) | `hazirla.py → ESERLER` | `eserler/<eser>/eser.json` |
+| Model dosyası | `ESERLER[].glb` | `eserler/<eser>/3d/model.json → glb`. Sunum dosyası `export/<glb>_sunum.glb`, harita dosyası `export/<glb>.glb` |
+| Yön | `ESERLER[].yaw` | `model.json → yaw` → `placement.headingDeg` |
+| Konum düzeltmesi | `OSM_DUZELTME` | `model.json → kaydirma_m {dogu, kuzey}` (metre; formül aynı: `lon += dogu / (111320·cos lat)`, `lat += kuzey / 110540`) |
+| Ana parça | `app.js ANA_PARCA` | `model.json → ana_parca` → `placement.anchorNode` |
+| Şehir | yok | `veri/sehir/<şehir>.json` |
+| Rota | `hazirla.py → ROTALAR` | `veri/rota/*.json` |
+
+**Öneri:** `prepare-demo-content.py`, v2'nin `hazirla.py` dosyasındaki okuyucuları kullansın:
+- `eserleri_bul`
+- `hikaye_oku`
+- `parcalar_oku`
+- `gorevler_oku`
+- `model_oku`
+- `okuma_oku`
+- `gecmis_oku`
+- `izler_oku`
+
+Ya da aynı dosyaları doğrudan okusun. Bu iş bitene kadar v1'i ve eski GLB'leri silmiyoruz, çünkü içe aktarma onlara bağlı.
+
+**Kimlik farkı:** Ürün iki eserde farklı kimlik kullanıyor:
+- `yildirim-bayezid-bedesteni` → `bedesten`
+- `orhan-bey-kulliyesi` → `orhan-gazi`
+
+Görev, parça ve izlerdeki eser kimlikleri de çevrilmeli.
+
+**Model sürümleri değişiyor:** 29 Ekim'de 3D ekibi parça sadeleştirmesi yapıyor:
+- yeni sürümler (`v17`, `v08`…);
+- bazı parça adları değişiyor ve birleşiyor.
+
+Sürüm numarasını hiçbir yere elle yazmayın. Her zaman `model.json → glb` okunsun.
+
+**Parça adları değişti, model ile içerik birlikte güncellenmeli (çakışma riski).** Parça sadeleştirmesi 29 Ekim'de bitti:
+- yeni sürümler: Bedesten v09, Koza Han v17, Orhan Bey Camii v10, Orhan Bey Hamamı v08, Emir Hanı v08, Orhan Gazi Türbesi v05;
+- Ulucami değişmedi (v29).
+
+Bazı eski parça adları artık yok. Örneğin Koza Han'da `Avlu_Mescit` + `Mescit_Kubbe` + `Mescit_Dikis` → `Mescit`. Ürünün veritabanındaki hikâye vurguları (`story_blocks.highlights`) ve quiz parçaları eski içe aktarmadan geldiği için eski adları taşıyor.
+
+Yalnız model dosyası panelden yenilenirse:
+- bu vurgular boşa düşer (hata vermez, sadece hiçbir şey yanmaz);
+- quiz'deki «3D modelde bul» görevi çalışmaz.
+
+Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → yeni ad eşlemesi `eserler/_kutuphane/blend_hat/parca_plan.json` dosyasında; hikâye dosyaları yeni adlara çevrildi. Ana parça adları (`placement.anchorNode`) değişmedi:
+- Ulucami ve Bedesten `Govde`;
+- Koza Han `Govde_Dis`;
+- Orhan Bey Camii `Cami_Govde`;
+- Emir Hanı `Emir_Hani`;
+- Orhan Gazi Türbesi `Govde`.
+
+## 2. 3D modeller: dosya kuralları
+
+- **Eser başına tek model (§11.2) ile uyum.** Prototip haritada hafif dosyayı (`<glb>.glb`), detayda sunum dosyasını (`_sunum`) kullanıyor. Ürünün kararı tek dosya. Öneri: yalnız `_sunum` yüklensin; haritada sunum parçaları çizilmesin (0969e22 bunu yapıyor).
+  - Ancak sabit liste (`Avlu_Agac`, `Avlu_Cim`) yerine kural kullanılsın: `Zemin*`, `Cevre*`, `Olcek*` ile başlayan parçalar, artı eserin `model.json → sunum_ek` listesi. Yeni eserde liste yeniden yazılmak zorunda kalmaz.
+- **AO dokusu ikinci UV'de** (`occlusionTexture.texCoord = 1`). three.js `GLTFLoader` bunu kendiliğinden uygular. Bir sıkıştırma ya da temizlik adımı `TEXCOORD_1`'i ya da `occlusionTexture`'ı silerse köşe kararması kaybolur.
+- **Modellerde artık şunlar yok:** köşe rengi (`COLOR_0`) ve `Yer_Golgesi` düzlemi.
+  - Yer gölgesini istemci çiziyor (bkz. 3).
+  - Eski bir dosyada `Yer_Golgesi` varsa gizlensin ve taban izi hesabına girmesin. Girerse çevredeki OSM binaları da silinir.
+- **Üçgen:** 29 Ekim sunum dosyaları sınırın (139.152) altında:
+  - Ulucami 97.496;
+  - Koza Han 46.292;
+  - Bedesten 25.224.
+- **Kaynak:** GLB'ler yalnız Blender'dan üretilir (`_kutuphane/blend_hat/`, eserin `build/build_vXX.py`'si). Blend ve build dosyaları repoda değil, Drive'da.
+
+## 3. Haritada ve detayda ışık, renk, yer gölgesi
+
+Ürünün `map-models.ts` ve `model-viewer.tsx` dosyalarında ışık sabit yazılı. `map-models.ts`'teki değerler prototipin eski değerleri (ortam 2,3 / güneş 1,3). Yeni değerler şehir kaydında: `veri/sehir/bursa.json → harita_isik`.
+
+```
+ortam 2 · gunes 1 · dolgu 1 · yon 315 · yukseklik 45 · doygunluk 1.25 · yer_golgesi 0.18
+```
+
+Prototipteki karşılığı (`app.js`, `ISIK` ve `Sahne3D`). Harita ve eser detayı **aynı** ışığı kullanır:
+
+```js
+const a = deg(yon), y = deg(yukseklik);                       // model ekseni: x doğu, y yukarı, z güney
+const dir = new Vector3(sin(a)*cos(y), sin(y), -cos(a)*cos(y));
+new HemisphereLight(0xffffff, 0xb8b0a2, ortam);
+new DirectionalLight(0xfff6ea, gunes).position.copy(dir);
+new DirectionalLight(0xdfe8f2, dolgu).position.set(-dir.x, 0.5, -dir.z);
+// doygunluk: her malzeme rengi HSL'de s *= doygunluk (en çok 1)
+```
+
+**Yer gölgesi:** Kodla üretilen tek doku kullanılır:
+- 128 px tuval;
+- `roundRect(26, 26, 76, 76, 14)`, siyah;
+- `blur(13px)`.
+
+Yapının taban izi boyutunda bir düzleme konur: `boy / 0,59 + 2 m`. Opaklık `yer_golgesi` değeridir. Ayrıca:
+- `depthWrite: false`;
+- `polygonOffset`;
+- model ile birlikte döner.
+
+**Detay sahnesinin zemini:** Şehir rengine çalan bir geçiş. Değerler `veri/sehir/bursa.json → kimlik.sahne_ust / sahne_alt` alanlarında (`#DDE4E5 → #A7B4B7`). Tuval saydamdır, zemin CSS'ten gelir.
+
+**Öneri:** `harita_isik` ve `kimlik` alanları `cities` tablosuna ya da harita ayarlarına (`/v1/map-settings`) eklensin. Panelden değiştirilebilsin.
+
+## 4. OSM binaları: kural farkı
+
+- **Ürün:** ortası taban izine düşen ve küçük olan bina gizlenir. Panelden `hidden_points` / `kept_points` ile düzeltilir.
+- **Prototip (29 Ekim'den beri):** ürünle aynı otomatik kural; panel yok.
+
+**Karar:** Ürünün bugünkü hâli kalsın: otomatik kural, artı panelde binaya tıklayıp «Gizle / Geri göster». Prototipte bir süre «modele değen bina bütünüyle kalkar» kuralı denendi. Bu kural çevredeki çarşı bloklarını da sildiği için bırakıldı. Prototipte görülen asıl sorun şuydu: bina kesilip artanı bırakılınca modelin dibinde ince şeritler kalıyordu. Ürün binayı kesmediği için bu sorun ürünü etkilemez.
+
+Yerleşim girilirken kontrol edilecek yerler:
+- Bedesten ve Koza Han'ın çevresindeki çarşı çatıları;
+- Emir Hanı: OSM'deki adlı çokgen başka bir bina; konum uydudan ölçüldü.
+
+## 5. Üründe olmayanlar (eklenmesi gerekenler)
+
+Önem sırasıyla. Her satırda veri kaynağı ve prototipteki karşılığı var.
+
+### 5.1 3D parça kartları
+- **Kaynak:** `eserler/<eser>/icerik/parcalar.md` (şimdilik yalnız Ulucami).
+- **Bir satır:**
+  - Parçalar (model düğüm adları, virgülle);
+  - Başlık;
+  - Metin;
+  - Fotoğraflar (sırayla, ilki kapak);
+  - Kaynak;
+  - Güven.
+- **Davranış (prototip `Sahne3D`):**
+  - Kartı olan parça tıklanır, kartı olmayan tıklanmaz.
+  - Eserin hiç kartı yoksa bütün parçalar adıyla tıklanır. Bunun istisnası `model.json → tiklanmaz` listesindeki parçalardır.
+  - Bir kartın **bütün parçaları birlikte** seçilir ve vurgulanır. Örneğin Ulucami'de dört cephe ile pencere girintileri tek kart.
+  - Masaüstünde fare üstündeyken hafif sarı vurgu görünür ve imleç el olur.
+  - Kart: fotoğraf şeridi, metin, sesli dinle.
+- **Ürünle ilişki:** `cards` tablosu hikâye cümlesine bağlı ve tek medya taşıyor. Parça kartı ayrı bir şey.
+- **Öneri:** `site_parts` tablosu:
+  - `site_id`
+  - `nodes text[]`
+  - `title`
+  - `body`
+  - `media_ids[]`
+  - `source_id`
+  - `trust`
+  - `position`
+
+### 5.2 «İçini göster»
+- **Kaynak:** `model.json → ortu_gruplari`. Yukarıdan aşağı kalkan parça grupları; ilk grup önce kalkar.
+- Ulucami'de kubbeler ve çatı kalkar, iç mekân görünür.
+- Hikâye cümlesinde `İç mekân (3D)` sütunu «evet» ise, o cümlede örtü otomatik kalkar.
+- **Öneri:** `site_map_placements`'a değil, model kaydına `cover_groups jsonb` alanı.
+
+### 5.3 Hikâye kamerası ve iç mekân
+- **Kaynak:** `icerik/hikaye.md`. İkinci tablo: `# | Hedef | Azimut | Eğim | Uzaklık | Neden`. Birinci tablo: `Vurgu (3D)` ve `İç mekân (3D)`.
+- Üründe `story_blocks.camera` var, ama içe aktarma bu alanı doldurmuyor. Bu yüzden ürünün hikâyesinde kamera hiç dönmüyor.
+- Uzaklık değerleri sözcük:
+  - `bütün yapı`
+  - `orta`
+  - `yakın`
+  - `çatı`
+  - `kadrajın yarısı`
+- Prototip bunları yapının sınır küresine göre kesire çeviriyor (`Sahne3D.aci`).
+
+### 5.4 «Eser hakkında» okuma düzeni
+- **Kaynak:** `icerik/eser-hakkinda-okuma.md` (şimdilik Ulucami). Her bölüm için:
+  - `Özet` cümleleri;
+  - `Rakam` kartları;
+  - `Alıntı`;
+  - `Zaman` (zaman çizelgesi);
+  - `Terim` (dokununca açılan tanım);
+  - `3D` (masaüstünde metinle birlikte dönen model açısı).
+- Hepsi envanter metninden **kelimesi kelimesine** seçilir; `hazirla.py` metinde geçtiğini doğrular.
+- `icerik/kitap-fotograflari.md`: envanterdeki fotoğrafların bölümlere yerleşimi.
+- `eser.json → hakkinda_kapak`: sayfanın kapak fotoğrafı (envanterin açılış fotoğrafı). Galerinin ilk fotoğrafından farklı olabilir.
+- **Ürünle ilişki:** `site_sections` yalnız `title` / `body` taşıyor.
+- **Öneri:** bölüme `extras jsonb` alanı (özet, rakam, alıntı, zaman, terim, kamera) ve eser düzeyinde `about_cover_media_id`.
+
+### 5.5 Görevler ve eser rozetleri
+- **Kaynak:** `icerik/gorevler.json` (şimdilik Ulucami; Talha diğer eserlerde çalışıyor). Görev türleri:
+  - `soru`: seçenekler, doğru cevap, ipuçları, doğru/yanlış metni, görsel, `parca`;
+  - `saha`: evden karşılığı var, `evden_cozulur`.
+- `rozetler`: koşul `hikaye_bitti` ya da `gorev: <id>`; ayrıca `yerinde_etiketi`.
+- **Kurallar:**
+  - Puan yok; süre yok; yanlış cevapta ceza yok.
+  - Cami içinde görev yok.
+  - Figma'dan puan ifadeleri kaldırıldı.
+- **Ürünle ilişki:** `quizzes` eser düzeyinde var. Saha görevi, ipucu ve eser rozeti yok. Rozet yalnız rota düzeyinde (`catalog_routes.badge_*`). Ürünün `point_events` tablosu puan tutuyor; tasarım kararıyla çelişiyor, konuşalım.
+- `parca` alanı: «3D modelde bul» görevi. Modeldeki parça adı; parça sadeleştirmesinden sonra adlar değişebilir (bkz. 1).
+
+### 5.6 Şehir kaydı ve küre
+- **Kaynak:** `veri/sehir/*.json`. İçerik:
+  - `merkez`, `zoom`, `zoom_masaustu`;
+  - `varsayilan`;
+  - envanter künyesi (`envanter_adi`, `_yili`, `_eser_sayisi`);
+  - `kimlik` (zemin rengi, desen, 3D sahne zemini);
+  - `harita_isik`.
+- Prototipte zoom 9'un altında küre görünümüne geçiliyor, şehirler işaret olarak görünüyor:
+  - Bursa: «7 eser».
+  - Hatay, Konya, Kütahya: «Yakında».
+- `cities` tablosu bugün yalnız `id` ve `name` taşıyor.
+
+### 5.7 Geçmişi Gör eki
+- **Kaynak:** `eserler/<eser>/gecmisi-gor/`:
+  - `bugunku-esler.json`: bugünkü eş fotoğraf;
+  - `izler.json`: İz Bırak örnekleri; `ornek=true` ekipten gelir, arayüzde «Örnek» etiketi.
+- Üründe `presentPhoto` ve `memories` var; bu dosyaları içe aktarma okumuyor.
+- **Lisans:**
+  - kaynak satırı (`kaynakSatiri`) her görselde aynen gösterilir;
+  - ND lisanslı görsel kırpılmaz (`object-fit: contain`);
+  - Deutsche Fotothek izni yalnız 7–8 Kasım finali için (Bursa'da kayıt yok, repoda yok).
+
+### 5.8 Harita küçükleri
+- **Stil:** `design/harita/akar-style-ozel-v2.json`, kullanıcının seçtiği renkler. Ürün `apps/web/public/harita/akar-style.json` kullanıyor.
+- **Pin:**
+  - etiket yer bulamazsa öbür yana geçer (`text-variable-anchor-offset`);
+  - önemli eser önce çizilir (`symbol-sort-key` = `eser.json → sira`);
+  - yakında pin küçülür.
+- **Filtre:**
+  - `rol: akar` arayüzde «Ticari (akar)»; «Akar» uygulamanın adıyla karışıyordu;
+  - şehirde eseri olmayan rol gösterilmez.
+
+### 5.9 Yükleme ekranları (şehrin deseniyle)
+- **Açılış ekranı:** tam ekran; arkada şehrin deseni silik (%6–10); ortada altın amblem çizgi çizgi çizilir; «AKAR», şehir adı, «Vakıf eserleri yükleniyor». Harita ilk kez çizilince kalkar.
+- **3D yükleniyor:** kart; amblem; «3D model yükleniyor · %NN»; ilerleme çubuğu; «x MB / y MB. Bu sırada Dinle ya da Oku ile başlayabilirsin…». Yüzde ve MB gerçek indirmeden gelir (akış okunur). Kart açıkken panel kullanılabilir.
+- **Kaynak:**
+  - Figma `akar-yeni`: «Amblem» 1:913, «Desenler» 1:863–958, «D · Eser detay / 3D yükleniyor» 1:4794, «Bileşen · Durum ekranları» 1:7615;
+  - prototip `index.html` `#acilis`, `app.js` `yuklemeKart` / `glbAl`.
+- **Desen ve renk şehir kaydından gelir:** `kimlik.desen` (`design/desenler/*.svg`), `kimlik.zemin`, `kimlik.desen_renk`. Kodda şehir adı ya da desen yazılmaz.
+
+## 6. Repoda olup ürüne alınmayacaklar
+
+- `design/test-redmi9t/` (v1): donmuş. İçe aktarma v2'ye geçince eski GLB'lerle birlikte silinecek:
+  - `v26`/`v27`, `v14`, `v06`, `v07` (cami), `v05` (hamam/emir), `v02`.
+- `design/harita/akar-harita-onizleme*.html`: tasarım aracı (ışık/renk paneli), ürün değil.
+- `design/test-redmi9t-v2/_promptlar/`: 3D ve içerik ajanlarına verilen iş emirleri; kayıt amaçlı.
+- `eserler/_kutuphane/renk_ao_v3/`: bir kerelik geçiş; kullanılmaz.
+- `.gitignore`'da olanlar ekip Drive'ında:
+  - `kontrol/`, `blend/`, `build/`, `ref/`;
+  - envanter PDF'leri, `veri/fotoatlas/`, `veri/bursa-foto/`.
+
+## 7. Repo sağlığı (ekip kararı)
+
+- **Envanter PDF'leri git geçmişinde duruyor.** 22 Ekim'de takipten çıkarıldılar, ama eski kopyalar geçmişte kaldı (6 dosya, her biri 29–63 MB; yerel `.git` 4,8 GB). Repo herkese açıksa ya da açılacaksa bu bir lisans sorunu, çünkü kitaplar «açık repoda tutulmaz» koşuluyla verildi.
+  - Çözüm: `git filter-repo` ile geçmişten silmek ve force push.
+  - Bütün ekip yeniden klonlamak zorunda kalır, açık PR'lar etkilenir. Bu yüzden birlikte, PR'lar birleştikten sonra yapılmalı.
+- **`design/ilk-prototip-kılıç-ali-pasa-düz-stil/`:**
+  - 44 dosyası repoda;
+  - `node_modules` ve `dist` (157 MB) diskte;
+  - macOS ad biçimi farkı yüzünden git onu «izlenmeyen» olarak gösteriyor.
+  - `git add -A` kullanılmasın; sahibi belli olunca karar verilsin.

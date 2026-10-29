@@ -1,0 +1,13 @@
+{
+  "_aciklama": "Şehir kaydı (28 Ekim 2026). Envanteri var, uygulamaya henüz eklenmedi: küre görünümünde «Yakında» olarak görünür; eserleri eklenince kendiliğinden «n eser» olur. merkez yaklaşık il merkezidir (yalnız harita işareti için).",
+  "id": "kutahya",
+  "ad": "Kütahya",
+  "merkez": [
+    29.9833,
+    39.42
+  ],
+  "zoom": 14,
+  "envanter_yili": 2025,
+  "envanter_eser_sayisi": 141,
+  "_kaynak": "KÖK&KOD Vakıf Eserleri Envanter Projesi Bilgi Notu (hackathon/KOKKOD_Envanter_Projesi_Bilgi_Notu.pdf): şehir, envanter yılı ve belgelenen eser sayısı."
+}

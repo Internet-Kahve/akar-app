@@ -14,7 +14,7 @@ Rota eseri: 8 cümle (~1 dk).
 | 4 | Uzun yıllar «Aynalı Çarşı» adıyla çarşı olarak kullanıldı. | 03_giris-kemer.jpg | hayır | — | E cilt-1 PDF s.105, s.106 | Doğrulanmış |
 | 5 | 1934'te Mimar Sedat Çetintaş, yapının aslında hamam olduğunu tespit etti. | 02_ic-carsi.jpg | evet | — | E cilt-1 PDF s.105 | Doğrulanmış |
 | 6 | Bugünkü üç girişinden yalnız kuzeydeki özgündür; diğerleri sonradan açıldı. | 04_tepeden-kubbeler.jpg | hayır | — | E cilt-1 PDF s.106 | Doğrulanmış |
-| 7 | Kubbelerin üstündeki aydınlık fenerleri içeriye ışık verir. | 05_kubbeler.jpg | hayır | Kubbe_Sicaklik | E cilt-1 PDF s.107 | Doğrulanmış |
+| 7 | Kubbelerin üstündeki aydınlık fenerleri içeriye ışık verir. | 05_kubbeler.jpg | hayır | Hamam_Sicaklik | E cilt-1 PDF s.107 | Doğrulanmış |
 | 8 | Bugün içinde antika ve hediyelik eşya satan dükkânlar sıralanır. | 02_ic-carsi.jpg | evet | — | E cilt-1 PDF s.106 | Doğrulanmış |
 
 ## Notlar
@@ -38,5 +38,5 @@ Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model d
 | 4 | Merkez | 180° | 25° | bütün yapı | Çarşı girişleri tarafı |
 | 5 | — | (4'te kalır) |  |  | Kart iç mekânı gösterir |
 | 6 | Merkez | 0° (kuzey) | 35° | bütün yapı | Özgün girişin bulunduğu kuzey cephe |
-| 7 | Kubbe_Sicaklik | 180° (güney) | 45° | orta | Fenerli kubbeler |
+| 7 | Hamam_Sicaklik | 180° (güney) | 45° | orta | Fenerli kubbeler |
 | 8 | Merkez | 180° | 30° | bütün yapı | Kapanış, 1'e dönüş |

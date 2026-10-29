@@ -13,9 +13,9 @@ Hero eser: 12 cümle (~1,5–2 dk). Her cümle tek bilgi, en fazla ~20 kelime.
 | 3 | İnşaat Mart 1489'da başladı; han 30 Eylül 1491'de açıldı. | 07_dis-cephe-bahce.jpg | hayır | — | E cilt-2 PDF s.8 | Doğrulanmış |
 | 4 | Hanın mimarı Abdülûlâ bin Pulad Şah'tır. | 07_dis-cephe-bahce.jpg | hayır | Portal | E cilt-2 PDF s.8 | Doğrulanmış |
 | 5 | Odalar, ortadaki avlunun çevresinde altlı üstlü sıralanır. | 02_avlu-genel.jpg | hayır | Avlu_Revak | E cilt-2 PDF s.9 | Doğrulanmış |
-| 6 | Avlunun ortasında sekizgen planlı bir köşk mescit durur. | 03_avlu-mescit.jpg | hayır | Avlu_Mescit | E cilt-2 PDF s.10; E cilt-1 PDF s.195 | Doğrulanmış |
-| 7 | Mescidin altında, on altıgen havuzlu bir şadırvan vardır. | 08_mescit-kitabe.jpg | evet | Avlu_Mescit | E cilt-1 PDF s.195 | Doğrulanmış |
-| 8 | Mescit, 1948'de tüccarların yardımıyla onarıldı. | 08_mescit-kitabe.jpg | evet | Mescit_Kubbe | E cilt-1 PDF s.195 | Doğrulanmış |
+| 6 | Avlunun ortasında sekizgen planlı bir köşk mescit durur. | 03_avlu-mescit.jpg | hayır | Mescit | E cilt-2 PDF s.10; E cilt-1 PDF s.195 | Doğrulanmış |
+| 7 | Mescidin altında, on altıgen havuzlu bir şadırvan vardır. | 08_mescit-kitabe.jpg | evet | Mescit | E cilt-1 PDF s.195 | Doğrulanmış |
+| 8 | Mescit, 1948'de tüccarların yardımıyla onarıldı. | 08_mescit-kitabe.jpg | evet | Mescit | E cilt-1 PDF s.195 | Doğrulanmış |
 | 9 | Hanın doğusunda, ahırların bulunduğu ikinci bir avlu vardır. | 04_tepeden.jpg | hayır | Ic_Koza | E cilt-2 PDF s.9 | Doğrulanmış |
 | 10 | Bugün üst katta ipek ticareti yapan işletmeler bulunur. | 05_revak-ipek-dukkanlari.jpg | hayır | Avlu_Revak | E cilt-2 PDF s.11 | Doğrulanmış |
 | 11 | Avlusu çay bahçesi olarak kullanılıyor. | 02_avlu-genel.jpg | hayır | Avlu_Zemin | E cilt-2 PDF s.11 | Doğrulanmış |
@@ -43,7 +43,7 @@ Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model d
 | 3 | Govde_Dis | 180° (güney) | 20° | uzun cephe | Güney cephe fotoğrafıyla aynı yön; yön doğrulanmalı |
 | 4 | Portal | 0° | 10° | yakın | Kuzey portal |
 | 5 | Avlu_Revak | 0° | 40° | avlu kadrajda | Avlu içine bakış |
-| 6 | Avlu_Mescit | 45° | 30° | yakın | Mescit ve merdiveni |
+| 6 | Mescit | 45° | 30° | yakın | Mescit ve merdiveni |
 | 7–8 | — | (6'da kalır) |  |  | Kartlar şadırvan ve kitabeyi gösterir |
 | 9 | Ic_Koza | 90° (doğu) | 45° | Ic_Koza + ana han | İkinci avlu doğuda |
 | 10 | Avlu_Revak | 0° | 25° | üst kat revak |  |

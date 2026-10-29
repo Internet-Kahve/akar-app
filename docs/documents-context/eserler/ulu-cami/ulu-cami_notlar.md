@@ -372,3 +372,11 @@ Orijin: yapının zemin ortası. Kuzey cephe −Y yönüne bakar, +X = batı.
 | v01/v01b · Kütle | OSM ayak izi + fotoğraftan oran ölçümü → Govde, Cati, Kubbeler_19, Sadirvan_Kubbe, Alemler, Minare_1/2, Zemin | kontrol_hepsi GECTI, üçgen < 25k, kuzey ve havadan render'ı REF3 ile yan yana |
 | v02 · Detay + renk + çıkış | Cephe nişleri ve pencereler, Tac_Kapi, yan kapılar, bant/silme, kasnak pencereleri, kubbe yivleri, minare detayları, son palet + AO, `export/ulu-cami_v02.glb` (geometri v01e2'de donduruldu) | GECTI, ≤ 30k üçgen, ≤ 1 MB |
 | v03 · Renk + çıkış | palet, `ao_vertex`, `disa_aktar` → `export/ulu-cami_v03.glb`, ≤ 1 MB | dosya boyutu, Redmi testi |
+
+
+## v27 · iç mekân (27 Ekim 2026)
+
+- Amaç: uygulamada «Kubbeleri kaldır» (Şekerhan 3D kat görüntüleyicisinden uyarlama). Önceki notlardaki «İç mekân, modele girmez» kararı bu sürümle değişti: payeler, sivri kemerler, mihrap, minber ve levhalar artık modelde.
+- Kaynak: 12 kare paye ve sivri kemerler (ENV C1 PDF s.26; Ürgen s.5), paye çekirdeği ≈ 2,2 m (Ayverdi), mihrap 5,13 × 8,11 m, 29 cm çıkıntı (Ürgen), levhalar «payelerin her yüzüne celi sülüs ve kûfi hatlarla esmâ-i hüsnâ» (ENV C1).
+- Tahmin (T): duvar payeleri, kemer üzengi/kilit kotları (7,0 / 12,6 m), minber ölçüsü ve biçimi, büyük duvar levhalarının yeri. Renkler stilize.
+- Kural: **levhalarda yazı yok.** Kaynakta okunmayan kitabe uydurulmaz; gerçek yazı fotoğraf kartıyla gösterilir.

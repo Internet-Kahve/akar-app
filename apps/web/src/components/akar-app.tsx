@@ -36,19 +36,21 @@ import {
   defaultMapSettings,
   filterSites,
   kindLabels,
-  trustLabels,
   normalize,
   type Command,
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
+  type CityScene,
   type Role,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
+import { CityScenes } from "./city-scenes";
 import { Architecture, Scene } from "./scene";
 import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
+import { AboutModal } from "./about-reading";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { MemoryActions } from "./memory-actions";
@@ -109,6 +111,7 @@ export function AkarApp() {
     [signIn, setSignIn] = useState<string | null>(null);
   const [mapSettings, setMapSettings] =
     useState<MapSettings>(defaultMapSettings);
+  const [cityScenes, setCityScenes] = useState<Record<string, CityScene>>({});
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -117,11 +120,17 @@ export function AkarApp() {
   const role: Role = state.role ?? (live ? "user" : "admin");
   const canManage = !live || (!!account && role !== "user");
   const showExperimental = !live && experimental;
-  /** Map settings are a refinement: when they cannot be read the map keeps the values it has. */
+  /**
+   * Map settings and city scenes (§11.42) are a refinement: when one cannot be read the map and the
+   * viewer keep the values they have.
+   */
   const loadMapSettings = useCallback(async () => {
-    try {
-      if (client.current) setMapSettings(await client.current.getMapSettings());
-    } catch {}
+    const c = client.current;
+    if (!c) return;
+    await Promise.all([
+      c.getMapSettings().then(setMapSettings, () => {}),
+      c.getCityScenes().then(setCityScenes, () => {}),
+    ]);
   }, []);
   const load = useCallback(async () => {
     if (!client.current) return;
@@ -447,7 +456,7 @@ export function AkarApp() {
       )}
     </div>
   );
-  return (
+  const shell = (
     <div className="app-shell">
       <a
         className="skip-link"
@@ -1098,12 +1107,24 @@ export function AkarApp() {
                 </button>
                 {isDetail && site ? (
                   <Scene
-                    key={`${site.id}-${view === "story" ? storyIndex : "detail"}`}
+                    key={`${site.id}-${view === "story" && !site.model ? storyIndex : view}`}
                     site={site}
                     live={live}
                     photoId={
                       view === "story"
                         ? site.stories[storyIndex]?.photoId
+                        : undefined
+                    }
+                    pose={
+                      view === "story"
+                        ? site.stories
+                            .slice(0, storyIndex + 1)
+                            .findLast((s) => s.camera)?.camera
+                        : undefined
+                    }
+                    interior={
+                      view === "story"
+                        ? (site.stories[storyIndex]?.interior ?? false)
                         : undefined
                     }
                     flow={
@@ -1173,44 +1194,7 @@ export function AkarApp() {
         />
       )}
       {overlay === "about" && site && (
-        <Modal title="Eser hakkında" onClose={() => setOverlay(null)}>
-          <h3>{site.name}</h3>
-          <p>{site.description}</p>
-          <dl className="facts">
-            <div>
-              <dt>Dönem</dt>
-              <dd>{site.year}</dd>
-            </div>
-            <div>
-              <dt>Mimar</dt>
-              <dd>{site.architect}</dd>
-            </div>
-            <div>
-              <dt>Konum</dt>
-              <dd>
-                {site.city} · {site.district}
-              </dd>
-            </div>
-          </dl>
-          {site.sections?.map((section) => (
-            <section key={section.id}>
-              <h3>{section.title}</h3>
-              <p>{section.body}</p>
-              <Tag tone={section.trust}>{trustLabels[section.trust]}</Tag>
-              <p className="muted">
-                {
-                  site.sources?.find((source) => source.id === section.sourceId)
-                    ?.title
-                }
-              </p>
-            </section>
-          ))}
-          <h3>Kaynak ve içerik durumu</h3>
-          <p>{site.source}</p>
-          {!site.sources?.length && (
-            <Notice>Bu kaydın kaynaklı içerik paketi henüz eklenmedi.</Notice>
-          )}
-        </Modal>
+        <AboutModal site={site} onClose={() => setOverlay(null)} />
       )}
       {overlay === "memories" && site && (
         <Modal title="Yaşayan hafıza" onClose={() => setOverlay(null)}>
@@ -1390,6 +1374,7 @@ export function AkarApp() {
       </nav>
     </div>
   );
+  return <CityScenes.Provider value={cityScenes}>{shell}</CityScenes.Provider>;
 }
 function PlusIcon() {
   return <span className="plus-circle">+</span>;

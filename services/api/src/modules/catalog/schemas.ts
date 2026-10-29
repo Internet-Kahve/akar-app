@@ -97,15 +97,16 @@ export const IdParams = z.object({ id: z.string().min(1).max(100) });
 
 const Image = z.object({ id: z.string(), url: z.string(), alt: z.string() });
 
-/** Saved 3D camera pose ("Açı"): azimuth/elevation in degrees, distance in metres. */
+/** Saved 3D camera pose ("Açı"): around a model part, distance relative to the model's size. */
 export const CameraPoseDto = z
   .object({
     label: z.string().optional(),
-    azimuthDeg: z.number(),
+    target: z.string().nullable().describe("Kameranın baktığı model parçası; null = modelin ortası"),
+    azimuthDeg: z.number().describe("0 = kuzeyden bakış, saat yönünde"),
     elevationDeg: z.number(),
-    distanceM: z.number(),
+    distance: z.number().describe("Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"),
   })
-  .describe("Kamera açısı: azimut ve yükseklik derece, uzaklık metre");
+  .describe("Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık");
 
 export const SiteSummary = z.object({
   id: z.string(),
@@ -149,6 +150,7 @@ export const StoryBlockDto = z.object({
   showCard: z.boolean().nullable(),
   cardId: z.string().nullable().describe("Cümlede modelin üstünde gösterilen kart (SiteDetail.cards)"),
   camera: CameraPoseDto.nullable().describe("Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"),
+  interior: z.boolean().describe("«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"),
   highlights: z.array(z.string()),
   audioMediaId: z.string().nullable().describe("Türkçe ses kaydı (SiteDetail.media, kind=audio)"),
   audioEnMediaId: z.string().nullable().describe("İngilizce ses kaydı (SiteDetail.media, kind=audio)"),
@@ -168,6 +170,9 @@ export const MediaDto = z.object({
   trust: TrustSchema,
   parts: z.array(z.string()),
   triangles: z.number().int().nullable().describe("3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"),
+  coverGroups: z
+    .array(z.array(z.string()))
+    .describe("«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"),
 });
 
 export const SourceDto = z.object({
@@ -181,6 +186,34 @@ export const SourceDto = z.object({
   trust: TrustSchema,
 });
 
+export const SectionPhotoDto = z.object({
+  mediaId: z.string().describe("Fotoğraf (SiteDetail.media, kind=photo)"),
+  aspect: z.number().nullable().describe("Fotoğrafın kitaptaki en/boy oranı; bilinmiyorsa null"),
+  alt: z.string(),
+});
+export type SectionPhotoDto = z.infer<typeof SectionPhotoDto>;
+
+export const ChapterDto = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    kind: z.enum(sectionKinds),
+    summary: z.array(z.string()).describe("Bölümün metninden seçilmiş özet cümleleri, kelimesi kelimesine"),
+    figures: z
+      .array(z.object({ value: z.string(), label: z.string(), evidence: z.string().describe("Metinde geçen ifade") }))
+      .describe("Rakam kartları"),
+    quotes: z.array(z.object({ text: z.string(), by: z.string().nullable() })).describe("Büyük alıntılar; by = söyleyen, bilinmiyorsa null"),
+    timeline: z.array(z.object({ year: z.string(), evidence: z.string().describe("Metinde geçen ifade") })).describe("Zaman çizelgesi"),
+    terms: z
+      .array(z.object({ word: z.string(), definition: z.string() }))
+      .describe("Bölüm metninde geçen, dokununca tanımı açılan terimler"),
+    camera: CameraPoseDto.nullable().describe("Bölüm okunurken masaüstünde 3B modelin açısı; null = model olduğu gibi kalır"),
+    interior: z.boolean().describe("Bölüm okunurken modelin örtü grupları kalkar"),
+    focusParts: z.array(z.string()).describe("Bölüm okunurken vurgulanan model parçaları; boş = bütün yapı"),
+  })
+  .describe("«Eser hakkında» okuma bölümü; metni SiteDetail.sections içinde chapterId ile ona bağlıdır");
+export type ChapterDto = z.infer<typeof ChapterDto>;
+
 export const SectionDto = z.object({
   id: z.string(),
   kind: z.enum(sectionKinds),
@@ -189,6 +222,8 @@ export const SectionDto = z.object({
   bodyEn: z.string().nullable(),
   trust: TrustSchema,
   sourceId: z.string().nullable(),
+  chapterId: z.string().nullable().describe("Paragrafın ait olduğu okuma bölümü (SiteDetail.chapters); null = hiçbir bölüme bağlı değil"),
+  photos: z.array(SectionPhotoDto).describe("Paragrafın arkasında gösterilen kitap fotoğrafları, sıralı; galeriye girmez"),
 });
 
 export const CardDto = z.object({
@@ -213,6 +248,16 @@ export const HistoryImageDto = z.object({
   sourceId: z.string().nullable(),
   trust: TrustSchema,
   camera: CameraPoseDto.nullable().describe("Bugünün görüntüsüyle hizalama açısı"),
+});
+
+export const PartCardDto = z.object({
+  id: z.string(),
+  parts: z.array(z.string()).describe("Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"),
+  title: z.string(),
+  body: z.string(),
+  photoIds: z.array(z.string()).describe("Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"),
+  sourceId: z.string().nullable(),
+  trust: TrustSchema,
 });
 
 export const MapPointDto = z.object({ lng: z.number(), lat: z.number() });
@@ -240,32 +285,54 @@ export const SiteDetail = SiteSummary.extend({
   sourceSummary: z.string().describe("Geriye uyumlu tek satırlık kaynak özeti"),
   editorVersion: z.literal(2).nullable(),
   coverMediaId: z.string().nullable(),
+  aboutCoverMediaId: z.string().nullable().describe("«Eser hakkında» sayfasının kapak fotoğrafı (SiteDetail.media); null = galerinin kapağı"),
   openingCamera: CameraPoseDto.nullable().describe("3B hikâyenin açılış açısı"),
   updatedAt: z.iso.datetime(),
   stories: z.array(StoryBlockDto),
-  sections: z.array(SectionDto).describe("Eser hakkında bölümler (Tarihçe, Mimari, Vakıf ve akar), sıralı"),
+  sections: z.array(SectionDto).describe("Eser hakkında paragraflar (Tarihçe, Mimari, Vakıf ve akar), sıralı"),
+  chapters: z.array(ChapterDto).describe("Eser hakkında okuma bölümleri, sıralı; boş = paragraflar başlıklarıyla düz gösterilir"),
   cards: z.array(CardDto).describe("Hikâye cümlelerinin kullandığı kartlar; ilk kullanım sırasıyla, tekrarsız"),
   historyImages: z.array(HistoryImageDto).describe("Geçmişi Gör görselleri, sıralı"),
+  partCards: z
+    .array(PartCardDto)
+    .describe("3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"),
   placement: MapPlacementDto.nullable().describe(
     "Modelin haritadaki yerleşimi. Eserin modeli varsa ve yerleşim gösterilmek üzere kaydedilmişse dolu; aksi halde null (alan hiçbir zaman eksik olmaz)",
   ),
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
   media: z
     .array(MediaDto)
-    .describe("Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
+    .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
   sources: z
     .array(SourceDto)
-    .describe("Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"),
+    .describe("Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"),
 });
 export type SiteDetail = z.infer<typeof SiteDetail>;
 
 export const SiteDetailListResponse = pageResponse(SiteDetail);
+
+export const CitySceneDto = z
+  .object({
+    light: z.object({
+      ambient: z.number().describe("Ortam (yarıküre) ışığı"),
+      sun: z.number().describe("Güneş ışığı"),
+      fill: z.number().describe("Karşı (dolgu) ışık"),
+      azimuthDeg: z.number().describe("Güneş yönü, kuzeyden saat yönünde derece"),
+      elevationDeg: z.number().describe("Güneşin ufuktan yüksekliği, derece"),
+      saturation: z.number().describe("Malzeme renklerinin doygunluk çarpanı"),
+      groundShadow: z.number().describe("Modelin altındaki yumuşak yer gölgesinin opaklığı (0 = yok)"),
+    }),
+    backgroundTop: z.string().describe("Eser 3B sahnesi zemini, üst renk (#RRGGBB)"),
+    backgroundBottom: z.string().describe("Eser 3B sahnesi zemini, alt renk (#RRGGBB)"),
+  })
+  .describe("Haritadaki ve eser sayfasındaki 3B modellerin ışığı ve sahne zemini (§11.42)");
 
 export const CityDto = z.object({
   id: z.string(),
   name: z.string(),
   siteCount: z.number().int().describe("Yayındaki eser sayısı"),
   routeCount: z.number().int().describe("Yayındaki rota sayısı"),
+  scene: CitySceneDto.nullable().describe("null = istemci varsayılan ışığı ve zemini kullanır"),
 });
 export type CityDto = z.infer<typeof CityDto>;
 

@@ -15,7 +15,16 @@ const PNG = Buffer.from(
 );
 
 test.beforeAll(async () => {
-  const ready = await fetch(`${API}/ready`).catch(() => null);
+  let ready = await fetch(`${API}/ready`).catch(() => null);
+  // Desktop and mobile share localhost's guest quota. A fast preceding project (or a local rerun)
+  // can exhaust it before the next project signs in. Wait at setup, never retry a failed assertion
+  // or relax the application's rate limit. Reset is seconds until the current window ends.
+  const remaining = ready?.headers.get("x-ratelimit-remaining");
+  const reset = Number(ready?.headers.get("x-ratelimit-reset"));
+  if (remaining !== null && remaining !== undefined && Number(remaining) < 250 && reset > 0 && reset <= 60) {
+    await sleep(reset * 1000 + 100);
+    ready = await fetch(`${API}/ready`).catch(() => null);
+  }
   expect(ready?.ok, "API kapalı: önce repo kökünde `npm run api`").toBe(true);
   const mail = await fetch(`${MAILPIT}/api/v1/info`).catch(() => null);
   expect(mail?.ok, "Mailpit (yerel Supabase) kapalı: `npm run api`").toBe(true);
@@ -387,6 +396,47 @@ test("live photo metadata editing preserves imported licenses and excludes unsup
   await expect(dialog.getByRole("button", { name: "Fotoğrafı güncelle", exact: true })).toBeEnabled();
   await expect(dialog.getByText(/Dosya veya kaynak değişikliği için/)).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("photo-editor.png"), fullPage: true });
+});
+
+test("map settings follow delayed reads without overwriting an edited field", async ({ page }) => {
+  const email = `e2e-map-admin-${randomUUID().slice(0, 8)}@akar.test`;
+  tokenFor(email, "admin");
+  let releaseFirstRead = () => {};
+  const firstRead = new Promise<void>((resolve) => { releaseFirstRead = resolve; });
+  let settings = { maxVisibleModels: 7, modelMinZoom: 18 };
+  await page.route(`${API}/v1/map-settings`, async (route) => {
+    await firstRead;
+    await route.fulfill({ json: settings });
+  });
+  await page.goto("/#view=admin");
+  await page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await signIn(page, email);
+  await page.getByRole("button", { name: "Harita ayarları", exact: true }).click();
+  const models = page.getByLabel("Aynı anda en çok model");
+  const zoom = page.getByLabel("Modellerin yüklendiği yakınlaştırma");
+  await expect(models).toBeVisible();
+  releaseFirstRead();
+  await expect(models).toHaveValue("7");
+  await expect(zoom).toHaveValue("18");
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
+
+  await models.fill("9");
+  settings = { maxVisibleModels: 6, modelMinZoom: 19 };
+  const refreshed = page.waitForResponse(`${API}/v1/map-settings`);
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await refreshed;
+  // Only the touched field belongs to the draft; untouched fields follow the server.
+  await expect(models).toHaveValue("9");
+  await expect(zoom).toHaveValue("19");
+  let submitted: unknown;
+  await page.route(`${API}/v1/admin/map-settings`, async (route) => {
+    submitted = route.request().postDataJSON();
+    await route.fulfill({ json: submitted });
+  });
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Harita ayarları kaydedildi.")).toBeVisible();
+  expect(submitted).toEqual({ maxVisibleModels: 9, modelMinZoom: 19 });
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
 });
 
 test("an admin finds a newly registered member, grants admin access and revokes it", async ({ browser, viewport, isMobile, hasTouch }, info) => {

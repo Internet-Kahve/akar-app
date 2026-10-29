@@ -25,11 +25,12 @@ export const LngLatInput = z.tuple([z.number().min(-180).max(180), z.number().mi
 export const CameraPoseInput = z
   .object({
     label: text(60).optional(),
+    target: text(200).nullable().default(null),
     azimuthDeg: z.number().min(-360).max(360),
     elevationDeg: z.number().min(-90).max(90),
-    distanceM: z.number().positive().max(10_000),
+    distance: z.number().min(0.1).max(4),
   })
-  .describe("Kamera açısı: azimut ve yükseklik derece, uzaklık metre");
+  .describe("Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)");
 export type CameraPoseInput = z.infer<typeof CameraPoseInput>;
 
 // ── site: list and detail ────────────────────────────────────────────────────
@@ -205,6 +206,7 @@ const StoryInput = z.object({
   showCard: z.boolean().nullable().optional(),
   cardId: Id.nullable().default(null).describe("Paylaşılan kart"),
   camera: CameraPoseInput.nullable().default(null),
+  interior: z.boolean().default(false).describe("«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"),
   highlights: z.array(text(200).min(1)).max(50).default([]).describe("Eserin 3B modelindeki parça adları"),
   audioMediaId: Id.nullable().default(null).describe("kind=audio medya (TR)"),
   audioEnMediaId: Id.nullable().default(null).describe("kind=audio medya (EN)"),

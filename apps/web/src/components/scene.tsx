@@ -10,7 +10,8 @@ import {
   Users,
   Maximize2,
 } from "lucide-react";
-import type { HeritageSite } from "@akar/domain";
+import type { CameraPose, HeritageSite } from "@akar/domain";
+import { useCityScene } from "./city-scenes";
 const ModelViewer = dynamic(() => import("./model-viewer"), {
   ssr: false,
   loading: () => <p role="status">3B görünüm hazırlanıyor…</p>,
@@ -59,16 +60,24 @@ export function Scene({
   flow = false,
   live = false,
   photoId,
+  pose,
+  interior,
   onHotspot,
 }: {
   site: HeritageSite;
   flow?: boolean;
   live?: boolean;
   photoId?: string;
+  /** Story sentence's camera view; the model stays mounted while it changes. */
+  pose?: CameraPose;
+  /** Story sentence's "İç mekân (3D)": lift the model's cover groups. */
+  interior?: boolean;
   onHotspot: (id: string) => void;
 }) {
+  const cityScene = useCityScene(site.city);
+  // A model site opens on the model, also in the story (its camera follows the sentences).
   const [mode, setMode] = useState<"photo" | "model">(
-    photoId ? "photo" : "model",
+    photoId && !site.model ? "photo" : "model",
   );
   const photo = [...(site.photos ?? []), ...(site.storyPhotos ?? [])].find(
     (p) => p.id === (photoId || site.coverPhotoId),
@@ -104,6 +113,11 @@ export function Scene({
               key={site.model.src}
               model={site.model}
               name={site.name}
+              scene={cityScene}
+              pose={pose}
+              interior={interior}
+              partCards={site.partCards}
+              sources={site.sources}
             />
             <div className="scene-photo-credit">
               Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için
