@@ -401,10 +401,11 @@ test("live photo metadata editing preserves imported licenses and excludes unsup
 test("map settings follow delayed reads without overwriting an edited field", async ({ page }) => {
   const email = `e2e-map-admin-${randomUUID().slice(0, 8)}@akar.test`;
   tokenFor(email, "admin");
-  const firstRead = Promise.withResolvers<void>();
+  let releaseFirstRead = () => {};
+  const firstRead = new Promise<void>((resolve) => { releaseFirstRead = resolve; });
   let settings = { maxVisibleModels: 7, modelMinZoom: 18 };
   await page.route(`${API}/v1/map-settings`, async (route) => {
-    await firstRead.promise;
+    await firstRead;
     await route.fulfill({ json: settings });
   });
   await page.goto("/#view=admin");
@@ -414,7 +415,7 @@ test("map settings follow delayed reads without overwriting an edited field", as
   const models = page.getByLabel("Aynı anda en çok model");
   const zoom = page.getByLabel("Modellerin yüklendiği yakınlaştırma");
   await expect(models).toBeVisible();
-  firstRead.resolve();
+  releaseFirstRead();
   await expect(models).toHaveValue("7");
   await expect(zoom).toHaveValue("18");
   await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
