@@ -1281,3 +1281,5 @@ body.d .hk-derin.acik .hk-derin-dugme{margin-right:-20px}   /* masaüstünde met
 .eser-alt:not(.tam) .ea-detay{-webkit-mask-image:linear-gradient(180deg,#000 0,#000 calc(var(--g,44px) - 72px),rgba(0,0,0,.14) var(--g,44px));mask-image:linear-gradient(180deg,#000 0,#000 calc(var(--g,44px) - 72px),rgba(0,0,0,.14) var(--g,44px))}
 body.m #temsili,body.m #kubbe-dugme,body.m #parca-ad{transition:bottom var(--sure-3) var(--egri)}
 #gorus:has(.eser-alt.surukle) #temsili,#gorus:has(.eser-alt.surukle) #kubbe-dugme,#gorus:has(.eser-alt.surukle) #parca-ad{transition:none}
+/* 30 Ekim 2026: 3D modeli olmayan eser (yalnız fotoğraf): Fotoğraf | 3D seçicisi gösterilmez */
+body.uc-yok .secici{display:none}

@@ -15,6 +15,20 @@
 - **Kapak** (`eser.json → hakkinda_kapak`): altı eserde de envanterin açılış fotoğrafı (Orhan Gazi Türbesi'nde açılış fotoğrafı galeride yok; dış fotoğraf seçildi).
 - **Geçmişi Gör:** Foto Atlas'ta izinli bütün kayıtlar tarandı. Koza Han'a 47676 «Koza Han Mescidi» (1908–34) eklendi (5 → 6; `veri/fotoatlas/eslesme_elle.csv`'ye onay, Git dışında). Bedesten, Emir Hanı ve Orhan Bey Hamamı için Foto Atlas'ta kullanılabilir (ya da izin bekleyen) **hiç kayıt yok**; bu eserlerde «eski görüntü henüz yok» ekranı kalır. Bugünkü eş ve örnek iz Ulucami dışında yapılmadı (`_promptlar/PROMPT_gecmisi_gor_diger_eserler.md` hâlâ açık).
 
+**Dört yeni eser ve iki yeni il (30 Ekim gece):**
+- **Dört yeni eser, yalnız fotoğrafla (3D yok):**
+  - **Eyne Bey (İnebey) Medresesi** · Bursa · **Eğitim** (Bursa Envanteri C2 s.34–36). Vakfiyesi müderrisin maaşını yandaki hamamın gelirine bağlar; 1969'dan beri Orhan Camii kütüphanesinin eserleriyle İnebey Yazma Eser Kütüphanesi.
+  - **Alaaddin Bey Çeşmesi** · Bursa · **Su** (C2 s.62). Kentteki en eski çeşme kabul edilir. Yapım yılı ve banisi kitapta yok, boş bırakıldı.
+  - **Karatay Medresesi** · **Konya** · Eğitim (Konya Vakıf Eserleri C2 s.45–47). 1251; Çini Eserler Müzesi.
+  - **Habib-i Neccar Camii** · **Hatay** · Dinî (Hatay İli Vakıf Eserleri s.28–36; tek cilt, kodda «cilt-1»). Kitap 2022 tarihli; 2023 depremindeki hasar hikâyenin son cümlesinde W kaynağıyla (İstiklal, 25.03.2023).
+- Her birinde: `eser.json`, envanter metninin tamamı (`eser-hakkinda.md`), hikâye (5–8 cümle), galeri (`fotograflar.md`) ve kitap fotoğrafları (`kitap-fotograflari.md`; fotoğraflar envanter kitabından kesildi), bir soru + hikâye rozeti (`gorevler.json`, taslak). Saha görevi yok (evden karşılığı 3D parça olduğu için). Okuma katmanı ve Geçmişi Gör yok.
+- **Haritada:** Su ve Eğitim filtreleri artık görünüyor (eser olunca kendiliğinden). Konya ve Hatay küre görünümünde «1 eser»; «Yakında» değil. Konum: Kültür Envanteri (kulturenvanteri.com) koordinatları, uydu ile ayrıca doğrulanmadı.
+- **Kodda (esere/ile özel değer yok):**
+  - 3D modeli olmayan eser: Fotoğraf | 3D seçicisi gizlenir, sahne hep fotoğraf (`gorunumAyar`, `body.uc-yok`); haritanın 3D katmanı yalnız modeli olanları yükler. Cihazdaki görünüm tercihi bozulmaz.
+  - Pin görseli veriden: her (ikon, rol) çifti için; gövde rengi rolün rengi (`ROL_RENK`). Yeni ikonlar `medrese`, `cesme` (`design/ikonlar/akar-medrese.svg`, `akar-cesme.svg`). Önceden ikon listesi ve rengi kodda sabitti.
+  - Liste haritadaki aktif ilin eserleri («Konya ▾ · 1 eser»); aramada bütün iller. Fotoğraf künyesi ve karşılama kartındaki eser sayısı ilin kaydından.
+  - Şehir kaydı: `veri/sehir/konya.json` ve `hatay.json`'a `envanter_adi`, `envanter_yayinci`, `foto_kunye`, `kaynakca`.
+
 **Kodda küçük, esere özel olmayan düzeltmeler:**
 - `hazirla.py` → `kitap_fotolari`: fotoğraf yalnız **aynı ciltteki** paragraflara göre yerleşir (Koza Han iki cilde yayılıyor) ve sondaki «Vakıf ve akar» özet paragrafı aynı sayfayı anıyorsa fotoğrafları kendine çekmez. Ulucami'nin yerleşimi değişmedi (denetlendi).
 - `hazirla.py` → `kucult`: `sips` yoksa (Linux) dosyayı küçültmeden kopyalar, önbelleğe yazmaz.

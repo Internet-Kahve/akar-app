@@ -1136,3 +1136,24 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - **Kod:** `hazirla.py` → kitap fotoğrafı yerleşimi (aynı cilt; sondaki özet paragraf), `kucult` (`sips` yoksa kopya); `app.js` → hikâyesi olmayan eserde bulmaca alt yazısı; `index.html` → buzlu varsayılan tema. Esere özel değer yok.
 - **Denendi:** `hazirla.py` hatasız; okuma katmanında uyarı yok; bütün kart ve görev fotoğrafları klasörde. Tarayıcıda Orhan Bey Camii: dış parçaya dokununca kart, «İçini göster» sonrası iç parçaya dokununca kart, bulmaca ekranı (veri sayfaya enjekte edilerek; çalışan sunucu yeniden başlatılmadan).
 - **Açık kalan:** görevlerin içerik sorumlusunca gözden geçirilmesi; kitap fotoğraflarının alt metinleri; Ulucami dışındaki eserlerde bugünkü eş ve örnek iz; `eslesme_elle.csv`'deki 47676 onayının doğrulanması.
+
+## 76. Su ve Eğitim kategorileri, Konya ve Hatay'dan ilk eserler (30 Ekim 2026 gece, Claude)
+
+İstek (Talha): «Diğer şehirlerden birer eser; dinî ve ticari dışındaki kategorileri tamamla. 3D gerekmez, yalnız fotoğrafla.»
+
+- **Dört yeni eser, yalnız fotoğrafla (3D yok):**
+  - **Eyne Bey (İnebey) Medresesi** · Bursa · **Eğitim** (Bursa Envanteri C2 s.34–36). Vakfiyesi müderrisin maaşını yandaki hamamın gelirine bağlar; 1969'dan beri Orhan Camii kütüphanesinin eserleriyle İnebey Yazma Eser Kütüphanesi.
+  - **Alaaddin Bey Çeşmesi** · Bursa · **Su** (C2 s.62). Kentteki en eski çeşme kabul edilir. Yapım yılı ve banisi kitapta yok, boş bırakıldı.
+  - **Karatay Medresesi** · **Konya** · Eğitim (Konya Vakıf Eserleri C2 s.45–47). 1251; Çini Eserler Müzesi.
+  - **Habib-i Neccar Camii** · **Hatay** · Dinî (Hatay İli Vakıf Eserleri s.28–36; tek cilt, kodda «cilt-1»). Kitap 2022 tarihli; 2023 depremindeki hasar hikâyenin son cümlesinde W kaynağıyla (İstiklal, 25.03.2023).
+- Her birinde: `eser.json`, envanter metninin tamamı (`eser-hakkinda.md`), hikâye (5–8 cümle), galeri (`fotograflar.md`) ve kitap fotoğrafları (`kitap-fotograflari.md`; fotoğraflar envanter kitabından kesildi), bir soru + hikâye rozeti (`gorevler.json`, taslak). Saha görevi yok (evden karşılığı 3D parça olduğu için). Okuma katmanı ve Geçmişi Gör yok.
+- **Haritada:** Su ve Eğitim filtreleri artık görünüyor (eser olunca kendiliğinden). Konya ve Hatay küre görünümünde «1 eser»; «Yakında» değil. Konum: Kültür Envanteri (kulturenvanteri.com) koordinatları, uydu ile ayrıca doğrulanmadı.
+- **Kodda (esere/ile özel değer yok):**
+  - 3D modeli olmayan eser: Fotoğraf | 3D seçicisi gizlenir, sahne hep fotoğraf (`gorunumAyar`, `body.uc-yok`); haritanın 3D katmanı yalnız modeli olanları yükler. Cihazdaki görünüm tercihi bozulmaz.
+  - Pin görseli veriden: her (ikon, rol) çifti için; gövde rengi rolün rengi (`ROL_RENK`). Yeni ikonlar `medrese`, `cesme` (`design/ikonlar/akar-medrese.svg`, `akar-cesme.svg`). Önceden ikon listesi ve rengi kodda sabitti.
+  - Liste haritadaki aktif ilin eserleri («Konya ▾ · 1 eser»); aramada bütün iller. Fotoğraf künyesi ve karşılama kartındaki eser sayısı ilin kaydından.
+  - Şehir kaydı: `veri/sehir/konya.json` ve `hatay.json`'a `envanter_adi`, `envanter_yayinci`, `foto_kunye`, `kaynakca`.
+
+- **Seçim gerekçesi:** İnebey Medresesi çarşıya yakın, Orhan Camii kütüphanesiyle bağlantılı (Orhan Bey Camii parça kartı) ve vakfiyesi akar–hayrat ilişkisini anlatıyor. Alaaddin Bey Çeşmesi kitapta «kentteki en eski çeşme». Karatay Medresesi Konya'nın en tanınan vakıf eserlerinden; Habib-i Neccar Hatay kitabının ilk kaydı.
+- **Kaynak kuralı:** metin kitaptan birebir; hikâye cümleleri yalnız kitaptaki bilgiden. Rivayet ve tahminler «Tarihsel çıkarım» ya da hikâye dışı (Karatay'ın mimarı, Habib-i Neccar'ın 636 tarihi). Hatay kitabının metni ayrı betikle çıkarıldı (`_araclar/envanter_metni_cikar_hatay.py`).
+- **Denendi:** `hazirla.py` hatasız. Tarayıcıda (geçici bir kopyayla, sonra silindi): Karatay detayında seçici gizli ve galeri doğru; anlatım fotoğrafla; Eser hakkında Konya künyesiyle; Habib-i Neccar bulmacası; harita Konya'ya gelince liste «Konya ▾ · 1 eser», Bursa'ya dönünce 9 eser; çeşme pini mavi ve çeşme simgeli; mevcut 8080 sunucusunda yedi eser eskisi gibi.

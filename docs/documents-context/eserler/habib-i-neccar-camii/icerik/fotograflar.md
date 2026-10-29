@@ -1,0 +1,16 @@
+# Habib-i Neccar Camii · fotoğraflar
+
+30 Ekim 2026. Bu eserin fotoğrafları envanter kitabının kendi kaydından (kitaptaki fotoğraf, PDF'ten kesildi; `kitap-fotograflari.md`). Fotoğrafın bu esere ait olduğu kitaptaki yerinden belli; gözle de kontrol edildi. Tanınabilir yüz yok. Güven sütunu **öneridir**.
+
+Galeri sırası: dış kapak → iç / avlu → öne çıkan detay → diğerleri.
+
+| Dosya | Asıl dosya | Galeri sırası | Başlık | Kısa metin | Alt metin | Kaynak | Lisans | Güven | Not |
+|---|---|---|---|---|---|---|---|---|---|
+| `kitap/s29-01.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.29 | 1 | Habib-i Neccar Camii | Kesme taş harim ve yuvarlak gövdeli minare. | Kesme taş, uzun cami gövdesi, köşede yuvarlak gövdeli minare (2023 depremi öncesi). | E cilt-1 PDF s.29 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 1, 6, 8. |
+| `kitap/s33-01.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.33 | 2 | Avlu | Yamuk avlu, minare ve medrese odaları. | Ağaçlı avlu, arkada minare, çevrede tek katlı medrese odaları. | E cilt-1 PDF s.33 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 5. |
+| `kitap/s31-01.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.31 | 3 | Harim | Kubbeli mihrap önü ve kalem işleri. | İç mekân: kalem işli kemerler ve kubbe, avizeler, kırmızı halı, solda mahfil. | E cilt-1 PDF s.31 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış |  |
+| `kitap/s32-03.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.32 | 4 | Harim kapısı | Siyah ve beyaz taşlı kapı. | Son cemaat yerinden harim kapısı: siyah-beyaz taşlı kemer, ahşap kapı, iki yanda pencereler. | E cilt-1 PDF s.32 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 3. |
+| `kitap/s34-01.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.34 | 5 | Şadırvan | On iki köşeli hazne, kısa sütunlar. | Avludaki şadırvan: taş hazne, sütunlar ve metal kaplı külah. | E cilt-1 PDF s.34 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 7. |
+| `kitap/s35-02.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.35 | 6 | Habib-i Neccar'ın sandukası | Türbede yeşil örtülü sanduka. | Taş tonozlu mekânda yeşil, yazılı örtülü sanduka. | E cilt-1 PDF s.35 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 2. |
+| `kitap/s30-01.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.30 | 7 | Son cemaat yeri | Kubbe ve revak. | Avludan son cemaat yeri revakı, arkada kurşun kubbe. | E cilt-1 PDF s.30 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 4. |
+| `kitap/s33-02.jpg` | `veri/kaynak_pdf/hatay-vakif-eserleri.pdf` s.33 | 8 | Medrese | Avluyu çeviren hücreler. | Kırma çatılı, kapı ve pencereleri avluya açılan medrese hücreleri. | E cilt-1 PDF s.33 (fotoğraf: envanter kitabı) | Vakıf Katılım, Hatay İli Vakıf Eserleri. Proje için verildi; kullanılabilir. | Doğrulanmış |  |

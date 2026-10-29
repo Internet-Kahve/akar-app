@@ -1,5 +1,5 @@
 {
-  "_aciklama": "Şehir kaydı (28 Ekim 2026). Envanteri var, uygulamaya henüz eklenmedi: küre görünümünde «Yakında» olarak görünür; eserleri eklenince kendiliğinden «n eser» olur. merkez yaklaşık il merkezidir (yalnız harita işareti için).",
+  "_aciklama": "Şehir kaydı (28 Ekim 2026; 30 Ekim 2026'da ilk eseri eklendi, envanter künyesi yazıldı). merkez yaklaşık il merkezidir; eserleri olduğu için küre görünümünde «n eser» olarak görünür.",
   "id": "konya",
   "ad": "Konya",
   "merkez": [
@@ -15,5 +15,9 @@
     "desen_renk": "#E8DD7A",
     "desen": "desen-konya-on-iki-gulbezek.svg",
     "_not": "tokens.css --sehir-konya-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
-  }
+  },
+  "foto_kunye": "Fotoğraf: Konya Vakıf Eserleri",
+  "kaynakca": "Konya Vakıf Eserleri, Cilt 1–2 (Vakıf Katılım, 2024).",
+  "envanter_adi": "Konya Vakıf Eserleri",
+  "envanter_yayinci": "Vakıf Katılım, 2024"
 }

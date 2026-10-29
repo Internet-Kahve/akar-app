@@ -182,3 +182,7 @@ Hepsi gerekmiyor. Jürinin göreceği akışa göre öneri:
 | Eser hakkında | Yedi eserde envanter metninin tamamı, okuma düzeni (özet, rakam, zaman, terim, 3D açısı), kitaptaki fotoğraflar ve kapak. Sesli dinleme oynatıcısı (tarayıcı sesi): oynat/durdur, önceki/sonraki paragraf, hız, «Okunan yere dön», ilerleme çizgisi; okunan paragraf ilin renginde vurgulanır. Mobilde ekranın altında, masaüstünde metin sütununun altında. | farklı (§6) |
 | Geçmişi Gör · mobil | Fotoğraf üstte sabit, altında tarih, kaynak ve «Bugün» kartı; harita en altta. «Kamerayı aç» fotoğrafın üstünden kaldırıldı; «Doğrulanmış» etiketi küçük. Masaüstünde mini harita hep açık. | farklı (§7) |
 | Rota · yalnız rotada cümleler | Sonraki durağa yönlendiren hikâye cümleleri (`hikaye.md` → `## Yalnız rotada`) eser rotadan açılmazsa okunmaz. Rota çizgisi ve yıldızlar rotanın ilinin renginde. | yok |
+| Yalnız fotoğraflı eser | 3D modeli olmayan eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii) Fotoğraf \| 3D seçicisi görünmez; anlatım ve galeri fotoğrafla. | yok |
+| Rol filtreleri | Dinî · Su · Eğitim · Ticari (akar); yalnız eseri olan rol görünür. Pin rengi rolün rengi, simgesi türün (cami, han, hamam, türbe, medrese, çeşme). | farklı |
+| Birden çok il | Konya ve Hatay'da birer eser. Harita bir ile gelince liste ve il rozeti o il olur («Konya ▾ · 1 eser»); aramada bütün iller. Küre görünümünde eseri olan il «n eser». | yok |
+

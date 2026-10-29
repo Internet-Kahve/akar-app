@@ -37,6 +37,8 @@ Notlar:
 
 ## 2. Tasarım
 
+- [x] **Su ve Eğitim kategorileri, Konya ve Hatay** (30 Ekim gece): İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii; yalnız fotoğrafla. Kalan: koordinatların uydu ile doğrulanması, görevlerin gözden geçirilmesi, istenirse 3D.
+
 - [x] **Asıl tema buzlu** (30 Ekim, Talha): prototipte varsayılan; ürüne taşınacak (`ENTEGRASYON_29EKIM.md` §5.13). Deneme tonları (`sicak`, `il`, `bant`) ve kullanılmayan tema dosyaları temizlenebilir.
 
 - [x] **Figma güncellemesi** (29 Ekim, `_promptlar/PROMPT_figma_guncelle_29ekim.md`): dokuz madde işlendi, Claude ekran görüntülerinden kontrol etti. Kalan küçük düzeltmeler (mobil geri düğmesi, sekme solması, lejant) ikinci prompt'la verildi.

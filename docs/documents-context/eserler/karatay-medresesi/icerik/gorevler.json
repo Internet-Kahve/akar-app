@@ -1,0 +1,47 @@
+{
+  "_aciklama": "Karatay Medresesi · görevler ve rozetler (30 Ekim 2026). TASLAK: içerik sorumlusu gözden geçirecek (`_taslak`). Ulucami'deki dosyayla aynı biçim. 3D modeli olmadığı için yalnız soru (fotoğrafla çözülür) + hikâye rozeti; saha görevinin evden karşılığı (3D parça) olmadığı için saha görevi yok. Puan, süre, ceza yok.",
+  "_taslak": true,
+  "gorevler": [
+    {
+      "id": "kar-soru-cini",
+      "tur": "soru",
+      "baslik": "Kubbenin süsü",
+      "soru": "Karatay Medresesi'nin kubbesini ve iç mekânını süsleyen başlıca malzeme hangisidir?",
+      "secenekler": [
+        "Çini",
+        "Kalem işi",
+        "Ahşap oyma",
+        "Vitray"
+      ],
+      "dogru": 0,
+      "ipuclari": [
+        "Fotoğraftaki turkuaz ve lacivert desenlere bak.",
+        "Yapı bugün bu malzemenin adını taşıyan bir müze."
+      ],
+      "dogru_metin": "İç mekânda mozaik, ajur ve plaka çini kullanıldı. Yapı 1955'ten beri Çini Eserler Müzesi'dir.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "kitap/s47-03.jpg",
+      "kaynak": "E cilt-2 PDF s.46",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    }
+  ],
+  "rozetler": [
+    {
+      "id": "kar-hikaye",
+      "ad": "Karatay Medresesi'ni dinledin",
+      "metin": "Karatay Medresesi'nin hikâyesini sonuna kadar dinledin ya da okudun.",
+      "kosul": {
+        "hikaye_bitti": true
+      }
+    },
+    {
+      "id": "kar-cini",
+      "ad": "Selçuklu çinisi",
+      "metin": "Karatay Medresesi'nin çinilerini tanıdın.",
+      "kosul": {
+        "gorev": "kar-soru-cini"
+      }
+    }
+  ]
+}

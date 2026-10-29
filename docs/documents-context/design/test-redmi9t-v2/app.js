@@ -16,6 +16,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;', '<'
    derinlik: kısa hikâye ve «Eser hakkında»nın yanında uzunluk çubuğu · kopru: kısa hikâye bitince tebrik kartında «Eser hakkında»ya köprü */
 const DETAY = (() => { try { const q = new URLSearchParams(location.search).get('detay'); if (q !== null) localStorage.setItem('akar.detay', q); return new Set((q ?? localStorage.getItem('akar.detay') ?? '').split(',').map((x) => x.trim()).filter(Boolean)); } catch { return new Set(); } })();
 const derinlikCubuk = (dk) => !DETAY.has('derinliksiz') ? `<span class="derinlik" aria-hidden="true">${[1, 2, 3, 4, 5].map((n) => `<i${n <= Math.min(5, Math.max(1, Math.round(dk / 3))) ? ' class="d"' : ''}></i>`).join('')}</span>` : '';
+/* 30 Ekim 2026: 3D modeli olmayan eser (model.json yok, yalnız fotoğraf): görünüm seçicisi gizlenir, sahne hep fotoğraf. Tercih cihazda kalır, modeli olan esere dönünce geri gelir. */
+const gorunumAyar = (e) => { const yok = !!e && !e.glb; durum.gorunum = yok ? 'foto' : (yerel('akar.gorunum') || 'foto'); document.body.classList.toggle('uc-yok', yok); };
 const yerel = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
 
 /* ---------- ikonlar (lucide, strokeWidth 2) ---------- */
@@ -67,6 +69,8 @@ const guven = (g, k) => g ? `<span class="guven ${GUVEN[g] || 'dogrulanmis'}" ro
    Kemerin 40 × 48 kutusu her resimde aynı yerde, kutunun altı (y 48) haritadaki noktaya oturur. */
 const KEMER_YOL = 'M20 1.5C26 5 33 11 33.5 20V33C33.5 34.6667 32.8333 36 31.5 37L22 45.5C20.6667 46.6333 19.3333 46.6333 18 45.5L8.5 37C7.16667 36 6.5 34.6667 6.5 33V20C7 11 14 5 20 1.5Z';
 const PIN_IKON = {
+  medrese:'<g transform="translate(0,-0.6)"><path d="M2.3 8.3L6.45 4.45Q7 4.3 7.65 4.35L4.3 8.1Q9 9.4 12 13.75V14.6Q11.6 14.1 11.2 14.1Q7 11.6 2.5 9Q2 8.65 2.3 8.3z"/><path d="M8.1 4.45Q10.6 4.9 11.75 6.75V13.3Q8.5 8.6 5 8z"/><path d="M2.4 10.4L17.8 19.75" fill="none" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round"/><g transform="matrix(-1 0 0 1 24 0)"><path d="M2.3 8.3L6.45 4.45Q7 4.3 7.65 4.35L4.3 8.1Q9 9.4 12 13.75V14.6Q11.6 14.1 11.2 14.1Q7 11.6 2.5 9Q2 8.65 2.3 8.3z"/><path d="M8.1 4.45Q10.6 4.9 11.75 6.75V13.3Q8.5 8.6 5 8z"/><path d="M2.4 10.4L17.8 19.75" fill="none" stroke="#FFFFFF" stroke-width="1.75" stroke-linecap="round"/></g></g>',
+  cesme:'<path d="M18 6.75h3.25v8.5H18z"/><path d="M18 9.25H10.25a3.75 3.75 0 0 0-3.75 3.75v2.75h3.75V13h7.75z"/><path d="M5.75 16.25h5.25v1.25H5.75z"/><path d="M12.4 6h1.5v3.25h-1.5z"/><path d="M10.4 4.25h5.5a.875.875 0 0 1 0 1.75h-5.5a.875.875 0 0 1 0-1.75z"/><path d="M8.4 18.6c.95 1.15 1.45 1.9 1.45 2.5a1.45 1.45 0 0 1-2.9 0c0-.6.5-1.35 1.45-2.5z"/>',
   cami:'<path fill-rule="evenodd" d="M3 21V15H15V21H3ZM8 21V18.5C8 17.5 8.33333 16.6667 9 16C9.66667 16.6667 10 17.5 10 18.5V21H8Z"/><path d="M4 14C4 12.9391 4.52678 11.9217 5.46447 11.1716C6.40215 10.4214 7.67392 10 9 10C10.3261 10 11.5979 10.4214 12.5355 11.1716C13.4732 11.9217 14 12.9391 14 14H4Z"/><path d="M17.5 21V9H19.5V21H17.5Z"/><path d="M16.75 11H20.25V12H16.75V11Z"/><path d="M17.5 8L18.5 3L19.5 8H17.5Z"/>',
   han:'<path fill-rule="evenodd" d="M2 21V6H22V21H2ZM6 12.5V10.5C6 9.83333 6.41667 9.25 7.25 8.75C8.08333 9.25 8.5 9.83333 8.5 10.5V12.5H6ZM15.5 12.5V10.5C15.5 9.83333 15.9167 9.25 16.75 8.75C17.5833 9.25 18 9.83333 18 10.5V12.5H15.5ZM5.5 21V17.5C5.5 16.5 6.08333 15.6667 7.25 15C8.41667 15.6667 9 16.5 9 17.5V21H5.5ZM15 21V17.5C15 16.5 15.5833 15.6667 16.75 15C17.9167 15.6667 18.5 16.5 18.5 17.5V21H15Z"/>',
   hamam:'<path fill-rule="evenodd" d="M2 21V15H22V21H2ZM5 21V18.5C5 17.5 5.33333 16.6667 6 16C6.66667 16.6667 7 17.5 7 18.5V21H5Z"/><path d="M3 14C3 13.337 3.31607 12.7011 3.87868 12.2322C4.44129 11.7634 5.20435 11.5 6 11.5C6.79565 11.5 7.55871 11.7634 8.12132 12.2322C8.68393 12.7011 9 13.337 9 14H3Z"/><path d="M10 14C10 12.8065 10.5795 11.6619 11.6109 10.818C12.6424 9.97411 14.0413 9.5 15.5 9.5C16.9587 9.5 18.3576 9.97411 19.3891 10.818C20.4205 11.6619 21 12.8065 21 14H10Z"/>',
@@ -75,7 +79,7 @@ const PIN_IKON = {
 const ROL_RENK = { dini:'#2E7D32', su:'#2A6FB0', egitim:'#25477B', akar:'#9A5B2E' };
 const ROL_AD = { dini:'Dinî', su:'Su', egitim:'Eğitim', akar:'Ticari (akar)' };   // «Akar» tek başına uygulamanın adıyla karışıyordu
 const ROL_ACIKLAMA = { dini:'Cami, mescit, türbe', su:'Çeşme, sebil, hamam suyu', egitim:'Medrese, mektep', akar:'Vakfa gelir getiren yapılar: han, bedesten, hamam, dükkân' };
-const kemerSvg = (ikon, renk) => `<path d="${KEMER_YOL}" fill="${renk}" stroke="#FFFFFF" stroke-width="2"/><g transform="translate(10 13) scale(0.8333)" fill="#FFFFFF">${PIN_IKON[ikon]}</g>`;
+const kemerSvg = (ikon, renk) => `<path d="${KEMER_YOL}" fill="${renk}" stroke="#FFFFFF" stroke-width="2"/><g transform="translate(10 13) scale(0.8333)" fill="#FFFFFF">${PIN_IKON[ikon] || PIN_IKON.cami}</g>`;
 const TAMAM_ROZET = '<circle cx="35" cy="5" r="6" fill="#C9A13B" stroke="#FFFFFF" stroke-width="2"/><path d="M32 5L34 7L38 3" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
 const pinSvg = (ikon, renk, tamam = false, boy = 2) => `<svg xmlns="http://www.w3.org/2000/svg" width="${44 * boy}" height="${50 * boy}" viewBox="-2 -2 44 50">${kemerSvg(ikon, renk)}${tamam ? TAMAM_ROZET : ''}</svg>`;
 const pinSeciliSvg = (ikon, renk, boy = 2) => `<svg xmlns="http://www.w3.org/2000/svg" width="${44 * boy}" height="${52 * boy}" viewBox="-2 -2 44 52"><path d="${KEMER_YOL}" fill="none" stroke="#C9A13B" stroke-width="6"/>${kemerSvg(ikon, renk)}</svg>`;
@@ -348,7 +352,7 @@ function haritaIliGuncelle() {
   if (!en || d > 0.55 || en === haritaIli) return;
   haritaIli = en; document.documentElement.dataset.il = en.id || '';
   $$('.il-ad').forEach((b) => { b.textContent = en.ad; });
-  if (!durum.secili && !location.hash.slice(2)) yoreUygula({ il:en.ad });
+  if (!durum.secili && !location.hash.slice(2)) { yoreUygula({ il:en.ad }); if (VERI.eserler.some((e) => e.il !== VERI.eserler[0].il)) kesif(); }   // birden çok ilde eser varsa liste yeni ilin eserleri
 }
 const kokRenk = (ad, yedek) => getComputedStyle(document.documentElement).getPropertyValue(ad).trim() || yedek;
 async function eserAdlariKur() {
@@ -377,20 +381,21 @@ function pinSeciliFiltre(id) {
 }
 async function haritaPinleriKur() {
   if (harita.getSource('eserler')) return;
-  for (const ikon of ['cami', 'han', 'hamam', 'turbe']) {
-    const renk = ['han', 'hamam'].includes(ikon) ? ROL_RENK.akar : ROL_RENK.dini;
-    if (!harita.hasImage('pin-' + ikon)) harita.addImage('pin-' + ikon, await svgResim(pinSvg(ikon, renk)), { pixelRatio:2 });
-    if (!harita.hasImage('pin-tamam-' + ikon)) harita.addImage('pin-tamam-' + ikon, await svgResim(pinSvg(ikon, renk, true)), { pixelRatio:2 });
-    if (!harita.hasImage('pin-secili-' + ikon)) harita.addImage('pin-secili-' + ikon, await svgResim(pinSeciliSvg(ikon, renk)), { pixelRatio:2 });
+  /* 30 Ekim 2026: pin görseli veriden: her (ikon, rol) çifti için bir görsel; gövde rengi = vakıftaki rol (ROL_RENK), ikon = eser türü. Yeni tür ya da rol eklenince kod değişmez */
+  for (const k of new Set(VERI.eserler.map((e) => `${e.ikon}-${e.rol}`))) {
+    const [ikon, rol] = k.split('-'), renk = ROL_RENK[rol] || ROL_RENK.dini;
+    if (!harita.hasImage('pin-' + k)) harita.addImage('pin-' + k, await svgResim(pinSvg(ikon, renk)), { pixelRatio:2 });
+    if (!harita.hasImage('pin-tamam-' + k)) harita.addImage('pin-tamam-' + k, await svgResim(pinSvg(ikon, renk, true)), { pixelRatio:2 });
+    if (!harita.hasImage('pin-secili-' + k)) harita.addImage('pin-secili-' + k, await svgResim(pinSeciliSvg(ikon, renk)), { pixelRatio:2 });
   }
   if (harita.getSource('eserler')) return;
   harita.addSource('eserler', { type:'geojson', data:eserNoktalari() });
   const glif = !!harita.getStyle().glyphs;
   const adEtiket = glif && await eserAdlariKur();   // serif eser adları (resim olarak; harita yazı tipi sunucusunda serif yok)
-  harita.addLayer({ id:'pin', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, layout:Object.assign({ 'icon-image':['concat', ['case', ['get', 'bitti'], 'pin-tamam-', 'pin-'], ['get', 'ikon']], 'icon-anchor':'bottom', 'icon-allow-overlap':true, 'icon-size':['interpolate', ['linear'], ['zoom'], 16, 0.8, 18, 0.66], 'symbol-sort-key':['get', 'sira'] },
+  harita.addLayer({ id:'pin', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, layout:Object.assign({ 'icon-image':['concat', ['case', ['get', 'bitti'], 'pin-tamam-', 'pin-'], ['get', 'ikon'], '-', ['get', 'rol']], 'icon-anchor':'bottom', 'icon-allow-overlap':true, 'icon-size':['interpolate', ['linear'], ['zoom'], 16, 0.8, 18, 0.66], 'symbol-sort-key':['get', 'sira'] },
     glif ? { 'text-field':['step', ['zoom'], '', 15.2, adEtiket ? ['format', ['image', ['concat', 'ad-', ['get', 'id']]]] : ['get', 'ad']], 'text-font':['Noto Sans Bold'], 'text-size':12, 'text-line-height':1.333, 'text-variable-anchor-offset':['left', [1.3, -1.6], 'right', [-1.3, -1.6], 'top', [0, 0.4], 'bottom', [0, -3.4]], 'text-justify':'auto', 'text-optional':true } : {}),
     paint:{ 'text-color':'#25477B', 'text-halo-color':'#fff', 'text-halo-width':2 } });
-  harita.addLayer({ id:'pin-secili', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, filter:['==', ['get', 'id'], ''], layout:{ 'icon-image':['concat', 'pin-secili-', ['get', 'ikon']], 'icon-anchor':'bottom', 'icon-offset':[0, 2], 'icon-allow-overlap':true, 'icon-size':1 } });
+  harita.addLayer({ id:'pin-secili', type:'symbol', source:'eserler', minzoom:SEHIR_ESIK, filter:['==', ['get', 'id'], ''], layout:{ 'icon-image':['concat', 'pin-secili-', ['get', 'ikon'], '-', ['get', 'rol']], 'icon-anchor':'bottom', 'icon-offset':[0, 2], 'icon-allow-overlap':true, 'icon-size':1 } });
   filtreUygula();
 }
 
@@ -403,7 +408,7 @@ const YG_DOKU = (() => { const c = document.createElement('canvas'); c.width = c
 const yerGolgesiMi = (o) => { for (let x = o; x; x = x.parent) if (/^Yer_Golgesi/.test(x.name || '')) return true; return false; };   // eski modellerdeki pişmiş düzlem
 const yapiKatman = {
   id:'yapilar', type:'custom', renderingMode:'3d', items:[],
-  onAdd(m, gl) { this.map = m; this.kamera = new THREE.Camera(); this.r = new THREE.WebGLRenderer({ canvas:m.getCanvas(), context:gl, antialias:true }); this.r.autoClear = false; VERI.eserler.forEach((e) => this.yukle(e)); },
+  onAdd(m, gl) { this.map = m; this.kamera = new THREE.Camera(); this.r = new THREE.WebGLRenderer({ canvas:m.getCanvas(), context:gl, antialias:true }); this.r.autoClear = false; VERI.eserler.filter((e) => e.glb).forEach((e) => this.yukle(e)); },
   async yukle(e) {
     try {
       const gltf = await glbCoz(e.glb);
@@ -1014,12 +1019,15 @@ function altEnAz() {
   kartEl.addEventListener('pointerup', birak); kartEl.addEventListener('pointercancel', birak);
 })();
 
+/* 30 Ekim 2026: liste haritadaki aktif ilin eserleri (birden çok ilde eser var); aramada bütün iller */
+const listeSehri = () => { try { return haritaIli || SEHIR; } catch { return SEHIR; } };
+const ilinMi = (e, s = listeSehri()) => !e.il || !s?.ad || e.il.toLocaleLowerCase('tr') === s.ad.toLocaleLowerCase('tr');
 function eserListe() {
-  const l = VERI.eserler.filter((e) => durum.filtre.has(e.rol) && (!durum.arama || e.ad.toLocaleLowerCase('tr').includes(durum.arama) || (e.uzun_ad || '').toLocaleLowerCase('tr').includes(durum.arama)));
+  const l = VERI.eserler.filter((e) => durum.filtre.has(e.rol) && (durum.arama || ilinMi(e)) && (!durum.arama || e.ad.toLocaleLowerCase('tr').includes(durum.arama) || (e.uzun_ad || '').toLocaleLowerCase('tr').includes(durum.arama)));
   const n = durum.konum === 'yakin' && durum.konumNokta;   // Yakınımda: yakından uzağa
   return n ? l.map((e) => [mesafeYon(n, { lng:e.lon, lat:e.lat })[0], e]).sort((a, b) => a[0] - b[0]).map((x) => x[1]) : l;
 }
-const listeAdi = (tur) => (durum.konum === 'yakin' ? `Yakınındaki ${tur}` : `${yerEki(SEHIR.ad)}ki ${tur}`);   // Yakınındaki eserler · Bursa'daki eserler
+const listeAdi = (tur) => (durum.konum === 'yakin' ? `Yakınındaki ${tur}` : `${yerEki(listeSehri().ad)}ki ${tur}`);   // Yakınındaki eserler · Bursa'daki eserler
 const eserSatir = (e) => `<li class="eser-satir${durum.secili === e.id ? ' secili' : ''}" data-eser="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta"><span class="rol-nokta" style="background:${ROL_RENK[e.rol] || 'var(--border)'}" title="${esc(ROL_AD[e.rol] || '')}"></span>${esc(meta(e))}</div>${e.glb && !VERI.eserler.every((x) => x.glb) ? '<span class="etiket">3D</span>' : ''}</div><button class="arti" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('plus', 16)}</button></li>`;
 function rotaKart() {
   const ilerleme = JSON.parse(yerel('akar.rota') || 'null');
@@ -1044,7 +1052,7 @@ function kesifIcerik(masaustu) {
   if (durum.sekme === 'rotalar') return `${sekme}<div class="sekme-icerik"${yon}><div class="baslik-satir"><h2>${listeAdi('rotalar')}</h2><a>Tümünü gör (${VERI.rotalar.length}) ›</a></div>${rotaKart()}</div>`;
   const liste = eserListe();
   const ust = masaustu ? `<div class="baslik-satir"><h2>${listeAdi('eserler')} · ${liste.length}</h2><a>Tümünü gör (${VERI.eserler.length}) ›</a></div>`   /* rol filtreleri yalnız haritanın üstünde (panelde ikinci kopya vardı) */
-    : `<div class="baslik-satir" style="margin-top:12px"><a style="color:var(--primary)" href="#/" data-sehirler>${esc(SEHIR.ad)} ▾ · ${liste.length} eser${durum.konum === 'yakin' ? ' yakında' : ''}</a></div>`;
+    : `<div class="baslik-satir" style="margin-top:12px"><a style="color:var(--primary)" href="#/" data-sehirler>${esc(listeSehri().ad)} ▾ · ${liste.length} eser${durum.konum === 'yakin' ? ' yakında' : ''}</a></div>`;
   return `${sekme}<div class="sekme-icerik"${yon}>${ust}<ul class="liste">${liste.map(eserSatir).join('') || '<li class="soluk" style="padding:16px 0">Sonuç yok. Yazımı kontrol et ya da filtreleri temizle.</li>'}</ul></div>`;
 }
 function kesif() {
@@ -1192,7 +1200,7 @@ function eserBilgi(e, masaustu) {
 }
 function eserDetay(id) {
   const e = ESER[id]; if (!e) return (location.hash = '#/');
-  durum.secili = id; rotaKaldir(); yoreUygula(e);
+  durum.secili = id; rotaKaldir(); yoreUygula(e); gorunumAyar(e);
   const ust = durum.masaustu ? `<div class="gorus-ust">${seciciHTML(false)}</div>` : `<div class="gorus-ust"><button class="geri" data-git="#/">‹ Harita</button>${seciciHTML(false)}</div>`;
   gorusAc(`${ust}<div id="gorus-alan"></div>${durum.masaustu ? '' : eserBilgi(e, false)}`);
   if (!durum.masaustu) eaYukseklik(0);   // kapalı başlar
@@ -1337,6 +1345,7 @@ document.addEventListener('click', (e) => {
   const p = e.target.closest('[data-parcalar]');
   if (p) {
     p.setAttribute('aria-pressed', 'true'); setTimeout(() => p.setAttribute('aria-pressed', 'false'), 650);
+    if (!(anlat.eser || ESER[durum.secili])?.glb) return;
     if (durum.gorunum !== '3d') { durum.gorunum = '3d'; yerel('akar.gorunum', '3d'); anlat.eser ? anlatSahne() : gorunumCiz(); setTimeout(() => s3d && s3d.flasla(), 1200); }
     else s3d && s3d.flasla();
     return;
@@ -1368,7 +1377,7 @@ function anlatim(id, mod) {
   const ayni = anlat.eser === e;
   anlatDur(true);
   Object.assign(anlat, { eser:e, mod, i:ayni ? anlat.i : (+(yerel('akar.ilerleme.' + id) || 0)) % e.hikaye.length, acik:mod === 'oku' });
-  yerel('akar.mod', mod); durum.secili = id; rotaKaldir();
+  yerel('akar.mod', mod); durum.secili = id; rotaKaldir(); gorunumAyar(e);
   const n = e.hikaye.length;
   const ilerleme = `<div class="ilerleme" id="ilerleme">${e.hikaye.map((_, i) => `<button data-cumle="${i}" aria-label="Bölüm ${i + 1}"><i></i></button>`).join('')}</div>`;
   const ust = `<div class="anlat-ust">${durum.masaustu ? '' : `<button class="yuvarlak ust-kontrol gizlenir" data-git="#/eser/${id}" aria-label="Kapat">${ic('x', 18)}</button>`}<div style="display:flex;gap:8px">${seciciHTML(true)}<button class="yuvarlak ust-kontrol gizlenir koyu-zemin" id="doldur" aria-label="Ekranı doldur">${ic(durum.doldur ? 'shrink' : 'expand', 18)}</button></div></div>`;
@@ -1404,7 +1413,7 @@ function anlatSahne() {
   $$('.ust-kontrol').forEach((u) => u.classList.toggle('koyu-zemin', koyu || u.id === 'doldur'));
   $('#doldur') && ($('#doldur').hidden = !koyu);
   $('#ilerleme').classList.toggle('acik', !koyu);
-  if (koyu) alan.innerHTML = `<div class="foto-sahne${durum.doldur ? ' doldur' : ''}" id="foto-sahne"><img class="bulanik" alt=""><img class="ana" alt=""><div class="ust-golge"></div><div class="alt-bilgi"><span id="foto-guven"></span><span class="kunye">${esc(SEHIR.foto_kunye)}</span></div></div>`;
+  if (koyu) alan.innerHTML = `<div class="foto-sahne${durum.doldur ? ' doldur' : ''}" id="foto-sahne"><img class="bulanik" alt=""><img class="ana" alt=""><div class="ust-golge"></div><div class="alt-bilgi"><span id="foto-guven"></span><span class="kunye">${esc(aktifSehir().foto_kunye)}</span></div></div>`;
   else {
     alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Model gelince sahne kendiliğinden açılır.')}</div><div class="kart3d" id="kart3d" style="opacity:0"></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
     s3dKur($('#s3d'), anlat.eser, { onParca:parcaSecildi, altBosluk:() => (!durum.masaustu && !anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) }, anlatSahne, () => sahneUygula(false));
@@ -1637,7 +1646,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#tebrik') && !$('#tebrik').hidden) { e.stopImmediatePropagation(); tebrikKapat(); } }, true);
 function hikayeSonrasi(id) {
-  const e = ESER[id]; durum.secili = id; rotaKaldir(); const sd = sonrakiDurak(e);
+  const e = ESER[id]; durum.secili = id; rotaKaldir(); gorunumAyar(e); const sd = sonrakiDurak(e);
   const govde = `<div style="text-align:center;padding-top:6px"><span class="sayac">Hikâye tamamlandı</span><h1 class="panel-baslik" style="margin-top:10px">${esc(e.ad)}</h1><div class="panel-meta">${e.hikaye.length} / ${e.hikaye.length} bölüm · tamamlandı</div></div>${SUSLEME}
     <div class="satir-link" data-git="#/hakkinda/${id}"><div><b>Eser hakkında</b><small>Tarihçe, mimari, kaynaklar</small></div>${ic('chevron-right', 18)}</div>
     <div class="satir-link" data-git="#/gecmis/${id}"><div><b>Geçmişi Gör</b><small>Eski hâlini gör</small></div>${ic('chevron-right', 18)}</div>
@@ -2505,7 +2514,7 @@ function karsilamaGoster() {
     ${durum.masaustu ? '<div class="ka-serit" aria-hidden="true"></div>' : `<div class="ka-foto">${resim(f)}</div>`}<img class="ka-logo" src="logo.png" alt="AKAR" width="800" height="237"><div class="ka-ust">Vakıf eserlerini keşfet</div>
     <h2 id="ka-baslik" class="ka-baslik">Şehrin hikâyesine karış.</h2>
     <p class="ka-alt">Geçmişi gör. Hikâyesini dinle. İzini bırak.</p>${SUSLEME}
-    <div class="ka-koleksiyon"><div><b>${esc(SEHIR.ad || '')} vakıf eserleri</b><small>${VERI.eserler.length} eser, hikâyesi ve kaynağıyla</small></div><span class="ka-yuvarlar">${VERI.eserler.slice(0, 3).map((x) => resim(kapak(x))).join('')}</span></div>
+    <div class="ka-koleksiyon"><div><b>${esc(SEHIR.ad || '')} vakıf eserleri</b><small>${VERI.eserler.filter((x) => ilinMi(x, SEHIR)).length} eser, hikâyesi ve kaynağıyla</small></div><span class="ka-yuvarlar">${VERI.eserler.slice(0, 3).map((x) => resim(kapak(x))).join('')}</span></div>
     <ul class="ka-maddeler">${madde('headphones', 'Dinle ya da oku', 'Her eserin kısa, kaynaklı hikâyesi')}${madde('history', 'Geçmişini gör', 'Eski fotoğrafı bugünle karşılaştır')}${madde('landmark', 'Vakfı anla', 'Bu yapıyı yüzyıllardır ne ayakta tuttu?')}</ul>
     <div class="ka-dugmeler"><button class="btn ana" data-ka="ev">${ic('house', 18)}Evden gez</button><button class="btn ikincil" data-ka="yakin">${ic('map-pin', 18)}Konumumu kullan</button></div>
     <div class="ka-son"><small>Konumun sadece cihazında kullanılır.</small><button class="metin-btn" data-vakif-nedir>Vakıf nedir? ›</button></div>
