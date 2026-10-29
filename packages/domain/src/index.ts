@@ -105,6 +105,17 @@ export interface HistoryImage {
   sourceId: string;
   trust: Trust;
 }
+/** 3D part card: tapping any of `parts` (model node names) opens it; they are highlighted together. */
+export interface PartCard {
+  id: string;
+  parts: string[];
+  title: string;
+  body: string;
+  /** Photo strip in order; the first is the cover. May be empty. */
+  photos: SitePhoto[];
+  sourceId?: string;
+  trust: Trust;
+}
 export interface HeritageSite {
   id: string;
   name: string;
@@ -133,6 +144,8 @@ export interface HeritageSite {
   coverPhotoId?: string;
   model?: SiteModel;
   historyImages?: HistoryImage[];
+  /** With cards, only their parts are tappable; absent or empty = every part shows its name. */
+  partCards?: PartCard[];
   storyPhotos?: SitePhoto[];
   sections?: Array<{
     id: string;

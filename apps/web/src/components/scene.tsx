@@ -113,6 +113,8 @@ export function Scene({
               name={site.name}
               pose={pose}
               interior={interior}
+              partCards={site.partCards}
+              sources={site.sources}
             />
             <div className="scene-photo-credit">
               Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için

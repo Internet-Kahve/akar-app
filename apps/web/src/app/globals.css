@@ -3942,6 +3942,66 @@ td small {
   background: var(--green, #2e573e);
   color: white;
 }
+/* Part name on a site without part cards; above the credit line like the inside button. */
+.model-part-name {
+  position: absolute;
+  left: 50%;
+  bottom: 62px;
+  z-index: 5;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px #141b2b26;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.part-card-photos {
+  position: relative;
+  margin: -6px 0 16px;
+}
+.part-card-strip {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.part-card-strip figure {
+  flex: 0 0 100%;
+  margin: 0;
+  scroll-snap-align: start;
+}
+.part-card-strip img {
+  display: block;
+  width: 100%;
+  height: min(54vw, 300px);
+  border-radius: 14px;
+  object-fit: cover;
+}
+.part-card-strip figcaption {
+  padding-top: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.part-card-count {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #141b2bb3;
+  color: white;
+  font-size: 11px;
+}
+.modal .part-card-body {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.part-card-source {
+  margin-top: 10px;
+}
 .scene-media-switch {
   position: absolute;
   top: 18px;

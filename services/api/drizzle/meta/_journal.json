@@ -120,6 +120,13 @@
       "when": 1793264577680,
       "tag": "0016_cover_groups",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793269683478,
+      "tag": "0017_part_cards",
+      "breakpoints": true
     }
   ]
 }

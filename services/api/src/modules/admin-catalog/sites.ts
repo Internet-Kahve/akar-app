@@ -35,7 +35,18 @@ import { AppError } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import { loadPlacements, publicPlacement, resolvePlacement, siteDedupeKey, siteSearchText, siteSortName, slugify, type PlacementRow } from "../catalog/service.ts";
+import {
+  loadPartCards,
+  loadPlacements,
+  publicPlacement,
+  resolvePlacement,
+  siteDedupeKey,
+  siteSearchText,
+  siteSortName,
+  slugify,
+  type PartCardRow,
+  type PlacementRow,
+} from "../catalog/service.ts";
 import { CITIES } from "../ingest/cities.ts";
 import { APPROXIMATE_SOURCES } from "../ingest/geocode.ts";
 import type {
@@ -227,6 +238,7 @@ export type SiteAggregate = {
   stories: StoryRow[];
   sections: SectionRow[];
   history: HistoryRow[];
+  partCards: PartCardRow[];
   /** `site_media` in display order. */
   mediaIds: string[];
   /** `site_sources` in display order. */
@@ -264,6 +276,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const mediaLinks = await q.select().from(siteMedia).where(inArray(siteMedia.siteId, ids)).orderBy(asc(siteMedia.position));
   const sourceLinks = await q.select().from(siteSources).where(inArray(siteSources.siteId, ids)).orderBy(asc(siteSources.position));
 
+  const partCardRows = await loadPartCards(q, ids);
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
@@ -272,6 +285,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...storyRows.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
     ...cardRows.map((c) => c.mediaId),
     ...historyRows.flatMap((h) => [h.mediaId, h.presentMediaId]),
+    ...partCardRows.flatMap((c) => c.photoIds),
   ]);
   const mediaRows = mediaIds.length ? await q.select().from(media).where(inArray(media.id, mediaIds)) : [];
   const sourceIds = distinct([
@@ -280,6 +294,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...sectionRows.map((s) => s.sourceId),
     ...cardRows.map((c) => c.sourceId),
     ...historyRows.map((h) => h.sourceId),
+    ...partCardRows.map((c) => c.sourceId),
     ...mediaRows.map((m) => m.sourceId),
   ]);
   const sourceRows = sourceIds.length ? await q.select().from(sources).where(inArray(sources.id, sourceIds)) : [];
@@ -291,6 +306,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const stories = groupBy(storyRows, (r) => r.siteId);
   const sections = groupBy(sectionRows, (r) => r.siteId);
   const history = groupBy(historyRows, (r) => r.siteId);
+  const partCardsOf = groupBy(partCardRows, (r) => r.siteId);
   const mediaOf = groupBy(mediaLinks, (r) => r.siteId);
   const sourcesOf = groupBy(sourceLinks, (r) => r.siteId);
 
@@ -302,6 +318,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
         stories: stories.get(site.id) ?? [],
         sections: sections.get(site.id) ?? [],
         history: history.get(site.id) ?? [],
+        partCards: partCardsOf.get(site.id) ?? [],
         mediaIds: (mediaOf.get(site.id) ?? []).map((l) => l.mediaId),
         sourceLinks: (sourcesOf.get(site.id) ?? []).map((l) => ({ sourceId: l.sourceId, locator: l.locator })),
         cards: cardById,
@@ -418,6 +435,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       ...a.stories.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
       ...distinct(a.stories.map((b) => b.cardId)).flatMap((cardId) => a.cards.get(cardId)?.mediaId ?? []),
       ...a.history.flatMap((h) => [h.mediaId, h.presentMediaId]),
+      ...a.partCards.flatMap((c) => c.photoIds),
     ]).map((id) => a.media.get(id)),
   );
   // Cards in the order the story first uses them (several sentences may share one card).
@@ -429,6 +447,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       ...a.sections.map((x) => x.sourceId),
       ...cardList.map((c) => c.sourceId),
       ...a.history.map((h) => h.sourceId),
+      ...a.partCards.map((c) => c.sourceId),
       ...mediaList.map((m) => m.sourceId),
     ]).map((id) => a.sources.get(id)),
   );
@@ -516,6 +535,15 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: h.sourceId,
       trust: h.trust,
       camera: h.camera,
+    })),
+    partCards: a.partCards.map((c) => ({
+      id: c.id,
+      parts: c.parts,
+      title: c.title,
+      body: c.body,
+      photoIds: c.photoIds,
+      sourceId: c.sourceId,
+      trust: c.trust,
     })),
     placement: s.lng === null || s.lat === null ? null : publicPlacement(a.placement, { lng: s.lng, lat: s.lat }, modelOf(a) !== undefined),
     media: mediaList.map((m) => ({

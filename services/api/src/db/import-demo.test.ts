@@ -26,9 +26,14 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
     id: `test-${i}`, name: `Eser ${i}`, city: "Bursa", district: "Hanlar", year: "1400", architect: "—", kind: "cami",
     coordinates: [29.06, 40.18], minutes: 1, description: "Kaynaklı içerik", status: "published", tier: "Tier 2", source: "Envanter",
     stories: [], sources: [{ id: `source-${i}`, title: "Fotoğrafçı · Arşiv", kind: "archive", author: "Fotoğrafçı", year: "1900", page: "", url: "https://archive.test", trust: "verified" }],
-    photos: [{ id: `photo-${i}`, file: "photo.jpg", src: "", alt: "Dış görünüş", title: "Eser", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: 1 }],
+    photos: [
+      { id: `photo-${i}`, file: "photo.jpg", src: "", alt: "Dış görünüş", title: "Eser", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: 1 },
+      // Off the gallery: only the part card shows it.
+      { id: `detail-${i}`, file: "photo.jpg", src: "", alt: "Kubbe", title: "Kubbe", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: null },
+    ],
     coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative" },
     historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}` }], sections: [] as unknown[],
+    partCards: [{ id: `part-${i}`, parts: ["kubbe_1"], title: "Kubbe", body: "Kaynaklı metin", photoIds: [`detail-${i}`, `photo-${i}`], trust: "verified", sourceId: `source-${i}` }],
   }));
   const manifest = { version: 1, sites, routes: [], retireSiteIds: [] };
   const path = join(root, "manifest.json"); await writeFile(path, JSON.stringify(manifest));
@@ -42,6 +47,12 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual(detail.photoIds, ["photo-0"]);
   assert.deepEqual(detail.media.find((m: { kind: string }) => m.kind === "model").parts, ["kubbe_1"]);
   assert.equal(detail.media.find((m: { kind: string }) => m.kind === "model").triangles, 0, "the model's triangles are counted from its file");
+  assert.deepEqual(detail.partCards.map((c: { parts: string[]; photoIds: string[] }) => [c.parts, c.photoIds]), [[["kubbe_1"], ["detail-0", "photo-0"]]]);
+  assert.ok(detail.media.some((m: { id: string }) => m.id === "detail-0"), "a card's off-gallery photo resolves from the detail's media");
+  sites[1]!.partCards[0]!.parts = ["yok"];
+  await writeFile(path, JSON.stringify(manifest));
+  await assert.rejects(importDemoContent(path, root, false, {}), /not model parts: test-1 yok/);
+  sites[1]!.partCards[0]!.parts = ["kubbe_1"];
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified" }];
   await writeFile(path, JSON.stringify(manifest));

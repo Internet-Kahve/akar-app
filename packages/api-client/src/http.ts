@@ -191,6 +191,16 @@ interface SiteDetailDto {
     sourceId?: string | null;
     trust?: Trust;
   }>;
+  /** Absent on older API versions. */
+  partCards?: Array<{
+    id: string;
+    parts: string[];
+    title: string;
+    body: string;
+    photoIds: string[];
+    sourceId: string | null;
+    trust: Trust;
+  }>;
   media: MediaDto[];
   /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
   placement?: MapPlacement | null;
@@ -339,6 +349,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     [
       ...d.cards.map((c) => c.mediaId),
       ...d.historyImages.flatMap((h) => [h.mediaId, h.presentMediaId]),
+      ...(d.partCards ?? []).flatMap((c) => c.photoIds),
     ].filter(present),
   );
   const gallery = d.photoIds ? new Set(d.photoIds) : null;
@@ -394,6 +405,16 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           ...(current ? { presentPhoto: toPhoto(current) } : {}),
         },
       ];
+    }),
+    ...(d.partCards?.length && {
+      partCards: d.partCards.map(({ photoIds, sourceId, ...card }) => ({
+        ...card,
+        photos: photoIds.flatMap((id) => {
+          const m = d.media.find((x) => x.id === id && x.kind === "photo");
+          return m ? [toPhoto(m)] : [];
+        }),
+        ...(present(sourceId) && { sourceId }),
+      })),
     }),
     ...(d.editorVersion === 2 && { editorVersion: 2 as const }),
     ...(present(d.nameEn) && { nameEn: d.nameEn }),

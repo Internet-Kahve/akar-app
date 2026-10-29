@@ -1095,6 +1095,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -1295,7 +1351,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -1351,7 +1407,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     }
                   },
                   "required": [
@@ -1389,6 +1445,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -2092,6 +2149,62 @@
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
                           },
+                          "partCards": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "parts": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "body": {
+                                  "type": "string"
+                                },
+                                "photoIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                                },
+                                "sourceId": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "trust": {
+                                  "type": "string",
+                                  "enum": [
+                                    "verified",
+                                    "inferred",
+                                    "representative"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "parts",
+                                "title",
+                                "body",
+                                "photoIds",
+                                "sourceId",
+                                "trust"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                          },
                           "placement": {
                             "anyOf": [
                               {
@@ -2292,7 +2405,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                            "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                           },
                           "sources": {
                             "type": "array",
@@ -2348,7 +2461,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                            "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                           }
                         },
                         "required": [
@@ -2386,6 +2499,7 @@
                           "sections",
                           "cards",
                           "historyImages",
+                          "partCards",
                           "placement",
                           "photoIds",
                           "media",
@@ -4360,6 +4474,62 @@
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
                           },
+                          "partCards": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "parts": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "body": {
+                                  "type": "string"
+                                },
+                                "photoIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                                },
+                                "sourceId": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "trust": {
+                                  "type": "string",
+                                  "enum": [
+                                    "verified",
+                                    "inferred",
+                                    "representative"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "parts",
+                                "title",
+                                "body",
+                                "photoIds",
+                                "sourceId",
+                                "trust"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                          },
                           "placement": {
                             "anyOf": [
                               {
@@ -4560,7 +4730,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                            "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                           },
                           "sources": {
                             "type": "array",
@@ -4616,7 +4786,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                            "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                           }
                         },
                         "required": [
@@ -4654,6 +4824,7 @@
                           "sections",
                           "cards",
                           "historyImages",
+                          "partCards",
                           "placement",
                           "photoIds",
                           "media",
@@ -8884,6 +9055,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -9084,7 +9311,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -9140,7 +9367,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -9356,6 +9583,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -10119,6 +10347,62 @@
                             },
                             "description": "Geçmişi Gör görselleri, sıralı"
                           },
+                          "partCards": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "parts": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "body": {
+                                  "type": "string"
+                                },
+                                "photoIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                                },
+                                "sourceId": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "trust": {
+                                  "type": "string",
+                                  "enum": [
+                                    "verified",
+                                    "inferred",
+                                    "representative"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "parts",
+                                "title",
+                                "body",
+                                "photoIds",
+                                "sourceId",
+                                "trust"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                          },
                           "placement": {
                             "anyOf": [
                               {
@@ -10319,7 +10603,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                            "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                           },
                           "sources": {
                             "type": "array",
@@ -10375,7 +10659,7 @@
                               ],
                               "additionalProperties": false
                             },
-                            "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                            "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                           },
                           "status": {
                             "type": "string",
@@ -10591,6 +10875,7 @@
                           "sections",
                           "cards",
                           "historyImages",
+                          "partCards",
                           "placement",
                           "photoIds",
                           "media",
@@ -11318,6 +11603,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -11518,7 +11859,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -11574,7 +11915,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -11790,6 +12131,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -12683,6 +13025,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -12883,7 +13281,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -12939,7 +13337,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -13155,6 +13553,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -13902,6 +14301,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -14102,7 +14557,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -14158,7 +14613,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -14374,6 +14829,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -15166,6 +15622,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -15366,7 +15878,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -15422,7 +15934,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -15638,6 +16150,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -16480,6 +16993,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -16680,7 +17249,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -16736,7 +17305,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -16952,6 +17521,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -17706,6 +18276,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -17906,7 +18532,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -17962,7 +18588,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -18178,6 +18804,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -18983,6 +19610,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -19183,7 +19866,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -19239,7 +19922,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -19455,6 +20138,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -20385,6 +21069,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -20585,7 +21325,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -20641,7 +21381,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -20857,6 +21597,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -21657,6 +22398,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -21857,7 +22654,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -21913,7 +22710,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -22129,6 +22926,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -22993,6 +23791,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -23193,7 +24047,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -23249,7 +24103,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -23465,6 +24319,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -24178,6 +25033,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -24378,7 +25289,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -24434,7 +25345,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -24650,6 +25561,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
@@ -25363,6 +26275,62 @@
                       },
                       "description": "Geçmişi Gör görselleri, sıralı"
                     },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
                     "placement": {
                       "anyOf": [
                         {
@@ -25563,7 +26531,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
+                      "description": "Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"
                     },
                     "sources": {
                       "type": "array",
@@ -25619,7 +26587,7 @@
                         ],
                         "additionalProperties": false
                       },
-                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
                     },
                     "status": {
                       "type": "string",
@@ -25835,6 +26803,7 @@
                     "sections",
                     "cards",
                     "historyImages",
+                    "partCards",
                     "placement",
                     "photoIds",
                     "media",
