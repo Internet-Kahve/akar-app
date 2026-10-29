@@ -97,15 +97,16 @@ export const IdParams = z.object({ id: z.string().min(1).max(100) });
 
 const Image = z.object({ id: z.string(), url: z.string(), alt: z.string() });
 
-/** Saved 3D camera pose ("Açı"): azimuth/elevation in degrees, distance in metres. */
+/** Saved 3D camera pose ("Açı"): around a model part, distance relative to the model's size. */
 export const CameraPoseDto = z
   .object({
     label: z.string().optional(),
-    azimuthDeg: z.number(),
+    target: z.string().nullable().describe("Kameranın baktığı model parçası; null = modelin ortası"),
+    azimuthDeg: z.number().describe("0 = kuzeyden bakış, saat yönünde"),
     elevationDeg: z.number(),
-    distanceM: z.number(),
+    distance: z.number().describe("Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"),
   })
-  .describe("Kamera açısı: azimut ve yükseklik derece, uzaklık metre");
+  .describe("Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık");
 
 export const SiteSummary = z.object({
   id: z.string(),

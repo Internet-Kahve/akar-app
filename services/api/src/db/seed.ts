@@ -149,6 +149,7 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
             sourceId: b.sourceId ?? null,
             showCard: b.showCard ?? null,
             highlights: b.highlights ?? [],
+            camera: b.camera ?? null,
           })),
         );
       }

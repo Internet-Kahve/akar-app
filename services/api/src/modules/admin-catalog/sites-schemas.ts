@@ -25,11 +25,12 @@ export const LngLatInput = z.tuple([z.number().min(-180).max(180), z.number().mi
 export const CameraPoseInput = z
   .object({
     label: text(60).optional(),
+    target: text(200).nullable().default(null),
     azimuthDeg: z.number().min(-360).max(360),
     elevationDeg: z.number().min(-90).max(90),
-    distanceM: z.number().positive().max(10_000),
+    distance: z.number().min(0.1).max(4),
   })
-  .describe("Kamera açısı: azimut ve yükseklik derece, uzaklık metre");
+  .describe("Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)");
 export type CameraPoseInput = z.infer<typeof CameraPoseInput>;
 
 // ── site: list and detail ────────────────────────────────────────────────────

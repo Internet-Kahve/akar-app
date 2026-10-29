@@ -25,6 +25,17 @@ def trust(value):
         raise ValueError('Unknown trust label: ' + value)
     return TRUST[value]
 
+# Distance words of the "Açı" table, as fractions of the distance at which the whole model fits the view
+# (prototype Sahne3D.aci); anything else ("bütün yapı", "kadrajın yarısı") is the whole building.
+DISTANCE = [('yakın', 0.42), ('orta', 0.62), ('çatı', 0.85)]
+
+def camera(angle):
+    words = angle['uzaklik'] or ''
+    target = angle['hedef']
+    return dict(target=None if target in (None, 'Merkez') else target, azimuthDeg=angle['azimut'],
+                elevationDeg=max(5, min(85, angle['egim'] if angle['egim'] is not None else 30)),
+                distance=next((f for w, f in DISTANCE if w in words), 0.95))
+
 for entry in editorial.eserleri_bul():
     folder = entry['id']
     sid = IDS.get(folder, folder)
@@ -57,7 +68,8 @@ for entry in editorial.eserleri_bul():
             raise ValueError(f'Missing story photograph: {folder} {item["foto"]}')
         stories.append(dict(id=f'{sid}-story-{item["no"]}', title=photo['title'], text=item['metin'],
                             simple=item['metin'], trust=trust(item['guven']), photoId=photo['id'],
-                            sourceId=source(item['kaynak']), showCard=item['kart'], highlights=item['vurgu']))
+                            sourceId=source(item['kaynak']), showCard=item['kart'], highlights=item['vurgu'],
+                            **({'camera': camera(item['aci'])} if item['aci'] else {})))
     sections = []
     for section in editorial.hakkinda_oku(folder):
         name = section['baslik']

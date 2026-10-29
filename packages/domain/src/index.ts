@@ -67,6 +67,17 @@ export interface SiteModel {
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
 }
+/**
+ * 3D camera pose of a story sentence: looks at `target` (a model part; null = model centre) from
+ * `azimuthDeg` (0 = from the north, clockwise) and `elevationDeg`; `distance` 1 = whole model fits the view.
+ */
+export interface CameraPose {
+  label?: string;
+  target: string | null;
+  azimuthDeg: number;
+  elevationDeg: number;
+  distance: number;
+}
 export interface StoryBlock {
   id: string;
   title: string;
@@ -78,6 +89,8 @@ export interface StoryBlock {
   sourceId?: string;
   showCard?: boolean;
   highlights?: string[];
+  /** Absent = keep the previous sentence's view. */
+  camera?: CameraPose;
 }
 export interface HistoryImage {
   id: string;
@@ -322,6 +335,8 @@ export function publicationIssues(site: HeritageSite): string[] {
       issues.push(`${i + 1}. cümleye fotoğraf bağla.`);
     if (story.highlights?.some((part) => !site.model?.parts.includes(part)))
       issues.push(`${i + 1}. cümlede modelde bulunmayan vurgu var.`);
+    if (story.camera?.target && !site.model?.parts.includes(story.camera.target))
+      issues.push(`${i + 1}. cümlenin kamera hedefi modelde yok.`);
   });
   return issues;
 }

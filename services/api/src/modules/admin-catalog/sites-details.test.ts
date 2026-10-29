@@ -64,7 +64,7 @@ async function publishedSite(name: string): Promise<AdminSiteDetail> {
   const base = `/v1/admin/sites/${draft.id}`;
   const card = (await call<AdminCardDto>("POST", "/v1/admin/cards", editor, { kind: "photo", title: `${name} Kartı`, mediaId: "ph-2", sourceId: "src-vgm", trust: "verified" })).body;
   await send("PUT", `${base}/location`, { coordinates: [29.06, 40.18] });
-  await send("PUT", `${base}/model`, { mediaId: "m-1", openingCamera: { azimuthDeg: 30, elevationDeg: 15, distanceM: 40 } });
+  await send("PUT", `${base}/model`, { mediaId: "m-1", openingCamera: { azimuthDeg: 30, elevationDeg: 15, distance: 0.8 } });
   await send("PUT", `${base}/sources`, { sources: [{ id: "src-vgm", title: "VGM Bursa Envanteri", kind: "book", trust: "verified" }] });
   await send("PUT", `${base}/media`, { photoIds: ["ph-1", "ph-2"], coverPhotoId: "ph-1" });
   await send("PUT", `${base}/stories`, {

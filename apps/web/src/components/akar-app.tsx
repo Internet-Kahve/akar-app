@@ -1098,12 +1098,19 @@ export function AkarApp() {
                 </button>
                 {isDetail && site ? (
                   <Scene
-                    key={`${site.id}-${view === "story" ? storyIndex : "detail"}`}
+                    key={`${site.id}-${view === "story" && !site.model ? storyIndex : view}`}
                     site={site}
                     live={live}
                     photoId={
                       view === "story"
                         ? site.stories[storyIndex]?.photoId
+                        : undefined
+                    }
+                    pose={
+                      view === "story"
+                        ? site.stories
+                            .slice(0, storyIndex + 1)
+                            .findLast((s) => s.camera)?.camera
                         : undefined
                     }
                     flow={
