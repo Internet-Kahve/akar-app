@@ -10,14 +10,15 @@ import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts"
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
-import { historyImages, media, siteMedia, siteSections, sites } from "./schema/index.ts";
+import { historyImages, media, siteMedia, sitePartCardPhotos, sitePartCards, siteSections, sites } from "./schema/index.ts";
 
 type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string };
-type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages"> & {
+type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "partCards"> & {
   photos: Array<NonNullable<HeritageSite["photos"]>[number] & { file: string; galleryPosition: number | null }>;
   model: NonNullable<HeritageSite["model"]> & { file: string };
   historyImages: ArchiveEntry[];
   sections: Array<{ id: string; kind: "history" | "architecture" | "waqf"; title: string; body: string; trust: Trust; sourceId: string }>;
+  partCards: Array<{ id: string; parts: string[]; title: string; body: string; photoIds: string[]; trust: Trust; sourceId: string }>;
 };
 type Manifest = { version: number; sites: ContentSite[]; routes: HeritageRoute[]; retireSiteIds: string[] };
 const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".glb": "model/gltf-binary" };
@@ -31,9 +32,10 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const mediaFiles = new Map<string, string>();
   const triangles = new Map<string, number>();
   for (const site of manifest.sites) {
-    validateSite({ ...site, historyImages: [] });
+    validateSite({ ...site, historyImages: [], partCards: [] });
     const ids = new Set(site.photos.map((p) => p.id));
     if (!ids.has(site.coverPhotoId ?? "") || site.stories.some((s) => !ids.has(s.photoId ?? ""))) throw new Error(`Unresolved photographs: ${site.id}`);
+    if (site.partCards.some((c) => c.photoIds.some((p) => !ids.has(p)))) throw new Error(`Unresolved part card photographs: ${site.id}`);
     for (const item of [...site.photos, ...site.historyImages, { ...site.model, id: `${site.id}-model` }]) {
       const file = await realpath(resolve(root, item.file));
       if (!file.startsWith(root + sep)) throw new Error("Content path leaves the supplied root");
@@ -58,6 +60,8 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     });
     const missing = (site.model.coverGroups ?? []).flat().filter((part) => !site.model.parts.includes(part));
     if (missing.length) throw new Error(`Cover group parts are not model parts: ${site.id} ${missing.join(", ")}`);
+    const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !site.model.parts.includes(part));
+    if (unknown.length) throw new Error(`Part card parts are not model parts: ${site.id} ${unknown.join(", ")}`);
   }
   const unique = new Map([...files.values()].map((f) => [f.key, f]));
   const report = { sites: manifest.sites.length, objects: unique.size, bytes: [...unique.values()].reduce((n, f) => n + f.body.length, 0), applied: apply };
@@ -78,7 +82,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const { db, pool } = createDb(config.DATABASE_URL, 2, config.DATABASE_SSL_CA);
   try {
     await db.transaction(async (tx) => {
-      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sections: _sections, ...site }) => site), routes: manifest.routes });
+      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sections: _sections, partCards: _parts, ...site }) => site), routes: manifest.routes });
       for (const site of manifest.sites) {
         // The seed includes every story photo; only editorial gallery entries belong in site_media.
         await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
@@ -96,6 +100,12 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         }
         await tx.delete(siteSections).where(eq(siteSections.siteId, site.id));
         if (site.sections.length) await tx.insert(siteSections).values(site.sections.map((section, position) => ({ ...section, siteId: site.id, position })));
+        // Photos cascade with their card.
+        await tx.delete(sitePartCards).where(eq(sitePartCards.siteId, site.id));
+        for (const [position, { photoIds, ...card }] of site.partCards.entries()) {
+          await tx.insert(sitePartCards).values({ ...card, siteId: site.id, position });
+          if (photoIds.length) await tx.insert(sitePartCardPhotos).values(photoIds.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
+        }
         for (const id of [...site.photos.map((p) => p.id), `${site.id}-model`]) {
           const file = files.get(mediaFiles.get(id)!)!;
           // Shared content-addressed files are seed-managed (storage_key stays null); deleting one site must not delete another's photo.

@@ -77,6 +77,14 @@ for entry in editorial.eserleri_bul():
         for p in section['paragraflar']:
             sections.append(dict(id=f'{sid}-section-{len(sections)+1}', kind=kind, title=name,
                                  body=p['metin'], trust=trust(p['guven']), sourceId=source(p['kaynak'])))
+    part_cards = []
+    for card in editorial.parcalar_oku(folder):
+        missing = [f for f in card['fotolar'] if f not in by_name]
+        if missing:
+            raise ValueError(f'Missing part card photograph: {folder} {", ".join(missing)}')
+        part_cards.append(dict(id=f'{sid}-part-{len(part_cards)+1}', parts=card['adlar'], title=card['baslik'],
+                               body=card['metin'], photoIds=[by_name[f]['id'] for f in card['fotolar']],
+                               trust=trust(card['guven']), sourceId=source(card['kaynak'])))
     history = []
     archive = json.loads((root / 'eserler' / folder / 'gecmisi-gor/gecmisi-gor.json').read_text())
     for image in archive['fotograflar']:
@@ -103,7 +111,7 @@ for entry in editorial.eserleri_bul():
         description=entry['kisa'], status='published', tier='Hero' if sid=='ulu-cami' else 'Tier 2',
         source='Bursa Vakıf Eserleri Envanteri · ekip tarafından hazırlanan kaynaklı içerik',
         role='akar' if entry['rol']=='akar' else 'hayrat', stories=stories, photos=photos, sources=sources,
-        coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sections=sections,
+        coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sections=sections, partCards=part_cards,
         relatedSiteId={'bedesten':'ulu-cami','orhan-bey-hamami':'orhan-gazi','emir-han':'orhan-gazi'}.get(sid)))
 result['routes'] = [
  dict(id='hanlar',name='Hanlar Bölgesi Vakıf Yürüyüşü',description='Ulucami, Bedesten, Koza Hanı ve Orhan Bey Camii arasında vakıf mirası.',siteIds=['ulu-cami','bedesten','koza-han','orhan-gazi'],theme='Vakıf kültürü',minutes=0,distance=''),

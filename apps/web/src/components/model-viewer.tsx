@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { CameraPose, SiteModel } from "@akar/domain";
+import type { CameraPose, PartCard, SiteModel, SiteSource } from "@akar/domain";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { PartCardDialog, partLabel } from "./part-card";
 
 const TWEEN_MS = 900;
 /** One cover group's rise; the next group follows once the one before has passed `LIFT_GAP`. */
@@ -13,30 +14,49 @@ const LIFT_MS = 700;
 const LIFT_GAP = 0.35;
 /** "İçini göster" raises a low camera to this elevation so the inside is visible. */
 const INSIDE_ELEVATION = 58;
+/** Part glow: hover (mouse) and the open card's parts. */
+const GLOW = new THREE.Color(0xf2c230);
+const HOVER_GLOW = 0.28;
+const PICK_GLOW = 0.55;
+/** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
+const TAP_SLOP = 6;
+const TAP_MS = 600;
 
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
  * x east, y up, z south; azimuth 0 looks from the north, clockwise. `interior` (story) lifts the
  * model's cover groups or sets them down; absent = leave them as the visitor left them.
+ * Parts: with `partCards`, only their parts respond to a tap and open the card (all of a card's
+ * parts glow together); without cards every part shows its name.
  */
 export default function ModelViewer({
   model,
   name,
   pose,
   interior,
+  partCards = [],
+  sources = [],
 }: {
   model: SiteModel;
   name: string;
   pose?: CameraPose;
   interior?: boolean;
+  partCards?: PartCard[];
+  sources?: SiteSource[];
 }) {
   const host = useRef<HTMLDivElement>(null);
   const aim = useRef<((pose: CameraPose) => void) | null>(null);
   const lift = useRef<((open: boolean, raise: boolean) => void) | null>(null);
+  const select = useRef<((parts: string[]) => void) | null>(null);
   const poseRef = useRef(pose);
   poseRef.current = pose;
   const interiorRef = useRef(interior);
   interiorRef.current = interior;
+  const cardsRef = useRef(partCards);
+  cardsRef.current = partCards;
+  /** The tapped part: its card, or only its name on a site without cards. */
+  const [picked, setPicked] = useState<{ part: string; card?: PartCard } | null>(null);
+  const partsKey = JSON.stringify([model.parts, partCards.map((c) => c.parts)]);
   const [status, setStatus] = useState("3B model yükleniyor…");
   /** null = the model has no usable cover groups (no button). */
   const [inside, setInside] = useState<boolean | null>(null);
@@ -53,6 +73,7 @@ export default function ModelViewer({
     let object: THREE.Group | undefined;
     let cancelTween = () => {};
     let cancelLift = () => {};
+    let detachPointer = () => {};
     const disposeObject = (root: THREE.Object3D) =>
       root.traverse((item) => {
         if (!(item instanceof THREE.Mesh)) return;
@@ -171,6 +192,126 @@ export default function ModelViewer({
               if (t < 1 && !disposed) frame = requestAnimationFrame(step);
             };
             frame = requestAnimationFrame(step);
+          };
+          // Parts that answer a tap: a card's parts, or every part when the site has no cards.
+          const [partNames, cardParts] = JSON.parse(partsKey) as [string[], string[][]];
+          const known = new Set(partNames);
+          const tappable = cardParts.length ? new Set(cardParts.flat()) : known;
+          /** Meshes of each tappable part, each on its own material copy so a glow never spreads to a part sharing one. */
+          const meshesOf = new Map<string, THREE.Mesh[]>();
+          for (const part of tappable) {
+            const node = root.getObjectByName(part);
+            if (!node) continue;
+            const meshes: THREE.Mesh[] = [];
+            node.traverse((item) => {
+              if (!(item instanceof THREE.Mesh)) return;
+              item.material = Array.isArray(item.material)
+                ? item.material.map((m: THREE.Material) => m.clone())
+                : item.material.clone();
+              meshes.push(item);
+            });
+            meshesOf.set(part, meshes);
+          }
+          const baseEmissive = new WeakMap<THREE.Material, THREE.Color>();
+          let hovered: string[] = [];
+          let selected: string[] = [];
+          // Applied to the meshes' current materials: "İçini göster" swaps in its own copies later.
+          const glow = () => {
+            for (const [part, meshes] of meshesOf) {
+              const level = selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0;
+              for (const mesh of meshes)
+                for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+                  if (!(m instanceof THREE.MeshStandardMaterial)) continue;
+                  if (!baseEmissive.has(m)) baseEmissive.set(m, m.emissive.clone());
+                  m.emissive.copy(baseEmissive.get(m)!).lerp(GLOW, level);
+                }
+            }
+            render();
+          };
+          const groupOf = (part: string) =>
+            cardParts.length ? (cardParts.find((parts) => parts.includes(part)) ?? []) : [part];
+          const ray = new THREE.Raycaster();
+          const partAt = (event: PointerEvent) => {
+            const rect = renderer!.domElement.getBoundingClientRect();
+            ray.setFromCamera(
+              new THREE.Vector2(
+                ((event.clientX - rect.left) / rect.width) * 2 - 1,
+                -((event.clientY - rect.top) / rect.height) * 2 + 1,
+              ),
+              camera,
+            );
+            for (const hit of ray.intersectObject(root, true)) {
+              // Lifted cover groups are hidden or fading: look through them.
+              let node: THREE.Object3D | null = hit.object;
+              let shown = true;
+              let part: string | undefined;
+              for (; node && node !== root; node = node.parent) {
+                if (!node.visible) shown = false;
+                if (!part && known.has(node.name)) part = node.name;
+              }
+              const materials = (hit.object as THREE.Mesh).material;
+              const faded = (Array.isArray(materials) ? materials : [materials]).every(
+                (m: THREE.Material) => m.transparent && m.opacity < 0.5,
+              );
+              if (!shown || faded) continue;
+              // The nearest visible surface decides; a part that does not answer blocks the ones behind it.
+              return part && tappable.has(part) ? part : undefined;
+            }
+            return undefined;
+          };
+          let press: { x: number; y: number; at: number } | null = null;
+          const canvas = renderer!.domElement;
+          const onDown = (e: PointerEvent) => {
+            press = { x: e.clientX, y: e.clientY, at: performance.now() };
+          };
+          const onUp = (e: PointerEvent) => {
+            const tap =
+              press &&
+              Math.hypot(e.clientX - press.x, e.clientY - press.y) < TAP_SLOP &&
+              performance.now() - press.at < TAP_MS;
+            press = null;
+            if (!tap) return;
+            const part = partAt(e);
+            if (!part) return;
+            const card = cardsRef.current.find((c) => c.parts.includes(part));
+            selected = groupOf(part);
+            glow();
+            setPicked(card ? { part, card } : { part });
+          };
+          let hoverFrame = 0;
+          const onMove = (e: PointerEvent) => {
+            if (e.pointerType !== "mouse" || e.buttons) return;
+            cancelAnimationFrame(hoverFrame);
+            hoverFrame = requestAnimationFrame(() => {
+              const part = partAt(e);
+              const next = part ? groupOf(part) : [];
+              canvas.style.cursor = part ? "pointer" : "";
+              if (next.join() === hovered.join()) return;
+              hovered = next;
+              glow();
+            });
+          };
+          const onLeave = () => {
+            cancelAnimationFrame(hoverFrame);
+            canvas.style.cursor = "";
+            if (!hovered.length) return;
+            hovered = [];
+            glow();
+          };
+          canvas.addEventListener("pointerdown", onDown);
+          canvas.addEventListener("pointerup", onUp);
+          canvas.addEventListener("pointermove", onMove);
+          canvas.addEventListener("pointerleave", onLeave);
+          detachPointer = () => {
+            cancelAnimationFrame(hoverFrame);
+            canvas.removeEventListener("pointerdown", onDown);
+            canvas.removeEventListener("pointerup", onUp);
+            canvas.removeEventListener("pointermove", onMove);
+            canvas.removeEventListener("pointerleave", onLeave);
+          };
+          select.current = (parts) => {
+            selected = parts;
+            glow();
           };
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>
@@ -293,9 +434,12 @@ export default function ModelViewer({
       disposed = true;
       aim.current = null;
       lift.current = null;
+      select.current = null;
       setInside(null);
+      setPicked(null);
       cancelTween();
       cancelLift();
+      detachPointer();
       observer?.disconnect();
       controls?.dispose();
       decoder?.dispose();
@@ -304,7 +448,7 @@ export default function ModelViewer({
       renderer?.forceContextLoss();
       renderer?.domElement.remove();
     };
-  }, [model.src, name, heading, groupsKey]);
+  }, [model.src, name, heading, groupsKey, partsKey]);
   useEffect(() => {
     if (pose) aim.current?.(pose);
   }, [pose]);
@@ -313,6 +457,15 @@ export default function ModelViewer({
     lift.current(interior, false);
     setInside(interior);
   }, [interior]);
+  // A bare part name fades after a moment; a card stays until closed.
+  useEffect(() => {
+    if (!picked || picked.card) return;
+    const timer = setTimeout(() => {
+      select.current?.([]);
+      setPicked(null);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [picked]);
   return (
     <div className="model-viewer">
       <div className="model-canvas" ref={host} />
@@ -333,6 +486,21 @@ export default function ModelViewer({
           {inside ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           {inside ? "Dışını göster" : "İçini göster"}
         </button>
+      )}
+      {picked && !picked.card && (
+        <p className="model-part-name" role="status">
+          {partLabel(picked.part)}
+        </p>
+      )}
+      {picked?.card && (
+        <PartCardDialog
+          card={picked.card}
+          sources={sources}
+          onClose={() => {
+            select.current?.([]);
+            setPicked(null);
+          }}
+        />
       )}
     </div>
   );

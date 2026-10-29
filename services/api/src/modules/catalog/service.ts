@@ -9,6 +9,8 @@ import {
   regions,
   siteMapPlacements,
   siteMedia,
+  sitePartCardPhotos,
+  sitePartCards,
   siteSections,
   siteSources,
   sites,
@@ -291,6 +293,28 @@ export async function loadPlacements(q: Db | Tx, siteIds: string[]): Promise<Map
   return new Map(rows.map((r) => [r.siteId, r]));
 }
 
+/** A part card row with its photo ids in strip order. */
+export type PartCardRow = typeof sitePartCards.$inferSelect & { photoIds: string[] };
+
+/** The part cards of the given sites with their photo ids, ordered by (site, position). Sequential: safe on a transaction. */
+export async function loadPartCards(q: Db | Tx, siteIds: string[]): Promise<PartCardRow[]> {
+  if (!siteIds.length) return [];
+  const cardRows = await q
+    .select()
+    .from(sitePartCards)
+    .where(inArray(sitePartCards.siteId, siteIds))
+    .orderBy(asc(sitePartCards.siteId), asc(sitePartCards.position));
+  if (!cardRows.length) return [];
+  const photoRows = await q
+    .select({ cardId: sitePartCardPhotos.cardId, mediaId: sitePartCardPhotos.mediaId })
+    .from(sitePartCardPhotos)
+    .where(inArray(sitePartCardPhotos.cardId, cardRows.map((c) => c.id)))
+    .orderBy(asc(sitePartCardPhotos.cardId), asc(sitePartCardPhotos.position));
+  const photosOf = new Map<string, string[]>();
+  for (const p of photoRows) photosOf.set(p.cardId, [...(photosOf.get(p.cardId) ?? []), p.mediaId]);
+  return cardRows.map((c) => ({ ...c, photoIds: photosOf.get(c.id) ?? [] }));
+}
+
 /** The placement as clients get it: the model's own point, or else the site's location `at` (null for a draft without one). */
 export function resolvePlacement<T extends number | null>(
   row: PlacementRow,
@@ -334,7 +358,7 @@ function bySite<T extends { siteId: string }>(rows: T[]): Map<string, T[]> {
 export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[]> {
   const siteIds = distinct(ids);
   if (!siteIds.length) return [];
-  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, linkedMedia, linkedSources, placements] = await Promise.all([
+  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, partCardRows, linkedMedia, linkedSources, placements] = await Promise.all([
     summaryQuery(db).where(and(published, inArray(sites.id, siteIds))),
     db
       .select({
@@ -369,6 +393,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         ),
       ),
     db.select().from(historyImages).where(inArray(historyImages.siteId, siteIds)).orderBy(asc(historyImages.siteId), asc(historyImages.position)),
+    loadPartCards(db, siteIds),
     db
       .select({ siteId: siteMedia.siteId, id: siteMedia.mediaId })
       .from(siteMedia)
@@ -385,10 +410,11 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const extraById = new Map(extras.map((e) => [e.id, e]));
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
-  const [storiesOf, sectionsOf, historyOf, mediaLinksOf, sourceLinksOf] = [
+  const [storiesOf, sectionsOf, historyOf, partCardsOf, mediaLinksOf, sourceLinksOf] = [
     bySite(storyRows),
     bySite(sectionRows),
     bySite(historyRows),
+    bySite(partCardRows),
     bySite(linkedMedia),
     bySite(linkedSources),
   ];
@@ -400,6 +426,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
     const stories = storiesOf.get(id) ?? [];
     const sections = sectionsOf.get(id) ?? [];
     const history = historyOf.get(id) ?? [];
+    const partCards = partCardsOf.get(id) ?? [];
     // Cards in the order the story first uses them (several sentences may share one card).
     const siteCards = distinct(stories.map((b) => b.cardId)).flatMap((cardId) => {
       const card = cardById.get(cardId);
@@ -411,6 +438,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...stories.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
       ...siteCards.map((c) => c.mediaId),
       ...history.flatMap((h) => [h.mediaId, h.presentMediaId]),
+      ...partCards.flatMap((c) => c.photoIds),
     ]);
     const contentSourceIds = distinct([
       ...(sourceLinksOf.get(id) ?? []).map((s) => s.id),
@@ -418,8 +446,9 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...sections.map((s) => s.sourceId),
       ...siteCards.map((c) => c.sourceId),
       ...history.map((h) => h.sourceId),
+      ...partCards.map((c) => c.sourceId),
     ]);
-    return [{ row, extra, stories, sections, history, siteCards, mediaIds, contentSourceIds }];
+    return [{ row, extra, stories, sections, history, partCards, siteCards, mediaIds, contentSourceIds }];
   });
 
   // Sources of the media come back with the media rows, so both lookups run in one round for all sites.
@@ -432,7 +461,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
   for (const s of sourceRows) sourceById.set(s.id, s);
   for (const { s } of mediaRows) if (s) sourceById.set(s.id, s);
 
-  return parts.map(({ row, extra, stories, sections, history, siteCards, mediaIds, contentSourceIds }) => {
+  return parts.map(({ row, extra, stories, sections, history, partCards, siteCards, mediaIds, contentSourceIds }) => {
     const siteMediaList = mediaIds.flatMap((mediaId) => {
       const m = mediaById.get(mediaId);
       return m ? [m] : [];
@@ -502,6 +531,15 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         sourceId: h.sourceId,
         trust: h.trust,
         camera: h.camera,
+      })),
+      partCards: partCards.map((c) => ({
+        id: c.id,
+        parts: c.parts,
+        title: c.title,
+        body: c.body,
+        photoIds: c.photoIds,
+        sourceId: c.sourceId,
+        trust: c.trust,
       })),
       placement: publicPlacement(
         placements.get(row.id),

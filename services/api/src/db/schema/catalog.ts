@@ -345,3 +345,36 @@ export const historyImages = pgTable(
   },
   (t) => [unique("history_images_order_uq").on(t.siteId, t.position)],
 );
+
+/** 3D part card ("parça kartı"): tapping any of `parts` (model node names) opens it; all of them light up together. */
+export const sitePartCards = pgTable(
+  "site_part_cards",
+  {
+    id: text("id").primaryKey(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    parts: text("parts").array().notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    sourceId: text("source_id").references(() => sources.id),
+    trust: trustEnum("trust").notNull(),
+  },
+  (t) => [unique("site_part_cards_order_uq").on(t.siteId, t.position)],
+);
+
+/** A part card's photo strip, in order; the first is the cover. */
+export const sitePartCardPhotos = pgTable(
+  "site_part_card_photos",
+  {
+    cardId: text("card_id")
+      .notNull()
+      .references(() => sitePartCards.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    mediaId: text("media_id")
+      .notNull()
+      .references(() => media.id),
+  },
+  (t) => [primaryKey({ columns: [t.cardId, t.position] }), index("site_part_card_photos_media_idx").on(t.mediaId)],
+);

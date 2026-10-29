@@ -220,6 +220,16 @@ export const HistoryImageDto = z.object({
   camera: CameraPoseDto.nullable().describe("Bugünün görüntüsüyle hizalama açısı"),
 });
 
+export const PartCardDto = z.object({
+  id: z.string(),
+  parts: z.array(z.string()).describe("Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"),
+  title: z.string(),
+  body: z.string(),
+  photoIds: z.array(z.string()).describe("Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"),
+  sourceId: z.string().nullable(),
+  trust: TrustSchema,
+});
+
 export const MapPointDto = z.object({ lng: z.number(), lat: z.number() });
 
 export const MapPlacementDto = z.object({
@@ -251,16 +261,19 @@ export const SiteDetail = SiteSummary.extend({
   sections: z.array(SectionDto).describe("Eser hakkında bölümler (Tarihçe, Mimari, Vakıf ve akar), sıralı"),
   cards: z.array(CardDto).describe("Hikâye cümlelerinin kullandığı kartlar; ilk kullanım sırasıyla, tekrarsız"),
   historyImages: z.array(HistoryImageDto).describe("Geçmişi Gör görselleri, sıralı"),
+  partCards: z
+    .array(PartCardDto)
+    .describe("3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"),
   placement: MapPlacementDto.nullable().describe(
     "Modelin haritadaki yerleşimi. Eserin modeli varsa ve yerleşim gösterilmek üzere kaydedilmişse dolu; aksi halde null (alan hiçbir zaman eksik olmaz)",
   ),
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
   media: z
     .array(MediaDto)
-    .describe("Eserin medya listesi, ardından kapak, hikâye, kart ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
+    .describe("Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
   sources: z
     .array(SourceDto)
-    .describe("Eserin kaynak listesi, ardından hikâye, bölüm, kart, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"),
+    .describe("Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"),
 });
 export type SiteDetail = z.infer<typeof SiteDetail>;
 
