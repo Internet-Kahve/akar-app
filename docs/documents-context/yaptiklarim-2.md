@@ -883,3 +883,16 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
   - İçerik şimdilik yalnız Türkçe. EN seçilince iki dilli uyarı çıkar: «English is coming soon. Content is shown in Turkish for now. · İngilizce içerik hazırlanıyor.» Uygulama Türkçe kalır; `<html lang>` «tr» kalır.
   - İngilizce metinler (`_en` alanları) gelince aynı düğme onları açacak.
 - Sınama: masaüstü ve mobilde düğme görünüyor, EN seçimi saklanıyor, hata yok.
+
+## 64. Bütün içerik dil seçiciye bağlandı; çeviri yok (test-redmi9t-v2)
+
+29 Ekim 2026. Kullanıcı: «İngilizceye çevirme ama her şey (kartlar, hikâye, hakkında) buna bağlı olsun.»
+- **Biçim:** `ICERIK_INGILIZCE.md`. Türkçe dosyalara dokunulmaz; çeviri `eserler/<eser>/icerik/en/` altında, Türkçe kayda anahtarla bağlanır. Ayrıca `eser.json` `ad_en` / `uzun_ad_en` / `kisa_en`.
+- **`hazirla.py` → `en_oku()`:** çeviriyi `<alan>_en` olarak ekler; eşleşmeyen satır için uyarı verir. Sınandı: örnek dosyalarla 7 alan bağlandı; yanlış numara, yanlış parça ve eksik paragraf için üç uyarı doğru çıktı. Gerçek veride `icerik/en/` olmadığı için hiçbir şey değişmedi.
+- **`app.js` → `dilVeri()`:** dil değişince görünen alanlar o dildeki metinle değişir, Türkçesi saklanır; açık ekran yeniden çizilir, pin etiketleri yenilenir.
+  - Okuma katmanı İngilizcede gizli (Türkçe kitaptan birebir seçme); 3D açıları kalır.
+  - İngilizce metinde ses `en-US`.
+  - Anlatım panelindeki dil etiketi seçimi gösterir.
+- **Uyarı:** EN seçiliyken eksik varsa bir kez «Some content is not in English yet… · Bazı içerikler henüz İngilizce değil.»; hiç çeviri yoksa «English is coming soon…».
+- Sınama (Playwright, örnek EN verisiyle): anlatımın ilk cümlesi İngilizce, başlık «Grand Mosque», TR'ye dönünce «Ulucami»; hata yok.
+- Ürün alanları ve eksikler ENTEGRASYON §5.11'de.

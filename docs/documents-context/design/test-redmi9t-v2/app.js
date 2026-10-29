@@ -103,14 +103,55 @@ function yuklemeIzle(kap, dosya) {
     k.querySelector('.yk-mb').textContent = `${mbYaz(n)} MB / ${mbYaz(top)} MB. `;
   });
 }
-/* dil seçici (29 Ekim 2026): seçim cihazda saklanır. İçerik şimdilik yalnız Türkçe: EN seçilince bunu dürüstçe söyler, uygulama Türkçe kalır
-   (<html lang> «tr» kalır; içerik İngilizceye geçince değişmeli, yoksa ekran okuyucu Türkçeyi İngilizce okur). İngilizce metinler (eser.json / hikaye.md'de _en alanları) gelince aynı düğme onları açar. */
+/* dil seçici (29 Ekim 2026). Seçim cihazda saklanır (`akar.dil`). Bütün içerik dile bağlı:
+   eser adı/kısa metni, hikâye cümleleri, parça kartları, fotoğraf başlıkları, «Eser hakkında» bölümleri.
+   İngilizce metin hazirla.py'nin `<alan>_en` alanlarından gelir (eserler/<eser>/icerik/en/, eser.json `ad_en`, `kisa_en`; biçim ICERIK_INGILIZCE.md).
+   Yöntem: dil değişince kayıtların görünen alanı (ad, metin, baslik…) o dildeki metinle değiştirilir; Türkçesi `_tr`'de saklanır. Böylece bütün
+   ekran kodu tek yerden dile bağlanır. Çevirisi olmayan alan Türkçe kalır; EN seçiliyken eksik varsa bir kez söylenir.
+   «Eser hakkında» okuma katmanı (özet, rakam, alıntı, zaman, terim) Türkçe kitap metninden birebir seçme olduğu için İngilizcede gösterilmez; 3D açıları kalır. */
+const DIL_ALAN = [
+  ['eser', (e) => [e], ['ad', 'uzun_ad', 'kisa']],
+  ['hikaye', (e) => e.hikaye, ['metin']],
+  ['parca', (e) => e.parcalar || [], ['baslik', 'metin']],
+  ['foto', (e) => e.fotolar, ['baslik', 'kisa', 'alt']],
+  ['bolum', (e) => e.hakkinda || [], ['baslik']],
+  ['paragraf', (e) => (e.hakkinda || []).flatMap((b) => b.paragraflar), ['metin']],
+];
+function dilVeri(d) {
+  let eksik = 0, var_ = 0;
+  for (const e of VERI.eserler) {
+    for (const [, kayitlar, alanlar] of DIL_ALAN) for (const o of kayitlar(e)) {
+      o._tr = o._tr || {};
+      for (const a of alanlar) {
+        if (!(a in o._tr)) o._tr[a] = o[a];
+        if (o._tr[a] == null || o._tr[a] === '') continue;
+        const en = o[a + '_en'];
+        if (d === 'en' && en) { o[a] = en; var_++; } else { o[a] = o._tr[a]; if (d === 'en') eksik++; }
+      }
+    }
+    for (const b of e.hakkinda || []) {   // okuma katmanı yalnız Türkçede
+      if (!('_okuma' in b)) b._okuma = b.okuma || null;
+      b.okuma = d === 'en' && b._okuma ? { ozet:[], rakam:[], alinti:[], zaman:[], ucd:b._okuma.ucd } : b._okuma;
+    }
+    if (!('_terimler' in e)) e._terimler = e.terimler || [];
+    e.terimler = d === 'en' ? [] : e._terimler;
+  }
+  return { eksik, var_ };
+}
+/* konuşma dili: gösterilen metin İngilizceyse İngilizce ses */
+const sesDili = (o, a = 'metin') => (durum.dil === 'en' && o && o[a + '_en'] ? 'en' : 'tr');
+const sesAyarla = (u, dil) => { u.lang = dil === 'en' ? 'en-US' : 'tr-TR'; const v = speechSynthesis.getVoices().find((x) => new RegExp('^' + dil, 'i').test(x.lang)); if (v) u.voice = v; };
 function dilUygula(d, bildir) {
   durum.dil = d === 'en' ? 'en' : 'tr'; yerel('akar.dil', durum.dil);
   $$('.dil-sec [data-dil]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.dil === durum.dil)));
-  if (bildir && durum.dil === 'en') toast('English is coming soon. Content is shown in Turkish for now. · İngilizce içerik hazırlanıyor.');
+  const { eksik, var_ } = dilVeri(durum.dil);
+  document.documentElement.lang = durum.dil === 'en' && var_ && !eksik ? 'en' : 'tr';   // karışık içerikte «tr» kalır (çoğu metin Türkçe)
+  if (!bildir) return;
+  if (typeof harita !== 'undefined') harita.getSource('eserler')?.setData(eserNoktalari());   // pin etiketleri
+  if (typeof yonlendir === 'function') yonlendir();   // açık ekran yeni dille yeniden çizilir
+  if (durum.dil === 'en' && eksik) toast(var_ ? 'Some content is not in English yet and is shown in Turkish. · Bazı içerikler henüz İngilizce değil.' : 'English is coming soon. Content is shown in Turkish for now. · İngilizce içerik hazırlanıyor.');
 }
-document.addEventListener('click', (e) => { const b = e.target.closest('.dil-sec [data-dil]'); if (b) { e.preventDefault(); e.stopPropagation(); dilUygula(b.dataset.dil, true); } }, true);
+document.addEventListener('click', (e) => { const b = e.target.closest('.dil-sec [data-dil]'); if (b) { e.preventDefault(); e.stopPropagation(); if (b.dataset.dil !== durum.dil) dilUygula(b.dataset.dil, true); } }, true);
 const SEHIR_ESIK = 9;   // bu zoomun altında eser pinleri yerine şehirler görünür (küre görünümü)
 const galeriFoto = (e) => e.fotolar.filter((f) => f.sira).sort((a, b) => a.sira - b.sira);
 const kapak = (e) => galeriFoto(e)[0] || e.fotolar[0];
@@ -891,8 +932,7 @@ function pkSesBaslat(bilgi) {
   if (!('speechSynthesis' in window)) return;
   if (anlat.oynuyor) oynat(false);                     // anlatım konuşuyorsa susar; iki ses üst üste binmez
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(`${bilgi.baslik}. ${bilgi.metin}`); u.lang = 'tr-TR';
-  const ses = speechSynthesis.getVoices().find((v) => /^tr/i.test(v.lang)); if (ses) u.voice = ses;
+  const u = new SpeechSynthesisUtterance(`${bilgi.baslik}. ${bilgi.metin}`); sesAyarla(u, sesDili(bilgi));
   pkSes = u; u.onend = u.onerror = () => { if (pkSes === u) pkSesDur(); };
   speechSynthesis.speak(u);
   const b = $('#pk-ses'); if (b) { b.innerHTML = ic('square', 18); b.setAttribute('aria-label', 'Sesi durdur'); b.setAttribute('aria-pressed', 'true'); }
@@ -1002,7 +1042,7 @@ function anlatim(id, mod) {
   const ust = `<div class="anlat-ust">${durum.masaustu ? '' : `<button class="yuvarlak ust-kontrol gizlenir" data-git="#/eser/${id}" aria-label="Kapat">${ic('x', 18)}</button>`}<div style="display:flex;gap:8px">${seciciHTML(true)}<button class="yuvarlak ust-kontrol gizlenir koyu-zemin" id="doldur" aria-label="Ekranı doldur">${ic(durum.doldur ? 'shrink' : 'expand', 18)}</button></div></div>`;
   const liste = `<ol class="cumleler" id="cumleler">${e.hikaye.map((c, i) => `<li data-cumle="${i}"><span class="no">${i + 1}</span><div><p>${esc(c.metin)}</p>${guven(c.guven)}</div></li>`).join('')}</ol>`;
   const oynatici = `<div class="oynatici"><button class="sol" data-mod-degis>${durum.masaustu ? `<span class="sure" id="sure">0:00 / 0:00</span>` : (mod === 'dinle' ? 'Oku' : 'Dinle')}</button><div class="orta"><button class="kucuk" data-adim="-1" aria-label="Önceki">${ic('skip-back', 18)}</button><button class="oynat" id="oynat" aria-label="Oynat">${ic('play', 22)}</button><button class="kucuk" data-adim="1" aria-label="Sonraki">${ic('skip-forward', 18)}</button></div><button class="sag" id="hiz">1x</button></div>`;
-  const sekme = `<div class="sekme-grup" role="tablist"><button role="tab" data-mod="dinle" aria-selected="${mod === 'dinle'}">${ic('headphones', 16)} Dinle</button><button role="tab" data-mod="oku" aria-selected="${mod === 'oku'}">${ic('book-open', 16)} Oku</button></div><span class="dil">TR ${ic('chevron-down', 14)}</span>`;
+  const sekme = `<div class="sekme-grup" role="tablist"><button role="tab" data-mod="dinle" aria-selected="${mod === 'dinle'}">${ic('headphones', 16)} Dinle</button><button role="tab" data-mod="oku" aria-selected="${mod === 'oku'}">${ic('book-open', 16)} Oku</button></div><span class="dil">${durum.dil === 'en' ? 'EN' : 'TR'}</span>`;   // anlatımın dili üstteki seçiciden
   if (durum.masaustu) {
     panel.innerHTML = `<div class="anlat-panel"><div class="bas"><button class="ikon-btn" style="width:36px;height:36px" data-git="#/eser/${id}" aria-label="Hikâyeden çık">${ic('x', 18)}</button>${sekme}</div>${liste}${oynatici}</div>`;
     gorusAc(`<div class="anlat-alan" id="anlat-alan"></div>${ilerleme}${ust}`, 'anlatim');
@@ -1077,8 +1117,7 @@ function seslendir() {
   clearTimeout(anlat.zaman);
   if ('speechSynthesis' in window) {
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(c.metin); u.lang = 'tr-TR'; u.rate = anlat.hiz;
-    const ses = speechSynthesis.getVoices().find((v) => /^tr/i.test(v.lang)); if (ses) u.voice = ses;
+    const u = new SpeechSynthesisUtterance(c.metin); sesAyarla(u, sesDili(c)); u.rate = anlat.hiz;
     u.onend = () => setTimeout(sonraki, 250);
     speechSynthesis.speak(u);
     anlat.zaman = setTimeout(sonraki, (sureTahmin(c) * 1.8 + 2) * 1000 / anlat.hiz);   // bazı Android sürümlerinde onend gelmeyebilir

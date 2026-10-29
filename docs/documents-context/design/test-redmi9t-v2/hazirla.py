@@ -288,6 +288,61 @@ def okuma_oku(eid, bolumler):
     return terimler
 
 
+def en_oku(eid, hikaye, parcalar, fotolar, hakkinda):
+    """İngilizce içerik (29 Ekim 2026): eserler/<eser>/icerik/en/ altında, Türkçe dosyalara DOKUNMADAN paralel dosyalar.
+    Biçim: docs/documents-context/ICERIK_INGILIZCE.md. Bulunan her çeviri Türkçe kaydın yanına `<alan>_en` olarak eklenir;
+    olmayan alan boş kalır, uygulama Türkçesini gösterir. Eşleşmeyen satır uyarı verir, sessizce atlanmaz."""
+    kok = os.path.join(ESER, eid, 'icerik', 'en')
+    if not os.path.isdir(kok):
+        return 0
+    uyari, n = [], 0
+    yol = os.path.join(kok, 'hikaye.md')
+    if os.path.exists(yol):
+        no = {c['no']: c for c in hikaye}
+        for h in tablo(oku(yol), '#'):
+            if len(h) >= 2 and h[0].isdigit() and h[1]:
+                if int(h[0]) in no: no[int(h[0])]['metin_en'] = h[1]; n += 1
+                else: uyari.append(f'hikaye.md: {h[0]}. cümle Türkçede yok')
+    yol = os.path.join(kok, 'parcalar.md')
+    if os.path.exists(yol):
+        anahtar = {', '.join(p['adlar']): p for p in parcalar}
+        for h in tablo(oku(yol), 'Parçalar'):
+            if len(h) < 3:
+                continue
+            k = ', '.join(x.strip() for x in h[0].split(',') if x.strip())
+            if k in anahtar:
+                if h[1]: anahtar[k]['baslik_en'] = h[1]; n += 1
+                if h[2]: anahtar[k]['metin_en'] = h[2]; n += 1
+            else: uyari.append(f'parcalar.md: «{k}» Türkçe kartlarda yok')
+    yol = os.path.join(kok, 'fotograflar.md')
+    if os.path.exists(yol):
+        dosya = {f['dosya']: f for f in fotolar}
+        for h in tablo(oku(yol), 'Dosya'):
+            if len(h) < 4:
+                continue
+            f = dosya.get(ham(h[0]))
+            if not f: uyari.append(f'fotograflar.md: {ham(h[0])} Türkçede yok'); continue
+            for i, alan in ((1, 'baslik'), (2, 'kisa'), (3, 'alt')):
+                if h[i]: f[alan + '_en'] = h[i]; n += 1
+    yol = os.path.join(kok, 'eser-hakkinda.md')
+    if os.path.exists(yol):
+        bol = {b['baslik']: b for b in hakkinda}
+        for parca in re.split(r'(?m)^## ', oku(yol))[1:]:
+            bas, _, govde = parca.partition('\n')
+            tr, _, en = bas.partition('|')
+            b = bol.get(tr.strip())
+            if not b: uyari.append(f'eser-hakkinda.md: «{tr.strip()}» bölümü Türkçede yok'); continue
+            if en.strip(): b['baslik_en'] = en.strip(); n += 1
+            pler = [x.strip() for x in govde.split('\n\n') if x.strip()]
+            if len(pler) != len(b['paragraflar']):
+                uyari.append(f'eser-hakkinda.md: «{tr.strip()}» {len(pler)} paragraf, Türkçede {len(b["paragraflar"])}; bölüm atlandı'); continue
+            for p, t in zip(b['paragraflar'], pler):
+                p['metin_en'] = t; n += 1
+    for u in uyari:
+        print(f'  ! {eid} icerik/en/{u}')
+    return n
+
+
 def gecmis_oku(eid, cikti):
     """eserler/<eser>/gecmisi-gor/ paketi (Foto Atlas, gecmisi_gor_uret.py yazar): fotoğraflar + WebP'ler gg/<eser>/'e."""
     yol = os.path.join(ESER, eid, 'gecmisi-gor', 'gecmisi-gor.json')
@@ -383,7 +438,9 @@ def main():
         for b in hakkinda:
             for p in b['paragraflar']:
                 p.pop('_sayfa', None)
-        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda, terimler=terimler, gecmis=gecmis_oku(eid, cikti), izler=izler_oku(eid, cikti), parcalar=parcalar_oku(eid), model=model,
+        parcalar = parcalar_oku(eid)
+        en = en_oku(eid, hikaye, parcalar, fotolar, hakkinda)
+        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda, terimler=terimler, gecmis=gecmis_oku(eid, cikti), izler=izler_oku(eid, cikti), parcalar=parcalar, model=model, en_alan=en,
                      gorevler=gorevler_oku(eid)[0], rozetler=gorevler_oku(eid)[1],
                      sure=max(1, round(sum(len(c['metin'].split()) for c in hikaye) / 130)) if hikaye else 0)
         veri['eserler'].append(kayit)

@@ -322,6 +322,11 @@ Figma `akar-yeni`'de değişen her ekranın altında «29 Ekim: …» notu var. 
 - `design/test-redmi9t-v2/app.js`: `Sahne3D`, `hkSerit`, `hkSekmeOk`, `yuklemeKart`, `glbAl`, `sehirlereUzaklas`;
 - `app.css`: `.hk-*`, `.galeri-f`, `.buyut-ic`, `.yukleme`, `#acilis`.
 
+### 5.11 Dil seçici (TR | EN) ve İngilizce içerik
+- Avatarın solunda «TR \| EN» seçici. Bütün içerik dile bağlı: eser adı ve kısa metni, hikâye, parça kartları, fotoğraf başlıkları, Eser hakkında.
+- Çeviri yok; altyapı hazır. Biçim ve ürün alanları: **[`ICERIK_INGILIZCE.md`](ICERIK_INGILIZCE.md)**.
+- Ürüne eklenecek alanlar: parça kartı ve Eser hakkında bölümü için `title_en`, `body_en`. İçe aktarma `icerik/en/` dosyalarını okumalı.
+
 ## 6. Repoda olup ürüne alınmayacaklar
 
 - `design/test-redmi9t/` (v1): donmuş. İçe aktarma v2'ye geçince eski GLB'lerle birlikte silinecek:
