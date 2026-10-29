@@ -103,6 +103,14 @@ function yuklemeIzle(kap, dosya) {
     k.querySelector('.yk-mb').textContent = `${mbYaz(n)} MB / ${mbYaz(top)} MB. `;
   });
 }
+/* dil seçici (29 Ekim 2026): seçim cihazda saklanır. İçerik şimdilik yalnız Türkçe: EN seçilince bunu dürüstçe söyler, uygulama Türkçe kalır
+   (<html lang> «tr» kalır; içerik İngilizceye geçince değişmeli, yoksa ekran okuyucu Türkçeyi İngilizce okur). İngilizce metinler (eser.json / hikaye.md'de _en alanları) gelince aynı düğme onları açar. */
+function dilUygula(d, bildir) {
+  durum.dil = d === 'en' ? 'en' : 'tr'; yerel('akar.dil', durum.dil);
+  $$('.dil-sec [data-dil]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.dil === durum.dil)));
+  if (bildir && durum.dil === 'en') toast('English is coming soon. Content is shown in Turkish for now. · İngilizce içerik hazırlanıyor.');
+}
+document.addEventListener('click', (e) => { const b = e.target.closest('.dil-sec [data-dil]'); if (b) { e.preventDefault(); e.stopPropagation(); dilUygula(b.dataset.dil, true); } }, true);
 const SEHIR_ESIK = 9;   // bu zoomun altında eser pinleri yerine şehirler görünür (küre görünümü)
 const galeriFoto = (e) => e.fotolar.filter((f) => f.sira).sort((a, b) => a.sira - b.sira);
 const kapak = (e) => galeriFoto(e)[0] || e.fotolar[0];
@@ -1952,5 +1960,6 @@ function yonlendir() {
 addEventListener('hashchange', yonlendir);
 $('#panel-sekme').onclick = () => { document.body.classList.toggle('panel-kapali'); setTimeout(() => harita.resize(), 300); };
 altYukseklik('kapali');
+dilUygula(yerel('akar.dil') || 'tr', false);
 yonlendir();
 window.akar = { durum, VERI, harita, anlat, s3d:() => s3d }; window.akarIzler = IZLER;   // yalnız sınama için

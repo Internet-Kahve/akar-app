@@ -140,7 +140,7 @@ body.d #ust{position:fixed;left:0;right:0;top:0;height:64px;z-index:6;background
 body.d #ust .logo{font:700 20px/1 var(--font);letter-spacing:.04em}
 body.d #ust .arama{width:420px;height:40px;box-shadow:none;border:1px solid var(--border);padding-right:4px}
 body.d #ust .arama .sehir{padding:4px 10px;border-radius:999px;background:var(--primary-light);color:var(--primary);font:600 12px var(--font)}
-body.d #ust .avatar{margin-left:auto}
+body.d #ust .dil-sec{margin-left:auto}
 body.d #panel{position:fixed;left:0;top:64px;bottom:0;width:420px;z-index:5;background:var(--surface);border-right:1px solid var(--border);transition:transform var(--sure-3) var(--egri)}
 body.d #panel-ic{position:absolute;inset:0;overflow:auto;padding:20px 24px 24px;display:flex;flex-direction:column}
 body.d #panel-sekme{position:absolute;right:-24px;top:16px;width:24px;height:48px;background:var(--surface);border:1px solid var(--border);border-left:0;border-radius:0 8px 8px 0;display:grid;place-items:center}
@@ -873,3 +873,12 @@ body.sehir-cok-uzak .sehir-isaret:not(.hazir) b,body.sehir-cok-uzak .sehir-isare
 .tb-dugmeler{display:grid;gap:8px}
 .tb-profil{margin-top:10px}
 @media (prefers-reduced-motion:reduce){.tb-isin,.tb-rozet{animation:none}}
+
+/* 29 Ekim 2026 · dil seçici (TR | EN), avatarın solunda. Bayrak değil dil kodu: bayrak ülkeyi gösterir, dili değil (İngilizce tek bir ülkenin dili değil);
+   kodlar yeni dillere de aynı biçimde genişler ve ekran okuyucu için nettir. */
+.dil-sec{display:inline-flex;flex:none;padding:2px;border-radius:999px;background:var(--surface);border:1px solid var(--border)}
+.dil-sec button{min-width:32px;height:28px;padding:0 8px;border-radius:999px;font:600 12px/1 var(--font);letter-spacing:.04em;color:var(--text-muted)}
+.dil-sec button[aria-pressed="true"]{background:var(--primary);color:#fff}
+.dil-sec button:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.arama .dil-sec{height:34px;align-items:center;border-color:transparent;background:var(--bg)}
+.arama .dil-sec button{height:28px;min-width:30px;padding:0 7px}

@@ -865,3 +865,21 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
   - `parcalar_taslak.md`: `Govde_Ortu` «On dört kubbe» kartına; 5 iç parça satırı.
   - `modelleri-gom.py` çalıştırıldı.
 - **Kontrol:** `kontrol/v10/icini_goster.png`, `ic_kaynak.png`, `tiklama_haritasi.png`.
+
+## 63. Dil seçici TR | EN (test-redmi9t-v2)
+
+29 Ekim 2026. Kullanıcı isteği: profil fotoğrafının yanında dil düğmesi; küresel vurgu.
+- **Yer:**
+  - **M:** üst çubukta avatarın solunda.
+  - **m:** arama çubuğunun içinde, avatarın solunda. Mobil arama yer tutucusu «Eser, şehir, rota ara» diye kısaldı; sığmıyordu.
+- **Biçim:** hap içinde iki kod, «TR \| EN». Seçili olan mavi zeminli beyaz yazı. 28 px yükseklik, harf aralığı .04em.
+- **Neden bayrak değil kod (Claude önerisi):**
+  - bayrak ülkeyi gösterir, dili değil: İngilizce için hangi bayrak?
+  - kodlar yeni dillere aynı biçimde genişler;
+  - ekran okuyucu için net (`lang`, `aria-pressed`);
+  - uluslararası uygulamalarda yaygın kalıp.
+- **Davranış:**
+  - Seçim cihazda saklanır (`akar.dil`).
+  - İçerik şimdilik yalnız Türkçe. EN seçilince iki dilli uyarı çıkar: «English is coming soon. Content is shown in Turkish for now. · İngilizce içerik hazırlanıyor.» Uygulama Türkçe kalır; `<html lang>` «tr» kalır.
+  - İngilizce metinler (`_en` alanları) gelince aynı düğme onları açacak.
+- Sınama: masaüstü ve mobilde düğme görünüyor, EN seçimi saklanıyor, hata yok.
