@@ -3963,6 +3963,12 @@ td small {
   outline: 2px solid var(--primary);
   outline-offset: -3px;
 }
+.photo-gallery-empty {
+  width: 100%;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted);
+}
 .photo-gallery-item {
   margin: 0;
   padding: 12px 16px 20px;

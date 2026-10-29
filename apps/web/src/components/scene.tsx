@@ -67,31 +67,33 @@ function PhotoGallery({
             </button>
           </div>
         )}
-        <div
-          className="photo-gallery-navigation"
-          role="group"
-          aria-label="Fotoğraf gezinme"
-        >
-          <button
-            className="icon-btn"
-            aria-label="Önceki fotoğraf"
-            disabled={active === 0}
-            onClick={() => goTo(active - 1)}
+        {photos.length > 0 && (
+          <div
+            className="photo-gallery-navigation"
+            role="group"
+            aria-label="Fotoğraf gezinme"
           >
-            <ChevronLeft size={20} />
-          </button>
-          <span role="status" aria-live="polite">
-            Fotoğraf {active + 1} / {photos.length}
-          </span>
-          <button
-            className="icon-btn"
-            aria-label="Sonraki fotoğraf"
-            disabled={active === photos.length - 1}
-            onClick={() => goTo(active + 1)}
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
+            <button
+              className="icon-btn"
+              aria-label="Önceki fotoğraf"
+              disabled={active === 0}
+              onClick={() => goTo(active - 1)}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <span role="status" aria-live="polite">
+              Fotoğraf {active + 1} / {photos.length}
+            </span>
+            <button
+              className="icon-btn"
+              aria-label="Sonraki fotoğraf"
+              disabled={active === photos.length - 1}
+              onClick={() => goTo(active + 1)}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
       </div>
       <div
         className="photo-gallery"
@@ -119,6 +121,11 @@ function PhotoGallery({
           setActive(closest);
         }}
       >
+        {photos.length === 0 && (
+          <p className="photo-gallery-empty" role="status">
+            Bu bölümün fotoğrafı bulunamadı.
+          </p>
+        )}
         {photos.map((photo, index) => {
           const source = site.sources?.find(
             (entry) => entry.id === photo.sourceId,
@@ -215,18 +222,23 @@ export function Scene({
   );
   // Story mode follows its sentence's photo; detail mode shows the whole editorial gallery,
   // cover first. Story-only photos do not become public gallery entries.
-  const photos =
-    photoId && photo
+  const photos = photoId
+    ? photo
       ? [photo]
-      : [
-          ...new Map(
-            [...(photo ? [photo] : []), ...(site.photos ?? [])].map((p) => [
-              p.id,
-              p,
-            ]),
-          ).values(),
-        ];
-  if (!flow && photos.length > 0 && (!site.model || mode === "photo"))
+      : []
+    : [
+        ...new Map(
+          [...(photo ? [photo] : []), ...(site.photos ?? [])].map((p) => [
+            p.id,
+            p,
+          ]),
+        ).values(),
+      ];
+  if (
+    !flow &&
+    (photos.length > 0 || !!photoId) &&
+    (!site.model || mode === "photo")
+  )
     return (
       <PhotoGallery
         key={photoId || site.id}
@@ -250,7 +262,7 @@ export function Scene({
           >
             3B model
           </button>
-          {photos.length > 0 && (
+          {(photos.length > 0 || !!photoId) && (
             <button
               className="btn secondary"
               aria-pressed={mode === "photo"}

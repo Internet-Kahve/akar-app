@@ -37,8 +37,11 @@ async function openGallery(page: Page, model: boolean) {
     },
   ];
   site.stories = site.stories
-    .slice(0, 2)
-    .map((story, i) => ({ ...story, photoId: i ? "gallery-3" : "story-only" }));
+    .slice(0, 3)
+    .map((story, i) => ({
+      ...story,
+      photoId: i === 2 ? "missing-story-photo" : i ? "gallery-3" : "story-only",
+    }));
   await page.addInitScript(
     (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
     snapshot,
@@ -251,6 +254,20 @@ export function photoGalleryTests() {
     await expect(gallery.locator("img")).toHaveAttribute(
       "alt",
       "Eser fotoğrafı 3",
+    );
+    await page.getByRole("button", { name: "Devam et", exact: true }).click();
+    await expect(gallery.locator("figure")).toHaveCount(0);
+    await expect(gallery.getByRole("status")).toHaveText(
+      "Bu bölümün fotoğrafı bulunamadı.",
+    );
+    await expect(
+      page.getByRole("group", { name: "Fotoğraf gezinme" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "3B model", exact: true }).click();
+    await expect(page.locator(".model-viewer canvas")).toBeVisible();
+    await page.getByRole("button", { name: "Fotoğraf", exact: true }).click();
+    await expect(gallery.getByRole("status")).toHaveText(
+      "Bu bölümün fotoğrafı bulunamadı.",
     );
   });
 }
