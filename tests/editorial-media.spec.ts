@@ -1,14 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { createSeed } from "../packages/api-client/src/seed";
 
-function triangleGlb() {
-  const data = Buffer.alloc(36);
-  [0, 0, 0, 1, 0, 0, 0, 1, 0].forEach((v, i) => data.writeFloatLE(v, i * 4));
+function triangleGlb(partName?: string) {
+  const positions = [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0];
+  const data = Buffer.alloc(positions.length * 4);
+  positions.forEach((v, i) => data.writeFloatLE(v, i * 4));
   const doc = JSON.stringify({
     asset: { version: "2.0" },
     scene: 0,
     scenes: [{ nodes: [0] }],
-    nodes: [{ mesh: 0 }],
+    nodes: [{ mesh: 0, name: partName }],
     meshes: [{ primitives: [{ attributes: { POSITION: 0 }, material: 0 }] }],
     materials: [{ doubleSided: true }],
     buffers: [{ byteLength: data.length }],
@@ -17,7 +18,7 @@ function triangleGlb() {
       {
         bufferView: 0,
         componentType: 5126,
-        count: 3,
+        count: positions.length / 3,
         type: "VEC3",
         min: [0, 0, 0],
         max: [1, 1, 0],
@@ -37,6 +38,84 @@ function triangleGlb() {
   data.copy(result, 28 + json.length);
   return result;
 }
+
+test("part cards and story interiors work without reloading the model between sentences", async ({
+  page,
+}) => {
+  const snapshot = createSeed();
+  const site = snapshot.sites[0]!;
+  site.model = {
+    src: "/story-model.glb",
+    name: "Story model",
+    bytes: 0,
+    parts: ["Roof"],
+    coverGroups: [["Roof"]],
+    trust: "representative",
+  };
+  site.partCards = [
+    {
+      id: "roof-card",
+      title: "Örtü kartı",
+      body: "Örtünün kaynaklı açıklaması.",
+      parts: ["Roof"],
+      photos: [],
+      trust: "verified",
+    },
+  ];
+  site.stories = site.stories.slice(0, 2).map((story, i) => ({
+    ...story,
+    id: `story-${i}`,
+    interior: i === 1,
+    camera: { target: "Roof", azimuthDeg: 0, elevationDeg: 20, distance: 0.95 },
+  }));
+  const errors: string[] = [];
+  let downloads = 0;
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(
+    (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
+    snapshot,
+  );
+  await page.route("**/story-model.glb", (route) => {
+    downloads++;
+    return route.fulfill({
+      contentType: "model/gltf-binary",
+      body: triangleGlb("Roof"),
+    });
+  });
+  await page.goto("/#view=detail&site=ulu-cami");
+  await expect(page.locator(".model-status")).toHaveCount(0);
+  const canvas = page.locator(".model-viewer canvas");
+  await expect(canvas).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "İçini göster" }),
+  ).toBeVisible();
+  await canvas.click();
+  await expect(page.getByRole("dialog", { name: "Örtü kartı" })).toContainText(
+    "Örtünün kaynaklı açıklaması.",
+  );
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "İçini göster" }).click();
+  await expect(
+    page.getByRole("button", { name: "Dışını göster" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Dışını göster" }).click();
+  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "İçini göster" }),
+  ).toBeVisible();
+  const storyDownloads = downloads;
+  await canvas.evaluate((el) =>
+    el.setAttribute("data-story-canvas", "retained"),
+  );
+  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Dışını göster" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(canvas).toHaveAttribute("data-story-canvas", "retained");
+  expect(downloads).toBe(storyDownloads);
+  expect(errors).toEqual([]);
+});
 
 test("model survives its loading state, photo switch and uncropped archive retain attribution", async ({
   page,

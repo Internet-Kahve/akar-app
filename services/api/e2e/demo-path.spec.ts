@@ -389,6 +389,46 @@ test("live photo metadata editing preserves imported licenses and excludes unsup
   await page.screenshot({ path: testInfo.outputPath("photo-editor.png"), fullPage: true });
 });
 
+test("map settings follow delayed reads without overwriting an edited field", async ({ page }) => {
+  const email = `e2e-map-admin-${randomUUID().slice(0, 8)}@akar.test`;
+  tokenFor(email, "admin");
+  const firstRead = Promise.withResolvers<void>();
+  let settings = { maxVisibleModels: 7, modelMinZoom: 18 };
+  await page.route(`${API}/v1/map-settings`, async (route) => {
+    await firstRead.promise;
+    await route.fulfill({ json: settings });
+  });
+  await page.goto("/#view=admin");
+  await page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await signIn(page, email);
+  await page.getByRole("button", { name: "Harita ayarları", exact: true }).click();
+  const models = page.getByLabel("Aynı anda en çok model");
+  const zoom = page.getByLabel("Modellerin yüklendiği yakınlaştırma");
+  await expect(models).toBeVisible();
+  firstRead.resolve();
+  await expect(models).toHaveValue("7");
+  await expect(zoom).toHaveValue("18");
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
+
+  await models.fill("9");
+  settings = { maxVisibleModels: 6, modelMinZoom: 19 };
+  const refreshed = page.waitForResponse(`${API}/v1/map-settings`);
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await refreshed;
+  // Only the touched field belongs to the draft; untouched fields follow the server.
+  await expect(models).toHaveValue("9");
+  await expect(zoom).toHaveValue("19");
+  let submitted: unknown;
+  await page.route(`${API}/v1/admin/map-settings`, async (route) => {
+    submitted = route.request().postDataJSON();
+    await route.fulfill({ json: submitted });
+  });
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Harita ayarları kaydedildi.")).toBeVisible();
+  expect(submitted).toEqual({ maxVisibleModels: 9, modelMinZoom: 19 });
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
+});
+
 test("an admin finds a newly registered member, grants admin access and revokes it", async ({ browser, viewport, isMobile, hasTouch }, info) => {
   const run = randomUUID().slice(0, 8);
   const adminEmail = `e2e-member-admin-${run}@akar.test`;
