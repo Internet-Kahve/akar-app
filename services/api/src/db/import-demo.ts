@@ -116,6 +116,13 @@ function checkExtraMediaIds(manifest: Manifest): void {
   }
 }
 
+/** `eser.json → sira` (§11.48): the map's draw priority, a whole number from 1 up; null or absent = unranked. Ties are fine. */
+function validateDisplayOrder(site: ContentSite): void {
+  const order: unknown = site.displayOrder;
+  if (order !== undefined && order !== null && !(typeof order === "number" && Number.isInteger(order) && order >= 1))
+    throw new Error(`Site ${site.id}: displayOrder must be an integer of at least 1 or absent, got ${JSON.stringify(order)}`);
+}
+
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
 export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env) {
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
@@ -136,6 +143,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const mediaFiles = new Map<string, string>();
   const triangles = new Map<string, number>();
   for (const site of manifest.sites) {
+    validateDisplayOrder(site);
     const { tasks: _tasks, badges: _badges, sampleTraces: _traces, ...validated } = site;
     validateSite({ ...validated, historyImages: [], partCards: [], chapters: [], sections: site.sections.map(({ chapterId: _chapter, photos: _photos, ...section }) => section) });
     const ids = new Set(site.photos.map((p) => p.id));

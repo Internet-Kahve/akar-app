@@ -151,6 +151,8 @@ interface SiteDetailDto {
   year: string;
   coordinates: [number, number];
   minutes: number;
+  /** Map draw priority (§11.48), absent on older API versions; null = unranked. */
+  displayOrder?: number | null;
   tier: HeritageSite["tier"];
   description: string;
   descriptionEn: string | null;
@@ -554,6 +556,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ...(present(d.address) && { address: d.address }),
     ...(present(d.role) && { role: d.role }),
     ...(present(d.relatedSiteId) && { relatedSiteId: d.relatedSiteId }),
+    ...(typeof d.displayOrder === "number" && { displayOrder: d.displayOrder }),
     ...(present(d.coverMediaId) && { coverPhotoId: d.coverMediaId }),
     ...(model && {
       model: {

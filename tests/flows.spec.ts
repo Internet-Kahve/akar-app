@@ -1,4 +1,68 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { createSeed } from "../packages/api-client/src/seed";
+
+/** The discovery map's development handle (`window.akarMap`), as far as the pin tests use it. */
+interface PinMap {
+  getSource(id: string):
+    | {
+        getData(): Promise<{
+          features: Array<{
+            properties: { id: string };
+            geometry: { coordinates: [number, number] };
+          }>;
+        }>;
+      }
+    | undefined;
+  getCanvas(): HTMLCanvasElement;
+  project(at: [number, number]): { x: number; y: number };
+  queryRenderedFeatures(
+    box: [[number, number], [number, number]],
+    options: { layers: string[] },
+  ): Array<{ properties: { id: string } }>;
+  jumpTo(options: { center: [number, number]; zoom: number }): void;
+  getZoom(): number;
+  isMoving(): boolean;
+}
+declare global {
+  interface Window {
+    akarMap?: PinMap;
+  }
+}
+/** Ids of the sites the map's pin source holds. */
+const pinIds = (page: Page) =>
+  page.evaluate(async () => {
+    const data = await window.akarMap?.getSource("pins")?.getData();
+    return data?.features.map((f) => f.properties.id) ?? [];
+  });
+/**
+ * True when at least one pin is on screen and the map finds every one of them where it projects its site.
+ * A pin stands 38 px above its point, so it is looked for 19 px up.
+ */
+const pinsFollowSites = (page: Page) =>
+  page.evaluate(async () => {
+    const map = window.akarMap!;
+    const data = await map.getSource("pins")!.getData();
+    const canvas = map.getCanvas();
+    let visible = 0;
+    let found = 0;
+    for (const { properties, geometry } of data.features) {
+      const foot = map.project(geometry.coordinates);
+      const [x, y] = [foot.x, foot.y - 19];
+      if (x < 20 || y < 20 || x > canvas.clientWidth - 20 || y > canvas.clientHeight - 20)
+        continue;
+      visible++;
+      const hits = map.queryRenderedFeatures(
+        [
+          [x - 4, y - 4],
+          [x + 4, y + 4],
+        ],
+        { layers: ["pin"] },
+      );
+      if (hits.some((hit) => hit.properties.id === properties.id)) found++;
+    }
+    return visible > 0 && found === visible;
+  });
+
 test("discovery, story, memory moderation and persistence form one complete flow", async ({
   page,
 }) => {
@@ -313,9 +377,9 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
     route.abort(),
   );
   await page.goto("/");
-  // MapLibre can emit load after error. Markers prove that load was handled;
-  // the fallback must still be present instead of disappearing during a click.
-  await expect(page.locator(".map-marker")).toHaveCount(6);
+  // MapLibre can emit load after error. The pins prove that load was handled: the map holds a pin
+  // for every site. The fallback must still be present instead of disappearing during a click.
+  await expect.poll(() => pinIds(page)).toHaveLength(6);
   await expect(page.locator(".fallback-note")).toContainText(
     "Harita yüklenemedi · Şematik konum görünümü",
   );
@@ -444,11 +508,11 @@ test("admin imports drafts and persists route stop order", async ({ page }) => {
   );
 });
 
-test("map markers stay attached during animated zoom and panel resize", async ({
+test("map pins stay on their sites through zoom and panel resize, and a click on a pin opens the site", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  // Isolate projection/DOM positioning from external tile availability; use real MapLibre.
+  // Isolate the pins from external tile availability; use real MapLibre.
   await page.route("**/harita/akar-style.json", (route) =>
     route.fulfill({
       json: {
@@ -458,58 +522,106 @@ test("map markers stay attached during animated zoom and panel resize", async ({
           {
             id: "background",
             type: "background",
-            paint: { "background-color": "#F5F2EA" },
+            paint: { "background-color": "#f3f1ed" },
           },
         ],
       },
     }),
   );
   await page.goto("/");
-  await expect(page.locator(".map-marker")).toHaveCount(6);
-  const measure = () =>
-    page.evaluate(async () => {
-      let worst = 0,
-        frames = 0;
-      const until = performance.now() + 700;
-      while (performance.now() < until) {
-        await new Promise(requestAnimationFrame);
-        const canvas = document
-          .querySelector(".map-canvas")!
-          .getBoundingClientRect();
-        for (const el of document.querySelectorAll<HTMLElement>(
-          ".map-marker",
-        )) {
-          const match = el.style.transform.match(
-            /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/,
-          );
-          if (!match) throw new Error("MapLibre marker projection is missing");
-          const rect = el.getBoundingClientRect();
-          worst = Math.max(
-            worst,
-            Math.abs(
-              rect.left + rect.width / 2 - canvas.left - Number(match[1]),
-            ),
-            Math.abs(rect.bottom - canvas.top - Number(match[2])),
-          );
-        }
-        frames++;
-      }
-      return { worst, frames };
-    });
-  const zoom = measure();
+  await expect.poll(() => pinIds(page)).toHaveLength(6);
+  // Ulucami in the middle of the map, so zoom and resize keep it on screen on a phone too.
+  const zoom = await page.evaluate(async () => {
+    const map = window.akarMap!;
+    const data = await map.getSource("pins")!.getData();
+    const hero = data.features.find((f) => f.properties.id === "ulu-cami")!;
+    map.jumpTo({ center: hero.geometry.coordinates, zoom: 16.5 });
+    return map.getZoom();
+  });
+  await expect.poll(() => pinsFollowSites(page)).toBe(true);
+  const at = (above: boolean, level: number) =>
+    page.evaluate(
+      ([above, level]) => {
+        const map = window.akarMap!;
+        return !map.isMoving() && (map.getZoom() > level) === above;
+      },
+      [above, level] as const,
+    );
   await page.getByRole("button", { name: "Yakınlaştır", exact: true }).click();
-  const sample = await zoom;
-  expect(sample.frames).toBeGreaterThan(5);
-  expect(sample.worst).toBeLessThan(1.1);
-  const out = measure();
+  await expect.poll(() => at(true, zoom + 0.9)).toBe(true);
+  await expect.poll(() => pinsFollowSites(page)).toBe(true);
   await page.getByRole("button", { name: "Uzaklaştır", exact: true }).click();
-  expect((await out).worst).toBeLessThan(1.1);
+  await expect.poll(() => at(false, zoom + 0.1)).toBe(true);
+  await expect.poll(() => pinsFollowSites(page)).toBe(true);
   await page.getByRole("button", { name: "Paneli kapat", exact: true }).click();
-  expect((await measure()).worst).toBeLessThan(1.1);
+  await expect.poll(() => pinsFollowSites(page)).toBe(true);
   await page.getByRole("button", { name: "Paneli aç", exact: true }).click();
-  const pin = page.getByRole("button", { name: "Ulucami haritada aç" });
-  await pin.click();
+  await expect.poll(() => pinsFollowSites(page)).toBe(true);
+  // The click lands on the pin itself: 19 px above Ulucami's point.
+  const pin = await page.evaluate(async () => {
+    const map = window.akarMap!;
+    const data = await map.getSource("pins")!.getData();
+    const hero = data.features.find((f) => f.properties.id === "ulu-cami")!;
+    const foot = map.project(hero.geometry.coordinates);
+    const canvas = map.getCanvas().getBoundingClientRect();
+    return { x: canvas.left + foot.x, y: canvas.top + foot.y - 19 };
+  });
+  await page.mouse.click(pin.x, pin.y);
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
+});
+
+test("the legend and the kind chips leave out what the city has no site of, and the income category is «Ticari (akar)»", async ({
+  page,
+}) => {
+  await page.goto("/#view=sites");
+  const legend = page.locator(".map-caption span");
+  const chips = page.locator(".filter-row button");
+  await expect(legend).toHaveText(["Dinî", "Su", "Eğitim", "Ticari (akar)"]);
+  await expect(chips).toHaveText([
+    "Tümü",
+    "Cami",
+    "Çeşme",
+    "Han",
+    "Bedesten",
+    "Eğitim",
+  ]);
+  // Without the fountain and the school the city has no water or education category.
+  const snapshot = createSeed();
+  for (const site of snapshot.sites)
+    if (site.kind === "cesme" || site.kind === "egitim") site.status = "draft";
+  await page.evaluate(
+    (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
+    snapshot,
+  );
+  await page.reload();
+  await expect(legend).toHaveText(["Dinî", "Ticari (akar)"]);
+  await expect(legend.last()).toHaveAttribute("title", /gelir getiren/);
+  await expect(chips).toHaveText(["Tümü", "Cami", "Han", "Bedesten"]);
+  // A second city with a tomb: a search that points back at Bursa keeps the chip of the active kind.
+  snapshot.sites.push({
+    ...snapshot.sites[4]!,
+    id: "konya-turbe",
+    name: "Konya Türbesi",
+    city: "Konya",
+    kind: "turbe",
+    status: "published",
+    coordinates: [32.49, 37.87],
+  });
+  await page.evaluate(
+    (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
+    snapshot,
+  );
+  await page.reload();
+  await expect(chips).toHaveText(["Tümü", "Cami", "Türbe", "Han", "Bedesten"]);
+  await chips.filter({ hasText: "Türbe" }).click();
+  await page
+    .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
+    .fill("Ulucami");
+  await expect(chips).toHaveText(["Tümü", "Cami", "Türbe", "Han", "Bedesten"]);
+  await expect(chips.filter({ hasText: "Türbe" })).toHaveClass(/active/);
+  // Clearing the kind leaves only what Bursa has.
+  await chips.filter({ hasText: "Tümü" }).click();
+  await expect(chips).toHaveText(["Tümü", "Cami", "Han", "Bedesten"]);
 });

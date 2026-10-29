@@ -123,6 +123,12 @@ export const SiteSummary = z.object({
   year: z.string(),
   coordinates: z.tuple([z.number(), z.number()]).describe("[boylam, enlem]"),
   minutes: z.number().int(),
+  displayOrder: z
+    .number()
+    .int()
+    .min(1)
+    .nullable()
+    .describe("Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"),
   tier: z.enum(siteTiers),
   trust: TrustSchema,
   description: z.string(),

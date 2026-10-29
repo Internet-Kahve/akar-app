@@ -11,7 +11,6 @@ import type {
   CustomLayerInterface,
   CustomRenderMethodInput,
   Map as MapLibreMap,
-  MapMouseEvent,
   MercatorCoordinate,
 } from "maplibre-gl";
 import * as THREE from "three";
@@ -19,6 +18,7 @@ import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { modelBase, PRESENTATION_PARTS, type ModelBase } from "./model-anchor";
 import { OsmBuildingLayer } from "./map-buildings";
+import { pinLayersOn } from "./map-pins";
 import { footprintRing, type HideRule, type Ring } from "./osm-buildings";
 import { addSceneLights, groundShadow, saturate, sceneOf } from "./scene-light";
 
@@ -379,7 +379,7 @@ export class MapModelLayer implements CustomLayerInterface {
     } catch {
       if (this.loading.get(site.id)?.token !== token) return;
       this.loading.delete(site.id);
-      // A model that cannot be read leaves the map as it is; its marker still opens the site.
+      // A model that cannot be read leaves the map as it is; its pin still opens the site.
       this.failed.set(site.id, site.src);
       this.onChange();
     }
@@ -429,42 +429,38 @@ export class MapModelLayer implements CustomLayerInterface {
   }
 }
 
-/** The map's models: `update` follows the catalog and settings, `dispose` removes both layers. */
+/**
+ * The map's models: `update` follows the catalog and settings, `pick` names the site whose model is under a
+ * screen point, `dispose` removes both layers.
+ */
 export interface MapModels {
   update(
     sites: HeritageSite[],
     settings: MapSettings,
     scenes: Record<string, CityScene>,
   ): void;
+  pick(x: number, y: number): string | null;
   dispose(): void;
 }
 
 /**
- * Model layer and OSM building layer on one map, kept in step with the catalog.
- * Never throws into the map: a failing layer leaves markers and base map as they were.
+ * Model layer and OSM building layer on one map, kept in step with the catalog; the models sit under the
+ * site pins. Never throws into the map: a failing layer leaves the pins and base map as they were.
  */
 export function createMapModels(
   map: MapLibreMap,
   mercator: typeof MercatorCoordinate,
-  onSelect: (siteId: string) => void,
 ): MapModels {
   let buildings: OsmBuildingLayer | null = null;
   const models = new MapModelLayer(mercator, () => buildings?.schedule());
   try {
     buildings = OsmBuildingLayer.install(map, () => models.hideRules());
-    map.addLayer(models);
+    // Under the pins, whichever of them the map has by now.
+    map.addLayer(models, pinLayersOn(map).at(-1));
   } catch {
     buildings?.dispose();
     buildings = null;
   }
-  const click = (e: MapMouseEvent) => {
-    // A marker is its own button: it has already opened its site.
-    if ((e.originalEvent.target as Element | null)?.closest?.(".map-marker"))
-      return;
-    const id = models.pick(e.point.x, e.point.y);
-    if (id) onSelect(id);
-  };
-  map.on("click", click);
   return {
     update(
       sites: HeritageSite[],
@@ -487,8 +483,8 @@ export function createMapModels(
         ),
       );
     },
+    pick: (x, y) => models.pick(x, y),
     dispose() {
-      map.off("click", click);
       buildings?.dispose();
       if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
     },

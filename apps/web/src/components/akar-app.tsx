@@ -37,6 +37,8 @@ import {
   filterSites,
   kindLabels,
   normalize,
+  offeredKinds,
+  siteKinds,
   type Command,
   type HeritageSite,
   type MapPlacement,
@@ -405,6 +407,11 @@ export function AkarApp() {
       filterSites(state.sites, query, kind, saved ? state.savedIds : undefined),
     [state.sites, state.savedIds, query, kind, saved],
   );
+  // Only the kinds with a site in the city the search points at get a chip (§11.48); the active one stays.
+  const kindChips = useMemo(() => {
+    const offered = offeredKinds(state.sites, query);
+    return siteKinds.filter((k) => offered.includes(k) || k === kind);
+  }, [state.sites, query, kind]);
   const published = useMemo(
     () => state.sites.filter((s) => s.status === "published"),
     [state.sites],
@@ -1112,16 +1119,7 @@ export function AkarApp() {
                               </button>
                             </div>
                             <div className="filter-row">
-                              {[
-                                "all",
-                                "cami",
-                                "turbe",
-                                "cesme",
-                                "hamam",
-                                "han",
-                                "bedesten",
-                                "egitim",
-                              ].map((k) => (
+                              {["all", ...kindChips].map((k) => (
                                 <button
                                   key={k}
                                   className={kind === k ? "active" : ""}

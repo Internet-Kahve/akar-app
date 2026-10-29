@@ -154,6 +154,8 @@ export const sites = pgTable(
     descriptionEn: text("description_en"),
     /** Narration length in minutes; feeds computed route duration. */
     minutes: integer("minutes").notNull().default(0),
+    /** Map draw/label priority from eser.json `sira` (§11.48): smaller first; null = unranked. Filled by the importer only. */
+    displayOrder: integer("display_order"),
     tier: siteTierEnum("tier").notNull(),
     /** Site-level trust; story blocks carry their own per-sentence trust. */
     trust: trustEnum("trust").notNull(),
@@ -186,6 +188,7 @@ export const sites = pgTable(
     foreignKey({ columns: [t.regionId, t.cityId], foreignColumns: [regions.id, regions.cityId], name: "sites_region_city_fk" }),
     index("sites_city_dedupe_idx").on(t.cityId, t.dedupeKey),
     check("sites_editor_version", sql`${t.editorVersion} IS NULL OR ${t.editorVersion} = 2`),
+    check("sites_display_order_positive", sql`${t.displayOrder} IS NULL OR ${t.displayOrder} >= 1`),
     // A point on the street or the neighbourhood centre is not the building: an editor must confirm
     // or move it (location_source becomes "manual") before publishing.
     check(

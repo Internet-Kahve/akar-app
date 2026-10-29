@@ -111,6 +111,7 @@ const summaryColumns = (near: [number, number] | undefined) => ({
   lng: sql<number>`ST_X(${sites.location})`,
   lat: sql<number>`ST_Y(${sites.location})`,
   minutes: sites.minutes,
+  displayOrder: sites.displayOrder,
   tier: sites.tier,
   trust: sites.trust,
   description: sites.description,
@@ -140,6 +141,7 @@ type SummaryRow = {
   lng: number;
   lat: number;
   minutes: number;
+  displayOrder: number | null;
   tier: SiteSummary["tier"];
   trust: SiteSummary["trust"];
   description: string;
@@ -166,6 +168,7 @@ function toSummary(r: SummaryRow): SiteSummary {
     year: r.year,
     coordinates: [r.lng, r.lat],
     minutes: r.minutes,
+    displayOrder: r.displayOrder,
     tier: r.tier,
     trust: r.trust,
     description: r.description,

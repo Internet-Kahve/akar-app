@@ -133,6 +133,16 @@ test("every item equals GET /v1/admin/sites/:id, for bare drafts and for a publi
   }
 });
 
+test("the bulk admin detail carries the map order (eser.json sira) like the single detail: the number, or null for an unranked site", async () => {
+  const ranked = await newDraft("Sıralı Han");
+  const unranked = await newDraft("Sırasız Han");
+  await app.deps.db.update(sites).set({ displayOrder: 2 }).where(eq(sites.id, ranked.id));
+  const { body } = await call<DetailPage>("GET", "/v1/admin/site-details?limit=100&query=han", editor);
+  assert.equal(body.items.find((i) => i.id === ranked.id)?.displayOrder, 2);
+  assert.equal(body.items.find((i) => i.id === unranked.id)?.displayOrder, null);
+  assert.equal((await call<AdminSiteDetail>("GET", `/v1/admin/sites/${ranked.id}`, editor)).body.displayOrder, 2);
+});
+
 test("pages hold the same ids in the same order as /v1/admin/sites with the same filters", async () => {
   for (let i = 1; i <= 5; i++) await newDraft(`Sayfa Hanı ${i}`, { city: i % 2 ? "bursa" : "edirne" });
   await publishedSite("Sayfa Hanı Yayında");

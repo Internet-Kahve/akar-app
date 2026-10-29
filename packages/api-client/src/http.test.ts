@@ -45,6 +45,7 @@ const detail = (id: string, extra = {}) => ({
   year: "1399",
   coordinates: [29.06, 40.18],
   minutes: 3,
+  displayOrder: null,
   tier: "Hero",
   description: "d",
   descriptionEn: null,
@@ -2414,6 +2415,35 @@ test("a model carries its triangle count and the site's placement; both are null
   assert.equal(hidden!.model?.triangles, null);
   assert.equal(hidden!.model?.placement, null);
   assert.equal(plain!.model, undefined);
+});
+
+test("a site's displayOrder (eser.json sira) is mapped when it is a number and left out for null or an older API", async () => {
+  const withoutField = () => {
+    const { displayOrder: _omitted, ...rest } = detail("old");
+    return rest;
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [
+        detail("first", { displayOrder: 1 }),
+        detail("seventh", { displayOrder: 7 }),
+        detail("unranked", { displayOrder: null }),
+        withoutField(),
+      ],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [first, seventh, unranked, old] = (await client.getSnapshot()).sites;
+  assert.equal(first!.displayOrder, 1);
+  assert.equal(seventh!.displayOrder, 7);
+  assert.ok(!("displayOrder" in unranked!), "null is unranked, not a value");
+  assert.ok(!("displayOrder" in old!), "an older API has no field");
 });
 
 test("map settings come from GET /v1/map-settings; missing values fall back to the defaults", async () => {
