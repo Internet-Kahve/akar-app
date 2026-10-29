@@ -882,3 +882,91 @@ body.sehir-cok-uzak .sehir-isaret:not(.hazir) b,body.sehir-cok-uzak .sehir-isare
 .dil-sec button:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
 .arama .dil-sec{height:34px;align-items:center;border-color:transparent;background:var(--bg)}
 .arama .dil-sec button{height:28px;min-width:30px;padding:0 7px}
+
+/* 29 Ekim 2026 · tebrik kartında giriş satırı (giriş yapmamış ziyaretçi) */
+.tb-giris{margin:4px 0 0;font-size:13px;color:var(--text-muted)}
+.tb-giris .metin-btn{padding:4px 2px;color:var(--primary)}
+
+/* 29 Ekim 2026 · güven etiketi dokunulur → yan sayfa «Bu bilgi nereden geliyor?» (Figma D 1:3193 · WF 1:7027) ve «Vakıf nedir?» */
+.guven[role="button"]{cursor:pointer}
+.kaynak-link{display:block;width:100%;text-align:left;padding:2px 0}
+.yan-arka{position:fixed;inset:0;z-index:90;background:rgba(20,27,43,.4);display:flex;align-items:flex-end;opacity:0;transition:opacity var(--sure-2)}
+.yan-arka.acik{opacity:1}
+.yan-sayfa{position:relative;width:100%;max-height:88dvh;overflow:auto;overscroll-behavior:contain;background:var(--surface);border-radius:20px 20px 0 0;padding:0 20px calc(20px + var(--sab));box-shadow:0 -8px 32px rgba(20,27,43,.2);transform:translateY(24px);transition:transform var(--sure-3) var(--egri)}
+.yan-arka.acik .yan-sayfa{transform:none}
+.ys-tutamak{display:flex;justify-content:center;padding:8px 0 12px}
+.ys-tutamak i{width:36px;height:4px;border-radius:2px;background:var(--border)}
+body.d .yan-arka{top:64px;justify-content:flex-end;align-items:stretch;background:rgba(20,27,43,.16)}
+body.d .yan-sayfa{width:420px;max-height:none;border-radius:0;padding:24px;border-left:1px solid var(--border);transform:translateX(24px);box-shadow:-8px 0 32px rgba(20,27,43,.12)}
+body.d .ys-tutamak{display:none}
+.ys-bas{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.ys-bas h2{margin:4px 0 0;font:600 24px/30px var(--font-display);font-variant-numeric:lining-nums}
+.ks-alinti{margin:0 0 16px;padding:14px 16px;border-radius:12px;background:var(--primary-light);font:400 15px/22px var(--font)}
+.ks-guven p{margin:8px 0 0;font-size:13px;line-height:18px;color:var(--text-muted)}
+.ks-bas{margin:22px 0 10px;font:600 16px/22px var(--font)}
+.ks-kaynak{border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.ks-kaynak b{display:block;font:600 14px/20px var(--font)}
+.ks-kaynak small{font-size:12px;color:var(--text-muted)}
+.ks-yok{font-size:13px}
+.ks-alt-bas{margin:20px 0 8px;font:600 13px/18px var(--font);color:var(--text-muted)}
+.ks-etiketler{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ks-etiketler li{display:grid;grid-template-columns:140px 1fr;align-items:center;gap:10px;font-size:12px;line-height:16px;color:var(--text-muted)}
+.ks-etiketler .guven{justify-self:start;cursor:default}
+.ks-hata{display:block;margin-top:20px;padding:10px 0;text-align:left}
+.vn-giris{margin:0 0 12px}
+.vn-roller{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.vn-roller li{display:flex;gap:10px;align-items:flex-start}
+.vn-roller .nokta{width:10px;height:10px;border-radius:50%;margin-top:5px;flex:none}
+.vn-roller b{display:block;font-weight:600}.vn-roller small{color:var(--text-muted);font-size:13px}
+.vn-etiket{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:-6px;font-size:12px;color:var(--text-muted)}
+.vn-ornek{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.vn-ornek span{flex:1}.vn-ornek b{display:block;font-weight:600}.vn-ornek small{display:block;color:var(--text-muted);font-size:13px;line-height:18px}
+
+/* 29 Ekim 2026 · 3D açılamazsa (Figma D 1:4911 · WF 1:7840) */
+.uc-hata{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:16px;background:var(--sahne-ust,#DDE4E5)}
+body.m .uc-hata{align-items:start;padding-top:max(96px,18dvh)}
+.uh-kart{width:min(380px,100%);padding:20px 22px;border-radius:16px;background:var(--surface);box-shadow:var(--golge);text-align:center}
+.uh-kart b{display:block;font:600 17px/24px var(--font)}
+.uh-kart p{margin:6px 0 16px;color:var(--text-muted);font-size:13px;line-height:19px}
+.uh-dugmeler{display:grid;gap:8px}
+
+/* 29 Ekim 2026 · «Yakınımda ▾» menüsü: Konumumu kullan | Evden gez (Figma D 1:4685) */
+.konum-menu{position:absolute;z-index:7;width:max-content;min-width:260px;max-width:calc(100vw - 32px);padding:6px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 24px rgba(20,27,43,.18);display:grid;gap:2px}
+.konum-menu button{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;text-align:left}
+.konum-menu button[aria-checked="true"]{background:var(--primary-light)}
+.konum-menu button>span{flex:1}
+.konum-menu b{display:block;font:600 14px/19px var(--font)}
+.konum-menu small{display:block;font-size:12px;line-height:16px;color:var(--text-muted)}
+.konum-menu .ic{color:var(--primary)}
+
+/* 29 Ekim 2026 · ilk açılış karşılama kartı (Figma D 1:4042 · WF 1:5616) */
+.karsilama-arka{position:fixed;inset:0;z-index:80;background:rgba(20,27,43,.45);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity var(--sure-3)}
+.karsilama-arka.acik{opacity:1}
+.karsilama{position:relative;width:min(520px,100%);max-height:calc(100dvh - 32px);overflow:auto;background:var(--surface);border-radius:20px;padding:20px 24px 16px;box-shadow:0 16px 48px rgba(20,27,43,.3);transform:translateY(16px) scale(.98);transition:transform var(--sure-3) var(--egri)}
+.karsilama-arka.acik .karsilama{transform:none}
+.karsilama>*{position:relative}
+.ka-serit{height:88px;border-radius:12px;background:var(--sehir-aksan);overflow:hidden;margin-bottom:16px}
+.ka-serit::before{content:"";position:absolute;inset:0;background:var(--sehir-acik);opacity:.55;-webkit-mask:var(--sehir-desen) 0 0/72px auto repeat;mask:var(--sehir-desen) 0 0/72px auto repeat}
+.ka-ust{font:600 11px/16px var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.ka-baslik{margin:6px 0 4px;font:600 34px/40px var(--font-display);font-variant-numeric:lining-nums}
+.ka-alt{margin:0;color:var(--text-muted)}
+.karsilama .susleme{margin:14px 0 16px}
+.ka-maddeler{list-style:none;margin:0 0 20px;padding:0;display:grid;gap:12px}
+.ka-maddeler li{display:flex;gap:12px;align-items:center}
+.ka-ik{width:36px;height:36px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:grid;place-items:center;flex:none}
+.ka-maddeler b{display:block;font:600 15px/20px var(--font)}
+.ka-maddeler small{display:block;color:var(--text-muted);font-size:13px;line-height:18px}
+.ka-dugmeler{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ka-dugmeler .btn{gap:8px}
+.ka-son{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;font-size:12px;color:var(--text-muted)}
+.ka-son .metin-btn{padding:8px 0;color:var(--primary);font-size:13px}
+body.m .karsilama-arka{padding:0;background:var(--bg)}
+body.m .karsilama{width:100%;height:100dvh;max-height:none;border-radius:0;display:flex;flex-direction:column;padding:calc(16px + var(--sat)) 16px calc(12px + var(--sab));box-shadow:none;background:var(--bg);transform:translateY(8px)}
+body.m .karsilama-arka.acik .karsilama{transform:none}
+.ka-foto{flex:1 1 auto;min-height:140px;max-height:34dvh;border-radius:20px;overflow:hidden;margin-bottom:18px;background:var(--border)}
+.ka-foto img,.ka-foto .gorsel-yok{width:100%;height:100%;object-fit:cover}
+body.m .ka-ust,body.m .ka-baslik,body.m .ka-alt{text-align:center}
+body.m .ka-baslik{font-size:31px;line-height:36px}
+body.m .ka-dugmeler{margin-top:auto;grid-template-columns:1fr}
+body.m .ka-son{flex-direction:column;gap:0}
+@media (prefers-reduced-motion:reduce){.karsilama,.yan-sayfa{transition:none}}

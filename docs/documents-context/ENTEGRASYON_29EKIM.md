@@ -327,6 +327,17 @@ Figma `akar-yeni`'de değişen her ekranın altında «29 Ekim: …» notu var. 
 - Çeviri yok; altyapı hazır. Biçim ve ürün alanları: **[`ICERIK_INGILIZCE.md`](ICERIK_INGILIZCE.md)**.
 - Ürüne eklenecek alanlar: parça kartı ve Eser hakkında bölümü için `title_en`, `body_en`. İçe aktarma `icerik/en/` dosyalarını okumalı.
 
+### 5.12 Karşılama, konum kipi, kaynak detayı, 3D yedeği, giriş satırı (29 Ekim akşamı)
+Figma'da olup prototipte eksik olan dört ekran eklendi; ayrıntı ve ölçüler [`PROTOTIP_URUN_FARKI.md`](PROTOTIP_URUN_FARKI.md) §1, §2, §3, §5, §11'de.
+- **İlk açılış karşılama kartı** (D 1:4042 · WF 1:5616): yalnız ilk girişte; «Evden gez» konum istemez, «Konumumu kullan» izni açar; «Vakıf nedir? ›». Ürün: ilk giriş bilgisi hesapta ya da cihazda tutulabilir; misafir için cihazda yeterli.
+- **Konum kipi Yakınımda | Evden gez** (D 1:4685 · WF 1:5742): varsayılan Evden gez (izin istemeden açılır). Yakınımda'da liste mesafeye göre sıralanır. Konum şehrin 30 km dışındaysa Evden gez'e döner. **Konum sunucuya gönderilmez**; ürün de mesafe hesabını istemcide yapmalı (KVKK metnindeki «konum yalnız cihazda» sözüyle uyumlu).
+- **Kaynak detayı «Bu bilgi nereden geliyor?»** (D 1:3193 · WF 1:7027): her güven etiketi dokunulur. Prototip `kaynak` metnini ayrıştırıyor («Envanter Cilt 1 · s. 25, 36; Ürgen s.10»). **Ürün için öneri:** içe aktarmada bu metin yapılandırılmış kaynağa çevrilsin (`sources[]`: `kitap`, `cilt`, `sayfa`, `tur`), yan sayfa ondan beslensin. «Bir hata mı gördün? Bildir ›» için bir bildirim kaydı (ör. `POST /reports`: içerik kimliği, metin, isteğe bağlı e-posta) gerekir; prototipte yalnız teşekkür uyarısı var.
+- **3D açılamazsa** (D 1:4911 · WF 1:7840): «3D model açılamadı» kartı, «Yeniden dene» (hatalı indirme önbellekten silinir) ve «Görsellerle devam et» (Fotoğraf görünümüne geçer, hikâye aynı akışla sürer). Ürünün `model-viewer.tsx` hata durumunda aynı iki düğmeyi vermeli. «Bu cihazda 3D ağır kaldı» (zayıf cihaz) prototipte yok.
+- **Tebrik kartında giriş satırı:** misafirse «Rozetlerini kaybetme · Giriş yap». Figma'daki ayrı «Giriş isteği (hikâye bitince)» penceresi yerine; iki pencere üst üste açılmaz. Girişte cihazdaki `akar.rozet.*`, `akar.bitti.*`, `akar.gorev.*` hesaba taşınmalı.
+- **Vakıf nedir? metni:** tanım cümlesi AKAR'ın açıklaması; alıntı envanter Cilt 1 girişinin «Ticari yapılar» paragrafından (basılı sayfa ~22; **PDF sayfa numarası doğrulanmadı**, bu yüzden kaynak satırında sayfa yazmıyor). Örnek cümle veriden seçilir (akar rolündeki eserin «vakfedil-» geçen hikâye cümlesi).
+- Kod: `app.js` → `yanSayfaAc`, `kaynakAc`, `vakifNedir`, `uc3Hata`, `s3dKur`, `konumKip`, `konumIste`, `konumMenu`, `karsilamaGoster`; `app.css` → `.yan-*`, `.ks-*`, `.vn-*`, `.uc-hata`, `.uh-*`, `.konum-menu`, `.karsilama*`, `.ka-*`, `.tb-giris`.
+- **Bekleyen karar: Akar akışı** (Figma D 1:2893): akar cümlesinde haritada kaynak → hayrat yayı. Seçenekler ve kaynak kuralı ekip kararından sonra buraya yazılacak.
+
 ## 6. Repoda olup ürüne alınmayacaklar
 
 - `design/test-redmi9t/` (v1): donmuş. İçe aktarma v2'ye geçince eski GLB'lerle birlikte silinecek:

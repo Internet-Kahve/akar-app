@@ -45,6 +45,8 @@ const IK = {
   'rotate-cw':'<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>',
   puzzle:'<path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/>',
   history:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  landmark:'<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  house:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
 };
 const ic = (ad, boy = 20) => `<svg class="ic" width="${boy}" height="${boy}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IK[ad] || ''}</svg>`;
 const ikonla = (k = document) => $$('[data-ic]', k).forEach((e) => { e.outerHTML = ic(e.dataset.ic, +(e.dataset.boy || 20)); });
@@ -52,7 +54,8 @@ const SUSLEME = '<div class="susleme" aria-hidden="true"><svg viewBox="0 0 28 12
 
 /* güven etiketi */
 const GUVEN = { 'Doğrulanmış':'dogrulanmis', 'Tarihsel çıkarım':'tarihsel', 'Temsili':'temsili' };
-const guven = (g) => g ? `<span class="guven ${GUVEN[g] || 'dogrulanmis'}">${esc(g)}<span class="i">ⓘ</span></span>` : '';
+/* 29 Ekim 2026 · etikete dokununca «Bu bilgi nereden geliyor?» açılır (Figma 1:3193 · WF 1:7027). k = { alinti, kaynak } verilirse kitap satırları da görünür */
+const guven = (g, k) => g ? `<span class="guven ${GUVEN[g] || 'dogrulanmis'}" role="button" tabindex="0" aria-label="${esc(g)}: bu bilgi nereden geliyor?"${k ? ` data-kaynak="${esc(JSON.stringify(k))}"` : ''}>${esc(g)}<span class="i" aria-hidden="true">ⓘ</span></span>` : '';
 
 /* AKAR harita pini: Figma akar-yeni «Harita pini» (1:544). Sivri kemer, gövde rengi = vakıftaki rol, ikon = eser türü.
    Normal (1:545) haritada 32 × 38; Seçili (1:548) 1,25× ve altın halka; Tamamlandı (1:552) sağ üstte altın ✓.
@@ -178,6 +181,62 @@ ikonla();
 let toastZ;
 function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastZ); toastZ = setTimeout(() => (t.hidden = true), 2600); }
 
+/* ---------- yan sayfa: kaynak detayı (Figma D 1:3193 · WF 1:7027) ve «Vakıf nedir?» (29 Ekim 2026) ----------
+   Masaüstünde sağdan açılan panel (üst çubuğun altında), mobilde alttan sayfa. ×, Esc ya da arka plan kapatır; odak açan öğeye döner. */
+const GUVEN_ACIKLAMA = { 'Doğrulanmış':'Bilgi en az bir güvenilir kaynakta açıkça yer alıyor.', 'Tarihsel çıkarım':'Kaynaklardan yorumlanan bilgi.', 'Temsili':'Görsel ya da model yaklaşık.' };
+function yanSayfaAc(baslik, govde) {
+  let k = $('#yan-sayfa');
+  if (!k) { k = document.createElement('div'); k.id = 'yan-sayfa'; k.className = 'yan-arka'; document.body.appendChild(k); }
+  if (k.hidden !== false || !k.classList.contains('acik')) k._donus = document.activeElement;
+  k.innerHTML = `<section class="yan-sayfa" role="dialog" aria-modal="true" aria-labelledby="ys-baslik"><div class="ys-tutamak" aria-hidden="true"><i></i></div><div class="ys-bas"><h2 id="ys-baslik">${esc(baslik)}</h2><button class="yuvarlak" data-ys-kapat aria-label="Kapat">${ic('x', 18)}</button></div><div class="ys-govde">${govde}</div></section>`;
+  k.hidden = false; requestAnimationFrame(() => k.classList.add('acik'));
+  setTimeout(() => k.querySelector('[data-ys-kapat]')?.focus({ preventScroll:true }), 250);
+}
+function yanSayfaKapat() { const k = $('#yan-sayfa'); if (!k || k.hidden) return; k.classList.remove('acik'); setTimeout(() => { k.hidden = true; k.innerHTML = ''; k._donus?.focus?.({ preventScroll:true }); }, 220); }
+/* «Envanter Cilt 1 · s. 25, 36; Ürgen s.10» → kitap satırları (envanterin adı ve yayıncısı şehir kaydından) */
+const kaynakSatirlari = (k) => String(k || '').split(/\s*;\s*/).filter(Boolean).map((x) => {
+  const m = x.match(/^Envanter\s+Cilt\s*(\d+)\s*(?:·\s*)?(.*)$/i);
+  return m ? { baslik:`${SEHIR.envanter_adi || 'Envanter'}, Cilt ${m[1]}`, alt:[SEHIR.envanter_yayinci, m[2]].filter(Boolean).join(' · ') } : { baslik:x, alt:'' };
+});
+function kaynakAc(g, k = {}) {
+  const kay = kaynakSatirlari(k.kaynak), alinti = String(k.alinti || '');
+  const kisa = alinti.length > 220 ? alinti.slice(0, 217).replace(/\s+\S*$/, '') + '…' : alinti;
+  const diger = Object.keys(GUVEN).filter((x) => x !== g).map((x) => `<li>${guven(x)}<span>${esc(GUVEN_ACIKLAMA[x])}</span></li>`).join('');
+  yanSayfaAc('Bu bilgi nereden geliyor?', `${kisa ? `<blockquote class="ks-alinti">“${esc(kisa)}”</blockquote>` : ''}
+    <div class="ks-guven">${guven(g)}<p>${esc(g)}: ${esc((GUVEN_ACIKLAMA[g] || '').replace(/^./, (h) => h.toLocaleLowerCase('tr')))}</p></div>
+    <h3 class="ks-bas">Kaynaklar</h3>${kay.length ? kay.map((x) => `<div class="ks-kaynak"><b>${esc(x.baslik)}</b>${x.alt ? `<small>${esc(x.alt)}</small>` : ''}</div>`).join('') : `<p class="soluk ks-yok">Bu öğenin ayrı kaynak satırı yok. Genel kaynak: ${esc(SEHIR.kaynakca || SEHIR.envanter_adi || '')}</p>`}
+    <h4 class="ks-alt-bas">Diğer etiketler</h4><ul class="ks-etiketler">${diger}</ul>
+    <button class="metin-btn ks-hata" data-hata-bildir>Bir hata mı gördün? Bildir ›</button>`);
+}
+/* «Vakıf nedir?» (karşılama kartından). Tanım AKAR'ın açıklamasıdır; alıntı ve örnek kitaptan, güven etiketi ve kaynağıyla.
+   Örnek veriden seçilir: akar rolündeki eserin «vakfedil-» geçen hikâye cümlesi (Bursa'da Orhan Hamamı → Orhan Gazi İmareti). */
+const VAKIF_ALINTI = { metin:'Ticaretin sürdüğü çarşı, han ve kervansaray gibi yapılar İslam tarihinin her döneminde inşa edilmiştir. Bu yapıların bakım ve işletme giderleri çoğu kez vakıflar aracılığıyla karşılanmış, aynı zamanda bu yapılardan elde edilen gelirlerle cami, mektep ve medrese gibi hayrat eserlerin ihtiyaçları desteklenmiştir.', kaynak:'Envanter Cilt 1 · Giriş, «Ticari yapılar»' };
+function vakifNedir() {
+  const ornek = VERI.eserler.filter((e) => e.rol === 'akar').flatMap((e) => e.hikaye.map((c) => ({ e, c }))).find(({ c }) => /vakfedil/i.test(c.metin_tr || c.metin));
+  const rol = (r, b) => `<li><span class="nokta" style="background:${ROL_RENK[r]}"></span><div><b>${b}</b><small>${esc(ROL_ACIKLAMA[r])}</small></div></li>`;
+  yanSayfaAc('Vakıf nedir?', `<p class="vn-giris">Vakıf, bir malın ya da gelirin kalıcı olarak bir hayır işine bağlanmasıdır. Haritadaki eserler bu düzenin iki yüzüdür:</p>
+    <ul class="vn-roller">${rol('dini', 'Hayrat · Dinî')}${rol('akar', 'Akar · Ticari')}</ul>
+    <h3 class="ks-bas">Kitap ne diyor?</h3><blockquote class="ks-alinti">“${esc(VAKIF_ALINTI.metin)}”</blockquote>
+    <div class="vn-etiket">${guven('Doğrulanmış', { alinti:VAKIF_ALINTI.metin, kaynak:VAKIF_ALINTI.kaynak })}<small>${esc(SEHIR.envanter_adi || 'Envanter')}, Cilt 1 · Giriş</small></div>
+    ${ornek ? `<h3 class="ks-bas">Bu şehirde bir örnek</h3><button class="vn-ornek" data-git="#/eser/${ornek.e.id}"><span><b>${esc(ornek.e.ad)}</b><small>${esc(ornek.c.metin)}</small></span>${ic('chevron-right', 18)}</button><div class="vn-etiket">${guven(ornek.c.guven, { alinti:ornek.c.metin, kaynak:ornek.c.kaynak })}<small>${esc(ornek.c.kaynak)}</small></div>` : ''}`);
+}
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-ys-kapat]') || e.target.id === 'yan-sayfa') { yanSayfaKapat(); return; }
+  if (e.target.closest('[data-hata-bildir]')) { toast('Teşekkürler · bildirim bu prototipte kaydedilmiyor'); return; }
+  if (e.target.closest('[data-vakif-nedir]')) { vakifNedir(); return; }
+});
+/* etikete ya da «Kaynak: … ›» bağlantısına dokununca: yakalama evresinde, altındaki satırın (cümleye git, kartı aç) tıklaması çalışmasın */
+const guvenAc = (el) => { let k = {}; try { k = JSON.parse(el.dataset.kaynak || '{}'); } catch {} kaynakAc([...el.childNodes].find((n) => n.nodeType === 3)?.textContent.trim() || 'Doğrulanmış', k); };
+document.addEventListener('click', (e) => {
+  const g = e.target.closest('.guven[role="button"]');
+  if (g && !g.closest('#yan-sayfa .ks-guven, #yan-sayfa .ks-etiketler')) { e.stopPropagation(); e.preventDefault(); guvenAc(g); return; }
+  if (e.target.closest('[data-kaynak-simdi]') && anlat.eser) { e.stopPropagation(); const c = anlat.eser.hikaye[anlat.i]; if (c) kaynakAc(c.guven, { alinti:c.metin, kaynak:c.kaynak }); }
+}, true);
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('.guven[role="button"]')) { e.preventDefault(); e.stopPropagation(); guvenAc(e.target); return; }
+  if (e.key === 'Escape' && $('#yan-sayfa') && !$('#yan-sayfa').hidden) { e.stopImmediatePropagation(); yanSayfaKapat(); }
+}, true);
+
 /* ---------- GLB önbelleği ---------- */
 const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
 const yukleyici = new GLTFLoader().setDRACOLoader(draco);
@@ -221,7 +280,7 @@ const harita = new maplibregl.Map({
 window.akarHarita = harita;
 /* açılış ekranı harita ilk kez çizilince kalkar ('load'; 'idle' model katmanı yeniden çizim istedikçe gecikebilir), en geç 8 sn */
 { const ac = document.getElementById('acilis'); let k = false;
-  const kaldir = () => { if (k || !ac) return; k = true; ac.classList.add('bitti'); setTimeout(() => ac.remove(), 400); };
+  const kaldir = () => { if (k || !ac) return; k = true; ac.classList.add('bitti'); setTimeout(() => { ac.remove(); window.akarKarsilama?.(); }, 400); };
   if (harita.loaded()) kaldir(); else harita.once('load', kaldir); setTimeout(kaldir, 8000); }
 const IZLER = [];   // model taban izleri (lng/lat çokgen), bina gizleme ve dokunma için
 
@@ -439,16 +498,53 @@ $('#b-uzak').onclick = () => harita.zoomOut();
   };
   daireCiz();
 })();
-$('#b-konum').onclick = () => {
-  if (!navigator.geolocation) return toast('Konum desteklenmiyor');
-  navigator.geolocation.getCurrentPosition((p) => harita.easeTo({ center:[p.coords.longitude, p.coords.latitude], zoom:16.5 }), () => { toast(`Konum izni yok · Evden gez: ${SEHIR.ad}`); harita.easeTo({ center:SEHIR.merkez, zoom:16.5 }); });
-};
+/* ---------- konum kipi: Yakınımda | Evden gez (Figma D 1:4685 · WF 1:5742 · 1:7694; 29 Ekim 2026) ----------
+   Evden gez: konum istenmez, harita şehrin merkezinden başlar, liste «Bursa'daki eserler». Varsayılan budur (izin istemeden açılır).
+   Yakınımda: konum yalnız cihazda kullanılır (sunucuya gitmez), liste yakından uzağa sıralanır.
+   Konum şehrin 30 km dışındaysa (jüri başka şehirden bakıyorsa) Evden gez'e döner ve bunu söyler; boş bir «yakınında» listesi göstermez. */
+const yerEki = (ad, cikma) => { const a = String(ad || ''), kucuk = a.toLocaleLowerCase('tr'), u = [...kucuk].reverse().find((h) => 'aıoueiöü'.includes(h)) || 'a';
+  return `${a}'${'fstkçşhp'.includes(kucuk.slice(-1)) ? 't' : 'd'}${'aıou'.includes(u) ? 'a' : 'e'}${cikma ? 'n' : ''}`; };   // Bursa'da · Bursa'dan
+durum.konum = yerel('akar.konum') === 'yakin' ? 'yakin' : 'ev'; durum.konumNokta = null;
+const konumCipIc = () => `${ic(durum.konum === 'yakin' ? 'navigation' : 'house', 14)}${durum.konum === 'yakin' ? 'Yakınımda' : 'Evden gez'} ${ic('chevron-down', 14)}`;
+function konumKip(k, uc = true) {
+  durum.konum = k; yerel('akar.konum', k);
+  const c = $('#cip-konum'); if (c) c.innerHTML = konumCipIc();
+  if (k === 'ev') { durum.konumNokta = null; if (uc) harita.easeTo({ center:SEHIR.merkez, zoom:durum.masaustu ? (SEHIR.zoom_masaustu || SEHIR.zoom) : SEHIR.zoom, duration:900 }); }
+  if (!location.hash.slice(2)) kesif();
+}
+function konumIste() {
+  if (!navigator.geolocation) { toast('Bu cihazda konum yok · Evden gez açık'); return konumKip('ev'); }
+  navigator.geolocation.getCurrentPosition((p) => {
+    const n = { lng:p.coords.longitude, lat:p.coords.latitude }, [m] = mesafeYon({ lng:SEHIR.merkez[0], lat:SEHIR.merkez[1] }, n);
+    if (m > 30000) { toast(`Konumun ${SEHIR.ad} dışında · Evden gez ile şehir merkezinden başladık`); return konumKip('ev'); }
+    durum.konumNokta = n; konumKip('yakin', false); harita.easeTo({ center:[n.lng, n.lat], zoom:16.5 });
+  }, () => { toast(`Konum izni yok · Evden gez: ${SEHIR.ad}`); konumKip('ev'); }, { timeout:10000, maximumAge:60000 });
+}
+$('#b-konum').onclick = konumIste;
+/* «Yakınımda ▾» menüsü: Konumumu kullan | Evden gez, seçili olanın yanında ✓ */
+function konumMenu(ac) {
+  const var_ = $('#konum-menu'), c = $('#cip-konum');
+  if (var_ || ac === false) { var_?.remove(); c?.setAttribute('aria-expanded', 'false'); return; }
+  if (!c) return;
+  const m = document.createElement('div'); m.id = 'konum-menu'; m.className = 'konum-menu'; m.setAttribute('role', 'menu');
+  const s = (k, ikon, b, a) => `<button role="menuitemradio" aria-checked="${durum.konum === k}" data-konum-kip="${k}">${ic(ikon, 18)}<span><b>${b}</b><small>${a}</small></span>${durum.konum === k ? ic('check', 16) : ''}</button>`;
+  m.innerHTML = s('yakin', 'map-pin', 'Konumumu kullan', 'Yakınındaki eserler önce gelir') + s('ev', 'house', 'Evden gez', `Konum gerekmez, ${yerEki(SEHIR.ad, true)} başlar`);
+  const ust = $('#harita-ust'), r = c.getBoundingClientRect(), u = ust.getBoundingClientRect();
+  m.style.left = (r.left - u.left) + 'px'; m.style.top = (r.bottom - u.top + 8) + 'px';
+  ust.appendChild(m); c.setAttribute('aria-expanded', 'true');
+  m.querySelector('[aria-checked="true"]')?.focus({ preventScroll:true });
+}
+document.addEventListener('click', (e) => {
+  const k = e.target.closest('[data-konum-kip]'); if (k) { konumMenu(false); if (k.dataset.konumKip === 'yakin') konumIste(); else konumKip('ev'); return; }
+  if ($('#konum-menu') && !e.target.closest('#konum-menu, #cip-konum')) konumMenu(false);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#konum-menu')) { e.stopImmediatePropagation(); konumMenu(false); $('#cip-konum')?.focus(); } }, true);
 
 /* filtre çipleri (vakıf rolü) */
 function ciplerHTML(masaustuPanel) {
   /* yalnız bu şehirde eseri olan roller (boş filtre jüriye boş liste gösterirdi) */
   const rol = ['dini', 'su', 'egitim', 'akar'].filter((r) => VERI.eserler.some((e) => e.rol === r)).map((r) => `<button class="cip filtre" data-rol="${r}" aria-pressed="${durum.filtre.has(r)}" title="${esc(ROL_ACIKLAMA[r])}"><span class="nokta" style="background:${ROL_RENK[r]}"></span>${ROL_AD[r]}</button>`).join('');
-  return masaustuPanel ? `<button class="cip koyu" data-rol="hepsi">Tümü</button>${rol}` : `<button class="cip koyu" id="cip-konum">${ic('navigation', 14)}Yakınımda ${ic('chevron-down', 14)}</button>${rol}`;
+  return masaustuPanel ? `<button class="cip koyu" data-rol="hepsi">Tümü</button>${rol}` : `<button class="cip koyu" id="cip-konum" aria-haspopup="menu" aria-expanded="false">${konumCipIc()}</button>${rol}`;
 }
 function filtreUygula() {
   if (harita.getLayer('pin')) harita.setFilter('pin', ['in', ['get', 'rol'], ['literal', [...durum.filtre]]]);
@@ -464,7 +560,7 @@ document.addEventListener('click', (e) => {
   filtreUygula(); if (!location.hash.slice(2)) yonlendir();
 });
 $('#cipler').innerHTML = ciplerHTML(false);
-$('#cipler').addEventListener('click', (e) => { if (e.target.closest('#cip-konum')) $('#b-konum').click(); });
+$('#cipler').addEventListener('click', (e) => { if (e.target.closest('#cip-konum')) konumMenu(); });
 for (const id of ['#arama-m', '#arama-d']) $(id).addEventListener('input', (e) => { durum.arama = e.target.value.trim().toLocaleLowerCase('tr'); if (location.hash.length > 2) location.hash = '#/'; else yonlendir(); });
 
 /* =====================================================================
@@ -742,6 +838,22 @@ class Sahne3D {
 }
 let s3d = null;
 function s3dKapat() { if (s3d) { s3d.kapat(); s3d = null; } if (typeof parcaKartKapat === 'function') parcaKartKapat(false); }
+/* 29 Ekim 2026 · 3D açılamazsa (Figma D 1:4911 · WF 1:7840): «3D model açılamadı», Yeniden dene | Görsellerle devam et.
+   İndirme kesilirse ya da dosya bozuksa (ya da cihazda WebGL yoksa) hikâye aynı akışla fotoğraflarla sürer. Hatalı indirme önbellekten silinir, yeniden dene baştan indirir. */
+function uc3Hata(kap, dosya, yeniden, err, foto) {
+  console.warn('3D açılamadı:', dosya, err);
+  glbTampon.delete(dosya); glbSon.delete(dosya); s3dKapat();
+  if (!kap || !kap.isConnected) return;
+  kap.innerHTML = `<div class="uc-hata" role="alert"><div class="uh-kart"><b>3D model açılamadı</b><p>Bağlantı kesildi ya da dosya bozuk. Hikâye görsellerle aynı şekilde devam eder.</p><div class="uh-dugmeler"><button class="btn ana tam" data-uh="yeniden">Yeniden dene</button><button class="btn ikincil tam" data-uh="foto">Görsellerle devam et</button></div></div></div>`;
+  kap.querySelector('[data-uh="yeniden"]').onclick = () => yeniden();
+  kap.querySelector('[data-uh="foto"]').onclick = foto || (() => { durum.gorunum = 'foto'; yerel('akar.gorunum', 'foto'); yeniden(); });
+}
+function s3dKur(kap, e, ayar, yeniden, sonra, foto) {
+  const dosya = e.glb + '_sunum'; let bu;
+  try { bu = s3d = new Sahne3D(kap, ayar); } catch (err) { s3d = null; return uc3Hata(kap, dosya, yeniden, err, foto); }
+  yuklemeIzle(kap, dosya);
+  bu.yukle(e).then(() => { if (s3d !== bu) return; kap.querySelector('.yukleniyor')?.remove(); sonra && sonra(); }).catch((err) => { if (s3d === bu) uc3Hata(kap, dosya, yeniden, err, foto); });
+}
 
 /* =====================================================================
    EKRANLAR
@@ -799,8 +911,11 @@ function altEnAz() {
 })();
 
 function eserListe() {
-  return VERI.eserler.filter((e) => durum.filtre.has(e.rol) && (!durum.arama || e.ad.toLocaleLowerCase('tr').includes(durum.arama) || (e.uzun_ad || '').toLocaleLowerCase('tr').includes(durum.arama)));
+  const l = VERI.eserler.filter((e) => durum.filtre.has(e.rol) && (!durum.arama || e.ad.toLocaleLowerCase('tr').includes(durum.arama) || (e.uzun_ad || '').toLocaleLowerCase('tr').includes(durum.arama)));
+  const n = durum.konum === 'yakin' && durum.konumNokta;   // Yakınımda: yakından uzağa
+  return n ? l.map((e) => [mesafeYon(n, { lng:e.lon, lat:e.lat })[0], e]).sort((a, b) => a[0] - b[0]).map((x) => x[1]) : l;
 }
+const listeAdi = (tur) => (durum.konum === 'yakin' ? `Yakınındaki ${tur}` : `${yerEki(SEHIR.ad)}ki ${tur}`);   // Yakınındaki eserler · Bursa'daki eserler
 const eserSatir = (e) => `<li class="eser-satir${durum.secili === e.id ? ' secili' : ''}" data-eser="${e.id}">${resim(kapak(e))}<div><h3>${esc(e.ad)}</h3><div class="meta">${esc(meta(e))}</div>${e.glb && !VERI.eserler.every((x) => x.glb) ? '<span class="etiket">3D</span>' : ''}</div><button class="arti" data-rotama="${e.id}" aria-label="Rotama ekle">${ic('plus', 16)}</button></li>`;
 function rotaKart() {
   const ilerleme = JSON.parse(yerel('akar.rota') || 'null');
@@ -809,10 +924,10 @@ function rotaKart() {
 }
 function kesifIcerik(masaustu) {
   const sekme = `<div class="sekme-grup" role="tablist"><button role="tab" data-sekme="eserler" aria-selected="${durum.sekme === 'eserler'}">Eserler</button><button role="tab" data-sekme="rotalar" aria-selected="${durum.sekme === 'rotalar'}">Rotalar</button></div>`;
-  if (durum.sekme === 'rotalar') return `${sekme}<div class="baslik-satir"><h2>Yakınındaki rotalar</h2><a>Tümünü gör (${VERI.rotalar.length}) ›</a></div>${rotaKart()}`;
+  if (durum.sekme === 'rotalar') return `${sekme}<div class="baslik-satir"><h2>${listeAdi('rotalar')}</h2><a>Tümünü gör (${VERI.rotalar.length}) ›</a></div>${rotaKart()}`;
   const liste = eserListe();
-  const ust = masaustu ? `<div class="cipler" style="margin-top:12px">${ciplerHTML(true)}</div><div class="baslik-satir"><h2>Yakınındaki eserler · ${liste.length}</h2><a>Tümünü gör (${VERI.eserler.length}) ›</a></div>`
-    : `<div class="baslik-satir" style="margin-top:12px"><a style="color:var(--primary)" href="#/" data-sehirler>${esc(SEHIR.ad)} ▾ · ${liste.length} eser yakında</a></div>`;
+  const ust = masaustu ? `<div class="cipler" style="margin-top:12px">${ciplerHTML(true)}</div><div class="baslik-satir"><h2>${listeAdi('eserler')} · ${liste.length}</h2><a>Tümünü gör (${VERI.eserler.length}) ›</a></div>`
+    : `<div class="baslik-satir" style="margin-top:12px"><a style="color:var(--primary)" href="#/" data-sehirler>${esc(SEHIR.ad)} ▾ · ${liste.length} eser${durum.konum === 'yakin' ? ' yakında' : ''}</a></div>`;
   return `${sekme}${ust}<ul class="liste">${liste.map(eserSatir).join('') || '<li class="soluk" style="padding:16px 0">Sonuç yok. Yazımı kontrol et ya da filtreleri temizle.</li>'}</ul>`;
 }
 function kesif() {
@@ -864,7 +979,7 @@ const seciciHTML = (koyu) => `<div class="ust-kontrol gizlenir${koyu ? ' koyu-ze
 
 function galeriHTML(e) {
   const f = galeriFoto(e);
-  return `<div class="galeri" id="galeri">${f.map((x, i) => `<figure class="${i % 3 === 0 ? 'buyuk' : 'kucuk'}"><button class="galeri-f" data-isik="${esc(x.url)}" data-kunye="${esc([x.baslik, x.kaynak].filter(Boolean).join(' · '))}" aria-label="Fotoğrafı büyüt: ${esc(x.alt)}">${resim(x)}${BUYUT()}</button>${i === 0 ? guven(x.guven) : ''}</figure>`).join('')}</div>`
+  return `<div class="galeri" id="galeri">${f.map((x, i) => `<figure class="${i % 3 === 0 ? 'buyuk' : 'kucuk'}"><button class="galeri-f" data-isik="${esc(x.url)}" data-kunye="${esc([x.baslik, x.kaynak].filter(Boolean).join(' · '))}" aria-label="Fotoğrafı büyüt: ${esc(x.alt)}">${resim(x)}${BUYUT()}</button>${i === 0 ? guven(x.guven, { alinti:x.baslik, kaynak:x.kaynak }) : ''}</figure>`).join('')}</div>`
     + (durum.masaustu ? `<button class="yuvarlak galeri-ok" style="right:24px" data-kaydir="1" aria-label="Sonraki fotoğraflar">${ic('chevron-right', 18)}</button><button class="yuvarlak galeri-ok" style="left:24px" data-kaydir="-1" aria-label="Önceki fotoğraflar">${ic('chevron-left', 18)}</button>` : '');
 }
 function eserBilgi(e, masaustu) {
@@ -903,9 +1018,8 @@ function gorunumCiz() {
   else {
     alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Bu sırada Dinle ya da Oku ile başlayabilirsin; model gelince sahne kendiliğinden açılır.')}</div><div class="ipucu">${ic('move', 14)}${durum.masaustu ? 'Sürükle: döndür · Tekerlek: yakınlaştır · Dokun: parça' : 'Sürükle: döndür · İki parmak: yakınlaştır · Dokun: parça'}</div><span class="guven temsili temsili-etiket" id="temsili">3D model · Temsili<span class="i">ⓘ</span></span><div class="parca-ad" id="parca-ad" hidden></div><button class="kubbe-dugme" id="kubbe-dugme" data-kubbe aria-pressed="false" hidden>${ic('chevron-up', 16)}<span>İçini göster</span></button>`;
     temsiliKonum();
-    s3d = new Sahne3D($('#s3d'), { onParca:parcaSecildi, altBosluk:() => (durum.masaustu ? 0 : (eaSinir()[0] || 0) + 12) });   // kart açılsa da kadraj kapalı boya göre
-    yuklemeIzle($('#s3d'), e.glb + '_sunum');
-    s3d.yukle(e).then(() => { $('#s3d .yukleniyor')?.remove(); if (s3d && s3d.kalkan) $('#kubbe-dugme').hidden = false; }).catch((err) => { $('#s3d .yukleniyor').textContent = '3D model açılamadı: ' + err.message; });
+    s3dKur($('#s3d'), e, { onParca:parcaSecildi, altBosluk:() => (durum.masaustu ? 0 : (eaSinir()[0] || 0) + 12) },   // kart açılsa da kadraj kapalı boya göre
+      gorunumCiz, () => { if (s3d && s3d.kalkan) $('#kubbe-dugme').hidden = false; });
   }
   $$('[data-gorunum]').forEach((b) => b.setAttribute('aria-checked', b.dataset.gorunum === durum.gorunum));
 }
@@ -948,7 +1062,7 @@ function parcaKartAc(ad) {
   k.innerHTML = `<section class="parca-kart" role="dialog" aria-modal="true" aria-labelledby="pk-baslik">
     <div class="pk-fotolar" id="pk-fotolar">${fl.map((f) => `<figure>${resim(f)}<figcaption>${esc(f.baslik)}</figcaption></figure>`).join('')}</div>${nokta}
     <button class="yuvarlak pk-kapat" data-pk-kapat aria-label="Kartı kapat">${ic('x', 18)}</button>
-    <div class="pk-bas"><div><h2 id="pk-baslik">${esc(b.baslik)}</h2>${guven(b.guven)}</div><button class="yuvarlak pk-ses" id="pk-ses" data-pk-ses aria-pressed="false" aria-label="Sesli dinle">${ic('volume-2', 20)}</button></div>
+    <div class="pk-bas"><div><h2 id="pk-baslik">${esc(b.baslik)}</h2>${guven(b.guven, { alinti:b.metin, kaynak:b.kaynak })}</div><button class="yuvarlak pk-ses" id="pk-ses" data-pk-ses aria-pressed="false" aria-label="Sesli dinle">${ic('volume-2', 20)}</button></div>
     <div class="pk-metin" id="pk-metin"><p>${esc(b.metin)}</p>${b.kaynak ? `<div class="pk-kaynak">Kaynak: ${esc(b.kaynak)}</div>` : ''}<div class="pk-kunye">${esc(SEHIR.foto_kunye)}</div></div>
   </section>`;
   k.hidden = false; k.dataset.ad = ad; k._bilgi = b;
@@ -1040,14 +1154,14 @@ function anlatim(id, mod) {
   const n = e.hikaye.length;
   const ilerleme = `<div class="ilerleme" id="ilerleme">${e.hikaye.map((_, i) => `<button data-cumle="${i}" aria-label="Bölüm ${i + 1}"><i></i></button>`).join('')}</div>`;
   const ust = `<div class="anlat-ust">${durum.masaustu ? '' : `<button class="yuvarlak ust-kontrol gizlenir" data-git="#/eser/${id}" aria-label="Kapat">${ic('x', 18)}</button>`}<div style="display:flex;gap:8px">${seciciHTML(true)}<button class="yuvarlak ust-kontrol gizlenir koyu-zemin" id="doldur" aria-label="Ekranı doldur">${ic(durum.doldur ? 'shrink' : 'expand', 18)}</button></div></div>`;
-  const liste = `<ol class="cumleler" id="cumleler">${e.hikaye.map((c, i) => `<li data-cumle="${i}"><span class="no">${i + 1}</span><div><p>${esc(c.metin)}</p>${guven(c.guven)}</div></li>`).join('')}</ol>`;
+  const liste = `<ol class="cumleler" id="cumleler">${e.hikaye.map((c, i) => `<li data-cumle="${i}"><span class="no">${i + 1}</span><div><p>${esc(c.metin)}</p>${guven(c.guven, { alinti:c.metin, kaynak:c.kaynak })}</div></li>`).join('')}</ol>`;
   const oynatici = `<div class="oynatici"><button class="sol" data-mod-degis>${durum.masaustu ? `<span class="sure" id="sure">0:00 / 0:00</span>` : (mod === 'dinle' ? 'Oku' : 'Dinle')}</button><div class="orta"><button class="kucuk" data-adim="-1" aria-label="Önceki">${ic('skip-back', 18)}</button><button class="oynat" id="oynat" aria-label="Oynat">${ic('play', 22)}</button><button class="kucuk" data-adim="1" aria-label="Sonraki">${ic('skip-forward', 18)}</button></div><button class="sag" id="hiz">1x</button></div>`;
   const sekme = `<div class="sekme-grup" role="tablist"><button role="tab" data-mod="dinle" aria-selected="${mod === 'dinle'}">${ic('headphones', 16)} Dinle</button><button role="tab" data-mod="oku" aria-selected="${mod === 'oku'}">${ic('book-open', 16)} Oku</button></div><span class="dil">${durum.dil === 'en' ? 'EN' : 'TR'}</span>`;   // anlatımın dili üstteki seçiciden
   if (durum.masaustu) {
     panel.innerHTML = `<div class="anlat-panel"><div class="bas"><button class="ikon-btn" style="width:36px;height:36px" data-git="#/eser/${id}" aria-label="Hikâyeden çık">${ic('x', 18)}</button>${sekme}</div>${liste}${oynatici}</div>`;
     gorusAc(`<div class="anlat-alan" id="anlat-alan"></div>${ilerleme}${ust}`, 'anlatim');
   } else {
-    const kart = `<div class="hikaye-kart" id="hikaye-kart"><div class="tutamak" data-ac><i></i></div><div class="ust"><span class="sayac" id="sayac">1 / ${n}</span><span id="kart-guven"></span></div><p class="cumle" id="kart-cumle"></p><div class="kaynak-link" id="kart-kaynak"></div>${oynatici}</div>`;
+    const kart = `<div class="hikaye-kart" id="hikaye-kart"><div class="tutamak" data-ac><i></i></div><div class="ust"><span class="sayac" id="sayac">1 / ${n}</span><span id="kart-guven"></span></div><p class="cumle" id="kart-cumle"></p><button type="button" class="kaynak-link" id="kart-kaynak" data-kaynak-simdi></button>${oynatici}</div>`;
     const sayfa = `<div class="cumle-sayfa" id="cumle-sayfa"><div class="tutamak" data-kapan><i></i></div><div class="bas">${sekme}</div>${liste}${oynatici}</div>`;
     gorusAc(`<div class="anlat-alan" id="anlat-alan"></div>${ilerleme}${ust}${kart}${sayfa}`, 'anlatim');
   }
@@ -1075,9 +1189,7 @@ function anlatSahne() {
   if (koyu) alan.innerHTML = `<div class="foto-sahne${durum.doldur ? ' doldur' : ''}" id="foto-sahne"><img class="bulanik" alt=""><img class="ana" alt=""><div class="ust-golge"></div><div class="alt-bilgi"><span id="foto-guven"></span><span class="kunye">${esc(SEHIR.foto_kunye)}</span></div></div>`;
   else {
     alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Model gelince sahne kendiliğinden açılır.')}</div><div class="kart3d" id="kart3d" style="opacity:0"></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
-    s3d = new Sahne3D($('#s3d'), { onParca:parcaSecildi, altBosluk:() => (!durum.masaustu && !anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) });
-    yuklemeIzle($('#s3d'), anlat.eser.glb + '_sunum');
-    s3d.yukle(anlat.eser).then(() => { $('#s3d .yukleniyor')?.remove(); sahneUygula(false); }).catch((err) => { $('#s3d .yukleniyor').textContent = '3D açılamadı: ' + err.message; });
+    s3dKur($('#s3d'), anlat.eser, { onParca:parcaSecildi, altBosluk:() => (!durum.masaustu && !anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) }, anlatSahne, () => sahneUygula(false));
   }
   $$('[data-gorunum]').forEach((b) => b.setAttribute('aria-checked', b.dataset.gorunum === durum.gorunum));
   sahneUygula(false);
@@ -1088,7 +1200,7 @@ function sahneUygula(gecis = true) {
     const f = foto(e, c.foto), fs = $('#foto-sahne'); if (!fs || !f) return;
     const ana = $('.ana', fs);
     if (ana.dataset.url !== f.url) { ana.style.opacity = 0; const yeni = new Image(); yeni.onload = () => { ana.src = f.url; $('.bulanik', fs).src = f.url; ana.dataset.url = f.url; ana.alt = f.alt; ana.style.opacity = 1; }; yeni.src = f.url; }
-    $('#foto-guven').innerHTML = guven(f.guven);
+    $('#foto-guven').innerHTML = guven(f.guven, { alinti:f.baslik, kaynak:f.kaynak });
   } else if (s3d && s3d.kok) {
     s3d.kubbeler(!!c.ic, gecis);   // v2: iç mekân cümlelerinde kubbeler kalkar
     s3d.aci(c.aci, gecis); s3d.vurgula(c.vurgu);
@@ -1105,7 +1217,7 @@ function cumleGit(i, konus = true) {
   const c = e.hikaye[anlat.i];
   $$('#ilerleme button i').forEach((b, k) => (b.style.width = k <= anlat.i ? '100%' : '0'));
   $$('#cumleler li').forEach((li, k) => li.classList.toggle('aktif', k === anlat.i));
-  if ($('#kart-cumle')) { $('#sayac').textContent = `${anlat.i + 1} / ${n}`; $('#kart-cumle').textContent = c.metin; $('#kart-guven').innerHTML = guven(c.guven); $('#kart-kaynak').textContent = `Kaynak: ${c.kaynak} ›`; }
+  if ($('#kart-cumle')) { $('#sayac').textContent = `${anlat.i + 1} / ${n}`; $('#kart-cumle').textContent = c.metin; $('#kart-guven').innerHTML = guven(c.guven, { alinti:c.metin, kaynak:c.kaynak }); $('#kart-kaynak').textContent = `Kaynak: ${c.kaynak} ›`; }
   if ($('#sure')) { const gecen = e.hikaye.slice(0, anlat.i).reduce((a, x) => a + sureTahmin(x), 0), top = e.hikaye.reduce((a, x) => a + sureTahmin(x), 0); $('#sure').textContent = `${dk(gecen)} / ${dk(top)}`; }
   if (anlat.mod === 'dinle' || !okuKaydiriyor) { const li = $$('#cumleler li')[anlat.i]; if (li && (anlat.mod === 'dinle' || konus === 'tik')) li.scrollIntoView({ block:'center', behavior:'smooth' }); }
   sahneUygula(true);
@@ -1133,7 +1245,7 @@ function anlatDur(sessiz) { anlat.jeton++; clearTimeout(anlat.zaman); if ('speec
 function modSekme() { $$('[data-mod]').forEach((b) => b.setAttribute('aria-selected', b.dataset.mod === anlat.mod)); $$('[data-mod-degis]').forEach((b) => { if (!durum.masaustu) b.textContent = anlat.mod === 'dinle' ? 'Oku' : 'Dinle'; }); yerel('akar.mod', anlat.mod); }
 function gizleBaslat() {
   clearTimeout(gizleZ); gorus.classList.remove('gizle');
-  if (anlat.oynuyor && durum.gorunum === 'foto') gizleZ = setTimeout(() => gorus.classList.add('gizle'), 3000);
+  if (anlat.oynuyor && durum.gorunum === 'foto') gizleZ = setTimeout(() => { if (anlat.eser && /^#\/anlat\//.test(location.hash)) gorus.classList.add('gizle'); }, 3000);   // 29 Ekim: anlatımdan çıkınca bekleyen zamanlayıcı eser detayını gizlemesin
 }
 ['pointerdown', 'keydown'].forEach((t) => document.addEventListener(t, (e) => { if (anlat.eser && gorus.classList.contains('gizle')) { e.stopPropagation(); e.preventDefault(); gizleBaslat(); } else if (anlat.eser) gizleBaslat(); }, true));
 document.addEventListener('mousemove', () => anlat.eser && gizleBaslat());
@@ -1205,6 +1317,7 @@ function tebrikGoster() {
     ${rozetler.length ? `<div class="tb-rozetler"><div class="tb-rozet-bas"><b>${esc(ilgi(e.ad))} rozetleri</b><span class="sayac">${kazanilan} / ${rozetler.length}</span></div><ul>${rozetSira}</ul></div>` : ''}
     <div class="tb-dugmeler">${dugmeler}</div>
     <button class="metin-btn tb-profil" data-tebrik-git="#/profil">Bütün rozetlerime bak ›</button>
+    ${yerel('akar.giris') ? '' : '<p class="tb-giris">Rozetlerini kaybetme · <button class="metin-btn" data-giris>Giriş yap</button></p>'}
   </section>`;
   k.hidden = false; requestAnimationFrame(() => k.classList.add('acik'));
   setTimeout(() => k.querySelector('.tb-dugmeler .btn')?.focus({ preventScroll:true }), 300);
@@ -1212,6 +1325,7 @@ function tebrikGoster() {
 function tebrikKapat() { const k = $('#tebrik'); if (!k || k.hidden) return; k.classList.remove('acik'); setTimeout(() => { k.hidden = true; k.innerHTML = ''; }, 200); }
 document.addEventListener('click', (e) => {
   const g = e.target.closest('[data-tebrik-git]'); if (g) { if (g.hasAttribute('data-rotada')) durum.rotada = true; tebrikKapat(); location.hash = g.dataset.tebrikGit; return; }
+  if (e.target.closest('[data-giris]')) { toast('Giriş bu prototipte yok · rozetlerin bu cihazda saklanıyor'); return; }   // üründe: giriş/kayıt, cihazdaki rozetler hesaba taşınır
   if (e.target.closest('[data-tebrik-kapat]') || e.target.id === 'tebrik') tebrikKapat();
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#tebrik') && !$('#tebrik').hidden) { e.stopImmediatePropagation(); tebrikKapat(); } }, true);
@@ -1275,7 +1389,7 @@ function hkTamMetin(b, baskin, kapakUrl, ozet = []) {   // envanter metni kitap 
     else if (m.startsWith('“')) { kartKapat(); kart = kitabe(m); }
     else { kartKapat(); const oz = ozet.some((c) => c.trim() && m.includes(c.trim()));   // «Kitaptan» özetindeki cümleyi taşıyan paragraf: kapalı önizlemede gizli (aynı cümle iki kez okunmasın), açınca yerinde
       h += `<p class="hk-p${oz ? ' hk-ozette' : ''}">${hkTerimli(m)}</p>`; }
-    if (p.guven !== baskin) { kartKapat(); h += `<div class="hk-p-guven">${guven(p.guven)}</div>`; }
+    if (p.guven !== baskin) { kartKapat(); h += `<div class="hk-p-guven">${guven(p.guven, { alinti:p.metin, kaynak:p.kaynak })}</div>`; }
     if (p.fotolar) { kartKapat(); h += hkSerit(p.fotolar, kapakUrl); }
   });
   kartKapat();
@@ -1335,9 +1449,8 @@ function hakkinda(id) {
       <aside class="hk-sag" aria-label="${ucd ? '3D model: okunan bölüm' : 'Bölümün fotoğrafı'}"><div class="hk-sahne${ucd ? ' uc' : ''}">${ucd ? `<div class="sahne3d" id="hk-s3d">${yuklemeKart('Bu sırada okumaya devam edebilirsin; model gelince sahne kendiliğinden açılır.')}</div>` : '<img id="hk-sag-foto" alt="">'}
         <div class="hk-sahne-etiket" id="hk-sahne-etiket"></div>${ucd ? '<span class="guven temsili hk-temsili">3D model · Temsili</span>' : ''}</div></aside></div></div>`);
     if (ucd) {
-      s3d = new Sahne3D($('#hk-s3d'), { onParca:parcaSecildi });
-      yuklemeIzle($('#hk-s3d'), e.glb + '_sunum');
-      s3d.yukle(e).then(() => { $('#hk-s3d .yukleniyor')?.remove(); hkSahne(hk.aktif ?? 0, false); }).catch((err) => { const y = $('#hk-s3d .yukleniyor'); if (y) y.textContent = '3D model açılamadı: ' + err.message; });
+      s3dKur($('#hk-s3d'), e, { onParca:parcaSecildi }, () => hakkinda(id), () => hkSahne(hk.aktif ?? 0, false),
+        () => { const k = $('#hk-s3d'); if (k) { k.outerHTML = '<img id="hk-sag-foto" alt="">'; $('.hk-temsili')?.remove(); hkSahne(hk.aktif ?? 0, false); } });   // «Görsellerle devam et»: bölümün fotoğrafı
     }
   } else {
     gorusAc(`<div class="hk hk-m" id="hk-kaydir">${nav}${kapakH}<div class="hk-govde">${bolumler}${son}</div></div>`);
@@ -1873,7 +1986,7 @@ function gorevSonuc() {
     k.innerHTML = `<div class="gv-sayfa" role="status"><div class="gv-isaret dogru">${ic('check', 26)}</div>
       <h2 class="gv-sonuc-baslik">${g.tur === 'soru' ? `Doğru! ${esc(g.secenekler[g.dogru])}.` : `Buldun! ${esc(g.baslik)}.`}</h2>
       <p>${esc(g.tur === 'soru' ? g.dogru_metin : g.tamam_metin)}</p>
-      <div class="gv-cipler">${guven(g.guven)}<span class="gv-kaynak">Kaynak: ${esc(g.kaynak)}</span>${nasil}</div>
+      <div class="gv-cipler">${guven(g.guven, { alinti:g.baslik, kaynak:g.kaynak })}<span class="gv-kaynak">Kaynak: ${esc(g.kaynak)}</span>${nasil}</div>
       ${rozet ? `<div class="gv-rozet">${rozetIkon(true, 36)}<div><b>${esc(rozet.ad)}</b><small>Rozet profiline eklendi</small></div></div>` : ''}
       ${sonraki}<button class="metin-btn" data-git="#/eser/${e.id}">${esc(e.ad)}’e dön</button></div>`;
   } else {
@@ -1973,7 +2086,36 @@ function profilSayfa() {
     <div class="pf-kaydir">${kimlik}${bolumler}<div class="pf-kutu pf-ayar">${sifirla}</div></div></div>`, 'pf-gorus');
 }
 
+/* ---------- ilk açılış karşılama kartı (Figma D 1:4042 · WF 1:5616; 29 Ekim 2026) ----------
+   Yalnız ilk girişte, açılış ekranı kalkınca ve harita adresindeyken (paylaşılan bir eser bağlantısıyla gelen kişiyi durdurmaz).
+   Masaüstünde haritanın üstünde kart (şehir deseni şeridi), mobilde tam ekran (desenli zemin, üstte eser fotoğrafı).
+   «Evden gez» konum istemez; «Konumumu kullan» tarayıcının izin penceresini açar. Gösterildiği cihazda kalır (akar.karsilama). */
+function karsilamaGoster() {
+  if (yerel('akar.karsilama') || location.hash.slice(2) || $('#karsilama')) return;
+  const k = document.createElement('div'); k.id = 'karsilama'; k.className = 'karsilama-arka';
+  const f = kapak(ESER[ROTA?.duraklar?.[0]] || VERI.eserler[0]);
+  const madde = (ikon, b, a) => `<li><span class="ka-ik">${ic(ikon, 18)}</span><div><b>${b}</b><small>${a}</small></div></li>`;
+  k.innerHTML = `<section class="karsilama${durum.masaustu ? '' : ' desenli-zemin'}" role="dialog" aria-modal="true" aria-labelledby="ka-baslik">
+    ${durum.masaustu ? '<div class="ka-serit" aria-hidden="true"></div>' : `<div class="ka-foto">${resim(f)}</div>`}<div class="ka-ust">Vakıf eserlerini keşfet</div>
+    <h2 id="ka-baslik" class="ka-baslik">Şehrin hikâyesine karış.</h2>
+    <p class="ka-alt">Geçmişi gör. Hikâyesini dinle. İzini bırak.</p>${SUSLEME}
+    <ul class="ka-maddeler">${madde('headphones', 'Dinle ya da oku', 'Her eserin kısa, kaynaklı hikâyesi')}${madde('history', 'Geçmişini gör', 'Eski fotoğrafı bugünle karşılaştır')}${madde('landmark', 'Vakfı anla', 'Bu yapıyı yüzyıllardır ne ayakta tuttu?')}</ul>
+    <div class="ka-dugmeler"><button class="btn ana" data-ka="ev">${ic('house', 18)}Evden gez</button><button class="btn ikincil" data-ka="yakin">${ic('map-pin', 18)}Konumumu kullan</button></div>
+    <div class="ka-son"><small>Konumun sadece cihazında kullanılır.</small><button class="metin-btn" data-vakif-nedir>Vakıf nedir? ›</button></div>
+  </section>`;
+  document.body.appendChild(k); requestAnimationFrame(() => k.classList.add('acik'));
+  setTimeout(() => k.querySelector('[data-ka="ev"]')?.focus({ preventScroll:true }), 300);
+}
+function karsilamaKapat(kip) {
+  const k = $('#karsilama'); if (!k) return; yerel('akar.karsilama', '1');
+  k.classList.remove('acik'); setTimeout(() => k.remove(), 250);
+  if (kip === 'yakin') konumIste(); else if (kip === 'ev') konumKip('ev', false);
+}
+document.addEventListener('click', (e) => { const a = e.target.closest('[data-ka]'); if (a) karsilamaKapat(a.dataset.ka); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#karsilama') && !($('#yan-sayfa') && !$('#yan-sayfa').hidden)) { e.stopImmediatePropagation(); karsilamaKapat(null); } }, true);
+
 function yonlendir() {
+  yanSayfaKapat(); konumMenu(false); if ($('#karsilama')) karsilamaKapat(null);   // sayfa değişince açık katmanlar kapanır
   const [ad, id, mod] = location.hash.replace(/^#\/?/, '').split('/');
   document.body.classList.toggle('gorus-acik', !!ad && ad !== 'rota');
   document.body.classList.toggle('tam-sayfa', ['hakkinda', 'profil', 'gorev'].includes(ad) && durum.masaustu);
@@ -2001,4 +2143,5 @@ $('#panel-sekme').onclick = () => { document.body.classList.toggle('panel-kapali
 altYukseklik('kapali');
 dilUygula(yerel('akar.dil') || 'tr', false);
 yonlendir();
+window.akarKarsilama = karsilamaGoster; if (!$('#acilis')) karsilamaGoster();   // açılış ekranı çoktan kalktıysa hemen
 window.akar = { durum, VERI, harita, anlat, s3d:() => s3d }; window.akarIzler = IZLER;   // yalnız sınama için

@@ -896,3 +896,37 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - **Uyarı:** EN seçiliyken eksik varsa bir kez «Some content is not in English yet… · Bazı içerikler henüz İngilizce değil.»; hiç çeviri yoksa «English is coming soon…».
 - Sınama (Playwright, örnek EN verisiyle): anlatımın ilk cümlesi İngilizce, başlık «Grand Mosque», TR'ye dönünce «Ulucami»; hata yok.
 - Ürün alanları ve eksikler ENTEGRASYON §5.11'de.
+
+## 66. Figma'dan dört ekran ve tebrik kartında giriş satırı (prototip v2)
+
+29 Ekim 2026 akşamı. YAPILACAKLAR §2b'deki 2–5. maddeler ve tebrik/giriş çakışmasının çözümü. Akar akışı (1. madde) ekip kararı bekliyor.
+- **Tebrik kartı:** misafirse en altta «Rozetlerini kaybetme · Giriş yap». Prototipte giriş olmadığı için dokununca «rozetlerin bu cihazda saklanıyor» uyarısı çıkar.
+- **İlk açılış karşılama kartı** (Figma D 1:4042 · WF 1:5616):
+  - yalnız ilk girişte, açılış ekranı kalkınca ve adres haritadayken gösterilir;
+  - masaüstünde desen şeritli kart, mobilde tam ekran ve desenli zemin;
+  - «Evden gez», «Konumumu kullan», «Vakıf nedir? ›».
+- **Konum kipi** (D 1:4685 · WF 1:5742):
+  - ilk çip «Evden gez ▾ / Yakınımda ▾» menüsünü açar;
+  - Evden gez varsayılan, liste «Bursa'daki eserler»;
+  - Yakınımda'da liste mesafeye göre sıralanır;
+  - konum şehrin 30 km dışındaysa Evden gez'e dönülür;
+  - şehir eki addan üretilir (`yerEki`).
+- **Kaynak detayı** (D 1:3193 · WF 1:7027):
+  - bütün güven etiketleri ve anlatım kartındaki «Kaynak: … ›» dokunulur;
+  - masaüstünde sağ panel, mobilde alttan sayfa;
+  - içerik: alıntı, etiket açıklaması, kitap satırları (envanter adı ve yayıncısı şehir kaydından), diğer etiketler, «Bildir».
+- **Vakıf nedir?** (aynı yan sayfa):
+  - tanım ve iki rol;
+  - envanter Cilt 1 girişinden «Ticari yapılar» alıntısı (sayfa numarası doğrulanmadığı için yazılmadı);
+  - veriden seçilen örnek: Orhan Hamamı → Orhan Gazi İmareti, C1 s.104.
+- **3D açılamazsa** (D 1:4911 · WF 1:7840):
+  - «3D model açılamadı», «Yeniden dene», «Görsellerle devam et»;
+  - eser detayı, anlatım ve Eser hakkında aynı yardımcıyı kullanır (`s3dKur`, `uc3Hata`);
+  - hatalı indirme önbellekten silinir.
+- **Hata düzeltmesi:** dinlerken anlatımdan çıkınca bekleyen «kontrolleri gizle» zamanlayıcısı eser detayına `gizle` sınıfı ekliyor ve tıklamaları yutuyordu. Artık yalnız anlatım adresindeyken çalışıyor.
+- **Sınama** (Playwright, masaüstü 1280 ve mobil 390):
+  - karşılama, Vakıf nedir, konum menüsü, kaynak paneli, 3D hatası (sunum GLB'si 404 verildi) ve Görsellerle devam et;
+  - tebrik kartında giriş satırı;
+  - başarılı 3D yüklemesi (Ulucami, İçini göster düğmesi).
+  - Sayfa hatası yok.
+- Belgeler: `PROTOTIP_URUN_FARKI.md` §1, §2, §3, §5, §11; `ENTEGRASYON_29EKIM.md` §5.12; `YAPILACAKLAR.md` §2b.
