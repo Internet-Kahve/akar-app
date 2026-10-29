@@ -181,6 +181,35 @@ export interface PartCard {
   sourceId?: string;
   trust: Trust;
 }
+/** A book photograph placed after a paragraph of "Eser hakkında"; `aspect` = width / height of the file as printed (absent = unknown). */
+export interface AboutPhoto {
+  photo: SitePhoto;
+  aspect?: number;
+  alt: string;
+}
+/**
+ * "Eser hakkında" chapter (one `## heading` of the inventory text) with its reading layer. Everything in it is
+ * quoted verbatim from the chapter's paragraphs; the paragraphs themselves are `HeritageSite.sections` with this `id` as `chapterId`.
+ */
+export interface AboutChapter {
+  id: string;
+  title: string;
+  kind: "history" | "architecture" | "waqf";
+  /** Sentences picked from the text, shown before it. */
+  summary: string[];
+  /** Number cards: `value` (e.g. "1399"), short `label`, `evidence` = the phrase in the text. */
+  figures: Array<{ value: string; label: string; evidence: string }>;
+  quotes: Array<{ text: string; by?: string }>;
+  timeline: Array<{ year: string; evidence: string }>;
+  /** Words in the chapter text that open a definition when tapped. */
+  terms: Array<{ word: string; definition: string }>;
+  /** Desktop 3D view while this chapter is read; absent = leave the model as it is. */
+  camera?: CameraPose;
+  /** The model's cover groups lift while this chapter is read. */
+  interior: boolean;
+  /** Model parts lit while this chapter is read; empty = the whole building. */
+  focusParts: string[];
+}
 export interface HeritageSite {
   id: string;
   name: string;
@@ -212,6 +241,10 @@ export interface HeritageSite {
   /** With cards, only their parts are tappable; absent or empty = every part shows its name. */
   partCards?: PartCard[];
   storyPhotos?: SitePhoto[];
+  /** Cover photograph of "Eser hakkında"; absent = the gallery cover. */
+  aboutCover?: SitePhoto;
+  /** Reading chapters in order; absent or empty = the sections are shown as plain paragraphs under their titles. */
+  chapters?: AboutChapter[];
   sections?: Array<{
     id: string;
     kind: "history" | "architecture" | "waqf";
@@ -219,6 +252,10 @@ export interface HeritageSite {
     body: string;
     trust: Trust;
     sourceId: string;
+    /** `AboutChapter.id`, absent when the paragraph belongs to no chapter. */
+    chapterId?: string;
+    /** Book photographs shown after this paragraph, in order. */
+    photos?: AboutPhoto[];
   }>;
 }
 export interface HeritageRoute {

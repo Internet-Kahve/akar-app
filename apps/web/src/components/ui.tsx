@@ -7,12 +7,14 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  className = "",
   dismissible = true,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  className?: string;
   dismissible?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -29,7 +31,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className={`modal ${wide ? "wide" : ""}`}
+      className={`modal ${wide ? "wide" : ""} ${className}`.trim()}
       onCancel={(event) => {
         if (dismissible) onClose();
         else event.preventDefault();

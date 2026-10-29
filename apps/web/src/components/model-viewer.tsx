@@ -32,8 +32,10 @@ const TAP_MS = 600;
 
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
- * x east, y up, z south; azimuth 0 looks from the north, clockwise. `interior` (story) lifts the
+ * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
  * model's cover groups or sets them down; absent = leave them as the visitor left them.
+ * `highlight` lights those parts (the "Eser hakkında" chapter being read); a tapped part's glow
+ * replaces it until the card or name closes.
  * Parts: with `partCards`, only their parts respond to a tap and open the card (all of a card's
  * parts glow together); without cards every part shows its name. `scene` is the city's light and
  * background (§11.42), the same light the map uses.
@@ -44,6 +46,7 @@ export default function ModelViewer({
   scene: cityScene,
   pose,
   interior,
+  highlight,
   partCards = [],
   sources = [],
 }: {
@@ -52,6 +55,7 @@ export default function ModelViewer({
   scene: CityScene;
   pose?: CameraPose;
   interior?: boolean;
+  highlight?: string[];
   partCards?: PartCard[];
   sources?: SiteSource[];
 }) {
@@ -63,6 +67,8 @@ export default function ModelViewer({
   poseRef.current = pose;
   const interiorRef = useRef(interior);
   interiorRef.current = interior;
+  const highlightRef = useRef(highlight);
+  highlightRef.current = highlight;
   const cardsRef = useRef(partCards);
   cardsRef.current = partCards;
   /** The tapped part: its card, or only its name on a site without cards. */
@@ -241,9 +247,9 @@ export default function ModelViewer({
           const [partNames, cardParts] = JSON.parse(partsKey) as [string[], string[][]];
           const known = new Set(partNames);
           const tappable = cardParts.length ? new Set(cardParts.flat()) : known;
-          /** Meshes of each tappable part, each on its own material copy so a glow never spreads to a part sharing one. */
+          /** Meshes of each part, each on its own material copy so a glow never spreads to a part sharing one. Every part can glow (a chapter's focus); only `tappable` ones answer a tap. */
           const meshesOf = new Map<string, THREE.Mesh[]>();
-          for (const part of tappable) {
+          for (const part of known) {
             const node = root.getObjectByName(part);
             if (!node) continue;
             const meshes: THREE.Mesh[] = [];
@@ -457,6 +463,7 @@ export default function ModelViewer({
             if (open) lift.current(true, false);
             setInside(open);
           }
+          if (highlightRef.current?.length) select.current(highlightRef.current);
           if (poseRef.current) aim.current(poseRef.current);
           render();
           setStatus("");
@@ -496,6 +503,10 @@ export default function ModelViewer({
   useEffect(() => {
     if (pose) aim.current?.(pose);
   }, [pose]);
+  const highlightKey = (highlight ?? []).join("|");
+  useEffect(() => {
+    select.current?.(highlightRef.current ?? []);
+  }, [highlightKey]);
   useEffect(() => {
     if (interior === undefined || !lift.current) return;
     lift.current(interior, false);
@@ -505,7 +516,7 @@ export default function ModelViewer({
   useEffect(() => {
     if (!picked || picked.card) return;
     const timer = setTimeout(() => {
-      select.current?.([]);
+      select.current?.(highlightRef.current ?? []);
       setPicked(null);
     }, 2500);
     return () => clearTimeout(timer);
@@ -549,7 +560,7 @@ export default function ModelViewer({
           card={picked.card}
           sources={sources}
           onClose={() => {
-            select.current?.([]);
+            select.current?.(highlightRef.current ?? []);
             setPicked(null);
           }}
         />

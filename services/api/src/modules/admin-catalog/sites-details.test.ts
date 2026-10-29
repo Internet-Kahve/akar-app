@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
-import { cities, media, sources } from "../../db/schema/index.ts";
+import { eq } from "drizzle-orm";
+import { cities, media, siteAboutChapters, siteSectionPhotos, siteSections, sites, sources } from "../../db/schema/index.ts";
 import type { ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -166,4 +167,45 @@ test("a malformed cursor is 400 INVALID_CURSOR and a limit over 100 is refused",
   const tooMany = await call<ErrorBody>("GET", "/v1/admin/site-details?limit=101", editor);
   assert.equal(tooMany.res.statusCode, 400);
   assert.equal(tooMany.body.error.code, "VALIDATION_FAILED");
+});
+
+test("rewriting the paragraphs keeps what the import attached: chapter and book photographs follow the paragraph's id, a new paragraph joins the chapter with its title", async () => {
+  const site = await publishedSite("Okuma Hanı");
+  const base = `/v1/admin/sites/${site.id}`;
+  const db = app.deps.db;
+  const first = site.sections[0]!;
+  const reading = { summary: ["Han 1491'de yapıldı."], figures: [], quotes: [], timeline: [], terms: [], camera: null, interior: false, focusParts: [] };
+  const chapterId = `chapter-${site.id}`;
+  await db.insert(siteAboutChapters).values({ id: chapterId, siteId: site.id, position: 0, title: "Tarihçe", kind: "history", reading });
+  await db.update(siteSections).set({ chapterId }).where(eq(siteSections.siteId, site.id));
+  await db.insert(siteSectionPhotos).values([
+    { siteId: site.id, sectionId: first.id, position: 0, mediaId: "ph-1", aspect: 1.5, alt: "Birinci" },
+    { siteId: site.id, sectionId: first.id, position: 1, mediaId: "ph-2", aspect: null, alt: "İkinci" },
+  ]);
+  await db.update(sites).set({ aboutCoverMediaId: "ph-2" }).where(eq(sites.id, site.id));
+
+  const edited = await send("PUT", `${base}/sections`, {
+    sections: [
+      { kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" },
+      { id: first.id, kind: "history", title: "Tarihçe", body: "Han 1491'de inşa edildi.", trust: "verified", sourceId: "src-vgm" },
+      { kind: "history", title: "Tarihçe", body: "Sonradan eklenen paragraf.", trust: "verified" },
+    ],
+  });
+  assert.deepEqual(edited.sections.map((x) => [x.title, x.chapterId, x.photos.map((p) => p.alt)]), [
+    ["Mimari", null, []],
+    ["Tarihçe", chapterId, ["Birinci", "İkinci"]],
+    ["Tarihçe", chapterId, []],
+  ]);
+  assert.equal(edited.sections[1]!.photos[0]!.aspect, 1.5);
+  assert.deepEqual(edited.chapters.map((c) => c.id), [chapterId]);
+  assert.equal(edited.aboutCoverMediaId, "ph-2");
+
+  // A paragraph left out takes its photographs with it; the chapter and the cover stay.
+  const trimmed = await send("PUT", `${base}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
+  assert.equal(trimmed.sections.length, 1);
+  assert.equal(trimmed.chapters.length, 1);
+  assert.equal(trimmed.aboutCoverMediaId, "ph-2");
+  assert.equal((await db.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, site.id))).length, 0);
+  const listed = await call<DetailPage>("GET", `/v1/admin/site-details?query=${encodeURIComponent("okuma hani")}`, editor);
+  assert.deepEqual(listed.body.items.find((i) => i.id === site.id), (await call<AdminSiteDetail>("GET", base, editor)).body);
 });

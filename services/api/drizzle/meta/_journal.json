@@ -134,6 +134,13 @@
       "when": 1793271797302,
       "tag": "0018_city_scene",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793274391570,
+      "tag": "0019_about_reading",
+      "breakpoints": true
     }
   ]
 }

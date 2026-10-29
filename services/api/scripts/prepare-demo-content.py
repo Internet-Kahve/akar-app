@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 import json
 import math
+import re
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
@@ -24,6 +25,8 @@ def trust(value):
     if value not in TRUST:
         raise ValueError('Unknown trust label: ' + value)
     return TRUST[value]
+
+BOOK_LICENSE = 'Vakıf Katılım, Bursa Vakıf Eserleri Envanteri ve fotoğraf arşivi. Proje için verildi; kullanılabilir'
 
 # Distance words of the "Açı" table, as fractions of the distance at which the whole model fits the view
 # (prototype Sahne3D.aci); anything else ("bütün yapı", "kadrajın yarısı") is the whole building.
@@ -70,13 +73,68 @@ for entry in editorial.eserleri_bul():
                             simple=item['metin'], trust=trust(item['guven']), photoId=photo['id'],
                             sourceId=source(item['kaynak']), showCard=item['kart'], highlights=item['vurgu'],
                             interior=item['ic'], **({'camera': camera(item['aci'])} if item['aci'] else {})))
-    sections = []
-    for section in editorial.hakkinda_oku(folder):
+    # "Eser hakkında": one chapter per heading of eser-hakkinda.md, its paragraphs, the reading layer of
+    # eser-hakkinda-okuma.md (verbatim-checked by okuma_oku, which warns and drops what the book text lacks) and the
+    # book photographs of kitap-fotograflari.md.
+    headings = editorial.hakkinda_oku(folder)
+    terms = editorial.okuma_oku(folder, headings)
+    has_reading = (root / 'eserler' / folder / 'icerik/eser-hakkinda-okuma.md').is_file()
+    sections, chapters, pages = [], [], []
+    for section in headings:
         name = section['baslik']
         kind = 'waqf' if any(w in name.lower() for w in ['vakıf', 'akar']) else 'architecture' if 'mimari' in name.lower() else 'history'
+        chapter_id = None
+        if has_reading:
+            chapter_id = f'{sid}-chapter-{len(chapters)+1}'
+            reading = section.get('okuma') or dict(ozet=[], rakam=[], alinti=[], zaman=[], ucd=None)
+            view = reading['ucd']
+            parts = [x for x in view['parcalar'] if x != 'Merkez'] if view else []
+            text = ' '.join(p['metin'] for p in section['paragraflar'])
+            chapters.append(dict(id=chapter_id, title=name, kind=kind, reading=dict(
+                summary=reading['ozet'],
+                figures=[dict(value=r['deger'], label=r['etiket'], evidence=r['kanit']) for r in reading['rakam']],
+                quotes=[dict(text=q['metin'], by=q['kim'] or None) for q in reading['alinti']],
+                timeline=[dict(year=t['yil'], evidence=t['kanit']) for t in reading['zaman']],
+                terms=[dict(word=t['kelime'], definition=t['tanim']) for t in terms if t['kelime'] in text],
+                camera=camera(dict(hedef=view['parcalar'][0], azimut=view['azimut'], egim=view['egim'], uzaklik=view['uzaklik'])) if view else None,
+                interior=bool(view and view['ici']), focusParts=parts)))
         for p in section['paragraflar']:
-            sections.append(dict(id=f'{sid}-section-{len(sections)+1}', kind=kind, title=name,
-                                 body=p['metin'], trust=trust(p['guven']), sourceId=source(p['kaynak'])))
+            sections.append(dict(id=f'{sid}-section-{len(sections)+1}', kind=kind, title=name, chapterId=chapter_id,
+                                 body=p['metin'], trust=trust(p['guven']), sourceId=source(p['kaynak']), photos=[]))
+            pages.append(p['_sayfa'])
+    # Book photographs (kitap-fotograflari.md): each goes after the last paragraph that starts on or before its page,
+    # as in the prototype's kitap_fotolari; the paragraphs outside the photographed pages do not take any. A photograph
+    # before the first paragraph goes after the first one. A file that is also a gallery photograph is that same media.
+    book_photos = []
+    book_path = root / 'eserler' / folder / 'icerik/kitap-fotograflari.md'
+    if book_path.is_file() and sections:
+        by_rel = {p['file'].split('/icerik/foto/', 1)[1]: p for p in photos}
+        found = []
+        for h in editorial.tablo(editorial.oku(book_path), 'Dosya'):
+            if len(h) < 6:
+                continue
+            page = re.match(r'E cilt-(\d)\s*PDF\s*s\.\s*(\d+)', h[2])
+            rel = editorial.ham(h[0])
+            if not page or not (root / 'eserler' / folder / 'icerik/foto' / rel).is_file():
+                raise ValueError(f'Missing book photograph: {folder} {rel}')
+            found.append((rel, h, (int(page.group(1)), int(page.group(2)))))
+        volumes = {f[2][0] for f in found}
+        first, last = min(f[2] for f in found), max(f[2] for f in found)
+        eligible = [i for i, pg in enumerate(pages) if pg and pg[0] in volumes and first <= pg <= last]
+        for rel, h, page in found:
+            earlier = [i for i in eligible if pages[i] <= page]
+            target = sections[earlier[-1] if earlier else 0]
+            if rel in by_rel:
+                media_id = by_rel[rel]['id']
+            else:
+                media_id = f'{sid}-book-{Path(rel).stem}'
+                book_photos.append(dict(id=media_id, file=f'eserler/{folder}/icerik/foto/{rel}', alt=h[4], title=f'{entry["ad"]} · Envanter Cilt {page[0]} · s. {page[1]}',
+                                        description=h[5], license=BOOK_LICENSE, trust='verified',
+                                        sourceId=source(f'Envanter Cilt {page[0]} · s. {page[1]}')))
+            target['photos'].append(dict(id=media_id, aspect=float(h[3].replace(',', '.')), alt=h[4]))
+    cover_name = entry.get('hakkinda_kapak')
+    if cover_name and cover_name not in by_name:
+        raise ValueError(f'Missing about cover photograph: {folder} {cover_name}')
     part_cards = []
     for card in editorial.parcalar_oku(folder):
         missing = [f for f in card['fotolar'] if f not in by_name]
@@ -111,7 +169,8 @@ for entry in editorial.eserleri_bul():
         description=entry['kisa'], status='published', tier='Hero' if sid=='ulu-cami' else 'Tier 2',
         source='Bursa Vakıf Eserleri Envanteri · ekip tarafından hazırlanan kaynaklı içerik',
         role='akar' if entry['rol']=='akar' else 'hayrat', stories=stories, photos=photos, sources=sources,
-        coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sections=sections, partCards=part_cards,
+        coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sections=sections, chapters=chapters, bookPhotos=book_photos,
+        aboutCoverPhotoId=by_name[cover_name]['id'] if cover_name else None, partCards=part_cards,
         relatedSiteId={'bedesten':'ulu-cami','orhan-bey-hamami':'orhan-gazi','emir-han':'orhan-gazi'}.get(sid)))
 result['routes'] = [
  dict(id='hanlar',name='Hanlar Bölgesi Vakıf Yürüyüşü',description='Ulucami, Bedesten, Koza Hanı ve Orhan Bey Camii arasında vakıf mirası.',siteIds=['ulu-cami','bedesten','koza-han','orhan-gazi'],theme='Vakıf kültürü',minutes=0,distance=''),
