@@ -1,7 +1,7 @@
-# Katkı kimliği
+# Depo kuralları
 
-- Çalışma dallarında `tamerakdeniz/` ön ekini kullan.
-- Commit yazarı ve committer için mevcut Tamer Akdeniz Git kimliğini koru.
-- PR, inceleme ve yorumları `tamerakdeniz` GitHub hesabıyla yayımla.
+- Çalışmaya başlamadan önce katkı ve doğrulama kuralları için `CONTRIBUTING.md` dosyasını oku.
+- Commit yazarı ve committer için katkıcının mevcut yerel Git kimliğini koru; başka bir katkıcının kimliğini kullanma.
+- PR, inceleme ve yorumları katkıcının doğrulanmış GitHub hesabıyla yayımla.
 - Dal adlarına, commit mesajlarına, PR başlık/açıklamalarına veya yorumlara araç/ajan markası, otomatik üretim imzası ya da ek ortak yazar atfı koyma.
-- Katkı ve doğrulama kuralları için `CONTRIBUTING.md` dosyasını oku.
+- Kişisel hesap tercihlerini ve yerel talimat dosyalarını sürüm kontrolüne dahil etme.

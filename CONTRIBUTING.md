@@ -8,14 +8,16 @@ Node sürümü `.nvmrc` içindedir. Repo kökünden `npm ci` ve `npm run dev` ç
 
 ## Değişiklik gönderme
 
-Bu repoda çalışma branch’leri için `tamerakdeniz/` ön eki kullanılır. Commit yazarı ve committer kimliği mevcut Tamer Akdeniz Git ayarlarıdır.
+Çalışma dallarında kendi GitHub kullanıcı adını ön ek olarak kullan. Commit yazarı ve committer kimliği katkıcının mevcut yerel Git ayarlarıdır.
 
-PR, inceleme ve yorumlar `tamerakdeniz` hesabıyla yayımlanır. Dal, commit, PR ve yorum metinlerinde araç/ajan markası, otomatik üretim imzası veya ek ortak yazar atfı kullanılmaz.
+PR, inceleme ve yorumları kendi doğrulanmış GitHub hesabınla yayımla. Dal, commit, PR ve yorum metinlerinde araç/ajan markası, otomatik üretim imzası veya ek ortak yazar atfı kullanılmaz.
+
+Örnekteki `katkici` bölümünü kendi GitHub kullanıcı adınla değiştir:
 
 ```sh
 git switch main
 git pull --ff-only
-git switch -c tamerakdeniz/ozellik-adi
+git switch -c katkici/ozellik-adi
 # Değişikliği uygula.
 npm run typecheck
 npm test
@@ -24,10 +26,12 @@ npm run build
 npm run test:e2e
 git add <ilgili-dosyalar>
 git commit -m "feat(scope): describe the change"
-git push -u origin tamerakdeniz/ozellik-adi
+git push -u origin katkici/ozellik-adi
 ```
 
 PR açıklamasında davranış değişikliğini, nasıl doğrulandığını ve bilinen sınırlarını yaz. Ortak API tipini değiştirdiğinde frontend/backend sözleşmesini de güncelle. Commit kimliğini kendi `git config user.name` ve `user.email` ayarlarınla kullan.
+
+Kişisel talimatlar ortak `AGENTS.md` dosyasına yazılmaz. Bu çalışma kopyasına özel tercihler için kökte `AGENTS.override.md` kullanılabilir; dosyanın başında ortak `AGENTS.md` dosyasının da okunmasını belirt. Yerel dosyayı commit dışında tutmak için `.git/info/exclude` içine `/AGENTS.override.md` ekle. Bu dışlama yalnız ilgili çalışma kopyasına aittir.
 
 ## Kontroller
 
