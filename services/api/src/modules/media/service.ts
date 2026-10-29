@@ -15,6 +15,7 @@ import {
   memories,
   siteMedia,
   sitePartCardPhotos,
+  siteSectionPhotos,
   sites,
   sources,
   staffMembers,
@@ -587,6 +588,7 @@ export async function expireUploads(deps: { db: Db; storage: StorageBuckets }, o
  */
 export const MEDIA_REFERENCES = [
   sites.coverMediaId,
+  sites.aboutCoverMediaId,
   siteMedia.mediaId,
   cards.mediaId,
   storyBlocks.photoId,
@@ -595,6 +597,7 @@ export const MEDIA_REFERENCES = [
   historyImages.mediaId,
   historyImages.presentMediaId,
   sitePartCardPhotos.mediaId,
+  siteSectionPhotos.mediaId,
   catalogRoutes.badgeMediaId,
   memories.mediaId,
 ] as const;

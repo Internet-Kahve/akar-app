@@ -36,7 +36,6 @@ import {
   defaultMapSettings,
   filterSites,
   kindLabels,
-  trustLabels,
   normalize,
   type Command,
   type HeritageSite,
@@ -51,6 +50,7 @@ import { CityScenes } from "./city-scenes";
 import { Architecture, Scene } from "./scene";
 import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
+import { AboutModal } from "./about-reading";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { MemoryActions } from "./memory-actions";
@@ -1194,44 +1194,7 @@ export function AkarApp() {
         />
       )}
       {overlay === "about" && site && (
-        <Modal title="Eser hakkında" onClose={() => setOverlay(null)}>
-          <h3>{site.name}</h3>
-          <p>{site.description}</p>
-          <dl className="facts">
-            <div>
-              <dt>Dönem</dt>
-              <dd>{site.year}</dd>
-            </div>
-            <div>
-              <dt>Mimar</dt>
-              <dd>{site.architect}</dd>
-            </div>
-            <div>
-              <dt>Konum</dt>
-              <dd>
-                {site.city} · {site.district}
-              </dd>
-            </div>
-          </dl>
-          {site.sections?.map((section) => (
-            <section key={section.id}>
-              <h3>{section.title}</h3>
-              <p>{section.body}</p>
-              <Tag tone={section.trust}>{trustLabels[section.trust]}</Tag>
-              <p className="muted">
-                {
-                  site.sources?.find((source) => source.id === section.sourceId)
-                    ?.title
-                }
-              </p>
-            </section>
-          ))}
-          <h3>Kaynak ve içerik durumu</h3>
-          <p>{site.source}</p>
-          {!site.sources?.length && (
-            <Notice>Bu kaydın kaynaklı içerik paketi henüz eklenmedi.</Notice>
-          )}
-        </Modal>
+        <AboutModal site={site} onClose={() => setOverlay(null)} />
       )}
       {overlay === "memories" && site && (
         <Modal title="Yaşayan hafıza" onClose={() => setOverlay(null)}>

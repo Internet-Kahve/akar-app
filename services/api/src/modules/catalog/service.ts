@@ -7,10 +7,12 @@ import {
   historyImages,
   media,
   regions,
+  siteAboutChapters,
   siteMapPlacements,
   siteMedia,
   sitePartCardPhotos,
   sitePartCards,
+  siteSectionPhotos,
   siteSections,
   siteSources,
   sites,
@@ -21,7 +23,7 @@ import {
 import { AppError } from "../../errors.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import type { ContentFlag, MapPlacementDto, SiteDetail, SiteSummary } from "./schemas.ts";
+import type { ChapterDto, ContentFlag, MapPlacementDto, SectionPhotoDto, SiteDetail, SiteSummary } from "./schemas.ts";
 
 /** Single definition of "visible to the public"; every read path goes through it. */
 export const published = eq(sites.status, "published");
@@ -315,6 +317,51 @@ export async function loadPartCards(q: Db | Tx, siteIds: string[]): Promise<Part
   return cardRows.map((c) => ({ ...c, photoIds: photosOf.get(c.id) ?? [] }));
 }
 
+/** An "Eser hakkında" chapter row. */
+export type ChapterRow = typeof siteAboutChapters.$inferSelect;
+/** A book photograph placed after a paragraph; `aspect` comes back from `numeric` as a number. */
+export type SectionPhotoRow = typeof siteSectionPhotos.$inferSelect;
+
+/** The chapters of the given sites, ordered by (site, position). */
+export function loadChapters(q: Db | Tx, siteIds: string[]): Promise<ChapterRow[]> {
+  if (!siteIds.length) return Promise.resolve([]);
+  return q.select().from(siteAboutChapters).where(inArray(siteAboutChapters.siteId, siteIds)).orderBy(asc(siteAboutChapters.siteId), asc(siteAboutChapters.position));
+}
+
+/** The book photographs of the given sites' paragraphs, ordered by (site, paragraph, position). */
+export function loadSectionPhotos(q: Db | Tx, siteIds: string[]): Promise<SectionPhotoRow[]> {
+  if (!siteIds.length) return Promise.resolve([]);
+  return q
+    .select()
+    .from(siteSectionPhotos)
+    .where(inArray(siteSectionPhotos.siteId, siteIds))
+    .orderBy(asc(siteSectionPhotos.siteId), asc(siteSectionPhotos.sectionId), asc(siteSectionPhotos.position));
+}
+
+export function chapterDto(c: ChapterRow): ChapterDto {
+  const r = c.reading;
+  return {
+    id: c.id,
+    title: c.title,
+    kind: c.kind,
+    summary: r.summary,
+    figures: r.figures,
+    quotes: r.quotes,
+    timeline: r.timeline,
+    terms: r.terms,
+    camera: r.camera,
+    interior: r.interior,
+    focusParts: r.focusParts,
+  };
+}
+
+/** The photographs of every paragraph of one site, by section id. */
+export function sectionPhotosBySection(rows: SectionPhotoRow[]): Map<string, SectionPhotoDto[]> {
+  const by = new Map<string, SectionPhotoDto[]>();
+  for (const p of rows) by.set(p.sectionId, [...(by.get(p.sectionId) ?? []), { mediaId: p.mediaId, aspect: p.aspect, alt: p.alt }]);
+  return by;
+}
+
 /** The placement as clients get it: the model's own point, or else the site's location `at` (null for a draft without one). */
 export function resolvePlacement<T extends number | null>(
   row: PlacementRow,
@@ -358,7 +405,7 @@ function bySite<T extends { siteId: string }>(rows: T[]): Map<string, T[]> {
 export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[]> {
   const siteIds = distinct(ids);
   if (!siteIds.length) return [];
-  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, partCardRows, linkedMedia, linkedSources, placements] = await Promise.all([
+  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, partCardRows, chapterRows, sectionPhotoRows, linkedMedia, linkedSources, placements] = await Promise.all([
     summaryQuery(db).where(and(published, inArray(sites.id, siteIds))),
     db
       .select({
@@ -373,6 +420,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         sourceSummary: sites.sourceSummary,
         editorVersion: sites.editorVersion,
         coverMediaId: sites.coverMediaId,
+        aboutCoverMediaId: sites.aboutCoverMediaId,
         openingCamera: sites.openingCamera,
         updatedAt: sites.updatedAt,
       })
@@ -394,6 +442,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ),
     db.select().from(historyImages).where(inArray(historyImages.siteId, siteIds)).orderBy(asc(historyImages.siteId), asc(historyImages.position)),
     loadPartCards(db, siteIds),
+    loadChapters(db, siteIds),
+    loadSectionPhotos(db, siteIds),
     db
       .select({ siteId: siteMedia.siteId, id: siteMedia.mediaId })
       .from(siteMedia)
@@ -410,11 +460,13 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const extraById = new Map(extras.map((e) => [e.id, e]));
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
-  const [storiesOf, sectionsOf, historyOf, partCardsOf, mediaLinksOf, sourceLinksOf] = [
+  const [storiesOf, sectionsOf, historyOf, partCardsOf, chaptersOf, sectionPhotosOf, mediaLinksOf, sourceLinksOf] = [
     bySite(storyRows),
     bySite(sectionRows),
     bySite(historyRows),
     bySite(partCardRows),
+    bySite(chapterRows),
+    bySite(sectionPhotoRows),
     bySite(linkedMedia),
     bySite(linkedSources),
   ];
@@ -427,6 +479,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
     const sections = sectionsOf.get(id) ?? [];
     const history = historyOf.get(id) ?? [];
     const partCards = partCardsOf.get(id) ?? [];
+    const chapters = chaptersOf.get(id) ?? [];
+    const sectionPhotos = sectionPhotosOf.get(id) ?? [];
     // Cards in the order the story first uses them (several sentences may share one card).
     const siteCards = distinct(stories.map((b) => b.cardId)).flatMap((cardId) => {
       const card = cardById.get(cardId);
@@ -435,10 +489,12 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
     const mediaIds = distinct([
       ...(mediaLinksOf.get(id) ?? []).map((m) => m.id),
       extra.coverMediaId,
+      extra.aboutCoverMediaId,
       ...stories.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
       ...siteCards.map((c) => c.mediaId),
       ...history.flatMap((h) => [h.mediaId, h.presentMediaId]),
       ...partCards.flatMap((c) => c.photoIds),
+      ...sectionPhotos.map((p) => p.mediaId),
     ]);
     const contentSourceIds = distinct([
       ...(sourceLinksOf.get(id) ?? []).map((s) => s.id),
@@ -448,7 +504,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...history.map((h) => h.sourceId),
       ...partCards.map((c) => c.sourceId),
     ]);
-    return [{ row, extra, stories, sections, history, partCards, siteCards, mediaIds, contentSourceIds }];
+    return [{ row, extra, stories, sections, history, partCards, chapters, sectionPhotos, siteCards, mediaIds, contentSourceIds }];
   });
 
   // Sources of the media come back with the media rows, so both lookups run in one round for all sites.
@@ -461,7 +517,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
   for (const s of sourceRows) sourceById.set(s.id, s);
   for (const { s } of mediaRows) if (s) sourceById.set(s.id, s);
 
-  return parts.map(({ row, extra, stories, sections, history, partCards, siteCards, mediaIds, contentSourceIds }) => {
+  return parts.map(({ row, extra, stories, sections, history, partCards, chapters, sectionPhotos, siteCards, mediaIds, contentSourceIds }) => {
+    const photosOf = sectionPhotosBySection(sectionPhotos);
     const siteMediaList = mediaIds.flatMap((mediaId) => {
       const m = mediaById.get(mediaId);
       return m ? [m] : [];
@@ -482,6 +539,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       sourceSummary: extra.sourceSummary,
       editorVersion: extra.editorVersion === 2 ? 2 : null,
       coverMediaId: extra.coverMediaId,
+      aboutCoverMediaId: extra.aboutCoverMediaId,
       openingCamera: extra.openingCamera,
       updatedAt: extra.updatedAt.toISOString(),
       stories: stories.map((b) => ({
@@ -509,7 +567,10 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         bodyEn: s.bodyEn,
         trust: s.trust,
         sourceId: s.sourceId,
+        chapterId: s.chapterId,
+        photos: photosOf.get(s.id) ?? [],
       })),
+      chapters: chapters.map(chapterDto),
       cards: siteCards.map((c) => ({
         id: c.id,
         kind: c.kind,
