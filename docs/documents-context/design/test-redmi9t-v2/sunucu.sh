@@ -14,7 +14,7 @@ if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
 fi
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 mkdir "$TMP/modeller"
-for f in index.html test.html app.js app.css temalar.css ornek-vasa.html; do ln -s "$PWD/$f" "$TMP/$f"; done
+for f in index.html test.html app.js app.css temalar.css; do ln -s "$PWD/$f" "$TMP/$f"; done
 echo "İçerik hazırlanıyor (ilk çalıştırmada fotoğraflar küçültülür)…"
 python3 "$PWD/hazirla.py" "$TMP"
 ln -s "$DC/design/harita/akar-style-ozel-v2.json" "$TMP/akar-style.json"   # kullanıcının seçtiği renkler (önizleme v3 ile aynı); ortak akar-style.json'a v1 bağlı, ona dokunulmaz

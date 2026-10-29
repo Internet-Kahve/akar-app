@@ -1137,6 +1137,26 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - **Denendi:** `hazirla.py` hatasız; okuma katmanında uyarı yok; bütün kart ve görev fotoğrafları klasörde. Tarayıcıda Orhan Bey Camii: dış parçaya dokununca kart, «İçini göster» sonrası iç parçaya dokununca kart, bulmaca ekranı (veri sayfaya enjekte edilerek; çalışan sunucu yeniden başlatılmadan).
 - **Açık kalan:** görevlerin içerik sorumlusunca gözden geçirilmesi; kitap fotoğraflarının alt metinleri; Ulucami dışındaki eserlerde bugünkü eş ve örnek iz; `eslesme_elle.csv`'deki 47676 onayının doğrulanması.
 
+## 75. Koza Hanı avlu ve revak ayrıntısı (3D; v18)
+
+29 Ekim 2026. Avlu açık olduğu için «İçini göster» eklenmedi; README'de nedeni yazılı.
+- **İç parçalar (yalnız sunum):**
+  - `Revak_Tonozlari`: alt ve üst kat revakta 88 enine sivri tuğla kemer ve 88 yelken kubbe (fotoğraf 05, 06).
+  - `Revak_Doseme`: alt kat karo döşeme. Ayakların iç yüzünden 1 m içeride başlıyor; tam karo harita ↔ sunum farkını %0,107 yapıyordu.
+- **Sunum eki:** `Zemin_Agac_Sekisi` (fotoğraf 02).
+- **Var olan ve değişmeyenler:** mescit, revak kemerleri, kapı-pencere ritmi, avlu döşemesi ve ağaçları, giriş eyvanı (v13–v17).
+- **Modellenmedi:**
+  - oda içleri: harita GLB'sindeki duvarı delmek gerekiyor;
+  - mescit içi;
+  - masa, tente, vitrinler.
+- **Sayılar:**
+  - Harita v17 ile aynı (fark en çok %0,005).
+  - Sunum 46 292 → 65 364 üçgen, 1090 KB, çizim çağrısı 109, doku 21.
+  - Harita ↔ sunum en çok %0,078. Doğrulamada c ve d geçti.
+- **Kayıt:**
+  - `model.json` → `koza-han_v18`, `ic_parcalar`; README v18 bölümü.
+  - Kart taslağına 2 satır eklendi. `kontrol/v18/` dolduruldu; `modelleri-gom.py` çalıştırıldı.
+
 ## 76. Su ve Eğitim kategorileri, Konya ve Hatay'dan ilk eserler (30 Ekim 2026 gece, Claude)
 
 İstek (Talha): «Diğer şehirlerden birer eser; dinî ve ticari dışındaki kategorileri tamamla. 3D gerekmez, yalnız fotoğrafla.»
@@ -1157,3 +1177,11 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - **Seçim gerekçesi:** İnebey Medresesi çarşıya yakın, Orhan Camii kütüphanesiyle bağlantılı (Orhan Bey Camii parça kartı) ve vakfiyesi akar–hayrat ilişkisini anlatıyor. Alaaddin Bey Çeşmesi kitapta «kentteki en eski çeşme». Karatay Medresesi Konya'nın en tanınan vakıf eserlerinden; Habib-i Neccar Hatay kitabının ilk kaydı.
 - **Kaynak kuralı:** metin kitaptan birebir; hikâye cümleleri yalnız kitaptaki bilgiden. Rivayet ve tahminler «Tarihsel çıkarım» ya da hikâye dışı (Karatay'ın mimarı, Habib-i Neccar'ın 636 tarihi). Hatay kitabının metni ayrı betikle çıkarıldı (`_araclar/envanter_metni_cikar_hatay.py`).
 - **Denendi:** `hazirla.py` hatasız. Tarayıcıda (geçici bir kopyayla, sonra silindi): Karatay detayında seçici gizli ve galeri doğru; anlatım fotoğrafla; Eser hakkında Konya künyesiyle; Habib-i Neccar bulmacası; harita Konya'ya gelince liste «Konya ▾ · 1 eser», Bursa'ya dönünce 9 eser; çeşme pini mavi ve çeşme simgeli; mevcut 8080 sunucusunda yedi eser eskisi gibi.
+
+## 76. Koza Hanı revak döşemesi düzeltmesi (3D; v18, aynı sürüm)
+
+29 Ekim 2026. Koza Hanı v18 onaylandı; odalar açılmadı, kart `parcalar.md`'de hazır.
+- `Revak_Doseme`: turuncu karo yerine cilalı gri-bej taş plak. Renkler ortak paletin nötr taş rolleri (Bedesten taş döşemesi); 0,40 m plaklar düzensiz tonlu. Döşeme ayak diplerine kadar tam.
+- Enine kemer bandı 0,45 → 0,50 m (fotoğraf 05: yaklaşık iki sıra tuğla).
+- Harita ↔ sunum en çok %0,093; harita v17 ↔ v18 en çok %0,005. Doğrulamada c ve d geçti.
+- `ic_detay.png`'deki alt kat revak karesi yenilendi; `modelleri-gom.py` çalıştırıldı.

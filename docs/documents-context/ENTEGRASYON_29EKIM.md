@@ -405,7 +405,7 @@ Figma'da olup prototipte eksik olan dört ekran eklendi; ayrıntı ve ölçüler
   - `v26`/`v27`, `v14`, `v06`, `v07` (cami), `v05` (hamam/emir), `v02`.
 - `design/harita/akar-harita-onizleme*.html`: tasarım aracı (ışık/renk paneli), ürün değil.
 - `design/test-redmi9t-v2/_promptlar/`: 3D ve içerik ajanlarına verilen iş emirleri; kayıt amaçlı.
-- `design/test-redmi9t-v2/temalar.css` içindeki deneme tonları (`data-ton=sicak|il|bant`) ve kullanılmayan `tema-vakif.css`, `ornek-vasa.html`, `harita/akar-style-galeri.json`, `akar-style-minyatur.json` (Git dışında).
+- `design/test-redmi9t-v2/temalar.css` içindeki deneme tonları (`data-ton=sicak|il|bant`) (`tema-vakif.css`, `ornek-vasa.html`, `harita/akar-style-galeri.json`, `akar-style-minyatur.json` 30 Ekim 2026'da silindi).
 - `eserler/_kutuphane/renk_ao_v3/`: bir kerelik geçiş; kullanılmaz.
 - `.gitignore`'da olanlar ekip Drive'ında:
   - `kontrol/`, `blend/`, `build/`, `ref/`;

@@ -175,7 +175,7 @@
    "Duvar_Almasik": "duvar",
    "Revak_Siva": "krem_siva",
    "Revak_Tugla": "tugla",
-   "Revak_Karo": "tugla",
+   "Revak_Karo": "ic_zemin_tas",
    "Seki_Ahsap": "mahfil_ceviz"
   },
   "orhan-bey-kulliyesi": {
@@ -471,11 +471,13 @@
   ],
   "malzemeler": [
    "Ic_Sokak (zemin dokusu ortası)",
-   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)",
+   "Revak_Karo (koza-han v18, revak taş plakları)"
   ],
   "uyeler": [
    "yildirim-bayezid-bedesteni",
-   "orhan-gazi-turbesi"
+   "orhan-gazi-turbesi",
+   "koza-han"
   ],
   "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
  },
@@ -486,11 +488,13 @@
   ],
   "malzemeler": [
    "Ic_Sokak (açık levhalar)",
-   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)",
+   "Revak_Karo (koza-han v18, revak taş plakları)"
   ],
   "uyeler": [
    "yildirim-bayezid-bedesteni",
-   "orhan-gazi-turbesi"
+   "orhan-gazi-turbesi",
+   "koza-han"
   ],
   "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
  },
@@ -501,11 +505,13 @@
   ],
   "malzemeler": [
    "Ic_Sokak (koyu levhalar)",
-   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)",
+   "Revak_Karo (koza-han v18, revak taş plakları)"
   ],
   "uyeler": [
    "yildirim-bayezid-bedesteni",
-   "orhan-gazi-turbesi"
+   "orhan-gazi-turbesi",
+   "koza-han"
   ],
   "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
  },
@@ -516,11 +522,13 @@
   ],
   "malzemeler": [
    "Ic_Sokak (derz)",
-   "Turbe_Ic_Atlas (türbe döşemesi, v06)"
+   "Turbe_Ic_Atlas (türbe döşemesi, v06)",
+   "Revak_Karo (koza-han v18, revak taş plakları)"
   ],
   "uyeler": [
    "yildirim-bayezid-bedesteni",
-   "orhan-gazi-turbesi"
+   "orhan-gazi-turbesi",
+   "koza-han"
   ],
   "not": "29 Ekim 2026, bedesten v11: iç mekân ayrıntısı (yalnız sunum GLB'si)."
  },

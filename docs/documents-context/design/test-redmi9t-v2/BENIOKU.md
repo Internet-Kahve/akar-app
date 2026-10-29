@@ -43,14 +43,14 @@
 - Çıkış noktası harita kartının buzlu ve cam seçenekleri. Haritanın ve sayfanın üstünde yüzen her şey (arama, etiketler, düğmeler, alt sayfa, kartlar, masaüstü üst çubuk ve panel, okuma sekmeleri, görev ve profil kutuları) cam yüzey: `--cam` + `backdrop-filter`; tam sayfalar renk lekeli zeminde (`--zemin`). Bulanıklığı desteklemeyen tarayıcıda düz yarı saydam.
 - Renk: lacivert (#25477B) yerine petrol ailesi ana renk (buzlu #1E5B6E, cam turkuaz #5BC2C4), vurgu altın; ara tonlar sis, adaçayı, kum, gök (buzlu) · gece petrol, turkuaz, altın (cam). Güven etiketleri ve 3D sahne zemini de temaya uyar.
 - Harita: `design/harita/akar-style-buzlu.json`, `akar-style-cam.json` (sunucu.sh paylaşır). Harita kartı temaya göre kendiliğinden buzlu / cam; `?kart=cam|perde|buzlu|yok` ile değişir (`akar.kart`).
-- Önceki denemeler (galeri, vasa, minyatür) kaldırıldı; `ornek-vasa.html`, `tema-vakif.css`, `harita/akar-style-galeri.json` ve `akar-style-minyatur.json` kullanılmıyor (silinmedi).
+- Önceki denemeler (galeri, vasa, minyatür, krem «Vakıf») kaldırıldı; dosyaları (`ornek-vasa.html`, `tema-vakif.css`, `harita/akar-style-galeri.json`, `akar-style-minyatur.json`) 30 Ekim 2026'da silindi.
 
 ## 29 Ekim 2026 · logo ve eser başlığı bandı
 
 - **Logo:** `design/logo/logo.png` (800 px kopyası `logo-web.png`, sunucu `logo.png` olarak paylaşır): açılış ekranı, masaüstü üst çubuk, karşılama kartı.
 - **Eser detayı (masaüstü panel):** başlık «Eser hakkında» kapağıyla aynı bantta: şehrin rengi, silik desen (sağ üstten solar), fotoğraf, ad ve tarih. «‹ Harita» düğmesi de bandın içinde. `app.css` → `.eb-bas`.
 - **Altın desen şeridi kaldırıldı** («Eser hakkında» kapağının altındaki sarı sıra; bandın dibinde yarım kalıyordu).
-- Krem/kemerli «Vakıf» teması denendi, beğenilmedi; bağlantısı kaldırıldı (`tema-vakif.css` kullanılmıyor).
+- Krem/kemerli «Vakıf» teması denendi, beğenilmedi; kaldırıldı (`tema-vakif.css` 30 Ekim'de silindi).
 
 ## v2 · 27 Ekim 2026: Ulucami v27 ve «Kubbeleri kaldır»
 
