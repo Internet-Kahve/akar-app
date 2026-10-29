@@ -97,8 +97,13 @@ Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → y
 
 ## 2. 3D modeller: dosya kuralları
 
-- **Eser başına tek model (§11.2) ile uyum.** Prototip haritada hafif dosyayı (`<glb>.glb`), detayda sunum dosyasını (`_sunum`) kullanıyor. Ürünün kararı tek dosya. Öneri: yalnız `_sunum` yüklensin; haritada sunum parçaları çizilmesin (0969e22 bunu yapıyor).
-  - Ancak sabit liste (`Avlu_Agac`, `Avlu_Cim`) yerine kural kullanılsın: `Zemin*`, `Cevre*`, `Olcek*` ile başlayan parçalar, artı eserin `model.json → sunum_ek` listesi. Yeni eserde liste yeniden yazılmak zorunda kalmaz.
+- **Harita için hafif dosya, detay için sunum dosyası (29 Ekim; önceki «yalnız _sunum yüklensin» önerisinin yerine geçer).** Her eserde iki dosya var:
+  - `<glb>.glb` (harita): yalnız yapı;
+  - `<glb>_sunum.glb` (detay): yapı + zemin kaidesi, ağaçlar, ölçek insanları.
+  - Haritada aynı anda 7–10 model yüklendiği için harita dosyası küçük olmalı. Bugün sunum dosyası harita dosyasından %10–25 büyük (Ulucami 786 → 865 KB, Bedesten 202 → 246 KB). Haritada sunum dosyası yüklenip ekler gizlenirse bu fark boşuna indirilir.
+  - **Öneri:** Model kaydına ikinci bir dosya alanı (`model.src` harita, `model.presentationSrc` detay) ya da `kind=model` için `variant: map | presentation`. Panelde iki dosya yüklenir. Yalnız biri varsa ikisinde de o kullanılır.
+  - Parça adları iki dosyada birebir aynı (yapı parçaları); `anchorNode` ve vurgular ikisinde de çalışır.
+  - Bu, §11.2 «eser başına tek model» kararını değiştirir; ekip kararı gerekir. Değişmezse `_sunum` yüklensin, haritada ekler gizlensin (0969e22). Daha yavaş olur ama çalışır.
 - **AO dokusu ikinci UV'de** (`occlusionTexture.texCoord = 1`). three.js `GLTFLoader` bunu kendiliğinden uygular. Bir sıkıştırma ya da temizlik adımı `TEXCOORD_1`'i ya da `occlusionTexture`'ı silerse köşe kararması kaybolur.
 - **Modellerde artık şunlar yok:** köşe rengi (`COLOR_0`) ve `Yer_Golgesi` düzlemi.
   - Yer gölgesini istemci çiziyor (bkz. 3).
