@@ -358,6 +358,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
     if (b.sourceId) story.sourceId = b.sourceId;
     if (b.showCard !== null) story.showCard = b.showCard;
     if (b.camera) story.camera = b.camera;
+    if (b.interior) story.interior = true;
     return story;
   });
 
@@ -390,7 +391,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
   if (s.relatedSiteId) site.relatedSiteId = s.relatedSiteId;
   if (s.coverMediaId) site.coverPhotoId = s.coverMediaId;
   const model = modelOf(a);
-  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust };
+  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups };
   return site;
 }
 
@@ -480,6 +481,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       showCard: b.showCard,
       cardId: b.cardId,
       camera: b.camera,
+      interior: b.interior,
       highlights: b.highlights,
       audioMediaId: b.audioMediaId,
       audioEnMediaId: b.audioEnMediaId,
@@ -530,6 +532,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       trust: m.trust,
       parts: m.parts,
       triangles: m.triangles,
+      coverGroups: m.coverGroups,
     })),
     sources: sourceList.map((r) => ({
       id: r.id,
@@ -1200,6 +1203,7 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
             showCard: b.showCard ?? null,
             cardId: b.cardId,
             camera: b.camera ? toPose(b.camera) : null,
+            interior: b.interior,
             highlights: [...new Set(b.highlights)],
             audioMediaId: b.audioMediaId,
             audioEnMediaId: b.audioEnMediaId,

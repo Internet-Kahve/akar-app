@@ -467,6 +467,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         showCard: b.showCard,
         cardId: b.cardId,
         camera: b.camera,
+        interior: b.interior,
         highlights: b.highlights,
         audioMediaId: b.audioMediaId,
         audioEnMediaId: b.audioEnMediaId,
@@ -522,6 +523,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         trust: m.trust,
         parts: m.parts,
         triangles: m.triangles,
+        coverGroups: m.coverGroups,
       })),
       sources: siteSourceList.map((s) => ({
         id: s.id,

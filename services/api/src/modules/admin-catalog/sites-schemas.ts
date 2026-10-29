@@ -206,6 +206,7 @@ const StoryInput = z.object({
   showCard: z.boolean().nullable().optional(),
   cardId: Id.nullable().default(null).describe("Paylaşılan kart"),
   camera: CameraPoseInput.nullable().default(null),
+  interior: z.boolean().default(false).describe("«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"),
   highlights: z.array(text(200).min(1)).max(50).default([]).describe("Eserin 3B modelindeki parça adları"),
   audioMediaId: Id.nullable().default(null).describe("kind=audio medya (TR)"),
   audioEnMediaId: Id.nullable().default(null).describe("kind=audio medya (EN)"),

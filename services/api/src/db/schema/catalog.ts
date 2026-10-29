@@ -308,6 +308,8 @@ export const storyBlocks = pgTable(
     cardId: text("card_id").references(() => cards.id),
     /** Camera pose ("Açı"); null keeps the previous sentence's pose. */
     camera: jsonb("camera").$type<CameraPose>(),
+    /** "İç mekân (3D)": the model's cover groups lift for this sentence. */
+    interior: boolean("interior").notNull().default(false),
     highlights: text("highlights").array().notNull().default(sql`'{}'::text[]`),
     audioMediaId: text("audio_media_id").references(() => media.id),
     audioEnMediaId: text("audio_en_media_id").references(() => media.id),

@@ -1113,6 +1113,11 @@ export function AkarApp() {
                             .findLast((s) => s.camera)?.camera
                         : undefined
                     }
+                    interior={
+                      view === "story"
+                        ? (site.stories[storyIndex]?.interior ?? false)
+                        : undefined
+                    }
                     flow={
                       !live &&
                       view === "story" &&

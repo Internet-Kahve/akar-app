@@ -426,9 +426,10 @@ test("story blocks must point at real photo, source, card and audio, and highlig
   const base = `/v1/admin/sites/${draft.id}`;
   await send("PUT", `${base}/model`, { mediaId: "m-1" });
   const camera = { target: "kubbe", azimuthDeg: 20, elevationDeg: 55, distance: 0.62 };
-  const kept = await send("PUT", `${base}/stories`, { blocks: [story({ highlights: ["kubbe"], camera })] });
+  const kept = await send("PUT", `${base}/stories`, { blocks: [story({ highlights: ["kubbe"], camera, interior: true })] });
   assert.deepEqual(kept.stories.map((s) => s.highlights), [["kubbe"]]);
   assert.deepEqual(kept.stories.map((s) => s.camera), [camera]);
+  assert.deepEqual(kept.stories.map((s) => s.interior), [true]);
   const rowsBefore = (await auditOf(draft.id)).length;
 
   const bad = await call<ErrorBody>("PUT", `${base}/stories`, editor, {

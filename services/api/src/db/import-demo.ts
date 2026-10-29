@@ -56,6 +56,8 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       const target = story.camera?.target;
       if (target && !site.model.parts.includes(target)) throw new Error(`Camera target is not a model part: ${site.id} ${story.id} ${target}`);
     });
+    const missing = (site.model.coverGroups ?? []).flat().filter((part) => !site.model.parts.includes(part));
+    if (missing.length) throw new Error(`Cover group parts are not model parts: ${site.id} ${missing.join(", ")}`);
   }
   const unique = new Map([...files.values()].map((f) => [f.key, f]));
   const report = { sites: manifest.sites.length, objects: unique.size, bytes: [...unique.values()].reduce((n, f) => n + f.body.length, 0), applied: apply };

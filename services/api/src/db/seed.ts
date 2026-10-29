@@ -87,6 +87,7 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
                 trust: site.model.trust,
                 bytes: site.model.bytes,
                 parts: site.model.parts,
+                coverGroups: site.model.coverGroups ?? [],
               },
             ]
           : []),
@@ -150,6 +151,7 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
             showCard: b.showCard ?? null,
             highlights: b.highlights ?? [],
             camera: b.camera ?? null,
+            interior: b.interior ?? false,
           })),
         );
       }

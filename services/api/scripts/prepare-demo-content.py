@@ -69,7 +69,7 @@ for entry in editorial.eserleri_bul():
         stories.append(dict(id=f'{sid}-story-{item["no"]}', title=photo['title'], text=item['metin'],
                             simple=item['metin'], trust=trust(item['guven']), photoId=photo['id'],
                             sourceId=source(item['kaynak']), showCard=item['kart'], highlights=item['vurgu'],
-                            **({'camera': camera(item['aci'])} if item['aci'] else {})))
+                            interior=item['ic'], **({'camera': camera(item['aci'])} if item['aci'] else {})))
     sections = []
     for section in editorial.hakkinda_oku(folder):
         name = section['baslik']
@@ -95,7 +95,7 @@ for entry in editorial.eserleri_bul():
     east, north = shift.get('dogu', 0), shift.get('kuzey', 0)
     coords = [entry['lon'] + east/(111320*math.cos(math.radians(entry['lat']))), entry['lat'] + north/110540]
     model = dict(name=entry['ad']+' · temsili 3B model', file=f'eserler/{folder}/3d/export/{model_info["glb"]}_sunum.glb',
-                 src='', bytes=0, parts=[], trust='representative')
+                 src='', bytes=0, parts=[], trust='representative', coverGroups=model_info.get('ortu_gruplari') or [])
     gallery = sorted((p for p in photos if p['galleryPosition'] is not None), key=lambda p:p['galleryPosition'])
     result['sites'].append(dict(id=sid, name=entry.get('uzun_ad') or entry['ad'], city='Bursa',
         district='Hisar' if folder=='orhan-gazi-turbesi' else 'Hanlar Bölgesi', year=entry['yil'], architect='—',

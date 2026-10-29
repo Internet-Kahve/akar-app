@@ -3928,6 +3928,20 @@ td small {
   text-align: center;
   z-index: 1;
 }
+/* Above the credit line, which spans the scene's width. */
+.model-inside {
+  position: absolute;
+  right: 18px;
+  bottom: 62px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn.model-inside[aria-pressed="true"] {
+  background: var(--green, #2e573e);
+  color: white;
+}
 .scene-media-switch {
   position: absolute;
   top: 18px;

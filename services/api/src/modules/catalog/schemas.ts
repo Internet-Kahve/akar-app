@@ -150,6 +150,7 @@ export const StoryBlockDto = z.object({
   showCard: z.boolean().nullable(),
   cardId: z.string().nullable().describe("Cümlede modelin üstünde gösterilen kart (SiteDetail.cards)"),
   camera: CameraPoseDto.nullable().describe("Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"),
+  interior: z.boolean().describe("«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"),
   highlights: z.array(z.string()),
   audioMediaId: z.string().nullable().describe("Türkçe ses kaydı (SiteDetail.media, kind=audio)"),
   audioEnMediaId: z.string().nullable().describe("İngilizce ses kaydı (SiteDetail.media, kind=audio)"),
@@ -169,6 +170,9 @@ export const MediaDto = z.object({
   trust: TrustSchema,
   parts: z.array(z.string()),
   triangles: z.number().int().nullable().describe("3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"),
+  coverGroups: z
+    .array(z.array(z.string()))
+    .describe("«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"),
 });
 
 export const SourceDto = z.object({

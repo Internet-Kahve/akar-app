@@ -823,6 +823,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -856,6 +860,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -1260,6 +1265,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -1275,7 +1290,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -1804,6 +1820,10 @@
                                   ],
                                   "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                                 },
+                                "interior": {
+                                  "type": "boolean",
+                                  "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                                },
                                 "highlights": {
                                   "type": "array",
                                   "items": {
@@ -1837,6 +1857,7 @@
                                 "showCard",
                                 "cardId",
                                 "camera",
+                                "interior",
                                 "highlights",
                                 "audioMediaId",
                                 "audioEnMediaId"
@@ -2241,6 +2262,16 @@
                                     }
                                   ],
                                   "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                                },
+                                "coverGroups": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -2256,7 +2287,8 @@
                                 "sourceId",
                                 "trust",
                                 "parts",
-                                "triangles"
+                                "triangles",
+                                "coverGroups"
                               ],
                               "additionalProperties": false
                             },
@@ -4056,6 +4088,10 @@
                                   ],
                                   "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                                 },
+                                "interior": {
+                                  "type": "boolean",
+                                  "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                                },
                                 "highlights": {
                                   "type": "array",
                                   "items": {
@@ -4089,6 +4125,7 @@
                                 "showCard",
                                 "cardId",
                                 "camera",
+                                "interior",
                                 "highlights",
                                 "audioMediaId",
                                 "audioEnMediaId"
@@ -4493,6 +4530,16 @@
                                     }
                                   ],
                                   "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                                },
+                                "coverGroups": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -4508,7 +4555,8 @@
                                 "sourceId",
                                 "trust",
                                 "parts",
-                                "triangles"
+                                "triangles",
+                                "coverGroups"
                               ],
                               "additionalProperties": false
                             },
@@ -6259,6 +6307,16 @@
                       ],
                       "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
                     },
+                    "coverGroups": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -6310,6 +6368,7 @@
                     "trust",
                     "parts",
                     "triangles",
+                    "coverGroups",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -6396,6 +6455,16 @@
                       ],
                       "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
                     },
+                    "coverGroups": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -6447,6 +6516,7 @@
                     "trust",
                     "parts",
                     "triangles",
+                    "coverGroups",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -6976,6 +7046,16 @@
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
                           },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
                           "bytes": {
                             "anyOf": [
                               {
@@ -7027,6 +7107,7 @@
                           "trust",
                           "parts",
                           "triangles",
+                          "coverGroups",
                           "bytes",
                           "partsStatus",
                           "uploadedBy",
@@ -7360,6 +7441,16 @@
                       ],
                       "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
                     },
+                    "coverGroups": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -7411,6 +7502,7 @@
                     "trust",
                     "parts",
                     "triangles",
+                    "coverGroups",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -8520,6 +8612,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -8553,6 +8649,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -8957,6 +9054,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -8972,7 +9079,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -9739,6 +9847,10 @@
                                   ],
                                   "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                                 },
+                                "interior": {
+                                  "type": "boolean",
+                                  "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                                },
                                 "highlights": {
                                   "type": "array",
                                   "items": {
@@ -9772,6 +9884,7 @@
                                 "showCard",
                                 "cardId",
                                 "camera",
+                                "interior",
                                 "highlights",
                                 "audioMediaId",
                                 "audioEnMediaId"
@@ -10176,6 +10289,16 @@
                                     }
                                   ],
                                   "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                                },
+                                "coverGroups": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -10191,7 +10314,8 @@
                                 "sourceId",
                                 "trust",
                                 "parts",
-                                "triangles"
+                                "triangles",
+                                "coverGroups"
                               ],
                               "additionalProperties": false
                             },
@@ -10922,6 +11046,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -10955,6 +11083,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -11359,6 +11488,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -11374,7 +11513,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -12271,6 +12411,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -12304,6 +12448,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -12708,6 +12853,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -12723,7 +12878,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -13474,6 +13630,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -13507,6 +13667,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -13911,6 +14072,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -13926,7 +14097,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -14722,6 +14894,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -14755,6 +14931,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -15159,6 +15336,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -15174,7 +15361,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -16020,6 +16208,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -16053,6 +16245,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -16457,6 +16650,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -16472,7 +16675,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -17230,6 +17434,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -17263,6 +17471,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -17667,6 +17876,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -17682,7 +17901,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -18491,6 +18711,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -18524,6 +18748,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -18928,6 +19153,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -18943,7 +19178,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -19398,6 +19634,11 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "interior": {
+                          "default": false,
+                          "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar",
+                          "type": "boolean"
                         },
                         "highlights": {
                           "default": [],
@@ -19872,6 +20113,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -19905,6 +20150,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -20309,6 +20555,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -20324,7 +20580,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -21128,6 +21385,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -21161,6 +21422,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -21565,6 +21827,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -21580,7 +21852,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -22448,6 +22721,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -22481,6 +22758,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -22885,6 +23163,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -22900,7 +23188,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -23617,6 +23906,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -23650,6 +23943,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -24054,6 +24348,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -24069,7 +24373,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
@@ -24786,6 +25091,10 @@
                             ],
                             "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
                           },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
                           "highlights": {
                             "type": "array",
                             "items": {
@@ -24819,6 +25128,7 @@
                           "showCard",
                           "cardId",
                           "camera",
+                          "interior",
                           "highlights",
                           "audioMediaId",
                           "audioEnMediaId"
@@ -25223,6 +25533,16 @@
                               }
                             ],
                             "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -25238,7 +25558,8 @@
                           "sourceId",
                           "trust",
                           "parts",
-                          "triangles"
+                          "triangles",
+                          "coverGroups"
                         ],
                         "additionalProperties": false
                       },
