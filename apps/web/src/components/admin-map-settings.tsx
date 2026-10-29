@@ -13,7 +13,12 @@ function check(zoom: string, models: string): string {
   const m = Number(models);
   if (zoom.trim() === "" || !Number.isFinite(z) || z < ZOOM.min || z > ZOOM.max)
     return `Yakınlaştırma eşiği ${ZOOM.min} ile ${ZOOM.max} arasında olmalı.`;
-  if (models.trim() === "" || !Number.isInteger(m) || m < MODELS.min || m > MODELS.max)
+  if (
+    models.trim() === "" ||
+    !Number.isInteger(m) ||
+    m < MODELS.min ||
+    m > MODELS.max
+  )
     return `Model sayısı ${MODELS.min} ile ${MODELS.max} arasında tam sayı olmalı.`;
   return "";
 }
@@ -28,8 +33,12 @@ export function AdminMapSettings({
   onSave: (settings: MapSettings) => Promise<MapSettings>;
   live: boolean;
 }) {
-  const [zoom, setZoom] = useState(String(settings.modelMinZoom));
-  const [models, setModels] = useState(String(settings.maxVisibleModels));
+  // Settings arrive after the catalog and refresh when the tab regains focus. Only edited fields
+  // belong to the draft; untouched fields must keep following those server reads.
+  const [zoomDraft, setZoom] = useState<string | null>(null);
+  const [modelsDraft, setModels] = useState<string | null>(null);
+  const zoom = zoomDraft ?? String(settings.modelMinZoom);
+  const models = modelsDraft ?? String(settings.maxVisibleModels);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -43,12 +52,12 @@ export function AdminMapSettings({
     setError("");
     setMessage("");
     try {
-      const saved = await onSave({
+      await onSave({
         modelMinZoom: Number(zoom),
         maxVisibleModels: Number(models),
       });
-      setZoom(String(saved.modelMinZoom));
-      setModels(String(saved.maxVisibleModels));
+      setZoom(null);
+      setModels(null);
       setMessage("Harita ayarları kaydedildi.");
     } catch (reason) {
       setError(describeError(reason, "Harita ayarları kaydedilemedi."));
@@ -87,6 +96,7 @@ export function AdminMapSettings({
             max={MODELS.max}
             step={1}
             value={models}
+            disabled={saving}
             onChange={(event) => setModels(event.target.value)}
           />
           <small>
@@ -103,6 +113,7 @@ export function AdminMapSettings({
             max={ZOOM.max}
             step={0.5}
             value={zoom}
+            disabled={saving}
             onChange={(event) => setZoom(event.target.value)}
           />
           <small>Harita bu yakınlaştırmadan itibaren model yükler.</small>

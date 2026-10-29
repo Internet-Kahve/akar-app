@@ -344,6 +344,9 @@ export class MapModelLayer implements CustomLayerInterface {
         return;
       }
       this.loading.delete(site.id);
+      // Pose and building overrides can change while the same file is in flight. Reconcile keeps
+      // that download, so place its result from the current catalog rather than the request's copy.
+      site = this.sites.get(site.id)!;
       stripScenery(gltf.scene);
       saturate(gltf.scene, site.light.saturation);
       const scene = new THREE.Scene();
