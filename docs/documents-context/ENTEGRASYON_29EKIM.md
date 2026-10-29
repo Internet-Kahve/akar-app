@@ -236,6 +236,14 @@ Yerleşim girilirken kontrol edilecek yerler:
   - Hatay, Konya, Kütahya: «Yakında».
 - `cities` tablosu bugün yalnız `id` ve `name` taşıyor.
 
+- **Küre ortalaması (29 Ekim):**
+  - MapLibre'de `easeTo` / `flyTo`'ya verilen `padding` kalıcıdır. Masaüstünde eser kartı için verilen sağ boşluk (380 px), eser bırakılınca da kalıyor ve küreyi sola kaydırıyordu.
+  - Prototip iki yerde sıfırlıyor: şehirlere uçarken (`padding:0`) ve zoom 9'un altına inildiğinde (`zoomend`).
+  - Ürün de eser seçimini aynı yolla yapıyorsa aynı sorun çıkar.
+- **Kürenin arkası:** tuval kürenin dışında saydam. Harita kabının arka planı 3D sahneyle aynı:
+  - renkler `kimlik.sahne_ust` → `sahne_alt`;
+  - ortası açık, kenarlar koyu elips geçiş.
+
 ### 5.7 Geçmişi Gör eki
 - **Kaynak:** `eserler/<eser>/gecmisi-gor/`:
   - `bugunku-esler.json`: bugünkü eş fotoğraf;
@@ -263,6 +271,48 @@ Yerleşim girilirken kontrol edilecek yerler:
   - Figma `akar-yeni`: «Amblem» 1:913, «Desenler» 1:863–958, «D · Eser detay / 3D yükleniyor» 1:4794, «Bileşen · Durum ekranları» 1:7615;
   - prototip `index.html` `#acilis`, `app.js` `yuklemeKart` / `glbAl`.
 - **Desen ve renk şehir kaydından gelir:** `kimlik.desen` (`design/desenler/*.svg`), `kimlik.zemin`, `kimlik.desen_renk`. Kodda şehir adı ya da desen yazılmaz.
+
+### 5.10 Arayüz ayrıntıları (prototipte var, Figma 29 Ekim'de güncellendi)
+
+Figma `akar-yeni`'de değişen her ekranın altında «29 Ekim: …» notu var. Figma'da «29 Ekim» diye aramak bütün listeyi verir.
+
+**Eser detayı · galeri**
+- Her fotoğrafta sağ altta «büyüt» düğmesi (30 px daire, lucide `expand`).
+- Fotoğrafa dokununca ışık kutusu açılır; altında künye «başlık · kaynak».
+- Yana kaydırınca soldaki boşluk sabit: `scroll-padding-inline` mobilde 16 px, masaüstünde 24 px.
+
+**Eser detayı · 3D**
+- Sahne zemini şehir renginde geçiş (bkz. 3).
+- Fare üstündeyken (yalnız masaüstü) parçanın kartındaki bütün parçalar hafif sarı yanar. Ayrıca imleç el olur ve ipucu kart başlığını gösterir.
+- Tıklanınca aynı grup seçilir (bkz. 5.1).
+
+**«Eser hakkında»**
+- Kapak:
+  - envanterin açılış fotoğrafı (`eser.json → hakkinda_kapak`);
+  - masaüstünde geri düğmesi kapağın sol üstünde; yarı saydam koyu hap, «‹ Ulucami».
+- Kapak geçilince sekme çubuğunun solunda geri düğmesi:
+  - masaüstü: «‹ Ulucami» hapı (beyaz, şehir renginde çerçeve);
+  - mobil: yalnız ‹ simgeli 40 px yuvarlak düğme.
+- Sekme şeridi taşınca kenarlarda solma. Sol solma yalnız kaydırılmışken görünür. Masaüstünde ‹ › okları var.
+- Bölümde başlık fotoğraftan önce gelir.
+- Alıntının üstünde altın süs yok.
+- Fotoğraflar kırpılmaz. Oran, görsel yüklenince gerçek boyutundan alınır (`--oran`).
+  - Şerit: aynı yükseklik, genişlik orana göre, dikeyde ortalı.
+  - Sağ altta «1 / 4» sayacı, masaüstünde ‹ › okları, kenarlarda solma, her fotoğrafta büyüt düğmesi.
+- «Tam metni oku» kapalıyken özet paragrafları tekrar etmez (`.hk-ozette`).
+- Masaüstü ölçüleri:
+  - yapışık 3D/fotoğraf alanı yüksekliği en çok `min(100vh − 112 px, 620 px)`;
+  - iki sütun arası 48 px;
+  - içerik en çok 1360 px.
+
+**«İçini göster» (yakında üç eser daha)**
+- Bedesten, Orhan Gazi Türbesi ve Orhan Bey Camii'ne iç mekân ekleniyor (`_promptlar/PROMPT_icini_goster_3_eser.md`).
+- Kod aynı kalır. Düğme, eserin `model.json → ortu_gruplari` alanı dolunca görünür. Ürün de koşulu veriden okumalı; düğmeyi «yalnız Ulucami» diye kodda açmasın.
+- Orhan Bey Hamamı'na iç mekân yapılmayacak.
+
+**Kaynak dosyalar (prototip):**
+- `design/test-redmi9t-v2/app.js`: `Sahne3D`, `hkSerit`, `hkSekmeOk`, `yuklemeKart`, `glbAl`, `sehirlereUzaklas`;
+- `app.css`: `.hk-*`, `.galeri-f`, `.buyut-ic`, `.yukleme`, `#acilis`.
 
 ## 6. Repoda olup ürüne alınmayacaklar
 
