@@ -77,7 +77,7 @@ const mediaRow = (id: string, kind: MediaInsert["kind"], over: Partial<MediaInse
   trust: "representative",
   ...over,
 });
-const pose = { label: "Giriş", azimuthDeg: 45, elevationDeg: 20, distanceM: 30 };
+const pose = { label: "Giriş", target: null, azimuthDeg: 45, elevationDeg: 20, distance: 0.6 };
 
 /**
  * Content the domain model cannot express (periods, audio, cards, sections, archive images). Matrix:

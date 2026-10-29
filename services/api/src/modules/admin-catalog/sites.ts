@@ -357,6 +357,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
     if (b.photoId) story.photoId = b.photoId;
     if (b.sourceId) story.sourceId = b.sourceId;
     if (b.showCard !== null) story.showCard = b.showCard;
+    if (b.camera) story.camera = b.camera;
     return story;
   });
 
@@ -835,8 +836,8 @@ async function mutate(
 }
 
 /** Zod's optional `label` reads `undefined`; the stored pose only carries the key when set. */
-function toPose({ label, azimuthDeg, elevationDeg, distanceM }: CameraPoseInput): CameraPose {
-  return label === undefined ? { azimuthDeg, elevationDeg, distanceM } : { label, azimuthDeg, elevationDeg, distanceM };
+function toPose({ label, ...pose }: CameraPoseInput): CameraPose {
+  return label === undefined ? pose : { label, ...pose };
 }
 
 /** Creates a draft (editor v2, Tier 1 unless told otherwise); 409 when the city already has the same name and district. */
@@ -1177,6 +1178,8 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
         if (b.cardId && !cardSet.has(b.cardId)) errors.add(`blocks.${i}.cardId`, "Kart bulunamadı.");
         const unknownParts = hasModel ? b.highlights.filter((h) => !parts.has(h)) : [];
         if (unknownParts.length) errors.add(`blocks.${i}.highlights`, `Modelde olmayan parça: ${unknownParts.join(", ")}.`);
+        if (hasModel && b.camera?.target && !parts.has(b.camera.target))
+          errors.add(`blocks.${i}.camera.target`, `Modelde olmayan parça: ${b.camera.target}.`);
       });
       errors.throwIfAny();
 

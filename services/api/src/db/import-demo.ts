@@ -53,6 +53,8 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     site.stories.forEach((story) => {
       // Editorial group names may be prefixes, while GLB nodes carry numbered suffixes.
       story.highlights = [...new Set((story.highlights ?? []).flatMap((prefix) => site.model.parts.filter((part) => part === prefix || part.startsWith(prefix + "_"))))];
+      const target = story.camera?.target;
+      if (target && !site.model.parts.includes(target)) throw new Error(`Camera target is not a model part: ${site.id} ${story.id} ${target}`);
     });
   }
   const unique = new Map([...files.values()].map((f) => [f.key, f]));

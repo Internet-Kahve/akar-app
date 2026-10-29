@@ -425,20 +425,23 @@ test("story blocks must point at real photo, source, card and audio, and highlig
   const draft = await newDraft("Hikâye Hanı");
   const base = `/v1/admin/sites/${draft.id}`;
   await send("PUT", `${base}/model`, { mediaId: "m-1" });
-  const kept = await send("PUT", `${base}/stories`, { blocks: [story({ highlights: ["kubbe"] })] });
+  const camera = { target: "kubbe", azimuthDeg: 20, elevationDeg: 55, distance: 0.62 };
+  const kept = await send("PUT", `${base}/stories`, { blocks: [story({ highlights: ["kubbe"], camera })] });
   assert.deepEqual(kept.stories.map((s) => s.highlights), [["kubbe"]]);
+  assert.deepEqual(kept.stories.map((s) => s.camera), [camera]);
   const rowsBefore = (await auditOf(draft.id)).length;
 
   const bad = await call<ErrorBody>("PUT", `${base}/stories`, editor, {
     blocks: [
       story({ highlights: ["minare"] }),
-      story({ photoId: "yok", sourceId: "yok", cardId: "yok", audioMediaId: "ph-1", audioEnMediaId: "au-1", highlights: ["kubbe", "avlu"] }),
+      story({ photoId: "yok", sourceId: "yok", cardId: "yok", audioMediaId: "ph-1", audioEnMediaId: "au-1", highlights: ["kubbe", "avlu"], camera: { ...camera, target: "avlu" } }),
     ],
   });
   assert.equal(bad.res.statusCode, 400);
   assert.equal(bad.body.error.code, "VALIDATION_FAILED");
   assert.deepEqual(Object.keys(bad.body.error.fieldErrors).sort(), [
     "blocks.1.audioMediaId",
+    "blocks.1.camera.target",
     "blocks.1.cardId",
     "blocks.1.highlights",
     "blocks.1.photoId",
@@ -467,9 +470,9 @@ test("the model link is replaced, not added, and model and photo links keep vali
   const base = `/v1/admin/sites/${draft.id}`;
   const links = async () => (await app.deps.db.select().from(siteMedia).where(eq(siteMedia.siteId, draft.id)).orderBy(asc(siteMedia.position))).map((l) => l.mediaId);
 
-  let site = await send("PUT", `${base}/model`, { mediaId: "m-1", openingCamera: { azimuthDeg: 30, elevationDeg: 15, distanceM: 40 } });
+  let site = await send("PUT", `${base}/model`, { mediaId: "m-1", openingCamera: { azimuthDeg: 30, elevationDeg: 15, distance: 0.8 } });
   assert.equal(site.modelMediaId, "m-1");
-  assert.deepEqual(site.openingCamera, { azimuthDeg: 30, elevationDeg: 15, distanceM: 40 });
+  assert.deepEqual(site.openingCamera, { target: null, azimuthDeg: 30, elevationDeg: 15, distance: 0.8 });
   assert.equal(site.has.model, true);
 
   site = await send("PUT", `${base}/media`, { photoIds: ["ph-1", "ph-2", "ph-3"], coverPhotoId: "ph-2" });
@@ -491,7 +494,7 @@ test("the model link is replaced, not added, and model and photo links keep vali
     await call<ErrorBody>("PUT", `${base}/media`, editor, { photoIds: ["ph-1"], coverPhotoId: "ph-2" }),
     await call<ErrorBody>("PUT", `${base}/media`, editor, { photoIds: ["m-1"], coverPhotoId: null }),
     await call<ErrorBody>("PUT", `${base}/media`, editor, { photoIds: ["ph-1", "ph-1"], coverPhotoId: "ph-1" }),
-    await call<ErrorBody>("PUT", `${base}/model`, editor, { mediaId: null, openingCamera: { azimuthDeg: 1, elevationDeg: 1, distanceM: 1 } }),
+    await call<ErrorBody>("PUT", `${base}/model`, editor, { mediaId: null, openingCamera: { azimuthDeg: 1, elevationDeg: 1, distance: 1 } }),
   ];
   assert.deepEqual(refused.map((r) => r.res.statusCode), [400, 400, 400, 400]);
   assert.ok(refused[0]!.body.error.fieldErrors.coverPhotoId);
@@ -565,7 +568,7 @@ test("archive images keep their ids when saved again, so route stops that point 
   const first = await send("PUT", base, {
     images: [
       { mediaId: "ph-1", caption: "Han, 1890'lar", dateLabel: "1890'lar", sourceId: "src-vgm", trust: "verified" },
-      { mediaId: "ph-2", presentMediaId: "ph-3", trust: "inferred", camera: { azimuthDeg: 45, elevationDeg: 10, distanceM: 30 } },
+      { mediaId: "ph-2", presentMediaId: "ph-3", trust: "inferred", camera: { azimuthDeg: 45, elevationDeg: 10, distance: 0.6 } },
     ],
   });
   const [a, b] = first.historyImages.map((h) => h.id) as [string, string];

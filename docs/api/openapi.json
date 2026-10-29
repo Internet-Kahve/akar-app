@@ -686,23 +686,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -779,23 +789,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -1020,23 +1040,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -1637,23 +1667,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -1730,23 +1770,33 @@
                                         "label": {
                                           "type": "string"
                                         },
+                                        "target": {
+                                          "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                          "type": [
+                                            "string",
+                                            "null"
+                                          ]
+                                        },
                                         "azimuthDeg": {
-                                          "type": "number"
+                                          "type": "number",
+                                          "description": "0 = kuzeyden bakış, saat yönünde"
                                         },
                                         "elevationDeg": {
                                           "type": "number"
                                         },
-                                        "distanceM": {
-                                          "type": "number"
+                                        "distance": {
+                                          "type": "number",
+                                          "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                         }
                                       },
                                       "required": [
+                                        "target",
                                         "azimuthDeg",
                                         "elevationDeg",
-                                        "distanceM"
+                                        "distance"
                                       ],
                                       "additionalProperties": false,
-                                      "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                      "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                                     },
                                     {
                                       "type": "null"
@@ -1971,23 +2021,33 @@
                                         "label": {
                                           "type": "string"
                                         },
+                                        "target": {
+                                          "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                          "type": [
+                                            "string",
+                                            "null"
+                                          ]
+                                        },
                                         "azimuthDeg": {
-                                          "type": "number"
+                                          "type": "number",
+                                          "description": "0 = kuzeyden bakış, saat yönünde"
                                         },
                                         "elevationDeg": {
                                           "type": "number"
                                         },
-                                        "distanceM": {
-                                          "type": "number"
+                                        "distance": {
+                                          "type": "number",
+                                          "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                         }
                                       },
                                       "required": [
+                                        "target",
                                         "azimuthDeg",
                                         "elevationDeg",
-                                        "distanceM"
+                                        "distance"
                                       ],
                                       "additionalProperties": false,
-                                      "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                      "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                                     },
                                     {
                                       "type": "null"
@@ -3859,23 +3919,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -3952,23 +4022,33 @@
                                         "label": {
                                           "type": "string"
                                         },
+                                        "target": {
+                                          "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                          "type": [
+                                            "string",
+                                            "null"
+                                          ]
+                                        },
                                         "azimuthDeg": {
-                                          "type": "number"
+                                          "type": "number",
+                                          "description": "0 = kuzeyden bakış, saat yönünde"
                                         },
                                         "elevationDeg": {
                                           "type": "number"
                                         },
-                                        "distanceM": {
-                                          "type": "number"
+                                        "distance": {
+                                          "type": "number",
+                                          "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                         }
                                       },
                                       "required": [
+                                        "target",
                                         "azimuthDeg",
                                         "elevationDeg",
-                                        "distanceM"
+                                        "distance"
                                       ],
                                       "additionalProperties": false,
-                                      "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                      "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                                     },
                                     {
                                       "type": "null"
@@ -4193,23 +4273,33 @@
                                         "label": {
                                           "type": "string"
                                         },
+                                        "target": {
+                                          "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                          "type": [
+                                            "string",
+                                            "null"
+                                          ]
+                                        },
                                         "azimuthDeg": {
-                                          "type": "number"
+                                          "type": "number",
+                                          "description": "0 = kuzeyden bakış, saat yönünde"
                                         },
                                         "elevationDeg": {
                                           "type": "number"
                                         },
-                                        "distanceM": {
-                                          "type": "number"
+                                        "distance": {
+                                          "type": "number",
+                                          "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                         }
                                       },
                                       "required": [
+                                        "target",
                                         "azimuthDeg",
                                         "elevationDeg",
-                                        "distanceM"
+                                        "distance"
                                       ],
                                       "additionalProperties": false,
-                                      "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                      "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                                     },
                                     {
                                       "type": "null"
@@ -8293,23 +8383,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -8386,23 +8486,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -8627,23 +8737,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -9482,23 +9602,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -9575,23 +9705,33 @@
                                         "label": {
                                           "type": "string"
                                         },
+                                        "target": {
+                                          "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                          "type": [
+                                            "string",
+                                            "null"
+                                          ]
+                                        },
                                         "azimuthDeg": {
-                                          "type": "number"
+                                          "type": "number",
+                                          "description": "0 = kuzeyden bakış, saat yönünde"
                                         },
                                         "elevationDeg": {
                                           "type": "number"
                                         },
-                                        "distanceM": {
-                                          "type": "number"
+                                        "distance": {
+                                          "type": "number",
+                                          "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                         }
                                       },
                                       "required": [
+                                        "target",
                                         "azimuthDeg",
                                         "elevationDeg",
-                                        "distanceM"
+                                        "distance"
                                       ],
                                       "additionalProperties": false,
-                                      "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                      "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                                     },
                                     {
                                       "type": "null"
@@ -9816,23 +9956,33 @@
                                         "label": {
                                           "type": "string"
                                         },
+                                        "target": {
+                                          "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                          "type": [
+                                            "string",
+                                            "null"
+                                          ]
+                                        },
                                         "azimuthDeg": {
-                                          "type": "number"
+                                          "type": "number",
+                                          "description": "0 = kuzeyden bakış, saat yönünde"
                                         },
                                         "elevationDeg": {
                                           "type": "number"
                                         },
-                                        "distanceM": {
-                                          "type": "number"
+                                        "distance": {
+                                          "type": "number",
+                                          "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                         }
                                       },
                                       "required": [
+                                        "target",
                                         "azimuthDeg",
                                         "elevationDeg",
-                                        "distanceM"
+                                        "distance"
                                       ],
                                       "additionalProperties": false,
-                                      "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                      "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                                     },
                                     {
                                       "type": "null"
@@ -10635,23 +10785,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -10728,23 +10888,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -10969,23 +11139,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -11954,23 +12134,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -12047,23 +12237,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -12288,23 +12488,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -13127,23 +13337,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -13220,23 +13440,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -13461,23 +13691,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -14020,6 +14260,18 @@
                             "type": "string",
                             "maxLength": 60
                           },
+                          "target": {
+                            "default": null,
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "azimuthDeg": {
                             "type": "number",
                             "minimum": -360,
@@ -14030,18 +14282,18 @@
                             "minimum": -90,
                             "maximum": 90
                           },
-                          "distanceM": {
+                          "distance": {
                             "type": "number",
-                            "exclusiveMinimum": 0,
-                            "maximum": 10000
+                            "minimum": 0.1,
+                            "maximum": 4
                           }
                         },
                         "required": [
                           "azimuthDeg",
                           "elevationDeg",
-                          "distanceM"
+                          "distance"
                         ],
-                        "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                        "description": "Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)"
                       },
                       {
                         "type": "null"
@@ -14333,23 +14585,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -14426,23 +14688,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -14667,23 +14939,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -15601,23 +15883,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -15694,23 +15986,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -15935,23 +16237,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -16781,23 +17093,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -16874,23 +17196,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -17115,23 +17447,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -18012,23 +18354,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -18105,23 +18457,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -18346,23 +18708,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -18987,6 +19359,18 @@
                                   "type": "string",
                                   "maxLength": 60
                                 },
+                                "target": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 200
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "azimuthDeg": {
                                   "type": "number",
                                   "minimum": -360,
@@ -18997,18 +19381,18 @@
                                   "minimum": -90,
                                   "maximum": 90
                                 },
-                                "distanceM": {
+                                "distance": {
                                   "type": "number",
-                                  "exclusiveMinimum": 0,
-                                  "maximum": 10000
+                                  "minimum": 0.1,
+                                  "maximum": 4
                                 }
                               },
                               "required": [
                                 "azimuthDeg",
                                 "elevationDeg",
-                                "distanceM"
+                                "distance"
                               ],
-                              "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                              "description": "Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)"
                             },
                             {
                               "type": "null"
@@ -19351,23 +19735,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -19444,23 +19838,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -19685,23 +20089,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -20577,23 +20991,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -20670,23 +21094,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -20911,23 +21345,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -21534,6 +21978,18 @@
                                   "type": "string",
                                   "maxLength": 60
                                 },
+                                "target": {
+                                  "default": null,
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "maxLength": 200
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
                                 "azimuthDeg": {
                                   "type": "number",
                                   "minimum": -360,
@@ -21544,18 +22000,18 @@
                                   "minimum": -90,
                                   "maximum": 90
                                 },
-                                "distanceM": {
+                                "distance": {
                                   "type": "number",
-                                  "exclusiveMinimum": 0,
-                                  "maximum": 10000
+                                  "minimum": 0.1,
+                                  "maximum": 4
                                 }
                               },
                               "required": [
                                 "azimuthDeg",
                                 "elevationDeg",
-                                "distanceM"
+                                "distance"
                               ],
-                              "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                              "description": "Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)"
                             },
                             {
                               "type": "null"
@@ -21855,23 +22311,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -21948,23 +22414,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -22189,23 +22665,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -22994,23 +23480,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -23087,23 +23583,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -23328,23 +23834,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -24133,23 +24649,33 @@
                             "label": {
                               "type": "string"
                             },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
                             "azimuthDeg": {
-                              "type": "number"
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
                             },
                             "elevationDeg": {
                               "type": "number"
                             },
-                            "distanceM": {
-                              "type": "number"
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                             }
                           },
                           "required": [
+                            "target",
                             "azimuthDeg",
                             "elevationDeg",
-                            "distanceM"
+                            "distance"
                           ],
                           "additionalProperties": false,
-                          "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                         },
                         {
                           "type": "null"
@@ -24226,23 +24752,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"
@@ -24467,23 +25003,33 @@
                                   "label": {
                                     "type": "string"
                                   },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
                                   "azimuthDeg": {
-                                    "type": "number"
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
                                   },
                                   "elevationDeg": {
                                     "type": "number"
                                   },
-                                  "distanceM": {
-                                    "type": "number"
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                   }
                                 },
                                 "required": [
+                                  "target",
                                   "azimuthDeg",
                                   "elevationDeg",
-                                  "distanceM"
+                                  "distance"
                                 ],
                                 "additionalProperties": false,
-                                "description": "Kamera açısı: azimut ve yükseklik derece, uzaklık metre"
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
                               },
                               {
                                 "type": "null"

@@ -2,6 +2,7 @@ import {
   defaultMapSettings,
   validatePlacement,
   validateSite,
+  type CameraPose,
   type Command,
   type HeritageRoute,
   type HeritageSite,
@@ -162,9 +163,9 @@ interface SiteDetailDto {
     sourceId: string | null;
     showCard: boolean | null;
     highlights: string[];
+    camera: CameraPose | null;
     /** Server-side only fields the domain does not carry; kept as they are on a story save. */
     cardId?: string | null;
-    camera?: CameraPoseDto | null;
     audioMediaId?: string | null;
     audioEnMediaId?: string | null;
   }>;
@@ -193,12 +194,6 @@ interface SiteDetailDto {
   photoIds?: string[];
   sources: SiteSource[];
 }
-interface CameraPoseDto {
-  label?: string;
-  azimuthDeg: number;
-  elevationDeg: number;
-  distanceM: number;
-}
 /** `AdminSiteDetail.mapPlacement`: the saved placement in every case (also while hidden); `lng`/`lat` are null while the model stands on the site's own location. */
 interface AdminPlacementDto extends Omit<MapPlacement, "lng" | "lat"> {
   lng: number | null;
@@ -214,7 +209,7 @@ interface AdminSiteDetailDto extends Omit<
   kind: string | null;
   coordinates: [number, number] | null;
   status: "draft" | "published";
-  openingCamera: CameraPoseDto | null;
+  openingCamera: CameraPose | null;
   /** The saved placement; `null` while none was saved; absent on older API versions. */
   mapPlacement?: AdminPlacementDto | null;
   /** Per-site place inside each source ("s. 42"); the domain source has no such field. */
@@ -325,6 +320,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     simple: s.simple,
     trust: s.trust,
     highlights: s.highlights,
+    ...(present(s.camera) && { camera: s.camera }),
     ...(present(s.textEn) && { textEn: s.textEn }),
     ...(present(s.photoId) && { photoId: s.photoId }),
     ...(present(s.sourceId) && { sourceId: s.sourceId }),
@@ -1392,7 +1388,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     const storiesChanged = !same(site.stories, cur.stories);
     if (!sourcesChanged && !modelChanged && !photosChanged && !storiesChanged)
       return;
-    // What the domain site does not carry: source locators, story cards, cameras and audio.
+    // What the domain site does not carry: source locators, story cards and audio.
     const before = await call<AdminSiteDetailDto>("GET", path);
 
     if (sourcesChanged) {
@@ -1487,7 +1483,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               showCard: s.showCard ?? null,
               highlights: s.highlights ?? [],
               cardId: k?.cardId ?? null,
-              camera: k?.camera ?? null,
+              camera: s.camera ?? null,
               audioMediaId: k?.audioMediaId ?? null,
               audioEnMediaId: k?.audioEnMediaId ?? null,
             };
