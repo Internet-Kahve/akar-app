@@ -1,5 +1,13 @@
 # Redmi 9T prototipi ve performans testi · v2
 
+## 30 Ekim 2026 · tanıtım sayfası (landing): `tanitim.html`
+
+Jüri ve ilk kez gelenler için: projeyi anlatır, sonra haritaya yönlendirir. Aynı sunucudan açılır: `http://<ip>:<port>/tanitim.html` (sunucu.sh adresi yazar). Bütün «Haritayı aç / Rotayı başlat / eser kartları» `index.html`'e gider (`#/`, `#/rota`, `#/eser/<id>`).
+- Bölümler: kahraman (Ulucami, sayılar veriden) · Akar nedir (hayrat ↔ akar, Bedesten → Ulucami altın gelir yayı) · Nasıl çalışır (4 uygulama ekranı) · canlı 3D (Ulucami sunum modeli, «İçini göster», model.json → ortu_gruplari) · Geçmişi Gör (1875–84 mihrap ↔ bugün kaydırıcısı) · Eserler (veri.json'dan, ile göre süzgeç) · Örnek rota · Güven (Ulucami anlatımından gerçek cümleler, kaynak ve etiketiyle) · Kaynaklar (envanter ciltleri, Foto Atlas) · son çağrı.
+- Görsel dil asıl tema «buzlu» ile aynı (taş zemin, mürekkep, altın, cam); başlıklar `tema/` klasöründeki müze sitelerinden (ince büyük serif + italik vurgu). İl renkleri envanter kapaklarından.
+- Uygulama ekranları `tanitim/` (Playwright ile prototipten çekildi; arayüz değişince yeniden çekilmeli). Sayılar, eser kartları, rota ve örnek cümleler `veri.json`'dan; elle yazılan bilgiler `AKAR_Tam_Baglam.md` ve envanterden.
+- 3D bölüme gelince yüklenir (~1,7 MB), ekrandan çıkınca çizim durur; WebGL yoksa «Uygulamada fotoğraflarla gör» bağlantısı çıkar. Hareket azaltma ayarında animasyon yok.
+
 ## 30 Ekim 2026 · asıl tema buzlu; altı eserin verisi Ulucami seviyesinde
 
 **Asıl tema buzlu.** Adres parametresi olmadan açılınca buzlu tema gelir (`index.html` baş betiği: `akar.tema` boşsa `buzlu`). `?tema=cam` akşam (koyu) kipi, `?tema=sade` eski sade görünüm. `sicak`, `il`, `bant` yalnız denemedir (buzlu + `data-ton`); ürüne buzlu taşınacak (bkz. `ENTEGRASYON_29EKIM.md` §0, §5.13).
