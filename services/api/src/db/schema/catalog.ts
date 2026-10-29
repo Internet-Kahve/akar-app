@@ -438,3 +438,84 @@ export const sitePartCardPhotos = pgTable(
   },
   (t) => [primaryKey({ columns: [t.cardId, t.position] }), index("site_part_card_photos_media_idx").on(t.mediaId)],
 );
+
+export const siteTaskKinds = ["quiz", "field"] as const;
+export type SiteTaskKind = (typeof siteTaskKinds)[number];
+
+/** Quiz task ("soru"): the answer key lives in `site_task_answers`, never here. */
+export type QuizTaskDetails = { options: string[]; hints: string[]; correctText: string; wrongText: string; fromHome: boolean };
+/** Field task ("saha görevi"): on site = within `radiusM` of the site point; from home = tap the named model part. */
+export type FieldTaskDetails = {
+  onSite: { text: string; radiusM: number };
+  fromHome: { text: string; part: string } | null;
+  doneText: string;
+};
+
+/**
+ * Site task: a question or a field task shown on the site page. No points, no timer, no penalty. Texts the player
+ * only gets after answering (`correctText`, `doneText`) and the wrong-answer text live in `details`; the public
+ * payload is built from an explicit field list (catalog/service.ts).
+ */
+export const siteTasks = pgTable(
+  "site_tasks",
+  {
+    id: text("id").primaryKey(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    kind: text("kind", { enum: siteTaskKinds }).notNull(),
+    title: text("title").notNull(),
+    /** Quiz: the question; field: the task text. */
+    prompt: text("prompt").notNull(),
+    mediaId: text("media_id").references(() => media.id, { onDelete: "set null" }),
+    /** Model part the task is about (quiz), null = none. */
+    part: text("part"),
+    source: text("source"),
+    trust: trustEnum("trust").notNull(),
+    details: jsonb("details").$type<QuizTaskDetails | FieldTaskDetails>().notNull(),
+  },
+  (t) => [
+    unique("site_tasks_order_uq").on(t.siteId, t.position),
+    check("site_tasks_kind_check", sql`${t.kind} in ('quiz', 'field')`),
+    index("site_tasks_media_idx").on(t.mediaId),
+  ],
+).enableRLS();
+
+/** Server-only answer key of a quiz task, never part of any public payload (like `quiz_answers`). */
+export const siteTaskAnswers = pgTable(
+  "site_task_answers",
+  {
+    taskId: text("task_id")
+      .primaryKey()
+      .references(() => siteTasks.id, { onDelete: "cascade" }),
+    correctIndex: integer("correct_index").notNull(),
+  },
+  (t) => [check("site_task_answers_index_check", sql`${t.correctIndex} >= 0`)],
+).enableRLS();
+
+export const siteBadgeConditions = ["story", "task"] as const;
+
+/** Site badge: earned by finishing the story (`story`) or one task (`task`, `taskId` required). */
+export const siteBadges = pgTable(
+  "site_badges",
+  {
+    id: text("id").primaryKey(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    title: text("title").notNull(),
+    text: text("text").notNull(),
+    condition: text("condition", { enum: siteBadgeConditions }).notNull(),
+    taskId: text("task_id").references(() => siteTasks.id, { onDelete: "cascade" }),
+    /** The badge carries the "Yerinde" tag when earned the GPS way. */
+    onSiteLabel: boolean("on_site_label").notNull().default(false),
+  },
+  (t) => [
+    unique("site_badges_order_uq").on(t.siteId, t.position),
+    check("site_badges_condition_check", sql`${t.condition} in ('story', 'task')`),
+    check("site_badges_task_check", sql`(${t.condition} = 'task') = (${t.taskId} is not null)`),
+    index("site_badges_task_idx").on(t.taskId),
+  ],
+).enableRLS();

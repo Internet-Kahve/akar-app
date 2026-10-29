@@ -143,6 +143,47 @@ for entry in editorial.eserleri_bul():
         part_cards.append(dict(id=f'{sid}-part-{len(part_cards)+1}', parts=card['adlar'], title=card['baslik'],
                                body=card['metin'], photoIds=[by_name[f]['id'] for f in card['fotolar']],
                                trust=trust(card['guven']), sourceId=source(card['kaynak'])))
+    # Site tasks and badges (§11.44): icerik/gorevler.json where the site has one. The photograph is a gallery photograph
+    # named in fotograflar.md (like a story's); the model part names are checked against the model by the importer.
+    tasks, badges = [], []
+    tasks_path = root / 'eserler' / folder / 'icerik/gorevler.json'
+    if tasks_path.is_file():
+        data = json.loads(tasks_path.read_text())
+        for g in data['gorevler']:
+            where = f'{folder} {g.get("id")}'
+            photo_name = g.get('gorsel')
+            if photo_name and photo_name not in by_name:
+                raise ValueError(f'Missing task photograph: {where} {photo_name}')
+            common = dict(id=g['id'], title=g['baslik'], photoId=by_name[photo_name]['id'] if photo_name else None,
+                          source=g.get('kaynak') or None, trust=trust(g['guven']))
+            if g['tur'] == 'soru':
+                options = g['secenekler']
+                if not 2 <= len(options) <= 6 or not isinstance(g['dogru'], int) or not 0 <= g['dogru'] < len(options):
+                    raise ValueError(f'Bad options or answer: {where}')
+                tasks.append(dict(common, kind='quiz', prompt=g['soru'], part=g.get('parca') or None, correctIndex=g['dogru'],
+                                  details=dict(options=options, hints=g.get('ipuclari') or [], correctText=g['dogru_metin'],
+                                               wrongText=g['yanlis_metin'], fromHome=bool(g.get('evden_cozulur')))))
+            elif g['tur'] == 'saha':
+                home = g.get('evden')
+                tasks.append(dict(common, kind='field', prompt=g['gorev'], part=None, correctIndex=None,
+                                  details=dict(onSite=dict(text=g['yerinde']['yap'], radiusM=int(g['yerinde']['konum_yaricap_m'])),
+                                               fromHome=dict(text=home['yap'], part=home['parca']) if home else None,
+                                               doneText=g['tamam_metin'])))
+            else:
+                raise ValueError(f'Unknown task type: {where} {g["tur"]}')
+        task_ids = {t['id'] for t in tasks}
+        if len(task_ids) != len(tasks):
+            raise ValueError(f'Duplicate task id: {folder}')
+        for b in data['rozetler']:
+            condition = b['kosul']
+            if condition.get('hikaye_bitti'):
+                kind, task_id = 'story', None
+            elif condition.get('gorev') in task_ids:
+                kind, task_id = 'task', condition['gorev']
+            else:
+                raise ValueError(f'Badge condition names no task: {folder} {b["id"]}')
+            badges.append(dict(id=b['id'], title=b['ad'], text=b['metin'], condition=kind, taskId=task_id,
+                               onSiteLabel=bool(b.get('yerinde_etiketi'))))
     history = []
     archive = json.loads((root / 'eserler' / folder / 'gecmisi-gor/gecmisi-gor.json').read_text())
     for image in archive['fotograflar']:
@@ -171,6 +212,7 @@ for entry in editorial.eserleri_bul():
         role='akar' if entry['rol']=='akar' else 'hayrat', stories=stories, photos=photos, sources=sources,
         coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sections=sections, chapters=chapters, bookPhotos=book_photos,
         aboutCoverPhotoId=by_name[cover_name]['id'] if cover_name else None, partCards=part_cards,
+        tasks=tasks, badges=badges,
         relatedSiteId={'bedesten':'ulu-cami','orhan-bey-hamami':'orhan-gazi','emir-han':'orhan-gazi'}.get(sid)))
 result['routes'] = [
  dict(id='hanlar',name='Hanlar Bölgesi Vakıf Yürüyüşü',description='Ulucami, Bedesten, Koza Hanı ve Orhan Bey Camii arasında vakıf mirası.',siteIds=['ulu-cami','bedesten','koza-han','orhan-gazi'],theme='Vakıf kültürü',minutes=0,distance=''),
@@ -190,4 +232,4 @@ for path in sorted((root / 'veri/sehir').glob('*.json')):
         backgroundTop=identity['sahne_ust'], backgroundBottom=identity['sahne_alt'])))
 args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps({'sites':len(result['sites']),'photos':sum(len(s['photos']) for s in result['sites']),
- 'stories':sum(len(s['stories']) for s in result['sites']),'history':sum(len(s['historyImages']) for s in result['sites'])}))
+ 'stories':sum(len(s['stories']) for s in result['sites']),'tasks':sum(len(s['tasks']) for s in result['sites']),'history':sum(len(s['historyImages']) for s in result['sites'])}))

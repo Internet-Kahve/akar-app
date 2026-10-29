@@ -5050,3 +5050,201 @@ td small {
     margin-bottom: 24px;
   }
 }
+
+/* Site tasks and badges (§11.44): a calm look, no error colour for a wrong answer. */
+.site-tasks .section-heading {
+  margin-top: 4px;
+}
+.task-list,
+.badge-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-align: left;
+  color: var(--primary);
+}
+.task-card:hover {
+  background: var(--primary-light);
+  border-color: #bacadd;
+}
+.task-card strong {
+  display: block;
+  color: var(--text);
+  font-size: 12px;
+}
+.task-card small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.badge-strip {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.badge-item {
+  display: flex;
+  flex: 0 0 148px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 11px;
+}
+.badge-item strong {
+  font-size: 12px;
+}
+.badge-item small {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.badge-item.earned {
+  border-color: var(--gold);
+  background: var(--inferred-bg);
+}
+.badge-item.earned > svg {
+  color: var(--gold-text);
+}
+.badge-item.locked {
+  color: var(--text-muted);
+}
+.badge-item.locked strong {
+  font-weight: 500;
+}
+.quiz-option.tried {
+  opacity: 0.55;
+}
+.task-photo {
+  margin: 14px 0 0;
+}
+.task-photo img {
+  display: block;
+  width: 100%;
+  height: min(54vw, 260px);
+  border-radius: 14px;
+  object-fit: cover;
+}
+.task-photo figcaption {
+  padding-top: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.modal .task-prompt {
+  margin: 18px 0 8px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.task-hint {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+.task-way {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.task-way h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.task-way p {
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+.task-result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--verified-bg);
+}
+.modal .task-result-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.task-result-text > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--verified);
+}
+.task-result-meta {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.modal .task-badge-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.task-badge-note > svg {
+  color: var(--gold-text);
+}
+.task-guest {
+  display: flex;
+  justify-content: flex-start;
+}
+/* Over the 3D stage below the panel toggle and the view switch while a field task waits for a tap. */
+.task-pick-bar {
+  position: absolute;
+  top: 84px;
+  left: 50%;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(460px, calc(100% - 28px));
+  padding: 10px 12px 10px 16px;
+  transform: translateX(-50%);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px #141b2b26;
+  font-size: 12px;
+  /* Taps reach the model beneath; only the cancel button answers. */
+  pointer-events: none;
+}
+.task-pick-bar small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.task-pick-bar .task-pick-hint {
+  color: var(--text);
+  font-weight: 600;
+}
+.task-pick-bar .btn {
+  flex-shrink: 0;
+  pointer-events: auto;
+}

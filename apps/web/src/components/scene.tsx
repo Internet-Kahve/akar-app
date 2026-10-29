@@ -201,6 +201,7 @@ export function Scene({
   pose,
   interior,
   onHotspot,
+  onPick,
 }: {
   site: HeritageSite;
   flow?: boolean;
@@ -211,6 +212,8 @@ export function Scene({
   /** Story sentence's "İç mekân (3D)": lift the model's cover groups. */
   interior?: boolean;
   onHotspot: (id: string) => void;
+  /** A site task waits for a tap on a model part (pick mode); the model is shown for it. */
+  onPick?: (part: string) => void;
 }) {
   const cityScene = useCityScene(site.city);
   // A model site opens on the model, also in the story (its camera follows the sentences).
@@ -237,7 +240,7 @@ export function Scene({
   if (
     !flow &&
     (photos.length > 0 || !!photoId) &&
-    (!site.model || mode === "photo")
+    (!site.model || (mode === "photo" && !onPick))
   )
     return (
       <PhotoGallery
@@ -281,6 +284,7 @@ export function Scene({
             pose={pose}
             interior={interior}
             partCards={site.partCards}
+            onPick={onPick}
             sources={site.sources}
           />
           <div className="scene-photo-credit">

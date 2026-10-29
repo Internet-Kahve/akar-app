@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
 import { eq } from "drizzle-orm";
-import { cities, media, siteAboutChapters, siteSectionPhotos, siteSections, sites, sources } from "../../db/schema/index.ts";
+import { cities, media, siteAboutChapters, siteBadges, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, sources } from "../../db/schema/index.ts";
 import type { ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -208,4 +208,30 @@ test("rewriting the paragraphs keeps what the import attached: chapter and book 
   assert.equal((await db.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, site.id))).length, 0);
   const listed = await call<DetailPage>("GET", `/v1/admin/site-details?query=${encodeURIComponent("okuma hani")}`, editor);
   assert.deepEqual(listed.body.items.find((i) => i.id === site.id), (await call<AdminSiteDetail>("GET", base, editor)).body);
+});
+
+test("the admin detail carries the tasks and badges the public detail does, the task photograph resolves from its media, no answer key, and editing the paragraphs leaves them alone", async () => {
+  const site = await publishedSite("Görev Hanı");
+  const db = app.deps.db;
+  await db.insert(siteTasks).values({
+    id: `${site.id}-soru`, siteId: site.id, position: 0, kind: "quiz", title: "Soru", prompt: "Hangisi?", mediaId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified",
+    details: { options: ["A", "B"], hints: ["İpucu"], correctText: "Gizli doğru metin", wrongText: "Tekrar dene", fromHome: false },
+  });
+  await db.insert(siteTaskAnswers).values({ taskId: `${site.id}-soru`, correctIndex: 1 });
+  await db.insert(siteBadges).values({ id: `${site.id}-rozet`, siteId: site.id, position: 0, title: "Rozet", text: "Kazandın", condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false });
+
+  const admin = (await call<AdminSiteDetail>("GET", `/v1/admin/sites/${site.id}`, editor)).body;
+  const pub = (await call<AdminSiteDetail>("GET", `/v1/sites/${site.id}`)).body;
+  assert.deepEqual(admin.tasks, pub.tasks);
+  assert.deepEqual(admin.badges, pub.badges);
+  assert.deepEqual(admin.tasks, [
+    { id: `${site.id}-soru`, kind: "quiz", title: "Soru", prompt: "Hangisi?", photoId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified", quiz: { options: ["A", "B"], hints: ["İpucu"], wrongText: "Tekrar dene", fromHome: false } },
+  ]);
+  assert.deepEqual(admin.badges, [{ id: `${site.id}-rozet`, title: "Rozet", text: "Kazandın", condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false }]);
+  assert.ok(admin.media.some((m) => m.id === "ph-2"), "the task photograph is part of the media list");
+  assert.ok(!JSON.stringify(admin).includes("Gizli doğru metin"));
+
+  const edited = await send("PUT", `/v1/admin/sites/${site.id}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
+  assert.equal(edited.tasks.length, 1);
+  assert.equal(edited.badges.length, 1);
 });

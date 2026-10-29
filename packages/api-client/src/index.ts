@@ -9,8 +9,15 @@ import {
   type HeritageSite,
   type Memory,
   type Role,
+  type SiteBadge,
+  type SiteTask,
 } from "@akar/domain";
-import { createSeed, demoCityScenes, demoQuizzes } from "./seed";
+import {
+  createSeed,
+  demoCityScenes,
+  demoQuizzes,
+  demoSiteTaskKeys,
+} from "./seed";
 export { routes, createSeed, demoRegion, demoQuizzes } from "./seed";
 export {
   createHttpClient,
@@ -47,6 +54,44 @@ export interface QuizAnswerResult {
   explanation: string | null;
   /** Fresh state (points, quizIds). */
   snapshot: Snapshot;
+}
+/** `POST /v1/site-tasks/:id/answer`: the answer key stays on the server (the mock keeps its own). */
+export interface SiteTaskAnswerResult {
+  correct: boolean;
+  /** Only when `correct`. */
+  correctText: string | null;
+  /** Only when wrong. */
+  wrongText: string | null;
+  /** Badges this answer earned; always empty for a guest. */
+  earnedBadges: SiteBadge[];
+}
+/** Where a field task is completed; `coordinates` is `[lng, lat]` like `locate`. */
+export type SiteTaskCompleteInput =
+  | { mode: "onSite"; coordinates: [number, number]; accuracyM?: number }
+  | { mode: "fromHome"; part: string };
+/** `done: false` is an answer, not an error: the visitor is too far away or tapped another part. */
+export type SiteTaskCompletion =
+  | {
+      done: true;
+      doneText: string;
+      onSite: boolean;
+      earnedBadges: SiteBadge[];
+    }
+  | { done: false; reason: "tooFar" | "wrongPart" };
+/** `GET /v1/me/site-progress`: what the signed-in user finished and earned; empty for a guest. */
+export interface SiteProgress {
+  tasks: Array<{
+    taskId: string;
+    siteId: string;
+    onSite: boolean;
+    completedAt: string;
+  }>;
+  badges: Array<{
+    badgeId: string;
+    siteId: string;
+    onSite: boolean;
+    earnedAt: string;
+  }>;
 }
 /** `GET /v1/admin/health` (decisions §11.21, §11.25): panel warnings for moderators and admins. */
 export interface AdminHealth {
@@ -115,6 +160,17 @@ export interface AkarClient {
   revealQuiz(
     quizId: string,
   ): Promise<{ correctOption: string; snapshot: Snapshot }>;
+  /**
+   * Site task (§11.44) answer. Checked server-side for guests too; only a signed-in user's progress and
+   * badges are stored.
+   */
+  answerSiteTask(taskId: string, choice: number): Promise<SiteTaskAnswerResult>;
+  completeSiteTask(
+    taskId: string,
+    input: SiteTaskCompleteInput,
+  ): Promise<SiteTaskCompletion>;
+  /** Finished tasks and earned badges of the signed-in user; empty for a guest (no request). */
+  getSiteProgress(): Promise<SiteProgress>;
   /** Moderator and admin only; the server answers 403 for other roles. */
   getAdminHealth(): Promise<AdminHealth>;
   getMembers(query: string, page: number): Promise<MemberPage>;
@@ -163,6 +219,41 @@ interface QuizProgress {
 /** Points per correct quiz, like the server's `quiz.correct`. */
 const QUIZ_POINTS = 20;
 const quizIdOf = (siteId: string, n: number) => `${siteId}:quiz-${n + 1}`;
+/** Metres between two `[lng, lat]` points (haversine). */
+function distanceM(a: [number, number], b: [number, number]) {
+  const rad = Math.PI / 180;
+  const h =
+    Math.sin(((b[1] - a[1]) * rad) / 2) ** 2 +
+    Math.cos(a[1] * rad) *
+      Math.cos(b[1] * rad) *
+      Math.sin(((b[0] - a[0]) * rad) / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+}
+/** The badges of `site` that `matches` and the visitor does not hold yet; a held one is marked `onSite` when earned there. */
+function awardBadges(
+  current: SiteProgress,
+  site: HeritageSite,
+  matches: (badge: SiteBadge) => boolean,
+  onSite: boolean,
+) {
+  const badges = [...current.badges];
+  const earned: SiteBadge[] = [];
+  for (const badge of site.badges ?? []) {
+    if (!matches(badge)) continue;
+    const at = badges.findIndex((b) => b.badgeId === badge.id);
+    if (at < 0) {
+      badges.push({
+        badgeId: badge.id,
+        siteId: site.id,
+        onSite,
+        earnedAt: new Date().toISOString(),
+      });
+      earned.push(badge);
+    } else if (onSite && !badges[at]!.onSite)
+      badges[at] = { ...badges[at]!, onSite: true };
+  }
+  return { badges, earned };
+}
 export function createMockClient(storage?: StorageAdapter): AkarClient {
   const members: AdminMember[] = [
     {
@@ -195,28 +286,44 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
   ];
   let state = createSeed();
   let progress: Record<string, QuizProgress> = {};
+  let siteProgress: SiteProgress = { tasks: [], badges: [] };
   try {
     const raw = storage?.getItem(key);
     if (raw) {
       const saved: unknown = JSON.parse(raw);
       if (validSnapshot(saved)) {
-        // Older saves have no `quizProgress`; the extra field is not part of the snapshot.
-        const { quizProgress, ...snapshot } = saved as Snapshot & {
-          quizProgress?: Record<string, QuizProgress>;
-        };
+        // Older saves have no `quizProgress` or `siteProgress`; the extra fields are not part of the snapshot.
+        const { quizProgress, siteProgress: savedSite, ...snapshot } =
+          saved as Snapshot & {
+            quizProgress?: Record<string, QuizProgress>;
+            siteProgress?: SiteProgress;
+          };
         state = snapshot;
         if (quizProgress && typeof quizProgress === "object")
           progress = quizProgress;
+        if (
+          Array.isArray(savedSite?.tasks) &&
+          Array.isArray(savedSite?.badges)
+        )
+          siteProgress = savedSite;
       }
     }
   } catch {
     /* Corrupt storage falls back to the demo seed. */
   }
-  const persist = (next: Snapshot, nextProgress = progress) => {
+  const persist = (
+    next: Snapshot,
+    nextProgress = progress,
+    nextSiteProgress = siteProgress,
+  ) => {
     try {
       storage?.setItem(
         key,
-        JSON.stringify({ ...next, quizProgress: nextProgress }),
+        JSON.stringify({
+          ...next,
+          quizProgress: nextProgress,
+          siteProgress: nextSiteProgress,
+        }),
       );
     } catch {
       throw new Error(
@@ -225,6 +332,7 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     }
     state = next;
     progress = nextProgress;
+    siteProgress = nextSiteProgress;
     return structuredClone(state);
   };
   const stateOf = (quizId: string): QuizProgress =>
@@ -241,6 +349,41 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     )
       throw new Error("Bulmaca bulunamadı.");
     return { siteId, quiz };
+  };
+  const findTask = (taskId: string) => {
+    for (const site of state.sites) {
+      const task =
+        site.status === "published"
+          ? site.tasks?.find((t) => t.id === taskId)
+          : undefined;
+      if (task) return { site, task };
+    }
+    throw new Error("Görev bulunamadı.");
+  };
+  /** Marks a task done (on site once, always on site) and earns its badges; returns the ones earned now. */
+  const finishTask = (site: HeritageSite, task: SiteTask, onSite: boolean) => {
+    const held = siteProgress.tasks.find((t) => t.taskId === task.id);
+    const tasks = held
+      ? siteProgress.tasks.map((t) =>
+          t === held ? { ...t, onSite: t.onSite || onSite } : t,
+        )
+      : [
+          ...siteProgress.tasks,
+          {
+            taskId: task.id,
+            siteId: site.id,
+            onSite,
+            completedAt: new Date().toISOString(),
+          },
+        ];
+    const { badges, earned } = awardBadges(
+      siteProgress,
+      site,
+      (b) => b.condition === "task" && b.taskId === task.id,
+      onSite,
+    );
+    persist(state, progress, { tasks, badges });
+    return earned;
   };
   // Demo: a change lasts until the page reloads, like the demo member roles.
   let mapSettings: MapSettings = { ...defaultMapSettings };
@@ -267,7 +410,22 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       );
     },
     async dispatch(command) {
-      return persist(reduceSnapshot(state, command));
+      const next = reduceSnapshot(state, command);
+      // Finishing a story earns the site's story badges.
+      const site =
+        command.type === "read"
+          ? next.sites.find((s) => s.id === command.siteId)
+          : undefined;
+      if (!site) return persist(next);
+      return persist(next, progress, {
+        ...siteProgress,
+        badges: awardBadges(
+          siteProgress,
+          site,
+          (b) => b.condition === "story",
+          false,
+        ).badges,
+      });
     },
     async getModerationPage(status, cursor) {
       const items = state.memories.filter((m) => m.status === status);
@@ -282,7 +440,7 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       return { site: snapshot.sites.find((s) => s.id === site.id)!, snapshot };
     },
     async reset() {
-      return persist(createSeed(), {});
+      return persist(createSeed(), {}, { tasks: [], badges: [] });
     },
     async getQuizzes(siteId) {
       if (!state.sites.some((s) => s.id === siteId && s.status === "published"))
@@ -347,6 +505,61 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
         correctOption: quiz.options[quiz.correct],
         snapshot,
       };
+    },
+    async answerSiteTask(taskId, choice) {
+      const { site, task } = findTask(taskId);
+      const key = demoSiteTaskKeys[taskId];
+      if (!task.quiz || !key || !("correctIndex" in key))
+        throw new Error("Bu görev bir soru değil.");
+      if (
+        !Number.isInteger(choice) ||
+        choice < 0 ||
+        choice >= task.quiz.options.length
+      )
+        throw new Error("Geçerli bir şık seç.");
+      if (choice !== key.correctIndex)
+        return {
+          correct: false,
+          correctText: null,
+          wrongText: task.quiz.wrongText,
+          earnedBadges: [],
+        };
+      return {
+        correct: true,
+        correctText: key.correctText,
+        wrongText: null,
+        earnedBadges: finishTask(site, task, false),
+      };
+    },
+    async completeSiteTask(taskId, input) {
+      const { site, task } = findTask(taskId);
+      const key = demoSiteTaskKeys[taskId];
+      if (!task.field || !key || !("doneText" in key))
+        throw new Error("Bu görev bir saha görevi değil.");
+      if (input.mode === "onSite") {
+        // Same rule as the visit check: the accuracy radius is forgiven up to 50 m.
+        const slack = Math.min(input.accuracyM ?? 0, 50);
+        if (
+          distanceM(site.coordinates, input.coordinates) - slack >
+          task.field.onSite.radiusM
+        )
+          return { done: false, reason: "tooFar" };
+      } else {
+        if (!task.field.fromHome)
+          throw new Error("Bu görev yalnızca yerinde yapılır.");
+        if (input.part !== task.field.fromHome.part)
+          return { done: false, reason: "wrongPart" };
+      }
+      const onSite = input.mode === "onSite";
+      return {
+        done: true,
+        doneText: key.doneText,
+        onSite,
+        earnedBadges: finishTask(site, task, onSite),
+      };
+    },
+    async getSiteProgress() {
+      return structuredClone(siteProgress);
     },
     async getMembers(query, page) {
       const filtered = members.filter((member) =>

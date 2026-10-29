@@ -335,8 +335,8 @@ test("progress keeps the furthest block and rejects blocks past the story and st
 test("a story pays once for a user and gives a guest a receipt; it needs a published story", async () => {
   const u = user();
   const first = await send("POST", "/v1/stories/han-a/complete", { as: u });
-  assert.deepEqual(first.json(), { awarded: 15 });
-  assert.deepEqual((await send("POST", "/v1/stories/han-a/complete", { as: u })).json(), { awarded: 0 });
+  assert.deepEqual(first.json(), { awarded: 15, earnedBadges: [] });
+  assert.deepEqual((await send("POST", "/v1/stories/han-a/complete", { as: u })).json(), { awarded: 0, earnedBadges: [] });
   const p = await passport(u);
   assert.deepEqual([p.points, p.read], [15, ["han-a"]]);
 
@@ -347,8 +347,9 @@ test("a story pays once for a user and gives a guest a receipt; it needs a publi
   }
 
   const guest = await send("POST", "/v1/stories/han-b/complete", { device });
-  const body = guest.json<{ awarded: number; receipt?: string }>();
+  const body = guest.json<{ awarded: number; receipt?: string; earnedBadges: unknown[] }>();
   assert.equal(body.awarded, 0);
+  assert.deepEqual(body.earnedBadges, [], "a guest earns no badge");
   assert.ok(body.receipt);
   const guestRows = await app.deps.db.select().from(pointEvents).where(sql`${pointEvents.userId} like 'guest:%'`);
   assert.deepEqual(guestRows, [], "guests never get ledger rows, only receipts");
@@ -369,7 +370,7 @@ test("an Idempotency-Key replays the first answer without redoing the work, and 
   const u = user();
   const one = await send("POST", "/v1/stories/han-b/complete", { as: u, key: "hikaye-1" });
   const two = await send("POST", "/v1/stories/han-b/complete", { as: u, key: "hikaye-1" });
-  assert.deepEqual([one.json(), two.json()], [{ awarded: 15 }, { awarded: 15 }], "the retry returns the first answer");
+  assert.deepEqual([one.json(), two.json()], [{ awarded: 15, earnedBadges: [] }, { awarded: 15, earnedBadges: [] }], "the retry returns the first answer");
   assert.equal((await events(u.id)).length, 1, "and awards nothing more");
 });
 

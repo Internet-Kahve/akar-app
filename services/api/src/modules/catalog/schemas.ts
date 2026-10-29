@@ -3,7 +3,9 @@ import {
   cardKinds,
   mediaKinds,
   sectionKinds,
+  siteBadgeConditions,
   siteRoles,
+  siteTaskKinds,
   siteTiers,
   sourceKinds,
   trustLevels,
@@ -260,6 +262,48 @@ export const PartCardDto = z.object({
   trust: TrustSchema,
 });
 
+export const SiteTaskDto = z
+  .object({
+    id: z.string(),
+    kind: z.enum(siteTaskKinds).describe("quiz = soru, field = saha görevi"),
+    title: z.string(),
+    prompt: z.string().describe("Soru ya da görev metni"),
+    photoId: z.string().nullable().describe("Görevin fotoğrafı: eserin fotoğraflarından biri (SiteDetail.photoIds / media); yoksa null"),
+    part: z.string().nullable().describe("Görevin konusu olan model parça adı; yoksa null"),
+    source: z.string().nullable().describe("Kaynak satırı (serbest metin, örn. «E cilt-1 PDF s.27»); yoksa null"),
+    trust: TrustSchema,
+    quiz: z
+      .object({
+        options: z.array(z.string()).describe("Seçenekler (2–6), cevap anahtarı yok; /v1/site-tasks/:id/answer ile sunucuda denetlenir"),
+        hints: z.array(z.string()).describe("İpuçları, sırayla istendikçe açılır"),
+        wrongText: z.string().describe("Yanlış cevapta gösterilen metin"),
+        fromHome: z.boolean().describe("Evden çözülebilir mi"),
+      })
+      .optional()
+      .describe("Yalnız kind = quiz. Doğru cevap metni (correctText) yoktur: yalnız doğru cevapta yanıtla gelir"),
+    field: z
+      .object({
+        onSite: z.object({ text: z.string(), radiusM: z.number().int().describe("Eserin noktasından en çok bu kadar metre uzakta (konum hassasiyeti payıyla)") }),
+        fromHome: z.object({ text: z.string(), part: z.string().describe("Dokunulacak model parça adı") }).nullable().describe("Evden karşılığı; yoksa null"),
+      })
+      .optional()
+      .describe("Yalnız kind = field. Tamamlama metni (doneText) yoktur: yalnız tamamlanınca yanıtla gelir"),
+  })
+  .describe("Eser görevi (soru ya da saha görevi). Puan, süre ve yanlış cevap cezası yoktur");
+export type SiteTaskDto = z.infer<typeof SiteTaskDto>;
+
+export const SiteBadgeDto = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    text: z.string(),
+    condition: z.enum(siteBadgeConditions).describe("story = hikâyeyi bitirince, task = taskId görevini yapınca"),
+    taskId: z.string().nullable().describe("condition = task ise görevin kimliği (SiteDetail.tasks), yoksa null"),
+    onSiteLabel: z.boolean().describe("Yerinde (GPS ile) kazanılınca «Yerinde» etiketi gösterilir"),
+  })
+  .describe("Eser rozeti. Rozet kaydı yalnız üyeye tutulur; puanla ilgisi yoktur");
+export type SiteBadgeDto = z.infer<typeof SiteBadgeDto>;
+
 export const MapPointDto = z.object({ lng: z.number(), lat: z.number() });
 
 export const MapPlacementDto = z.object({
@@ -296,13 +340,15 @@ export const SiteDetail = SiteSummary.extend({
   partCards: z
     .array(PartCardDto)
     .describe("3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"),
+  tasks: z.array(SiteTaskDto).describe("Eser görevleri, sıralı; boş = görev yok"),
+  badges: z.array(SiteBadgeDto).describe("Eser rozetleri, sıralı"),
   placement: MapPlacementDto.nullable().describe(
     "Modelin haritadaki yerleşimi. Eserin modeli varsa ve yerleşim gösterilmek üzere kaydedilmişse dolu; aksi halde null (alan hiçbir zaman eksik olmaz)",
   ),
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
   media: z
     .array(MediaDto)
-    .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
+    .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
   sources: z
     .array(SourceDto)
     .describe("Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"),

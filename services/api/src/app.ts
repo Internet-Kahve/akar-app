@@ -31,6 +31,7 @@ import { mediaRoutes } from "./modules/media/routes.ts";
 import { moderationRoutes } from "./modules/moderation/routes.ts";
 import { catalogRouteRoutes } from "./modules/routes/routes.ts";
 import { settingsRoutes } from "./modules/settings/routes.ts";
+import { siteTaskRoutes } from "./modules/site-tasks/routes.ts";
 
 /**
  * Runtime dependencies. Optional services are null when not configured; a module that needs one
@@ -68,6 +69,7 @@ const MODULES: ModulePlugin[] = [
   moderationRoutes,
   adminHealthRoutes,
   engagementRoutes,
+  siteTaskRoutes,
   settingsRoutes,
 ];
 

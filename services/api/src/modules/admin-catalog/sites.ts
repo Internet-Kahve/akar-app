@@ -55,6 +55,7 @@ import {
   type PlacementRow,
   type SectionPhotoRow,
 } from "../catalog/service.ts";
+import { badgeDto, loadBadges, loadTasks, taskDto, type BadgeRow, type TaskRow } from "../catalog/tasks.ts";
 import { CITIES } from "../ingest/cities.ts";
 import { APPROXIMATE_SOURCES } from "../ingest/geocode.ts";
 import type {
@@ -252,6 +253,8 @@ export type SiteAggregate = {
   chapters: ChapterRow[];
   /** Book photographs of the paragraphs, ordered by (paragraph, position). */
   sectionPhotos: SectionPhotoRow[];
+  tasks: TaskRow[];
+  badges: BadgeRow[];
   /** `site_media` in display order. */
   mediaIds: string[];
   /** `site_sources` in display order. */
@@ -292,6 +295,8 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const partCardRows = await loadPartCards(q, ids);
   const chapterRows = await loadChapters(q, ids);
   const sectionPhotoRows = await loadSectionPhotos(q, ids);
+  const taskRows = await loadTasks(q, ids);
+  const badgeRows = await loadBadges(q, ids);
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
@@ -303,6 +308,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...historyRows.flatMap((h) => [h.mediaId, h.presentMediaId]),
     ...partCardRows.flatMap((c) => c.photoIds),
     ...sectionPhotoRows.map((p) => p.mediaId),
+    ...taskRows.map((t) => t.mediaId),
   ]);
   const mediaRows = mediaIds.length ? await q.select().from(media).where(inArray(media.id, mediaIds)) : [];
   const sourceIds = distinct([
@@ -326,6 +332,8 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const partCardsOf = groupBy(partCardRows, (r) => r.siteId);
   const chaptersOf = groupBy(chapterRows, (r) => r.siteId);
   const sectionPhotosOf = groupBy(sectionPhotoRows, (r) => r.siteId);
+  const tasksOf = groupBy(taskRows, (r) => r.siteId);
+  const badgesOf = groupBy(badgeRows, (r) => r.siteId);
   const mediaOf = groupBy(mediaLinks, (r) => r.siteId);
   const sourcesOf = groupBy(sourceLinks, (r) => r.siteId);
 
@@ -340,6 +348,8 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
         partCards: partCardsOf.get(site.id) ?? [],
         chapters: chaptersOf.get(site.id) ?? [],
         sectionPhotos: sectionPhotosOf.get(site.id) ?? [],
+        tasks: tasksOf.get(site.id) ?? [],
+        badges: badgesOf.get(site.id) ?? [],
         mediaIds: (mediaOf.get(site.id) ?? []).map((l) => l.mediaId),
         sourceLinks: (sourcesOf.get(site.id) ?? []).map((l) => ({ sourceId: l.sourceId, locator: l.locator })),
         cards: cardById,
@@ -459,6 +469,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       ...a.history.flatMap((h) => [h.mediaId, h.presentMediaId]),
       ...a.partCards.flatMap((c) => c.photoIds),
       ...a.sectionPhotos.map((p) => p.mediaId),
+      ...a.tasks.map((t) => t.mediaId),
     ]).map((id) => a.media.get(id)),
   );
   // Cards in the order the story first uses them (several sentences may share one card).
@@ -573,6 +584,8 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: c.sourceId,
       trust: c.trust,
     })),
+    tasks: a.tasks.map(taskDto),
+    badges: a.badges.map(badgeDto),
     placement: s.lng === null || s.lat === null ? null : publicPlacement(a.placement, { lng: s.lng, lat: s.lat }, modelOf(a) !== undefined),
     media: mediaList.map((m) => ({
       id: m.id,

@@ -1,5 +1,5 @@
 import { bigserial, boolean, index, integer, pgTable, primaryKey, smallint, text, timestamp, unique } from "drizzle-orm/pg-core";
-import { sites } from "./catalog.ts";
+import { siteBadges, siteTasks, sites } from "./catalog.ts";
 import { catalogRoutes, quizzes } from "./routes.ts";
 import { timestamps } from "./shared.ts";
 
@@ -103,3 +103,31 @@ export const userBadges = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.routeId] })],
 );
+
+/** A site task the user completed. `onSite` turns true once any completion was on site and never goes back. */
+export const userSiteTasks = pgTable(
+  "user_site_tasks",
+  {
+    userId: text("user_id").notNull(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => siteTasks.id, { onDelete: "cascade" }),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+    onSite: boolean("on_site").notNull().default(false),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.taskId] })],
+).enableRLS();
+
+/** A site badge the user earned (same `onSite` rule as `user_site_tasks`). */
+export const userSiteBadges = pgTable(
+  "user_site_badges",
+  {
+    userId: text("user_id").notNull(),
+    badgeId: text("badge_id")
+      .notNull()
+      .references(() => siteBadges.id, { onDelete: "cascade" }),
+    earnedAt: timestamp("earned_at", { withTimezone: true }).notNull().defaultNow(),
+    onSite: boolean("on_site").notNull().default(false),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.badgeId] })],
+).enableRLS();

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { pageResponse } from "../../platform/pagination.ts";
-import { SiteSummary, TrustSchema } from "../catalog/schemas.ts";
+import { SiteBadgeDto, SiteSummary, TrustSchema } from "../catalog/schemas.ts";
 import { PlayableQuizDto } from "../routes/schemas.ts";
 import { RECEIPT_ACTIONS, RECEIPT_REJECTIONS } from "./receipts.ts";
 
@@ -70,6 +70,7 @@ export const ProgressListResponse = pageResponse(ProgressItem);
 export const CompleteResponse = z.object({
   awarded: z.number().int().describe("Bu istekle eklenen puan; tekrarında ve misafirde 0 (misafirin puanı makbuzla hesaba geçer)"),
   receipt: z.string().optional().describe("Yalnız misafire: girişte POST /v1/me/receipts ile bozdurulur"),
+  earnedBadges: z.array(SiteBadgeDto).describe("Bu istekle yeni kazanılan eser rozetleri (koşulu hikâyeyi bitirmek olanlar); tekrarında ve misafirde boş"),
 });
 
 // ── quizzes ──────────────────────────────────────────────────────────────────
