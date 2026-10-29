@@ -43,6 +43,8 @@ import {
   type MapSettings,
   type CityScene,
   type Role,
+  type SiteBadge,
+  type SiteTask,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
@@ -56,9 +58,21 @@ import { Profile, Admin } from "./profile-admin";
 import { MemoryActions } from "./memory-actions";
 import { SignInModal } from "./sign-in-modal";
 import { Modal, Tag, Notice, Back, Motif } from "./ui";
+import {
+  FieldTaskDialog,
+  isFieldTask,
+  isQuizTask,
+  QuizTaskDialog,
+  SiteTasks,
+  TaskPickBar,
+  useSiteProgress,
+  type FieldDone,
+  type FieldTask,
+} from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
 import { apiUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
+import { locateOnce } from "../lib/locate";
 type View =
   | "map"
   | "sites"
@@ -109,6 +123,13 @@ export function AkarApp() {
     ),
     // `null` = closed; the string says why the dialog opened ("" = user asked).
     [signIn, setSignIn] = useState<string | null>(null);
+  const [taskDialog, setTaskDialog] = useState<{
+    task: SiteTask;
+    result?: FieldDone;
+  } | null>(null);
+  const [pick, setPick] = useState<{ task: FieldTask; hint: string } | null>(
+    null,
+  );
   const [mapSettings, setMapSettings] =
     useState<MapSettings>(defaultMapSettings);
   const [cityScenes, setCityScenes] = useState<Record<string, CityScene>>({});
@@ -116,10 +137,18 @@ export function AkarApp() {
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
     accountId = useRef<string | null | undefined>(undefined);
+  const pickBusy = useRef(false);
   const live = !!apiUrl;
   const role: Role = state.role ?? (live ? "user" : "admin");
   const canManage = !live || (!!account && role !== "user");
   const showExperimental = !live && experimental;
+  /** A guest plays the tasks freely, but nothing is stored and no badge is earned; the demo has no sign-in. */
+  const guestPlayer = live && !account;
+  const { progress, refresh: refreshProgress } = useSiteProgress(
+    client,
+    ready,
+    account?.id ?? null,
+  );
   /**
    * Map settings and city scenes (§11.42) are a refinement: when one cannot be read the map and the
    * viewer keep the values they have.
@@ -177,31 +206,11 @@ export function AkarApp() {
           getMemoryConsent: () => consent.current,
           onUploadProgress: setUploadProgress,
           locate: () =>
-            new Promise((resolve, reject) => {
-              if (!navigator.geolocation) {
-                reject(
-                  new Error("Bu cihaz konum doğrulamasını desteklemiyor."),
-                );
-                return;
-              }
-              navigator.geolocation.getCurrentPosition(
-                (p) =>
-                  resolve({
-                    coordinates: [p.coords.longitude, p.coords.latitude],
-                    accuracyM: p.coords.accuracy,
-                  }),
-                (error) =>
-                  reject(
-                    new Error(
-                      error.code === 1
-                        ? "Ziyareti doğrulamak için konum izni vermelisin."
-                        : error.code === 3
-                          ? "Konum alınması zaman aşımına uğradı. Yeniden dene."
-                          : "Konum alınamadı. Konum hizmetlerini kontrol et.",
-                    ),
-                  ),
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-              );
+            locateOnce({
+              unsupported: "Bu cihaz konum doğrulamasını desteklemiyor.",
+              denied: "Ziyareti doğrulamak için konum izni vermelisin.",
+              timeout: "Konum alınması zaman aşımına uğradı. Yeniden dene.",
+              failed: "Konum alınamadı. Konum hizmetlerini kontrol et.",
             }),
         })
       : createMockClient(storage);
@@ -267,6 +276,8 @@ export function AkarApp() {
     setCollapsed(false);
     if (id) setSiteId(id);
     setOverlay(null);
+    setTaskDialog(null);
+    setPick(null);
     const p = new URLSearchParams({ view: next });
     if (id) p.set("site", id);
     window.location.hash = p.toString();
@@ -288,6 +299,40 @@ export function AkarApp() {
     async (command: Command) => (await run(command)) === null,
     [run],
   );
+  /** A finished task: the badges it earned are announced and the progress is read again. */
+  const taskFinished = useCallback(
+    (badges: SiteBadge[]) => {
+      if (badges.length)
+        setToast(`Yeni rozet: ${badges.map((b) => b.title).join(", ")}`);
+      void refreshProgress();
+    },
+    [refreshProgress],
+  );
+  const signInForBadges = () => setSignIn("Rozetlerin hesabına kaydedilir.");
+  /** The tap of pick mode: the part goes to the server; a wrong one keeps the model waiting. */
+  async function pickPart(part: string) {
+    const current = pick;
+    if (!current || pickBusy.current || !client.current) return;
+    pickBusy.current = true;
+    try {
+      const result = await client.current.completeSiteTask(current.task.id, {
+        mode: "fromHome",
+        part,
+      });
+      if (result.done) {
+        setPick(null);
+        setTaskDialog({ task: current.task, result });
+        taskFinished(result.earnedBadges);
+      } else
+        setPick({
+          ...current,
+          hint: "Bu başka bir parça. Başka bir yere dokunmayı dene.",
+        });
+    } catch (e) {
+      setPick({ ...current, hint: describeError(e, "Görev tamamlanamadı.") });
+    }
+    pickBusy.current = false;
+  }
   const loadPlacement = useCallback<AkarClient["getMapPlacement"]>(
     async (siteId) => {
       if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
@@ -354,6 +399,7 @@ export function AkarApp() {
   const site = state.sites.find(
     (s) => s.id === siteId && s.status === "published",
   );
+  const dialogTask = taskDialog?.task;
   const filtered = useMemo(
     () =>
       filterSites(state.sites, query, kind, saved ? state.savedIds : undefined),
@@ -659,10 +705,16 @@ export function AkarApp() {
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {
+                          const fresh = await refreshProgress();
+                          const earned = (site.badges ?? []).filter((b) =>
+                            fresh.includes(b.id),
+                          );
                           setToast(
-                            state.readIds.includes(site.id)
-                              ? "Hikâyeyi yeniden keşfettin."
-                              : "Hikâye tamamlandı.",
+                            `${
+                              state.readIds.includes(site.id)
+                                ? "Hikâyeyi yeniden keşfettin."
+                                : "Hikâye tamamlandı."
+                            }${earned.length ? ` Yeni rozet: ${earned.map((b) => b.title).join(", ")}` : ""}`,
                           );
                           go("detail", site.id);
                         }
@@ -770,6 +822,11 @@ export function AkarApp() {
                           </button>
                         ))}
                       </div>
+                      <SiteTasks
+                        site={site}
+                        progress={progress}
+                        onOpen={(task) => setTaskDialog({ task })}
+                      />
                       <button
                         className="detail-link"
                         onClick={() => setOverlay("about")}
@@ -1137,6 +1194,7 @@ export function AkarApp() {
                       if (index >= 0) openStory(false, index);
                       else setOverlay("about");
                     }}
+                    onPick={pick ? pickPart : undefined}
                   />
                 ) : (
                   <HeritageMap
@@ -1150,6 +1208,13 @@ export function AkarApp() {
                     mapSettings={mapSettings}
                   />
                 )}
+                {pick && (
+                  <TaskPickBar
+                    task={pick.task}
+                    hint={pick.hint}
+                    onCancel={() => setPick(null)}
+                  />
+                )}
                 {!live && (
                   <div className="demo-label">
                     <span />
@@ -1160,6 +1225,35 @@ export function AkarApp() {
             </main>
           )}
         </>
+      )}
+      {taskDialog && dialogTask && site && client.current && isQuizTask(dialogTask) && (
+        <QuizTaskDialog
+          key={dialogTask.id}
+          task={dialogTask}
+          client={client.current}
+          guest={guestPlayer}
+          done={progress.tasks.some((t) => t.taskId === dialogTask.id)}
+          onClose={() => setTaskDialog(null)}
+          onDone={taskFinished}
+          onSignIn={signInForBadges}
+        />
+      )}
+      {taskDialog && dialogTask && site && client.current && isFieldTask(dialogTask) && (
+        <FieldTaskDialog
+          key={dialogTask.id}
+          task={dialogTask}
+          site={site}
+          client={client.current}
+          guest={guestPlayer}
+          {...(taskDialog.result && { initial: taskDialog.result })}
+          onClose={() => setTaskDialog(null)}
+          onPickFromHome={() => {
+            setPick({ task: dialogTask, hint: "" });
+            setTaskDialog(null);
+          }}
+          onDone={taskFinished}
+          onSignIn={signInForBadges}
+        />
       )}
       {overlay === "memory" && site && (
         <MemoryModal
@@ -1302,7 +1396,10 @@ export function AkarApp() {
               className="btn"
               onClick={async () => {
                 try {
-                  if (client.current) setState(await client.current.reset());
+                  if (client.current) {
+                    setState(await client.current.reset());
+                    void refreshProgress();
+                  }
                   setOverlay(null);
                   setToast("Demo başlangıca döndürüldü.");
                 } catch (e) {

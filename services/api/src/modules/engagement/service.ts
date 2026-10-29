@@ -16,12 +16,15 @@ import {
   storyProgress,
   userBadges,
   userRouteStops,
+  userSiteBadges,
+  userSiteTasks,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import { TrustSchema, type SiteSummary } from "../catalog/schemas.ts";
+import { TrustSchema, type SiteBadgeDto, type SiteSummary } from "../catalog/schemas.ts";
 import { getPublishedSummaries, published } from "../catalog/service.ts";
+import { awardStoryBadges } from "../site-tasks/badges.ts";
 import { checkQuizAnswer, playableQuiz } from "../routes/quizzes.ts";
 import { POINT_ACTIONS, pointsOf, receiptRedeemed, recordPointEvent, type PointAction } from "./points.ts";
 import { issueReceipt, receiptSecret, verifyReceipt, type ReceiptPayload } from "./receipts.ts";
@@ -323,25 +326,27 @@ export async function awardBadges(tx: Tx, userId: string): Promise<string[]> {
 
 /**
  * Completing a published story with at least one block. A user earns `story.complete` once and may
- * earn route badges; a guest gets a receipt to redeem after sign-in.
+ * earn route badges and the site's story badges (`earnedBadges`: the ones this call newly awarded); a guest gets
+ * a receipt to redeem after sign-in and no badge.
  */
 export async function completeStory(
   tx: Tx,
   config: Config,
   player: Player,
   siteId: string,
-): Promise<{ awarded: number; receipt?: string }> {
+): Promise<{ awarded: number; receipt?: string; earnedBadges: SiteBadgeDto[] }> {
   const total = await publishedStoryLength(tx, siteId);
   if (total === null) throw notFound("Hikâye");
 
   if (player.kind === "guest") {
     const receipt = issueReceipt(receiptSecret(config), { action: "story.complete", subjectId: siteId, deviceId: player.deviceId });
-    return { awarded: 0, receipt };
+    return { awarded: 0, receipt, earnedBadges: [] };
   }
   await markStoryCompleted(tx, player.id, siteId, total);
   const gained = await recordPointEvent(tx, { userId: player.id, action: "story.complete", subjectId: siteId });
   await awardBadges(tx, player.id);
-  return { awarded: gained ? POINT_ACTIONS["story.complete"] : 0 };
+  const earnedBadges = await awardStoryBadges(tx, player.id, siteId);
+  return { awarded: gained ? POINT_ACTIONS["story.complete"] : 0, earnedBadges };
 }
 
 // ── quizzes ──────────────────────────────────────────────────────────────────
@@ -434,6 +439,34 @@ const MAX_ACCURACY_M = 100;
 const MAX_SLACK_M = 50;
 
 /**
+ * The geofence rule shared by visits and site field tasks: true when `distance - min(accuracyM, 50) <= radiusM`, the
+ * distance being the PostGIS geography distance to the published site; null when there is no such published site.
+ * A reading less accurate than 100 m is a 422. The coordinates exist only as bound parameters of that one query.
+ */
+export async function withinSiteRadius(
+  db: Reader,
+  siteId: string,
+  coordinates: [number, number],
+  accuracyM: number,
+  radiusM: number,
+): Promise<boolean | null> {
+  if (accuracyM > MAX_ACCURACY_M) {
+    throw new AppError(422, "LOCATION_ACCURACY_INSUFFICIENT", "Konum hassasiyeti yetersiz.", {
+      accuracyM: [`Hassasiyet en fazla ${MAX_ACCURACY_M} metre olmalı.`],
+    });
+  }
+  const [lng, lat] = coordinates;
+  const slack = Math.min(accuracyM, MAX_SLACK_M);
+  const [row] = await db
+    .select({
+      near: sql<boolean>`ST_Distance(${sites.location}::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography) - ${slack}::float8 <= ${radiusM}::float8`,
+    })
+    .from(sites)
+    .where(and(eq(sites.id, siteId), published));
+  return row ? row.near : null;
+}
+
+/**
  * Geofence check (D4b): verified when `distance - min(accuracyM, 50) <= VISIT_RADIUS_M`, distance
  * being the PostGIS geography distance to the published site. The coordinates exist only as bound
  * parameters of that one query: never stored, never logged, never returned (only a near/far band).
@@ -444,22 +477,8 @@ export async function verifyVisit(
   player: Player,
   input: { siteId: string; coordinates: [number, number]; accuracyM: number },
 ) {
-  if (input.accuracyM > MAX_ACCURACY_M) {
-    throw new AppError(422, "LOCATION_ACCURACY_INSUFFICIENT", "Konum hassasiyeti yetersiz.", {
-      accuracyM: [`Hassasiyet en fazla ${MAX_ACCURACY_M} metre olmalı.`],
-    });
-  }
-  const [lng, lat] = input.coordinates;
-  const slack = Math.min(input.accuracyM, MAX_SLACK_M);
-  const [row] = await tx
-    .select({
-      near: sql<boolean>`ST_Distance(${sites.location}::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography) - ${slack}::float8 <= ${config.VISIT_RADIUS_M}::float8`,
-    })
-    .from(sites)
-    .where(and(eq(sites.id, input.siteId), published));
-  if (!row) throw notFound("Eser");
-
-  const verified = row.near;
+  const verified = await withinSiteRadius(tx, input.siteId, input.coordinates, input.accuracyM, config.VISIT_RADIUS_M);
+  if (verified === null) throw notFound("Eser");
   let awarded = 0;
   let receipt: string | undefined;
   if (verified) {
@@ -628,7 +647,7 @@ export async function getPassport(db: Db, userId: string): Promise<PassportRespo
   };
 }
 
-/** Account erasure (KVKK): deletes the user's points ledger, saves, Rotam, story/quiz progress and badges. */
+/** Account erasure (KVKK): deletes the user's points ledger, saves, Rotam, story/quiz progress, route badges, site task completions and site badges. */
 export async function eraseEngagement(tx: Tx, userId: string): Promise<void> {
   await tx.delete(pointEvents).where(eq(pointEvents.userId, userId));
   await tx.delete(savedSites).where(eq(savedSites.userId, userId));
@@ -636,4 +655,6 @@ export async function eraseEngagement(tx: Tx, userId: string): Promise<void> {
   await tx.delete(storyProgress).where(eq(storyProgress.userId, userId));
   await tx.delete(quizProgress).where(eq(quizProgress.playerId, userId));
   await tx.delete(userBadges).where(eq(userBadges.userId, userId));
+  await tx.delete(userSiteTasks).where(eq(userSiteTasks.userId, userId));
+  await tx.delete(userSiteBadges).where(eq(userSiteBadges.userId, userId));
 }

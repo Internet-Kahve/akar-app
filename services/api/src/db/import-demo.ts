@@ -3,18 +3,26 @@ import { readFile, realpath } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { and, eq, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like, notInArray, sql } from "drizzle-orm";
 import { validateCityScene, validateSite, type CityScene, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
 import { loadConfig } from "../config.ts";
+import type { Tx } from "../platform/idempotency.ts";
 import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts";
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
-import { cities, historyImages, media, siteAboutChapters, siteMedia, sitePartCardPhotos, sitePartCards, siteSectionPhotos, siteSections, sites, type AboutReading } from "./schema/index.ts";
+import { cities, historyImages, media, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type QuizTaskDetails } from "./schema/index.ts";
 
 type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string };
 type BookPhoto = { id: string; file: string; alt: string; title: string; description: string; license: string; trust: Trust; sourceId: string };
-type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "partCards" | "chapters" | "aboutCover" | "sections"> & {
+type ContentTask = {
+  id: string; kind: "quiz" | "field"; title: string; prompt: string; photoId: string | null; part: string | null; source: string | null; trust: Trust;
+  /** Quiz only: index of the right option (stored server-side in `site_task_answers`). */
+  correctIndex: number | null;
+  details: QuizTaskDetails | FieldTaskDetails;
+};
+type ContentBadge = { id: string; title: string; text: string; condition: "story" | "task"; taskId: string | null; onSiteLabel: boolean };
+type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "partCards" | "chapters" | "aboutCover" | "sections" | "tasks" | "badges"> & {
   photos: Array<NonNullable<HeritageSite["photos"]>[number] & { file: string; galleryPosition: number | null }>;
   model: NonNullable<HeritageSite["model"]> & { file: string };
   historyImages: ArchiveEntry[];
@@ -27,9 +35,37 @@ type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "pa
   bookPhotos: BookPhoto[];
   aboutCoverPhotoId: string | null;
   partCards: Array<{ id: string; parts: string[]; title: string; body: string; photoIds: string[]; trust: Trust; sourceId: string }>;
+  /** `icerik/gorevler.json` (§11.44); empty for a site without one. */
+  tasks: ContentTask[];
+  badges: ContentBadge[];
 };
 type Manifest = { version: number; sites: ContentSite[]; routes: HeritageRoute[]; retireSiteIds: string[]; cities: Array<{ name: string; scene: CityScene }> };
 const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".glb": "model/gltf-binary" };
+
+/** Tasks and badges of one site: photographs and model parts resolve, answer keys and badge conditions are consistent. */
+function validateTasks(site: ContentSite, photoIds: Set<string>): void {
+  const fail = (what: string, ...ids: string[]): never => { throw new Error(`${what}: ${[site.id, ...ids].join(" ")}`); };
+  const taskIds = new Set(site.tasks.map((t) => t.id));
+  if (taskIds.size !== site.tasks.length || new Set(site.badges.map((b) => b.id)).size !== site.badges.length) fail("Duplicate task or badge id");
+  for (const task of site.tasks) {
+    const where = task.id;
+    if (task.photoId !== null && !photoIds.has(task.photoId)) fail("Unresolved task photograph", where);
+    if (task.part !== null && !site.model.parts.includes(task.part)) fail("Task part is not a model part", where, task.part);
+    if (task.kind === "quiz") {
+      const d = task.details as QuizTaskDetails;
+      if (!Array.isArray(d.options) || d.options.length < 2 || d.options.length > 6) fail("Quiz needs 2-6 options", where);
+      if (!Number.isInteger(task.correctIndex) || task.correctIndex! < 0 || task.correctIndex! >= d.options.length) fail("Quiz answer is not an option", where);
+    } else {
+      const d = task.details as FieldTaskDetails;
+      if (task.correctIndex !== null) fail("Field task has an answer key", where);
+      if (!Number.isInteger(d.onSite.radiusM) || d.onSite.radiusM <= 0) fail("Field task radius", where);
+      if (d.fromHome && !site.model.parts.includes(d.fromHome.part)) fail("Task part is not a model part", where, d.fromHome.part);
+    }
+  }
+  for (const badge of site.badges) {
+    if ((badge.condition === "task") !== (badge.taskId !== null) || (badge.taskId !== null && !taskIds.has(badge.taskId))) fail("Badge condition", badge.id);
+  }
+}
 
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
 export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env) {
@@ -44,7 +80,8 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const mediaFiles = new Map<string, string>();
   const triangles = new Map<string, number>();
   for (const site of manifest.sites) {
-    validateSite({ ...site, historyImages: [], partCards: [], chapters: [], sections: site.sections.map(({ chapterId: _chapter, photos: _photos, ...section }) => section) });
+    const { tasks: _tasks, badges: _badges, ...validated } = site;
+    validateSite({ ...validated, historyImages: [], partCards: [], chapters: [], sections: site.sections.map(({ chapterId: _chapter, photos: _photos, ...section }) => section) });
     const ids = new Set(site.photos.map((p) => p.id));
     if (!ids.has(site.coverPhotoId ?? "") || site.stories.some((s) => !ids.has(s.photoId ?? ""))) throw new Error(`Unresolved photographs: ${site.id}`);
     if (site.partCards.some((c) => c.photoIds.some((p) => !ids.has(p)))) throw new Error(`Unresolved part card photographs: ${site.id}`);
@@ -80,6 +117,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     if (outside.length) throw new Error(`Chapter parts are not model parts: ${site.id} ${[...new Set(outside)].join(", ")}`);
     const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !site.model.parts.includes(part));
     if (unknown.length) throw new Error(`Part card parts are not model parts: ${site.id} ${unknown.join(", ")}`);
+    validateTasks(site, ids);
   }
   const unique = new Map([...files.values()].map((f) => [f.key, f]));
   const report = { sites: manifest.sites.length, objects: unique.size, bytes: [...unique.values()].reduce((n, f) => n + f.body.length, 0), applied: apply };
@@ -100,7 +138,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const { db, pool } = createDb(config.DATABASE_URL, 2, config.DATABASE_SSL_CA);
   try {
     await db.transaction(async (tx) => {
-      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, ...site }) => site), routes: manifest.routes });
+      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes });
       for (const site of manifest.sites) {
         // The seed includes every story photo; only editorial gallery entries belong in site_media.
         await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
@@ -138,6 +176,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           await tx.insert(sitePartCards).values({ ...card, siteId: site.id, position });
           if (photoIds.length) await tx.insert(sitePartCardPhotos).values(photoIds.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
         }
+        await replaceTasks(tx, site);
         for (const id of [...site.photos.map((p) => p.id), `${site.id}-model`]) {
           const file = files.get(mediaFiles.get(id)!)!;
           // Shared content-addressed files are seed-managed (storage_key stays null); deleting one site must not delete another's photo.
@@ -150,6 +189,30 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     });
   } finally { await pool.end(); }
   return report;
+}
+
+/**
+ * Brings the site's tasks, answer keys and badges to the manifest. Rows are upserted by id and only the vanished ones
+ * are deleted, so a player's progress survives for every task or badge that is still there (the foreign keys cascade
+ * only for the vanished). Positions are parked below zero first: the (site, position) unique key would otherwise
+ * refuse a reorder.
+ */
+async function replaceTasks(tx: Tx, site: ContentSite): Promise<void> {
+  await tx.update(siteTasks).set({ position: sql`-${siteTasks.position} - 1` }).where(eq(siteTasks.siteId, site.id));
+  await tx.update(siteBadges).set({ position: sql`-${siteBadges.position} - 1` }).where(eq(siteBadges.siteId, site.id));
+  for (const [position, { correctIndex, photoId, ...task }] of site.tasks.entries()) {
+    const row = { ...task, siteId: site.id, position, mediaId: photoId };
+    await tx.insert(siteTasks).values(row).onConflictDoUpdate({ target: siteTasks.id, set: row });
+    if (correctIndex === null) await tx.delete(siteTaskAnswers).where(eq(siteTaskAnswers.taskId, task.id));
+    else await tx.insert(siteTaskAnswers).values({ taskId: task.id, correctIndex }).onConflictDoUpdate({ target: siteTaskAnswers.taskId, set: { correctIndex } });
+  }
+  for (const [position, badge] of site.badges.entries()) {
+    const row = { ...badge, siteId: site.id, position };
+    await tx.insert(siteBadges).values(row).onConflictDoUpdate({ target: siteBadges.id, set: row });
+  }
+  const badgeIds = site.badges.map((b) => b.id), taskIds = site.tasks.map((t) => t.id);
+  await tx.delete(siteBadges).where(badgeIds.length ? and(eq(siteBadges.siteId, site.id), notInArray(siteBadges.id, badgeIds)) : eq(siteBadges.siteId, site.id));
+  await tx.delete(siteTasks).where(taskIds.length ? and(eq(siteTasks.siteId, site.id), notInArray(siteTasks.id, taskIds)) : eq(siteTasks.siteId, site.id));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

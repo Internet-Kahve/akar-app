@@ -16,6 +16,7 @@ import {
   siteMedia,
   sitePartCardPhotos,
   siteSectionPhotos,
+  siteTasks,
   sites,
   sources,
   staffMembers,
@@ -598,6 +599,7 @@ export const MEDIA_REFERENCES = [
   historyImages.presentMediaId,
   sitePartCardPhotos.mediaId,
   siteSectionPhotos.mediaId,
+  siteTasks.mediaId,
   catalogRoutes.badgeMediaId,
   memories.mediaId,
 ] as const;

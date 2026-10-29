@@ -181,6 +181,50 @@ export interface PartCard {
   sourceId?: string;
   trust: Trust;
 }
+/**
+ * Site task (decision §11.44), a question or a field task. The public shape carries no answer key:
+ * the server (or the mock client) checks answers, the part and the position.
+ */
+export interface SiteTask {
+  id: string;
+  kind: "quiz" | "field";
+  title: string;
+  /** Quiz: the question; field: the task text. */
+  prompt: string;
+  /** One of the site's photographs. */
+  photo?: SitePhoto;
+  /** Model part the task is about. */
+  part?: string;
+  /** Where the content comes from (book and page), as plain text. */
+  source?: string;
+  trust: Trust;
+  quiz?: {
+    options: string[];
+    /** Revealed one by one, on demand. */
+    hints: string[];
+    /** Shown after a wrong answer (the player may try again). */
+    wrongText: string;
+    /** Whether the question can be answered without being at the site. */
+    fromHome: boolean;
+  };
+  field?: {
+    /** Done at the site: the visitor's position must be within `radiusM` of the site. */
+    onSite: { text: string; radiusM: number };
+    /** Done from home: tapping `part` on the 3D model. `null` = on site only. */
+    fromHome: { text: string; part: string } | null;
+  };
+}
+/** Badge of a site: earned by finishing the story or by one of the site's tasks. */
+export interface SiteBadge {
+  id: string;
+  title: string;
+  text: string;
+  condition: "story" | "task";
+  /** The task that earns it; `null` for a story badge. */
+  taskId: string | null;
+  /** Show a «Yerinde» tag when it was earned at the site. */
+  onSiteLabel: boolean;
+}
 /** A book photograph placed after a paragraph of "Eser hakkında"; `aspect` = width / height of the file as printed (absent = unknown). */
 export interface AboutPhoto {
   photo: SitePhoto;
@@ -240,6 +284,10 @@ export interface HeritageSite {
   historyImages?: HistoryImage[];
   /** With cards, only their parts are tappable; absent or empty = every part shows its name. */
   partCards?: PartCard[];
+  /** Tasks in order; absent or empty = the site has none. */
+  tasks?: SiteTask[];
+  /** Badges in order; absent or empty = the site has none. */
+  badges?: SiteBadge[];
   storyPhotos?: SitePhoto[];
   /** Cover photograph of "Eser hakkında"; absent = the gallery cover. */
   aboutCover?: SitePhoto;

@@ -2,7 +2,9 @@ import type {
   CityScene,
   HeritageRoute,
   HeritageSite,
+  SiteBadge,
   SiteModel,
+  SiteTask,
   Snapshot,
   StoryBlock,
 } from "@akar/domain";
@@ -271,9 +273,97 @@ const demoModels: Record<string, SiteModel> = {
     anchorNode: "Cami_Govde",
   }),
 };
+/**
+ * Ulucami's tasks and badges (`icerik/gorevler.json`, 28 Ekim 2026), as the public API serves them: no
+ * answer key. The key and the texts shown after success are `demoSiteTaskKeys`, which stays inside the mock client.
+ */
+const ulucamiTasks: SiteTask[] = [
+  {
+    id: "ulu-soru-kundekari",
+    kind: "quiz",
+    title: "Minberin sırrı",
+    prompt: "Ulucami'nin ahşap minberi hangi teknikle yapıldı?",
+    part: "Minber",
+    source: "E cilt-1 PDF s.27",
+    trust: "verified",
+    quiz: {
+      options: ["Kündekâri", "Çini", "Kalem işi", "Mukarnas"],
+      hints: [
+        "Minberin parçalarına bak: aralarında çivi ya da tutkal yok, birbirine geçiyorlar.",
+        "Cevap «K» harfiyle başlıyor.",
+      ],
+      wrongText: "Tekrar dene. İpucu almak istersen aşağıda.",
+      fromHome: true,
+    },
+  },
+  {
+    id: "ulu-saha-sahaflar",
+    kind: "field",
+    title: "Sahaflar Kapısı",
+    prompt:
+      "Caminin kuzey cephesindeki mermer taç kapıyı bul. Halk arasında adı «Sahaflar Kapısı».",
+    source: "E cilt-1 PDF s.25",
+    trust: "verified",
+    field: {
+      onSite: {
+        text: "Kapının önüne gel ve «Buradayım»a dokun. İstersen fotoğrafını çekip İz Bırak'a ekle.",
+        radiusM: 80,
+      },
+      fromHome: {
+        text: "3D modelde Sahaflar Kapısı'na dokun.",
+        part: "Tac_Kapi",
+      },
+    },
+  },
+];
+const ulucamiBadges: SiteBadge[] = [
+  {
+    id: "ulu-hikaye",
+    title: "Ulucami'yi dinledin",
+    text: "Ulucami'nin hikâyesini sonuna kadar dinledin ya da okudun.",
+    condition: "story",
+    taskId: null,
+    onSiteLabel: false,
+  },
+  {
+    id: "ulu-kundekari",
+    title: "Kündekâri",
+    text: "Minberin çivisiz, birbirine geçen parçalarını öğrendin.",
+    condition: "task",
+    taskId: "ulu-soru-kundekari",
+    onSiteLabel: false,
+  },
+  {
+    id: "ulu-sahaflar",
+    title: "Sahaflar Kapısı",
+    text: "Ulucami'nin kuzeydeki taç kapısını buldun.",
+    condition: "task",
+    taskId: "ulu-saha-sahaflar",
+    onSiteLabel: true,
+  },
+];
+/** Mock only: answer key of the question and the texts shown once a task is done. Never part of a site. */
+export const demoSiteTaskKeys: Record<
+  string,
+  { correctIndex: number; correctText: string } | { doneText: string }
+> = {
+  "ulu-soru-kundekari": {
+    correctIndex: 0,
+    correctText:
+      "Kündekâri: ahşap parçalar çivi, tutkal ya da başka bir bağlayıcı kullanılmadan birbirine geçirilir. Ulucami minberi bu tekniğin en özgün örneklerinden biridir.",
+  },
+  "ulu-saha-sahaflar": {
+    doneText:
+      "Ulucami'ye üç kapıdan girilir: kuzeyde Sahaflar Kapısı, doğuda Çarşı Kapısı, batıda Müftülük ya da Mahkeme Kapısı.",
+  },
+};
 export const sites: HeritageSite[] = input.map((site, i) => ({
   ...site,
   ...(demoModels[site.id] && { model: demoModels[site.id] }),
+  ...(site.id === "ulu-cami" && {
+    tasks: ulucamiTasks,
+    badges: ulucamiBadges,
+  }),
   architect: "—",
   city: demoRegion.city,
   district: demoRegion.district,

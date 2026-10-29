@@ -2642,3 +2642,253 @@ test("a placement is saved for a draft too, a model left unchanged is no model c
     (e) => e instanceof ApiError && e.status === 409,
   );
 });
+
+const taskDto = {
+  id: "t-quiz",
+  kind: "quiz",
+  title: "Minberin sırrı",
+  prompt: "Hangi teknik?",
+  photoId: "p1",
+  part: "Minber",
+  source: "E cilt-1 PDF s.27",
+  trust: "verified",
+  quiz: {
+    options: ["A", "B"],
+    hints: ["ipucu"],
+    wrongText: "Tekrar dene.",
+    fromHome: true,
+  },
+};
+const fieldTaskDto = {
+  id: "t-field",
+  kind: "field",
+  title: "Kapı",
+  prompt: "Kapıyı bul.",
+  photoId: null,
+  part: null,
+  source: null,
+  trust: "verified",
+  field: {
+    onSite: { text: "Önüne gel.", radiusM: 80 },
+    fromHome: { text: "Modelde dokun.", part: "Tac_Kapi" },
+  },
+};
+const badgeDto = {
+  id: "b-task",
+  title: "Kapı",
+  text: "Kapıyı buldun.",
+  condition: "task",
+  taskId: "t-field",
+  onSiteLabel: true,
+};
+
+test("site tasks and badges reach the UI with their photo resolved; the answer key is not in them; an older API has none", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [
+        detail("t", {
+          media: [media("p1", "photo")],
+          tasks: [taskDto, fieldTaskDto],
+          badges: [badgeDto],
+        }),
+        detail("old"),
+      ],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [site, old] = (await client.getSnapshot()).sites;
+  const [quiz, field] = site!.tasks!;
+  assert.equal(quiz!.photo?.id, "p1");
+  assert.equal(quiz!.photo?.src, "https://cdn.test/p1");
+  assert.equal(quiz!.part, "Minber");
+  assert.equal(quiz!.source, "E cilt-1 PDF s.27");
+  assert.deepEqual(quiz!.quiz, taskDto.quiz);
+  assert.equal(field!.photo, undefined);
+  assert.equal(field!.part, undefined);
+  assert.equal(field!.source, undefined);
+  assert.deepEqual(field!.field, fieldTaskDto.field);
+  assert.deepEqual(site!.badges, [badgeDto]);
+  assert.ok(!JSON.stringify(site).includes("correct"));
+  assert.equal(old!.tasks, undefined);
+  assert.equal(old!.badges, undefined);
+  // A task photograph is a site photograph: it stays in the gallery.
+  assert.deepEqual(
+    site!.photos?.map((p) => p.id),
+    ["p1"],
+  );
+});
+
+test("a guest answers and completes tasks without a token; a signed-in user's token is sent; the position goes as lat/lng", async () => {
+  let token: string | null = null;
+  const api = fakeApi({
+    "POST /v1/site-tasks/t-quiz/answer": (c) =>
+      (c.body as { choice: number }).choice === 1
+        ? {
+            correct: true,
+            correctText: "Doğru.",
+            wrongText: null,
+            earnedBadges: token ? [badgeDto] : [],
+          }
+        : {
+            correct: false,
+            correctText: null,
+            wrongText: "Tekrar dene.",
+            earnedBadges: [],
+          },
+    "POST /v1/site-tasks/t-field/complete": (c) => {
+      const body = c.body as { mode: string; part?: string };
+      if (body.mode === "fromHome" && body.part !== "Tac_Kapi")
+        return Response.json(
+          {
+            error: {
+              code: "WRONG_PART",
+              message: "Bu parça değil.",
+              fieldErrors: {},
+              requestId: "r",
+            },
+          },
+          { status: 422 },
+        );
+      if (body.mode === "onSite" && !token)
+        return Response.json(
+          {
+            error: {
+              code: "TOO_FAR",
+              message: "Çok uzaktasın.",
+              fieldErrors: {},
+              requestId: "r",
+            },
+          },
+          { status: 422 },
+        );
+      return {
+        doneText: "Tamam.",
+        onSite: body.mode === "onSite",
+        earnedBadges: token ? [badgeDto] : [],
+      };
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => token,
+    fetch: api.fetch,
+  });
+  const wrong = await client.answerSiteTask("t-quiz", 0);
+  assert.deepEqual(
+    [wrong.correct, wrong.correctText, wrong.wrongText, wrong.earnedBadges],
+    [false, null, "Tekrar dene.", []],
+  );
+  const right = await client.answerSiteTask("t-quiz", 1);
+  assert.deepEqual(
+    [right.correct, right.correctText, right.earnedBadges],
+    [true, "Doğru.", []],
+  );
+  const guestCall = api.calls[1]!;
+  assert.equal(guestCall.headers.authorization, undefined);
+  assert.ok(guestCall.headers["x-device-id"]);
+  assert.ok(guestCall.headers["idempotency-key"]);
+  assert.deepEqual(guestCall.body, { choice: 1 });
+
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "fromHome",
+      part: "Cati",
+    }),
+    { done: false, reason: "wrongPart" },
+  );
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "onSite",
+      coordinates: [29.1, 40.2],
+      accuracyM: 12,
+    }),
+    { done: false, reason: "tooFar" },
+  );
+  assert.deepEqual(api.calls.at(-1)?.body, {
+    mode: "onSite",
+    lat: 40.2,
+    lng: 29.1,
+    accuracyM: 12,
+  });
+
+  token = "tok";
+  const earned = await client.answerSiteTask("t-quiz", 1);
+  assert.deepEqual(earned.earnedBadges, [badgeDto]);
+  assert.equal(api.calls.at(-1)?.headers.authorization, "Bearer tok");
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "onSite",
+      coordinates: [29.1, 40.2],
+    }),
+    { done: true, doneText: "Tamam.", onSite: true, earnedBadges: [badgeDto] },
+  );
+  assert.deepEqual(api.calls.at(-1)?.body, {
+    mode: "onSite",
+    lat: 40.2,
+    lng: 29.1,
+  });
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "fromHome",
+      part: "Tac_Kapi",
+    }),
+    { done: true, doneText: "Tamam.", onSite: false, earnedBadges: [badgeDto] },
+  );
+});
+
+test("any other API error of a task request is thrown, not turned into an answer", async () => {
+  const api = fakeApi({
+    "POST /v1/site-tasks/t-field/complete": () =>
+      Response.json(
+        {
+          error: {
+            code: "VALIDATION_FAILED",
+            message: "Geçersiz.",
+            fieldErrors: {},
+            requestId: "r",
+          },
+        },
+        { status: 400 },
+      ),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  await assert.rejects(
+    client.completeSiteTask("t-field", { mode: "fromHome", part: "x" }),
+    (e) => e instanceof ApiError && e.status === 400,
+  );
+});
+
+test("site progress is read for a signed-in user and is empty without a request for a guest", async () => {
+  let token: string | null = null;
+  const progress = {
+    tasks: [
+      { taskId: "t-field", siteId: "t", onSite: true, completedAt: "2026-10-29T10:00:00Z" },
+    ],
+    badges: [
+      { badgeId: "b-task", siteId: "t", onSite: true, earnedAt: "2026-10-29T10:00:00Z" },
+    ],
+  };
+  const api = fakeApi({ "GET /v1/me/site-progress": () => progress });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => token,
+    fetch: api.fetch,
+  });
+  assert.deepEqual(await client.getSiteProgress(), { tasks: [], badges: [] });
+  assert.equal(api.calls.length, 0);
+  token = "tok";
+  assert.deepEqual(await client.getSiteProgress(), progress);
+  assert.equal(api.calls[0]?.headers.authorization, "Bearer tok");
+});

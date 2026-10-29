@@ -3,6 +3,7 @@ import {
   validatePlacement,
   validateSite,
   type AboutChapter,
+  type SiteBadge,
   type CameraPose,
   type Command,
   type HeritageRoute,
@@ -15,6 +16,7 @@ import {
   type SiteKind,
   type SitePhoto,
   type SiteSource,
+  type SiteTask,
   type Snapshot,
   type StoryBlock,
   type Trust,
@@ -24,6 +26,10 @@ import type {
   AdminMember,
   MemberPage,
   AkarClient,
+  SiteProgress,
+  SiteTaskAnswerResult,
+  SiteTaskCompleteInput,
+  SiteTaskCompletion,
   PlayableQuiz,
   QuizAnswerResult,
   StorageAdapter,
@@ -223,6 +229,22 @@ interface SiteDetailDto {
     sourceId: string | null;
     trust: Trust;
   }>;
+  /** Absent on older API versions. */
+  tasks?: Array<{
+    id: string;
+    kind: "quiz" | "field";
+    title: string;
+    prompt: string;
+    /** A site photograph; resolves in `media`. */
+    photoId: string | null;
+    part: string | null;
+    source: string | null;
+    trust: Trust;
+    quiz?: NonNullable<SiteTask["quiz"]>;
+    field?: NonNullable<SiteTask["field"]>;
+  }>;
+  /** Absent on older API versions. */
+  badges?: SiteBadge[];
   media: MediaDto[];
   /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
   placement?: MapPlacement | null;
@@ -471,6 +493,22 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         ...(present(sourceId) && { sourceId }),
       })),
     }),
+    ...(d.tasks?.length && {
+      tasks: d.tasks.map(({ photoId, part, source, quiz, field, ...task }) => {
+        const m = photoId
+          ? d.media.find((x) => x.id === photoId && x.kind === "photo")
+          : undefined;
+        return {
+          ...task,
+          ...(m && { photo: toPhoto(m) }),
+          ...(present(part) && { part }),
+          ...(present(source) && { source }),
+          ...(quiz && { quiz }),
+          ...(field && { field }),
+        };
+      }),
+    }),
+    ...(d.badges?.length && { badges: d.badges }),
     ...(d.editorVersion === 2 && { editorVersion: 2 as const }),
     ...(present(d.nameEn) && { nameEn: d.nameEn }),
     ...(present(d.descriptionEn) && { descriptionEn: d.descriptionEn }),
@@ -2032,6 +2070,56 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           snapshot: await build(false),
         };
       }),
+    // Optional auth: a signed-in user's token earns badges, a guest plays without storing anything.
+    answerSiteTask: (taskId, choice) =>
+      call<SiteTaskAnswerResult>(
+        "POST",
+        `/v1/site-tasks/${encodeURIComponent(taskId)}/answer`,
+        { body: { choice } },
+      ),
+    completeSiteTask: async (taskId, input) => {
+      const body =
+        input.mode === "onSite"
+          ? {
+              mode: "onSite",
+              lat: input.coordinates[1],
+              lng: input.coordinates[0],
+              ...(input.accuracyM !== undefined && {
+                accuracyM: input.accuracyM,
+              }),
+            }
+          : { mode: "fromHome", part: input.part };
+      try {
+        const done = await call<{
+          doneText: string;
+          onSite: boolean;
+          earnedBadges: SiteBadge[];
+        }>(
+          "POST",
+          `/v1/site-tasks/${encodeURIComponent(taskId)}/complete`,
+          { body },
+        );
+        return { done: true, ...done };
+      } catch (e) {
+        // Not a failed request: the visitor is too far away or tapped another part.
+        if (
+          e instanceof ApiError &&
+          e.status === 422 &&
+          (e.code === "TOO_FAR" || e.code === "WRONG_PART")
+        )
+          return {
+            done: false,
+            reason: e.code === "TOO_FAR" ? "tooFar" : "wrongPart",
+          };
+        throw e;
+      }
+    },
+    getSiteProgress: async () =>
+      (await token())
+        ? call<SiteProgress>("GET", "/v1/me/site-progress", {
+            cache: "no-store",
+          })
+        : { tasks: [], badges: [] },
     // Live state, not queued behind commands: the panel re-reads it after each one.
     getMembers: (query, page) =>
       call<MemberPage>("GET", "/v1/admin/users", {

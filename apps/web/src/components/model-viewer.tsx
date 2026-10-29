@@ -37,8 +37,9 @@ const TAP_MS = 600;
  * `highlight` lights those parts (the "Eser hakkında" chapter being read); a tapped part's glow
  * replaces it until the card or name closes.
  * Parts: with `partCards`, only their parts respond to a tap and open the card (all of a card's
- * parts glow together); without cards every part shows its name. `scene` is the city's light and
- * background (§11.42), the same light the map uses.
+ * parts glow together); without cards every part shows its name. `onPick` (a site task waiting for
+ * a tap) makes every part answer and sends the tapped part to it instead of opening a card. `scene`
+ * is the city's light and background (§11.42), the same light the map uses.
  */
 export default function ModelViewer({
   model,
@@ -48,6 +49,7 @@ export default function ModelViewer({
   interior,
   highlight,
   partCards = [],
+  onPick,
   sources = [],
 }: {
   model: SiteModel;
@@ -57,6 +59,7 @@ export default function ModelViewer({
   interior?: boolean;
   highlight?: string[];
   partCards?: PartCard[];
+  onPick?: (part: string) => void;
   sources?: SiteSource[];
 }) {
   const host = useRef<HTMLDivElement>(null);
@@ -71,6 +74,8 @@ export default function ModelViewer({
   highlightRef.current = highlight;
   const cardsRef = useRef(partCards);
   cardsRef.current = partCards;
+  const pickRef = useRef(onPick);
+  pickRef.current = onPick;
   /** The tapped part: its card, or only its name on a site without cards. */
   const [picked, setPicked] = useState<{ part: string; card?: PartCard } | null>(null);
   const partsKey = JSON.stringify([model.parts, partCards.map((c) => c.parts)]);
@@ -279,7 +284,11 @@ export default function ModelViewer({
             render();
           };
           const groupOf = (part: string) =>
-            cardParts.length ? (cardParts.find((parts) => parts.includes(part)) ?? []) : [part];
+            pickRef.current
+              ? [part]
+              : cardParts.length
+                ? (cardParts.find((parts) => parts.includes(part)) ?? [])
+                : [part];
           const ray = new THREE.Raycaster();
           const partAt = (event: PointerEvent) => {
             const rect = renderer!.domElement.getBoundingClientRect();
@@ -305,7 +314,7 @@ export default function ModelViewer({
               );
               if (!shown || faded) continue;
               // The nearest visible surface decides; a part that does not answer blocks the ones behind it.
-              return part && tappable.has(part) ? part : undefined;
+              return part && (pickRef.current || tappable.has(part)) ? part : undefined;
             }
             return undefined;
           };
@@ -323,6 +332,14 @@ export default function ModelViewer({
             if (!tap) return;
             const part = partAt(e);
             if (!part) return;
+            if (pickRef.current) {
+              // Pick mode (site task): the tap goes to the task, no card opens; the tapped name shows briefly.
+              selected = [part];
+              glow();
+              setPicked({ part });
+              pickRef.current(part);
+              return;
+            }
             const card = cardsRef.current.find((c) => c.parts.includes(part));
             selected = groupOf(part);
             glow();
