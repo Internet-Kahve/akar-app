@@ -4,7 +4,8 @@ import { extname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { and, eq, inArray, like, notInArray, sql } from "drizzle-orm";
-import { validateCityScene, validateSite, type CityScene, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
+import { validateCityMap, validateCityScene, validateSite, type CityRecord, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
+import { slugify } from "../modules/catalog/service.ts";
 import { loadConfig } from "../config.ts";
 import type { Tx } from "../platform/idempotency.ts";
 import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts";
@@ -39,7 +40,8 @@ type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "pa
   tasks: ContentTask[];
   badges: ContentBadge[];
 };
-type Manifest = { version: number; sites: ContentSite[]; routes: HeritageRoute[]; retireSiteIds: string[]; cities: Array<{ name: string; scene: CityScene }> };
+type ContentCity = Omit<CityRecord, "siteCount">;
+type Manifest = { version: number; sites: ContentSite[]; routes: HeritageRoute[]; retireSiteIds: string[]; cities: ContentCity[] };
 const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".glb": "model/gltf-binary" };
 
 /** Tasks and badges of one site: photographs and model parts resolve, answer keys and badge conditions are consistent. */
@@ -72,9 +74,15 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
   if (manifest.version !== 1 || manifest.sites.length !== 7) throw new Error("Expected the reviewed seven-site manifest (version 1)");
   for (const city of manifest.cities) {
-    if (!manifest.sites.some((s) => s.city === city.name)) throw new Error(`City ${city.name} has no site in the manifest`);
-    validateCityScene(city.scene);
+    // loadCatalog keys the city row a site creates by slugify(name); the record must land on that row.
+    if (city.id !== slugify(city.name)) throw new Error(`City id ${city.id} does not match its name ${city.name}`);
+    if (city.scene) validateCityScene(city.scene);
+    if (city.map) validateCityMap(city.map);
+    else if (city.isDefault) throw new Error(`Default city ${city.id} has no map view`);
   }
+  if (manifest.cities.filter((c) => c.isDefault).length > 1) throw new Error("More than one default city");
+  for (const site of manifest.sites)
+    if (!manifest.cities.some((c) => c.name === site.city)) throw new Error(`Site ${site.id} has no city record (${site.city})`);
   const root = await realpath(contentRoot);
   const files = new Map<string, { body: Buffer; key: string; mime: string }>();
   const mediaFiles = new Map<string, string>();
@@ -184,8 +192,23 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         }
       }
       await tx.update(sites).set({ status: "draft" }).where(and(inArray(sites.id, manifest.retireSiteIds), like(sites.sourceSummary, "15 Ekim AKAR ürün notları%")));
-      // loadCatalog created the city rows from the sites; the scene comes from the city record (§11.42).
-      for (const city of manifest.cities) await tx.update(cities).set({ scene: city.scene }).where(eq(cities.name, city.name));
+      // loadCatalog created the city rows of the sites; the record adds map, inventory and scene, and the cities
+      // without sites (§11.45). The default moves in two steps: the unique index allows one default at a time.
+      await tx.update(cities).set({ isDefault: false }).where(eq(cities.isDefault, true));
+      for (const { id, map, inventory, ...city } of manifest.cities) {
+        const row = {
+          ...city,
+          centerLng: map?.center[0] ?? null,
+          centerLat: map?.center[1] ?? null,
+          zoom: map?.zoom ?? null,
+          zoomDesktop: map?.zoomDesktop ?? null,
+          inventoryName: inventory?.name ?? null,
+          inventoryPublisher: inventory?.publisher ?? null,
+          inventoryYear: inventory?.year ?? null,
+          inventorySiteCount: inventory?.siteCount ?? null,
+        };
+        await tx.insert(cities).values({ id, ...row }).onConflictDoUpdate({ target: cities.id, set: row });
+      }
     });
   } finally { await pool.end(); }
   return report;

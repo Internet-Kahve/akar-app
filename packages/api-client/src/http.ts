@@ -7,7 +7,7 @@ import {
   type CameraPose,
   type Command,
   type HeritageRoute,
-  type CityScene,
+  type CityRecord,
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
@@ -1947,14 +1947,13 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     },
     setMapSettings: (settings) =>
       call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
-    getCityScenes: async () => {
-      const { items } = await call<{
-        items: Array<{ name: string; scene: CityScene | null }>;
-      }>("GET", "/v1/cities");
-      return Object.fromEntries(
-        items.flatMap((c) => (c.scene ? [[c.name, c.scene]] : [])),
-      );
-    },
+    getCities: async () =>
+      (
+        await call<{ items: Array<CityRecord & { routeCount: number }> }>(
+          "GET",
+          "/v1/cities",
+        )
+      ).items.map(({ routeCount: _routes, ...city }) => city),
     // Live state, not queued behind commands: the editor reads it when it opens.
     getMapPlacement: async (siteId) => {
       const id = createdIds.get(siteId) ?? siteId;

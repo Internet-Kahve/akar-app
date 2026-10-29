@@ -2,10 +2,15 @@
 import { useEffect, useRef, useState } from "react";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
-import type { HeritageSite, MapSettings } from "@akar/domain";
+import {
+  CITY_MARKER_MAX_ZOOM,
+  type CityRecord,
+  type HeritageSite,
+  type MapSettings,
+} from "@akar/domain";
 import type { Map as MapType, Marker as MarkerType } from "maplibre-gl";
 import type { MapModels } from "../lib/map-models";
-import { useCityScenes } from "./city-scenes";
+import { useCities, useCityScenes } from "./city-scenes";
 import {
   LocateFixed,
   Plus,
@@ -24,6 +29,32 @@ const pins = {
   bedesten: "c4a6c.svg",
   egitim: "65acc.svg",
 };
+const WIDE = "(min-width: 1000px)";
+/** Where the globe flies out to: Türkiye whole on the screen. */
+const COUNTRY = {
+  center: [34.5, 39.2] as [number, number],
+  zoom: 3.6,
+  zoomWide: 4.6,
+};
+/** The city's opening view (desktop zoom on a wide screen). */
+function cityView(city: CityRecord) {
+  const map = city.map!;
+  const wide = matchMedia(WIDE).matches;
+  return {
+    center: map.center,
+    zoom: wide ? (map.zoomDesktop ?? map.zoom) : map.zoom,
+  };
+}
+/** The default city's view; the demo region until the city records are read (or when none is the default). */
+function openingView(cities: CityRecord[]) {
+  const city = cities.find((c) => c.isDefault && c.map);
+  return city ? cityView(city) : { center: demoRegion.center, zoom: 16 };
+}
+/** The text a city marker says, and what tapping a city without sites tells (§11.45). */
+function comingSoon(city: CityRecord) {
+  const inv = city.inventory;
+  return `${city.name}: ${inv?.siteCount ? `${inv.siteCount} vakıf eseri ` : ""}envanterde belgelendi${inv?.year ? ` (${inv.year})` : ""}. Uygulamaya ekleniyor.`;
+}
 export function HeritageMap({
   sites,
   selectedId,
@@ -41,18 +72,25 @@ export function HeritageMap({
   mapSettings?: MapSettings;
 }) {
   const scenes = useCityScenes();
+  const cities = useCities();
   const container = useRef<HTMLDivElement>(null),
     map = useRef<MapType | null>(null),
     markers = useRef<MarkerType[]>([]),
+    cityMarkers = useRef<MarkerType[]>([]),
     models = useRef<MapModels | null>(null),
     selectRef = useRef(onSelect),
-    latest = useRef({ sites, mapSettings, scenes });
+    // Set once the visitor moves the map: a late city record must not pull the map back.
+    moved = useRef(false),
+    latest = useRef({ sites, mapSettings, scenes, cities });
   const [loaded, setLoaded] = useState(false),
     [failed, setFailed] = useState(false),
     [tilt, setTilt] = useState(false),
-    [locationError, setLocationError] = useState("");
+    [cityMode, setCityMode] = useState<
+      "" | " city-mode" | " city-mode city-far"
+    >(""),
+    [notice, setNotice] = useState("");
   selectRef.current = onSelect;
-  latest.current = { sites, mapSettings, scenes };
+  latest.current = { sites, mapSettings, scenes, cities };
   useEffect(() => {
     let disposed = false;
     import("maplibre-gl")
@@ -62,15 +100,53 @@ export function HeritageMap({
           lib.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
           const m = new lib.Map({
             container: container.current,
-            center: demoRegion.center,
-            zoom: 16,
+            ...openingView(latest.current.cities),
             pitch: 0,
+            minZoom: 1.2,
             attributionControl: { compact: true },
             style: "/harita/akar-style.json",
           });
           map.current = m;
+          // Only a visitor's gesture carries an original DOM event; jumpTo and flyTo from code do not.
+          m.on("movestart", (e) => {
+            if (e.originalEvent) moved.current = true;
+          });
+          // Far out only dots stay for the cities without sites, so the labels do not pile up.
+          const mode = () => {
+            const z = m.getZoom();
+            setCityMode(
+              z >= CITY_MARKER_MAX_ZOOM
+                ? ""
+                : z < 3.2
+                  ? " city-mode city-far"
+                  : " city-mode",
+            );
+          };
+          m.on("zoom", mode);
           m.on("load", () => {
             if (disposed) return;
+            // Globe view (§11.45): far out the earth is round, near a city MapLibre turns flat by itself.
+            m.setProjection({ type: "globe" });
+            m.setSky({
+              "sky-color": "#C9DCEB",
+              "horizon-color": "#F3F5F5",
+              "sky-horizon-blend": 0.6,
+              "fog-color": "#F3F5F5",
+              "horizon-fog-blend": 0.4,
+              "fog-ground-blend": 1,
+              "atmosphere-blend": [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                0,
+                1,
+                5,
+                1,
+                8,
+                0,
+              ],
+            });
+            mode();
             setLoaded(true);
             // A load event can follow a tile error; keep discovery available
             // through the schematic view for the lifetime of this map.
@@ -107,10 +183,67 @@ export function HeritageMap({
       markers.current.forEach((m) => m.remove());
       models.current?.dispose();
       models.current = null;
+      cityMarkers.current.forEach((m) => m.remove());
       map.current?.remove();
       map.current = null;
     };
   }, []);
+  // The city records arrive after the map: open at the default city unless the visitor has moved already.
+  useEffect(() => {
+    if (loaded && !moved.current) map.current?.jumpTo(openingView(cities));
+  }, [cities, loaded]);
+  // One marker per city on the map; shown below CITY_MARKER_MAX_ZOOM instead of the site pins (CSS `city-mode`).
+  useEffect(() => {
+    const m = map.current;
+    if (!loaded || !m) return;
+    let cancelled = false;
+    import("maplibre-gl").then((lib) => {
+      if (cancelled) return;
+      cityMarkers.current.forEach((marker) => marker.remove());
+      cityMarkers.current = cities
+        .filter((c) => c.map)
+        .map((city) => {
+          const el = document.createElement("button");
+          el.type = "button";
+          el.className = `city-marker${city.siteCount ? " ready" : ""}`;
+          el.setAttribute(
+            "aria-label",
+            city.siteCount
+              ? `${city.name}: ${city.siteCount} eser, haritada aç`
+              : `${city.name}: yakında`,
+          );
+          const dot = document.createElement("i");
+          const name = document.createElement("b");
+          name.textContent = city.name;
+          const count = document.createElement("small");
+          count.textContent = city.siteCount
+            ? `${city.siteCount} eser`
+            : "Yakında";
+          el.append(dot, name, count);
+          el.onclick = () => {
+            if (!city.siteCount) return setNotice(comingSoon(city));
+            setNotice("");
+            m.flyTo({
+              ...cityView(city),
+              pitch: 0,
+              bearing: 0,
+              duration: 2600,
+              essential: true,
+            });
+          };
+          return new lib.Marker({
+            element: el,
+            anchor: "left",
+            offset: [-7, 0],
+          })
+            .setLngLat(city.map!.center)
+            .addTo(m);
+        });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [cities, loaded]);
   useEffect(() => {
     const m = map.current;
     if (!loaded || !m) return;
@@ -168,6 +301,7 @@ export function HeritageMap({
           id: "route",
           type: "line",
           source: "route",
+          minzoom: CITY_MARKER_MAX_ZOOM,
           paint: {
             "line-color": colors.cityBursa,
             "line-width": 3,
@@ -200,7 +334,7 @@ export function HeritageMap({
   }, [collapsed]);
   function locate() {
     if (!navigator.geolocation) {
-      setLocationError("Tarayıcın konumu desteklemiyor.");
+      setNotice("Tarayıcın konumu desteklemiyor.");
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -209,17 +343,17 @@ export function HeritageMap({
           center: [p.coords.longitude, p.coords.latitude],
           zoom: 15,
         });
-        setLocationError("Konumuna gidildi. Eserler Bursa keşif bölgesinde.");
+        setNotice("Konumuna gidildi. Eserler Bursa keşif bölgesinde.");
       },
       () =>
-        setLocationError(
+        setNotice(
           "Konum alınamadı. Bursa keşif bölgesinde keşfe devam edebilirsin.",
         ),
       { timeout: 8000 },
     );
   }
   return (
-    <div className="map-wrap">
+    <div className={`map-wrap${cityMode}`}>
       <div
         ref={container}
         className="map-canvas"
@@ -301,8 +435,7 @@ export function HeritageMap({
         aria-label="Keşif bölgesine dön"
         onClick={() => {
           map.current?.easeTo({
-            center: demoRegion.center,
-            zoom: 16,
+            ...openingView(cities),
             bearing: 0,
             pitch: 0,
           });
@@ -311,12 +444,9 @@ export function HeritageMap({
       >
         <Compass size={28} />
       </button>
-      {locationError && (
-        <button
-          className="location-notice"
-          onClick={() => setLocationError("")}
-        >
-          {locationError} ×
+      {notice && (
+        <button className="location-notice" onClick={() => setNotice("")}>
+          {notice} ×
         </button>
       )}
       <div className="map-caption">

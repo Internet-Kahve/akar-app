@@ -15,6 +15,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { media } from "./media.ts";
 import {
@@ -66,13 +67,35 @@ export const periods = pgTable("periods", {
 // ── places ───────────────────────────────────────────────────────────────────
 
 /** City (e.g. "bursa"); `city=` filter matches the slug id. */
-export const cities = pgTable("cities", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  /** 3D model light and viewer background (§11.42); null = clients use `defaultCityScene`. */
-  scene: jsonb("scene").$type<CityScene>(),
-  ...timestamps,
-});
+export const cities = pgTable(
+  "cities",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    /** 3D model light and viewer background (§11.42); null = clients use `defaultCityScene`. */
+    scene: jsonb("scene").$type<CityScene>(),
+    /** Map opening point and globe marker (§11.45); all null = not on the globe. */
+    centerLng: doublePrecision("center_lng"),
+    centerLat: doublePrecision("center_lat"),
+    zoom: doublePrecision("zoom"),
+    zoomDesktop: doublePrecision("zoom_desktop"),
+    /** The map opens here; at most one row. */
+    isDefault: boolean("is_default").notNull().default(false),
+    inventoryName: text("inventory_name"),
+    inventoryPublisher: text("inventory_publisher"),
+    inventoryYear: integer("inventory_year"),
+    inventorySiteCount: integer("inventory_site_count"),
+    ...timestamps,
+  },
+  (t) => [
+    check(
+      "cities_map_complete",
+      sql`(${t.centerLng} is null) = (${t.centerLat} is null) and (${t.centerLng} is null) = (${t.zoom} is null) and (${t.zoomDesktop} is null or ${t.zoom} is not null)`,
+    ),
+    check("cities_default_on_map", sql`not ${t.isDefault} or ${t.centerLng} is not null`),
+    uniqueIndex("cities_one_default").on(t.isDefault).where(sql`${t.isDefault}`),
+  ],
+);
 
 /** District / heritage area inside a city (domain `HeritageSite.district`). */
 export const regions = pgTable(

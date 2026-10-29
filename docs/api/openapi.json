@@ -3516,6 +3516,111 @@
                               }
                             ],
                             "description": "null = istemci varsayılan ışığı ve zemini kullanır"
+                          },
+                          "isDefault": {
+                            "type": "boolean",
+                            "description": "Harita bu şehirde açılır (en çok bir şehir)"
+                          },
+                          "map": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "center": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                      {
+                                        "type": "number"
+                                      },
+                                      {
+                                        "type": "number"
+                                      }
+                                    ],
+                                    "items": false,
+                                    "minItems": 2,
+                                    "maxItems": 2,
+                                    "description": "[boylam, enlem]"
+                                  },
+                                  "zoom": {
+                                    "type": "number"
+                                  },
+                                  "zoomDesktop": {
+                                    "description": "Geniş ekranda açılış yakınlığı; null = zoom",
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "center",
+                                  "zoom",
+                                  "zoomDesktop"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Haritanın bu şehirde açıldığı nokta, küre görünümündeki şehir işareti; null = kürede yok (§11.45)"
+                          },
+                          "inventory": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "publisher": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "year": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "siteCount": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Envanterde belgelenen eser sayısı (uygulamadaki değil)"
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "publisher",
+                                  "year",
+                                  "siteCount"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Şehrin Vakıf Eserleri Envanteri; eseri olmayan şehirde «Yakında» bilgisi"
                           }
                         },
                         "required": [
@@ -3523,7 +3628,10 @@
                           "name",
                           "siteCount",
                           "routeCount",
-                          "scene"
+                          "scene",
+                          "isDefault",
+                          "map",
+                          "inventory"
                         ],
                         "additionalProperties": false
                       }

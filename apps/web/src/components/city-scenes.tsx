@@ -1,12 +1,28 @@
 "use client";
-import { createContext, useContext } from "react";
-import { defaultCityScene, type CityScene } from "@akar/domain";
+import { createContext, useContext, useMemo } from "react";
+import {
+  defaultCityScene,
+  type CityRecord,
+  type CityScene,
+} from "@akar/domain";
 
-/** City scenes by city name (`GET /v1/cities`, §11.42); read once by `AkarApp`. */
-export const CityScenes = createContext<Record<string, CityScene>>({});
+/** City records (`GET /v1/cities`, §11.42, §11.45); read once by `AkarApp`, empty until then. */
+export const Cities = createContext<CityRecord[]>([]);
 
-export function useCityScenes() {
-  return useContext(CityScenes);
+export function useCities() {
+  return useContext(Cities);
+}
+
+/** Saved scenes by city name; a city without one is absent. */
+export function useCityScenes(): Record<string, CityScene> {
+  const cities = useCities();
+  return useMemo(
+    () =>
+      Object.fromEntries(
+        cities.flatMap((c) => (c.scene ? [[c.name, c.scene]] : [])),
+      ),
+    [cities],
+  );
 }
 
 /** The scene of one city; the default light and background when it has none. */

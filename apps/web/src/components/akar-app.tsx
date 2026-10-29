@@ -41,14 +41,14 @@ import {
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
-  type CityScene,
+  type CityRecord,
   type Role,
   type SiteBadge,
   type SiteTask,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
-import { CityScenes } from "./city-scenes";
+import { Cities } from "./city-scenes";
 import { Architecture, Scene } from "./scene";
 import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
@@ -132,7 +132,7 @@ export function AkarApp() {
   );
   const [mapSettings, setMapSettings] =
     useState<MapSettings>(defaultMapSettings);
-  const [cityScenes, setCityScenes] = useState<Record<string, CityScene>>({});
+  const [cityRecords, setCityRecords] = useState<CityRecord[]>([]);
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -150,15 +150,15 @@ export function AkarApp() {
     account?.id ?? null,
   );
   /**
-   * Map settings and city scenes (§11.42) are a refinement: when one cannot be read the map and the
-   * viewer keep the values they have.
+   * Map settings and city records (§11.42, §11.45) are a refinement: when one cannot be read the map
+   * opens at the demo region and the viewer keeps the values it has.
    */
   const loadMapSettings = useCallback(async () => {
     const c = client.current;
     if (!c) return;
     await Promise.all([
       c.getMapSettings().then(setMapSettings, () => {}),
-      c.getCityScenes().then(setCityScenes, () => {}),
+      c.getCities().then(setCityRecords, () => {}),
     ]);
   }, []);
   const load = useCallback(async () => {
@@ -1471,7 +1471,7 @@ export function AkarApp() {
       </nav>
     </div>
   );
-  return <CityScenes.Provider value={cityScenes}>{shell}</CityScenes.Provider>;
+  return <Cities.Provider value={cityRecords}>{shell}</Cities.Provider>;
 }
 function PlusIcon() {
   return <span className="plus-circle">+</span>;

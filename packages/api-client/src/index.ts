@@ -1,7 +1,7 @@
 import {
   reduceSnapshot,
   defaultMapSettings,
-  type CityScene,
+  type CityRecord,
   type Command,
   type MapPlacement,
   type MapSettings,
@@ -14,7 +14,7 @@ import {
 } from "@akar/domain";
 import {
   createSeed,
-  demoCityScenes,
+  demoCities,
   demoQuizzes,
   demoSiteTaskKeys,
 } from "./seed";
@@ -140,8 +140,8 @@ export interface AkarClient {
   getMapSettings(): Promise<MapSettings>;
   /** `PUT /v1/admin/map-settings`, admin only: returns the saved values. */
   setMapSettings(settings: MapSettings): Promise<MapSettings>;
-  /** `GET /v1/cities`: 3D light and viewer background by city name; a city without a saved scene is absent. */
-  getCityScenes(): Promise<Record<string, CityScene>>;
+  /** `GET /v1/cities`: every city with its map view, inventory and scene (§11.42, §11.45), alphabetical. */
+  getCities(): Promise<CityRecord[]>;
   /**
    * The placement saved for a site's model, `visible: false` included (the catalog hides it then); `null`
    * when none was saved. Panel read: the editor asks when it opens.
@@ -401,8 +401,13 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       mapSettings = { ...settings };
       return { ...mapSettings };
     },
-    async getCityScenes() {
-      return structuredClone(demoCityScenes);
+    async getCities() {
+      return demoCities.map((c) => ({
+        ...structuredClone(c),
+        siteCount: state.sites.filter(
+          (s) => s.city === c.name && s.status === "published",
+        ).length,
+      }));
     },
     async getMapPlacement(siteId) {
       return structuredClone(

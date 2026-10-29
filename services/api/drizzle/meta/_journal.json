@@ -148,6 +148,13 @@
       "when": 1793279032406,
       "tag": "0020_site_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793284432588,
+      "tag": "0021_city_globe",
+      "breakpoints": true
     }
   ]
 }

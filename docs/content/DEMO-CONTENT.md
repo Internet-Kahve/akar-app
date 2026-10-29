@@ -9,6 +9,7 @@ Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`
 - Arşiv görselleri kırpılmadan gösterilir. Eşlenmiş bugünkü fotoğraf yokken karşılaştırma varmış gibi sunulmaz. Dış arşiv/CDN'den hotlink yapılmaz.
 - Bedesten ve Orhan Bey Camii mevcut `bedesten` / `orhan-gazi` kimliklerini korur. Ziyaretçi kayıtları korunur; kurmaca çeşme/mektep kayıtları silinmeden taslağa alınır.
 - Görevler ve rozetler `icerik/gorevler.json` dosyasından okunur (§11.44; şimdilik yalnız Ulucami: 1 soru, 1 saha görevi, 3 rozet). Görev fotoğrafı `fotograflar.md` listesindeki bir dosya olmalı, `parca` / `evden.parca` 3B modeldeki parça adı olmalı; aksi halde aktarım durur. Yeniden aktarım görev ve rozetleri kimliğe göre günceller, dosyadan çıkanları siler, oyuncuların ilerlemesini kimliği duranlar için korur.
+- Şehir kayıtları `veri/sehir/*.json` dosyalarının hepsinden okunur (§11.45): Bursa (varsayılan, harita burada açılır) ile eseri henüz olmayan Hatay, Konya, Kütahya (kürede «Yakında»). Dosyadaki `id` şehir adının küçük harfli, Türkçe karaktersiz hâli olmalı (`Kütahya` → `kutahya`); eseri olan her şehrin kaydı olmalı ve en çok bir şehir `varsayilan` olabilir, aksi halde aktarım durur.
 - Orhan Gazi Türbesi paketinde anlatım henüz yoktur; fotoğraf, model ve tarihî görseller kullanılabilir. Diğer altı eserin anlatımı tarayıcının Türkçe sesli okumasını kullanır; hazır ses dosyası bu pakette bulunmuyor.
 
 ## Yeniden hazırlama ve aktarım
