@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   ArrowRight,
@@ -9,13 +9,151 @@ import {
   Sun,
   Users,
   Maximize2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import type { CameraPose, HeritageSite } from "@akar/domain";
+import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
 import { useCityScene } from "./city-scenes";
 const ModelViewer = dynamic(() => import("./model-viewer"), {
   ssr: false,
   loading: () => <p role="status">3B görünüm hazırlanıyor…</p>,
 });
+
+/** Desktop scrolls down the gallery; mobile swipes across it without trapping page scrolling. */
+function PhotoGallery({
+  site,
+  photos,
+  onModel,
+}: {
+  site: HeritageSite;
+  photos: SitePhoto[];
+  onModel?: () => void;
+}) {
+  const gallery = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  function goTo(index: number) {
+    const strip = gallery.current;
+    const item = strip?.children[index] as HTMLElement | undefined;
+    if (!strip || !item) return;
+    strip.scrollTo({
+      left: item.offsetLeft,
+      top: item.offsetTop,
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
+  }
+  return (
+    <section
+      className="scene photo-scene"
+      aria-label={`${site.name} fotoğrafları`}
+    >
+      <div className="photo-gallery-toolbar">
+        {onModel && (
+          <div
+            className="scene-media-switch"
+            role="group"
+            aria-label="Eser görünümü"
+          >
+            <button
+              className="btn secondary"
+              aria-pressed={false}
+              onClick={onModel}
+            >
+              3B model
+            </button>
+            <button className="btn secondary" aria-pressed={true}>
+              Fotoğraf
+            </button>
+          </div>
+        )}
+        {photos.length > 0 && (
+          <div
+            className="photo-gallery-navigation"
+            role="group"
+            aria-label="Fotoğraf gezinme"
+          >
+            <button
+              className="icon-btn"
+              aria-label="Önceki fotoğraf"
+              disabled={active === 0}
+              onClick={() => goTo(active - 1)}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <span role="status" aria-live="polite">
+              Fotoğraf {active + 1} / {photos.length}
+            </span>
+            <button
+              className="icon-btn"
+              aria-label="Sonraki fotoğraf"
+              disabled={active === photos.length - 1}
+              onClick={() => goTo(active + 1)}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
+      </div>
+      <div
+        className="photo-gallery"
+        ref={gallery}
+        tabIndex={0}
+        role="region"
+        aria-label="Eser fotoğraf galerisi"
+        onScroll={() => {
+          const strip = gallery.current;
+          if (!strip) return;
+          const horizontal = strip.scrollWidth > strip.clientWidth + 1;
+          const position = horizontal ? strip.scrollLeft : strip.scrollTop;
+          let closest = 0;
+          let distance = Infinity;
+          Array.from(strip.children).forEach((child, index) => {
+            const item = child as HTMLElement;
+            const delta = Math.abs(
+              (horizontal ? item.offsetLeft : item.offsetTop) - position,
+            );
+            if (delta < distance) {
+              distance = delta;
+              closest = index;
+            }
+          });
+          setActive(closest);
+        }}
+      >
+        {photos.length === 0 && (
+          <p className="photo-gallery-empty" role="status">
+            Bu bölümün fotoğrafı bulunamadı.
+          </p>
+        )}
+        {photos.map((photo, index) => {
+          const source = site.sources?.find(
+            (entry) => entry.id === photo.sourceId,
+          );
+          return (
+            <figure
+              key={photo.id}
+              className="photo-gallery-item"
+              aria-label={`${index + 1} / ${photos.length}`}
+            >
+              <img
+                className="scene-photo"
+                src={photo.src}
+                alt={photo.alt}
+                loading={index === 0 ? "eager" : "lazy"}
+              />
+              <figcaption className="scene-photo-credit">
+                <strong>{photo.title || site.name}</strong>
+                {photo.license && <span>{photo.license}</span>}
+                {source?.title && <span>{source.title}</span>}
+              </figcaption>
+            </figure>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 export function Architecture({ kind = "cami" }: { kind?: string }) {
   return (
@@ -82,6 +220,33 @@ export function Scene({
   const photo = [...(site.photos ?? []), ...(site.storyPhotos ?? [])].find(
     (p) => p.id === (photoId || site.coverPhotoId),
   );
+  // Story mode follows its sentence's photo; detail mode shows the whole editorial gallery,
+  // cover first. Story-only photos do not become public gallery entries.
+  const photos = photoId
+    ? photo
+      ? [photo]
+      : []
+    : [
+        ...new Map(
+          [...(photo ? [photo] : []), ...(site.photos ?? [])].map((p) => [
+            p.id,
+            p,
+          ]),
+        ).values(),
+      ];
+  if (
+    !flow &&
+    (photos.length > 0 || !!photoId) &&
+    (!site.model || mode === "photo")
+  )
+    return (
+      <PhotoGallery
+        key={photoId || site.id}
+        site={site}
+        photos={photos}
+        onModel={site.model ? () => setMode("model") : undefined}
+      />
+    );
   if (site.model && !flow)
     return (
       <div className="scene media-scene">
@@ -97,7 +262,7 @@ export function Scene({
           >
             3B model
           </button>
-          {photo && (
+          {(photos.length > 0 || !!photoId) && (
             <button
               className="btn secondary"
               aria-pressed={mode === "photo"}
@@ -107,44 +272,22 @@ export function Scene({
             </button>
           )}
         </div>
-        {mode === "model" || !photo ? (
-          <>
-            <ModelViewer
-              key={site.model.src}
-              model={site.model}
-              name={site.name}
-              scene={cityScene}
-              pose={pose}
-              interior={interior}
-              partCards={site.partCards}
-              sources={site.sources}
-            />
-            <div className="scene-photo-credit">
-              Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için
-              kaydır.
-            </div>
-          </>
-        ) : (
-          <>
-            <img className="scene-photo" src={photo.src} alt={photo.alt} />
-            <div className="scene-photo-credit">
-              {photo.title} · {photo.license}
-              <br />
-              {site.sources?.find((s) => s.id === photo.sourceId)?.title}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  if (photo && !flow)
-    return (
-      <div className="scene">
-        <img className="scene-photo" src={photo.src} alt={photo.alt} />
-        <div className="scene-photo-credit">
-          {photo.title || site.name} · {photo.license}
-          <br />
-          {site.sources?.find((s) => s.id === photo.sourceId)?.title}
-        </div>
+        <>
+          <ModelViewer
+            key={site.model.src}
+            model={site.model}
+            name={site.name}
+            scene={cityScene}
+            pose={pose}
+            interior={interior}
+            partCards={site.partCards}
+            sources={site.sources}
+          />
+          <div className="scene-photo-credit">
+            Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için
+            kaydır.
+          </div>
+        </>
       </div>
     );
   if (live)
