@@ -843,3 +843,25 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - **Tamamlandı işareti:** Hikâyesi biten eserde iki düğmenin sağ üst köşesinde yeşil ✓ rozeti (22 px, `--trust-verified`, beyaz çerçeve) çıkar: eser panelindeki ve mobil karttaki «Dinle», haritadaki kısa karttaki «Hikâyeyi başlat». Kısa karttaki düğmenin yazısı da «Yeniden dinle» olur.
 - Sınama (Playwright, masaüstü ve mobil): Oku kipinde 12 bölüm ilerletildi. Kart açıldı, rozet 1/3 kazanıldı; Esc ile kapandı; panelde Dinle ✓; hata yok.
 - **Figma:** «D · Hikâye sonrası» (1:2991) ve «WF · Eser / Hikâye sonrası» (1:6925) bu karta göre güncellenmeli.
+
+## 62. Bedesten'e «İçini göster» (3D; v10)
+
+29 Ekim 2026. İş emri: «AKAR 3D: İçini göster özelliğini üç esere ekle». Sıra Bedesten → Türbe → Orhan Bey Camii; bu madde yalnız Bedesten. Kullanıcı render'ları onaylayınca Türbe'ye geçilecek.
+- **Model:** `bedesten_v10` (`build/build_v10.py` → `build_v10_ic.py` → `_kutuphane/blend_hat/uret.py`).
+  - Gövde çatısı levhası `Dukkanlar`'dan ayrılıp `Govde_Ortu` oldu. Kubbelerin altına Ø 6,70 kasnak ağzı açıldı.
+  - Govde'nin içi boşaltıldı.
+  - Yeni parçalar: `Payeler`, `Kemerler`, `Ic_Dukkanlar` (32 mahzen ağzı), `Ic_Sokak`, `Sadirvan`.
+  - Ölçü ve kaynaklar `3d/README.md` v10 tablosunda.
+- **Gruplar:** `model.json` → `glb` `bedesten_v10`, `ortu_gruplari` [[Kubbeler], [Govde_Ortu]].
+- **Palet:** yeni rol `aciklik` #3E4A55. Beş iç malzeme `eser_malzeme`'ye eklendi.
+- **Sınama:**
+  - Örtü yerindeyken görüntü v09 ile aynı (fark %0,009).
+  - İlk denemede eski kapağın örtü eğiminden görünen 25 cm'lik şeridi kaybolmuştu (fark %0,5). Şerit, eski malzeme ve UV'siyle duvar üstü halkası olarak geri kondu.
+  - Kemer uçları duvar yüzüyle aynı düzlemde titriyordu; 5 cm duvara gömüldü.
+  - Referans denetimi c ve d geçti.
+  - Üçgen 20 088 → 25 814 (sunum +5 726); uygulama GLB'si 160 → 197 KB.
+- **İçerik:**
+  - `hikaye.md`'ye «İç mekân (3D)» sütunu eklendi. Cümle 6 evet, vurgu `Payeler`; cümle 7 evet, vurgu `Ic_Dukkanlar`. Cümle metinleri değişmedi.
+  - `parcalar_taslak.md`: `Govde_Ortu` «On dört kubbe» kartına; 5 iç parça satırı.
+  - `modelleri-gom.py` çalıştırıldı.
+- **Kontrol:** `kontrol/v10/icini_goster.png`, `ic_kaynak.png`, `tiklama_haritasi.png`.

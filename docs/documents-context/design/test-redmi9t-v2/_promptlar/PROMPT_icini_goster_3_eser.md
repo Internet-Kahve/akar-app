@@ -1,4 +1,4 @@
-# Prompt: «İçini göster» Bedesten, Orhan Gazi Türbesi, Orhan Bey Camii ve Orhan Bey Hamamı'na (29 Ekim 2026)
+# Prompt: «İçini göster» Bedesten, Orhan Gazi Türbesi ve Orhan Bey Camii'ne (29 Ekim 2026)
 
 Kullanım: kod bloğunu 3D üretim ajanına (akar-3d-model) olduğu gibi ver. Ajan Bedesten'i bitirince durur. Sen render'lara bakıp «devam» dersen sıradaki esere geçer.
 
@@ -9,16 +9,15 @@ Kullanım: kod bloğunu 3D üretim ajanına (akar-3d-model) olduğu gibi ver. Aj
 | 1 | Bedesten | 14 kubbe | 6 paye, kemerler, iki sıra iç dükkân, iç sokak | Gabriel planı ve kesiti (1 m ızgara), iç fotoğraflar 02, 05 | Ulucami'ye en benzer yapı (kubbeler ayaklara oturur); kod değişmeden çalışır; akar hikâyesi |
 | 2 | Orhan Gazi Türbesi | Kubbe (kasnak ve çatı eteğiyle) | Dört sütunlu küçük orta kubbe, beşik tonozlu dehliz, 21 sanduka, pirinç şebekeli Orhan Gazi sandukası | Envanter C2 s.115–117; Yurt 2024 iç fotoğraf anahtar planı; fotoğraflar 02, 03, 05 | Küçük ve basit; içi fotoğraflarla iyi belgeli |
 | 3 | Orhan Bey Camii | Ana kubbe, mihrap kubbesi, tabhane kubbeleri, kanat çatıları | Ters T plan: orta mekân, mihrap eyvanı, iki yanda tabhane odaları, mihrap | Gabriel, Ayverdi, Acar planları; kesit (1 m ızgara); fotoğraflar 02, 03, 07 | Plan tipini (tabhaneli cami) göstermenin en iyi yolu |
-| 4 | Orhan Bey Hamamı | Bölüm kubbeleri | **Bugünkü** Aynalı Çarşı (dükkânlar) | Çetintaş «günümüz» planı ve kesitleri; fotoğraf 02 | Akar hikâyesi (hamam → çarşı); ama özgün hamam içi temsili olur. Bu yüzden yalnız bugünkü hâl, en sona |
 
-Koza Hanı ve Emir Hanı açık avlulu; içi zaten görünüyor, gerek yok.
+Koza Hanı ve Emir Hanı açık avlulu; içi zaten görünüyor, gerek yok. Orhan Bey Hamamı yapılmıyor (kullanıcı kararı, 29 Ekim): bugün Aynalı Çarşı; özgün hamam içi büyük ölçüde temsili olurdu.
 
 ## Prompt
 
 ```
-AKAR 3D: «İçini göster» özelliğini dört esere ekle. Referans Ulucami (v29).
+AKAR 3D: «İçini göster» özelliğini üç esere ekle. Referans Ulucami (v29).
 
-SIRA: Bedesten → Orhan Gazi Türbesi → Orhan Bey Camii → Orhan Bey Hamamı.
+SIRA: Bedesten → Orhan Gazi Türbesi → Orhan Bey Camii. Orhan Bey Hamamı'na DOKUNMA.
 Bedesten'i bitirince DUR ve rapor ver. Kullanıcı render'ları görüp onay verirse sıradaki esere geç. Her eser kendi başına bitmiş olmalı; yarım bırakma.
 
 ÖNCE OKU
@@ -43,7 +42,7 @@ KAYNAK KURALI (uydurma yok)
 
 HER ESERDE YAPILACAK
 1. Örtüyü ayrı kök parçalara ayır. Kalkacak parçalar kökte ayrı olmalı (kubbe, kasnak, çatı, alem).
-   - Sadeleştirmede birleşmiş olabilirler. Örnek: Hamam'da kubbeler bölümlere katıldı. Gerekiyorsa yeniden ayır, adını «<Bölüm>_Ortu» ya da «Kubbe_<bölüm>» koy.
+   - Sadeleştirmede birleşmiş olabilirler. Örnek: Orhan Camii'nde son cemaat kubbeleri Cami_SonCemaat'e, kanat çatıları Cami_Govde'ye katıldı. Gerekiyorsa yeniden ayır, adını «<Bölüm>_Ortu» ya da «Kubbe_<bölüm>» koy.
    - Ayırmak tıklamayı bozmaz: uygulama bir kartın parçalarını birlikte seçer. Kart taslağında (icerik/parcalar_taslak.md) yeni örtü parçasını ait olduğu kartın «Parçalar» sütununa ekle.
 2. İç yüzeyleri kur: duvarların iç yüzü, zemin, ayaklar/sütunlar, kemerler, kubbelerin iç yüzü (örtü kalkınca altta kalan kasnak ağzı), içerideki ana öğeler.
    - Gövdenin üstü kapalıysa (kapak yüzü) aç; örtü kalkınca içerisi görünmeli, düz bir kapak değil.
@@ -52,7 +51,6 @@ HER ESERDE YAPILACAK
    - Türbe: Orta_Kubbe_Sutunlar, Dehliz, Sandukalar, Orhan_Gazi_Sandukasi.
    - Orhan Camii: Ic_Zemin, Mihrap_Eyvani, Tabhaneler, Ic_Mihrap.
      Dış Cami_Mihrap çıkıntısıyla karışmasın. İç mihrap «Ic_Mihrap», dıştaki eski adıyla kalır.
-   - Hamam: Carsi_Dukkanlari, Ic_Sokak.
 4. model.json → ortu_gruplari. Yukarıdan aşağı, en üstteki önce kalkar. Örnek Bedesten: [["Kubbeler"]]. Kubbeler ve onları taşıyan kasnaklar ayrı parçaysa önce kubbeler, sonra kasnaklar. _aciklama metnine dokunma; zaten ortu_gruplari'nı anlatıyor.
 5. İç mekân dış görünümü bozmaz:
    - Örtü yerindeyken normal render önceki sürümle aynı olmalı (fark < %0,1).

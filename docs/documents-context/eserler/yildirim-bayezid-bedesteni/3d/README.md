@@ -2,7 +2,31 @@
 
 Yalnız **son sürüm** tutulur. Eski sürümlerin değerleri ve kararları aşağıdaki tabloda ve `../bedesten_notlar.md` "Ek: Geçmiş kayıt" bölümündedir.
 
-## Güncel sürüm: v06 (21 Ekim 2026)
+## Güncel sürüm: v10 (29 Ekim 2026) · iç mekân («İçini göster»)
+
+v09 + iç mekân. Dış görünüş v09 ile aynı (örtü yerindeyken normal görüntü farkı %0,009). Betik `build/build_v10.py` → `build/build_v10_ic.py` (Blender, v09 blend'ini açar, dokunmaz) → `_kutuphane/blend_hat/uret.py`. Sahne `blend/bedesten_v10.blend`, uygulama `export/bedesten_v10.glb` (25 814 üçgen, 197 KB; v09: 20 088, 160 KB), sunum `export/bedesten_v10_sunum.glb` (30 950 üçgen). Kontrol `kontrol/v10/` (`icini_goster.png`, `ic_kaynak.png`, `tiklama_haritasi.png`, `parca_dogrulama.json`, `ic_rapor.json`, `blend_rapor.json`).
+
+**Kalkan gruplar** (`model.json → ortu_gruplari`, yukarıdan aşağı): `Kubbeler` → `Govde_Ortu`.
+
+| Kök parça | Ne | Ölçü | Kaynak |
+|---|---|---|---|
+| `Govde_Ortu` (yeni, kalkar) | v09'da `Dukkanlar`'a katılmış gövde çatısı levhası (+9,95 → +10,25) ayrıldı; 14 kubbenin altında kasnak ağzı | Ø 6,70 m (kubbe eteği Ø 7,40 olduğu için dışarıdan görünmez) | W: Ekinci 2025 PDF 96 «kubbe açıklıkları 6,50–6,90» (ortası) |
+| `Govde` (değişti) | Kapak (+10,0) silindi; 1,50 m duvarın iç yüzü; duvar üstü halkası eski kapağın malzemesi ve UV'siyle; 4 iç kapı açıklığı | Salon iç 56,50 × 15,00; kapı 3,0 m, üzengi 2,2, tepe 3,7 | E: C2 PDF 29 «iç ölçüler 15,00 × 56,50»; kapı ölçüleri v05 dış kapı (P Gabriel geçit 3,0; yükseklik T) |
+| `Payeler` | 6 kare ayak, başlıklı | 1,80 × 1,80; başlık 2,00 × 2,00, +4,75–5,00; yerleri kubbe ızgarası (x = ±4,04 / ±12,11 / ±20,18, y = 0) | P: Ayverdi 1966 planı (`ref/plan/ekinci2025_pdf097_*`) ≈ 1,75–1,80; W: Ekinci PDF 97 «restorasyondan sonra bütün ayaklar … aynı boyutta»; başlık P: Gabriel kesiti (`ref/plan/gabriel_kesit_1m_izgara.png`) +4,8–5,1 |
+| `Kemerler` | Boyunda 7, enine 12 yarım daire kemer; ayak üstü dolgu; hepsi örtü altına (+9,95) kadar | Üzengi +5,00; kalınlık 1,80; kilit +8,1–8,6 (açıklığa göre) | P: Gabriel kesiti (üzengi ≈ +5,0, iç kilit ≈ +7,9–8,3, duvar üstü +10,0); F: `ref/foto/alan-baskanligi_pdf008_ic_mahzen-dukkanlar.jpg` (sıvalı yuvarlak kemerler) |
+| `Ic_Dukkanlar` | 32 mahzen ağzı: kuzey ve güney duvarında 8 + giriş + 8 | Adım 3,14 m (giriş bölmesi ±3,10); açıklık 2,30 × 2,60 (T) | W: Ekinci PDF 96 «kuzey ve güney taraflarda karşılıklı 32 mahzen … 2,70 × 2,00»; P: Gabriel planı (yarım duvarda 8 mahzen, giriş bölmesi ≈ 6,2 m); F: Alan Başkanlığı föyü s.8 (bugün camekân) |
+| `Ic_Sokak` | Salon döşemesi | 56,50 × 15,00; üstü +0,03 (Govde tabanından 3 cm) | W: Ekinci PDF 103 «zeminin döşemesi … mermer ile değiştirilmiştir» |
+| `Sadirvan` | Merkezde on iki yüzlü havuz, ortada sütun ve tas | Ø 2,10, yükseklik 0,90 (T); tas +1,15–1,40 (T) | P: Ayverdi 1966 planında merkezde Ø ≈ 2,1 daire; W: Ekinci PDF 96 ve 102 («restorasyon sürecinde … kuzey ve güney kapılarının açıldığı merkeze»); F: Ekinci PDF 96 Fotoğraf 3 (`ref/foto/ekinci2025_pdf096_sadirvan.png`) |
+
+Malzemeler (doku yok; renk `_kutuphane/malzeme-paleti.json`): `Ic_Duvar`, `Ic_Tas` → duvar; `Ic_Siva` (kemer, kasnak ağzı) → krem_siva; `Ic_Mermer` (döşeme, şadırvan) → mermer; `Ic_Aciklik` (mahzen ve kapı ağzı) → **yeni rol `aciklik` #3E4A55** (v05'teki dükkân açıklığı rengi). Yeni parçalarda pişmiş AO yok; yüksekliğe göre hafif köşe rengi (Ulucami v27 gibi). Kemer uçları duvara 5 cm gömülü, açıklık levhaları duvardan 6 cm önde (aynı düzlemde yüz yok).
+
+**Belirsiz / sade bırakılan:** mahzen ağızlarının yüksekliği ve genişliği (T; bugün camekân); iç duvarlarda pencere ve duvar kemerleri yok (fotoğrafta duvar kemerleri tuğla dolgulu; modellenmedi); pandantif ve kubbe içi yok (kubbe kalkınca kasnak ağzından kemer ızgarası görünür); ayakların çevresindeki 2007 camekân dükkânları ve eski ahşap sekiler modellenmedi; ayak ölçüsü 1960 sonrası Ayverdi planından okundu (Gabriel'de ayaklar farklı boyda); kuzey ve güney giriş mekânlarının (kubbeli) içi yok; iç zemin dışarıyla aynı kotta (Gabriel kesitinde dış sokak güneyde yükseliyor, model düz).
+
+### v09 (29 Ekim 2026)
+
+Kök parça sadeleştirme; ayrıntı aşağıdaki tabloda.
+
+## Güncel sürüm öncesi: v06 (21 Ekim 2026)
 
 v05 + ortak palet ve yumuşak pişirme; geometri ve parça adları aynı. Betik `build/build_v06.py` (v05 blend'ini açar, `_kutuphane/palet_v2/` ile yalnız rengi ve pişirilmiş ışığı değiştirir; ayar `palet_v2/ayar/bedesten.json`), sahne `blend/bedesten_v06.blend`, uygulama modeli `export/bedesten_v06.glb` (yalnız yapı, Draco, 0,17 MB, 20 088 üçgen, 8 nesne), sunum `export/bedesten_v06_sunum.glb` (kaide, figür), render'lar `kontrol/v06/`. v05 blend'i silindiği için `build_v06.py`'yi baştan çalıştırmak için v05'i git geçmişinden almak gerekir.
 
@@ -41,3 +65,4 @@ Nesneler: `Govde`, `Kubbeler`, `Cati`, `Sacak`, `Pencereler`, `Kapilar`, `Dukkan
 | v08 | 28 Ekim | Pastel renk geri, pişmiş AO küçük, yer gölgesi yok | 28 Ekim 2026 (gece). 21 Ekim pastel renkleri geri (kullanıcı: fotoğraf renkleri haritada cansız; ton ayarı web'de): her malzeme v06 sürümündeki aynı adlı malzemenin rengi ve dokusu (fark 0 ton; v06'deki köşe rengi gri AO idi, çarpılmadı). Değişen: Duvar #AF9A7D→#E3DDBE; Kitabe #E6E2D6→#F5F4F0; Tugla #8E6A4E→#CF7F55. Pişmiş AO v07'den, yeniden pişirilmedi: 512 px tek kanal JPEG q80 (182 → 38 KB). Yer_Golgesi çıkarıldı (web çiziyor). Uygulama GLB 796 → 161 KB (pastel v06: 168 KB). Geometri v07 ile aynı (Draco sıfır alanlı üçgenleri attı; kutu aynı). Betik `_kutuphane/renk_ao_v3/pastel_kucuk.mjs`. Kontrol `kontrol/v08/`. |
 | v08 | 29 Ekim | Blend kaynağı eşitlendi | v08: blend kaynağı GLB ile eşitlendi (29 Ekim 2026). GLB artık Blender'dan üretiliyor: `build/build_v08.py` → `_kutuphane/blend_hat/` (renk ve doku yalnız `malzeme-paleti.json`'dan; Yer_Golgesi yok; AO tek kanal JPEG). Doğrulama a–g geçti (`kontrol/v08/esitleme.png`). |
 | v09 | 29 Ekim | Parça yapısı sadeleştirildi | v09: kök parça bölünüşü sadeleştirildi (29 Ekim 2026): 8 → 4 parça (Dukkanlar, Govde, Kapilar, Kubbeler). Adımlar: birleşti: Govde, Pencereler → Govde; birleşti: Dukkanlar, Dukkan_Kapilari, Cati, Sacak → Dukkanlar. Renk, doku, AO ve toplam üçgen (20088) aynı; referanslar yeni adlara çevrildi (eksik 0). Plan `_kutuphane/blend_hat/parca_plan.json`; ayrıntı `kontrol/v09/parca_envanteri.md`, `tiklama_haritasi.png`. |
+| v10 | 29 Ekim | İç mekân («İçini göster») | `Govde_Ortu` ayrıldı (kasnak ağızları Ø 6,70); Govde içi boşaldı; yeni `Payeler`, `Kemerler`, `Ic_Dukkanlar`, `Ic_Sokak`, `Sadirvan`. `ortu_gruplari` [[Kubbeler], [Govde_Ortu]]. Üçgen 20 088 → 25 814 (sunum 25 224 → 30 950); uygulama GLB 160 → 197 KB (+%24). Dış görünüş farkı %0,009. Referans denetimi c, d geçti. Kaynaklar yukarıdaki tabloda. Kontrol `kontrol/v10/`. |

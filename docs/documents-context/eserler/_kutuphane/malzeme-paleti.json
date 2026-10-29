@@ -140,7 +140,12 @@
    "Bant_Cati": "kursun",
    "Duvar": "duvar",
    "Tugla": "tugla",
-   "Kitabe": "mermer"
+   "Kitabe": "mermer",
+   "Ic_Duvar": "duvar",
+   "Ic_Tas": "duvar",
+   "Ic_Siva": "krem_siva",
+   "Ic_Mermer": "mermer",
+   "Ic_Aciklik": "aciklik"
   },
   "koza-han": {
    "Cati_Kursun": "kursun",
@@ -214,6 +219,19 @@
   "pastel_kaynak": {
    "orhan-gazi-turbesi": "orhan-gazi-turbesi referans sürüm / Cephe_Krem"
   }
+ },
+ "aciklik": {
+  "hex": "#3E4A55",
+  "kaynak": [
+   "eserler/yildirim-bayezid-bedesteni/3d/build/build_v05.py (Dukkan_Aciklik, Pencere: «plan §5.1: #3E4A55»)"
+  ],
+  "malzemeler": [
+   "Ic_Aciklik"
+  ],
+  "uyeler": [
+   "yildirim-bayezid-bedesteni"
+  ],
+  "not": "29 Ekim 2026 («İçini göster»): iç mekândaki kapı ve mahzen açıklıkları (koyu boşluk). Fotoğraftan ölçülmedi; dış dükkân açıklıklarının mevcut rengi."
  },
  "kararlar_28_ekim": {
   "emir-han.cati": "KURŞUN KALIR. Envanter (E cilt-1, envanter_c1.md s.151): «üzeri kurşunla kaplıdır; ancak bir dönem kiremitle örtüldüğü bilinmektedir». 2024 dron fotoğrafındaki gri/yeşil/mavi kaplamalar geçici ya da onarım katmanı; çatı sokaktan görünmez. Kaynak + yedi eserde tutarlılık + değişen bir kaplamaya bağlanmamak.",
