@@ -28,7 +28,7 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   await writeFile(join(root, "book.jpg"), Buffer.from([255, 216, 255, 1, 217]));
   await writeFile(join(root, "present.webp"), Buffer.from([82, 73, 70, 70, 1])); await writeFile(join(root, "trace.webp"), Buffer.from([82, 73, 70, 70, 2]));
   const sites = Array.from({ length: 7 }, (_, i) => ({
-    id: `test-${i}`, name: `Eser ${i}`, city: "Bursa", district: "Hanlar", year: "1400", architect: "—", kind: "cami",
+    id: `test-${i}`, name: `Eser ${i}`, city: "Bursa", district: "Hanlar", year: "1400", architect: "—", kind: "cami", displayOrder: [3, 1, 1][i] ?? null,
     coordinates: [29.06, 40.18], minutes: 1, description: "Kaynaklı içerik", status: "published", tier: "Tier 2", source: "Envanter",
     stories: [], sources: [{ id: `source-${i}`, title: "Fotoğrafçı · Arşiv", kind: "archive", author: "Fotoğrafçı", year: "1900", page: "", url: "https://archive.test", trust: "verified" }],
     photos: [
@@ -98,6 +98,9 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   const res = await ctx.app.inject({ url: "/v1/sites/test-0" });
   assert.equal(res.statusCode, 200);
   const detail = res.json();
+  assert.equal(detail.displayOrder, 3, "eser.json sira is written on insert");
+  const orderOf = async (id: string) => (await ctx.app.inject({ url: `/v1/sites/${id}` })).json().displayOrder;
+  assert.deepEqual([await orderOf("test-1"), await orderOf("test-2"), await orderOf("test-3")], [1, 1, null], "ties are allowed; absent is null");
   assert.equal(detail.historyImages[0].dateLabel, "1900");
   assert.equal(detail.media.find((m: { id: string }) => m.id === "archive-0").description, "Fotoğrafçı · Arşiv");
   assert.deepEqual(detail.photoIds, ["photo-0"]);
@@ -164,6 +167,18 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual((await db.select({ id: siteBadges.id }).from(siteBadges).where(eq(siteBadges.siteId, "test-0"))).map((b) => b.id), ["badge-s-0"]);
   assert.deepEqual((await db.select({ id: userSiteTasks.taskId }).from(userSiteTasks)).map((t) => t.id), ["task-q-0"], "only the vanished task's progress goes");
   assert.deepEqual((await db.select({ id: userSiteBadges.badgeId }).from(userSiteBadges)).map((b) => b.id), ["badge-s-0"]);
+  // A reimport changes the order, and a removed `sira` resets it to unranked.
+  sites[0]!.displayOrder = 2;
+  sites[1]!.displayOrder = null;
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  assert.deepEqual([await orderOf("test-0"), await orderOf("test-1")], [2, null]);
+  // The first site's `sira` is gone from the manifest altogether (not null).
+  await writeFile(path, JSON.stringify({ ...manifest, sites: sites.map(({ displayOrder, ...rest }, i) => (i === 0 ? rest : { displayOrder, ...rest })) }));
+  await importDemoContent(path, root, true, env);
+  assert.equal(await orderOf("test-0"), null, "no sira in the manifest clears the stored value");
+  sites[0]!.displayOrder = 3;
+  sites[1]!.displayOrder = 1;
   // A reimport brings the samples and the present-day pair to the manifest: a vanished sample is gone, a vanished pair clears its angle word.
   sites[0]!.sampleTraces.pop();
   sites[0]!.historyImages[0]!.present = null;
@@ -210,6 +225,10 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   await attempt(trace1, { historyImageId: "archive-0" }, /Sample trace names no archive photograph of the site: test-1 iz-1-1 archive-0/);
   await attempt(trace1, { id: "iz-0-1" }, /Media id used twice: iz-0-1/);
   await attempt(trace1, { id: "photo-1" }, /Media id used twice: photo-1/);
+  // `sira` must be a whole number from 1 up (or absent): 0, 1.5 and "2" stop the import before anything is written.
+  for (const bad of [0, 1.5, "2", -1]) {
+    await attempt(sites[1]!, { displayOrder: bad }, /Site test-1: displayOrder must be an integer of at least 1/);
+  }
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified", chapterId: null, photos: [] }];
   await writeFile(path, JSON.stringify(manifest));

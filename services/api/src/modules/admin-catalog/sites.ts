@@ -177,6 +177,7 @@ const siteSelection = {
   description: sites.description,
   descriptionEn: sites.descriptionEn,
   minutes: sites.minutes,
+  displayOrder: sites.displayOrder,
   tier: sites.tier,
   trust: sites.trust,
   sourceSummary: sites.sourceSummary,
@@ -224,6 +225,7 @@ export type SiteRow = Pick<
   | "description"
   | "descriptionEn"
   | "minutes"
+  | "displayOrder"
   | "tier"
   | "trust"
   | "sourceSummary"
@@ -508,6 +510,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     year: s.year,
     coordinates: s.lng === null || s.lat === null ? null : [s.lng, s.lat],
     minutes: s.minutes,
+    displayOrder: s.displayOrder,
     tier: s.tier,
     trust: s.trust,
     description: s.description,

@@ -380,9 +380,19 @@ export const demoSiteTaskKeys: Record<
       "Ulucami'ye üç kapıdan girilir: kuzeyde Sahaflar Kapısı, doğuda Çarşı Kapısı, batıda Müftülük ya da Mahkeme Kapısı.",
   },
 };
+/** eser.json `sira` of the real demo sites (§11.48); the two fictional ones stay unranked. */
+const demoDisplayOrder: Record<string, number> = {
+  "ulu-cami": 1,
+  bedesten: 2,
+  "koza-han": 3,
+  "orhan-gazi": 4,
+};
 export const sites: HeritageSite[] = input.map((site, i) => ({
   ...site,
   ...(demoModels[site.id] && { model: demoModels[site.id] }),
+  ...(demoDisplayOrder[site.id] && {
+    displayOrder: demoDisplayOrder[site.id],
+  }),
   ...(site.id === "ulu-cami" && {
     tasks: ulucamiTasks,
     badges: ulucamiBadges,

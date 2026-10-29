@@ -54,8 +54,8 @@ const route = (id: string, siteIds: string[], over: Partial<HeritageRoute> = {})
 });
 
 const sites: HeritageSite[] = [
-  site("carsi-hamami", "Çarşı Hamamı", { kind: "hamam", coordinates: [29.0, 40.0] }),
-  site("iznik-han", "İznik Hanı", { coordinates: [29.5, 40.5] }),
+  site("carsi-hamami", "Çarşı Hamamı", { kind: "hamam", coordinates: [29.0, 40.0], displayOrder: 2 }),
+  site("iznik-han", "İznik Hanı", { coordinates: [29.5, 40.5], displayOrder: 1 }),
   site("isik-cami", "Işık Camii", { kind: "cami", city: "İzmir", district: "Konak", coordinates: [27.1, 38.4] }),
   // Equal sort names: ties must be broken by id, never skipped or repeated across a page boundary.
   site("han-b", "Han", { coordinates: [29.1, 40.1] }),
@@ -340,6 +340,25 @@ test("summaries report the category, period and content flags of their site", as
   assert.deepEqual(by["han-b"]?.has, { model: false, audio: false, history: false });
   assert.deepEqual([by["isik-cami"]?.categoryId, by["isik-cami"]?.periodId], ["dini", "klasik-osmanli"]);
   assert.deepEqual([by["han-b"]?.categoryId, by["han-b"]?.periodId], ["akar", null]);
+});
+
+test("the map order (eser.json sira) is in every summary and detail, ranked or null, and in route stops", async () => {
+  const list = (await get<Page>("/v1/sites?limit=100")).body.items;
+  const by = Object.fromEntries(list.map((s) => [s.id, s]));
+  assert.deepEqual([by["iznik-han"]?.displayOrder, by["carsi-hamami"]?.displayOrder], [1, 2]);
+  assert.equal(by["han-a"]?.displayOrder, null, "unranked is null, not absent");
+  assert.ok(list.every((s) => "displayOrder" in s));
+
+  assert.equal((await get<SiteDetail>("/v1/sites/iznik-han")).body.displayOrder, 1);
+  assert.equal((await get<SiteDetail>("/v1/sites/han-a")).body.displayOrder, null);
+  const details = (await get<{ items: SiteDetail[] }>("/v1/site-details?limit=100")).body.items;
+  assert.deepEqual(
+    details.map((d) => [d.id, d.displayOrder]),
+    list.map((s) => [s.id, s.displayOrder]),
+  );
+
+  const stops = (await get<RouteDto>("/v1/routes/sirali")).body.stops;
+  assert.deepEqual(stops.map((s) => s.site.displayOrder), [1, 2, null]);
 });
 
 test("distance sort lists the nearest first and its pages never repeat or skip a row, ties included", async () => {

@@ -3,13 +3,28 @@ import { useEffect, useRef, useState } from "react";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
+  categoriesOf,
+  categoryHints,
+  categoryLabels,
   CITY_MARKER_MAX_ZOOM,
   type CityRecord,
   type HeritageSite,
   type MapSettings,
 } from "@akar/domain";
-import type { Map as MapType, Marker as MarkerType } from "maplibre-gl";
+import type {
+  GeoJSONSource,
+  Map as MapType,
+  Marker as MarkerType,
+} from "maplibre-gl";
 import type { MapModels } from "../lib/map-models";
+import {
+  PIN_LABEL_LAYER,
+  PIN_LAYER,
+  pinAt,
+  pinFeatures,
+  pinFiles,
+  syncPins,
+} from "../lib/map-pins";
 import { useCities, useCityScenes } from "./city-scenes";
 import {
   LocateFixed,
@@ -20,15 +35,12 @@ import {
   MapPin,
   RotateCcw,
 } from "lucide-react";
-const pins = {
-  cami: "e269f.svg",
-  turbe: "e269f.svg",
-  cesme: "d42c6.svg",
-  hamam: "29586.svg",
-  han: "c4a6c.svg",
-  bedesten: "c4a6c.svg",
-  egitim: "65acc.svg",
-};
+declare global {
+  interface Window {
+    /** The discovery map; browser tests read pins and project coordinates through it. Development builds only. */
+    akarMap?: MapType;
+  }
+}
 const WIDE = "(min-width: 1000px)";
 /** Where the globe flies out to: Türkiye whole on the screen. */
 const COUNTRY = {
@@ -75,7 +87,6 @@ export function HeritageMap({
   const cities = useCities();
   const container = useRef<HTMLDivElement>(null),
     map = useRef<MapType | null>(null),
-    markers = useRef<MarkerType[]>([]),
     cityMarkers = useRef<MarkerType[]>([]),
     models = useRef<MapModels | null>(null),
     selectRef = useRef(onSelect),
@@ -111,6 +122,20 @@ export function HeritageMap({
           m.on("movestart", (e) => {
             if (e.originalEvent) moved.current = true;
           });
+          // A site opens from its pin; where none is, from the model under the pointer.
+          m.on("click", (e) => {
+            const id =
+              pinAt(m, e.point.x, e.point.y) ??
+              models.current?.pick(e.point.x, e.point.y);
+            if (id) selectRef.current(id);
+          });
+          m.on("mouseenter", [PIN_LAYER, PIN_LABEL_LAYER], () => {
+            m.getCanvas().style.cursor = "pointer";
+          });
+          m.on("mouseleave", [PIN_LAYER, PIN_LABEL_LAYER], () => {
+            m.getCanvas().style.cursor = "";
+          });
+          if (process.env.NODE_ENV !== "production") window.akarMap = m;
           // Far out only dots stay for the cities without sites, so the labels do not pile up.
           const mode = () => {
             const z = m.getZoom();
@@ -151,16 +176,12 @@ export function HeritageMap({
             // A load event can follow a tile error; keep discovery available
             // through the schematic view for the lifetime of this map.
             // Models and the OSM building layer are an addition: whatever
-            // goes wrong there leaves markers and the base map as they are.
+            // goes wrong there leaves the pins and the base map as they are.
             if (!latest.current.mapSettings) return;
             import("../lib/map-models")
               .then(({ createMapModels }) => {
                 if (disposed) return;
-                models.current = createMapModels(
-                  m,
-                  lib.MercatorCoordinate,
-                  (id) => selectRef.current(id),
-                );
+                models.current = createMapModels(m, lib.MercatorCoordinate);
                 if (latest.current.mapSettings)
                   models.current.update(
                     latest.current.sites,
@@ -180,7 +201,7 @@ export function HeritageMap({
       .catch(() => setFailed(true));
     return () => {
       disposed = true;
-      markers.current.forEach((m) => m.remove());
+      delete window.akarMap;
       models.current?.dispose();
       models.current = null;
       cityMarkers.current.forEach((m) => m.remove());
@@ -244,72 +265,44 @@ export function HeritageMap({
       cancelled = true;
     };
   }, [cities, loaded]);
+  // The route line and the site pins follow the sites, the route and the selection (§11.48).
   useEffect(() => {
     const m = map.current;
     if (!loaded || !m) return;
     let cancelled = false;
-    import("maplibre-gl").then((lib) => {
-      if (cancelled) return;
-      markers.current.forEach((marker) => marker.remove());
-      markers.current = sites.map((site) => {
-        // MapLibre owns the outer transform; button interaction styles must not animate it.
-        const anchor = document.createElement("div");
-        anchor.className = "map-marker";
-        anchor.setAttribute("role", "presentation");
-        anchor.dataset.siteId = site.id;
-        const el = document.createElement("button");
-        el.type = "button";
-        el.className = `map-pin ${site.id === selectedId ? "selected" : ""}`;
-        el.setAttribute("aria-label", `${site.name} haritada aç`);
-        const img = document.createElement("img");
-        img.src = `/figma/${pins[site.kind]}`;
-        img.alt = "";
-        if (site.kind === "egitim") {
-          const label = document.createElement("span");
-          label.className = "education-pin";
-          label.textContent = "E";
-          el.append(label);
-        } else el.append(img);
-        if (routeIds.includes(site.id)) {
-          const number = document.createElement("span");
-          number.textContent = String(routeIds.indexOf(site.id) + 1);
-          el.append(number);
-        }
-        el.onclick = () => selectRef.current(site.id);
-        anchor.append(el);
-        return new lib.Marker({ element: anchor, anchor: "bottom" })
-          .setLngLat(site.coordinates)
-          .addTo(m);
-      });
-      const coordinates = routeIds
-        .map((id) => sites.find((s) => s.id === id)?.coordinates)
-        .filter((x): x is [number, number] => !!x);
-      const data: GeoJSON.Feature<GeoJSON.LineString> = {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: coordinates.length > 1 ? coordinates : [],
+    const coordinates = routeIds
+      .map((id) => sites.find((s) => s.id === id)?.coordinates)
+      .filter((x): x is [number, number] => !!x);
+    const data: GeoJSON.Feature<GeoJSON.LineString> = {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "LineString",
+        coordinates: coordinates.length > 1 ? coordinates : [],
+      },
+    };
+    const route = m.getSource<GeoJSONSource>("route");
+    if (route) route.setData(data);
+    else {
+      m.addSource("route", { type: "geojson", data });
+      m.addLayer({
+        id: "route",
+        type: "line",
+        source: "route",
+        minzoom: CITY_MARKER_MAX_ZOOM,
+        paint: {
+          "line-color": colors.cityBursa,
+          "line-width": 3,
+          "line-dasharray": [2, 2],
         },
-      };
-      const source = m.getSource("route") as
-        import("maplibre-gl").GeoJSONSource | undefined;
-      if (source) source.setData(data);
-      else {
-        m.addSource("route", { type: "geojson", data });
-        m.addLayer({
-          id: "route",
-          type: "line",
-          source: "route",
-          minzoom: CITY_MARKER_MAX_ZOOM,
-          paint: {
-            "line-color": colors.cityBursa,
-            "line-width": 3,
-            "line-dasharray": [2, 2],
-          },
-        });
-      }
-    });
+      });
+    }
+    // The pins draw over the route line; without them the schematic view keeps discovery usable.
+    syncPins(m, pinFeatures(sites, routeIds, selectedId), () => cancelled).catch(
+      () => {
+        if (!cancelled) setFailed(true);
+      },
+    );
     return () => {
       cancelled = true;
     };
@@ -352,6 +345,8 @@ export function HeritageMap({
       { timeout: 8000 },
     );
   }
+  // The legend names only the categories that have a pin on this map (§11.48).
+  const categories = categoriesOf(sites);
   return (
     <div className={`map-wrap${cityMode}`}>
       <div
@@ -382,7 +377,7 @@ export function HeritageMap({
               {site.kind === "egitim" ? (
                 <span className="education-pin">E</span>
               ) : (
-                <img src={`/figma/${pins[site.kind]}`} alt="" />
+                <img src={`/figma/${pinFiles[site.kind]}`} alt="" />
               )}
               <span>{site.name}</span>
             </button>
@@ -449,24 +444,16 @@ export function HeritageMap({
           {notice} ×
         </button>
       )}
-      <div className="map-caption">
-        <span>
-          <i className="dot dini" />
-          Dinî
-        </span>
-        <span>
-          <i className="dot su" />
-          Su
-        </span>
-        <span>
-          <i className="dot egitim" />
-          Eğitim
-        </span>
-        <span>
-          <i className="dot akar" />
-          Akar
-        </span>
-      </div>
+      {categories.length > 0 && (
+        <div className="map-caption">
+          {categories.map((category) => (
+            <span key={category} title={categoryHints[category]}>
+              <i className={`dot ${category}`} />
+              {categoryLabels[category]}
+            </span>
+          ))}
+        </div>
+      )}
       {failed && (
         <button className="map-retry" onClick={() => window.location.reload()}>
           <RotateCcw size={14} />

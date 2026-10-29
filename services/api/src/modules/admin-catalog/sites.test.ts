@@ -184,6 +184,21 @@ test("create makes a v2 Tier 1 draft that is not public; the same name and distr
   assert.ok(unknownCity.body.error.fieldErrors.city);
 });
 
+test("the map order (eser.json sira) is read-only in the panel: the detail carries it, create and Bilgiler never write it", async () => {
+  const draft = await newDraft("Sıra Hanı", { displayOrder: 1 });
+  assert.equal(draft.displayOrder, null, "create ignores it; only the importer fills it");
+  const base = `/v1/admin/sites/${draft.id}`;
+  await app.deps.db.update(sites).set({ displayOrder: 4 }).where(eq(sites.id, draft.id));
+  assert.equal((await call<AdminSiteDetail>("GET", base, editor)).body.displayOrder, 4);
+
+  const patched = await send("PATCH", `${base}/info`, { year: "1500", displayOrder: 9 });
+  assert.equal(patched.year, "1500");
+  assert.equal(patched.displayOrder, 4, "PATCH leaves the stored order as it was");
+  assert.equal((await send("PUT", `${base}/location`, { coordinates: [29.06, 40.18] })).displayOrder, 4, "so do the other steps");
+  const [row] = await app.deps.db.select({ displayOrder: sites.displayOrder }).from(sites).where(eq(sites.id, draft.id));
+  assert.equal(row?.displayOrder, 4);
+});
+
 test("an id is made unique when the slug is taken by a site with another duplicate key", async () => {
   const first = await newDraft("Eski-Han", { district: "Gemlik" });
   // "Eski Han" and "Eski-Han" normalize differently (so no 409) but slugify to the same id.

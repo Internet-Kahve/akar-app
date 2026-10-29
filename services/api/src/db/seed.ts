@@ -112,6 +112,7 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
         description: site.description,
         descriptionEn: site.descriptionEn ?? null,
         minutes: site.minutes,
+        displayOrder: site.displayOrder ?? null,
         tier: site.tier,
         trust: weakestTrust(site),
         sourceSummary: site.source,

@@ -1,0 +1,2 @@
+ALTER TABLE "sites" ADD COLUMN "display_order" integer;--> statement-breakpoint
+ALTER TABLE "sites" ADD CONSTRAINT "sites_display_order_positive" CHECK ("sites"."display_order" IS NULL OR "sites"."display_order" >= 1);

@@ -338,6 +338,11 @@ export interface HeritageSite {
   era?: string;
   address?: string;
   role?: "akar" | "hayrat" | "both";
+  /**
+   * Priority of the site's pin on the map (`eser.json` `sira`, §11.48): the smaller, the earlier it is drawn and
+   * labelled. Absent = unranked, after every ranked site.
+   */
+  displayOrder?: number;
   relatedSiteId?: string;
   photos?: SitePhoto[];
   sources?: SiteSource[];
@@ -445,6 +450,48 @@ export const kindLabels: Record<SiteKind, string> = {
   egitim: "Eğitim",
   turbe: "Türbe",
 };
+/** Every site kind in the order the filter row lists them. */
+export const siteKinds: readonly SiteKind[] = [
+  "cami",
+  "turbe",
+  "cesme",
+  "hamam",
+  "han",
+  "bedesten",
+  "egitim",
+];
+/** What a pin's colour means on the map: the waqf category of the site (API `role_categories`). */
+export type SiteCategory = "dini" | "su" | "egitim" | "akar";
+/** Categories in the order the map legend lists them. */
+export const siteCategories: readonly SiteCategory[] = [
+  "dini",
+  "su",
+  "egitim",
+  "akar",
+];
+/** The category of each kind, as the `site_types` rows have it. */
+export const kindCategory: Record<SiteKind, SiteCategory> = {
+  cami: "dini",
+  turbe: "dini",
+  cesme: "su",
+  egitim: "egitim",
+  hamam: "akar",
+  han: "akar",
+  bedesten: "akar",
+};
+/** «Akar» alone was taken for the app's name (§11.48), so the income category says what it is. */
+export const categoryLabels: Record<SiteCategory, string> = {
+  dini: "Dinî",
+  su: "Su",
+  egitim: "Eğitim",
+  akar: "Ticari (akar)",
+};
+export const categoryHints: Record<SiteCategory, string> = {
+  dini: "Cami, mescit, türbe",
+  su: "Çeşme, sebil, hamam suyu",
+  egitim: "Medrese, mektep",
+  akar: "Vakfa gelir getiren yapılar: han, bedesten, hamam, dükkân",
+};
 export const trustLabels: Record<Trust, string> = {
   verified: "Doğrulanmış",
   inferred: "Tarihsel çıkarım",
@@ -473,6 +520,22 @@ export function filterSites(
         term,
       ),
   );
+}
+/**
+ * The kinds the filter row offers (§11.48): those with a published site in the city the search points at, so a
+ * chip never leads to an empty list. An empty search points at every city. Listed in `siteKinds` order.
+ */
+export function offeredKinds(sites: HeritageSite[], query: string): SiteKind[] {
+  const cities = new Set(filterSites(sites, query).map((s) => s.city));
+  const here = sites.filter((s) => s.status === "published" && cities.has(s.city));
+  return siteKinds.filter((kind) => here.some((s) => s.kind === kind));
+}
+/** The categories these sites belong to, in `siteCategories` order; the map legend lists only these (§11.48). */
+export function categoriesOf(sites: HeritageSite[]): SiteCategory[] {
+  const present = new Set<SiteCategory | undefined>(
+    sites.map((s) => kindCategory[s.kind]),
+  );
+  return siteCategories.filter((c) => present.has(c));
 }
 export function validateSite(site: HeritageSite) {
   if (site.editorVersion === 2 && site.status === "published") {

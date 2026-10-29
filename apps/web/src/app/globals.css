@@ -669,16 +669,6 @@ img {
 .akar {
   background: var(--pin-akar);
 }
-.map-marker {
-  position: absolute;
-  width: 32px;
-  height: 38.4px;
-  transition: none;
-}
-/* Globe view (§11.45): below the city threshold cities replace the site pins. */
-.city-mode .map-marker {
-  display: none;
-}
 .city-marker {
   display: none;
   align-items: center;
@@ -729,54 +719,9 @@ img {
 .city-far .city-marker:not(.ready) small {
   display: none;
 }
-.map-pin {
-  display: block;
-  width: 32px;
-  height: 38.4px;
-  padding: 0;
-  transition: filter 0.18s;
-  filter: drop-shadow(0 3px 3px #141b2b38);
-  position: relative;
-}
-.map-pin img {
-  width: 32px;
-  height: 38.4px;
-  object-fit: contain;
-  object-position: bottom;
-}
-.map-pin:not(:disabled):active {
-  transform: none;
-}
-.map-pin::before {
-  content: "";
-  position: absolute;
-  inset: -4px;
-}
-.map-pin img,
 .fallback-pin img {
   display: block;
   max-width: none;
-}
-.map-pin:hover {
-  filter: drop-shadow(0 0 6px #25477b70);
-}
-.map-pin.selected {
-  background: var(--surface);
-  border-radius: 40px;
-}
-.map-pin > span {
-  position: absolute;
-  right: 0;
-  top: 0;
-  min-width: 19px;
-  height: 19px;
-  border-radius: 50%;
-  background: var(--primary);
-  border: 2px solid var(--surface);
-  font-size: 10px;
-  color: white;
-  display: grid;
-  place-items: center;
 }
 .map-fallback {
   position: absolute;

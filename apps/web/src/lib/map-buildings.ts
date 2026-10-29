@@ -74,7 +74,7 @@ export class OsmBuildingLayer {
         paint: {
           "fill-extrusion-color": paint(
             "fill-extrusion-color",
-            "#d0c6b4",
+            "#ddd5c6",
           ) as string,
           "fill-extrusion-opacity": paint(
             "fill-extrusion-opacity",

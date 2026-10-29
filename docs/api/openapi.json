@@ -293,6 +293,19 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "displayOrder": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                          },
                           "tier": {
                             "type": "string",
                             "enum": [
@@ -391,6 +404,7 @@
                           "year",
                           "coordinates",
                           "minutes",
+                          "displayOrder",
                           "tier",
                           "trust",
                           "description",
@@ -521,6 +535,19 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
                     },
                     "tier": {
                       "type": "string",
@@ -1935,6 +1962,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -2093,6 +2121,19 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "displayOrder": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
                           },
                           "tier": {
                             "type": "string",
@@ -3507,6 +3548,7 @@
                           "year",
                           "coordinates",
                           "minutes",
+                          "displayOrder",
                           "tier",
                           "trust",
                           "description",
@@ -4152,6 +4194,19 @@
                                       "minimum": -9007199254740991,
                                       "maximum": 9007199254740991
                                     },
+                                    "displayOrder": {
+                                      "anyOf": [
+                                        {
+                                          "type": "integer",
+                                          "minimum": 1,
+                                          "maximum": 9007199254740991
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ],
+                                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                                    },
                                     "tier": {
                                       "type": "string",
                                       "enum": [
@@ -4250,6 +4305,7 @@
                                     "year",
                                     "coordinates",
                                     "minutes",
+                                    "displayOrder",
                                     "tier",
                                     "trust",
                                     "description",
@@ -4522,6 +4578,19 @@
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
+                              "displayOrder": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                              },
                               "tier": {
                                 "type": "string",
                                 "enum": [
@@ -4620,6 +4689,7 @@
                               "year",
                               "coordinates",
                               "minutes",
+                              "displayOrder",
                               "tier",
                               "trust",
                               "description",
@@ -4888,6 +4958,19 @@
                                     "minimum": -9007199254740991,
                                     "maximum": 9007199254740991
                                   },
+                                  "displayOrder": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ],
+                                    "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                                  },
                                   "tier": {
                                     "type": "string",
                                     "enum": [
@@ -4986,6 +5069,7 @@
                                   "year",
                                   "coordinates",
                                   "minutes",
+                                  "displayOrder",
                                   "tier",
                                   "trust",
                                   "description",
@@ -5116,6 +5200,19 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "displayOrder": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
                           },
                           "tier": {
                             "type": "string",
@@ -6530,6 +6627,7 @@
                           "year",
                           "coordinates",
                           "minutes",
+                          "displayOrder",
                           "tier",
                           "trust",
                           "description",
@@ -10216,6 +10314,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -11807,6 +11918,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -12025,6 +12137,19 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "displayOrder": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
                           },
                           "tier": {
                             "type": "string",
@@ -13617,6 +13742,7 @@
                           "year",
                           "coordinates",
                           "minutes",
+                          "displayOrder",
                           "tier",
                           "trust",
                           "description",
@@ -13799,6 +13925,19 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
                     },
                     "tier": {
                       "type": "string",
@@ -15391,6 +15530,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -15740,6 +15880,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -17331,6 +17484,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -17534,6 +17688,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -19125,6 +19292,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -19373,6 +19541,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -20964,6 +21145,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -21262,6 +21444,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -22853,6 +23048,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -23063,6 +23259,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -24654,6 +24863,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -24915,6 +25125,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -26506,6 +26729,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -26892,6 +27116,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -28483,6 +28720,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -28739,6 +28977,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -30330,6 +30581,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -30666,6 +30918,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -32257,6 +32522,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -32426,6 +32692,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -34017,6 +34296,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -34186,6 +34466,19 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
                     "tier": {
                       "type": "string",
                       "enum": [
@@ -35777,6 +36070,7 @@
                     "year",
                     "coordinates",
                     "minutes",
+                    "displayOrder",
                     "tier",
                     "trust",
                     "description",
@@ -41296,6 +41590,19 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "displayOrder": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                          },
                           "tier": {
                             "type": "string",
                             "enum": [
@@ -41394,6 +41701,7 @@
                           "year",
                           "coordinates",
                           "minutes",
+                          "displayOrder",
                           "tier",
                           "trust",
                           "description",
@@ -41744,6 +42052,19 @@
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
+                              "displayOrder": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                              },
                               "tier": {
                                 "type": "string",
                                 "enum": [
@@ -41842,6 +42163,7 @@
                               "year",
                               "coordinates",
                               "minutes",
+                              "displayOrder",
                               "tier",
                               "trust",
                               "description",

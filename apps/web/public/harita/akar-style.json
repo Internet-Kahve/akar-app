@@ -1,17 +1,27 @@
 {
   "version": 8,
+  "name": "AKAR · Harita v1.0",
   "metadata": {
     "maputnik:renderer": "mlgljs",
     "akar:kaynak": "OpenFreeMap Positron temelli. Renkler tokens.css ile uyumlu."
   },
+  "center": [
+    28.9818,
+    41.0262
+  ],
+  "zoom": 15.5,
+  "bearing": 0,
+  "pitch": 0,
+  "sprite": "https://tiles.openfreemap.org/sprites/ofm_f384/ofm",
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   "sources": {
     "ne2_shaded": {
+      "type": "raster",
       "maxzoom": 6,
       "tileSize": 256,
       "tiles": [
         "https://tiles.openfreemap.org/natural_earth/ne2sr/{z}/{x}/{y}.png"
-      ],
-      "type": "raster"
+      ]
     },
     "openmaptiles": {
       "type": "vector",
@@ -123,7 +133,7 @@
               "type": "Point",
               "coordinates": [
                 35.32,
-                37.0
+                37
               ]
             }
           },
@@ -438,7 +448,7 @@
               "type": "Point",
               "coordinates": [
                 39.72,
-                41.0
+                41
               ]
             }
           },
@@ -1241,14 +1251,12 @@
       }
     }
   },
-  "sprite": "https://tiles.openfreemap.org/sprites/ofm_f384/ofm",
-  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#F5F2EA"
+        "background-color": "#f3f1ed"
       }
     },
     {
@@ -1556,7 +1564,7 @@
       "minzoom": 12,
       "paint": {
         "fill-antialias": true,
-        "fill-color": "#fde2c9",
+        "fill-color": "#ede0d4",
         "fill-outline-color": "#D6C6AC",
         "fill-opacity": 0.7
       }
@@ -1566,12 +1574,13 @@
       "type": "fill-extrusion",
       "source": "openmaptiles",
       "source-layer": "building",
-      "minzoom": 15,
       "metadata": {
         "akar:not": "Sadece harita eğikken görünür (uygulama pitch > 5 iken açar). Hafif kademede hiç açılmaz."
       },
+      "minzoom": 15,
+      "layout": {},
       "paint": {
-        "fill-extrusion-color": "#d0c6b4",
+        "fill-extrusion-color": "#ddd5c6",
         "fill-extrusion-height": [
           "interpolate",
           [
@@ -1763,7 +1772,7 @@
       ],
       "paint": {
         "fill-antialias": true,
-        "fill-color": "#F5F2EA"
+        "fill-color": "#f3f1ed"
       }
     },
     {
@@ -1803,7 +1812,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#F5F2EA",
+        "line-color": "#f3f1ed",
         "line-width": [
           "interpolate",
           [
@@ -3017,6 +3026,9 @@
           1
         ]
       ],
+      "layout": {
+        "visibility": "none"
+      },
       "paint": {
         "line-color": "#A79FB8",
         "line-dasharray": [
@@ -3037,9 +3049,6 @@
           11,
           2
         ]
-      },
-      "layout": {
-        "visibility": "none"
       }
     },
     {
@@ -4263,14 +4272,5 @@
         "text-halo-blur": 0.5
       }
     }
-  ],
-  "id": "yhzni7h",
-  "name": "AKAR · Harita v1.0",
-  "center": [
-    28.9818,
-    41.0262
-  ],
-  "zoom": 15.5,
-  "bearing": 0,
-  "pitch": 0
+  ]
 }
