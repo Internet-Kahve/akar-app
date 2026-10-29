@@ -4,6 +4,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startTestApp, TEST_RECEIPT_SECRET } from "../test/harness.ts";
+import { deleteUnreferencedMedia } from "../modules/media/service.ts";
 import { importDemoContent } from "./import-demo.ts";
 
 let ctx: Awaited<ReturnType<typeof startTestApp>>;
@@ -22,6 +23,7 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   glb.writeUInt32LE(0x46546c67, 0); glb.writeUInt32LE(2, 4); glb.writeUInt32LE(glb.length, 8);
   glb.writeUInt32LE(json.length, 12); glb.writeUInt32LE(0x4e4f534a, 16); json.copy(glb, 20);
   await writeFile(join(root, "model.glb"), glb); await writeFile(join(root, "photo.jpg"), Buffer.from([255, 216, 255, 217]));
+  await writeFile(join(root, "book.jpg"), Buffer.from([255, 216, 255, 1, 217]));
   const sites = Array.from({ length: 7 }, (_, i) => ({
     id: `test-${i}`, name: `Eser ${i}`, city: "Bursa", district: "Hanlar", year: "1400", architect: "—", kind: "cami",
     coordinates: [29.06, 40.18], minutes: 1, description: "Kaynaklı içerik", status: "published", tier: "Tier 2", source: "Envanter",
@@ -32,7 +34,15 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
       { id: `detail-${i}`, file: "photo.jpg", src: "", alt: "Kubbe", title: "Kubbe", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: null },
     ],
     coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative" },
-    historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}` }], sections: [] as unknown[],
+    historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}` }], sections: [
+      { id: `sec-${i}-1`, kind: "history", title: "Tarihçe", body: "Cami 1399 yılında açıldı.", trust: "verified", sourceId: `source-${i}`, chapterId: `chapter-${i}`,
+        photos: [{ id: `photo-${i}`, aspect: 1.5, alt: "Dış görünüş" }, { id: `book-${i}`, aspect: null, alt: "Kitap sayfası" }] },
+      { id: `sec-${i}-2`, kind: "architecture", title: "Mimari", body: "Kubbeli.", trust: "verified", sourceId: `source-${i}`, chapterId: null, photos: [] },
+    ] as unknown[],
+    // The reading layer: a chapter with its paragraph (a gallery photo and a book photo after it) and a paragraph outside any chapter.
+    chapters: [{ id: `chapter-${i}`, title: "Tarihçe", kind: "history", reading: { summary: ["Kaynaklı cümle."], figures: [{ value: "1399", label: "açılış yılı", evidence: "1399 yılında" }], quotes: [{ text: "Alıntı", by: null }], timeline: [{ year: "1399", evidence: "1399 yılında" }], terms: [{ word: "kubbe", definition: "Yarım küre örtü" }], camera: { target: "kubbe_1", azimuthDeg: 30, elevationDeg: 40, distance: 0.6 }, interior: true, focusParts: ["kubbe_1"] } }],
+    bookPhotos: [{ id: `book-${i}`, file: "book.jpg", alt: "Kitap sayfası", title: "Envanter Cilt 1 · s. 18", description: "Kitaptan kesildi", license: "Proje izni", trust: "verified", sourceId: `source-${i}` }],
+    aboutCoverPhotoId: `detail-${i}`,
     partCards: [{ id: `part-${i}`, parts: ["kubbe_1"], title: "Kubbe", body: "Kaynaklı metin", photoIds: [`detail-${i}`, `photo-${i}`], trust: "verified", sourceId: `source-${i}` }],
   }));
   const scene = { light: { ambient: 2, sun: 1, fill: 1, azimuthDeg: 315, elevationDeg: 45, saturation: 1.25, groundShadow: 0.18 }, backgroundTop: "#DDE4E5", backgroundBottom: "#A7B4B7" };
@@ -43,8 +53,8 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   await assert.rejects(importDemoContent(path, root, false, {}), /#RRGGBB/);
   scene.backgroundTop = "#DDE4E5";
   await writeFile(path, JSON.stringify(manifest));
-  assert.equal((await importDemoContent(path, root, false, {})).objects, 2);
-  for (let i = 0; i < 2; i++) assert.equal((await importDemoContent(path, root, true, env)).objects, 2);
+  assert.equal((await importDemoContent(path, root, false, {})).objects, 3);
+  for (let i = 0; i < 2; i++) assert.equal((await importDemoContent(path, root, true, env)).objects, 3);
   const city = (await ctx.app.inject({ url: "/v1/cities" })).json().items.find((c: { name: string }) => c.name === "Bursa");
   assert.deepEqual(city.scene, scene, "the city record's scene is served with the city");
   const res = await ctx.app.inject({ url: "/v1/sites/test-0" });
@@ -57,12 +67,30 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.equal(detail.media.find((m: { kind: string }) => m.kind === "model").triangles, 0, "the model's triangles are counted from its file");
   assert.deepEqual(detail.partCards.map((c: { parts: string[]; photoIds: string[] }) => [c.parts, c.photoIds]), [[["kubbe_1"], ["detail-0", "photo-0"]]]);
   assert.ok(detail.media.some((m: { id: string }) => m.id === "detail-0"), "a card's off-gallery photo resolves from the detail's media");
+  // The reading layer comes back whole: chapters in order, paragraphs tied to them, book photographs in order (a gallery photo and a book-only one).
+  assert.deepEqual(detail.chapters, [{ id: "chapter-0", title: "Tarihçe", kind: "history", summary: ["Kaynaklı cümle."], figures: [{ value: "1399", label: "açılış yılı", evidence: "1399 yılında" }],
+    quotes: [{ text: "Alıntı", by: null }], timeline: [{ year: "1399", evidence: "1399 yılında" }], terms: [{ word: "kubbe", definition: "Yarım küre örtü" }],
+    camera: { target: "kubbe_1", azimuthDeg: 30, elevationDeg: 40, distance: 0.6 }, interior: true, focusParts: ["kubbe_1"] }]);
+  assert.deepEqual(detail.sections.map((x: { id: string; chapterId: string | null; photos: unknown[] }) => [x.id, x.chapterId, x.photos]), [
+    ["sec-0-1", "chapter-0", [{ mediaId: "photo-0", aspect: 1.5, alt: "Dış görünüş" }, { mediaId: "book-0", aspect: null, alt: "Kitap sayfası" }]],
+    ["sec-0-2", null, []],
+  ]);
+  assert.equal(detail.aboutCoverMediaId, "detail-0");
+  assert.deepEqual(detail.photoIds, ["photo-0"], "book photographs are not gallery photographs");
+  for (const id of ["book-0", "detail-0"]) assert.ok(detail.media.some((m: { id: string }) => m.id === id), `${id} resolves from the detail's media`);
+  assert.equal(detail.media.find((m: { id: string }) => m.id === "book-0").description, "Kitaptan kesildi");
+  const swept = await ctx.app.deps.db.transaction((tx) => deleteUnreferencedMedia(tx, ["book-0"]));
+  assert.deepEqual(swept, [], "a photograph only a paragraph shows is in use");
+  sites[1]!.chapters[0]!.reading.focusParts = ["yok"];
+  await writeFile(path, JSON.stringify(manifest));
+  await assert.rejects(importDemoContent(path, root, false, {}), /Chapter parts are not model parts: test-1 yok/);
+  sites[1]!.chapters[0]!.reading.focusParts = ["kubbe_1"];
   sites[1]!.partCards[0]!.parts = ["yok"];
   await writeFile(path, JSON.stringify(manifest));
   await assert.rejects(importDemoContent(path, root, false, {}), /not model parts: test-1 yok/);
   sites[1]!.partCards[0]!.parts = ["kubbe_1"];
   sites[0]!.name = "Must roll back";
-  sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified" }];
+  sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified", chapterId: null, photos: [] }];
   await writeFile(path, JSON.stringify(manifest));
   await assert.rejects(importDemoContent(path, root, true, env));
   assert.equal((await ctx.app.inject({ url: "/v1/sites/test-0" })).json().name, "Eser 0");

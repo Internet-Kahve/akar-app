@@ -186,6 +186,34 @@ export const SourceDto = z.object({
   trust: TrustSchema,
 });
 
+export const SectionPhotoDto = z.object({
+  mediaId: z.string().describe("Fotoğraf (SiteDetail.media, kind=photo)"),
+  aspect: z.number().nullable().describe("Fotoğrafın kitaptaki en/boy oranı; bilinmiyorsa null"),
+  alt: z.string(),
+});
+export type SectionPhotoDto = z.infer<typeof SectionPhotoDto>;
+
+export const ChapterDto = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    kind: z.enum(sectionKinds),
+    summary: z.array(z.string()).describe("Bölümün metninden seçilmiş özet cümleleri, kelimesi kelimesine"),
+    figures: z
+      .array(z.object({ value: z.string(), label: z.string(), evidence: z.string().describe("Metinde geçen ifade") }))
+      .describe("Rakam kartları"),
+    quotes: z.array(z.object({ text: z.string(), by: z.string().nullable() })).describe("Büyük alıntılar; by = söyleyen, bilinmiyorsa null"),
+    timeline: z.array(z.object({ year: z.string(), evidence: z.string().describe("Metinde geçen ifade") })).describe("Zaman çizelgesi"),
+    terms: z
+      .array(z.object({ word: z.string(), definition: z.string() }))
+      .describe("Bölüm metninde geçen, dokununca tanımı açılan terimler"),
+    camera: CameraPoseDto.nullable().describe("Bölüm okunurken masaüstünde 3B modelin açısı; null = model olduğu gibi kalır"),
+    interior: z.boolean().describe("Bölüm okunurken modelin örtü grupları kalkar"),
+    focusParts: z.array(z.string()).describe("Bölüm okunurken vurgulanan model parçaları; boş = bütün yapı"),
+  })
+  .describe("«Eser hakkında» okuma bölümü; metni SiteDetail.sections içinde chapterId ile ona bağlıdır");
+export type ChapterDto = z.infer<typeof ChapterDto>;
+
 export const SectionDto = z.object({
   id: z.string(),
   kind: z.enum(sectionKinds),
@@ -194,6 +222,8 @@ export const SectionDto = z.object({
   bodyEn: z.string().nullable(),
   trust: TrustSchema,
   sourceId: z.string().nullable(),
+  chapterId: z.string().nullable().describe("Paragrafın ait olduğu okuma bölümü (SiteDetail.chapters); null = hiçbir bölüme bağlı değil"),
+  photos: z.array(SectionPhotoDto).describe("Paragrafın arkasında gösterilen kitap fotoğrafları, sıralı; galeriye girmez"),
 });
 
 export const CardDto = z.object({
@@ -255,10 +285,12 @@ export const SiteDetail = SiteSummary.extend({
   sourceSummary: z.string().describe("Geriye uyumlu tek satırlık kaynak özeti"),
   editorVersion: z.literal(2).nullable(),
   coverMediaId: z.string().nullable(),
+  aboutCoverMediaId: z.string().nullable().describe("«Eser hakkında» sayfasının kapak fotoğrafı (SiteDetail.media); null = galerinin kapağı"),
   openingCamera: CameraPoseDto.nullable().describe("3B hikâyenin açılış açısı"),
   updatedAt: z.iso.datetime(),
   stories: z.array(StoryBlockDto),
-  sections: z.array(SectionDto).describe("Eser hakkında bölümler (Tarihçe, Mimari, Vakıf ve akar), sıralı"),
+  sections: z.array(SectionDto).describe("Eser hakkında paragraflar (Tarihçe, Mimari, Vakıf ve akar), sıralı"),
+  chapters: z.array(ChapterDto).describe("Eser hakkında okuma bölümleri, sıralı; boş = paragraflar başlıklarıyla düz gösterilir"),
   cards: z.array(CardDto).describe("Hikâye cümlelerinin kullandığı kartlar; ilk kullanım sırasıyla, tekrarsız"),
   historyImages: z.array(HistoryImageDto).describe("Geçmişi Gör görselleri, sıralı"),
   partCards: z
@@ -270,7 +302,7 @@ export const SiteDetail = SiteSummary.extend({
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
   media: z
     .array(MediaDto)
-    .describe("Eserin medya listesi, ardından kapak, hikâye, kart, parça kartı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
+    .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, paragraf fotoğrafı ve geçmiş görsellerinin başvurduğu diğer medya; tekrarsız"),
   sources: z
     .array(SourceDto)
     .describe("Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"),

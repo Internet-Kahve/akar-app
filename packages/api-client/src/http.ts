@@ -2,6 +2,7 @@ import {
   defaultMapSettings,
   validatePlacement,
   validateSite,
+  type AboutChapter,
   type CameraPose,
   type Command,
   type HeritageRoute,
@@ -181,6 +182,26 @@ interface SiteDetailDto {
     body: string;
     trust: Trust;
     sourceId: string | null;
+    /** Absent on older API versions. */
+    chapterId?: string | null;
+    /** Book photographs after the paragraph; `mediaId` resolves in `media`. Absent on older API versions. */
+    photos?: Array<{ mediaId: string; aspect: number | null; alt: string }>;
+  }>;
+  /** Absent on older API versions. */
+  aboutCoverMediaId?: string | null;
+  /** Absent on older API versions. */
+  chapters?: Array<{
+    id: string;
+    title: string;
+    kind: "history" | "architecture" | "waqf";
+    summary: string[];
+    figures: AboutChapter["figures"];
+    quotes: Array<{ text: string; by: string | null }>;
+    timeline: AboutChapter["timeline"];
+    terms: AboutChapter["terms"];
+    camera: CameraPose | null;
+    interior: boolean;
+    focusParts: string[];
   }>;
   cards: Array<{ mediaId: string }>;
   historyImages: Array<{
@@ -351,6 +372,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
       ...d.cards.map((c) => c.mediaId),
       ...d.historyImages.flatMap((h) => [h.mediaId, h.presentMediaId]),
       ...(d.partCards ?? []).flatMap((c) => c.photoIds),
+      ...(d.sections ?? []).flatMap((s) => (s.photos ?? []).map((p) => p.mediaId)),
     ].filter(present),
   );
   const gallery = d.photoIds ? new Set(d.photoIds) : null;
@@ -361,6 +383,9 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         (gallery ? gallery.has(m.id) : used.has(m.id) || !other.has(m.id)),
     )
     .map(toPhoto);
+  const aboutCover = d.aboutCoverMediaId
+    ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
+    : undefined;
   const model = d.media.find((m) => m.kind === "model");
   return {
     id: d.id,
@@ -380,10 +405,39 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     tier: d.tier,
     photos,
     sources: d.sources,
-    sections: (d.sections ?? []).map((section) => ({
-      ...section,
-      sourceId: section.sourceId ?? "",
-    })),
+    sections: (d.sections ?? []).map(
+      ({ chapterId, photos: aboutPhotos, ...section }) => {
+        const placed = (aboutPhotos ?? []).flatMap((p) => {
+          const m = d.media.find((x) => x.id === p.mediaId && x.kind === "photo");
+          return m
+            ? [
+                {
+                  photo: toPhoto(m),
+                  alt: p.alt,
+                  ...(present(p.aspect) && { aspect: p.aspect }),
+                },
+              ]
+            : [];
+        });
+        return {
+          ...section,
+          sourceId: section.sourceId ?? "",
+          ...(present(chapterId) && { chapterId }),
+          ...(placed.length && { photos: placed }),
+        };
+      },
+    ),
+    ...(d.chapters?.length && {
+      chapters: d.chapters.map(({ camera, quotes, ...chapter }) => ({
+        ...chapter,
+        quotes: quotes.map(({ text, by }) => ({
+          text,
+          ...(present(by) && { by }),
+        })),
+        ...(present(camera) && { camera }),
+      })),
+    }),
+    ...(aboutCover && { aboutCover: toPhoto(aboutCover) }),
     storyPhotos: d.media
       .filter((m) => m.kind === "photo" && used.has(m.id))
       .map(toPhoto),

@@ -2190,6 +2190,91 @@ test("archive attribution and story-only photographs reach the UI without becomi
   assert.equal(site.historyImages?.[0]?.presentPhoto, undefined);
 });
 
+test("«Eser hakkında» chapters, paragraph photos and the cover reach the UI; none of them become gallery photos; an older API has none", async () => {
+  const chapter = {
+    id: "ch1",
+    title: "Tarihçe",
+    kind: "history",
+    summary: ["Bir cümle."],
+    figures: [{ value: "1399", label: "açılış yılı", evidence: "1399 yılında" }],
+    quotes: [{ text: "Alıntı", by: null }, { text: "Başka", by: "Evliya Çelebi" }],
+    timeline: [{ year: "1399", evidence: "1399 yılında" }],
+    terms: [{ word: "mihrap", definition: "Kıble yönünü gösteren niş" }],
+    camera: { target: null, azimuthDeg: 0, elevationDeg: 30, distance: 1 },
+    interior: true,
+    focusParts: ["Kubbeler_19"],
+  };
+  const base = detail("about", {
+    media: [
+      media("cover", "photo"),
+      media("book1", "photo"),
+      media("book-missing", "model"),
+    ],
+    coverMediaId: "cover",
+    photoIds: ["cover"],
+    aboutCoverMediaId: "book1",
+    chapters: [chapter],
+    sections: [
+      {
+        id: "s1",
+        kind: "history",
+        title: "Tarihçe",
+        body: "Metin.",
+        trust: "verified",
+        sourceId: null,
+        chapterId: "ch1",
+        photos: [
+          { mediaId: "book1", aspect: 1.5, alt: "Kitap fotoğrafı" },
+          { mediaId: "book-missing", aspect: null, alt: "Yok" },
+        ],
+      },
+      {
+        id: "s2",
+        kind: "history",
+        title: "Tarihçe",
+        body: "Bağsız.",
+        trust: "inferred",
+        sourceId: null,
+      },
+    ],
+  });
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [base, detail("old")],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [site, old] = (await client.getSnapshot()).sites;
+  assert.deepEqual(site!.chapters, [
+    {
+      ...chapter,
+      quotes: [{ text: "Alıntı" }, { text: "Başka", by: "Evliya Çelebi" }],
+      camera: chapter.camera,
+    },
+  ]);
+  assert.equal(site!.aboutCover?.id, "book1");
+  assert.deepEqual(
+    site!.photos?.map((p) => p.id),
+    ["cover"],
+  );
+  const [first, second] = site!.sections!;
+  assert.equal(first!.chapterId, "ch1");
+  assert.deepEqual(
+    first!.photos?.map((p) => [p.photo.id, p.aspect, p.alt]),
+    [["book1", 1.5, "Kitap fotoğrafı"]],
+  );
+  assert.equal(second!.chapterId, undefined);
+  assert.equal(second!.photos, undefined);
+  assert.equal(old!.chapters, undefined);
+  assert.equal(old!.aboutCover, undefined);
+});
+
 test("member administration uses protected, uncached endpoints and sends the expected role", async () => {
   const member = {
     userId: "member-1",
