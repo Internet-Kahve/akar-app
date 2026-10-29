@@ -5094,6 +5094,8 @@ td small {
   font-size: 10px;
 }
 .badge-strip {
+  /* Absolutely positioned screen-reader labels stay inside the scrolling strip. */
+  position: relative;
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
