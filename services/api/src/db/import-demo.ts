@@ -125,8 +125,21 @@ function validateDisplayOrder(site: ContentSite): void {
     throw new Error(`Site ${site.id}: displayOrder must be an integer of at least 1 or absent, got ${JSON.stringify(order)}`);
 }
 
+/** `partCardsKept` (sites whose part cards the panel owns and the import left alone, §11.52) is filled only by --apply: a dry run does not read the database. */
+export interface ImportReport {
+  sites: number;
+  objects: number;
+  bytes: number;
+  presentPhotos: number;
+  sampleTraces: number;
+  applied: boolean;
+  partCardsKept?: string[];
+}
+
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
-export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env) {
+export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env, options: { replacePartCards?: boolean } = {}): Promise<ImportReport> {
+  const { replacePartCards = false } = options;
+  const partCardsKept: string[] = [];
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
   if (manifest.version !== 1 || manifest.sites.length < 7) throw new Error("Expected a reviewed manifest of at least seven sites (version 1)");
   for (const city of manifest.cities) {
@@ -212,6 +225,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const { db, pool } = createDb(config.DATABASE_URL, 2, config.DATABASE_SSL_CA);
   try {
     await db.transaction(async (tx) => {
+      const existing = new Set((await tx.select({ id: sites.id }).from(sites).where(inArray(sites.id, manifest.sites.map((s) => s.id)))).map((r) => r.id));
       await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sampleTraces: _traces, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes });
       // A present-day photograph or a sample's photograph is a `media` row of its own, credited as the file says.
       const upsertPhoto = async (p: CreditedPhoto, trust: Trust) => {
@@ -258,12 +272,15 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           if (placed.length) await tx.insert(siteSectionPhotos).values(placed);
         }
         await tx.update(sites).set({ aboutCoverMediaId: site.aboutCoverPhotoId }).where(eq(sites.id, site.id));
-        // Photos cascade with their card.
-        await tx.delete(sitePartCards).where(eq(sitePartCards.siteId, site.id));
-        for (const [position, { photoIds, ...card }] of site.partCards.entries()) {
-          await tx.insert(sitePartCards).values({ ...card, siteId: site.id, position });
-          if (photoIds.length) await tx.insert(sitePartCardPhotos).values(photoIds.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
-        }
+        // The panel owns the part cards of a site that is already in the database (§11.52): only a new site gets the
+        // manifest's cards, unless the run says to replace them. Photos cascade with their card.
+        if (replacePartCards || !existing.has(site.id)) {
+          await tx.delete(sitePartCards).where(eq(sitePartCards.siteId, site.id));
+          for (const [position, { photoIds, ...card }] of site.partCards.entries()) {
+            await tx.insert(sitePartCards).values({ ...card, siteId: site.id, position });
+            if (photoIds.length) await tx.insert(sitePartCardPhotos).values(photoIds.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
+          }
+        } else partCardsKept.push(site.id);
         await replaceTasks(tx, site);
         for (const id of [...site.photos.map((p) => p.id), ...modelIds]) {
           const file = files.get(mediaFiles.get(id)!)!;
@@ -293,7 +310,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       }
     });
   } finally { await pool.end(); }
-  return report;
+  return { ...report, partCardsKept };
 }
 
 /**
@@ -321,7 +338,7 @@ async function replaceTasks(tx: Tx, site: ContentSite): Promise<void> {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false } } });
-  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply]");
-  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply)));
+  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false }, "replace-part-cards": { type: "boolean", default: false } } });
+  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply] [--replace-part-cards]");
+  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply, process.env, { replacePartCards: values["replace-part-cards"] })));
 }

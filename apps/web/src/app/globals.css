@@ -3564,6 +3564,32 @@ td small {
   flex: 1;
   min-width: 0;
 }
+.part-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 8px 0 4px;
+}
+.part-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.part-card-edit-strip {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin: 8px 0;
+}
+.part-card-edit-strip figure {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.part-card-edit-strip figcaption {
+  align-items: center;
+  gap: 4px;
+}
 .editor-details {
   border-top: 1px solid var(--border);
   padding: 14px 0 0;

@@ -16,6 +16,7 @@ import {
   setLocation,
   setMapPlacement,
   setModel,
+  setPartCards,
   setPhotos,
   setSections,
   setSources,
@@ -39,6 +40,7 @@ import {
   LocationBody,
   MapPlacementBody,
   ModelBody,
+  PartCardsBody,
   SectionsBody,
   SiteInfoBody,
   SiteMediaBody,
@@ -269,6 +271,21 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => write(req, 200, (tx, ctx) => setHistoryImages(tx, ctx, req.params.id, req.body)),
+  );
+
+  app.put(
+    "/v1/admin/sites/:id/part-cards",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary: "3B parça kartlarını sırasıyla değiştir; verilen kimlikler korunur, listede olmayan kart silinir (parçalar modelde, fotoğraflar ve kaynak eserde olmalı)",
+        params: IdParams,
+        body: PartCardsBody,
+        response: { 200: AdminSiteDetail },
+      },
+    },
+    async (req) => write(req, 200, (tx, ctx) => setPartCards(tx, ctx, req.params.id, req.body)),
   );
 
   app.post(

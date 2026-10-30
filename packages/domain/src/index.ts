@@ -580,6 +580,30 @@ export function validateSite(site: HeritageSite) {
     throw new Error("Geçerli enlem ve boylam gir.");
   if (site.status === "published" && !site.source.trim())
     throw new Error("Yayınlamak için kaynak bilgisi ekle.");
+  validatePartCards(site);
+}
+/**
+ * The API's refusals for part cards, so the demo client answers the same: a title, a part, only parts of the model (none
+ * without a model; a model whose part names are not read yet cannot be checked) and a source of the site. Photos are not
+ * checked here: a card may show a photograph that is not in `site.photos` (the API lists it through the card itself).
+ */
+function validatePartCards(site: HeritageSite) {
+  const cards = site.partCards ?? [];
+  if (cards.some((c) => !c.title.trim() || !c.parts.length))
+    throw new Error("Her parça kartının başlığı ve en az bir parçası olmalı.");
+  const modelParts = site.model?.parts ?? [];
+  const unknown = cards
+    .flatMap((c) => c.parts)
+    .filter((p) =>
+      site.model ? modelParts.length && !modelParts.includes(p) : true,
+    );
+  if (unknown.length)
+    throw new Error(
+      `Modelde olmayan parça: ${[...new Set(unknown)].join(", ")}.`,
+    );
+  const sourceIds = new Set((site.sources ?? []).map((s) => s.id));
+  if (cards.some((c) => c.sourceId && !sourceIds.has(c.sourceId)))
+    throw new Error("Kart kaynağı eserin kaynakları arasında olmalı.");
 }
 /** Value ranges of a placement; the API refuses the same ones (`MapPlacementBody`). */
 export const placementLimits = {

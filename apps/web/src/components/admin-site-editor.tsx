@@ -27,9 +27,17 @@ import {
 import { routes } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
+import { PartCardsStep } from "./admin-part-cards";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
 import { prepareModel } from "../lib/editor-media";
-const steps = ["Model", "Bilgiler", "Kaynaklar", "Hikâye", "Yayın"];
+const steps = [
+  "Model",
+  "Bilgiler",
+  "Kaynaklar",
+  "Hikâye",
+  "Parça kartları",
+  "Yayın",
+];
 function prepareSite(site: HeritageSite): HeritageSite {
   const copy = structuredClone(site);
   return {
@@ -158,7 +166,7 @@ export function SiteEditor({
   const selectedPhoto = photos.find((p) => p.id === story?.photoId) ?? cover;
   async function save(status: HeritageSite["status"], exit = false) {
     if (status === "published" && issues.length) {
-      setStep(4);
+      setStep(steps.length - 1);
       setError("Yayınlamadan önce aşağıdaki eksikleri tamamla.");
       return;
     }
@@ -621,7 +629,8 @@ export function SiteEditor({
                     className="btn secondary"
                     disabled={
                       photos.some((p) => p.sourceId === s.id) ||
-                      draft.stories.some((b) => b.sourceId === s.id)
+                      draft.stories.some((b) => b.sourceId === s.id) ||
+                      (draft.partCards ?? []).some((c) => c.sourceId === s.id)
                     }
                     onClick={() =>
                       field(
@@ -634,8 +643,8 @@ export function SiteEditor({
                     Kaynağı kaldır
                   </button>
                   <small className="muted">
-                    Kullanılan kaynak kaldırılmaz; önce fotoğraf ve cümle
-                    bağlantılarını değiştir.
+                    Kullanılan kaynak kaldırılmaz; önce fotoğraf, cümle ve
+                    parça kartı bağlantılarını değiştir.
                   </small>
                 </fieldset>
               ))}
@@ -845,6 +854,23 @@ export function SiteEditor({
             </div>
           )}
           {step === 4 && (
+            <PartCardsStep
+              cards={draft.partCards ?? []}
+              modelParts={draft.model?.parts}
+              photos={[
+                ...photos,
+                ...new Map(
+                  (draft.partCards ?? [])
+                    .flatMap((c) => c.photos)
+                    .filter((p) => !photos.some((g) => g.id === p.id))
+                    .map((p) => [p.id, p]),
+                ).values(),
+              ]}
+              sources={sources}
+              onChange={(cards) => field("partCards", cards)}
+            />
+          )}
+          {step === 5 && (
             <div className="editor-step-content">
               <h2>Yayın kontrolü</h2>
               <div className="publish-checks" role="status">
@@ -925,7 +951,7 @@ export function SiteEditor({
               <ArrowLeft size={16} />
               {steps[step - 1] || "Geri"}
             </button>
-            {step < 4 ? (
+            {step < steps.length - 1 ? (
               <button className="btn" onClick={() => setStep(step + 1)}>
                 {steps[step + 1]}
                 <ArrowRight size={16} />

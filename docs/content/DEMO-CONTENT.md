@@ -33,6 +33,8 @@ Uygulamak için API'nin `DATABASE_URL`, `DATABASE_SSL_CA` ve `STORAGE_*` ayarlar
 
 Bu komut editoryal paketin yeniden yayımlanmasıdır: paketteki eserlerin katalog alanlarını günceller. Panelde yapılmış yeni editoryal düzenlemeler varsa önce pakete aktarın ve katalog yedeği alın. Ziyaretçi ilerlemesi/kullanıcı tablolarına dokunmaz.
 
+**Parça kartları (§11.52).** Panel parça kartlarının sahibidir: aktarım veritabanında zaten olan eserin kartlarına dokunmaz, yalnız yeni oluşturduğu eserin kartlarını yazar (`--apply` çıktısındaki `partCardsKept` kartları korunan eserleri listeler; kuru çalıştırma veritabanını okumadığı için bu alanı vermez). Kartları dosyadaki hâline getirmek için komuta `--replace-part-cards` ekleyin; bu, panelde yapılmış kart düzenlemelerini siler.
+
 Dosyalar önce içerik özetiyle adlandırılmış nesnelere yüklenir. Aynı baytlar yeniden yüklenmez. Ardından tüm katalog ilişkileri tek veritabanı işlemi içinde güncellenir; hata olursa katalog değişmez. Ortak dosyalar seed yönetimindedir: bir eserin kaldırılması başka bir eserin kullandığı dosyayı silemez. Yeni bir paket eski dosyaları kendiliğinden silmez; temizlik öncesinde kullanım kontrolü yapılmalıdır.
 
 ## Doğrulama
