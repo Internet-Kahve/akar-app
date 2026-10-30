@@ -36,7 +36,8 @@ type ContentTask = {
 type ContentBadge = { id: string; title: string; text: string; condition: "story" | "task"; taskId: string | null; onSiteLabel: boolean };
 type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "sampleTraces" | "partCards" | "chapters" | "aboutCover" | "sections" | "tasks" | "badges"> & {
   photos: Array<NonNullable<HeritageSite["photos"]>[number] & { file: string; galleryPosition: number | null }>;
-  model: NonNullable<HeritageSite["model"]> & { file: string };
+  /** Absent for a photo-only site. */
+  model?: NonNullable<HeritageSite["model"]> & { file: string };
   historyImages: ArchiveEntry[];
   /** Team-made İz Bırak samples (`gecmisi-gor/izler.json`, §11.47); empty for a site without any. */
   sampleTraces: SampleTrace[];
@@ -61,11 +62,12 @@ const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpe
 function validateTasks(site: ContentSite, photoIds: Set<string>): void {
   const fail = (what: string, ...ids: string[]): never => { throw new Error(`${what}: ${[site.id, ...ids].join(" ")}`); };
   const taskIds = new Set(site.tasks.map((t) => t.id));
+  const parts = site.model?.parts ?? [];
   if (taskIds.size !== site.tasks.length || new Set(site.badges.map((b) => b.id)).size !== site.badges.length) fail("Duplicate task or badge id");
   for (const task of site.tasks) {
     const where = task.id;
     if (task.photoId !== null && !photoIds.has(task.photoId)) fail("Unresolved task photograph", where);
-    if (task.part !== null && !site.model.parts.includes(task.part)) fail("Task part is not a model part", where, task.part);
+    if (task.part !== null && !parts.includes(task.part)) fail("Task part is not a model part", where, task.part);
     if (task.kind === "quiz") {
       const d = task.details as QuizTaskDetails;
       if (!Array.isArray(d.options) || d.options.length < 2 || d.options.length > 6) fail("Quiz needs 2-6 options", where);
@@ -74,7 +76,7 @@ function validateTasks(site: ContentSite, photoIds: Set<string>): void {
       const d = task.details as FieldTaskDetails;
       if (task.correctIndex !== null) fail("Field task has an answer key", where);
       if (!Number.isInteger(d.onSite.radiusM) || d.onSite.radiusM <= 0) fail("Field task radius", where);
-      if (d.fromHome && !site.model.parts.includes(d.fromHome.part)) fail("Task part is not a model part", where, d.fromHome.part);
+      if (d.fromHome && !parts.includes(d.fromHome.part)) fail("Task part is not a model part", where, d.fromHome.part);
     }
   }
   for (const badge of site.badges) {
@@ -126,7 +128,7 @@ function validateDisplayOrder(site: ContentSite): void {
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
 export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env) {
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
-  if (manifest.version !== 1 || manifest.sites.length !== 7) throw new Error("Expected the reviewed seven-site manifest (version 1)");
+  if (manifest.version !== 1 || manifest.sites.length < 7) throw new Error("Expected a reviewed manifest of at least seven sites (version 1)");
   for (const city of manifest.cities) {
     // loadCatalog keys the city row a site creates by slugify(name); the record must land on that row.
     if (city.id !== slugify(city.name)) throw new Error(`City id ${city.id} does not match its name ${city.name}`);
@@ -155,7 +157,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     if (site.aboutCoverPhotoId !== null && !ids.has(site.aboutCoverPhotoId)) throw new Error(`Unresolved about cover photograph: ${site.id}`);
     if (site.sections.some((s) => (s.chapterId !== null && !chapterIds.has(s.chapterId)) || s.photos.some((p) => !bookIds.has(p.id)))) throw new Error(`Unresolved chapter or section photographs: ${site.id}`);
     const extraPhotos = [...site.historyImages.flatMap((h) => (h.present ? [h.present] : [])), ...site.sampleTraces];
-    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, ...extraPhotos, { ...site.model, id: `${site.id}-model` }]) {
+    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, ...extraPhotos, ...(site.model ? [{ ...site.model, id: `${site.id}-model` }] : [])]) {
       const file = await realpath(resolve(root, item.file));
       if (!file.startsWith(root + sep)) throw new Error("Content path leaves the supplied root");
       if (!files.has(item.file)) {
@@ -166,22 +168,26 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       }
       mediaFiles.set(item.id, item.file);
     }
-    const model = files.get(site.model.file)!;
-    const gltf = await readGlbJson(model.body.length, async ({ start, end }) => model.body.subarray(start, end + 1));
-    site.model.parts = partNames(gltf);
-    triangles.set(`${site.id}-model`, countTriangles(gltf));
-    site.model.bytes = model.body.length;
+    if (site.model) {
+      const model = files.get(site.model.file)!;
+      const gltf = await readGlbJson(model.body.length, async ({ start, end }) => model.body.subarray(start, end + 1));
+      site.model.parts = partNames(gltf);
+      triangles.set(`${site.id}-model`, countTriangles(gltf));
+      site.model.bytes = model.body.length;
+    }
+    // A photo-only site has no parts, so anything that names one stops the import.
+    const parts = site.model?.parts ?? [];
     site.stories.forEach((story) => {
       // Editorial group names may be prefixes, while GLB nodes carry numbered suffixes.
-      story.highlights = [...new Set((story.highlights ?? []).flatMap((prefix) => site.model.parts.filter((part) => part === prefix || part.startsWith(prefix + "_"))))];
+      story.highlights = [...new Set((story.highlights ?? []).flatMap((prefix) => parts.filter((part) => part === prefix || part.startsWith(prefix + "_"))))];
       const target = story.camera?.target;
-      if (target && !site.model.parts.includes(target)) throw new Error(`Camera target is not a model part: ${site.id} ${story.id} ${target}`);
+      if (target && !parts.includes(target)) throw new Error(`Camera target is not a model part: ${site.id} ${story.id} ${target}`);
     });
-    const missing = (site.model.coverGroups ?? []).flat().filter((part) => !site.model.parts.includes(part));
+    const missing = (site.model?.coverGroups ?? []).flat().filter((part) => !parts.includes(part));
     if (missing.length) throw new Error(`Cover group parts are not model parts: ${site.id} ${missing.join(", ")}`);
-    const outside = site.chapters.flatMap((c) => [...c.reading.focusParts, ...(c.reading.camera?.target ? [c.reading.camera.target] : [])]).filter((part) => !site.model.parts.includes(part));
+    const outside = site.chapters.flatMap((c) => [...c.reading.focusParts, ...(c.reading.camera?.target ? [c.reading.camera.target] : [])]).filter((part) => !parts.includes(part));
     if (outside.length) throw new Error(`Chapter parts are not model parts: ${site.id} ${[...new Set(outside)].join(", ")}`);
-    const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !site.model.parts.includes(part));
+    const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !parts.includes(part));
     if (unknown.length) throw new Error(`Part card parts are not model parts: ${site.id} ${unknown.join(", ")}`);
     validateTasks(site, ids);
     validateHistoryExtras(site);
@@ -201,7 +207,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   }
   for (const site of manifest.sites) {
     for (const photo of site.photos) photo.src = storage.publicUrl(files.get(photo.file)!.key);
-    site.model.src = storage.publicUrl(files.get(site.model.file)!.key);
+    if (site.model) site.model.src = storage.publicUrl(files.get(site.model.file)!.key);
   }
   const { db, pool } = createDb(config.DATABASE_URL, 2, config.DATABASE_SSL_CA);
   try {
@@ -217,7 +223,8 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         // The seed includes every story photo; only editorial gallery entries belong in site_media.
         await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
         const gallery = site.photos.filter((p) => p.galleryPosition !== null).sort((a, b) => a.galleryPosition! - b.galleryPosition!);
-        await tx.insert(siteMedia).values([...gallery.map((p) => p.id), `${site.id}-model`].map((mediaId, position) => ({ siteId: site.id, mediaId, position })));
+        const modelIds = site.model ? [`${site.id}-model`] : [];
+        await tx.insert(siteMedia).values([...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({ siteId: site.id, mediaId, position })));
         await tx.delete(historyImages).where(eq(historyImages.siteId, site.id));
         for (const [position, h] of site.historyImages.entries()) {
           const file = files.get(h.file)!;
@@ -258,7 +265,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           if (photoIds.length) await tx.insert(sitePartCardPhotos).values(photoIds.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
         }
         await replaceTasks(tx, site);
-        for (const id of [...site.photos.map((p) => p.id), `${site.id}-model`]) {
+        for (const id of [...site.photos.map((p) => p.id), ...modelIds]) {
           const file = files.get(mediaFiles.get(id)!)!;
           // Shared content-addressed files are seed-managed (storage_key stays null); deleting one site must not delete another's photo.
           await tx.update(media).set({ bytes: file.body.length, ...(id.endsWith("-model") ? { triangles: triangles.get(id)!, partsStatus: "done" as const, license: "AKAR ekip üretimi · temsili model" } : {}) }).where(eq(media.id, id));

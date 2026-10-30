@@ -76,6 +76,7 @@ export function HeritageMap({
   routeIds,
   collapsed,
   mapSettings,
+  focusCity,
   onFirstDraw,
 }: {
   sites: HeritageSite[];
@@ -85,6 +86,8 @@ export function HeritageMap({
   collapsed: boolean;
   /** Without settings the map draws no models (the route preview in the panel). */
   mapSettings?: MapSettings;
+  /** The city the visitor picked by name; the map goes there. */
+  focusCity?: string;
   /** Called once the map has been drawn for the first time, or has given up (then the schematic view takes over). */
   onFirstDraw?: () => void;
 }) {
@@ -223,6 +226,22 @@ export function HeritageMap({
   useEffect(() => {
     if (loaded && !moved.current) map.current?.jumpTo(openingView(cities));
   }, [cities, loaded]);
+  // Only a new pick moves the map: the cities come from a ref so a background refresh cannot pull the camera back.
+  useEffect(() => {
+    const m = map.current;
+    const city = latest.current.cities.find(
+      (c) => c.name === focusCity && c.map,
+    );
+    if (!loaded || !m || !city) return;
+    moved.current = true;
+    m.flyTo({
+      ...cityView(city),
+      pitch: m.getPitch() > 5 ? TILT_PITCH : 0,
+      bearing: 0,
+      duration: 2600,
+      essential: true,
+    });
+  }, [focusCity, loaded]);
   // One marker per city on the map; shown below CITY_MARKER_MAX_ZOOM instead of the site pins (CSS `city-mode`).
   useEffect(() => {
     const m = map.current;
@@ -361,6 +380,7 @@ export function HeritageMap({
   }
   // The legend names only the categories that have a pin on this map (§11.48).
   const categories = categoriesOf(sites);
+  const openingCity = cities.find((c) => c.isDefault)?.name;
   return (
     <div className={`map-wrap${cityMode}`}>
       <div
@@ -400,7 +420,13 @@ export function HeritageMap({
       )}
       <div className="map-location">
         <span className="live-dot" />
-        Bursa <span>/</span> Hanlar Bölgesi <TagText />
+        {focusCity && focusCity !== openingCity ? (
+          focusCity
+        ) : (
+          <>
+            Bursa <span>/</span> Hanlar Bölgesi <TagText />
+          </>
+        )}
       </div>
       <div className="map-tools">
         <button
