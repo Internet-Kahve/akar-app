@@ -198,7 +198,7 @@ Betik yalnız bu klasörün sayfalarını, harita stilini, 14 GLB'yi (7 normal +
   - Orhan Bey Hamamı: «Hamamın bugünkü adı» (Eski Aynalı Çarşı) · «Aynalı Çarşı girişi» (`Hamam_Giris`) · «Aynalı Çarşı», «Üç giriş».
   - Emir Hanı: «Revakları taşıyan ayaklar» (kesme taş ve tuğla) · «Avludaki şadırvan» (`Sadirvan`) · «Taş ve tuğla», «Han avlusu».
   - Orhan Gazi Türbesi: «Türbedeki sandukalar» (Nilüfer Hatun) · «Tek kubbeli türbe» (`Kubbe`) · «Nilüfer Hatun», «Tek kubbe» (hikâye rozeti yok).
-  - Hikâyesi olan beş esere ayrıca «… dinledin» rozeti. Toplam 20 rozet. 30 Ekim'de onaylandı, `_taslak` kaldırıldı.
+  - Hikâyesi olan beş esere ayrıca «… dinledin» rozeti. Toplam 20 rozet. 30 Ekim'de onaylandı: `_taslak: false` (ana daldaki hazırlama betiği `true` görürse durur).
 - **Üründe:** İlerleme `kullanici_ilerleme` tablosuna gider. Misafirken biriken ilerleme girişten sonra hesaba taşınır.
 
 ## Küre ve şehirler · 28 Ekim 2026
