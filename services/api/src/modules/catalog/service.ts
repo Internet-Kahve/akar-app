@@ -18,11 +18,13 @@ import {
   sites,
   siteTypes,
   sources,
+  narrations,
   storyBlocks,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
+import { currentNarrations, loadNarrationRows, narrationsOfBlock } from "../narrations/read.ts";
 import { loadSampleTraces, sampleTraceDto } from "./sample-traces.ts";
 import { badgeDto, loadBadges, loadTasks, taskDto } from "./tasks.ts";
 import type { ChapterDto, ContentFlag, MapPlacementDto, SectionPhotoDto, SiteDetail, SiteSummary } from "./schemas.ts";
@@ -83,7 +85,8 @@ export type ListSitesInput = {
  */
 const hasContent = {
   model: sql<boolean>`exists (select 1 from ${siteMedia} join ${media} on ${media.id} = ${siteMedia.mediaId} where ${siteMedia.siteId} = ${sites.id} and ${media.kind} = 'model')`,
-  audio: sql<boolean>`exists (select 1 from ${storyBlocks} where ${storyBlocks.siteId} = ${sites.id} and (${storyBlocks.audioMediaId} is not null or ${storyBlocks.audioEnMediaId} is not null))`,
+  // Counts every recording of the site, stale ones too: the flag is one EXISTS and cannot compare hashes; the detail lists only current ones.
+  audio: sql<boolean>`exists (select 1 from ${narrations} where ${narrations.siteId} = ${sites.id})`,
   history: sql<boolean>`exists (select 1 from ${historyImages} where ${historyImages.siteId} = ${sites.id})`,
 } satisfies Record<ContentFlag, SQL<boolean>>;
 
@@ -410,7 +413,7 @@ function bySite<T extends { siteId: string }>(rows: T[]): Map<string, T[]> {
 export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[]> {
   const siteIds = distinct(ids);
   if (!siteIds.length) return [];
-  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, partCardRows, chapterRows, sectionPhotoRows, taskRows, badgeRows, traceRows, linkedMedia, linkedSources, placements] = await Promise.all([
+  const [rows, extras, storyRows, sectionRows, cardRows, historyRows, partCardRows, chapterRows, sectionPhotoRows, taskRows, badgeRows, traceRows, linkedMedia, linkedSources, placements, narrationRows] = await Promise.all([
     summaryQuery(db).where(and(published, inArray(sites.id, siteIds))),
     db
       .select({
@@ -463,11 +466,13 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       .where(inArray(siteSources.siteId, siteIds))
       .orderBy(asc(siteSources.siteId), asc(siteSources.position)),
     loadPlacements(db, siteIds),
+    loadNarrationRows(db, siteIds),
   ]);
 
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const extraById = new Map(extras.map((e) => [e.id, e]));
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
+  const narrationsOf = bySite(currentNarrations(narrationRows, storyRows));
   const [storiesOf, sectionsOf, historyOf, partCardsOf, chaptersOf, sectionPhotosOf, tasksOf, badgesOf, tracesOf, mediaLinksOf, sourceLinksOf] = [
     bySite(storyRows),
     bySite(sectionRows),
@@ -495,6 +500,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
     const tasks = tasksOf.get(id) ?? [];
     const badges = badgesOf.get(id) ?? [];
     const traces = tracesOf.get(id) ?? [];
+    const narrationList = narrationsOf.get(id) ?? [];
     // Cards in the order the story first uses them (several sentences may share one card).
     const siteCards = distinct(stories.map((b) => b.cardId)).flatMap((cardId) => {
       const card = cardById.get(cardId);
@@ -504,7 +510,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...(mediaLinksOf.get(id) ?? []).map((m) => m.id),
       extra.coverMediaId,
       extra.aboutCoverMediaId,
-      ...stories.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
+      ...stories.map((b) => b.photoId),
+      ...narrationList.map((n) => n.mediaId),
       ...siteCards.map((c) => c.mediaId),
       ...history.flatMap((h) => [h.mediaId, h.presentMediaId]),
       ...partCards.flatMap((c) => c.photoIds),
@@ -520,7 +527,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...history.map((h) => h.sourceId),
       ...partCards.map((c) => c.sourceId),
     ]);
-    return [{ row, extra, stories, sections, history, partCards, chapters, sectionPhotos, tasks, badges, traces, siteCards, mediaIds, contentSourceIds }];
+    return [{ row, extra, stories, narrationList, sections, history, partCards, chapters, sectionPhotos, tasks, badges, traces, siteCards, mediaIds, contentSourceIds }];
   });
 
   // Sources of the media come back with the media rows, so both lookups run in one round for all sites.
@@ -533,7 +540,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
   for (const s of sourceRows) sourceById.set(s.id, s);
   for (const { s } of mediaRows) if (s) sourceById.set(s.id, s);
 
-  return parts.map(({ row, extra, stories, sections, history, partCards, chapters, sectionPhotos, tasks, badges, traces, siteCards, mediaIds, contentSourceIds }) => {
+  return parts.map(({ row, extra, stories, narrationList, sections, history, partCards, chapters, sectionPhotos, tasks, badges, traces, siteCards, mediaIds, contentSourceIds }) => {
     const photosOf = sectionPhotosBySection(sectionPhotos);
     const siteMediaList = mediaIds.flatMap((mediaId) => {
       const m = mediaById.get(mediaId);
@@ -574,8 +581,10 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         routeOnly: b.routeOnly,
         flow: b.flow,
         highlights: b.highlights,
-        audioMediaId: b.audioMediaId,
-        audioEnMediaId: b.audioEnMediaId,
+        simpleEn: b.simpleEn,
+        textEnStatus: b.textEnStatus,
+        simpleEnStatus: b.simpleEnStatus,
+        narrations: narrationsOfBlock(narrationList, row.id, b.id),
       })),
       sections: sections.map((s) => ({
         id: s.id,

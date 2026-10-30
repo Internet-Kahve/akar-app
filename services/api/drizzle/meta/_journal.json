@@ -183,6 +183,13 @@
       "when": 1793381303306,
       "tag": "0025_history_viewpoint",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793397779233,
+      "tag": "0026_narrations",
+      "breakpoints": true
     }
   ]
 }

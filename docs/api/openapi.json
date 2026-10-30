@@ -942,19 +942,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -973,8 +1038,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -2642,19 +2709,84 @@
                                     "type": "string"
                                   }
                                 },
-                                "audioMediaId": {
-                                  "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                                "simpleEn": {
+                                  "description": "Sade anlatımın İngilizcesi",
                                   "type": [
                                     "string",
                                     "null"
                                   ]
                                 },
-                                "audioEnMediaId": {
-                                  "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                                  "type": [
-                                    "string",
-                                    "null"
-                                  ]
+                                "textEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                                },
+                                "simpleEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                                },
+                                "narrations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "variant": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "simple"
+                                        ],
+                                        "description": "text = hikâye metni, simple = sade anlatım"
+                                      },
+                                      "lang": {
+                                        "type": "string",
+                                        "enum": [
+                                          "tr",
+                                          "en"
+                                        ]
+                                      },
+                                      "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                          "female",
+                                          "male"
+                                        ]
+                                      },
+                                      "mediaId": {
+                                        "type": "string",
+                                        "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                      }
+                                    },
+                                    "required": [
+                                      "variant",
+                                      "lang",
+                                      "voice",
+                                      "mediaId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                                 }
                               },
                               "required": [
@@ -2673,8 +2805,10 @@
                                 "routeOnly",
                                 "flow",
                                 "highlights",
-                                "audioMediaId",
-                                "audioEnMediaId"
+                                "simpleEn",
+                                "textEnStatus",
+                                "simpleEnStatus",
+                                "narrations"
                               ],
                               "additionalProperties": false
                             }
@@ -5868,19 +6002,84 @@
                                     "type": "string"
                                   }
                                 },
-                                "audioMediaId": {
-                                  "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                                "simpleEn": {
+                                  "description": "Sade anlatımın İngilizcesi",
                                   "type": [
                                     "string",
                                     "null"
                                   ]
                                 },
-                                "audioEnMediaId": {
-                                  "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                                  "type": [
-                                    "string",
-                                    "null"
-                                  ]
+                                "textEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                                },
+                                "simpleEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                                },
+                                "narrations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "variant": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "simple"
+                                        ],
+                                        "description": "text = hikâye metni, simple = sade anlatım"
+                                      },
+                                      "lang": {
+                                        "type": "string",
+                                        "enum": [
+                                          "tr",
+                                          "en"
+                                        ]
+                                      },
+                                      "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                          "female",
+                                          "male"
+                                        ]
+                                      },
+                                      "mediaId": {
+                                        "type": "string",
+                                        "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                      }
+                                    },
+                                    "required": [
+                                      "variant",
+                                      "lang",
+                                      "voice",
+                                      "mediaId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                                 }
                               },
                               "required": [
@@ -5899,8 +6098,10 @@
                                 "routeOnly",
                                 "flow",
                                 "highlights",
-                                "audioMediaId",
-                                "audioEnMediaId"
+                                "simpleEn",
+                                "textEnStatus",
+                                "simpleEnStatus",
+                                "narrations"
                               ],
                               "additionalProperties": false
                             }
@@ -11095,19 +11296,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -11126,8 +11392,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -13033,19 +13301,84 @@
                                     "type": "string"
                                   }
                                 },
-                                "audioMediaId": {
-                                  "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                                "simpleEn": {
+                                  "description": "Sade anlatımın İngilizcesi",
                                   "type": [
                                     "string",
                                     "null"
                                   ]
                                 },
-                                "audioEnMediaId": {
-                                  "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                                  "type": [
-                                    "string",
-                                    "null"
-                                  ]
+                                "textEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                                },
+                                "simpleEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                                },
+                                "narrations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "variant": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "simple"
+                                        ],
+                                        "description": "text = hikâye metni, simple = sade anlatım"
+                                      },
+                                      "lang": {
+                                        "type": "string",
+                                        "enum": [
+                                          "tr",
+                                          "en"
+                                        ]
+                                      },
+                                      "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                          "female",
+                                          "male"
+                                        ]
+                                      },
+                                      "mediaId": {
+                                        "type": "string",
+                                        "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                      }
+                                    },
+                                    "required": [
+                                      "variant",
+                                      "lang",
+                                      "voice",
+                                      "mediaId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                                 }
                               },
                               "required": [
@@ -13064,8 +13397,10 @@
                                 "routeOnly",
                                 "flow",
                                 "highlights",
-                                "audioMediaId",
-                                "audioEnMediaId"
+                                "simpleEn",
+                                "textEnStatus",
+                                "simpleEnStatus",
+                                "narrations"
                               ],
                               "additionalProperties": false
                             }
@@ -14935,19 +15270,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -14966,8 +15366,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -17003,19 +17405,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -17034,8 +17501,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -18925,19 +19394,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -18956,8 +19490,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -20892,19 +21428,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -20923,8 +21524,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -22909,19 +23512,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -22940,8 +23608,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -24838,19 +25508,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -24869,8 +25604,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -26818,19 +27555,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -26849,8 +27651,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -28216,6 +29020,19 @@
                           "maxLength": 2000
                         },
                         "textEn": {
+                          "description": "İngilizce metin; kaydedilen İngilizce metin 'reviewed' (gözden geçirilmiş) olur, değişmediyse önceki durumu korur",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 2000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "simpleEn": {
+                          "description": "İngilizce sade anlatım; verilmezse kayıtlı değer ve durumu korunur, null ya da boş metin siler",
                           "anyOf": [
                             {
                               "type": "string",
@@ -28447,36 +29264,6 @@
                             "minLength": 1,
                             "maxLength": 200
                           }
-                        },
-                        "audioMediaId": {
-                          "default": null,
-                          "description": "kind=audio medya (TR)",
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 100,
-                              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "audioEnMediaId": {
-                          "default": null,
-                          "description": "kind=audio medya (EN)",
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "minLength": 1,
-                              "maxLength": 100,
-                              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
                         }
                       },
                       "required": [
@@ -29015,19 +29802,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -29046,8 +29898,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -30990,19 +31844,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -31021,8 +31940,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -33045,19 +33966,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -33076,8 +34062,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -35026,19 +36014,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -35057,8 +36110,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -36914,19 +37969,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -36945,8 +38065,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -38802,19 +39924,84 @@
                               "type": "string"
                             }
                           },
-                          "audioMediaId": {
-                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                          "simpleEn": {
+                            "description": "Sade anlatımın İngilizcesi",
                             "type": [
                               "string",
                               "null"
                             ]
                           },
-                          "audioEnMediaId": {
-                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
-                            "type": [
-                              "string",
-                              "null"
-                            ]
+                          "textEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"
+                          },
+                          "simpleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "simpleEn kaynağı (textEnStatus ile aynı anlam)"
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -38833,8 +40020,10 @@
                           "routeOnly",
                           "flow",
                           "highlights",
-                          "audioMediaId",
-                          "audioEnMediaId"
+                          "simpleEn",
+                          "textEnStatus",
+                          "simpleEnStatus",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       }
@@ -47504,6 +48693,165 @@
                   "required": [
                     "modelMinZoom",
                     "maxVisibleModels"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/sites/{id}/narrations": {
+      "post": {
+        "summary": "Eserin hikâye metinlerini seslendir: Türkçe metin ve sade anlatım, İngilizcesi doluysa İngilizce metin ve sade anlatım; her biri 4 sesle (kadın ve erkek, iki dilde). Eksik ve metni değişmiş (bayat) kayıtlar sırayla üretilir, güncel olanlara dokunulmaz; eski ses dosyası silinir. Rakamlar seslendirmede sözcüğe çevrilir, saklanan metin değişmez. Deepgram anahtarı yoksa 503; son 24 saatte günlük karakter sınırı aşılırsa 429",
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "storyBlockId": {
+                        "description": "Yalnız bu hikâye cümlesi; verilmezse eserin tüm cümleleri",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generated": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Bu istekte üretilen kayıt sayısı (yeni ve yenilenen)"
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Metni değişmediği için dokunulmayan güncel kayıt sayısı"
+                    },
+                    "stale": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Metni değiştiği için bayatlamış, bu istekte yenilenip eski dosyası silinen kayıt sayısı (generated içinde sayılır)"
+                    }
+                  },
+                  "required": [
+                    "generated",
+                    "skipped",
+                    "stale"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/sites/{id}/translate": {
+      "post": {
+        "summary": "Eserin boş İngilizce hikâye metinlerini (metin ve sade anlatım) Gemini ile Türkçeden çevirip doldur ve 'machine' (makine çevirisi) işaretle; dolu alanlara dokunulmaz. Yazılan çeviri panelden kaydedilince 'reviewed' olur. Gemini anahtarı yoksa 503",
+        "tags": [
+          "admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "storyBlockId": {
+                        "description": "Yalnız bu hikâye cümlesi; verilmezse eserin tüm cümleleri",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "translated": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "İngilizcesi boş olduğu için makine çevirisiyle doldurulan hikâye cümlesi sayısı"
+                    },
+                    "skipped": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Dokunulmayan cümle sayısı: İngilizcesi dolu ya da Türkçesi boş"
+                    }
+                  },
+                  "required": [
+                    "translated",
+                    "skipped"
                   ],
                   "additionalProperties": false
                 }

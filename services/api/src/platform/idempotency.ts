@@ -55,9 +55,7 @@ export async function idempotent<T>(
   const key = idempotencyKeyOf(req);
   if (!key) return db.transaction(run);
 
-  const requestHash = createHash("sha256")
-    .update(`${req.method} ${req.url}\n${JSON.stringify(req.body ?? null)}`)
-    .digest("base64url");
+  const requestHash = requestHashOf(req);
 
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`idem:${actorId}:${key}`}))`);
@@ -79,4 +77,44 @@ export async function idempotent<T>(
     }
     return result;
   });
+}
+
+function requestHashOf(req: FastifyRequest): string {
+  return createHash("sha256")
+    .update(`${req.method} ${req.url}\n${JSON.stringify(req.body ?? null)}`)
+    .digest("base64url");
+}
+
+/**
+ * Like `idempotent`, for a handler that must not hold a transaction while it waits on another service (voice-over
+ * generation): the stored response is looked up first and written after `run`, in separate statements. Two
+ * concurrent calls with one key may both run, so `run` has to be safe to repeat; a later retry still replays the
+ * first stored answer (`onConflictDoNothing`).
+ */
+export async function idempotentUnlocked<T>(
+  db: Db,
+  req: FastifyRequest,
+  actorId: string,
+  run: () => Promise<MutationResult<T>>,
+): Promise<MutationResult<T>> {
+  const key = idempotencyKeyOf(req);
+  if (!key) return run();
+
+  const requestHash = requestHashOf(req);
+  const [prior] = await db
+    .select()
+    .from(idempotencyKeys)
+    .where(and(eq(idempotencyKeys.actorId, actorId), eq(idempotencyKeys.key, key)));
+  if (prior) {
+    if (prior.requestHash !== requestHash) {
+      throw new AppError(422, "IDEMPOTENCY_KEY_REUSED", "Bu Idempotency-Key farklı bir istek için kullanılmış.");
+    }
+    return { status: prior.statusCode, body: prior.responseBody as T };
+  }
+  const result = await run();
+  if (result.status < 500) {
+    const responseBody = result.body === undefined || result.body === null ? sql`'null'::jsonb` : result.body;
+    await db.insert(idempotencyKeys).values({ actorId, key, requestHash, statusCode: result.status, responseBody }).onConflictDoNothing();
+  }
+  return result;
 }

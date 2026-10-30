@@ -32,8 +32,10 @@ import {
   sites,
   siteTypes,
   sources,
+  narrations,
   storyBlocks,
   type CameraPose,
+  type TranslationStatus,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
@@ -60,6 +62,8 @@ import {
 import { loadSampleTraces, sampleTraceDto, type SampleTraceRow } from "../catalog/sample-traces.ts";
 import { badgeDto, loadBadges, loadTasks, taskDto, type BadgeRow, type TaskRow } from "../catalog/tasks.ts";
 import { CITIES } from "../ingest/cities.ts";
+import { deleteUnreferencedMedia } from "../media/service.ts";
+import { currentNarrations, loadNarrationRows, narrationsOfBlock, type NarrationRow } from "../narrations/read.ts";
 import { APPROXIMATE_SOURCES } from "../ingest/geocode.ts";
 import type {
   AdminCardDto,
@@ -253,6 +257,8 @@ export type SiteRow = Pick<
 export type SiteAggregate = {
   site: SiteRow;
   stories: StoryRow[];
+  /** Voice-overs that still match their sentence's text (stale ones left out), §11.56. */
+  narrations: NarrationRow[];
   sections: SectionRow[];
   history: HistoryRow[];
   partCards: PartCardRow[];
@@ -306,13 +312,15 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const taskRows = await loadTasks(q, ids);
   const badgeRows = await loadBadges(q, ids);
   const traceRows = await loadSampleTraces(q, ids);
+  const narrationList = currentNarrations(await loadNarrationRows(q, ids), storyRows);
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
     ...mediaLinks.map((l) => l.mediaId),
     ...siteRows.map((s) => s.coverMediaId),
     ...siteRows.map((s) => s.aboutCoverMediaId),
-    ...storyRows.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
+    ...storyRows.map((b) => b.photoId),
+    ...narrationList.map((n) => n.mediaId),
     ...cardRows.map((c) => c.mediaId),
     ...historyRows.flatMap((h) => [h.mediaId, h.presentMediaId]),
     ...partCardRows.flatMap((c) => c.photoIds),
@@ -345,6 +353,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const tasksOf = groupBy(taskRows, (r) => r.siteId);
   const badgesOf = groupBy(badgeRows, (r) => r.siteId);
   const tracesOf = groupBy(traceRows, (r) => r.siteId);
+  const narrationsOf = groupBy(narrationList, (r) => r.siteId);
   const mediaOf = groupBy(mediaLinks, (r) => r.siteId);
   const sourcesOf = groupBy(sourceLinks, (r) => r.siteId);
 
@@ -354,6 +363,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
       {
         site,
         stories: stories.get(site.id) ?? [],
+        narrations: narrationsOf.get(site.id) ?? [],
         sections: sections.get(site.id) ?? [],
         history: history.get(site.id) ?? [],
         partCards: partCardsOf.get(site.id) ?? [],
@@ -478,7 +488,8 @@ function referencesOf(a: SiteAggregate): { mediaList: MediaRow[]; cardList: Card
       ...a.mediaIds,
       s.coverMediaId,
       s.aboutCoverMediaId,
-      ...a.stories.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
+      ...a.stories.map((b) => b.photoId),
+      ...a.narrations.map((n) => n.mediaId),
       ...distinct(a.stories.map((b) => b.cardId)).flatMap((cardId) => a.cards.get(cardId)?.mediaId ?? []),
       ...a.history.flatMap((h) => [h.mediaId, h.presentMediaId]),
       ...a.partCards.flatMap((c) => c.photoIds),
@@ -530,7 +541,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     sourceCount: a.sourceLinks.length,
     has: {
       model: linked.some((m) => m.kind === "model"),
-      audio: a.stories.some((b) => b.audioMediaId !== null || b.audioEnMediaId !== null),
+      audio: a.narrations.length > 0,
       history: a.history.length > 0,
     },
     distanceMeters: null,
@@ -563,8 +574,10 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       routeOnly: b.routeOnly,
       flow: b.flow,
       highlights: b.highlights,
-      audioMediaId: b.audioMediaId,
-      audioEnMediaId: b.audioEnMediaId,
+      simpleEn: b.simpleEn,
+      textEnStatus: b.textEnStatus,
+      simpleEnStatus: b.simpleEnStatus,
+      narrations: narrationsOfBlock(a.narrations, s.id, b.id),
     })),
     sections: a.sections.map((x) => ({
       id: x.id,
@@ -1246,8 +1259,21 @@ export function setSources(tx: Tx, ctx: AuditCtx, id: string, input: SiteSources
 
 const TRUST_RANK: Record<Trust, number> = { verified: 0, inferred: 1, representative: 2 };
 
+type EnglishState = { value: string | null; status: TranslationStatus | null };
+
 /**
- * Adım 4 (Hikâye): replaces the sentences in order. Photo, source, card and audio must exist (with
+ * The English text columns of a saved sentence (§11.56). A text the editor changed or wrote is their own reading
+ * (`reviewed`); an unchanged one keeps the status it had, so a machine draft stays `machine` until someone edits it.
+ * `next` undefined keeps the stored value (clients that do not know the field); empty or null clears it.
+ */
+function englishState(next: string | null | undefined, old: EnglishState | undefined): EnglishState {
+  if (next === undefined) return old ?? { value: null, status: null };
+  if (!next) return { value: null, status: null };
+  return old?.value === next ? old : { value: next, status: "reviewed" };
+}
+
+/**
+ * Adım 4 (Hikâye): replaces the sentences in order. Photo, source and card must exist (with
  * the right media kind) and highlights must be parts of the linked model. The site's own trust is
  * its weakest sentence, as the seed loader does it.
  */
@@ -1259,10 +1285,11 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
     (a) => ({ stories: a.stories }),
     async (before) => {
       const blocks = input.blocks.map((b) => ({ ...b, id: b.id ?? newId("s") }));
+      const previous = new Map(before.stories.map((b) => [b.id, b]));
       const errors = new FieldErrors();
       checkUnique(errors, (i) => `blocks.${i}.id`, blocks.map((b) => b.id), "Aynı kimlik birden fazla cümlede kullanılmış.");
 
-      const kinds = await mediaKindsOf(tx, distinct(blocks.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId])));
+      const kinds = await mediaKindsOf(tx, distinct(blocks.map((b) => b.photoId)));
       const sourceIds = await existingSourceIds(tx, distinct(blocks.map((b) => b.sourceId)));
       const cardIds = distinct(blocks.map((b) => b.cardId));
       const knownCards = cardIds.length ? await tx.select({ id: cards.id }).from(cards).where(inArray(cards.id, cardIds)) : [];
@@ -1272,8 +1299,6 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
 
       blocks.forEach((b, i) => {
         checkMedia(errors, `blocks.${i}.photoId`, b.photoId, kinds, "photo");
-        checkMedia(errors, `blocks.${i}.audioMediaId`, b.audioMediaId, kinds, "audio");
-        checkMedia(errors, `blocks.${i}.audioEnMediaId`, b.audioEnMediaId, kinds, "audio");
         if (b.sourceId && !sourceIds.has(b.sourceId)) errors.add(`blocks.${i}.sourceId`, "Kaynak bulunamadı.");
         if (b.cardId && !cardSet.has(b.cardId)) errors.add(`blocks.${i}.cardId`, "Kart bulunamadı.");
         const unknownParts = hasModel ? b.highlights.filter((h) => !parts.has(h)) : [];
@@ -1286,29 +1311,43 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
       await tx.delete(storyBlocks).where(eq(storyBlocks.siteId, id));
       if (blocks.length) {
         await tx.insert(storyBlocks).values(
-          blocks.map((b, position) => ({
-            siteId: id,
-            id: b.id,
-            position,
-            title: b.title,
-            text: b.text,
-            textEn: b.textEn || null,
-            simple: b.simple,
-            trust: b.trust,
-            photoId: b.photoId,
-            sourceId: b.sourceId,
-            showCard: b.showCard ?? null,
-            cardId: b.cardId,
-            camera: b.camera ? toPose(b.camera) : null,
-            interior: b.interior,
-            routeOnly: b.routeOnly,
-            flow: b.flow,
-            highlights: [...new Set(b.highlights)],
-            audioMediaId: b.audioMediaId,
-            audioEnMediaId: b.audioEnMediaId,
-          })),
+          blocks.map((b, position) => {
+            const old = previous.get(b.id);
+            const textEn = englishState(b.textEn ?? null, old && { value: old.textEn, status: old.textEnStatus });
+            const simpleEn = englishState(b.simpleEn, old && { value: old.simpleEn, status: old.simpleEnStatus });
+            return {
+              siteId: id,
+              id: b.id,
+              position,
+              title: b.title,
+              text: b.text,
+              textEn: textEn.value,
+              textEnStatus: textEn.status,
+              simpleEn: simpleEn.value,
+              simpleEnStatus: simpleEn.status,
+              simple: b.simple,
+              trust: b.trust,
+              photoId: b.photoId,
+              sourceId: b.sourceId,
+              showCard: b.showCard ?? null,
+              cardId: b.cardId,
+              camera: b.camera ? toPose(b.camera) : null,
+              interior: b.interior,
+              routeOnly: b.routeOnly,
+              flow: b.flow,
+              highlights: [...new Set(b.highlights)],
+            };
+          }),
         );
       }
+      // Recordings of sentences the editor deleted go with them (the table has no foreign key to the sentence). Their
+      // storage objects are queued in `media_deletions` by the call below and removed by the maintenance worker.
+      const keptIds = blocks.map((b) => b.id);
+      const orphaned = await tx
+        .delete(narrations)
+        .where(and(eq(narrations.siteId, id), eq(narrations.subjectType, "story_block"), keptIds.length ? notInArray(narrations.subjectId, keptIds) : undefined))
+        .returning({ mediaId: narrations.mediaId });
+      await deleteUnreferencedMedia(tx, orphaned.map((n) => n.mediaId));
       const weakest = blocks.reduce<Trust>((w, b) => (TRUST_RANK[b.trust] > TRUST_RANK[w] ? b.trust : w), blocks[0]?.trust ?? "representative");
       return { trust: weakest };
     },

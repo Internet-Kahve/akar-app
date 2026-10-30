@@ -406,7 +406,11 @@ export const storyBlocks = pgTable(
     title: text("title").notNull(),
     text: text("text").notNull(),
     textEn: text("text_en"),
+    /** `machine`: filled by the AI translation, not yet saved by an editor; `reviewed`: an editor saved it; null: no EN text, or imported and untracked. */
+    textEnStatus: text("text_en_status").$type<"machine" | "reviewed">(),
     simple: text("simple").notNull(),
+    simpleEn: text("simple_en"),
+    simpleEnStatus: text("simple_en_status").$type<"machine" | "reviewed">(),
     trust: trustEnum("trust").notNull(),
     photoId: text("photo_id").references(() => media.id),
     sourceId: text("source_id").references(() => sources.id),
@@ -423,10 +427,10 @@ export const storyBlocks = pgTable(
     /** "Akar akışı": the waqf's income road, drawn on the map for this sentence. */
     flow: jsonb("flow").$type<StoryFlow>(),
     highlights: text("highlights").array().notNull().default(sql`'{}'::text[]`),
-    audioMediaId: text("audio_media_id").references(() => media.id),
-    audioEnMediaId: text("audio_en_media_id").references(() => media.id),
   },
   (t) => [
+    check("story_blocks_text_en_status_check", sql`${t.textEnStatus} in ('machine', 'reviewed')`),
+    check("story_blocks_simple_en_status_check", sql`${t.simpleEnStatus} in ('machine', 'reviewed')`),
     primaryKey({ columns: [t.siteId, t.id] }),
     unique("story_blocks_order_uq").on(t.siteId, t.position),
     index("story_blocks_card_idx").on(t.cardId),

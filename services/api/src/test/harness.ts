@@ -22,6 +22,10 @@ export type TestAppOptions = {
   storage?: AppDeps["storage"];
   /** Default: null. Admin import tests pass a deterministic geocoder factory. */
   geocoderFor?: AppDeps["geocoderFor"];
+  /** Default: null (narration generation answers 503). Pass a fake from `test/fakes.ts`. */
+  tts?: AppDeps["tts"];
+  /** Default: null (translation answers 503). Pass a fake from `test/fakes.ts`. */
+  translator?: AppDeps["translator"];
   /** Extra config values, e.g. `{ VISIT_RADIUS_M: "30" }`. */
   env?: Record<string, string>;
   /** Module plugins not yet registered in app.ts (see `buildApp`). */
@@ -59,6 +63,8 @@ export async function startTestApp(opts: TestAppOptions = {}): Promise<{
       storage: opts.storage ?? null,
       jobs,
       geocoderFor: opts.geocoderFor ?? null,
+      tts: opts.tts ?? null,
+      translator: opts.translator ?? null,
     },
     { docs: false, register: opts.register ?? [] },
   );
