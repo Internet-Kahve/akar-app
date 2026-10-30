@@ -93,6 +93,8 @@ export default function ModelViewer({
   const reframe = useRef<(() => void) | null>(null);
   /** The pose the running tour started from; empty once it stopped. */
   const tourPose = useRef("");
+  /** The sentence pose the camera last went to; a sentence without its own camera reuses it and keeps the visitor's view. */
+  const aimedPose = useRef<CameraPose | undefined>(undefined);
   const tourRef = useRef(tour);
   tourRef.current = tour;
   const frameRef = useRef(frame);
@@ -202,15 +204,18 @@ export default function ModelViewer({
         element.dataset.tour = "off";
       };
       const turn = (now: number) => {
-        controls!.update((now - turnedAt) / 1000);
+        // Clamped: a tab back from the background does not jump the model by the whole hidden time.
+        controls!.update(Math.min(0.064, Math.max(0, (now - turnedAt) / 1000)));
         turnedAt = now;
         if (turning && !disposed) turnFrame = requestAnimationFrame(turn);
       };
       const startTurn = () => {
+        // Not before the model is drawn: aim is set once it loads.
         if (
           turning ||
           tweening ||
           !turnWanted ||
+          !aim.current ||
           matchMedia("(prefers-reduced-motion: reduce)").matches
         )
           return;
@@ -586,6 +591,7 @@ export default function ModelViewer({
           if (highlightRef.current?.length) select.current(highlightRef.current);
           reframe.current?.();
           if (poseRef.current) aim.current(poseRef.current);
+          aimedPose.current = poseRef.current;
           spin.current?.(!!tourRef.current);
           tourPose.current = tourRef.current ? JSON.stringify(poseRef.current ?? null) : "";
           render();
@@ -638,7 +644,9 @@ export default function ModelViewer({
   }, [frame.left, frame.bottom]);
   useEffect(() => {
     const key = JSON.stringify(pose ?? null);
-    if (pose && !tourCarriesOn(tour, tourPose.current, key)) aim.current?.(pose);
+    if (pose && pose !== aimedPose.current && !tourCarriesOn(tour, tourPose.current, key))
+      aim.current?.(pose);
+    aimedPose.current = pose;
     spin.current?.(!!tour);
     tourPose.current = tour ? key : "";
   }, [pose, tour]);
