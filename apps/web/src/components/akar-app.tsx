@@ -1220,6 +1220,14 @@ export function AkarApp() {
                         ? (site.stories[storyIndex]?.interior ?? false)
                         : undefined
                     }
+                    photoCard={
+                      view === "story" && site.stories[storyIndex]?.showCard
+                    }
+                    highlights={
+                      view === "story"
+                        ? site.stories[storyIndex]?.highlights
+                        : undefined
+                    }
                     flow={
                       !live &&
                       view === "story" &&

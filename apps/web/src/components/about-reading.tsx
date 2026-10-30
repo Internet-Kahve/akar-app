@@ -36,7 +36,7 @@ type Term = AboutChapter["terms"][number];
 const WIDE = "(min-width: 1000px)";
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
-function useWide() {
+export function useWide() {
   return useSyncExternalStore(
     (notify) => {
       const query = matchMedia(WIDE);
@@ -696,7 +696,7 @@ function PhotoGroup({
   );
 }
 
-function Lightbox({
+export function Lightbox({
   photos,
   index,
   onIndex,
