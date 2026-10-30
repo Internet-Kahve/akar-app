@@ -11,6 +11,7 @@ import {
   pinFeatures,
   pinImageId,
   pinLayers,
+  starPoints,
 } from "./map-pins";
 
 const sites = createSeed().sites;
@@ -25,9 +26,17 @@ const specs = (labels: boolean) =>
     paint?: Record<string, unknown>;
   }>;
 
-test("a pin's image is its kind, with the route stop number when it is a stop", () => {
+test("a pin's image is its kind, ticked once finished; a route stop is the numbered star of the route's colour", () => {
   assert.equal(pinImageId("han"), "pin-han");
-  assert.equal(pinImageId("han", 3), "pin-han-3");
+  assert.equal(pinImageId("han", 0, true), "pin-han-done");
+  assert.equal(pinImageId("han", 3, true, "#3D8285"), "stop-3-#3D8285");
+});
+
+test("the star has eight points inside its box", () => {
+  const points = starPoints(36);
+  assert.equal(points.length, 16);
+  assert.ok(points.every(([x, y]) => x >= 0 && x <= 36 && y >= 0 && y <= 36));
+  assert.ok(Math.abs(points[0]![1]) < 1e-9);
 });
 
 test("pins carry the site's rank as sort key, unranked sites come after every ranked one", () => {
@@ -49,10 +58,10 @@ test("a pin sits at the site, names it and numbers the route stops from 1", () =
   assert.deepEqual(koza.geometry.coordinates, at("koza-han").coordinates);
   assert.equal(koza.properties.name, at("koza-han").name);
   assert.equal(koza.properties.stop, 1);
-  assert.equal(koza.properties.icon, "pin-han-1");
+  assert.equal(koza.properties.icon, "stop-1-#22566E");
   const ulucami = features.find((f) => f.properties.id === "ulu-cami")!;
   assert.equal(ulucami.properties.stop, 2);
-  assert.equal(ulucami.properties.icon, "pin-cami-2");
+  assert.equal(ulucami.properties.icon, "stop-2-#22566E");
   const outside = features.find((f) => f.properties.id === "orhan-gazi")!;
   assert.equal(outside.properties.stop, 0);
   assert.equal(outside.properties.icon, "pin-cami");

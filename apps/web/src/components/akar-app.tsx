@@ -609,6 +609,16 @@ export function AkarApp() {
     } catch {}
     if (readPreference("akar.dil") === "en") setLang("en");
   }, []);
+  // A route's page shows the whole route on the map.
+  const routeStops = routeSites.map((s) => s.id).join();
+  useEffect(() => {
+    if (routeId && routeSites.length)
+      setFlight((f) => ({
+        key: (f?.key ?? 0) + 1,
+        to: "route",
+        points: routeSites.map((s) => s.coordinates),
+      }));
+  }, [routeId, routeStops]);
   useEffect(() => {
     if (view === "routes" || view === "sites")
       setTab(view === "routes" ? "routes" : "sites");
@@ -1217,8 +1227,12 @@ export function AkarApp() {
                 ) : (
                   <>
                     <HeritageMap
-                      sites={filtered}
+                      sites={routeId && routeSites.length ? routeSites : filtered}
                       selectedId={peekId}
+                      finishedIds={state.readIds}
+                      {...(lookCity?.identity && {
+                        routeColour: lookCity.identity.accent,
+                      })}
                       onSelect={pickSite}
                       onClear={() => setPeekId(undefined)}
                       onFirstDraw={() => setMapDrawn(true)}

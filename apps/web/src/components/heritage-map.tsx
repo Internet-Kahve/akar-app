@@ -68,7 +68,8 @@ function comingSoon(city: CityRecord) {
 /** A camera move the page asks for; a new `key` asks again. */
 export type MapFlight =
   | { key: number; to: "globe" | "home" }
-  | { key: number; to: "point"; point: LngLat };
+  | { key: number; to: "point"; point: LngLat }
+  | { key: number; to: "route"; points: LngLat[] };
 export function HeritageMap({
   sites,
   selectedId,
@@ -84,6 +85,8 @@ export function HeritageMap({
   flight,
   bottomInset = 0,
   peek,
+  finishedIds,
+  routeColour = colors.cityBursa,
 }: {
   sites: HeritageSite[];
   selectedId?: string | undefined;
@@ -107,6 +110,10 @@ export function HeritageMap({
   bottomInset?: number;
   /** The short card of the picked site; it follows the pin on a wide screen. */
   peek?: ReactNode;
+  /** Sites whose story is finished: their pins carry a tick. */
+  finishedIds?: string[];
+  /** The route's city colour, for its line and stop stars. */
+  routeColour?: string;
 }) {
   const scenes = useCityScenes();
   const cities = useCities();
@@ -364,24 +371,29 @@ export function HeritageMap({
         source: "route",
         minzoom: CITY_MARKER_MAX_ZOOM,
         paint: {
-          "line-color": colors.cityBursa,
-          "line-width": 3,
-          "line-dasharray": [2, 2],
+          "line-color": routeColour,
+          "line-width": 4,
+          "line-dasharray": [1.2, 1.2],
         },
       });
     }
+    m.setPaintProperty("route", "line-color", routeColour);
     // The pins draw over the route line; without them the schematic view keeps discovery usable.
     syncPins(
       m,
-      pinFeatures(sites, routeIds, selectedId),
+      pinFeatures(sites, routeIds, selectedId, {
+        ...(finishedIds && { finishedIds }),
+        accent: routeColour,
+      }),
       () => cancelled,
+      routeColour,
     ).catch(() => {
       if (!cancelled) setFailed(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [sites, selectedId, routeIds, loaded]);
+  }, [sites, selectedId, routeIds, loaded, finishedIds, routeColour]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);
@@ -419,6 +431,30 @@ export function HeritageMap({
     const flat = { left: 0, right: 0, top: 0, bottom: 0 };
     if (flight.to === "point")
       m.easeTo({ center: flight.point, zoom: 16.5, duration: 900 });
+    else if (flight.to === "route") {
+      const [first, ...rest] = flight.points;
+      if (!first) return;
+      const bounds = rest.reduce(
+        (box, point) => {
+          box[0] = Math.min(box[0], point[0]);
+          box[1] = Math.min(box[1], point[1]);
+          box[2] = Math.max(box[2], point[0]);
+          box[3] = Math.max(box[3], point[1]);
+          return box;
+        },
+        [first[0], first[1], first[0], first[1]] as [
+          number,
+          number,
+          number,
+          number,
+        ],
+      );
+      m.fitBounds(bounds, {
+        padding: { top: 110, left: 70, right: 150, bottom: 110 + bottomInset },
+        maxZoom: 17,
+        duration: 900,
+      });
+    }
     else if (flight.to === "home")
       m.easeTo({
         ...openingView(latest.current.cities),

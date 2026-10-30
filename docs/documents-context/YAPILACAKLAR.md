@@ -8,8 +8,6 @@ Prototip `apps/web`'e taşındı ve `docs` içinden kaldırıldı. Üründe olan
 
 Kalan farklar:
 - `cam` (gece) teması bağlanmadı; harita stili `design/harita/akar-style-cam.json`.
-- Rota çizgisi hâlâ pinlerde numara; sekiz köşeli yıldız işaretleri yok.
-- Harita pinleri rol rengi + tür simgesi yerine Figma pin görselleri; `medrese` pini kodla çiziliyor.
 - Adresler `#view=…&site=…`; prototipin `#/eser/<id>` biçimi yok.
 - «Bir hata mı gördün? Bildir» yalnız teşekkür gösteriyor, bildirim kaydı yok (`POST /reports` gerekir).
 - İngilizce içerik dosyaları içe aktarılmıyor; dil seçici var, çeviri olan alanlar değişmiyor.
