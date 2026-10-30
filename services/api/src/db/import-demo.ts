@@ -12,7 +12,7 @@ import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts"
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
-import { cities, historyAngleMatches, historyImages, media, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type HistoryAngleMatch, type QuizTaskDetails } from "./schema/index.ts";
+import { type HistoryViewpoint, cities, historyAngleMatches, historyImages, media, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type HistoryAngleMatch, type QuizTaskDetails } from "./schema/index.ts";
 
 /**
  * A photograph the visitor sees with its credit line and licence word for word (§11.47): the present-day pair of an
@@ -25,7 +25,7 @@ type SampleTrace = CreditedPhoto & {
   /** The site's archive photograph (`ArchiveEntry.id`) this shows the same view of; null = none. */
   historyImageId: string | null; angleMatch: HistoryAngleMatch | null;
 };
-type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string; present?: PresentPhoto | null };
+type ArchiveEntry = { id: string; file: string; caption: string; dateLabel: string; alt: string; license: string; credit: string; trust: Trust; sourceId: string; present?: PresentPhoto | null; viewpoint?: HistoryViewpoint | null };
 type BookPhoto = { id: string; file: string; alt: string; title: string; description: string; license: string; trust: Trust; sourceId: string };
 type ContentTask = {
   id: string; kind: "quiz" | "field"; title: string; prompt: string; photoId: string | null; part: string | null; source: string | null; trust: Trust;
@@ -247,7 +247,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             description: h.credit, license: h.license, sourceId: h.sourceId, trust: h.trust, bytes: file.body.length };
           await tx.insert(media).values({ id: h.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
           if (h.present) await upsertPhoto(h.present, "verified");
-          await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, presentMediaId: h.present?.id ?? null, presentAngleMatch: h.present?.angleMatch ?? null,
+          await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, presentMediaId: h.present?.id ?? null, presentAngleMatch: h.present?.angleMatch ?? null, viewpoint: h.viewpoint ?? null,
             caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust });
         }
         // Samples replace the site's whole set; the archive photograph they point at was inserted just above.

@@ -3,7 +3,7 @@
 Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`, `3d/model.json`, `icerik/`, `gecmisi-gor/`); okuyucular `services/api/scripts/editorial_reader.py` içinde (§11.38). Şehrin 3B ışığı ve eser sahnesi zemini `veri/sehir/<şehir>.json` dosyasından (`harita_isik`, `kimlik.sahne_ust / sahne_alt`, §11.42). Ham çalışma arşivi uygulama paketine alınmaz.
 
 - 11 eser (Bursa 9, Konya 1, Hatay 1), 7 Draco sıkıştırmalı GLB; modeller temsili olarak etiketlenir. Dört eser yalnız fotoğraflıdır.
-- 102 kaynaklı eser fotoğrafı, 37 tarihî fotoğraf eşleşmesi, 86 hikâye adımı, 18 görev.
+- 102 kaynaklı eser fotoğrafı, 37 tarihî fotoğraf eşleşmesi, 88 hikâye adımı, 18 görev.
 - Aynı içeriğin tek kopyasıyla 316 Storage nesnesi: 149.804.081 bayt (142,9 MiB; 30 Ekim paketi, #67). Bu sayılar paketi anlatır; canlı katalog aktarım yapılana dek eski paketi gösterir.
 - Güncel eser fotoğraflarının izin/künye alanları `icerik/fotograflar.md` dosyalarından, tarihî fotoğrafların kaynak/lisans alanları `gecmisi-gor.json` dosyalarından aynen aktarılır.
 - Arşiv görselleri kırpılmadan gösterilir. Eşlenmiş bugünkü fotoğraf yokken karşılaştırma varmış gibi sunulmaz. Dış arşiv/CDN'den hotlink yapılmaz.
@@ -13,7 +13,7 @@ Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`
 - Geçmişi Gör eki (§11.47): `eserler/<eser>/gecmisi-gor/bugunku-esler.json` her eski fotoğrafın bugünkü eşini `fotoAtlasId` ile bağlar (şimdilik Ulucami: 1 eş), `izler.json` dosyasından yalnız `ornek: true` ve `durum: onaylandi` kayıtlar okunur (şimdilik Ulucami: 1 örnek; diğerleri atlanır ve sayılır, gerçek ziyaretçi katkısı dosyadan değil uygulamadan gelir). Her görselin `kaynakSatiri` ve `lisans` alanı aynen saklanır; görsel, kaynak satırı, lisans ya da `aciBenzerligi` (`ayni` / `yakin`) eksikse, bağlanan fotoğraf eserde yoksa aktarım durur. Hiçbir görsel kırpılmaz.
 - Eser sırası (§11.48): `eserler/<eser>/eser.json` içindeki `sira` `displayOrder` olarak okunur (pozitif tam sayı, isteğe bağlı, aynı değer birden çok eserde olabilir). Haritada pinler bu sıraya göre çizilir; `sira` yoksa eser sırasızdır (`null`), sayı değilse ya da 1'den küçükse aktarım durur. Yeniden aktarımda değer güncellenir, kaldırılan `sira` sırasızlığa döner.
 - Yalnız fotoğraflı eser (§11.51): `3d/` klasörü olmayan eser modelsiz içe aktarılır; `3d/` olup `model.json` yoksa hazırlama durur. Model parçası adı geçen görev, kart ya da kamera bu eserde aktarımı durdurur. `gecmisi-gor/` paketi yoksa Geçmişi Gör boş durumunu gösterir. Eserin şehri `eser.json → il`, şehrin envanter adı kaynak ve kitap fotoğrafı lisans satırına girer; şehir kaydında `envanter_adi` yoksa hazırlama durur.
-- Hikâyenin `## Yalnız rotada` cümleleri ürüne alınmaz (§11.51). Şehir kaydında `desen` yoksa şehrin kimliği boş kalır ve ekranlar nötr çizilir.
+- Hikâyenin `## Yalnız rotada` cümleleri `routeOnly`, `## Akar akışı` satırları `flow`, Geçmişi Gör `cekimNoktasi` / `yon` / `gorusAcisi` alanları `viewpoint` olarak aktarılır (§11.54). Şehir kaydında `desen` yoksa şehrin kimliği boş kalır ve ekranlar nötr çizilir.
 - Orhan Gazi Türbesi paketinde anlatım henüz yoktur; fotoğraf, model ve tarihî görseller kullanılabilir. Diğer altı eserin anlatımı tarayıcının Türkçe sesli okumasını kullanır; hazır ses dosyası bu pakette bulunmuyor.
 
 ## Yeniden hazırlama ve aktarım

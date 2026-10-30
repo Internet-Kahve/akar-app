@@ -207,6 +207,20 @@ const StoryInput = z.object({
   cardId: Id.nullable().default(null).describe("Paylaşılan kart"),
   camera: CameraPoseInput.nullable().default(null),
   interior: z.boolean().default(false).describe("«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"),
+  routeOnly: z.boolean().default(false).describe("«Yalnız rotada»: yalnız eser rotadan açılınca okunur"),
+  flow: z
+    .object({
+      fromSiteId: Id,
+      toSiteId: Id.nullable(),
+      toPoint: z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]).nullable(),
+      toName: text(200),
+      label: text(200),
+      source: text(500),
+      trust: TrustSchema,
+    })
+    .nullable()
+    .default(null)
+    .describe("«Akar akışı»: bu cümlede haritada çizilen gelir yolu"),
   highlights: z.array(text(200).min(1)).max(50).default([]).describe("Eserin 3B modelindeki parça adları"),
   audioMediaId: Id.nullable().default(null).describe("kind=audio medya (TR)"),
   audioEnMediaId: Id.nullable().default(null).describe("kind=audio medya (EN)"),

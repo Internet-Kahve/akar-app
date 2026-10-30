@@ -87,7 +87,8 @@ test("content preparation reads a photo-only site from its own city", async () =
     assert.equal("model" in site, false);
     assert.deepEqual(site.historyImages, []);
     assert.deepEqual([site.photos[0].id, site.coverPhotoId, site.aboutCoverPhotoId], ["medrese-photo-s1-01", "medrese-photo-s1-01", "medrese-photo-s1-01"], "a kitap/ crop is a gallery photograph");
-    assert.deepEqual(site.stories.map((s: { id: string }) => s.id), ["medrese-story-1"], "route-only sentences stay out of the story");
+    assert.deepEqual(site.stories.map((s: { id: string }) => s.id), ["medrese-story-1", "medrese-story-2"]);
+    assert.deepEqual(site.stories.map((s: { routeOnly: boolean }) => s.routeOnly), [false, true], "route-only sentences are kept and marked");
     const byId = Object.fromEntries(records.map((c: { id: string }) => [c.id, c]));
     assert.deepEqual(byId.konya.scene.light, { ambient: 2, sun: 1, fill: 1, azimuthDeg: 220.6, elevationDeg: 50, saturation: 1, groundShadow: 0.18 });
     assert.equal(byId.hatay.identity, null, "no pattern yet, no identity");

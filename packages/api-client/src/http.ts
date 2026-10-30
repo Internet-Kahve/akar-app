@@ -6,6 +6,8 @@ import {
   type AngleMatch,
   type SiteBadge,
   type CameraPose,
+  type HistoryViewpoint,
+  type StoryFlow,
   type Command,
   type HeritageRoute,
   type CityRecord,
@@ -179,6 +181,9 @@ interface SiteDetailDto {
     camera: CameraPose | null;
     /** Absent on older API versions. */
     interior?: boolean;
+    /** Absent on older API versions. */
+    routeOnly?: boolean;
+    flow?: StoryFlow | null;
     /** Server-side only fields the domain does not carry; kept as they are on a story save. */
     cardId?: string | null;
     audioMediaId?: string | null;
@@ -223,6 +228,7 @@ interface SiteDetailDto {
     trust?: Trust;
     /** Absent on older API versions. */
     presentAngleMatch?: AngleMatch | null;
+    viewpoint?: HistoryViewpoint | null;
   }>;
   /** Team-made İz Bırak samples; absent on older API versions. */
   sampleTraces?: Array<{
@@ -396,6 +402,8 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     highlights: s.highlights,
     ...(present(s.camera) && { camera: s.camera }),
     ...(s.interior && { interior: true }),
+    ...(s.routeOnly && { routeOnly: true }),
+    ...(s.flow && { flow: s.flow }),
     ...(present(s.textEn) && { textEn: s.textEn }),
     ...(present(s.photoId) && { photoId: s.photoId }),
     ...(present(s.sourceId) && { sourceId: s.sourceId }),
@@ -496,6 +504,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           dateLabel: h.dateLabel ?? "Tarih bilinmiyor",
           sourceId: h.sourceId ?? image.sourceId ?? "",
           trust: h.trust ?? image.trust,
+          ...(h.viewpoint && { viewpoint: h.viewpoint }),
           ...(current
             ? {
                 presentPhoto: toPhoto(current),
@@ -1655,6 +1664,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               cardId: k?.cardId ?? null,
               camera: s.camera ?? null,
               interior: s.interior ?? false,
+              routeOnly: s.routeOnly ?? false,
+              flow: s.flow ?? null,
               audioMediaId: k?.audioMediaId ?? null,
               audioEnMediaId: k?.audioEnMediaId ?? null,
             };

@@ -419,6 +419,8 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
     if (b.showCard !== null) story.showCard = b.showCard;
     if (b.camera) story.camera = b.camera;
     if (b.interior) story.interior = true;
+    if (b.routeOnly) story.routeOnly = true;
+    if (b.flow) story.flow = b.flow;
     return story;
   });
 
@@ -558,6 +560,8 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       cardId: b.cardId,
       camera: b.camera,
       interior: b.interior,
+      routeOnly: b.routeOnly,
+      flow: b.flow,
       highlights: b.highlights,
       audioMediaId: b.audioMediaId,
       audioEnMediaId: b.audioEnMediaId,
@@ -595,6 +599,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: h.sourceId,
       trust: h.trust,
       camera: h.camera,
+      viewpoint: h.viewpoint,
       presentAngleMatch: h.presentAngleMatch,
     })),
     sampleTraces: a.sampleTraces.map(sampleTraceDto),
@@ -1296,6 +1301,8 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
             cardId: b.cardId,
             camera: b.camera ? toPose(b.camera) : null,
             interior: b.interior,
+            routeOnly: b.routeOnly,
+            flow: b.flow,
             highlights: [...new Set(b.highlights)],
             audioMediaId: b.audioMediaId,
             audioEnMediaId: b.audioEnMediaId,
