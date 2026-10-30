@@ -140,7 +140,7 @@ export interface AkarClient {
   getMapSettings(): Promise<MapSettings>;
   /** `PUT /v1/admin/map-settings`, admin only: returns the saved values. */
   setMapSettings(settings: MapSettings): Promise<MapSettings>;
-  /** `GET /v1/cities`: every city with its map view, inventory and scene (§11.42, §11.45), alphabetical. */
+  /** `GET /v1/cities`: every city with its map view, inventory, scene and identity (§11.42, §11.45, §11.49), alphabetical. */
   getCities(): Promise<CityRecord[]>;
   /**
    * The placement saved for a site's model, `visible: false` included (the catalog hides it then); `null`

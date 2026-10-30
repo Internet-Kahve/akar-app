@@ -9,6 +9,7 @@ import {
   offeredKinds,
   siteCategories,
   siteKinds,
+  validateCityIdentity,
   validateSite,
   memoryPermissions,
   type HeritageSite,
@@ -357,4 +358,12 @@ test("every kind belongs to a category; the legend lists only categories with a 
   );
   const unknown = { ...sites[0]!, kind: "tekke" } as unknown as HeritageSite;
   assert.deepEqual(categoriesOf([unknown]), []);
+});
+test("a city identity needs two #RRGGBB colours and a pattern file name that cannot be a path", () => {
+  const identity = { accent: "#22566E", pattern: "desen-bursa-sekiz-yildiz.svg", patternColour: "#A4D8E0" };
+  validateCityIdentity(identity);
+  assert.throws(() => validateCityIdentity({ ...identity, accent: "petrol" }), /#RRGGBB/);
+  assert.throws(() => validateCityIdentity({ ...identity, patternColour: "#A4D8E" }), /#RRGGBB/);
+  for (const pattern of ["", "desen.png", "../desen.svg", "desenler/desen.svg", "Desen.svg", 'a".svg', "a b.svg", ".svg", "-a.svg"])
+    assert.throws(() => validateCityIdentity({ ...identity, pattern }), /\.svg dosya adı/, pattern);
 });

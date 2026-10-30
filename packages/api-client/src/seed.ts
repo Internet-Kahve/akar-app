@@ -45,6 +45,11 @@ export const demoCities: Array<Omit<CityRecord, "siteCount">> = [
       backgroundTop: "#DDE4E5",
       backgroundBottom: "#A7B4B7",
     },
+    identity: {
+      accent: "#22566E",
+      pattern: "desen-bursa-sekiz-yildiz.svg",
+      patternColour: "#A4D8E0",
+    },
   },
   {
     id: "konya",
@@ -53,6 +58,11 @@ export const demoCities: Array<Omit<CityRecord, "siteCount">> = [
     map: { center: [32.4846, 37.8714], zoom: 14, zoomDesktop: null },
     inventory: { name: null, publisher: null, year: 2024, siteCount: 289 },
     scene: null,
+    identity: {
+      accent: "#3D8285",
+      pattern: "desen-konya-on-iki-gulbezek.svg",
+      patternColour: "#E8DD7A",
+    },
   },
 ];
 const story = (id: string, title: string, text: string): StoryBlock => ({

@@ -1,6 +1,5 @@
 "use client";
 import { useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import {
   ArrowRight,
   Landmark,
@@ -13,11 +12,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
-import { useCityScene } from "./city-scenes";
-const ModelViewer = dynamic(() => import("./model-viewer"), {
-  ssr: false,
-  loading: () => <p role="status">3B görünüm hazırlanıyor…</p>,
-});
+import { useCityIdentity, useCityScene } from "./city-scenes";
+import { ModelStage } from "./model-stage";
 
 /** Desktop scrolls down the gallery; mobile swipes across it without trapping page scrolling. */
 function PhotoGallery({
@@ -202,6 +198,7 @@ export function Scene({
   interior,
   onHotspot,
   onPick,
+  context = "detail",
 }: {
   site: HeritageSite;
   flow?: boolean;
@@ -214,8 +211,11 @@ export function Scene({
   onHotspot: (id: string) => void;
   /** A site task waits for a tap on a model part (pick mode); the model is shown for it. */
   onPick?: (part: string) => void;
+  /** What the 3D loading card tells the visitor to do meanwhile: «Dinle ya da Oku» on the detail, nothing more in the story. */
+  context?: "detail" | "story";
 }) {
   const cityScene = useCityScene(site.city);
+  const identity = useCityIdentity(site.city);
   // A model site opens on the model, also in the story (its camera follows the sentences).
   const [mode, setMode] = useState<"photo" | "model">(
     photoId && !site.model ? "photo" : "model",
@@ -276,11 +276,13 @@ export function Scene({
           )}
         </div>
         <>
-          <ModelViewer
+          <ModelStage
             key={site.model.src}
             model={site.model}
             name={site.name}
             scene={cityScene}
+            identity={identity}
+            context={context}
             pose={pose}
             interior={interior}
             partCards={site.partCards}

@@ -121,6 +121,27 @@ export function validateCityScene(scene: CityScene) {
   )
     throw new Error("Sahne zemini #RRGGBB biçiminde olmalı");
 }
+/**
+ * City record `identity` (`GET /v1/cities`, §11.49): what the loading screens take from the city
+ * (`veri/sehir/<şehir>.json → kimlik`). `null` = the screens stay neutral; no city name or pattern lives in the code.
+ */
+export interface CityIdentity {
+  /** The city's colour (`kimlik.zemin`, `#RRGGBB`): its name on the opening screen and its pattern on a light ground. */
+  accent: string;
+  /** Pattern tile (`kimlik.desen`): the name of an SVG file served from `/desenler/`, e.g. `desen-bursa-sekiz-yildiz.svg`. */
+  pattern: string;
+  /** Colour of the pattern on a ground in `accent` (`kimlik.desen_renk`, `#RRGGBB`). */
+  patternColour: string;
+}
+/** A pattern file name: lower-case words joined by hyphens, `.svg`; never a path, so it can sit in a URL or a CSS value. */
+export const CITY_PATTERN_FILE = /^[a-z0-9][a-z0-9-]*\.svg$/;
+/** Throws on an identity the loading screens cannot draw. */
+export function validateCityIdentity(identity: CityIdentity) {
+  if (!HEX_COLOUR.test(identity.accent) || !HEX_COLOUR.test(identity.patternColour))
+    throw new Error("Şehir renkleri #RRGGBB biçiminde olmalı");
+  if (typeof identity.pattern !== "string" || !CITY_PATTERN_FILE.test(identity.pattern))
+    throw new Error("Şehir deseni küçük harfli bir .svg dosya adı olmalı");
+}
 /** City record `map` (`GET /v1/cities`, §11.45): where the map opens in this city; the globe marker sits at `center`. */
 export interface CityMapView {
   /** `[lng, lat]`. */
@@ -149,6 +170,8 @@ export interface CityRecord {
   map: CityMapView | null;
   inventory: CityInventory | null;
   scene: CityScene | null;
+  /** The city's look on the opening screen and the 3D loading card (§11.49); `null` = neutral screens. */
+  identity: CityIdentity | null;
 }
 /** Below this map zoom the map shows cities instead of site pins and models (globe view, §11.45). */
 export const CITY_MARKER_MAX_ZOOM = 9;

@@ -15,6 +15,12 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { PartCardDialog, partLabel } from "./part-card";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addSceneLights, groundShadow, saturate } from "../lib/scene-light";
+import {
+  forgetDownload,
+  rememberDownload,
+  toDownloadProgress,
+  type DownloadProgress,
+} from "../lib/model-download";
 
 const TWEEN_MS = 900;
 /** One cover group's rise; the next group follows once the one before has passed `LIFT_GAP`. */
@@ -39,7 +45,8 @@ const TAP_MS = 600;
  * Parts: with `partCards`, only their parts respond to a tap and open the card (all of a card's
  * parts glow together); without cards every part shows its name. `onPick` (a site task waiting for
  * a tap) makes every part answer and sends the tapped part to it instead of opening a card. `scene`
- * is the city's light and background (§11.42), the same light the map uses.
+ * is the city's light (§11.42), the same light the map uses. The stage around it (`ModelStage`) owns the
+ * background and the loading card: `onProgress` reports the bytes read, `onSettled` says whether the model came.
  */
 export default function ModelViewer({
   model,
@@ -51,6 +58,8 @@ export default function ModelViewer({
   partCards = [],
   onPick,
   sources = [],
+  onProgress,
+  onSettled,
 }: {
   model: SiteModel;
   name: string;
@@ -61,6 +70,8 @@ export default function ModelViewer({
   partCards?: PartCard[];
   onPick?: (part: string) => void;
   sources?: SiteSource[];
+  onProgress?: (progress: DownloadProgress) => void;
+  onSettled?: (outcome: "ready" | "failed") => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const aim = useRef<((pose: CameraPose) => void) | null>(null);
@@ -76,10 +87,15 @@ export default function ModelViewer({
   cardsRef.current = partCards;
   const pickRef = useRef(onPick);
   pickRef.current = onPick;
+  const progressRef = useRef(onProgress);
+  progressRef.current = onProgress;
+  const settledRef = useRef(onSettled);
+  settledRef.current = onSettled;
   /** The tapped part: its card, or only its name on a site without cards. */
   const [picked, setPicked] = useState<{ part: string; card?: PartCard } | null>(null);
   const partsKey = JSON.stringify([model.parts, partCards.map((c) => c.parts)]);
-  const [status, setStatus] = useState("3B model yükleniyor…");
+  /** Why there is no model, in the visitor's words; empty while it loads (the stage's card shows that) and once it is drawn. */
+  const [status, setStatus] = useState("");
   /** null = the model has no usable cover groups (no button). */
   const [inside, setInside] = useState<boolean | null>(null);
   const heading = model.placement?.headingDeg ?? 0;
@@ -147,6 +163,7 @@ export default function ModelViewer({
       new GLTFLoader().setDRACOLoader(decoder).load(
         model.src,
         (gltf) => {
+          forgetDownload(model.src);
           if (disposed) {
             disposeObject(gltf.scene);
             return;
@@ -484,19 +501,26 @@ export default function ModelViewer({
           if (poseRef.current) aim.current(poseRef.current);
           render();
           setStatus("");
+          settledRef.current?.("ready");
         },
-        undefined,
+        // The bytes the browser has read of the response, for the stage's loading card (§11.49).
+        (event) => {
+          const next = toDownloadProgress(event);
+          rememberDownload(model.src, next);
+          if (!disposed) progressRef.current?.(next);
+        },
         () => {
-          if (!disposed)
-            setStatus(
-              "3B model yüklenemedi. Fotoğraflardan devam edebilirsin.",
-            );
+          forgetDownload(model.src);
+          if (disposed) return;
+          setStatus("3B model yüklenemedi. Fotoğraflardan devam edebilirsin.");
+          settledRef.current?.("failed");
         },
       );
     } catch {
       setStatus(
         "Bu cihazda 3B görünüm açılamadı. Fotoğraflardan devam edebilirsin.",
       );
+      settledRef.current?.("failed");
     }
     return () => {
       disposed = true;
@@ -539,15 +563,7 @@ export default function ModelViewer({
     return () => clearTimeout(timer);
   }, [picked]);
   return (
-    <div
-      className="model-viewer"
-      style={
-        {
-          "--scene-top": cityScene.backgroundTop,
-          "--scene-bottom": cityScene.backgroundBottom,
-        } as React.CSSProperties
-      }
-    >
+    <>
       <div className="model-canvas" ref={host} />
       {status && (
         <p className="model-status" role="status">
@@ -582,6 +598,6 @@ export default function ModelViewer({
           }}
         />
       )}
-    </div>
+    </>
   );
 }

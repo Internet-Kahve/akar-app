@@ -51,6 +51,7 @@ import {
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
 import { Cities } from "./city-scenes";
+import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Architecture, Scene } from "./scene";
 import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
@@ -136,6 +137,10 @@ export function AkarApp() {
   const [mapSettings, setMapSettings] =
     useState<MapSettings>(defaultMapSettings);
   const [cityRecords, setCityRecords] = useState<CityRecord[]>([]);
+  // The opening screen (§11.49) stays until the map is first drawn; `mapDrawn` says so, `openingLate` gives up waiting.
+  const [opening, setOpening] = useState(true),
+    [mapDrawn, setMapDrawn] = useState(false),
+    [openingLate, setOpeningLate] = useState(false);
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -224,6 +229,8 @@ export function AkarApp() {
         })
       : createMockClient(storage);
     void load();
+    // The opening screen names the default city and draws its pattern: its record is read beside the catalog, not after it.
+    void client.current.getCities().then(setCityRecords, () => {});
     // The first event only reports the stored session; later changes (sign-in,
     // sign-out, rejected token) re-read the state for the new identity.
     const subscription = supabase?.auth.onAuthStateChange((_event, session) => {
@@ -282,6 +289,11 @@ export function AkarApp() {
     const t = setTimeout(() => setToast(""), 4500);
     return () => clearTimeout(t);
   }, [toast]);
+  // A map that never draws must not hold the opening screen for ever.
+  useEffect(() => {
+    const t = setTimeout(() => setOpeningLate(true), OPENING_MAX_MS);
+    return () => clearTimeout(t);
+  }, []);
   const go = useCallback((next: View, id?: string) => {
     setView(next);
     setCollapsed(false);
@@ -446,6 +458,14 @@ export function AkarApp() {
     showMap = !["profile", "admin", "history"].includes(view),
     showRoutes =
       (view === "routes" || (view === "map" && tab === "routes")) && !query;
+  // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
+  // to wait for, as soon as the page can show something.
+  const openingDone =
+    mapDrawn ||
+    openingLate ||
+    !!loadError ||
+    (ready && !(showMap && !isDetail));
+  const openingCity = cityRecords.find((c) => c.isDefault);
   function selectSite(id: string) {
     setStoryIndex(0);
     go("detail", id);
@@ -525,7 +545,7 @@ export function AkarApp() {
     </div>
   );
   const shell = (
-    <div className="app-shell">
+    <div className="app-shell" inert={opening && !openingDone}>
       <a
         className="skip-link"
         href="#main-content"
@@ -1178,6 +1198,7 @@ export function AkarApp() {
                 {isDetail && site ? (
                   <Scene
                     key={`${site.id}-${view === "story" && !site.model ? storyIndex : view}`}
+                    context={view === "story" ? "story" : "detail"}
                     site={site}
                     live={live}
                     photoId={
@@ -1214,6 +1235,7 @@ export function AkarApp() {
                     sites={filtered}
                     selectedId={undefined}
                     onSelect={selectSite}
+                    onFirstDraw={() => setMapDrawn(true)}
                     routeIds={
                       routeId ? routeSites.map((s) => s.id) : state.routeIds
                     }
@@ -1492,7 +1514,19 @@ export function AkarApp() {
       </nav>
     </div>
   );
-  return <Cities.Provider value={cityRecords}>{shell}</Cities.Provider>;
+  return (
+    <Cities.Provider value={cityRecords}>
+      {shell}
+      {opening && (
+        <OpeningScreen
+          cityName={openingCity?.name}
+          identity={openingCity?.identity ?? null}
+          done={openingDone}
+          onGone={() => setOpening(false)}
+        />
+      )}
+    </Cities.Provider>
+  );
 }
 function PlusIcon() {
   return <span className="plus-circle">+</span>;

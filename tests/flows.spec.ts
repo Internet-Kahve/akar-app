@@ -77,6 +77,8 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(
     page.getByRole("heading", { name: "Şehrin hikâyesine karış." }),
   ).toBeVisible();
+  // The page under the opening screen takes no input until the map is drawn (§11.49).
+  await expect(page.locator(".opening")).toHaveCount(0);
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Ulucami");
@@ -342,6 +344,7 @@ test("route search opens a usable route and selection persists", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(page.locator(".opening")).toHaveCount(0);
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Akar ve Hayrat");

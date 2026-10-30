@@ -7,7 +7,6 @@ import {
   useSyncExternalStore,
   type CSSProperties,
 } from "react";
-import dynamic from "next/dynamic";
 import { ChevronDown, ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import {
   trustLabels,
@@ -16,7 +15,8 @@ import {
   type HeritageSite,
   type SitePhoto,
 } from "@akar/domain";
-import { useCityScene } from "./city-scenes";
+import { useCityIdentity, useCityScene } from "./city-scenes";
+import { ModelStage } from "./model-stage";
 import { Modal, Notice, Tag } from "./ui";
 import {
   STRIP_MAX,
@@ -28,11 +28,6 @@ import {
   wordCount,
   type Block,
 } from "../lib/about-reading";
-
-const ModelViewer = dynamic(() => import("./model-viewer"), {
-  ssr: false,
-  loading: () => <p role="status">3B görünüm hazırlanıyor…</p>,
-});
 
 type Section = NonNullable<HeritageSite["sections"]>[number];
 type Term = AboutChapter["terms"][number];
@@ -136,6 +131,7 @@ function Reading({
 }) {
   const wide = useWide();
   const cityScene = useCityScene(site.city);
+  const identity = useCityIdentity(site.city);
   const scroller = useRef<HTMLDivElement>(null);
   const tabs = useRef<HTMLDivElement>(null);
   const progress = useRef<HTMLElement>(null);
@@ -386,11 +382,13 @@ function Reading({
           >
             <div className="about-stage">
               {showModel && site.model ? (
-                <ModelViewer
+                <ModelStage
                   key={site.model.src}
                   model={site.model}
                   name={site.name}
                   scene={cityScene}
+                  identity={identity}
+                  context="reading"
                   pose={current.chapter.camera}
                   interior={current.chapter.interior}
                   highlight={current.chapter.focusParts}
