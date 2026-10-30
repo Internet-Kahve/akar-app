@@ -250,6 +250,19 @@ export const HistoryImagesBody = z.object({
 });
 export type HistoryImagesInput = z.infer<typeof HistoryImagesBody>;
 
+const PartCardInput = z.object({
+  id: Id.optional().describe("Verilirse kartın kimliği korunur; yoksa sunucu üretir"),
+  parts: z.array(text(200).min(1)).min(1).max(50).describe("Kartı açan model parça adları (eserin modelinde olmalı); dokununca hepsi birlikte vurgulanır"),
+  title: text(200).min(1),
+  body: text(4000),
+  photoIds: z.array(Id).max(20).default([]).describe("kind=photo medya, şerit sırasıyla (ilki kapak); eserin medya listesinde olmalı"),
+  trust: TrustSchema,
+  sourceId: Id.nullable().default(null).describe("Eserin kaynaklarından biri"),
+});
+
+export const PartCardsBody = z.object({ cards: z.array(PartCardInput).max(100).describe("3B parça kartları, sırasıyla") });
+export type PartCardsInput = z.infer<typeof PartCardsBody>;
+
 // ── cards ────────────────────────────────────────────────────────────────────
 
 export const AdminCardDto = CardDto.extend({

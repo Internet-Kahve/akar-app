@@ -32606,6 +32606,1873 @@
         }
       }
     },
+    "/v1/admin/sites/{id}/part-cards": {
+      "put": {
+        "summary": "3B parça kartlarını sırasıyla değiştir; verilen kimlikler korunur, listede olmayan kart silinir (parçalar modelde, fotoğraflar ve kaynak eserde olmalı)",
+        "tags": [
+          "admin-sites"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cards": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "description": "Verilirse kartın kimliği korunur; yoksa sunucu üretir",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                        },
+                        "parts": {
+                          "minItems": 1,
+                          "maxItems": 50,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 200
+                          },
+                          "description": "Kartı açan model parça adları (eserin modelinde olmalı); dokununca hepsi birlikte vurgulanır"
+                        },
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "body": {
+                          "type": "string",
+                          "maxLength": 4000
+                        },
+                        "photoIds": {
+                          "default": [],
+                          "description": "kind=photo medya, şerit sırasıyla (ilki kapak); eserin medya listesinde olmalı",
+                          "maxItems": 20,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 100,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                          }
+                        },
+                        "trust": {
+                          "type": "string",
+                          "enum": [
+                            "verified",
+                            "inferred",
+                            "representative"
+                          ]
+                        },
+                        "sourceId": {
+                          "default": null,
+                          "description": "Eserin kaynaklarından biri",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 100,
+                              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "parts",
+                        "title",
+                        "body",
+                        "trust"
+                      ]
+                    },
+                    "description": "3B parça kartları, sırasıyla"
+                  }
+                },
+                "required": [
+                  "cards"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "nameEn": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "kind": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 40,
+                          "description": "Yapı türü kimliği (site_types), örn. cami"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Yapı türü (site_types); yayın için zorunlu"
+                    },
+                    "categoryId": {
+                      "description": "Vakıf rolü kategorisi; türden gelir",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "periodId": {
+                      "description": "Dönem kimliği (periods); bilinmiyorsa null",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "city": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "district": {
+                      "description": "İlçe; içe aktarılan bazı kayıtlarda bilinmiyor",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "year": {
+                      "type": "string"
+                    },
+                    "coordinates": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "prefixItems": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "number"
+                            }
+                          ],
+                          "items": false,
+                          "minItems": 2,
+                          "maxItems": 2
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "[boylam, enlem]; yayın için zorunlu"
+                    },
+                    "minutes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "displayOrder": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Eserin haritadaki çizim önceliği (eser.json `sira`, §11.48): küçük olan önce çizilir ve etiketlenir; null = sırasız, sıralı eserlerden sonra"
+                    },
+                    "tier": {
+                      "type": "string",
+                      "enum": [
+                        "Hero",
+                        "Tier 2",
+                        "Tier 1"
+                      ]
+                    },
+                    "trust": {
+                      "type": "string",
+                      "enum": [
+                        "verified",
+                        "inferred",
+                        "representative"
+                      ]
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "coverImage": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "alt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "url",
+                            "alt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sourceCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "has": {
+                      "type": "object",
+                      "properties": {
+                        "model": {
+                          "type": "boolean"
+                        },
+                        "audio": {
+                          "type": "boolean"
+                        },
+                        "history": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "model",
+                        "audio",
+                        "history"
+                      ],
+                      "additionalProperties": false,
+                      "description": "Eserde bulunan içerik: 3B model, sesli anlatım (TR ya da EN), geçmiş görselleri"
+                    },
+                    "distanceMeters": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Listede near verilmişse eserin o noktaya jeodezik uzaklığı (metre); aksi halde null"
+                    },
+                    "descriptionEn": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "architect": {
+                      "type": "string"
+                    },
+                    "patron": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "era": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "address": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "role": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "akar",
+                            "hayrat",
+                            "both"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "relatedSiteId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "sourceSummary": {
+                      "type": "string",
+                      "description": "Geriye uyumlu tek satırlık kaynak özeti"
+                    },
+                    "editorVersion": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "enum": [
+                            2
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "coverMediaId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "aboutCoverMediaId": {
+                      "description": "«Eser hakkında» sayfasının kapak fotoğrafı (SiteDetail.media); null = galerinin kapağı",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "openingCamera": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "azimuthDeg": {
+                              "type": "number",
+                              "description": "0 = kuzeyden bakış, saat yönünde"
+                            },
+                            "elevationDeg": {
+                              "type": "number"
+                            },
+                            "distance": {
+                              "type": "number",
+                              "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            }
+                          },
+                          "required": [
+                            "target",
+                            "azimuthDeg",
+                            "elevationDeg",
+                            "distance"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "3B hikâyenin açılış açısı"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "stories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "textEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "simple": {
+                            "type": "string"
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          },
+                          "photoId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "showCard": {
+                            "type": [
+                              "boolean",
+                              "null"
+                            ]
+                          },
+                          "cardId": {
+                            "description": "Cümlede modelin üstünde gösterilen kart (SiteDetail.cards)",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "camera": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "azimuthDeg": {
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
+                                  },
+                                  "elevationDeg": {
+                                    "type": "number"
+                                  },
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  }
+                                },
+                                "required": [
+                                  "target",
+                                  "azimuthDeg",
+                                  "elevationDeg",
+                                  "distance"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"
+                          },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"
+                          },
+                          "highlights": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "audioMediaId": {
+                            "description": "Türkçe ses kaydı (SiteDetail.media, kind=audio)",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "audioEnMediaId": {
+                            "description": "İngilizce ses kaydı (SiteDetail.media, kind=audio)",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "text",
+                          "textEn",
+                          "simple",
+                          "trust",
+                          "photoId",
+                          "sourceId",
+                          "showCard",
+                          "cardId",
+                          "camera",
+                          "interior",
+                          "highlights",
+                          "audioMediaId",
+                          "audioEnMediaId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "sections": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "history",
+                              "architecture",
+                              "waqf"
+                            ]
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "bodyEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "chapterId": {
+                            "description": "Paragrafın ait olduğu okuma bölümü (SiteDetail.chapters); null = hiçbir bölüme bağlı değil",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "photos": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "Fotoğraf (SiteDetail.media, kind=photo)"
+                                },
+                                "aspect": {
+                                  "description": "Fotoğrafın kitaptaki en/boy oranı; bilinmiyorsa null",
+                                  "type": [
+                                    "number",
+                                    "null"
+                                  ]
+                                },
+                                "alt": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "mediaId",
+                                "aspect",
+                                "alt"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Paragrafın arkasında gösterilen kitap fotoğrafları, sıralı; galeriye girmez"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "title",
+                          "body",
+                          "bodyEn",
+                          "trust",
+                          "sourceId",
+                          "chapterId",
+                          "photos"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Eser hakkında paragraflar (Tarihçe, Mimari, Vakıf ve akar), sıralı"
+                    },
+                    "chapters": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "history",
+                              "architecture",
+                              "waqf"
+                            ]
+                          },
+                          "summary": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Bölümün metninden seçilmiş özet cümleleri, kelimesi kelimesine"
+                          },
+                          "figures": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "value": {
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "evidence": {
+                                  "type": "string",
+                                  "description": "Metinde geçen ifade"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "label",
+                                "evidence"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Rakam kartları"
+                          },
+                          "quotes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "text": {
+                                  "type": "string"
+                                },
+                                "by": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "text",
+                                "by"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Büyük alıntılar; by = söyleyen, bilinmiyorsa null"
+                          },
+                          "timeline": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "year": {
+                                  "type": "string"
+                                },
+                                "evidence": {
+                                  "type": "string",
+                                  "description": "Metinde geçen ifade"
+                                }
+                              },
+                              "required": [
+                                "year",
+                                "evidence"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Zaman çizelgesi"
+                          },
+                          "terms": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "word": {
+                                  "type": "string"
+                                },
+                                "definition": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "word",
+                                "definition"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Bölüm metninde geçen, dokununca tanımı açılan terimler"
+                          },
+                          "camera": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "azimuthDeg": {
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
+                                  },
+                                  "elevationDeg": {
+                                    "type": "number"
+                                  },
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  }
+                                },
+                                "required": [
+                                  "target",
+                                  "azimuthDeg",
+                                  "elevationDeg",
+                                  "distance"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bölüm okunurken masaüstünde 3B modelin açısı; null = model olduğu gibi kalır"
+                          },
+                          "interior": {
+                            "type": "boolean",
+                            "description": "Bölüm okunurken modelin örtü grupları kalkar"
+                          },
+                          "focusParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Bölüm okunurken vurgulanan model parçaları; boş = bütün yapı"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "kind",
+                          "summary",
+                          "figures",
+                          "quotes",
+                          "timeline",
+                          "terms",
+                          "camera",
+                          "interior",
+                          "focusParts"
+                        ],
+                        "additionalProperties": false,
+                        "description": "«Eser hakkında» okuma bölümü; metni SiteDetail.sections içinde chapterId ile ona bağlıdır"
+                      },
+                      "description": "Eser hakkında okuma bölümleri, sıralı; boş = paragraflar başlıklarıyla düz gösterilir"
+                    },
+                    "cards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "portrait",
+                              "photo",
+                              "document"
+                            ]
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "titleEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "bodyEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mediaId": {
+                            "type": "string"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "title",
+                          "titleEn",
+                          "body",
+                          "bodyEn",
+                          "mediaId",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Hikâye cümlelerinin kullandığı kartlar; ilk kullanım sırasıyla, tekrarsız"
+                    },
+                    "historyImages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Eski görsel"
+                          },
+                          "presentMediaId": {
+                            "description": "Aynı açıdan bugünün görüntüsü",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "caption": {
+                            "type": "string"
+                          },
+                          "captionEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "dateLabel": {
+                            "type": "string",
+                            "description": "Kaynaktaki serbest tarih, örn. 1890'lar"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          },
+                          "camera": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "target": {
+                                    "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "azimuthDeg": {
+                                    "type": "number",
+                                    "description": "0 = kuzeyden bakış, saat yönünde"
+                                  },
+                                  "elevationDeg": {
+                                    "type": "number"
+                                  },
+                                  "distance": {
+                                    "type": "number",
+                                    "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  }
+                                },
+                                "required": [
+                                  "target",
+                                  "azimuthDeg",
+                                  "elevationDeg",
+                                  "distance"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünün görüntüsüyle hizalama açısı"
+                          },
+                          "presentAngleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bugünkü görüntünün eskisiyle açı benzerliği: same = aynı nokta ve yön, near = yakın açı (birebir aynı noktadan çekilmedi); bugünkü görüntü yoksa null"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "mediaId",
+                          "presentMediaId",
+                          "caption",
+                          "captionEn",
+                          "dateLabel",
+                          "sourceId",
+                          "trust",
+                          "camera",
+                          "presentAngleMatch"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Geçmişi Gör görselleri, sıralı"
+                    },
+                    "sampleTraces": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "string",
+                            "description": "Ekibin yazdığı katkı sahibi adı, örn. «AKAR ekibi»; bir hesap değildir"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "type": "string",
+                            "description": "Fotoğraf (SiteDetail.media); kaynak satırı ve lisansı medyanın description ve license alanlarındadır"
+                          },
+                          "historyImageId": {
+                            "description": "Aynı görünümü gösterdiği eski görsel (SiteDetail.historyImages); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "angleMatch": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "same",
+                                  "near"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Eski görselle açı benzerliği: same = aynı nokta ve yön, near = yakın açı; historyImageId yoksa genellikle null"
+                          },
+                          "addedOn": {
+                            "type": "string",
+                            "description": "Eklendiği gün, YYYY-MM-DD; eski görselin bugünkü fotoğrafı yoksa en yenisi onun yerine geçer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "author",
+                          "text",
+                          "mediaId",
+                          "historyImageId",
+                          "angleMatch",
+                          "addedOn"
+                        ],
+                        "additionalProperties": false,
+                        "description": "İz Bırak örneği (§11.47): ekibin hazırladığı örnek katkı; ziyaretçi anısı değildir (moderasyon, kota ve puanla ilgisi yok), arayüzde «Örnek» etiketiyle gösterilir"
+                      },
+                      "description": "İz Bırak örnekleri, sıralı; boş = örnek yok (§11.47)"
+                    },
+                    "partCards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "photoIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "parts",
+                          "title",
+                          "body",
+                          "photoIds",
+                          "sourceId",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "3B parça kartları, sıralı. Kart varsa yalnız kartı olan parçalar tıklanır; boşsa her parça adıyla tıklanır"
+                    },
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "quiz",
+                              "field"
+                            ],
+                            "description": "quiz = soru, field = saha görevi"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "prompt": {
+                            "type": "string",
+                            "description": "Soru ya da görev metni"
+                          },
+                          "photoId": {
+                            "description": "Görevin fotoğrafı: eserin fotoğraflarından biri (SiteDetail.photoIds / media); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "part": {
+                            "description": "Görevin konusu olan model parça adı; yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "source": {
+                            "description": "Kaynak satırı (serbest metin, örn. «E cilt-1 PDF s.27»); yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          },
+                          "quiz": {
+                            "description": "Yalnız kind = quiz. Doğru cevap metni (correctText) yoktur: yalnız doğru cevapta yanıtla gelir",
+                            "type": "object",
+                            "properties": {
+                              "options": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "Seçenekler (2–6), cevap anahtarı yok; /v1/site-tasks/:id/answer ile sunucuda denetlenir"
+                              },
+                              "hints": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "İpuçları, sırayla istendikçe açılır"
+                              },
+                              "wrongText": {
+                                "type": "string",
+                                "description": "Yanlış cevapta gösterilen metin"
+                              },
+                              "fromHome": {
+                                "type": "boolean",
+                                "description": "Evden çözülebilir mi"
+                              }
+                            },
+                            "required": [
+                              "options",
+                              "hints",
+                              "wrongText",
+                              "fromHome"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "field": {
+                            "description": "Yalnız kind = field. Tamamlama metni (doneText) yoktur: yalnız tamamlanınca yanıtla gelir",
+                            "type": "object",
+                            "properties": {
+                              "onSite": {
+                                "type": "object",
+                                "properties": {
+                                  "text": {
+                                    "type": "string"
+                                  },
+                                  "radiusM": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Eserin noktasından en çok bu kadar metre uzakta (konum hassasiyeti payıyla)"
+                                  }
+                                },
+                                "required": [
+                                  "text",
+                                  "radiusM"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "fromHome": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "text": {
+                                        "type": "string"
+                                      },
+                                      "part": {
+                                        "type": "string",
+                                        "description": "Dokunulacak model parça adı"
+                                      }
+                                    },
+                                    "required": [
+                                      "text",
+                                      "part"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Evden karşılığı; yoksa null"
+                              }
+                            },
+                            "required": [
+                              "onSite",
+                              "fromHome"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "title",
+                          "prompt",
+                          "photoId",
+                          "part",
+                          "source",
+                          "trust"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Eser görevi (soru ya da saha görevi). Puan, süre ve yanlış cevap cezası yoktur"
+                      },
+                      "description": "Eser görevleri, sıralı; boş = görev yok"
+                    },
+                    "badges": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          },
+                          "condition": {
+                            "type": "string",
+                            "enum": [
+                              "story",
+                              "task"
+                            ],
+                            "description": "story = hikâyeyi bitirince, task = taskId görevini yapınca"
+                          },
+                          "taskId": {
+                            "description": "condition = task ise görevin kimliği (SiteDetail.tasks), yoksa null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "onSiteLabel": {
+                            "type": "boolean",
+                            "description": "Yerinde (GPS ile) kazanılınca «Yerinde» etiketi gösterilir"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "text",
+                          "condition",
+                          "taskId",
+                          "onSiteLabel"
+                        ],
+                        "additionalProperties": false,
+                        "description": "Eser rozeti. Rozet kaydı yalnız üyeye tutulur; puanla ilgisi yoktur"
+                      },
+                      "description": "Eser rozetleri, sıralı"
+                    },
+                    "placement": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "lng": {
+                              "type": "number",
+                              "description": "Modelin boylamı; yerleşimde konum verilmemişse eserin konumu"
+                            },
+                            "lat": {
+                              "type": "number",
+                              "description": "Modelin enlemi; yerleşimde konum verilmemişse eserin konumu"
+                            },
+                            "headingDeg": {
+                              "type": "number",
+                              "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
+                            },
+                            "scale": {
+                              "type": "number",
+                              "description": "0,1–10; 1 = model birimi bir metre"
+                            },
+                            "altitudeM": {
+                              "type": "number",
+                              "description": "Modelin zemine oturmuş hâlinin üstüne eklenen yükseklik, metre (−50–200)"
+                            },
+                            "anchorNode": {
+                              "description": "Taban noktasının hesaplandığı modeldeki parça adı; null = presentasyon parçaları dışındaki tüm parçalar",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "hiddenPoints": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "lng": {
+                                    "type": "number"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "lng",
+                                  "lat"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "description": "Elle gizlenen OSM binalarından birer nokta (en çok 50)"
+                            },
+                            "keptPoints": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "lng": {
+                                    "type": "number"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "lng",
+                                  "lat"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "description": "Otomatik gizlenip geri istenen OSM binalarından birer nokta (en çok 50)"
+                            }
+                          },
+                          "required": [
+                            "lng",
+                            "lat",
+                            "headingDeg",
+                            "scale",
+                            "altitudeM",
+                            "anchorNode",
+                            "hiddenPoints",
+                            "keptPoints"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Modelin haritadaki yerleşimi. Eserin modeli varsa ve yerleşim gösterilmek üzere kaydedilmişse dolu; aksi halde null (alan hiçbir zaman eksik olmaz)"
+                    },
+                    "photoIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
+                    },
+                    "media": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "photo",
+                              "model",
+                              "audio"
+                            ]
+                          },
+                          "mime": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "alt": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "titleEn": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "license": {
+                            "type": "string"
+                          },
+                          "sourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "triangles": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "3B modelin üçgen sayısı (GLB'nin JSON bölümünden sayılır); model olmayan ya da henüz sayılmamış kayıtta null"
+                          },
+                          "coverGroups": {
+                            "type": "array",
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "mime",
+                          "url",
+                          "alt",
+                          "title",
+                          "titleEn",
+                          "description",
+                          "license",
+                          "sourceId",
+                          "trust",
+                          "parts",
+                          "triangles",
+                          "coverGroups"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "book",
+                              "article",
+                              "archive",
+                              "web",
+                              "field"
+                            ]
+                          },
+                          "author": {
+                            "type": "string"
+                          },
+                          "year": {
+                            "type": "string"
+                          },
+                          "page": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          },
+                          "trust": {
+                            "type": "string",
+                            "enum": [
+                              "verified",
+                              "inferred",
+                              "representative"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "title",
+                          "kind",
+                          "author",
+                          "year",
+                          "page",
+                          "url",
+                          "trust"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Eserin kaynak listesi, ardından hikâye, bölüm, kart, parça kartı, geçmiş görseli ve medyanın başvurduğu diğer kaynaklar; tekrarsız"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published"
+                      ]
+                    },
+                    "dedupeKey": {
+                      "type": "string",
+                      "description": "normalize(ad)|normalize(ilçe); aynı şehirde yinelenen kayıt denetimi"
+                    },
+                    "locationSource": {
+                      "description": "Konumun kaynağı; PUT .../location 'manual' yapar",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "importMeta": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "İçe aktarılan envanter satırı (cilt, sayfa, ham tür, ham adres)"
+                    },
+                    "modelMediaId": {
+                      "description": "Adım 1: eserin bağlı 3B modeli",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapPlacement": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "lng": {
+                              "description": "Yerleşimde konum verilmemişse eserin konumu; o da yoksa null",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "lat": {
+                              "description": "Yerleşimde konum verilmemişse eserin konumu; o da yoksa null",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
+                            "headingDeg": {
+                              "type": "number",
+                              "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
+                            },
+                            "scale": {
+                              "type": "number",
+                              "description": "0,1–10; 1 = model birimi bir metre"
+                            },
+                            "altitudeM": {
+                              "type": "number",
+                              "description": "Modelin zemine oturmuş hâlinin üstüne eklenen yükseklik, metre (−50–200)"
+                            },
+                            "anchorNode": {
+                              "description": "Taban noktasının hesaplandığı modeldeki parça adı; null = presentasyon parçaları dışındaki tüm parçalar",
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "hiddenPoints": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "lng": {
+                                    "type": "number"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "lng",
+                                  "lat"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "description": "Elle gizlenen OSM binalarından birer nokta (en çok 50)"
+                            },
+                            "keptPoints": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "lng": {
+                                    "type": "number"
+                                  },
+                                  "lat": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "lng",
+                                  "lat"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "description": "Otomatik gizlenip geri istenen OSM binalarından birer nokta (en çok 50)"
+                            },
+                            "visible": {
+                              "type": "boolean",
+                              "description": "false = kayıtlı ama ziyaretçi haritasında çizilmez"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "lng",
+                            "lat",
+                            "headingDeg",
+                            "scale",
+                            "altitudeM",
+                            "anchorNode",
+                            "hiddenPoints",
+                            "keptPoints",
+                            "visible",
+                            "updatedAt"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Kayıtlı harita yerleşimi; `visible` kapalı olsa da, modeli kaldırılmış eserde de döner. Ziyaretçiye giden hâli `placement`"
+                    },
+                    "sourceLinks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sourceId": {
+                            "type": "string"
+                          },
+                          "locator": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "sourceId",
+                          "locator"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Eserin sıralı kaynak listesi; locator kaynak içindeki yer (örn. s. 42)"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Yayın kapısının eksikleri (publicationIssues + tür/konum kuralları), Türkçe; boş = yayına hazır"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "nameEn",
+                    "kind",
+                    "categoryId",
+                    "periodId",
+                    "city",
+                    "district",
+                    "year",
+                    "coordinates",
+                    "minutes",
+                    "displayOrder",
+                    "tier",
+                    "trust",
+                    "description",
+                    "coverImage",
+                    "sourceCount",
+                    "has",
+                    "distanceMeters",
+                    "descriptionEn",
+                    "architect",
+                    "patron",
+                    "era",
+                    "address",
+                    "role",
+                    "relatedSiteId",
+                    "sourceSummary",
+                    "editorVersion",
+                    "coverMediaId",
+                    "aboutCoverMediaId",
+                    "openingCamera",
+                    "updatedAt",
+                    "stories",
+                    "sections",
+                    "chapters",
+                    "cards",
+                    "historyImages",
+                    "sampleTraces",
+                    "partCards",
+                    "tasks",
+                    "badges",
+                    "placement",
+                    "photoIds",
+                    "media",
+                    "sources",
+                    "status",
+                    "dedupeKey",
+                    "locationSource",
+                    "importMeta",
+                    "modelMediaId",
+                    "mapPlacement",
+                    "sourceLinks",
+                    "issues"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/sites/{id}/publish": {
       "post": {
         "summary": "Adım 5 · Yayınla: yayın kapısı geçerse eser herkese açılır; aksi halde 422 PUBLISH_BLOCKED ve fieldErrors._ içinde eksikler",

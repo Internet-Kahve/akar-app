@@ -1521,12 +1521,12 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       await new Promise((r) => setTimeout(r, MODEL_PARTS_WAIT_MS));
     }
     throw new Error(
-      "Modelin parça adları henüz okunmadı. Vurgulu cümleler için birkaç saniye sonra yeniden kaydet.",
+      "Modelin parça adları henüz okunmadı. Vurgulu cümleler ve parça kartları için birkaç saniye sonra yeniden kaydet.",
     );
   }
 
   /**
-   * Sources, photos, model and story of an editor save, through the wizard's step endpoints. Order
+   * Sources, photos, model, story and part cards of an editor save, through the wizard's step endpoints. Order
    * follows the references: sources before the photos and sentences citing them, files before the
    * lists naming them, the model (and its part names) before the highlights. Each step is skipped
    * when unchanged. A new file is a data URL: it is uploaded and its domain id mapped to the media id.
@@ -1546,7 +1546,14 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     const photosChanged =
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
-    if (!sourcesChanged && !modelChanged && !photosChanged && !storiesChanged)
+    const partCardsChanged = !same(site.partCards ?? [], cur.partCards ?? []);
+    if (
+      !sourcesChanged &&
+      !modelChanged &&
+      !photosChanged &&
+      !storiesChanged &&
+      !partCardsChanged
+    )
       return;
     // What the domain site does not carry: source locators, story cards and audio.
     const before = await call<AdminSiteDetailDto>("GET", path);
@@ -1600,7 +1607,10 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           trust: model.trust,
         });
         await call("PUT", `${path}/model`, { body: { mediaId: id } });
-        if (site.stories.some((s) => s.highlights?.length))
+        if (
+          site.stories.some((s) => s.highlights?.length) ||
+          (partCardsChanged && site.partCards?.length)
+        )
           await modelParts(path, id);
       } else if (linked && model.trust !== linked.trust) {
         await call(
@@ -1652,6 +1662,25 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         },
       });
     }
+
+    // Last: the cards name model parts, gallery and story photos and the site's sources, all saved above.
+    const cardsRemapped = (site.partCards ?? []).some((c) =>
+      c.photos.some((p) => uploaded.has(p.id)),
+    );
+    if (partCardsChanged || cardsRemapped)
+      await call("PUT", `${path}/part-cards`, {
+        body: {
+          cards: (site.partCards ?? []).map((c) => ({
+            id: c.id,
+            parts: c.parts,
+            title: c.title,
+            body: c.body,
+            photoIds: c.photos.map((p) => mediaId(p.id)),
+            trust: c.trust,
+            sourceId: c.sourceId || null,
+          })),
+        },
+      });
   }
 
   async function updateRoutes(input: HeritageRoute[]) {

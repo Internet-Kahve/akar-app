@@ -326,7 +326,7 @@ for (const role of ["editor", "moderator", "admin"] as const) {
       await expect(page.getByRole("button", { name: "Yeni eser", exact: true })).toBeVisible();
       await expect(nav.getByRole("button", { name: "Katkılar", exact: true })).toHaveCount(role === "admin" ? 1 : 0);
       await page.getByRole("button", { name: "Yeni eser", exact: true }).click();
-      await page.getByRole("button", { name: "5 Yayın", exact: true }).click();
+      await page.getByRole("button", { name: "6 Yayın", exact: true }).click();
       await expect(page.getByText("Yayınladığın değişiklikler kaydedilir ve eserin herkese açık sayfasında görünür.")).toBeVisible();
       await expect(page.getByText(/Sunucuya veri gönderilmez/)).toHaveCount(0);
     }

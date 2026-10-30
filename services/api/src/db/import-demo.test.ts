@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startTestApp, TEST_RECEIPT_SECRET } from "../test/harness.ts";
 import { deleteUnreferencedMedia } from "../modules/media/service.ts";
-import { siteBadges, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
+import { siteBadges, sitePartCards, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
 import { importDemoContent } from "./import-demo.ts";
 
 let ctx: Awaited<ReturnType<typeof startTestApp>>;
@@ -218,6 +218,15 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   await writeFile(path, JSON.stringify(manifest));
   await assert.rejects(importDemoContent(path, root, false, {}), /not model parts: test-1 yok/);
   sites[1]!.partCards[0]!.parts = ["kubbe_1"];
+  // The panel owns the part cards of a site already in the database (§11.52): a repeat import keeps its edits, --replace-part-cards restores the manifest's.
+  const titles = async (siteId: string) => (await db.select({ title: sitePartCards.title }).from(sitePartCards).where(eq(sitePartCards.siteId, siteId))).map((c) => c.title);
+  await db.update(sitePartCards).set({ title: "Panelde düzeltildi" }).where(eq(sitePartCards.siteId, "test-0"));
+  await db.delete(sitePartCards).where(eq(sitePartCards.siteId, "test-1"));
+  await writeFile(path, JSON.stringify(manifest));
+  assert.deepEqual((await importDemoContent(path, root, true, env)).partCardsKept?.length, 7);
+  assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Panelde düzeltildi"], []]);
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replacePartCards: true })).partCardsKept, []);
+  assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Kubbe"], ["Kubbe"]]);
   // Present-day photographs and samples: a missing credit line or licence, an unknown angle word, a date that is not a day, an archive
   // photograph of another site or an id another photograph already has stops the import before anything is written.
   const attempt = async (record: Record<string, unknown>, change: Record<string, unknown>, expected: RegExp) => {

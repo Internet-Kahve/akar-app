@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
-import { auditLog, catalogRoutes, cities, media, routeStops, siteMedia, sites, sources } from "../../db/schema/index.ts";
+import { auditLog, catalogRoutes, cities, media, routeStops, siteMedia, sitePartCardPhotos, sites, sources } from "../../db/schema/index.ts";
 import { AppError, type ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -122,6 +122,7 @@ test("the panel is for editors and admins: guests get 401, users and moderators 
     ["PUT", `${base}/stories`, { blocks: [story()] }],
     ["PUT", `${base}/sections`, { sections: [{ kind: "history", title: "Tarihçe", body: "Metin", trust: "verified" }] }],
     ["PUT", `${base}/history-images`, { images: [{ mediaId: "ph-1", trust: "verified" }] }],
+    ["PUT", `${base}/part-cards`, { cards: [] }],
     ["POST", `${base}/publish`],
     ["POST", `${base}/unpublish`],
     ["GET", "/v1/admin/cards"],
@@ -637,6 +638,77 @@ test("an archive image's present-day photograph keeps its angle word, and the wo
   assert.deepEqual(await read(), ["near", null]);
   await send("PUT", base, { images: [{ id: saved.historyImages[0]!.id, mediaId: "ph-1", trust: "verified" }] });
   assert.deepEqual(await read(), [null]);
+});
+
+test("part cards are replaced whole and in order: parts must be model parts, photos the site's own, ids stay, left-out cards go", async () => {
+  const site = await newDraft("Parça Hanı");
+  const other = await newDraft("Parça Komşusu");
+  const base = `/v1/admin/sites/${site.id}`;
+  const put = (id: string, cards: object[]) => call<ErrorBody>("PUT", `/v1/admin/sites/${id}/part-cards`, editor, { cards });
+  const card = (over: Record<string, unknown> = {}) => ({ parts: ["kubbe"], title: "Kubbe", body: "Orta kubbe.", photoIds: ["ph-1"], trust: "verified", sourceId: "src-vgm", ...over });
+
+  // No model: no part is valid yet, and the refusal says why.
+  await send("PUT", `${base}/media`, { photoIds: ["ph-1", "ph-2"], coverPhotoId: "ph-1" });
+  await send("PUT", `${base}/sources`, { sources: [{ id: "src-vgm", title: "VGM Bursa Envanteri", kind: "book", trust: "verified" }] });
+  const noModel = await put(site.id, [card()]);
+  assert.equal(noModel.res.statusCode, 400);
+  assert.ok(noModel.body.error.fieldErrors["cards.0.parts"]);
+  await send("PUT", `${base}/model`, { mediaId: "m-1" });
+
+  const saved = await send("PUT", `${base}/part-cards`, {
+    cards: [card(), card({ parts: ["minare", "kubbe"], title: "Minare", body: "Tuğla minare.", photoIds: ["ph-2", "ph-1"], trust: "inferred", sourceId: null })],
+  });
+  const [a, b] = saved.partCards as [(typeof saved.partCards)[number], (typeof saved.partCards)[number]];
+  assert.deepEqual([a.title, b.title], ["Kubbe", "Minare"]);
+  assert.deepEqual(b.parts, ["minare", "kubbe"]);
+  assert.deepEqual(b.photoIds, ["ph-2", "ph-1"]);
+  assert.equal(b.sourceId, null);
+  assert.equal(b.trust, "inferred");
+  assert.notEqual(a.id, b.id);
+
+  // Public read shows the same cards in the same order.
+  await send("PUT", `${base}/stories`, { blocks: [story()] });
+  await send("PUT", `${base}/location`, { coordinates: [29.06, 40.18] });
+  await send("POST", `${base}/publish`);
+  const pub = (await call<SiteDetail>("GET", `/v1/sites/${site.id}`)).body;
+  assert.deepEqual(pub.partCards.map((c) => c.title), ["Kubbe", "Minare"]);
+
+  // Reorder keeps ids; a card left out is gone with its photo links.
+  const reordered = await send("PUT", `${base}/part-cards`, { cards: [{ ...b, body: "Düzeltildi.", sourceId: "src-vgm" }, a] });
+  assert.deepEqual(reordered.partCards.map((c) => c.id), [b.id, a.id]);
+  assert.equal(reordered.partCards[0]?.body, "Düzeltildi.");
+  const removed = await send("PUT", `${base}/part-cards`, { cards: [a] });
+  assert.deepEqual(removed.partCards.map((c) => c.id), [a.id]);
+  assert.deepEqual((await app.deps.db.select().from(sitePartCardPhotos).where(eq(sitePartCardPhotos.cardId, b.id))), []);
+  assert.deepEqual((await send("PUT", `${base}/part-cards`, { cards: [] })).partCards, []);
+
+  // Refusals write nothing: unknown part, a photo the site does not list, a foreign source, a repeated id, an id of another site.
+  const keep = await send("PUT", `${base}/part-cards`, { cards: [a] });
+  const refused = [
+    { cards: [card({ parts: ["kubbe", "yok"] })], field: "cards.0.parts" },
+    { cards: [card({ photoIds: ["ph-1", "ph-3"] })], field: "cards.0.photoIds.1" },
+    { cards: [card({ photoIds: ["ph-yok"] })], field: "cards.0.photoIds.0" },
+    { cards: [card({ sourceId: "src-ek" })], field: "cards.0.sourceId" },
+    { cards: [{ ...a }, { ...a }], field: "cards.1.id" },
+    { cards: [card({ parts: [] })], field: "cards.0.parts" },
+  ];
+  for (const { cards, field } of refused) {
+    const r = await put(site.id, cards);
+    assert.equal(r.res.statusCode, 400, field);
+    assert.ok(r.body.error.fieldErrors[field], `${field}: ${r.res.body}`);
+  }
+  assert.deepEqual((await call<AdminSiteDetail>("GET", base, editor)).body.partCards, keep.partCards);
+
+  await send("PUT", `/v1/admin/sites/${other.id}/media`, { photoIds: ["ph-1"], coverPhotoId: "ph-1" });
+  await send("PUT", `/v1/admin/sites/${other.id}/model`, { mediaId: "m-1" });
+  const taken = await put(other.id, [{ ...card(), id: a.id, sourceId: null }]);
+  assert.equal(taken.res.statusCode, 409);
+  assert.ok(taken.body.error.fieldErrors["cards.0.id"]);
+  assert.deepEqual((await call<AdminSiteDetail>("GET", `/v1/admin/sites/${other.id}`, editor)).body.partCards, []);
+
+  const unknownSite = await put("yok", [card()]);
+  assert.equal(unknownSite.res.statusCode, 404);
+  assert.equal((await auditOf(site.id)).filter((r) => (r.after as Record<string, unknown>)["partCards"] !== undefined).length, 5);
 });
 
 test("the panel list shows drafts with their issues and location source, filters, and pages without repeats or gaps", async () => {
