@@ -1290,7 +1290,10 @@ function parcaKartAc(ad) {
   const b = parcaBilgi(ad); if (!b) return;   // kartı olmayan parça kart açmaz (yalnız adı görünür)
   pkSesDur();
   const fl = (b.fotolar.length ? b.fotolar : [kapak(e)?.dosya]).map((d) => foto(e, d)).filter(Boolean);
-  const nokta = fl.length > 1 ? `<div class="pk-nokta">${fl.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : '';
+  /* birden çok fotoğrafta: sağ/sol okları ve dokunulabilir noktalar (kaydırmayla da gezilir) */
+  const coklu = fl.length > 1;
+  const nokta = coklu ? `<div class="pk-nokta" role="group" aria-label="Fotoğraflar">${fl.map((_, i) => `<button type="button" data-pk-git="${i}" class="${i ? '' : 'on'}" aria-label="${i + 1}. fotoğraf"${i ? '' : ' aria-current="true"'}><i></i></button>`).join('')}</div>
+    <button type="button" class="yuvarlak pk-ok sol" data-pk-adim="-1" aria-label="Önceki fotoğraf" disabled>${ic('chevron-left', 20)}</button><button type="button" class="yuvarlak pk-ok sag" data-pk-adim="1" aria-label="Sonraki fotoğraf">${ic('chevron-right', 20)}</button>` : '';
   let k = $('#parca-kart');
   if (!k) { k = document.createElement('div'); k.id = 'parca-kart'; k.className = 'parca-kart-arka'; document.body.appendChild(k); }
   k.innerHTML = `<section class="parca-kart" role="dialog" aria-modal="true" aria-labelledby="pk-baslik">
@@ -1301,8 +1304,18 @@ function parcaKartAc(ad) {
   </section>`;
   k.hidden = false; k.dataset.ad = ad; k._bilgi = b;
   const sh = $('#pk-fotolar');
-  sh.addEventListener('scroll', () => { const i = Math.round(sh.scrollLeft / sh.clientWidth); $$('.pk-nokta i', k).forEach((n, j) => n.classList.toggle('on', j === i)); }, { passive:true });
+  sh.addEventListener('scroll', () => pkFotoDurum(k), { passive:true });
   requestAnimationFrame(() => k.classList.add('acik'));
+}
+const pkFotoSira = (sh) => Math.round(sh.scrollLeft / (sh.clientWidth || 1));
+function pkFotoDurum(k) {   // etkin nokta ve okların açık/kapalı hâli kaydırma konumundan
+  const sh = $('#pk-fotolar'); if (!sh) return; const i = pkFotoSira(sh), n = sh.children.length;
+  $$('[data-pk-git]', k).forEach((b, j) => { b.classList.toggle('on', j === i); if (j === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+  const sol = k.querySelector('.pk-ok.sol'), sag = k.querySelector('.pk-ok.sag'); if (sol) sol.disabled = i <= 0; if (sag) sag.disabled = i >= n - 1;
+}
+function pkFotoGit(i) {
+  const sh = $('#pk-fotolar'); if (!sh) return; const n = sh.children.length; i = Math.max(0, Math.min(n - 1, i));
+  sh.scrollTo({ left:i * sh.clientWidth, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 function parcaKartKapat(secimiBirak = true) {
   const k = $('#parca-kart'); pkSesDur(); if (!k || k.hidden) return;
@@ -1312,6 +1325,13 @@ function parcaKartKapat(secimiBirak = true) {
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-pk-kapat]') || e.target.id === 'parca-kart') { parcaKartKapat(); return; }
   if (e.target.closest('[data-pk-ses]')) { const k = $('#parca-kart'); if (pkSes) pkSesDur(); else if (k && k._bilgi) pkSesBaslat(k._bilgi); }
+  const git = e.target.closest('[data-pk-git]'); if (git) { pkFotoGit(+git.dataset.pkGit); return; }
+  const adim = e.target.closest('[data-pk-adim]'); if (adim) { const sh = $('#pk-fotolar'); if (sh) pkFotoGit(pkFotoSira(sh) + +adim.dataset.pkAdim); }
+});
+/* kart açıkken klavyede ← → fotoğraflar arasında gezer */
+document.addEventListener('keydown', (e) => {
+  const k = $('#parca-kart'); if (!k || k.hidden || !$('#pk-fotolar') || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+  e.preventDefault(); pkFotoGit(pkFotoSira($('#pk-fotolar')) + (e.key === 'ArrowRight' ? 1 : -1));
 });
 /* mobil eser kartı sürükleme: tutamak ya da başlık parmağı izler, bırakılan yükseklikte kalır (en az: üst bölüm, en çok: içerik ya da ekranın %75'i);
    kenara 40 px'ten yakınsa oraya oturur. Tutamağa dokunmak kapalı ↔ tam açık */
