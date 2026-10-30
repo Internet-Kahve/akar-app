@@ -487,3 +487,9 @@ Karar: Şehir kaydı `veri/sehir/<şehir>.json → kimlik.zemin / desen / desen_
 Neden: ENTEGRASYON_29EKIM §5.9. Şehir görünümü sahne ışığıyla aynı kayıtta durduğu için ayrı sütun ve migration gereksizdi. `patternColour` (koyu zeminde desen rengi) API'de sunulur ama bugünkü iki ekran açık zeminde olduğu için kullanılmaz; koyu zeminli ekran eklenince kullanılır. `foto_kunye` ve `kaynakca` bu işin dışında.
 Karar veren / tarih: kimliğin `cities.scene` içinde olması, desenin dosya adıyla tutulması, kodda şehir yazılmaması Weissman, 29 Eki (iş listesi 25, adım 5.9); 8 sn üst sınır, 300 ms gecikme, bağlama göre ipucu ve `patternColour`'un şimdilik kullanılmaması backend sorumlusu önerisi.
 Nasıl değiştirilir: renk ve desen `veri/sehir/<şehir>.json` içinde düzenlenip aktarım yeniden çalıştırılır; yeni desen `public/desenler/` altına eklenir. Süreler `apps/web/src/components/loading-screens.tsx` (`OPENING_MAX_MS`) ve `model-stage.tsx` (`LOADING_DELAY_MS`), opaklık `globals.css` `.city-pattern`.
+
+**11.50 Keşif haritası eğik görünümle açılır.**
+Karar: Ana harita ilk yüklemede 50° eğimle (`TILT_PITCH`) açılır; eğim düğmesi baştan etkin görünür ve üstten görünüme (0°) geçirir. Pusula ("Keşif bölgesine dön") açılış görünümüne eğik olarak döner; şehir işaretinden şehre uçuş o anki kipi korur (eğikse eğik, üstten ise üstten).
+Neden: 3B eser modelleri eğik görünümde okunur; kullanıcı açılışta üstten düz bir harita görüyordu.
+Karar veren / tarih: Weissman, 30 Eki; pusula ve şehre uçuşta kipin korunması backend sorumlusu önerisi.
+Nasıl değiştirilir: `apps/web/src/components/heritage-map.tsx` içinde `TILT_PITCH` ve `tilt` durumunun başlangıç değeri.

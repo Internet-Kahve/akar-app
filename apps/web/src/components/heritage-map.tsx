@@ -42,6 +42,8 @@ declare global {
   }
 }
 const WIDE = "(min-width: 1000px)";
+/** Angled view the map opens with; the tilt button toggles between this and 0 (top view). */
+const TILT_PITCH = 50;
 /** Where the globe flies out to: Türkiye whole on the screen. */
 const COUNTRY = {
   center: [34.5, 39.2] as [number, number],
@@ -98,7 +100,7 @@ export function HeritageMap({
     latest = useRef({ sites, mapSettings, scenes, cities });
   const [loaded, setLoaded] = useState(false),
     [failed, setFailed] = useState(false),
-    [tilt, setTilt] = useState(false),
+    [tilt, setTilt] = useState(true),
     [cityMode, setCityMode] = useState<
       "" | " city-mode" | " city-mode city-far"
     >(""),
@@ -120,7 +122,7 @@ export function HeritageMap({
           const m = new lib.Map({
             container: container.current,
             ...openingView(latest.current.cities),
-            pitch: 0,
+            pitch: TILT_PITCH,
             minZoom: 1.2,
             attributionControl: { compact: true },
             style: "/harita/akar-style.json",
@@ -255,7 +257,7 @@ export function HeritageMap({
             setNotice("");
             m.flyTo({
               ...cityView(city),
-              pitch: 0,
+              pitch: m.getPitch() > 5 ? TILT_PITCH : 0,
               bearing: 0,
               duration: 2600,
               essential: true,
@@ -438,7 +440,10 @@ export function HeritageMap({
           onClick={() => {
             moved.current = true;
             setTilt(!tilt);
-            map.current?.easeTo({ pitch: tilt ? 0 : 50, duration: 500 });
+            map.current?.easeTo({
+              pitch: tilt ? 0 : TILT_PITCH,
+              duration: 500,
+            });
           }}
         >
           <Layers size={20} />
@@ -452,9 +457,9 @@ export function HeritageMap({
           map.current?.easeTo({
             ...openingView(cities),
             bearing: 0,
-            pitch: 0,
+            pitch: TILT_PITCH,
           });
-          setTilt(false);
+          setTilt(true);
         }}
       >
         <Compass size={28} />
