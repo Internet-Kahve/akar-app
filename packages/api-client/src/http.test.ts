@@ -2084,6 +2084,149 @@ test("explicit gallery ids preserve photos also used by cards and history across
   assert.deepEqual(stored.photoIds, ["cover", "card-img", "old", "extra"]);
 });
 
+test("a part card edit PUTs the whole ordered list with photo ids and a null source; an unchanged card list sends nothing", async () => {
+  let stored: any = {
+    ...siteA(),
+    status: "published",
+    photoIds: ["cover", "card-img", "old", "extra"],
+    sourceLinks: [],
+    openingCamera: null,
+    partCards: [
+      {
+        id: "k1",
+        parts: ["kubbe"],
+        title: "Kubbe",
+        body: "Metin",
+        photoIds: ["card-img", "extra"],
+        sourceId: null,
+        trust: "verified",
+      },
+    ],
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored], nextCursor: null }),
+    "GET /v1/sites/a": () => stored,
+    "GET /v1/admin/sites/a": () => stored,
+    "PUT /v1/admin/sites/a/part-cards": (c) => {
+      stored = { ...stored, partCards: (c.body as { cards: unknown[] }).cards };
+      return stored;
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const current = (await client.getSnapshot()).sites[0]!;
+  assert.deepEqual(
+    current.partCards?.[0]?.photos.map((p) => p.id),
+    ["card-img", "extra"],
+  );
+  await client.saveSite({ ...current, description: "Başka" }).catch(() => {});
+  assert.equal(
+    api.calls.filter((c) => c.path.endsWith("/part-cards")).length,
+    0,
+  );
+  const card = current.partCards![0]!;
+  await client.saveSite({
+    ...current,
+    partCards: [
+      { ...card, title: "Kubbe II", photos: [...card.photos].reverse() },
+    ],
+  });
+  const put = api.calls.find((c) => c.path.endsWith("/part-cards"))!;
+  assert.deepEqual(put.body, {
+    cards: [
+      {
+        id: "k1",
+        parts: ["kubbe"],
+        title: "Kubbe II",
+        body: "Metin",
+        photoIds: ["extra", "card-img"],
+        trust: "verified",
+        sourceId: null,
+      },
+    ],
+  });
+});
+
+test("part cards of a new model are saved only after the server has read the model's part names", async () => {
+  const stored = () => ({
+    ...siteA(),
+    status: "published",
+    sourceLinks: [],
+    openingCamera: null,
+    media: siteA().media.map((m) =>
+      m.id === "glb" ? { ...m, id: "m-new", parts: ["kubbe", "minare"] } : m,
+    ),
+  });
+  const order: string[] = [];
+  const log =
+    (out: unknown = {}) =>
+    (c: Call) => {
+      order.push(`${c.method} ${c.path}`);
+      return out;
+    };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored()], nextCursor: null }),
+    "GET /v1/admin/sites/a": (c) => {
+      order.push(`${c.method} ${c.path}`);
+      return stored();
+    },
+    "POST /v1/media/uploads": () => ({
+      uploadId: "up1",
+      url: "/v1/media/uploads/up1/content",
+      headers: {},
+    }),
+    "PUT /v1/media/uploads/up1/content": () =>
+      new Response(null, { status: 204 }),
+    "POST /v1/media/uploads/up1/complete": () => ({ id: "m-new" }),
+    "PUT /v1/admin/sites/a/model": log(),
+    "PUT /v1/admin/sites/a/part-cards": log(),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const site = (await client.getSnapshot()).sites.find((s) => s.id === "a")!;
+  await client.dispatch({
+    type: "site",
+    site: {
+      ...site,
+      model: {
+        name: "yeni.glb",
+        bytes: 8,
+        src: "data:model/gltf-binary;base64,Z2xURgIAAAA=",
+        parts: ["minare"],
+        trust: "representative",
+      },
+      partCards: [
+        {
+          id: "k-new",
+          parts: ["minare"],
+          title: "Minare",
+          body: "",
+          photos: [],
+          trust: "representative",
+        },
+      ],
+    },
+  });
+  const afterModel = order.slice(order.indexOf("PUT /v1/admin/sites/a/model"));
+  assert.ok(
+    afterModel.indexOf("GET /v1/admin/sites/a") <
+      afterModel.indexOf("PUT /v1/admin/sites/a/part-cards"),
+    afterModel.join(", "),
+  );
+});
+
 test("moderation reads one bounded page per selected tab and forwards its cursor", async () => {
   const api = fakeApi({
     ...catalogHandlers(),

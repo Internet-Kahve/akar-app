@@ -24,6 +24,8 @@ import {
   siteMapPlacements,
   siteAboutChapters,
   siteMedia,
+  sitePartCardPhotos,
+  sitePartCards,
   siteSectionPhotos,
   siteSections,
   siteSources,
@@ -72,6 +74,7 @@ import type {
   LocationInput,
   MapPlacementInput,
   ModelInput,
+  PartCardsInput,
   SectionsInput,
   SiteInfoInput,
   SiteMediaInput,
@@ -465,9 +468,9 @@ export function publishIssues(a: SiteAggregate): string[] {
   return issues;
 }
 
-function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
+/** Everything the site refers to, as the editable view lists it: media, shared cards (in story order) and sources, each without repeats. */
+function referencesOf(a: SiteAggregate): { mediaList: MediaRow[]; cardList: CardRow[]; sourceList: SourceRow[] } {
   const { site: s } = a;
-  const linked = linkedMedia(a);
   const mediaList = present(
     distinct([
       ...a.mediaIds,
@@ -495,6 +498,13 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       ...mediaList.map((m) => m.sourceId),
     ]).map((id) => a.sources.get(id)),
   );
+  return { mediaList, cardList, sourceList };
+}
+
+function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
+  const { site: s } = a;
+  const linked = linkedMedia(a);
+  const { mediaList, cardList, sourceList } = referencesOf(a);
   const cover = s.coverMediaId ? a.media.get(s.coverMediaId) : undefined;
   const photosOf = sectionPhotosBySection(a.sectionPhotos);
 
@@ -1411,6 +1421,66 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
         };
         if (mine.has(r.id)) await tx.update(historyImages).set({ ...values, position }).where(eq(historyImages.id, r.id));
         else await tx.insert(historyImages).values({ id: r.id, siteId: id, position, ...values });
+      }
+      return {};
+    },
+  );
+}
+
+/**
+ * 3D part cards, replaced whole and in order (§11.52). Every part must be a part of the linked model, photographs
+ * must be photographs the site already lists (gallery, story, earlier cards …) and the source one of the site's.
+ * A card keeps its id when given (ids are global: one owned by another site is a 409); cards left out go with
+ * their photograph strips. The media rows stay: a photograph no card shows any more is still the library's.
+ */
+export function setPartCards(tx: Tx, ctx: AuditCtx, id: string, input: PartCardsInput): Promise<AdminSiteDetail> {
+  return mutate(
+    tx,
+    ctx,
+    id,
+    (a) => ({ partCards: a.partCards }),
+    async (before) => {
+      const rows = input.cards.map((c) => ({ ...c, id: c.id ?? newId("pk", c.title) }));
+      const errors = new FieldErrors();
+      checkUnique(errors, (i) => `cards.${i}.id`, rows.map((r) => r.id), "Aynı kimlik birden fazla kartta kullanılmış.");
+
+      const model = modelOf(before);
+      const parts = new Set(model?.parts);
+      const { mediaList, sourceList } = referencesOf(before);
+      const photoIds = new Set(mediaList.filter((m) => m.kind === "photo").map((m) => m.id));
+      const sourceIds = new Set(sourceList.map((s) => s.id));
+      rows.forEach((r, i) => {
+        const unknown = r.parts.filter((p) => !parts.has(p));
+        if (unknown.length) {
+          errors.add(`cards.${i}.parts`, model ? `Modelde olmayan parça: ${unknown.join(", ")}.` : "Eserin 3B modeli yok; parça kartı için önce model bağla.");
+        }
+        r.photoIds.forEach((photoId, j) => {
+          if (!photoIds.has(photoId)) errors.add(`cards.${i}.photoIds.${j}`, "Fotoğraf eserin fotoğrafları arasında değil.");
+        });
+        if (r.sourceId && !sourceIds.has(r.sourceId)) errors.add(`cards.${i}.sourceId`, "Kaynak eserin kaynakları arasında değil.");
+      });
+      errors.throwIfAny();
+
+      const taken = rows.length
+        ? await tx
+            .select({ id: sitePartCards.id })
+            .from(sitePartCards)
+            .where(and(inArray(sitePartCards.id, rows.map((r) => r.id)), ne(sitePartCards.siteId, id)))
+        : [];
+      if (taken.length) {
+        const owned = new Set(taken.map((t) => t.id));
+        const fieldErrors: Record<string, string[]> = {};
+        rows.forEach((r, i) => {
+          if (owned.has(r.id)) fieldErrors[`cards.${i}.id`] = ["Bu kimlik başka bir eserin kartına ait."];
+        });
+        throw new AppError(409, "CONFLICT", "Kart kimliği başka bir esere ait.", fieldErrors);
+      }
+
+      // The photograph strips cascade with their card.
+      await tx.delete(sitePartCards).where(eq(sitePartCards.siteId, id));
+      for (const [position, { photoIds: strip, ...card }] of rows.entries()) {
+        await tx.insert(sitePartCards).values({ ...card, parts: [...new Set(card.parts)], siteId: id, position });
+        if (strip.length) await tx.insert(sitePartCardPhotos).values(strip.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
       }
       return {};
     },
