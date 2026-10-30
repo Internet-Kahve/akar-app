@@ -279,6 +279,7 @@ export function AkarApp() {
     const readLocation = () => {
       setTaskDialog(null);
       setPick(null);
+      setPeekId(undefined);
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
       if (
@@ -842,7 +843,7 @@ export function AkarApp() {
                   ? ({ "--sheet-h": `${sheetHeight}px` } as CSSProperties)
                   : undefined
               }
-              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite ? "peeking" : ""}`}
+              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""}`}
             >
               <aside
                 ref={sheet}
