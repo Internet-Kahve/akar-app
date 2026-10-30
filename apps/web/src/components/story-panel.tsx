@@ -16,6 +16,8 @@ import { writePreference } from "../lib/preferences";
 import { TrustTag } from "./side-sheet";
 
 const RATES = [1, 1.25, 1.5];
+/** Scroll events this long after a wheel or a finger still belong to the visitor (momentum). */
+const HAND_SCROLL_MS = 900;
 
 function SourceLine({ site, block }: { site: HeritageSite; block: StoryBlock }) {
   const source = site.sources?.find((s) => s.id === block.sourceId);
@@ -52,8 +54,9 @@ export function StoryPanel({
     [simple, setSimple] = useState(false),
     [error, setError] = useState(""),
     list = useRef<HTMLOListElement>(null),
-    // The list scrolls because the sentence changed: that scroll must not pick a sentence back.
-    settling = useRef(0);
+    // Only the visitor's own scrolling picks a sentence; a scroll that follows the sentence never does.
+    scrolledByHand = useRef(0),
+    pickedByScroll = useRef(false);
   const stories = site.stories;
   const block = stories[index] ?? stories[0]!;
   const last = index >= stories.length - 1;
@@ -65,9 +68,12 @@ export function StoryPanel({
   advance.current = go;
   useEffect(() => {
     writePreference(`akar.ilerleme.${site.id}`, String(index));
+    if (pickedByScroll.current) {
+      pickedByScroll.current = false;
+      return;
+    }
     const item = list.current?.children[index] as HTMLElement | undefined;
     if (!item || !list.current) return;
-    settling.current = performance.now() + 700;
     list.current.scrollTo({
       top: item.offsetTop - list.current.offsetTop - 12,
       behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -120,6 +126,9 @@ export function StoryPanel({
     window.addEventListener("keydown", keys);
     return () => window.removeEventListener("keydown", keys);
   }, [index, listen, onClose]);
+  const handScroll = () => {
+    scrolledByHand.current = performance.now() + HAND_SCROLL_MS;
+  };
   const elapsed = stories
     .slice(0, index)
     .reduce((sum, s) => sum + sentenceSeconds(s.text), 0);
@@ -176,9 +185,11 @@ export function StoryPanel({
       <ol
         className="story-list"
         ref={list}
+        onWheel={handScroll}
+        onTouchMove={handScroll}
         onScroll={(e) => {
           // In reading mode the sentence at the middle of the list leads the scene.
-          if (listen || performance.now() < settling.current) return;
+          if (listen || performance.now() > scrolledByHand.current) return;
           const box = e.currentTarget,
             middle = box.getBoundingClientRect().top + box.clientHeight / 2;
           let closest = index,
@@ -191,7 +202,10 @@ export function StoryPanel({
               closest = i;
             }
           });
-          if (closest !== index) onIndex(closest);
+          if (closest !== index) {
+            pickedByScroll.current = true;
+            onIndex(closest);
+          }
         }}
       >
         {stories.map((s, i) => (

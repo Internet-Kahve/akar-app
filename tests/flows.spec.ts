@@ -375,6 +375,21 @@ test.describe("first visit", () => {
     await expect(page.locator(".welcome")).toHaveCount(0);
   });
 });
+test("reading keeps the chosen sentence while the list follows it, and the visitor's scrolling leads", async ({
+  page,
+}) => {
+  await page.goto("/#view=detail&site=ulu-cami");
+  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  const count = page.locator(".story-count");
+  await expect(count).toHaveText("3 / 9");
+  await page.waitForTimeout(1200);
+  await expect(count).toHaveText("3 / 9");
+  await page.locator(".story-list").hover();
+  await page.mouse.wheel(0, 400);
+  await expect(count).not.toHaveText("3 / 9");
+});
 test("a trust tag tells where the statement comes from", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".opening")).toHaveCount(0);

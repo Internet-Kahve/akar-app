@@ -102,7 +102,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   const errors: string[] = [];
   visitor.page.on("pageerror", (e) => errors.push(e.message));
   await openSite(visitor.page, MEMORY_SITE.name);
-  await visitor.page.getByRole("button", { name: "İz Bırak", exact: true }).click();
+  await visitor.page.getByRole("button", { name: /^İz Bırak/ }).click();
   const form = visitor.page.getByRole("dialog").filter({ has: visitor.page.getByRole("heading", { name: "İz Bırak" }) });
   await form.getByLabel("Anı fotoğrafı").setInputFiles({ name: "iz.png", mimeType: "image/png", buffer: PNG });
   await expect(form.getByAltText("Paylaşılacak fotoğrafın önizlemesi")).toBeVisible();
