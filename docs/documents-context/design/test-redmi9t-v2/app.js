@@ -402,9 +402,23 @@ async function haritaPinleriKur() {
 /* --- modellerimiz: MapLibre özel katmanı + three.js (aynı GL bağlamı). Yerleşim test.html ile aynı. --- */
 /* ışık şehir kaydından (veri/sehir/<şehir>.json → harita_isik; önizleme v3 «Pişmiş»). Yoksa eski varsayılanlar.
    Köşe kararması (AO) modellerde pişmiş; gerçek zamanlı gölge yok. Yer gölgesi web'de: kodla üretilen tek bulanık doku, her modelin altında. */
-const ISIK = Object.assign({ ortam:2.3, gunes:1.3, dolgu:0.5, yon:216, yukseklik:46, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
+const ISIK = Object.assign({ yon:216, yukseklik:46, kamera_farki:40, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
 const YG_DOKU = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.filter = 'blur(13px)'; x.fillStyle = '#000';
   x.beginPath(); if (x.roundRect) x.roundRect(26, 26, 76, 76, 14); else x.rect(26, 26, 76, 76); x.fill(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+/* ışık tanıtım sayfasındaki 3D ile aynı (30 Ekim 2026): sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme.
+   güneşin yüksekliği şehir kaydından; yönü sunumda şehir kaydından (yon), haritada kameradan (gunesYonu). R: gölge kamerasının yarı genişliği (m) */
+function gunesYonu(g, az, R, merkez) {   // az: güneşin geldiği yön, kuzeyden saat yönüne derece. Model ekseni: x doğu, y yukarı, z güney
+  const a = THREE.MathUtils.degToRad(az), y = THREE.MathUtils.degToRad(ISIK.yukseklik);
+  g.position.set(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y)).multiplyScalar(R * 2.5).add(merkez);
+}
+function isikKur(r, sahne, R, haritada, merkez = new THREE.Vector3()) {
+  r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  sahne.add(new THREE.HemisphereLight(0xF4F1EA, 0x8C948F, 1.15));
+  const g = new THREE.DirectionalLight(0xFFF4E0, 2.1); gunesYonu(g, ISIK.yon, R, merkez); g.target.position.copy(merkez); sahne.add(g.target); g.castShadow = true;
+  const n = haritada ? 1024 : 2048; g.shadow.mapSize.set(n, n); g.shadow.bias = -0.0004; g.shadow.normalBias = R / n;
+  Object.assign(g.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R * 0.5, far:R * 5 }); sahne.add(g); return g;
+}
 const yerGolgesiMi = (o) => { for (let x = o; x; x = x.parent) if (/^Yer_Golgesi/.test(x.name || '')) return true; return false; };   // eski modellerdeki pişmiş düzlem
 const yapiKatman = {
   id:'yapilar', type:'custom', renderingMode:'3d', items:[],
@@ -422,11 +436,11 @@ const yapiKatman = {
       const grup = new THREE.Group(); gltf.scene.position.set(-c.x, -kutu.min.y, -c.z); grup.add(gltf.scene);
       grup.rotation.y = -THREE.MathUtils.degToRad(e.yaw || 0);
       const sahne = new THREE.Scene(); sahne.add(grup);
-      const a = THREE.MathUtils.degToRad(ISIK.yon), y = THREE.MathUtils.degToRad(ISIK.yukseklik);   // model ekseni: x doğu, y yukarı, z güney
-      const yon = new THREE.Vector3(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y));
-      sahne.add(new THREE.HemisphereLight(0xffffff, 0xb8b0a2, ISIK.ortam));
-      const gunes = new THREE.DirectionalLight(0xfff6ea, ISIK.gunes); gunes.position.copy(yon); sahne.add(gunes);
-      const dolgu = new THREE.DirectionalLight(0xdfe8f2, ISIK.dolgu); dolgu.position.set(-yon.x, 0.5, -yon.z); sahne.add(dolgu);
+      const R = kutu.getSize(new THREE.Vector3()).length() * 0.65, gunes = isikKur(this.r, sahne, R, true);
+      gltf.scene.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+      /* gölge harita zeminine: yalnız gölgeyi çizen saydam düzlem (ışık modelle sabit, gölge haritası bir kez çizilir) */
+      const gz = new THREE.Mesh(new THREE.PlaneGeometry(R * 2, R * 2), new THREE.ShadowMaterial({ opacity:0.3, depthWrite:false, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:8 }));
+      gz.rotation.x = -Math.PI / 2; gz.position.y = 0.02; gz.receiveShadow = true; gz.renderOrder = -1; sahne.add(gz);
       if (ISIK.yer_golgesi > 0) {   // dokunun koyu iç dikdörtgeni (76/128) taban izini biraz aşar; model ile döner
         const boy = kutu.getSize(new THREE.Vector3()), kc = kutu.getCenter(new THREE.Vector3()), k1 = 1 / 0.59;
         const yg = new THREE.Mesh(new THREE.PlaneGeometry(boy.x * k1 + 2, boy.z * k1 + 2), new THREE.MeshBasicMaterial({ map:YG_DOKU, transparent:true, opacity:ISIK.yer_golgesi, depthWrite:false, toneMapped:false, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:8 }));
@@ -434,7 +448,7 @@ const yapiKatman = {
       }
       const mc = maplibregl.MercatorCoordinate.fromLngLat([e.lon, e.lat], 0), k = mc.meterInMercatorCoordinateUnits();
       const l = new THREE.Matrix4().makeTranslation(mc.x, mc.y, mc.z).scale(new THREE.Vector3(k, -k, k)).multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
-      this.items.push({ id:e.id, sahne, l });
+      this.items.push({ id:e.id, sahne, l, gunes, R, az:null });
       const kes = tabanIzi(e, kutu.min.x - c.x, kutu.max.x - c.x, kutu.min.z - c.z, kutu.max.z - c.z, 1);
       IZLER.push({ id:e.id, cokgen:tabanIzi(e, kutu.min.x - c.x, kutu.max.x - c.x, kutu.min.z - c.z, kutu.max.z - c.z, 3), kes:turf.polygon([[...kes, kes[0]]]), ana:anaObj ? new THREE.Box3().setFromObject(anaObj).getSize(new THREE.Vector3()) : kutu.getSize(new THREE.Vector3()) });
       binalariGuncelle(); this.map.triggerRepaint();
@@ -446,7 +460,15 @@ const yapiKatman = {
        mercator matrisidir; geçiş sürerken mercator yedeği (fallbackMatrix) kullanılır, modeller kürenin üstünde yüzmez */
     const d = girdi.defaultProjectionData, p = new THREE.Matrix4().fromArray(d.projectionTransition > 0 ? d.fallbackMatrix : d.mainMatrix);
     this.r.resetState();
-    for (const it of this.items) { this.kamera.projectionMatrix.copy(p).multiply(it.l); this.r.render(it.sahne, this.kamera); }
+    /* güneş izleyicinin arkasından, kamera_farki kadar yandan vurur: harita nasıl dönerse dönsün görünen cepheler aydınlık.
+       gölge haritası yalnız güneş yön değiştirince (harita 2°'den fazla dönünce) yeniden çizilir */
+    const az = this.map.getBearing() + 180 + ISIK.kamera_farki;
+    this.r.shadowMap.autoUpdate = false;
+    for (const it of this.items) {
+      const yeni = it.az === null || Math.abs(((az - it.az) % 360 + 540) % 360 - 180) > 2;
+      if (yeni) { it.az = az; gunesYonu(it.gunes, az, it.R, new THREE.Vector3()); }
+      this.kamera.projectionMatrix.copy(p).multiply(it.l); this.r.shadowMap.needsUpdate = yeni; this.r.render(it.sahne, this.kamera);
+    }
   },
 };
 /* modelin taban dikdörtgeni (m, yerleşim noktasına göre; yaw ile döndürülmüş, pay eklenmiş) → [lng, lat] köşeleri */
@@ -725,12 +747,7 @@ class Sahne3D {
     this.r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.r.setClearColor(0x000000, 0);
     kap.appendChild(this.r.domElement);
     this.sahne = new THREE.Scene();
-    /* ışık haritadakiyle aynı (ISIK: şehir kaydı harita_isik); model haritadaki yaw ile döndüğü için güneş yönü de aynı düşer */
-    { const a = THREE.MathUtils.degToRad(ISIK.yon), y = THREE.MathUtils.degToRad(ISIK.yukseklik);
-      const yon = new THREE.Vector3(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y));
-      this.sahne.add(new THREE.HemisphereLight(0xffffff, 0xb8b0a2, ISIK.ortam));
-      const g = new THREE.DirectionalLight(0xfff6ea, ISIK.gunes); g.position.copy(yon); this.sahne.add(g);
-      const d = new THREE.DirectionalLight(0xdfe8f2, ISIK.dolgu); d.position.set(-yon.x, 0.5, -yon.z); this.sahne.add(d); }
+    /* ışık (isikKur) model yüklenince kurulur: gölge kamerası yapının boyuna göre. Model haritadaki yaw ile döndüğü için güneş yönü de aynı düşer */
     this.kam = new THREE.PerspectiveCamera(38, 1, 0.5, 5000);
     this.kont = new OrbitControls(this.kam, this.r.domElement);
     this.kont.enableDamping = true; this.kont.dampingFactor = 0.09; this.kont.maxPolarAngle = Math.PI * 0.49;
@@ -760,13 +777,14 @@ class Sahne3D {
     for (const o of gltf.scene.children) if (!sunumEk(e, o.name) && !yerGolgesiMi(o)) this.kutu.expandByObject(o);
     const c = this.kutu.getCenter(new THREE.Vector3()), b = this.kutu.getSize(new THREE.Vector3());
     this.yaricap = b.length() / 2; this.boyY = b.y;
+    isikKur(this.r, this.sahne, this.yaricap * 1.3, false, c);
     this.merkez = new THREE.Vector3(c.x, this.kutu.min.y + b.y * 0.25, c.z);   // Merkez: kutunun yatay ortası (kadraj için tabandan biraz yukarıda)
     this.parcalar = new Map(); this.meshler = [];
     const adlar = new Set(gltf.parser.json.nodes.filter((n) => n.mesh !== undefined && !sunumEk(e, n.name)).map((n) => n.name));
     for (const ad of adlar) { const o = this.kok.getObjectByName(ad); if (o) this.parcalar.set(ad, o); }
     this.kok.traverse((o) => {
       if (!o.isMesh) return;
-      o.material = o.material.clone(); o.material.emissive = new THREE.Color(0, 0, 0);
+      o.material = o.material.clone(); o.material.emissive = new THREE.Color(0, 0, 0); o.castShadow = o.receiveShadow = true;
       if (ISIK.doygunluk !== 1 && o.material.color) { const hsl = {}; o.material.color.getHSL(hsl); o.material.color.setHSL(hsl.h, Math.min(1, hsl.s * ISIK.doygunluk), hsl.l); }   // haritadaki doygunluk
       let p = o; while (p && !adlar.has(p.name)) p = p.parent;
       o.userData.parca = p ? p.name : null; this.meshler.push(o);

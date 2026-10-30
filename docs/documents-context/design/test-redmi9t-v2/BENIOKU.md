@@ -1,5 +1,9 @@
 # Redmi 9T prototipi ve performans testi · v2
 
+## 30 Ekim 2026 · 3D ışığı tanıtım sayfasındaki gibi
+
+Harita ve eser detayındaki bütün modeller tanıtım sayfasının ışığını kullanır (`app.js` → `isikKur`): ACES ton eşleme, sıcak gök ışığı, gerçek gölge düşüren tek güneş. Detay sahnesinde güneş güneybatıdan (`harita_isik.yon` 221°). Haritada güneş izleyicinin arkasından, 40° sağa kayık gelir (`kamera_farki`); harita döndükçe döner, görünen cepheler hep aydınlık, gölge harita zeminine düşer. Ürüne aktarım: `ENTEGRASYON_29EKIM.md` §3.
+
 ## 30 Ekim 2026 · tanıtım sayfası (landing): `tanitim.html`
 
 Jüri ve ilk kez gelenler için: projeyi anlatır, sonra haritaya yönlendirir. Aynı sunucudan açılır: `http://<ip>:<port>/tanitim.html` (sunucu.sh adresi yazar). Bütün «Haritayı aç / Rotayı başlat / eser kartları» `index.html`'e gider (`#/`, `#/rota`, `#/eser/<id>`).
