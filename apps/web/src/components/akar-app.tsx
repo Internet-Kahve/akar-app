@@ -973,7 +973,9 @@ export function AkarApp() {
                               <span>
                                 <strong>{s.name}</strong>
                                 <small>
-                                  {s.year} · {s.minutes} dk
+                                  {[s.year, `${s.minutes} dk`]
+                                    .filter(Boolean)
+                                    .join(" · ")}
                                 </small>
                               </span>
                               <ArrowRight size={15} />
@@ -1241,6 +1243,9 @@ export function AkarApp() {
                     }
                     collapsed={collapsed}
                     mapSettings={mapSettings}
+                    focusCity={
+                      cityRecords.find((c) => c.name === query.trim())?.name
+                    }
                   />
                 )}
                 {pick && (
@@ -1554,7 +1559,7 @@ function SiteCard({
         </div>
         <span>
           <small>
-            {kindLabels[site.kind]} · {site.year}
+            {[kindLabels[site.kind], site.year].filter(Boolean).join(" · ")}
           </small>
           <strong>{site.name}</strong>
           <span className="site-meta">

@@ -69,10 +69,12 @@ export function AboutModal({
       <h3>{site.name}</h3>
       <p>{site.description}</p>
       <dl className="facts">
-        <div>
-          <dt>Dönem</dt>
-          <dd>{site.year}</dd>
-        </div>
+        {site.year && (
+          <div>
+            <dt>Dönem</dt>
+            <dd>{site.year}</dd>
+          </div>
+        )}
         <div>
           <dt>Mimar</dt>
           <dd>{site.architect}</dd>

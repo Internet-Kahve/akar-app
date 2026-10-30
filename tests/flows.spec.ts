@@ -600,6 +600,43 @@ test("map pins stay on their sites through zoom and panel resize, and a click on
   ).toBeVisible();
 });
 
+test("naming a city takes the map there, and a later refresh leaves it there", async ({
+  page,
+}) => {
+  type CityMap = {
+    loaded(): boolean;
+    jumpTo(view: { center: [number, number]; zoom: number }): void;
+    getCenter(): { lng: number; lat: number };
+    isMoving(): boolean;
+  };
+  const center = () =>
+    page.evaluate(() => {
+      const map = window.akarMap as unknown as CityMap;
+      return map.isMoving() ? null : map.getCenter();
+    });
+  await page.goto("/");
+  await expect
+    .poll(() =>
+      page.evaluate(() => !!(window.akarMap as unknown as CityMap)?.loaded()),
+    )
+    .toBe(true);
+  // Elsewhere on the map, as a visitor who has been to another city.
+  await page.evaluate(() =>
+    (window.akarMap as unknown as CityMap).jumpTo({
+      center: [32.48, 37.87],
+      zoom: 14,
+    }),
+  );
+  await page.getByLabel("Eser, şehir veya rota ara").fill("Bursa");
+  await expect
+    .poll(async () => (await center())?.lng ?? 0, { timeout: 8000 })
+    .toBeLessThan(30);
+  const arrived = await center();
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.waitForTimeout(300);
+  expect(await center()).toEqual(arrived);
+});
+
 test("the legend and the kind chips leave out what the city has no site of, and the income category is «Ticari (akar)»", async ({
   page,
 }) => {
