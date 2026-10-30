@@ -1,0 +1,76 @@
+{
+  "_aciklama": "Koza Han · görevler ve rozetler (30 Ekim 2026). Onaylandı (30 Ekim 2026, ekip). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Mescit içinde görev yok; saha görevi avluda, merdivenin önünde. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta.",
+  "_taslak": false,
+  "gorevler": [
+    {
+      "id": "koza-soru-kosk-mescit",
+      "tur": "soru",
+      "baslik": "Avludaki küçük yapı",
+      "soru": "Koza Han avlusunun ortasında, kemerlerin üstünde yükselen küçük mescide ne ad verilir?",
+      "secenekler": [
+        "Köşk mescit",
+        "Zaviye",
+        "Tabhane",
+        "Medrese"
+      ],
+      "dogru": 0,
+      "ipuclari": [
+        "Fotoğraftaki yapı yerde durmuyor; kemerlerin üstünde, bir köşk gibi yükseliyor.",
+        "Cevap «K» harfiyle başlıyor."
+      ],
+      "dogru_metin": "Köşk mescit: han avlusunun ortasında, kemerler üstünde yükselen müstakil mescit. Koza Han'ınki, Bursa'da özgün olarak günümüze ulaşabilmiş nadir köşk mescitlerdendir.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "08_mescit-kitabe.jpg",
+      "parca": "Mescit",
+      "kaynak": "E cilt-2 PDF s.10; E cilt-1 PDF s.195",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    },
+    {
+      "id": "koza-saha-merdiven",
+      "tur": "saha",
+      "baslik": "Mescidin merdiveni",
+      "gorev": "Köşk mescidin mermer merdivenini bul ve basamaklarını say.",
+      "yerinde": {
+        "yap": "Mescidin merdiveninin önüne gel ve «Buradayım»a dokun.",
+        "konum_yaricap_m": 80,
+        "_not": "Konum eserin noktasından ölçülür (eser.json lat/lon). Öğenin kendi koordinatı ölçülmedi; 80 m yapının çevresini kapsar."
+      },
+      "evden": {
+        "yap": "3D modelde köşk mescide dokun.",
+        "parca": "Mescit"
+      },
+      "tamam_metin": "Mescide on dört basamaklı mermer bir merdivenle çıkılır; merdivenin korkulukları da mermerdir ve geometrik şebekelidir.",
+      "gorsel": "08_mescit-kitabe.jpg",
+      "kaynak": "E cilt-1 PDF s.195",
+      "guven": "Doğrulanmış"
+    }
+  ],
+  "rozetler": [
+    {
+      "id": "koza-hikaye",
+      "ad": "Koza Han'ı dinledin",
+      "metin": "Koza Han'ın hikâyesini sonuna kadar dinledin ya da okudun.",
+      "kosul": {
+        "hikaye_bitti": true
+      }
+    },
+    {
+      "id": "koza-kosk-mescit",
+      "ad": "Köşk mescit",
+      "metin": "Han avlusunda kemerler üstünde yükselen mescidi öğrendin.",
+      "kosul": {
+        "gorev": "koza-soru-kosk-mescit"
+      }
+    },
+    {
+      "id": "koza-on-dort-basamak",
+      "ad": "On dört basamak",
+      "metin": "Köşk mescidin mermer merdivenini buldun.",
+      "kosul": {
+        "gorev": "koza-saha-merdiven"
+      },
+      "yerinde_etiketi": true
+    }
+  ]
+}

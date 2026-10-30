@@ -1,0 +1,68 @@
+{
+  "_aciklama": "Orhan Gazi Türbesi · görevler ve rozetler (30 Ekim 2026). Onaylandı (30 Ekim 2026, ekip). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var). Puan yok, süre yok, yanlış cevapta ceza yok. Türbe içinde görev yok; saha görevi dışarıda. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta. Bu eserin hikâyesi (hikaye.md) olmadığı için hikâye rozeti yok.",
+  "_taslak": false,
+  "gorevler": [
+    {
+      "id": "ogt-soru-nilufer",
+      "tur": "soru",
+      "baslik": "Türbedeki sandukalar",
+      "soru": "Orhan Gazi Türbesi'nde, Orhan Gazi'nin sandukasının yanında kimin sandukası da bulunur?",
+      "secenekler": [
+        "Nilüfer Hatun",
+        "Osman Gazi",
+        "Şeyh Edebali",
+        "Ertuğrul Gazi"
+      ],
+      "dogru": 0,
+      "ipuclari": [
+        "Fotoğraftaki sandukanın önündeki levhayı oku.",
+        "Orhan Gazi'nin eşi."
+      ],
+      "dogru_metin": "Türbede Orhan Gazi'ninkinden başka yirmi sanduka vardır; eşi Nilüfer Hatun, oğlu Şehzade Kasım, Fatma Sultan, Şehzade Abdullah ve Şehzade Korkut'unkiler tanımlanabilmiştir.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "03_nilufer-hatun.jpg",
+      "parca": "Sandukalar",
+      "kaynak": "E cilt-2 PDF s.117",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    },
+    {
+      "id": "ogt-saha-kubbe",
+      "tur": "saha",
+      "baslik": "Tek kubbeli türbe",
+      "gorev": "Hisariçi'nde, Osman Gazi Türbesi'nin yanındaki kare planlı, tek kubbeli türbeyi bul.",
+      "yerinde": {
+        "yap": "Türbenin dışına, giriş cephesinin önüne gel ve «Buradayım»a dokun.",
+        "konum_yaricap_m": 80,
+        "_not": "Konum eserin noktasından ölçülür (eser.json lat/lon). Öğenin kendi koordinatı ölçülmedi; 80 m yapının çevresini kapsar. Osman Gazi Türbesi hemen yanında; görev iki türbenin önündeki meydanda yapılır."
+      },
+      "evden": {
+        "yap": "3D modelde türbenin kubbesine dokun.",
+        "parca": "Kubbe"
+      },
+      "tamam_metin": "Kadı sicillerine göre eski türbenin üstü birden çok kubbeyle örtülüydü; 1855 depreminden sonra yeniden yapılan bina tek kubbelidir.",
+      "gorsel": "01_dis.jpg",
+      "kaynak": "E cilt-2 PDF s.116, s.117",
+      "guven": "Doğrulanmış"
+    }
+  ],
+  "rozetler": [
+    {
+      "id": "ogt-nilufer",
+      "ad": "Nilüfer Hatun",
+      "metin": "Orhan Gazi'nin yanında yatanlardan birini öğrendin.",
+      "kosul": {
+        "gorev": "ogt-soru-nilufer"
+      }
+    },
+    {
+      "id": "ogt-tek-kubbe",
+      "ad": "Tek kubbe",
+      "metin": "Orhan Gazi Türbesi'ni Hisariçi'nde buldun.",
+      "kosul": {
+        "gorev": "ogt-saha-kubbe"
+      },
+      "yerinde_etiketi": true
+    }
+  ]
+}

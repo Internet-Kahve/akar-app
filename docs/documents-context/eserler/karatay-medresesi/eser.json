@@ -1,0 +1,19 @@
+{
+  "_aciklama": "Eserin kimlik kaydı. Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. 3D modeli yok (model.json yok): eser sayfası yalnız fotoğrafla açılır.",
+  "id": "karatay-medresesi",
+  "sira": 10,
+  "ad": "Karatay Medresesi",
+  "yil": "1251",
+  "yaptiran": "Celaleddin Karatay",
+  "tur": "Medrese",
+  "ikon": "medrese",
+  "rol": "egitim",
+  "kisa": "Selçuklu çinileriyle bezeli, bugün Çini Eserler Müzesi olan medrese.",
+  "il": "Konya",
+  "ilce": "Selçuklu",
+  "lat": 37.8750305,
+  "lon": 32.492897,
+  "_kaynak": "Kimlik: Konya Vakıf Eserleri Cilt 2, PDF s.45 (kodda «E cilt-2»). Konum: Kültür Envanteri (kulturenvanteri.com «Karatay Medresesi»), 30 Ekim 2026; uydu görüntüsüyle ayrıca doğrulanmadı.",
+  "hakkinda_kapak": "kitap/s45-02.jpg",
+  "_hakkinda_kapak": "«Eser hakkında» kapak fotoğrafı: envanterde kaydın açılış fotoğrafı (Konya Vakıf Eserleri Cilt 2, PDF s.45). 30 Ekim 2026."
+}

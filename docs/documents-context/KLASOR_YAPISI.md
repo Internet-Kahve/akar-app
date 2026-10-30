@@ -29,7 +29,7 @@ documents-context/
 │   ├── ayasofya/             Önceki pilot (sürüm klasörleri v20–v24; Git dışında)
 │   ├── aday-eserler/         Henüz işlenmemiş 30 aday eser (eser.md + ref; Git dışında)
 │   ├── _GENEL_SAHNE_STANDARDI.md  Renk, ışık, zemin kuralları
-│   └── <eser>/               eser.md, notlar, icerik/, gecmisi-gor/, 3d/export (ref/, 3d/blend, build, kontrol Git dışında)
+│   └── <eser>/               eser.md, eser.json, notlar, icerik/, gecmisi-gor/, 3d/export (ref/, 3d/blend, build, kontrol Git dışında)
 └── veri/
     ├── BENIOKU.md
     ├── kaynak_pdf/           Vakıf Katılım envanter PDF'leri (Git dışında; ekibe kısıtlı Drive'dan)
@@ -65,3 +65,20 @@ documents-context/
 | `3d-eser/_kutuphane/` ve yöntem rehberleri | `eserler/_kutuphane/` |
 | `3d-eser/bursa/ref/` | `veri/bursa/` |
 | `3d-eser/bursa/sablonlar/` | `veri/bursa/sablonlar/` |
+
+## Eser klasörü: `icerik/` (30 Ekim 2026, yedi eserde aynı)
+
+Yalnız fotoğraflı dört eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii) `3d/`, `parcalar.md` ve `eser-hakkinda-okuma.md` yok; fotoğraflar `foto/kitap/` içinde (envanter kitabından). Hatay kitabının metni `design/test-redmi9t-v2/_araclar/envanter_metni_cikar_hatay.py` ile çıkarılır.
+
+| Dosya | Ne | Uygulama okur mu |
+| --- | --- | --- |
+| `hikaye.md` | Hikâye cümleleri, 3D açıları, «Akar akışı», «Yalnız rotada» | evet |
+| `fotograflar.md` + `foto/` | Galeri fotoğrafları ve künyeleri | evet |
+| `eser-hakkinda.md` | Envanter metninin tamamı (kitaptan birebir), bölümlü | evet |
+| `eser-hakkinda-okuma.md` | Okuma katmanı: özet, rakam, alıntı, zaman, terim, 3D açısı | evet |
+| `kitap-fotograflari.md` + `foto/kitap/` | Envanter kitabındaki fotoğraflar ve yerleri | evet |
+| `parcalar.md` | 3D parça kartları | evet |
+| `gorevler.json` | Bulmaca, saha görevi, rozetler | evet |
+| `eser-hakkinda-ozet.md` | Önceki özet metin ve kaynak notları | hayır |
+| `_eski/` | Yerini yeni dosyaya bırakan taslaklar (ör. `parcalar_taslak.md`) | hayır |
+| `en/` | İngilizce karşılıklar (`ICERIK_INGILIZCE.md`) | evet (varsa) |

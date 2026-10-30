@@ -1,6 +1,6 @@
 # Eserler ve 3D üretim
 
-> 23 Ekim temizliği: kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği yedi eserle sınırlıdır.
+> 23 Ekim temizliği: kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği: yedi 3D modelli eser (Bursa) ve 30 Ekim 2026'dan beri yalnız fotoğraflı dört eser (Bursa'da İnebey Medresesi ve Alaaddin Bey Çeşmesi, Konya'da Karatay Medresesi, Hatay'da Habib-i Neccar Camii).
 
 Her eser kendi klasöründe tutulur. Önce `eser.md`, ardından varsa eserin notları ve üretim README'si okunur. Klasör adları eser kimliğini taşır; il bilgisi eser belgesinde yer alır.
 
@@ -12,6 +12,15 @@ Her eser kendi klasöründe tutulur. Önce `eser.md`, ardından varsa eserin not
 - [Ulucami modelinin güncel notları](ulu-cami/3d/README.md)
 
 Esere özel referanslar tek `ref/` klasöründe toplanır: `ref/foto/` (fotoğraflar), `ref/plan/` (rölöve, plan, kesit, cephe çizimleri), `ref/metin/` (PDF metin çıkarımları), `ref/maket/` (maket ve başka 3D model görüntüleri; ölçü için kullanılmaz) ve her türev dosyanın kaynak PDF/sayfa kaydı `ref/kaynak_dizini.json`. 19 Ekim 2026 itibarıyla Ulu Cami, Koza Han, Yıldırım Bayezid Bedesteni, Orhan Bey Camii (`orhan-bey-kulliyesi/`), Orhan Bey Hamamı ve Emir Hanı bu düzende; Ulu Cami'nin güncel sürümü v26 (22 Ekim 2026; planı silindi); Bedesten, Koza Han, Emir Hanı ve Yarhisar çeşmesinde eski tur talimatı `SONNET_REVIZYON_PLANI.md` duruyor (tarihsel). Güncel model sürümleri her eserin `3d/README.md` dosyasında. 30 aday eser `aday-eserler/` altında. Ortak sahne kuralları: [Genel sahne standardı](_GENEL_SAHNE_STANDARDI.md). Üretim klasörlerindeki `build/`, `blend/`, `export/` ve `kontrol/` birbirini tamamlar; tek başına GLB dosyasını taşımak üretim kaynağını taşımaz. Ortak kaynak belgeleri `../veri/bursa/` altındadır.
+
+## Yalnız fotoğraflı eserler (30 Ekim 2026; 3D yok)
+
+`eser.json` + `icerik/` (hikâye, envanter metni, fotoğraflar, görev); `3d/` klasörü ve `model.json` yok, uygulama Fotoğraf görünümüyle açar.
+
+- [Eyne Bey (İnebey) Medresesi](eyne-bey-medresesi/icerik/eser-hakkinda.md) · Bursa · Eğitim
+- [Alaaddin Bey Çeşmesi](alaaddin-bey-cesmesi/icerik/eser-hakkinda.md) · Bursa · Su
+- [Karatay Medresesi](karatay-medresesi/icerik/eser-hakkinda.md) · Konya · Eğitim
+- [Habib-i Neccar Camii](habib-i-neccar-camii/icerik/eser-hakkinda.md) · Hatay · Dinî
 
 ## Orhan Bey Külliyesi ile ilişkili eserler
 

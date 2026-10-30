@@ -40,3 +40,13 @@ Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model d
 | 6 | Merkez | 0° (kuzey) | 35° | bütün yapı | Özgün girişin bulunduğu kuzey cephe |
 | 7 | Hamam_Sicaklik | 180° (güney) | 45° | orta | Fenerli kubbeler |
 | 8 | Merkez | 180° | 30° | bütün yapı | Kapanış, 1'e dönüş |
+
+## Akar akışı
+
+Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.
+
+| # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |
+|---|---|---|---|---|---|---|
+| 2 | orhan-bey-hamami | orhan-bey-kulliyesi | Orhan Gazi İmareti (bugün yok) | 1360 vakfiyesi · gelir → imarete | E cilt-1 PDF s.104 | Doğrulanmış |
+
+İmaret günümüze ulaşmadı ve yeri kitapta yok (C1 s.96); yay külliyenin bugünkü camisine çizilir, kart «Orhan Gazi İmareti (bugün yok)» der.

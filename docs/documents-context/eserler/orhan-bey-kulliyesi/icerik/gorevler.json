@@ -1,0 +1,76 @@
+{
+  "_aciklama": "Orhan Bey Camii · görevler ve rozetler (30 Ekim 2026). Onaylandı (30 Ekim 2026, ekip). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Cami içinde görev yok; saha görevi dışarıda, son cemaat yerinin yan cephesinde. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta.",
+  "_taslak": false,
+  "gorevler": [
+    {
+      "id": "obc-soru-alci-mihrap",
+      "tur": "soru",
+      "baslik": "Mihrabın malzemesi",
+      "soru": "Orhan Bey Camii'nin, Bursa'daki sonraki selatin camilerine örnek olan mihrabı hangi malzemeyle işlenmiştir?",
+      "secenekler": [
+        "Alçı",
+        "Çini",
+        "Ahşap",
+        "Mermer"
+      ],
+      "dogru": 0,
+      "ipuclari": [
+        "Fotoğraftaki mihrabın yaldızlı, ince oyma süslemelerine bak.",
+        "Bu malzeme duvar sıvasında da kullanılır."
+      ],
+      "dogru_metin": "Mihrap, alçı işçiliğinin ileri düzeydeki en güzel örneklerinden biri sayılır; yaldızlı, yedi katlı mukarnas kavsarası rumi-palmet motifleri ve lotus çiçekleriyle süslüdür.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "03_mihrap.jpg",
+      "parca": "Cami_Mihrap",
+      "kaynak": "E cilt-1 PDF s.102",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    },
+    {
+      "id": "obc-saha-ikiz-kemer",
+      "tur": "saha",
+      "baslik": "İkiz kemerler",
+      "gorev": "Son cemaat yerinin yan cephelerindeki ikiz kemerleri bul.",
+      "yerinde": {
+        "yap": "Son cemaat yerinin yanına gel; sütun başlığına oturan ikiz kemerleri bul ve «Buradayım»a dokun.",
+        "konum_yaricap_m": 80,
+        "_not": "Konum eserin noktasından ölçülür (eser.json lat/lon). Öğenin kendi koordinatı ölçülmedi; 80 m yapının çevresini kapsar."
+      },
+      "evden": {
+        "yap": "3D modelde son cemaat yerine dokun.",
+        "parca": "Cami_SonCemaat"
+      },
+      "tamam_metin": "Son cemaat yerinin yan cepheleri sağır değildir; devşirme kompozit başlıklara oturan ikişer sivri kemerle dışa açılır.",
+      "gorsel": "05_revak-ikiz-kemer.jpg",
+      "kaynak": "E cilt-1 PDF s.98",
+      "guven": "Doğrulanmış"
+    }
+  ],
+  "rozetler": [
+    {
+      "id": "obc-hikaye",
+      "ad": "Orhan Bey Camii'ni dinledin",
+      "metin": "Orhan Bey Camii'nin hikâyesini sonuna kadar dinledin ya da okudun.",
+      "kosul": {
+        "hikaye_bitti": true
+      }
+    },
+    {
+      "id": "obc-alci-mihrap",
+      "ad": "Alçı mihrap",
+      "metin": "Bursa camilerine örnek olan alçı mihrabı öğrendin.",
+      "kosul": {
+        "gorev": "obc-soru-alci-mihrap"
+      }
+    },
+    {
+      "id": "obc-ikiz-kemer",
+      "ad": "İkiz kemerler",
+      "metin": "Son cemaat yerinin dışa açılan ikiz kemerlerini buldun.",
+      "kosul": {
+        "gorev": "obc-saha-ikiz-kemer"
+      },
+      "yerinde_etiketi": true
+    }
+  ]
+}

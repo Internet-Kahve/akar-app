@@ -1,6 +1,6 @@
 # AKAR · Proje bağlamı ve üretim dosyaları
 
-> 23 Ekim temizliği: kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği yedi eserle sınırlıdır.
+> 23 Ekim temizliği: kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği: yedi 3D modelli eser (Bursa) ve 30 Ekim 2026'dan beri yalnız fotoğraflı dört eser (Bursa'da İnebey Medresesi ve Alaaddin Bey Çeşmesi, Konya'da Karatay Medresesi, Hatay'da Habib-i Neccar Camii).
 
 Ürün belgeleri, tasarım referansları, kaynak verisi ve eserlerin 3D üretimi burada tutulur. Güncel ürün odağı Bursa'dır. Uygulama kodu aynı reponun `apps/` ve `packages/` klasörlerindedir.
 

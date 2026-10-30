@@ -1,0 +1,19 @@
+{
+  "_aciklama": "Eserin kimlik kaydı. Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. 3D modeli yok (model.json yok): eser sayfası yalnız fotoğrafla açılır.",
+  "id": "eyne-bey-medresesi",
+  "sira": 8,
+  "ad": "Eyne Bey (İnebey) Medresesi",
+  "yil": "15. yy başı",
+  "yaptiran": "Eyne Bey",
+  "tur": "Medrese",
+  "ikon": "medrese",
+  "rol": "egitim",
+  "kisa": "Subaşı Eyne Bey’in yaptırdığı medrese; bugün İnebey Yazma Eser Kütüphanesi.",
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "lat": 40.1826553,
+  "lon": 29.0610638,
+  "_kaynak": "Kimlik: E cilt-2 PDF s.34. Konum: Kültür Envanteri (kulturenvanteri.com, «İnebey Medresesi»), 30 Ekim 2026; uydu görüntüsüyle ayrıca doğrulanmadı.",
+  "hakkinda_kapak": "kitap/s34-01.jpg",
+  "_hakkinda_kapak": "«Eser hakkında» kapak fotoğrafı: envanterde kaydın açılış fotoğrafı (E cilt-2 PDF s.34). 30 Ekim 2026."
+}

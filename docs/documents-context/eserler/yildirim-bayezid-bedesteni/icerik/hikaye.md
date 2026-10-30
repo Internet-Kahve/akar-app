@@ -4,19 +4,19 @@
 
 Hero eser: 11 cümle (~1 dk). Her cümle tek bilgi, en fazla ~20 kelime. Bedesten bir **akar**dır: geliri Ulucami'ye gidiyordu; bu yüzden akar cümlesinde (4) Bedesten'le birlikte Ulucami'nin göründüğü fotoğraf kullanıldı.
 
-| # | Cümle (TR) | Fotoğraf | Kart | Vurgu (3D) | Kaynak | Güven (öneri) |
-|---|---|---|---|---|---|---|
-| 1 | Bedesten'i 14. yüzyılda Sultan Yıldırım Bayezid yaptırdı. | 01_dis-havadan-ulucami-ile.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış |
-| 2 | Osmanlı'da bedesten olarak inşa edilen ilk yapı budur. | 01_dis-havadan-ulucami-ile.jpg | hayır | — | E cilt-2 PDF s.29 | Doğrulanmış |
-| 3 | Yapı, sonraki bütün Osmanlı bedestenlerine örnek oldu. | 03_tepeden-14-kubbe.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış |
-| 4 | Yıldırım Bayezid, Bedesten'i Ulucami'ye gelir sağlamak için onun yakınına yaptırdı. | 04_dis-havadan-ulucami-yonu.jpg | evet | Govde | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |
-| 5 | Bugünkü Bursa Kapalıçarşısı, bu yapının çevresinde büyüdü. | 05_carsi-icinde.jpg | evet | — | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |
-| 6 | İç mekânın üstünü, altı ayağa oturan on dört kubbe örter. | 03_tepeden-14-kubbe.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış |
-| 7 | İçeride, doğu–batı yönünde sıralanmış otuz iki mahzen vardır. | 02_ic-kuyumcular.jpg | evet | — | E cilt-2 PDF s.29 | Doğrulanmış |
-| 8 | Evliya Çelebi'ye göre bedestenin dört yanı kuyumcular çarşısıyla çevriliydi. | 07_dis-duvar-kuyumcular.jpg | evet | Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış |
-| 9 | 1958 Kapalıçarşı yangınında ağır hasar gören yapı, 1960'ta onarıldı. | 06_kubbeler-yakindan.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış |
-| 10 | Bedesten bugün de çoğunlukla kuyumcu atölyelerine ev sahipliği yapıyor. | 02_ic-kuyumcular.jpg | evet | Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış |
-| 11 | Sonraki durak, Ulucami ile Orhan Bey Camii arasındaki Koza Han. | 08_sonraki-durak-koza-han.jpg | evet | — | E cilt-2 PDF s.8 | Doğrulanmış |
+| # | Cümle (TR) | Fotoğraf | Kart | Vurgu (3D) | Kaynak | Güven (öneri) | İç mekân (3D) |
+|---|---|---|---|---|---|---|---|
+| 1 | Bedesten'i 14. yüzyılda Sultan Yıldırım Bayezid yaptırdı. | 01_dis-havadan-ulucami-ile.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 2 | Osmanlı'da bedesten olarak inşa edilen ilk yapı budur. | 01_dis-havadan-ulucami-ile.jpg | hayır | — | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 3 | Yapı, sonraki bütün Osmanlı bedestenlerine örnek oldu. | 03_tepeden-14-kubbe.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 4 | Yıldırım Bayezid, Bedesten'i Ulucami'ye gelir sağlamak için onun yakınına yaptırdı. | 04_dis-havadan-ulucami-yonu.jpg | evet | Govde | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 5 | Bugünkü Bursa Kapalıçarşısı, bu yapının çevresinde büyüdü. | 05_carsi-icinde.jpg | evet | — | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 6 | İç mekânın üstünü, altı ayağa oturan on dört kubbe örter. | 03_tepeden-14-kubbe.jpg | hayır | Payeler | E cilt-2 PDF s.29 | Doğrulanmış | evet |
+| 7 | İçeride, doğu–batı yönünde sıralanmış otuz iki mahzen vardır. | 02_ic-kuyumcular.jpg | evet | Ic_Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış | evet |
+| 8 | Evliya Çelebi'ye göre bedestenin dört yanı kuyumcular çarşısıyla çevriliydi. | 07_dis-duvar-kuyumcular.jpg | evet | Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 9 | 1958 Kapalıçarşı yangınında ağır hasar gören yapı, 1960'ta onarıldı. | 06_kubbeler-yakindan.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 10 | Bedesten bugün de çoğunlukla kuyumcu atölyelerine ev sahipliği yapıyor. | 02_ic-kuyumcular.jpg | evet | Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 11 | Sonraki durak, Ulucami ile Orhan Bey Camii arasındaki Koza Han. | 08_sonraki-durak-koza-han.jpg | evet | — | E cilt-2 PDF s.8 | Doğrulanmış | hayır |
 
 ## Notlar
 
@@ -26,6 +26,7 @@ Hero eser: 11 cümle (~1 dk). Her cümle tek bilgi, en fazla ~20 kelime. Bedeste
 - **Cümle 7–8:** İç mekân modelde yok (v05'te salon içi, ayaklar ve mahzenler modellenmedi); cümle 7'nin vurgusu boş, kart iç fotoğrafı gösterir. Kitap Evliya Çelebi'nin anlatımını aktarıyor; cümlede kaynağı adıyla verildi. Cümle 8'in fotoğrafı 20 Ekim 2026'da `07_dis-duvar-kuyumcular.jpg` oldu: Bedesten'in kemerli dış duvarı önünde kuyumcu dükkânları; envanter bu fotoğrafı Bedesten maddesinde basıyor (C2 s.29).
 - **Cümle 11 (sonraki durak, 22 Ekim 2026):** Rota 4 durak oldu (Ulucami → Bedesten → Koza Hanı → Orhan Bey Camii). C2 s.8 «Koza Han, Çarşı ve Hanlar Bölgesi'nde, Orhan Camii ile Ulucami arasında konumlanmaktadır»; cami adı envanter maddesinin başlığındaki gibi «Orhan Bey Camii» (C1 s.96). Mesafe için kaynak yok, yazılmadı. Fotoğraf Koza Han'ın kapak fotoğrafı (`koza-han/icerik/foto/01_dis-cephe-koza-han.jpg`); kart "evet": model Koza Han'ı göstermiyor.
 - **Kullanılmayanlar:** Kitap girişlerin «kubbeyle örtülü bir giriş mekânına» açıldığını yazıyor (s.29); dış fotoğraflarda bu kubbeler görünmüyor (bkz. `bedesten_notlar.md` §1). Hikâyede giriş kubbesinden söz edilmedi. W kaynakları (Ekinci 2025: 71,70 × 35,50 m vb.) içerikte kullanılmadı; envanter öncelikli.
+- **«İç mekân (3D)» sütunu ve iç parçalar (29 Ekim 2026, model v10):** iç mekân artık modelde (`3d/README.md` v10). Metni açıkça içeriden söz eden iki cümle «evet» oldu ve vurgusu iç parçaya bağlandı: 6 (`Kubbeler` → `Payeler`, «altı ayak»), 7 (boş → `Ic_Dukkanlar`, «içeride … otuz iki mahzen»). «evet» olan cümlede uygulama örtüyü kaldırır («İçini göster»; gruplar `../3d/model.json`). Yukarıdaki cümle 7–8 notundaki «iç mekân modelde yok» bilgisi v05–v09 içindir.
 - **Vurgu adları** `bedesten_v05.glb`'den (v06'da aynı, 22 Ekim 2026): `Kubbeler`, `Govde`, `Dukkanlar`. v03'teki `Ic_Bedesten_Sokagi` v04'ten beri yok (cümle 7'den çıkarıldı). Cümle 10'da `Kapilar` (dört giriş kapısı) yerine kuyumcu birimlerini gösteren `Dukkanlar` kullanıldı.
 
 ## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
@@ -45,3 +46,18 @@ Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model d
 | 11 | Merkez | 315° (kuzeybatı) | 35° | bütün yapı | Güneydoğuya, Koza Han yönüne bakış (Koza Han ~150 m güneydoğuda, OSM); kart Koza Han'ı gösterir |
 
 Yön kaynağı: `veri/bursa/osm_secilen.csv` (Bedesten 40.18517, 29.06205; Ulucami 40.18393, 29.06176). Eski tablodaki «Ulucami batıda» tahmini yanlıştı.
+
+## Akar akışı
+
+Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.
+
+| # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |
+|---|---|---|---|---|---|---|
+| 4 | yildirim-bayezid-bedesteni | ulu-cami | Ulucami | Gelir → Ulucami | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |
+
+## Yalnız rotada
+Bu cümleler rotanın bir sonraki durağına yönlendirir; eser rotadan açılmadıysa hikâyede atlanır (29 Ekim 2026; design/test-redmi9t-v2/hazirla.py → cümlenin `rota` alanı).
+
+| # |
+|---|
+| 11 |

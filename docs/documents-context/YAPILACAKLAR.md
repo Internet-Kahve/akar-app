@@ -4,7 +4,7 @@
 
 ## Şu anki durum (bir bakışta)
 
-- **Prototip** (`design/test-redmi9t-v2/`): harita + 7 eser 3D, «Eser hakkında» okuma düzeni (yalnız Ulucami), Geçmişi Gör (Ulucami), bulmaca/rozet (Ulucami), rota. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
+- **Prototip** (`design/test-redmi9t-v2/`): 11 eser, 3 il (Bursa 9, Konya 1, Hatay 1), 4 rol (Dinî, Ticari, Su, Eğitim); 7 eser 3D modelli, 4 eser yalnız fotoğraf (30 Ekim gece); asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (30 Ekim'de onaylandı), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
 - **Modeller:** pastel renkler + pişmiş AO, yer gölgesi web'de. Toplam ≈ 2,7 MB.
 - **Harita önizlemesi:** `design/harita/akar-harita-onizleme-v3.html` (ışık/renk paneli, «Pişmiş» hazır ayarı).
 - **Git:** `docs` dalında commit var, **push edilmedi**.
@@ -16,7 +16,7 @@
 | 1 | `git push origin docs` | Muhammed (terminal) | Bu bağlantıdan push yapılamıyor (sanal makinede SSH anahtarı yok). Sonra PR: https://github.com/Internet-Kahve/akar-app/pull/new/docs |
 | 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `_promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
 | 3 | ~~Redmi 9T denemesi~~ yapıldı (29 Ekim, Muhammed): sorun yok. | — | — |
-| 4 | Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları | Talha | Ayrıntı aşağıda: «Talha'nın işleri». |
+| 4 | ~~Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları~~ yapıldı (30 Ekim gece, Claude; `yaptiklarim-2.md` §75). Görevler 30 Ekim'de onaylandı. Kalan: bugünkü eş / örnek iz (Koza Han, Orhan Bey Camii, Türbe) | Talha | Ayrıntı aşağıda. |
 
 ### Talha'nın işleri (7 eserin hepsi Ulucami seviyesine)
 
@@ -37,17 +37,47 @@ Notlar:
 
 ## 2. Tasarım
 
-- [ ] **Figma güncellemesi** (prototipte yapıldı, Figma'da eski):
-  - 3D eser sahnesi zemini: Bursa tonuna çalan gri geçiş (#DDE4E5 → #A7B4B7)
-  - Eser hakkında: geri düğmesi kapağın sol üst köşesinde; aşağıda sekme çubuğunda «‹ Ulucami»; sekme şeridinde solma + ‹ › okları; bölüm başlığı fotoğraftan önce; alıntı üstündeki altın süs yok; fotoğraflar kırpılmadan (kendi oranında); fotoğraf şeridinde «1 / 4» sayacı ve oklar; «büyüt» simgesi; kapakta akşam fotoğrafı (envanter s.19)
-  - Galeri fotoğrafları tıklanır (ışık kutusu)
-  - Harita: filtre «Ticari (akar)», boş filtreler gizli, listede «3D» etiketi yok
+- [x] **Su ve Eğitim kategorileri, Konya ve Hatay** (30 Ekim gece): İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii; yalnız fotoğrafla. Kalan: koordinatların uydu ile doğrulanması, görevlerin gözden geçirilmesi, istenirse 3D.
+
+- [x] **Asıl tema buzlu** (30 Ekim, Talha): prototipte varsayılan; ürüne taşınacak (`ENTEGRASYON_29EKIM.md` §5.13). Deneme tonları (`sicak`, `il`, `bant`) ve kullanılmayan tema dosyaları temizlenebilir.
+
+- [x] **Figma güncellemesi** (29 Ekim, `_promptlar/PROMPT_figma_guncelle_29ekim.md`): dokuz madde işlendi, Claude ekran görüntülerinden kontrol etti. Kalan küçük düzeltmeler (mobil geri düğmesi, sekme solması, lejant) ikinci prompt'la verildi.
 - [ ] **3D eser ekranı, masaüstünde sol panelin alt yarısı boş** (karar bekliyor): kısa künye (yaptıran, malzeme, envanter sayfası) ya da «İçini göster / parçalara dokun» ipucu.
 - [ ] **Pin çakışması:** düzeltildi (etiket yer bulamazsa öbür yana geçer, önemli eser önce çizilir, yakında pin küçülür) ama **etiketler test ortamında çizilemedi** (yazı tipi indirilemiyor). Gerçek haritada ve Redmi'de bak.
-- [ ] **Diğer eserlerin kapak fotoğrafı:** `eser.json → hakkinda_kapak` yalnız Ulucami'de (envanterdeki açılış fotoğrafı). Diğer 6 eser için envanterdeki açılış fotoğrafı bulunup yazılmalı.
+- [x] **Diğer eserlerin kapak fotoğrafı:** 30 Ekim'de altı esere de yazıldı (envanterin açılış fotoğrafı; Türbe'de galeride olmadığı için dış fotoğraf).
 - [ ] **Ulucami ana referans.** Tasarım, UX kararları ve veri biçimi için örnek Ulucami. Diğer eserlerde bir şey eksikse Ulucami'deki karşılığına bakılır. Bunlar: okuma düzeni, parça kartları, «İçini göster», görev, Geçmişi Gör, kapak.
-- [ ] **Eser hakkında okuma düzeni yalnız Ulucami'de** (`icerik/eser-hakkinda-okuma.md`: özet, rakam, alıntı, zaman çizelgesi, 3D açıları). Diğer eserlerde tam metin düz görünüyor. En azından Koza Han ve Bedesten için yapılmalı (demo).
+- [x] **Eser hakkında okuma düzeni** yedi eserde (30 Ekim): envanter metninin tamamı + `eser-hakkinda-okuma.md` + kitap fotoğrafları.
+- [ ] **Kitap fotoğraflarının alt metinleri** (altı eser, geçici: «s. N, k. fotoğraf») ve arşivdeki yüksek çözünürlüklü asıllarla eşleştirme (Ulucami'deki gibi).
 - [ ] **Renk ince ayarı:** pastel renkler biraz açık bulunursa önizleme v3 sağ panelinde «Renk parlaklığı / Doygunluk» → «Ayarları kopyala» → `veri/sehir/bursa.json → harita_isik`.
+
+## 2b. Figma'da olup prototipte olmayanlar (29 Ekim taraması)
+
+Figma `akar-yeni` ekranları prototiple tek tek karşılaştırıldı. Düğüm numaraları Figma'daki ekranlardır.
+
+**Demo için önerilen (prototipe eklenecek):** Hepsi yapıldı (29 Ekim akşamı; `yaptiklarim-2.md` §66, §67).
+1. ✅ **Anlatım · Akar akışı** (karar: haritada altın yay; veri `hikaye.md` «## Akar akışı») (D 1:2893, B 80:3004): «Yıldırım Bayezid, Ulucami'ye gelir sağlamak için Bedesten'i yaptırdı» cümlesinde harita Bedesten → Ulucami kesik çizgisini gösterir. Vakıf hikâyesinin özü; jüri için en önemli eksik.
+2. ✅ **İlk açılış karşılama kartı** (D 1:4042, WF 1:5616): şehir deseni şeridi, «Şehrin hikâyesine karış.», üç madde (Dinle ya da oku · Geçmişini gör · Vakfı anla), «Evden gez» / «Konumumu kullan», «Vakıf nedir? ›». Yükleme ekranından sonra yalnız ilk girişte.
+3. ✅ **3D açılamadı / görsel kademe** (D 1:4853, 1:4911; B 1:7802, 1:7840): 3D açılmazsa gravür/fotoğrafa düşer, üstte «3D açılamadı, görsellerle gösteriliyor · Yeniden dene». Zayıf cihazda «Bu cihazda 3D ağır kaldı» (bu kısım yapılmadı).
+4. ✅ **Kaynak detayı** (D 1:3193, WF 1:7027): «Kaynak: … ›» dokununca kitap, sayfa ve güven bilgisi.
+5. ✅ **Evden gez kipi ve konum seçimi** (D 1:4428, 1:4685; WF 1:5742, 1:7694): «Yakınımda ▾» menüsünde «Evden gez»; liste «Bursa'daki eserler», mesafe yok.
+
+**Üründe zaten olan (prototipe eklemeye gerek yok, ürün ekibi Figma'ya göre bitirir):**
+- İz Bırak akışı (1:3328, 1:3364, 1:3409; WF 1:7236, 1:7254, 1:7267, 108:2856).
+- Yaşayan hafıza (82:2735, 86:2733; WF 108:2765, 108:2807).
+- Giriş, e-posta kodu, KVKK, avatar menüsü, girişli profil (1:3055, 1:3816, 80:2930, 1:2065; WF 1:6960, 1:7672, 1:7544, 1:7372).
+- Rota akışı: Rotam, Rota aktif, Vardın, Rota tamamlandı, Tüm rotalar, Bana rota oluştur, Rota önerisi (1:2447, 1:2494, 80:2764, 80:2826, 1:3938, 80:2557, 80:2668; WF karşılıkları).
+- Arama ekranı ve sonuç yok (1:2141, 1:4522; WF 1:5925).
+- Tüm eserler + filtre (1:2296; WF 1:6065, 1:6119).
+- Bağlantı yok ve durum ekranları (1:4577, 1:7615).
+
+**Bilinçli fark (değiştirme):**
+- Şehir seçici (WF 1:5839): prototipte küre görünümü.
+- Anlatım altyazı düzeni (1:2730): alternatif; panel düzeni seçildi.
+- Birlikte Gez (1:3500; WF 1:7330, 1:7355): üründe de deneysel; kapsam kararı bekliyor.
+
+**Tersi (prototipte olup Figma'da olmayan, Figma'ya işlenecek):** hikâye bitince tebrik kartı (Hikâye sonrası 1:2991 / 1:6925 yerine), TR \| EN dil seçici.
+
+**Çakışma (çözüldü, 29 Ekim):** Figma'da «Giriş isteği (hikâye bitince)» var; prototipte hikâye bitince tebrik kartı çıkıyor. Karar: misafirse tebrik kartının altında «Rozetlerini kaybetme · Giriş yap» satırı; iki ayrı pencere üst üste açılmaz. Figma'ya da işlenmeli.
 
 ## 3. Ekip notları (frontend / backend)
 
@@ -55,7 +85,7 @@ Notlar:
 
 - [ ] Veri dosyaları ve alanları: `eserler/<eser>/eser.json` (hakkinda_kapak dahil), `3d/model.json`, `veri/sehir/*.json` (`kimlik`: renk, desen, 3D sahne zemini; `harita_isik`), `veri/rota/*.json`, `icerik/gorevler.json` (görev/rozet şeması), `gecmisi-gor/*.json`
 - [ ] GLB kuralları: AO `occlusionTexture.texCoord = 1`, köşe rengi yok, «Yer_Golgesi» yok, boyut sınırı, parça adları = hikâye vurgu adları
-- [ ] Haritadaki model katmanı: ışık `harita_isik`'ten, web yer gölgesi (kodla üretilen doku), taban izi ve OSM bina kaldırma kuralı (modele değen bina bütünüyle gider, 3 m pay), küre
+- [ ] Haritadaki model katmanı: ışık `harita_isik`'ten, web yer gölgesi (kodla üretilen doku), taban izi ve OSM bina kaldırma kuralı (ürünle aynı: merkezi taban izi + 3 m içinde ve alanı taban izinin 1,6 katından küçük bina gizlenir; ENTEGRASYON §4), küre
 - [ ] Zemin titremesi (z-fighting) düzeltmesi ve model kuralı (zemin katmanları arası ≥ 3 cm)
 - [ ] Stil: `design/harita/akar-style-ozel-v2.json`
 
@@ -64,7 +94,7 @@ Notlar:
 Değerlendirme: tasarım ve teknik güçlü; **zayıf yanlar bütünlük/demo ve etki hikâyesi.**
 
 - [ ] **«Bu Vakıf Katılım için neden önemli?»** Etki hikâyesi: akar kavramı (vakfı yaşatan gelir yapıları; han, bedesten, hamam), vakıf mirasının görünürlüğü, ziyaretçiyi esere getirme, ölçülebilir hedefler (ziyaret, okuma, rota tamamlama).
-- [ ] **Sürdürülebilirlik:** içerik envanterden veri hattıyla geliyor; yeni şehir = yeni klasör (Konya, Hatay, Kütahya «Yakında»); maliyet ve bakım.
+- [ ] **Sürdürülebilirlik:** içerik envanterden veri hattıyla geliyor; yeni şehir = yeni klasör (Konya ve Hatay'da ilk eser 30 Ekim'de kodsuz eklendi; Kütahya «Yakında»); maliyet ve bakım.
 - [ ] **Demo senaryosu (≈ 3 dk):** harita → Ulucami 3D → İçini göster → Eser hakkında → Geçmişi Gör → bulmaca/rozet → rota. Jüri Ulucami dışına tıklarsa ne görecek? (bkz. 1.4 ve 2.)
 - [ ] **Yedek demo videosu:** internet ya da cihaz sorununa karşı ekran kaydı.
 - [ ] Fotoğraf izinleri/lisans: Foto Atlas ND kayıtlar kırpılmaz; SALT için yazılı izin; Bedesten/Emir/Hamam eski fotoğrafları (bkz. `yaptiklarim-2.md` §27).

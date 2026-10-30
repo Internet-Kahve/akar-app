@@ -54,3 +54,18 @@ Görev dosyasında `hikaye.md` tablosunda Açı sütunu yok; açı panelde model
 | 12 | Merkez | (11'de kalır) | | | Kapanış; Bedesten'e bakan kuzey cephe, kart Bedesten'i gösterir |
 
 Yönler OSM merkezlerinden (`veri/bursa/osm_secilen.csv`, 20 Ekim 2026): Bedesten, Ulucami'nin yaklaşık 140 m kuzeyinde (biraz doğuya kayık); Koza Han yaklaşık 160 m doğu-kuzeydoğusunda. Eski tablodaki «Bedesten doğuda» tahmini yanlıştı. Hikâye metninde yön bilgisi verilmez.
+
+## Akar akışı
+
+Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.
+
+| # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |
+|---|---|---|---|---|---|---|
+| 11 | yildirim-bayezid-bedesteni | ulu-cami | Ulucami | Gelir → Ulucami | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış |
+
+## Yalnız rotada
+Bu cümleler rotanın bir sonraki durağına yönlendirir; eser rotadan açılmadıysa hikâyede atlanır (29 Ekim 2026; design/test-redmi9t-v2/hazirla.py → cümlenin `rota` alanı).
+
+| # |
+|---|
+| 12 |

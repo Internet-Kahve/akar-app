@@ -1,0 +1,19 @@
+{
+  "_aciklama": "Eserin kimlik kaydı. Prototip (hazirla.py) eserleri bu dosyalardan bulur; üründe eser tablosunun alanları. 3D modeli yok (model.json yok): eser sayfası yalnız fotoğrafla açılır.",
+  "id": "habib-i-neccar-camii",
+  "sira": 11,
+  "ad": "Habib-i Neccar Camii",
+  "yil": "",
+  "yaptiran": "",
+  "tur": "Cami",
+  "ikon": "cami",
+  "rol": "dini",
+  "kisa": "Anadolu’da yapılan ilk cami olarak anılan, Antakya’daki külliye.",
+  "il": "Hatay",
+  "ilce": "Antakya",
+  "lat": 36.2015769,
+  "lon": 36.1655096,
+  "_kaynak": "Kimlik: Hatay İli Vakıf Eserleri, PDF s.28–36 (tek cilt; kodda «E cilt-1»). Yapım yılı kitapta rivayet (M.S. 636) ve kitabeler (Baybars, 1268) olarak geçtiği için boş bırakıldı. Konum: Kültür Envanteri (kulturenvanteri.com «Habib-i Neccar Camii»), 30 Ekim 2026.",
+  "hakkinda_kapak": "kitap/s29-01.jpg",
+  "_hakkinda_kapak": "«Eser hakkında» kapak fotoğrafı: envanterde kaydın açılış fotoğrafı (Hatay İli Vakıf Eserleri, PDF s.29). 30 Ekim 2026."
+}

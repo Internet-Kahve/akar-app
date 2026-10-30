@@ -1,10 +1,33 @@
 {
-  "_aciklama": "3D model ayarı (28 Ekim 2026). glb: export/ içindeki dosya adı (uzantısız; _sunum otomatik). yaw: Haritada kuzeye göre dönüş (derece). OSM yön açısı 90°'ye indirgendiği için 180° belirsizdir; Ulucami 22 Ekim'de 174 yapıldı. ana_parca: Haritada modeli konuma oturtmak için ortası alınan parça; avlu, şadırvan gibi ek yapılar kutuyu kaydırmaz. Boşsa bütün modelin kutusu kullanılır. kaydirma_m: 22 Ekim 2026: modelin ana gövdesi tepeden OSM bina sınırlarıyla karşılaştırılıp metre cinsinden kaydırıldı (doğu, kuzey). Pin de bu noktaya oturur.",
-  "glb": "orhan-bey-camii_v10",
+  "_aciklama": "3D model ayarı (28 Ekim 2026). glb: export/ içindeki dosya adı (uzantısız; _sunum otomatik). yaw: Haritada kuzeye göre dönüş (derece). OSM yön açısı 90°'ye indirgendiği için 180° belirsizdir; Ulucami 22 Ekim'de 174 yapıldı. ana_parca: Haritada modeli konuma oturtmak için ortası alınan parça; avlu, şadırvan gibi ek yapılar kutuyu kaydırmaz. Boşsa bütün modelin kutusu kullanılır. kaydirma_m: 22 Ekim 2026: modelin ana gövdesi tepeden OSM bina sınırlarıyla karşılaştırılıp metre cinsinden kaydırıldı (doğu, kuzey). Pin de bu noktaya oturur. ortu_gruplari: «İçini göster» düğmesinde yukarıdan aşağı kalkan parça grupları; ilk grup önce kalkar, iniş tersten. ic_parcalar: yalnız sunum GLB'sinde olan iç mekân parçaları; harita GLB'sinde yok (29 Ekim 2026, eser başına iki model).",
+  "glb": "orhan-bey-camii_v11",
   "yaw": 13,
   "ana_parca": "Cami_Govde",
   "kaydirma_m": {
     "dogu": -2.2,
     "kuzey": -5.6
-  }
+  },
+  "ortu_gruplari": [
+    [
+      "Kubbe_Ana",
+      "Kubbe_Mihrap",
+      "Kubbe_Tabhaneler",
+      "Kubbe_Pencereler",
+      "Ic_Kubbeler"
+    ],
+    [
+      "Cami_Ortu"
+    ]
+  ],
+  "ic_parcalar": [
+    "Orta_Mekan",
+    "Mihrap_Eyvani",
+    "Tabhaneler",
+    "Giris_Koridoru",
+    "Pandantifler",
+    "Ic_Kubbeler",
+    "Ic_Zemin",
+    "Ic_Mihrap",
+    "Minber"
+  ]
 }
