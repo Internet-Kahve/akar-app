@@ -240,6 +240,28 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   for (const bad of [0, 1.5, "2", -1]) {
     await attempt(sites[1]!, { displayOrder: bad }, /Site test-1: displayOrder must be an integer of at least 1/);
   }
+  // A photo-only site (no 3D model, no archive) in a city of its own: published without a model row; a part name stops it, as does a short manifest.
+  const photoOnly = {
+    id: "photo-only", name: "Fotoğraflı eser", city: "Konya", district: "Selçuklu", year: "", architect: "—", kind: "egitim", displayOrder: null,
+    coordinates: [32.49, 37.87], minutes: 1, description: "Kaynaklı içerik", status: "published", tier: "Tier 2", source: "Konya envanteri", stories: [],
+    sources: [{ id: "source-photo-only", title: "Envanter", kind: "book", author: "", year: "", page: "", url: "", trust: "verified" }],
+    photos: [{ id: "photo-only-1", file: "photo.jpg", src: "", alt: "Avlu", title: "Avlu", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: "source-photo-only", galleryPosition: 1 }],
+    coverPhotoId: "photo-only-1", historyImages: [], sampleTraces: [], sections: [], chapters: [], bookPhotos: [], aboutCoverPhotoId: null, partCards: [],
+    tasks: [{ id: "task-photo-only", kind: "quiz", title: "Soru", prompt: "Hangisi?", photoId: "photo-only-1", part: null as string | null, source: null, trust: "verified", correctIndex: 0,
+      details: { options: ["A", "B"], hints: [], correctText: "A doğru", wrongText: "Tekrar dene", fromHome: true } }],
+    badges: [{ id: "badge-photo-only", title: "Hikâye", text: "Dinledin", condition: "story", taskId: null, onSiteLabel: false }],
+  };
+  await writeFile(path, JSON.stringify({ ...manifest, sites: [...sites, photoOnly] }));
+  assert.equal((await importDemoContent(path, root, true, env)).sites, 8);
+  const photoSite = (await ctx.app.inject({ url: "/v1/sites/photo-only" })).json();
+  assert.deepEqual(photoSite.media.map((m: { kind: string }) => m.kind), ["photo"], "a photo-only site has no model row");
+  assert.deepEqual(photoSite.historyImages, []);
+  assert.equal((await served()).find((c) => c.id === "konya")!.siteCount, 1);
+  photoOnly.tasks[0]!.part = "kubbe_1";
+  await writeFile(path, JSON.stringify({ ...manifest, sites: [...sites, photoOnly] }));
+  await assert.rejects(importDemoContent(path, root, false, {}), /Task part is not a model part: photo-only task-photo-only kubbe_1/);
+  await writeFile(path, JSON.stringify({ ...manifest, sites: sites.slice(0, 6) }));
+  await assert.rejects(importDemoContent(path, root, false, {}), /at least seven sites/);
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified", chapterId: null, photos: [] }];
   await writeFile(path, JSON.stringify(manifest));
