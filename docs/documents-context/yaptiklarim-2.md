@@ -1185,3 +1185,16 @@ Dosyada renk değişkeni ve yazı stili yok; renkler listedeki hex değerleriyle
 - Enine kemer bandı 0,45 → 0,50 m (fotoğraf 05: yaklaşık iki sıra tuğla).
 - Harita ↔ sunum en çok %0,093; harita v17 ↔ v18 en çok %0,005. Doğrulamada c ve d geçti.
 - `ic_detay.png`'deki alt kat revak karesi yenilendi; `modelleri-gom.py` çalıştırıldı.
+
+## 77. Tanıtım sayfası, 3D ışığı, anlatım kartı, logo, temizlik (30 Ekim 2026, Claude)
+
+- **Tanıtım sayfası** (`design/test-redmi9t-v2/tanitim.html`, commit bec67d6): akar fikri (Bedesten → Ulucami gelir akışı), dört uygulama ekranı, canlı 3D Ulucami («İçini göster»), Geçmişi Gör kaydırıcısı, veriden eser kartları ve il süzgeci, örnek rota, güven etiketleri, kaynaklar; sonda haritaya yönlendirir. 3D bölümünün altında öbür 3D eserler ve «Haritada 3D gez».
+- **3D ışığı** (24c4efa → 6da1838, 3614031): harita ve detayda tanıtımdaki ışık (ACES, gök ışığı, gölgeli güneş). Denenen ve bırakılanlar: kameraya bağlı güneş (gölge kamerayı izliyordu, model kayboluyordu), model eksenine bağlı güneş (bazı eserlerde arkadan vuruyordu). Son hâl: güneş her eserin ön cephesine göre, `model.json → on_yonu` (girişin baktığı yön; değerler modeldeki giriş parçalarından), ön sol çapraz 40°; haritada 20°, 62°, şiddet 1,5. Gölge geçişinden sonra çizim alanı her karede düzeltiliyor (yüksek DPI'da model kayboluyordu). `harita_isik.yon` ürünün aktarma betiği için korunuyor.
+- **Anlatım** (95ec545): vurgusuz cümlede yapı 360° döner; Ulucami 3. cümlenin taç kapı vurgusu kaldırıldı. Fotoğraf kartı kenara yaslanır (m: hikâye kartının üstü, M: sol alt), kadraj kart kadar kayar; kart sürüklenir, dokununca parça kartı ya da büyük fotoğraf.
+- **Parça kartı** (0bfba47): fotoğraflar arası oklar, dokunulabilir noktalar, ← → tuşları.
+- **Bulmaca:** «3D modelde bul» eseri her zaman 3D görünümde açar (kayıtlı Fotoğraf tercihi olsa da). On görev paketi onaylandı, `_taslak: false` (PR #67 sözleşmesi).
+- **Logo:** masaüstü üst çubuk, mobil arama çubuğunda kubbeli «A», favicon ve ana ekran simgesi (`design/logo/`).
+- **3D modeller:** Koza Han v18 revak döşemesi onaylandı; iç mekân turu kapandı, Orhan Bey Hamamı ve Emir Hanı ertelendi.
+- **Temizlik:** kullanılmayan tema denemeleri silindi (eeffc57). Repo dışında, izlenmeyen eski blend/glb sürümleri (68 dosya, 60 MB), git artıkları ve logo PSD'si Çöp Sepeti'ne taşındı.
+- **Kontrol:** dört yeni eserin koordinatları OSM (Nominatim) ile karşılaştırıldı, doğru. `services/api/scripts/prepare-demo-content.py` bu içerikle çalıştırıldı: 11 eser, 86 cümle, 18 görev. Ürün testleri çalıştırılmadı (bağımlılıklar kurulu değil).
+- **PR:** #67 main'e birleşti (fc50005). Sonrakiler yeni PR'da.

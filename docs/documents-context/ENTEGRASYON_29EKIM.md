@@ -74,6 +74,15 @@ Ekran ekran liste [`PROTOTIP_URUN_FARKI.md`](PROTOTIP_URUN_FARKI.md) §13'te. K�
 - **Geçmişi Gör:** mobilde fotoğraf sabit, harita altta; «Bugün» kartı; fotoğrafın üstündeki «Kamerayı aç» kaldırıldı, «Doğrulanmış» etiketi küçüldü. Masaüstünde mini harita hep açık, mobilde isteğe bağlı.
 - **Hikâye · «Yalnız rotada» cümleleri:** `hikaye.md` sonunda `## Yalnız rotada` bölümündeki cümleler (sonraki durağa yönlendiren) yalnız eser rotadan açılınca okunur (`hazirla.py` → `rota: true`). Ulucami 12 ve Bedesten 11. **Ürün:** `story_blocks`'a `route_only boolean`.
 - **Parça kartı her eserde, «İçini göster» Bedesten / Orhan Bey Camii / Orhan Gazi Türbesi'nde de:** kod aynı, veri dolunca açılır (§5.1, §5.2).
+- **30 Ekim (gün içi), prototipte ayrıca:**
+  - **3D ışığı** tanıtım sayfasındaki gibi; güneş her eserin ön cephesine göre (`model.json → on_yonu`). §3.
+  - **Anlatım:** vurgusuz cümlede yapı döner; fotoğraf kartı kenara yaslanır, sürüklenir. §2b.
+  - **Parça kartı:** fotoğraflar arasında sağ/sol okları, dokunulabilir noktalar, ← → tuşları (§5.1).
+  - **Bulmaca:** «3D modelde bul» eseri her zaman 3D görünümde açar (§5.5).
+  - **Logo:** mobil arama çubuğunda kubbeli «A» işareti, favicon ve ana ekran simgesi (`design/logo/isaret-a*.png`, `favicon-32/64.png`, `apple-touch-icon.png`). Ürünün `apps/web` başlığına ve `manifest`'ine aynı dosyalar.
+  - **Tanıtım sayfası:** `design/test-redmi9t-v2/tanitim.html` (tek dosya; veriyi `veri.json`'dan okur, ekran görüntüleri `tanitim/`). Ürüne alınacaksa: kök adres tanıtım, «Haritayı aç» uygulamaya.
+  - **Görevler onaylandı:** on görev paketinde `_taslak: false`; `prepare-demo-content.py` artık durmaz.
+  - **Uyumluluk:** `veri/sehir/bursa.json → harita_isik.yon` ürünün aktarma betiği için korunur (§3).
 
 
 ## 1. Önce bu: içe aktarma eski prototipe bağlı (kritik)
@@ -227,6 +236,9 @@ Yerleşim girilirken kontrol edilecek yerler:
 Önem sırasıyla. Her satırda veri kaynağı ve prototipteki karşılığı var.
 
 ### 5.1 3D parça kartları
+
+*30 Ekim:* kartın fotoğraf şeridinde sağ/sol okları (uçta gizlenir), dokunulabilir noktalar (24 px alan) ve ← → tuşları.
+
 - **Kaynak:** `eserler/<eser>/icerik/parcalar.md` (30 Ekim'den beri yedi eserin hepsinde).
 - **Bir satır:**
   - Parçalar (model düğüm adları, virgülle);
@@ -284,7 +296,7 @@ Yerleşim girilirken kontrol edilecek yerler:
 - **Öneri:** bölüme `extras jsonb` alanı (özet, rakam, alıntı, zaman, terim, kamera) ve eser düzeyinde `about_cover_media_id`.
 
 ### 5.5 Görevler ve eser rozetleri
-- **Kaynak:** `icerik/gorevler.json` (yedi eserde; Ulucami dışındakiler `_taslak: true`, içerik sorumlusu gözden geçirecek). Görev türleri:
+- **Kaynak:** `icerik/gorevler.json` (on bir eserde; 30 Ekim'de onaylandı, `_taslak: false`). Görev türleri:
   - `soru`: seçenekler, doğru cevap, ipuçları, doğru/yanlış metni, görsel, `parca`;
   - `saha`: evden karşılığı var, `evden_cozulur`.
 - `rozetler`: koşul `hikaye_bitti` ya da `gorev: <id>`; ayrıca `yerinde_etiketi`.
@@ -294,6 +306,7 @@ Yerleşim girilirken kontrol edilecek yerler:
   - Figma'dan puan ifadeleri kaldırıldı.
 - **Ürünle ilişki:** `quizzes` eser düzeyinde var. Saha görevi, ipucu ve eser rozeti yok. Rozet yalnız rota düzeyinde (`catalog_routes.badge_*`). Ürünün `point_events` tablosu puan tutuyor; tasarım kararıyla çelişiyor, konuşalım.
 - `parca` alanı: «3D modelde bul» görevi. Modeldeki parça adı; parça sadeleştirmesinden sonra adlar değişebilir (bkz. 1).
+- **«3D modelde bul» yönlendirmesi (30 Ekim 2026, not):** düğme eser sayfasını **3D görünümde** açmalı, fotoğraf galerisinde değil. Prototipte kullanıcının kayıtlı görünüm tercihi «Fotoğraf» olsa da bulmacadan gelindiyse 3D açılır, tercih değişmez (`app.js → gorunumAyar`, `gv.bul`). Üstte görev şeridi («Görev: 3D modelde … dokun»), doğru parçaya dokununca görev tamamlanır. Ürün: görev ekranından eser detayına `?gorunum=3d&gorev=<id>` gibi bir parametreyle gidilmeli; 3D modeli olmayan eserde saha görevinin evden karşılığı yok.
 
 ### 5.6 Şehir kaydı ve küre
 - **Kaynak:** `veri/sehir/*.json`. İçerik:

@@ -17,7 +17,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;', '<'
 const DETAY = (() => { try { const q = new URLSearchParams(location.search).get('detay'); if (q !== null) localStorage.setItem('akar.detay', q); return new Set((q ?? localStorage.getItem('akar.detay') ?? '').split(',').map((x) => x.trim()).filter(Boolean)); } catch { return new Set(); } })();
 const derinlikCubuk = (dk) => !DETAY.has('derinliksiz') ? `<span class="derinlik" aria-hidden="true">${[1, 2, 3, 4, 5].map((n) => `<i${n <= Math.min(5, Math.max(1, Math.round(dk / 3))) ? ' class="d"' : ''}></i>`).join('')}</span>` : '';
 /* 30 Ekim 2026: 3D modeli olmayan eser (model.json yok, yalnız fotoğraf): görünüm seçicisi gizlenir, sahne hep fotoğraf. Tercih cihazda kalır, modeli olan esere dönünce geri gelir. */
-const gorunumAyar = (e) => { const yok = !!e && !e.glb; durum.gorunum = yok ? 'foto' : (yerel('akar.gorunum') || 'foto'); document.body.classList.toggle('uc-yok', yok); };
+/* bulmacadan «3D modelde bul» ile gelindiyse (gv.bul) eser kayıtlı tercihe bakmadan 3D açılır; tercih değişmez (30 Ekim 2026) */
+const gorunumAyar = (e) => { const yok = !!e && !e.glb, bul = !!e && gv?.bul?.eser === e.id; durum.gorunum = yok ? 'foto' : bul ? '3d' : (yerel('akar.gorunum') || 'foto'); document.body.classList.toggle('uc-yok', yok); };
 const yerel = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } };
 
 /* ---------- ikonlar (lucide, strokeWidth 2) ---------- */

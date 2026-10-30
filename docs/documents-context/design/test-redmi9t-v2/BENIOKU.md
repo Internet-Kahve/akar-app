@@ -1,5 +1,10 @@
 # Redmi 9T prototipi ve performans testi · v2
 
+## 30 Ekim 2026 · bulmacadan 3D, parça kartında fotoğraf okları
+
+- **«3D modelde bul»** (saha görevi) eseri her zaman 3D görünümde açar; kayıtlı tercih «Fotoğraf» olsa da (tercih değişmez). `gorunumAyar` → `gv.bul`.
+- **Parça kartı:** birden çok fotoğrafta sağ/sol okları, dokunulabilir noktalar, ← → tuşları.
+
 ## 30 Ekim 2026 · anlatımda genel görünüm ve kenara yaslanan fotoğraf kartı
 
 Vurgusu boş cümlede 3D'de yapı yavaşça döner (dokununca durur); Ulucami 3. cümledeki taç kapı vurgusu kaldırıldı. Fotoğraf kartı vurgulanan yerin üstüne binmez: mobilde hikâye kartının üstünde, masaüstünde sol altta; model kartın yanında kalır. Kart sürüklenir, dokununca parça kartı (yoksa büyük fotoğraf) açılır. Ayrıntı: `ENTEGRASYON_29EKIM.md` §2b.

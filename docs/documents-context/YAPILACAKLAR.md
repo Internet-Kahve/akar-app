@@ -7,7 +7,8 @@
 - **Prototip** (`design/test-redmi9t-v2/`): 11 eser, 3 il (Bursa 9, Konya 1, Hatay 1), 4 rol (Dinî, Ticari, Su, Eğitim); 7 eser 3D modelli, 4 eser yalnız fotoğraf (30 Ekim gece); asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (30 Ekim'de onaylandı), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
 - **Modeller:** pastel renkler + pişmiş AO, yer gölgesi web'de. Toplam ≈ 2,7 MB.
 - **Harita önizlemesi:** `design/harita/akar-harita-onizleme-v3.html` (ışık/renk paneli, «Pişmiş» hazır ayarı).
-- **Git:** `docs` dalında commit var, **push edilmedi**.
+- **Git:** PR #67 main'e birleşti (30 Ekim, `fc50005`). Sonraki işler `docs` dalında, yeni PR ile (güneş ön cepheye göre, anlatım kartı, parça kartı okları, bulmacadan 3D).
+- **3D ışığı:** tanıtım sayfasındaki gibi; güneş her eserin ön cephesine göre (`model.json → on_yonu`). İç mekân turu kapandı (Ulucami v32, Bedesten v11, Türbe v06, Orhan Bey Camii v11, Koza Han v18); Orhan Bey Hamamı ve Emir Hanı ertelendi.
 
 ## 1. Hemen
 
@@ -49,6 +50,11 @@ Notlar:
 - [x] **Eser hakkında okuma düzeni** yedi eserde (30 Ekim): envanter metninin tamamı + `eser-hakkinda-okuma.md` + kitap fotoğrafları.
 - [ ] **Kitap fotoğraflarının alt metinleri** (altı eser, geçici: «s. N, k. fotoğraf») ve arşivdeki yüksek çözünürlüklü asıllarla eşleştirme (Ulucami'deki gibi).
 - [ ] **Renk ince ayarı:** pastel renkler biraz açık bulunursa önizleme v3 sağ panelinde «Renk parlaklığı / Doygunluk» → «Ayarları kopyala» → `veri/sehir/bursa.json → harita_isik`.
+- [ ] **Redmi 9T'de gölgeli ışık:** haritada 7 model gerçek gölgeyle; takılırsa haritada yalnız gölge kapatılır (Muhammed deneyecek).
+- [ ] **Bedesten'in ön cephesi:** dört yönde kapı var, `on_yonu` kuzey (4) seçildi (tahmin). Ana kapı başka cepheyse `model.json`'da değişir.
+- [ ] **Ürüne taşıma (ekip):** buzlu tema (§5.13), 3D ışığı ve `on_yonu` (§3, admin «ön cephe yönü»), anlatımda genel görünüm ve fotoğraf kartı (§2b, admin «döndürme»), parça kartı okları, «3D modelde bul» yönlendirmesi (§5.5), logo/favicon. Hepsi `ENTEGRASYON_29EKIM.md`'de.
+- [x] **Logo ve favicon** (30 Ekim): masaüstü üst çubuk, mobil arama çubuğunda «A» işareti, favicon, ana ekran simgesi.
+- [x] **Tanıtım sayfası** (30 Ekim): `tanitim.html`; haritaya ve öbür 3D eserlere yönlendirir. Arayüz değişirse `tanitim/` ekran görüntüleri yeniden çekilmeli.
 
 ## 2b. Figma'da olup prototipte olmayanlar (29 Ekim taraması)
 
