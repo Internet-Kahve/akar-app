@@ -16,6 +16,12 @@ import { PartCardDialog, partLabel } from "./part-card";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addSceneLights, groundShadow, saturate } from "../lib/scene-light";
 import {
+  fitHalfAngle,
+  NO_FRAME,
+  tourCarriesOn,
+  type SceneFrame,
+} from "../lib/story-scene";
+import {
   forgetDownload,
   rememberDownload,
   toDownloadProgress,
@@ -41,7 +47,9 @@ const TAP_MS = 600;
  * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
  * model's cover groups or sets them down; absent = leave them as the visitor left them.
  * `highlight` lights those parts (the "Eser hakkında" chapter being read); a tapped part's glow
- * replaces it until the card or name closes.
+ * replaces it until the card or name closes. `tour` (a story sentence about the whole building) turns the
+ * camera slowly once it has reached the pose, until the visitor touches the model; the next such sentence on
+ * the same pose carries on instead of going back. `frame` keeps the model out of what covers the canvas.
  * Parts: with `partCards`, only their parts respond to a tap and open the card (all of a card's
  * parts glow together); without cards every part shows its name. `onPick` (a site task waiting for
  * a tap) makes every part answer and sends the tapped part to it instead of opening a card. `scene`
@@ -55,6 +63,8 @@ export default function ModelViewer({
   pose,
   interior,
   highlight,
+  tour,
+  frame = NO_FRAME,
   partCards = [],
   onPick,
   sources = [],
@@ -67,6 +77,8 @@ export default function ModelViewer({
   pose?: CameraPose;
   interior?: boolean;
   highlight?: string[];
+  tour?: boolean;
+  frame?: SceneFrame;
   partCards?: PartCard[];
   onPick?: (part: string) => void;
   sources?: SiteSource[];
@@ -77,6 +89,14 @@ export default function ModelViewer({
   const aim = useRef<((pose: CameraPose) => void) | null>(null);
   const lift = useRef<((open: boolean, raise: boolean) => void) | null>(null);
   const select = useRef<((parts: string[]) => void) | null>(null);
+  const spin = useRef<((on: boolean) => void) | null>(null);
+  const reframe = useRef<(() => void) | null>(null);
+  /** The pose the running tour started from; empty once it stopped. */
+  const tourPose = useRef("");
+  const tourRef = useRef(tour);
+  tourRef.current = tour;
+  const frameRef = useRef(frame);
+  frameRef.current = frame;
   const poseRef = useRef(pose);
   poseRef.current = pose;
   const interiorRef = useRef(interior);
@@ -146,18 +166,77 @@ export default function ModelViewer({
         if (!disposed) renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
+      // The canvas shows a window of a larger view, so the model's centre lands in the part left free.
+      const applyFrame = () => {
+        const { width, height } = element.getBoundingClientRect();
+        if (!width || !height) return;
+        const { left, bottom } = frameRef.current;
+        if (left || bottom)
+          camera.setViewOffset(width + left, height + bottom, 0, bottom, width, height);
+        else {
+          camera.clearViewOffset();
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+        }
+      };
+      reframe.current = () => {
+        applyFrame();
+        render();
+      };
       observer = new ResizeObserver(() => {
         const { width, height } = element.getBoundingClientRect();
         if (!width || !height) return;
         renderer!.setSize(width, height);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        render();
+        reframe.current?.();
       });
       let frame = 0;
-      cancelTween = () => cancelAnimationFrame(frame);
+      let tweening = false;
+      let turnFrame = 0;
+      let turning = false;
+      let turnWanted = false;
+      let turnedAt = 0;
+      const stopTurn = () => {
+        turning = false;
+        controls!.autoRotate = false;
+        cancelAnimationFrame(turnFrame);
+        element.dataset.tour = "off";
+      };
+      const turn = (now: number) => {
+        controls!.update((now - turnedAt) / 1000);
+        turnedAt = now;
+        if (turning && !disposed) turnFrame = requestAnimationFrame(turn);
+      };
+      const startTurn = () => {
+        if (
+          turning ||
+          tweening ||
+          !turnWanted ||
+          matchMedia("(prefers-reduced-motion: reduce)").matches
+        )
+          return;
+        turning = true;
+        controls!.autoRotate = true;
+        turnedAt = performance.now();
+        turnFrame = requestAnimationFrame(turn);
+        element.dataset.tour = "on";
+      };
+      spin.current = (on) => {
+        turnWanted = on;
+        if (on) startTurn();
+        else stopTurn();
+      };
+      cancelTween = () => {
+        cancelAnimationFrame(frame);
+        cancelAnimationFrame(turnFrame);
+      };
       // A drag stops the camera where the visitor took it.
-      controls.addEventListener("start", () => cancelAnimationFrame(frame));
+      controls.addEventListener("start", () => {
+        cancelAnimationFrame(frame);
+        tweening = false;
+        turnWanted = false;
+        tourPose.current = "";
+        stopTurn();
+      });
       observer.observe(element);
       decoder = new DRACOLoader().setDecoderPath("/draco/").setWorkerLimit(2);
       new GLTFLoader().setDRACOLoader(decoder).load(
@@ -224,10 +303,10 @@ export default function ModelViewer({
           controls!.target.set(0, 0, 0);
           controls!.update();
           aim.current = (next) => {
-            // Distance at which the bounding sphere fits the narrower field of view.
-            const vfov = THREE.MathUtils.degToRad(camera.fov);
-            const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect);
-            const fit = sphere / Math.sin(Math.min(vfov, hfov) / 2);
+            // Distance at which the bounding sphere fits the narrower field of view of the free part.
+            const { width, height } = element.getBoundingClientRect();
+            const fit =
+              sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
             controls!.maxDistance = Math.max(radius * 4, fit * 1.6);
             const part = next.target ? root.getObjectByName(next.target) : undefined;
             const goal = part
@@ -244,6 +323,7 @@ export default function ModelViewer({
               ),
             );
             cancelAnimationFrame(frame);
+            stopTurn();
             if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
               camera.position.copy(to);
               controls!.target.copy(goal);
@@ -251,6 +331,7 @@ export default function ModelViewer({
               render();
               return;
             }
+            tweening = true;
             const from = camera.position.clone();
             const fromTarget = controls!.target.clone();
             const start = performance.now();
@@ -261,7 +342,12 @@ export default function ModelViewer({
               controls!.target.lerpVectors(fromTarget, goal, k);
               controls!.update();
               render();
-              if (t < 1 && !disposed) frame = requestAnimationFrame(step);
+              if (disposed) return;
+              if (t < 1) frame = requestAnimationFrame(step);
+              else {
+                tweening = false;
+                startTurn();
+              }
             };
             frame = requestAnimationFrame(step);
           };
@@ -498,7 +584,10 @@ export default function ModelViewer({
             setInside(open);
           }
           if (highlightRef.current?.length) select.current(highlightRef.current);
+          reframe.current?.();
           if (poseRef.current) aim.current(poseRef.current);
+          spin.current?.(!!tourRef.current);
+          tourPose.current = tourRef.current ? JSON.stringify(poseRef.current ?? null) : "";
           render();
           setStatus("");
           settledRef.current?.("ready");
@@ -527,6 +616,8 @@ export default function ModelViewer({
       aim.current = null;
       lift.current = null;
       select.current = null;
+      spin.current = null;
+      reframe.current = null;
       setInside(null);
       setPicked(null);
       cancelTween();
@@ -541,9 +632,16 @@ export default function ModelViewer({
       renderer?.domElement.remove();
     };
   }, [model.src, name, heading, groupsKey, partsKey, lightKey]);
+  // Before the pose: a sentence's camera is worked out for the frame of that sentence.
   useEffect(() => {
-    if (pose) aim.current?.(pose);
-  }, [pose]);
+    reframe.current?.();
+  }, [frame.left, frame.bottom]);
+  useEffect(() => {
+    const key = JSON.stringify(pose ?? null);
+    if (pose && !tourCarriesOn(tour, tourPose.current, key)) aim.current?.(pose);
+    spin.current?.(!!tour);
+    tourPose.current = tour ? key : "";
+  }, [pose, tour]);
   const highlightKey = (highlight ?? []).join("|");
   useEffect(() => {
     select.current?.(highlightRef.current ?? []);
