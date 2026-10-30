@@ -25,7 +25,7 @@
 
 Veritabanı şeması, içe aktarma ve UX kararları için örnek Ulucami. Bir alanın biçimi ya da bir etkileşimin nasıl davranacağı belirsizse Ulucami'nin dosyasına ve prototipteki Ulucami ekranlarına bakılsın.
 
-**30 Ekim 2026:** diğer altı eserin dosyaları da Ulucami biçiminde hazır (parça kartları, görevler, envanter metni, okuma katmanı, kitap fotoğrafları, kapak). Ayrıntı §0. Şema Ulucami'ye göre kurulursa yedi eser aynı içe aktarmayla gelir.
+**30 Ekim 2026:** diğer altı eserin dosyaları da Ulucami biçiminde hazır (parça kartları, görevler, envanter metni, okuma katmanı, kitap fotoğrafları, kapak). Ayrıntı §0. Şema Ulucami'ye göre kurulursa yedi eser aynı içe aktarmayla gelir. Ayrıca dört eser yalnız fotoğrafla eklendi (İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi · Konya, Habib-i Neccar Camii · Hatay); toplam 11 eser, 3 il, 4 rol (§0.1b).
 
 **İlke:** Prototipte esere ya da şehre özel değer kodda yazılmaz; her şey aşağıdaki veri dosyalarından okunur. Ürüne de böyle taşınmalı.
 
@@ -283,8 +283,8 @@ Yerleşim girilirken kontrol edilecek yerler:
   - `kimlik` (zemin rengi, desen, 3D sahne zemini);
   - `harita_isik`.
 - Prototipte zoom 9'un altında küre görünümüne geçiliyor, şehirler işaret olarak görünüyor:
-  - Bursa: «7 eser».
-  - Hatay, Konya, Kütahya: «Yakında».
+  - Bursa: «9 eser» (7'si 3D modelli, 2'si yalnız fotoğraf; 30 Ekim).
+  - Konya ve Hatay: «1 eser» (30 Ekim; yalnız fotoğraf). Kütahya: «Yakında» (kitabı yok).
 - `cities` tablosu bugün yalnız `id` ve `name` taşıyor.
 
 - **Küre ortalaması (29 Ekim):**

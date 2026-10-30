@@ -68,6 +68,8 @@ documents-context/
 
 ## Eser klasörü: `icerik/` (30 Ekim 2026, yedi eserde aynı)
 
+Yalnız fotoğraflı dört eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii) `3d/`, `parcalar.md` ve `eser-hakkinda-okuma.md` yok; fotoğraflar `foto/kitap/` içinde (envanter kitabından). Hatay kitabının metni `design/test-redmi9t-v2/_araclar/envanter_metni_cikar_hatay.py` ile çıkarılır.
+
 | Dosya | Ne | Uygulama okur mu |
 | --- | --- | --- |
 | `hikaye.md` | Hikâye cümleleri, 3D açıları, «Akar akışı», «Yalnız rotada» | evet |
