@@ -1,0 +1,16 @@
+# Karatay Medresesi · fotoğraflar
+
+30 Ekim 2026. Bu eserin fotoğrafları envanter kitabının kendi kaydından (kitaptaki fotoğraf, PDF'ten kesildi; `kitap-fotograflari.md`). Fotoğrafın bu esere ait olduğu kitaptaki yerinden belli; gözle de kontrol edildi. Tanınabilir yüz yok. Güven sütunu **öneridir**.
+
+Galeri sırası: dış kapak → iç / avlu → öne çıkan detay → diğerleri.
+
+| Dosya | Asıl dosya | Galeri sırası | Başlık | Kısa metin | Alt metin | Kaynak | Lisans | Güven | Not |
+|---|---|---|---|---|---|---|---|---|---|
+| `kitap/s45-02.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.45 | 1 | Karatay Medresesi | Kurşun kaplı büyük kubbe ve taçkapı. | Havadan: kesme taş gövde, kurşun kaplı kubbe ve aydınlık feneri, önde taçkapı. | E cilt-2 PDF s.45 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 2. |
+| `kitap/s45-04.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.45 | 2 | Taçkapı | Beyaz ve gri mermerden, Suriye etkili süsleme. | İki renkli mermer taçkapı, örgülü kuşaklar ve mukarnaslı niş. | E cilt-2 PDF s.45 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 1, 5. |
+| `kitap/s47-03.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.47 | 3 | Kubbe | 12 metre çapında, ortasında aydınlık feneri. | Aşağıdan bakış: turkuaz ve lacivert çinilerle kaplı kubbe, ortada ahşap kaplı aydınlık feneri. | E cilt-2 PDF s.47 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 6. |
+| `kitap/s46-01.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.46 | 4 | Eyvan ve avlu | Bugün Çini Eserler Müzesi. | İç mekân: çinili eyvan, avlunun ortasında havuz, duvar boyunca vitrinler. | E cilt-2 PDF s.46 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 3, 4, 8. |
+| `kitap/s46-03.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.46 | 5 | Çini mozaik | Yıldız ve kollu geometrik desen. | Turkuaz, lacivert ve siyah çinilerden yıldızlı geometrik mozaik. | E cilt-2 PDF s.46 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış | Hikâye: 7. |
+| `kitap/s45-03.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.45 | 6 | Tepeden | Kubbeler ve çevresi. | Tepeden: büyük kubbe, yan kubbeler ve medresenin yanındaki yol. | E cilt-2 PDF s.45 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış |  |
+| `kitap/s47-02.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.47 | 7 | Celaleddin Karatay'ın türbesi | Eyvanın güneyindeki oda. | Lacivert örtülü sanduka, tuğla kubbe. | E cilt-2 PDF s.47 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış |  |
+| `kitap/s46-04.jpg` | `veri/kaynak_pdf/konya-envanteri-2_cilt-web.pdf` s.46 | 8 | Sütun başlığı | Mermer süsleme. | Yapraklı mermer sütun başlığı ve oyma kuşak. | E cilt-2 PDF s.46 (fotoğraf: envanter kitabı) | Vakıf Katılım, Konya Vakıf Eserleri Cilt 2. Proje için verildi; kullanılabilir. | Doğrulanmış |  |

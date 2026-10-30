@@ -1,7 +1,8 @@
 // AKAR · parça sadeleştirme doğrulaması (29 Ekim 2026). Eski ve yeni sürümü karşılaştırır:
 // b) toplam üçgen/köşe, malzeme adları ve görünen renk (baseColorFactor × doku ortancası), AO texCoord 1 ve TEXCOORD_1, fazladan UV kanalı yok
-// c) içerik dosyalarında geçen her parça adı yeni uygulama VE sunum GLB'sinde var
-// d) kök parça sayısı (Zemin*, Cevre*, Olcek* ve model.json sunum_ek hariç); ana_parca kutu merkezi değişmedi
+// c) içerik dosyalarında (hikâye, kartlar, okuma, görevler) ve model.json'da (ortu_gruplari, ic_parcalar) geçen her parça adı yeni SUNUM GLB'sinde var
+// d) kök parça sayısı (Zemin*, Cevre*, Olcek* ve model.json sunum_ek hariç); ana_parca kutu merkezi değişmedi;
+//    29 Ekim 2026, eser başına iki model: harita (uygulama) GLB'sinde ic_parcalar dışındaki bütün yapı parçaları var, ic_parcalar'dan hiçbiri yok
 // Kullanım: GT_DIR=<kurulum> node parca_dogrula.mjs <eser klasörü> <ad> <eski> <yeni> <rapor.json>
 import { createRequire } from 'module'; import path from 'path'; import fs from 'fs';
 const require = createRequire(path.join(process.env.GT_DIR, 'x.js'));
@@ -47,8 +48,12 @@ for (const [x, y, t] of [[A, B, 'uygulama'], [As, Bs, 'sunum']]) {
   if ([...y.tc].some(v => v !== 1)) S.b.push(`${t}: AO texCoord ${[...y.tc]}`);
   if (JSON.stringify([...x.uv].sort()) !== JSON.stringify([...y.uv].sort())) S.b.push(`${t}: UV kanalları ${[...x.uv]} → ${[...y.uv]}`);
 }
+const IC = MJ.ic_parcalar || [];
 const yA = B.kok.filter(n => !ekMi(n)).sort(), yS = Bs.kok.filter(n => !ekMi(n)).sort();
-if (JSON.stringify(yA) !== JSON.stringify(yS)) S.d.push(`uygulama ve sunum yapı parçaları farklı: ${yA} | ${yS}`);
+for (const n of yS) if (!IC.includes(n) && !yA.includes(n)) S.d.push(`harita GLB'sinde yapı parçası eksik: ${n}`);
+for (const n of yA) if (IC.includes(n)) S.d.push(`iç parça harita GLB'sinde: ${n}`);
+for (const n of yA) if (!yS.includes(n)) S.d.push(`yalnız haritada olan parça: ${n}`);
+for (const n of IC) if (!yS.includes(n)) S.d.push(`ic_parcalar sunumda yok: ${n}`);
 const ap = MJ.ana_parca;
 if (ap) { const k0 = A.kutu[ap], k1 = B.kutu[ap]; if (!k1) S.d.push(`ana_parca ${ap} yeni uygulama GLB'sinde yok`);
   else { const f = Math.max(...[0, 2].map(q => Math.abs((k0.mn[q] + k0.mx[q]) / 2 - (k1.mn[q] + k1.mx[q]) / 2))); if (f > 0.01) S.d.push(`ana_parca ${ap} yatay merkezi ${(f * 100).toFixed(1)} cm kaydı`); } }   /* harita yalnız x/z merkezini kullanır (app.js) */
@@ -61,9 +66,9 @@ for (const f of dosyalar) { const ham = fs.readFileSync(path.join(U, f), 'utf8')
   const t = f.endsWith('.md') ? ham.split('\n').filter(l => l.startsWith('|')).join('\n') : ham;   // md: yalnız tablo satırları (notlardaki tarihsel adlar referans değil)
   for (const a of tumAd) if (!ekMi(a) && new RegExp(`(?<![A-Za-z0-9_])${a.replace(/[.]/g, '\\.')}(?![A-Za-z0-9_])`).test(t)) ref.push([f, a]);
   for (const m of t.matchAll(/`([A-Z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+)`/g)) if (!tumAd.has(m[1]) && /^[A-Z]/.test(m[1]) && !/^(DJI|ERD)_?\d/.test(m[1])) ref.push([f, m[1]]); }
-for (const [f, a] of ref) if (!B.kok.includes(a) || !Bs.kok.includes(a)) { if (!(MJ.sunum_ek || []).includes(a)) S.c.push(`${f}: ${a} yeni GLB'de yok`); }
+for (const [f, a] of ref) if (!Bs.kok.includes(a)) { if (!(MJ.sunum_ek || []).includes(a)) S.c.push(`${f}: ${a} yeni sunum GLB'sinde yok`); }
 const sonuc = { eser: path.basename(U), eski, yeni, gecti: { b: !S.b.length, c: !S.c.length, d: !S.d.length }, sorun: S,
-  kok_parca: { once: A.kok.filter(n => !ekMi(n)).length, sonra: yA.length, once_adlar: A.kok.filter(n => !ekMi(n)), sonra_adlar: yA },
+  kok_parca: { once: A.kok.filter(n => !ekMi(n)).length, sonra: yS.length, once_adlar: A.kok.filter(n => !ekMi(n)), sonra_adlar: yS, harita: yA.length, harita_adlar: yA, ic_parcalar: IC },
   toplam: { ucgen: [A.ucgen, B.ucgen], kose: [A.kose, B.kose], sunum_ucgen: [As.ucgen, Bs.ucgen] }, malzeme: Object.keys(B.mat).length,
   referanslar: [...new Set(ref.map(r => r[1]))].sort() };
 fs.writeFileSync(rYol, JSON.stringify(sonuc, null, 1));

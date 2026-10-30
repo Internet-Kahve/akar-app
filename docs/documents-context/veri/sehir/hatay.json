@@ -1,5 +1,5 @@
 {
-  "_aciklama": "Şehir kaydı (28 Ekim 2026). Envanteri var, uygulamaya henüz eklenmedi: küre görünümünde «Yakında» olarak görünür; eserleri eklenince kendiliğinden «n eser» olur. merkez yaklaşık il merkezidir (yalnız harita işareti için).",
+  "_aciklama": "Şehir kaydı (28 Ekim 2026; 30 Ekim 2026'da ilk eseri eklendi, envanter künyesi yazıldı). merkez yaklaşık il merkezidir; eserleri olduğu için küre görünümünde «n eser» olarak görünür.",
   "id": "hatay",
   "ad": "Hatay",
   "merkez": [
@@ -9,5 +9,14 @@
   "zoom": 14,
   "envanter_yili": 2022,
   "envanter_eser_sayisi": 117,
-  "_kaynak": "KÖK&KOD Vakıf Eserleri Envanter Projesi Bilgi Notu (hackathon/KOKKOD_Envanter_Projesi_Bilgi_Notu.pdf): şehir, envanter yılı ve belgelenen eser sayısı."
+  "_kaynak": "KÖK&KOD Vakıf Eserleri Envanter Projesi Bilgi Notu (hackathon/KOKKOD_Envanter_Projesi_Bilgi_Notu.pdf): şehir, envanter yılı ve belgelenen eser sayısı.",
+  "kimlik": {
+    "zemin": "#7A6340",
+    "desen_renk": "#DBCDB5",
+    "_not": "29 Ekim 2026: Hatay Vakıf Eserleri envanterinin kapak rengi (veri/kaynak_pdf/hatay-vakif-eserleri.pdf, s. 1–3 ölçümü #8C734C bronz, açık tonu #DBCDB5). Beyaz yazı kontrastı için bir tık koyusu (#7A6340, ~5.7:1). Desen henüz yok."
+  },
+  "foto_kunye": "Fotoğraf: Hatay İli Vakıf Eserleri",
+  "kaynakca": "Hatay İli Vakıf Eserleri (Vakıf Katılım, 2022).",
+  "envanter_adi": "Hatay İli Vakıf Eserleri",
+  "envanter_yayinci": "Vakıf Katılım, 2022"
 }

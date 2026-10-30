@@ -1,0 +1,289 @@
+/* AKAR · iki tema (29 Ekim 2026, 4. tur). Açmak: ?tema=buzlu | ?tema=cam · kapatmak: ?tema=sade.
+   Seçim cihazda kalır (akar.tema); kurallar yalnız html[data-tema=…] altında, varsayılan görünüm (app.css) değişmez.
+   Çıkış noktası: harita kartının «buzlu» ve «cam» seçenekleri (kullanıcı beğendi). Bu iki dil bütün uygulamaya taşındı:
+   - buzlu (gün): haritanın ve sayfanın üstünde yüzen her şey buzlu beyaz cam (blur 22 px); sis zemin, yumuşak renk lekeleri.
+   - cam (akşam): koyu, şeffaf cam (blur 18 px) ve beyaz yazı; koyu petrol harita; fotoğraf öne çıkar.
+   Renk kararı (29 Ekim 2026, 5. tur): ortak zemin + yöre rengi. Petrol yalnız Bursa envanterinin rengi; uygulama Konya, Hatay…
+   envanterlerini de taşıyacağı için ortak arayüz hiçbir şehre ait değil: taş/kireç nötr zemin, mürekkep yazı ve düğme, altın vurgu.
+   Yöre rengi (--sehir-aksan, --sehir-acik) eserin ilinin envanter cildinden gelir (veri/sehir/<il>.json → kimlik; app.js yoreUygula)
+   ve yalnız esere ait yüzeylerde kullanılır: eser başlığı bandı, «Eser hakkında» kapağı/başlıkları/sekmesi, harita kartının üst çizgisi,
+   keşif simgeleri, sayfa zeminindeki ilk renk lekesi. Kapaklardan ölçülen renkler: Bursa #225471, Konya #3D8285 (firuze), Hatay #8C734C (bronz).
+   İlin kimliği yoksa nötr mürekkep kalır. Güven etiketlerinin yeşil/kehribar tonları anlam taşıdığı için korunur.
+   Haritalar: harita/akar-style-buzlu.json, harita/akar-style-cam.json. Temaya göre harita kartı da kendiliğinden buzlu / cam olur
+   (?kart=… ile değiştirilebilir). Pinlerin rol renkleri (tokens.css) değişmez. */
+
+/* ------------------------------------------------ ortak: cam yüzey */
+html[data-tema="buzlu"],html[data-tema="cam"]{
+  --egri-cam:cubic-bezier(.2,.8,.2,1);
+}
+[data-tema] .arama,[data-tema] .cip,[data-tema] .daire,[data-tema] .zoom,[data-tema] .geri,[data-tema] .secici,[data-tema] .yuvarlak,[data-tema] .dil-sec,[data-tema] .ikon-btn,[data-tema] body.m #alt,[data-tema] body.m #eser-kart,[data-tema] #eser-pop,[data-tema] .eser-alt,[data-tema] .hikaye-kart,[data-tema] .cumle-sayfa,[data-tema] .karsilama,[data-tema] .yk-kart,[data-tema] body.d #ust,[data-tema] body.d #panel,[data-tema] body.d #panel-sekme,[data-tema] .hk-nav,[data-tema] .parca-kart,[data-tema] .tebrik,[data-tema] .yan-sayfa,[data-tema] .gv-sayfa,[data-tema] .konum-menu,[data-tema] .sehir-isaret,[data-tema] .akis-kart,[data-tema] .rota-kart,[data-tema] .pf-kutu,[data-tema] .sayfa-ic .kutu,[data-tema] .satir-link,[data-tema] .gg-alt,[data-tema] .gg-kart,[data-tema] .gg-kamera,[data-tema] .kart3d,[data-tema] .kubbe-dugme,[data-tema] .ipucu,[data-tema] .uh-kart,[data-tema] .rozet-bant,[data-tema] .gv-secenek,[data-tema] .gv-yol,[data-tema] .ea-kisayol button{background:var(--cam);-webkit-backdrop-filter:var(--bulan);backdrop-filter:var(--bulan);box-shadow:var(--cam-kenar),var(--cam-golge);border-color:transparent}
+[data-tema] body,[data-tema] #gorus,[data-tema] #acilis,[data-tema] .sayfa-ic,[data-tema] .gg,[data-tema] .hk,[data-tema] .gv,[data-tema] .pf,[data-tema] body.m .karsilama{background:var(--zemin)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-tema] .arama,[data-tema] .cip,[data-tema] .daire,[data-tema] .zoom,[data-tema] .geri,[data-tema] .secici,[data-tema] .yuvarlak,[data-tema] .dil-sec,[data-tema] .ikon-btn,[data-tema] body.m #alt,[data-tema] body.m #eser-kart,[data-tema] #eser-pop,[data-tema] .eser-alt,[data-tema] .hikaye-kart,[data-tema] .cumle-sayfa,[data-tema] .karsilama,[data-tema] .yk-kart,[data-tema] body.d #ust,[data-tema] body.d #panel,[data-tema] body.d #panel-sekme,[data-tema] .hk-nav,[data-tema] .parca-kart,[data-tema] .tebrik,[data-tema] .yan-sayfa,[data-tema] .gv-sayfa,[data-tema] .konum-menu,[data-tema] .sehir-isaret,[data-tema] .akis-kart,[data-tema] .rota-kart,[data-tema] .pf-kutu,[data-tema] .sayfa-ic .kutu,[data-tema] .satir-link,[data-tema] .gg-alt,[data-tema] .gg-kart,[data-tema] .gg-kamera,[data-tema] .kart3d,[data-tema] .kubbe-dugme,[data-tema] .ipucu,[data-tema] .uh-kart,[data-tema] .rozet-bant,[data-tema] .gv-secenek,[data-tema] .gv-yol,[data-tema] .ea-kisayol button{background:var(--cam-yedek)}}
+
+/* ================================================================ buzlu */
+html[data-tema="buzlu"]{
+  --bg:#EDEEEA; --surface:#F8F8F6; --text:#1A2328; --text-muted:#56616A; --border:#D9DCD7;
+  --primary:#1F2B31; --primary-dark:#11191D; --primary-light:#E2E5E1; --on-primary:#FFFFFF;   /* mürekkep: şehirden bağımsız */
+  --gold:#C9A13B; --gold-text:#86650F;
+  --sehir-aksan:#2F3B41; --sehir-acik:#C9D0D2;   /* yedek; ilin kimliği varsa app.js üzerine yazar */
+  --yore-tint:color-mix(in srgb,var(--sehir-aksan) 13%,#FFFFFF); --yore-yazi:var(--sehir-aksan);
+  --trust-verified:#2E6B4C; --trust-verified-bg:#DCEBE0; --trust-inferred:#7A5D22; --trust-inferred-bg:#F2E7CF; --trust-representative-bg:#E7E4F1;
+  --cam:rgba(255,255,255,.56); --cam-yedek:rgba(250,252,251,.95); --bulan:blur(22px) saturate(1.7);
+  --cam-kenar:inset 0 0 0 1px rgba(255,255,255,.72),inset 0 1px 0 rgba(255,255,255,.9); --cam-golge:0 10px 34px rgba(18,38,46,.14);
+  --golge:var(--cam-kenar),var(--cam-golge);
+  --zemin:radial-gradient(60% 45% at 12% 8%,color-mix(in srgb,var(--sehir-aksan) 17%,transparent),transparent 70%),radial-gradient(50% 40% at 92% 28%,rgba(201,161,59,.18),transparent 70%),radial-gradient(60% 45% at 38% 100%,rgba(176,160,132,.16),transparent 70%),#EDEEEA;
+  --sahne-ust:#E6E8E5; --sahne-alt:#B4BBBA;
+}
+/* ================================================================ cam */
+html[data-tema="cam"]{
+  color-scheme:dark;
+  --bg:#12171B; --surface:#1A2126; --text:#ECEFF0; --text-muted:#A7B0B5; --border:rgba(255,255,255,.14);
+  --primary:#E9ECEC; --primary-dark:#CDD3D5; --primary-light:rgba(255,255,255,.10); --on-primary:#12171B;   /* gece: açık mürekkep */
+  --gold:#E3BC5E; --gold-text:#EBCB7C; --error:#FF8A80;
+  --sehir-aksan:#2F3B41; --sehir-acik:#C9D0D2;
+  --yore-tint:color-mix(in srgb,var(--sehir-aksan) 45%,transparent); --yore-yazi:var(--sehir-acik);
+  --trust-verified:#86D9AD; --trust-verified-bg:rgba(134,217,173,.14); --trust-inferred:#EBCB7C; --trust-inferred-bg:rgba(227,188,94,.16);
+  --trust-representative:#C2B3EE; --trust-representative-bg:rgba(194,179,238,.16);
+  --cam:rgba(24,30,35,.48); --cam-yedek:rgba(24,30,35,.94); --bulan:blur(18px) saturate(1.5);
+  --cam-kenar:inset 0 0 0 1px rgba(255,255,255,.16),inset 0 1px 0 rgba(255,255,255,.22); --cam-golge:0 14px 40px rgba(0,0,0,.40);
+  --golge:var(--cam-kenar),var(--cam-golge);
+  --zemin:radial-gradient(60% 45% at 10% 6%,color-mix(in srgb,var(--sehir-aksan) 55%,transparent),transparent 70%),radial-gradient(50% 40% at 95% 30%,rgba(227,188,94,.12),transparent 70%),radial-gradient(70% 50% at 40% 105%,rgba(120,108,90,.18),transparent 70%),#12171B;
+  --sahne-ust:#1C2328; --sahne-alt:#0E1215;
+}
+
+/* ------------------------------------------------ ortak bileşenler (iki tema) */
+[data-tema] .btn{font-weight:600}   /* hap biçimi app.css'ten (sekme ve etiketlerle aynı dil) */
+[data-tema] .btn.ana{background:var(--primary);color:var(--on-primary);box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 35%,transparent)}
+[data-tema] .btn.ana:active{background:var(--primary-dark)}
+[data-tema] .btn.ikincil{background:var(--yore-tint);color:var(--yore-yazi)}   /* Oku vb.: yöre renginin açık tonu, zeminden ayrışsın */
+[data-tema] .btn.cerceve{background:transparent;border:1px solid var(--border);color:var(--text)}
+[data-tema] .cip{font-weight:500;color:var(--text)}
+[data-tema] .cip.koyu{background:var(--primary);color:var(--on-primary);box-shadow:none}
+[data-tema] .secici button[aria-checked="true"],[data-tema] .dil-sec [aria-pressed="true"]{background:var(--primary);color:var(--on-primary)}
+[data-tema] .sekme-grup{background:var(--primary-light)}
+[data-tema] .sekme-grup button[aria-selected="true"]{background:var(--surface);color:var(--text)}
+[data-tema] .sekme-grup.kayan button[aria-selected="true"]{background:transparent}
+[data-tema] .eser-satir.secili{background:var(--primary-light)}
+[data-tema] .eser-satir img,[data-tema] .eser-satir .gorsel-yok,[data-tema] .kart-ust img{border-radius:14px}
+[data-tema] .galeri figure{border-radius:22px}
+[data-tema] .eser-alt,[data-tema] #eser-kart,[data-tema] #eser-pop,[data-tema] .hikaye-kart,[data-tema] .karsilama,[data-tema] .yk-kart,[data-tema] .rota-kart{border-radius:24px}
+[data-tema] body.m #alt,[data-tema] .cumle-sayfa{border-radius:24px 24px 0 0}
+[data-tema] body.d #ust{border-bottom:0}
+[data-tema] body.d #panel{border-right:0}
+/* eser başlığı ve «Eser hakkında» kapağı: şehrin petrolü, desen altın-açık */
+[data-tema] .eb-bas,[data-tema] .hk-kapak{background:var(--sehir-aksan)}
+/* keşif yolları: yumuşak renkli simge daireleri */
+[data-tema] .ky .ky-daire{background:var(--yore-tint);color:var(--yore-yazi)}
+[data-tema] .ky-ok{color:var(--primary)}
+[data-tema] .ka-maddeler .ka-ik{background:var(--yore-tint);color:var(--yore-yazi)}
+[data-tema] .hk-sekme[aria-current="true"]{background:var(--sehir-aksan);border-color:var(--sehir-aksan);color:#fff}
+[data-tema] .hk-ilerleme i,[data-tema] .hk-no::before,[data-tema] .hk-rakam::before{background:var(--gold)}
+[data-tema] .hk-h2,[data-tema] .hk-h3,[data-tema] .hk-rakam b,[data-tema] .hk-zaman b,[data-tema] .hk-alinti p{color:var(--yore-yazi)}
+[data-tema="cam"] .hk-h2,[data-tema="cam"] .hk-h3{color:var(--text)}
+[data-tema] .akis-kart b{color:var(--primary)}
+[data-tema] .yildiz{background:var(--primary);color:var(--on-primary)}
+[data-tema] .avatar{background:var(--primary-light);color:var(--primary)}
+
+/* ------------------------------------------------ cam: koyu zeminde açık kalan sabit renkler */
+[data-tema="cam"] .koyu-zemin .secici button[aria-checked="true"]{background:var(--primary);color:var(--on-primary)}
+[data-tema="cam"] .yuvarlak.parca[aria-pressed="true"],[data-tema="cam"] .kubbe-dugme[aria-pressed="true"],[data-tema="cam"] .gv-yerinde,[data-tema="cam"] #gv-bul{background:rgba(227,188,94,.22);color:var(--gold-text)}
+[data-tema="cam"] .gv-ipucu-metin,[data-tema="cam"] .gv-rozet{background:rgba(227,188,94,.12)}
+[data-tema="cam"] .hk-sekme-ok,[data-tema="cam"] .hk-geri,[data-tema="cam"] .hk-serit-ok,[data-tema="cam"] .hk-serit-ok:hover,[data-tema="cam"] .gg-k-tutamak span,[data-tema="cam"] .cek-tutamak,[data-tema="cam"] .cek-sekme button[aria-selected="true"]{background:var(--surface);color:var(--text)}
+[data-tema="cam"] .hk-sekme{background:transparent;border-color:var(--border);color:var(--text-muted)}
+[data-tema="cam"] .hk-d .hk-nav-geri{background:transparent;border-color:var(--yore-yazi);color:var(--yore-yazi)}
+[data-tema="cam"] .hk-derin-dugme{background:transparent;border-color:var(--yore-yazi);color:var(--yore-yazi)}
+[data-tema="cam"] .hk-terim{text-decoration-color:var(--yore-yazi)}
+[data-tema="cam"] .acilis-sehir{color:var(--sehir-acik)}   /* koyu zeminde şehir adı: yöre renginin açık tonu */
+[data-tema="cam"] .btn.koyu{background:var(--primary);color:var(--on-primary)}
+[data-tema="cam"] .pk-ses[aria-pressed="true"]{color:#1C1606}
+[data-tema="cam"] .tutamak i{background:rgba(255,255,255,.3)}
+[data-tema="cam"] #ust .logo img,[data-tema="cam"] .acilis-logo,[data-tema="cam"] .ka-logo{filter:brightness(0) invert(1)}
+[data-tema="cam"] .gorsel-yok{background:#262E33;color:var(--text-muted)}
+[data-tema="cam"] .galeri figure{background:#1E252A}
+[data-tema="cam"] .maplibregl-ctrl-attrib{background:rgba(18,23,27,.6)!important;color:var(--text-muted)}
+[data-tema="cam"] .maplibregl-ctrl-attrib a{color:var(--text-muted)}
+[data-tema="buzlu"] #ust .logo img,[data-tema="buzlu"] .acilis-logo,[data-tema="buzlu"] .ka-logo{filter:brightness(0) opacity(.86)}   /* mürekkep logo: şehirden bağımsız */
+
+/* ------------------------------------------------ harita kartı (temaya göre kendiliğinden; ?kart= ile değişir) */
+[data-kart="cam"] #eser-kart,[data-kart="cam"] #eser-pop,[data-kart="perde"] #eser-kart,[data-kart="perde"] #eser-pop{padding:0;overflow:hidden;min-height:300px;display:flex;flex-direction:column;justify-content:flex-end;background:#1E2230;isolation:isolate}
+[data-kart="cam"] .kart-ust,[data-kart="perde"] .kart-ust{display:block;position:static}
+[data-kart="cam"] .kart-ust img,[data-kart="cam"] .kart-ust .gorsel-yok,[data-kart="perde"] .kart-ust img,[data-kart="perde"] .kart-ust .gorsel-yok{position:absolute;inset:0;width:100%!important;height:100%!important;border-radius:0!important;box-shadow:none!important;z-index:-2;object-fit:cover}
+[data-kart="cam"] .kapat,[data-kart="perde"] .kapat,[data-kart="buzlu"] .kapat{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.28);color:#fff;-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+[data-kart="cam"] .kart-ust>div,[data-kart="cam"] #eser-pop>p,[data-kart="cam"] .kart-alt{margin:0;padding:14px 16px 0;background:var(--kart-bant,rgba(255,255,255,.62));-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);color:var(--kart-yazi,#141B2B)}
+[data-kart="cam"] .kart-ust>div{margin:0 10px;border-radius:20px 20px 0 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+[data-kart="cam"] #eser-pop>p{margin:0 10px;padding-top:6px}
+[data-kart="cam"] .kart-alt{margin:0 10px 10px;padding:12px 16px 16px;border-radius:0 0 20px 20px}
+[data-kart="cam"] .kart-ust .meta{color:var(--kart-soluk,#3D4556)}
+[data-kart="cam"] .kart-ust h3{color:var(--kart-yazi,#141B2B)}
+[data-kart="perde"] #eser-kart::before,[data-kart="perde"] #eser-pop::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(14,18,28,0) 25%,rgba(14,18,28,.55) 55%,rgba(14,18,28,.92) 100%)}
+[data-kart="perde"] .kart-ust>div,[data-kart="perde"] #eser-pop>p{padding:0 18px;color:#fff}
+[data-kart="perde"] .kart-ust h3{color:#fff;font-size:26px;line-height:30px}
+[data-kart="perde"] .kart-ust .meta,[data-kart="perde"] #eser-pop>p{color:rgba(255,255,255,.82)}
+[data-kart="perde"] .kart-alt{padding:0 18px 18px;margin-top:14px}
+[data-kart="perde"] .kart-alt .btn.ana{background:#fff;color:#141B2B}
+[data-kart="perde"] .kart-alt .ikon-btn{background:rgba(255,255,255,.2);border:0;color:#fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+[data-kart="buzlu"] #eser-kart,[data-kart="buzlu"] #eser-pop{background:var(--kart-cam,rgba(255,255,255,.55));-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);
+  box-shadow:0 12px 40px rgba(20,27,43,.22),inset 0 0 0 1px rgba(255,255,255,.65)}
+/* yöre çizgisi: kartın üst kenarında eserin ilinin rengi (envanter cildinin rengi) */
+[data-tema] #eser-kart::after,[data-tema] #eser-pop::after{content:"";position:absolute;left:24px;right:24px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--sehir-aksan);pointer-events:none}
+[data-tema="cam"] #eser-kart::after,[data-tema="cam"] #eser-pop::after{background:var(--yore-yazi)}
+[data-kart="buzlu"] .kart-ust img{box-shadow:0 6px 16px rgba(20,27,43,.25)}
+[data-kart="buzlu"] .kapat{background:rgba(127,127,127,.16);color:var(--text)}
+[data-kart="buzlu"] .kart-alt .ikon-btn{background:rgba(255,255,255,.5);border-color:rgba(255,255,255,.7)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  [data-kart="cam"] .kart-ust>div,[data-kart="cam"] #eser-pop>p,[data-kart="cam"] .kart-alt{background:rgba(255,255,255,.9)}
+  [data-kart="buzlu"] #eser-kart,[data-kart="buzlu"] #eser-pop{background:rgba(255,255,255,.94)}}
+/* kart seçeneklerinde güven etiketi ve uzun düğme yazısı */
+[data-kart="perde"] .kart-ust .guven{background:rgba(255,255,255,.2);color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+html[data-tema="cam"]{--kart-bant:rgba(18,23,27,.58);--kart-yazi:#ECEFF0;--kart-soluk:#A7B0B5;--kart-cam:rgba(24,30,35,.5)}
+html[data-tema="buzlu"]{--kart-cam:rgba(255,255,255,.56)}
+[data-kart="cam"] .kart-ust>div{box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+/* keşif yolları (Eser hakkında · Geçmişi Gör · Bulmaca): kart içine alınmaz, envanter sayfası gibi düz çizgili liste kalır (29 Ekim kararı) */
+[data-tema="cam"] .tb-kopru b,[data-tema="cam"] .tb-kopru i{color:var(--yore-yazi)}
+[data-tema="cam"] .tb-kopru{border-color:var(--yore-yazi)}
+/* tebrik kartı koyu perdenin üstünde: cam bulanıklığı grileşip bulanık duruyordu → düz yüzey */
+[data-tema] .tebrik{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}
+/* eser başlığındaki geri düğmesi: cam hap değil, bant üstünde ince halkalı daire + «Harita» */
+[data-tema] .eb-bas .geri{background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff}
+[data-tema] .eb-bas .geri .ikon-btn{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);-webkit-backdrop-filter:none;backdrop-filter:none;color:#fff}
+/* Eser hakkında sekme çubuğu: ayrı cam kutu değil, üst çubuğun devamı; kenardan kenara, altında yalnız ince çizgi ve okuma ilerlemesi */
+[data-tema] .hk-nav{--hk-nav-zemin:color-mix(in srgb,var(--bg) 94%,transparent);border-radius:0;background:var(--hk-nav-zemin);
+  box-shadow:0 0 0 100vmax var(--hk-nav-zemin),0 1px 0 100vmax var(--border);clip-path:inset(0 -100vmax -1px)}   /* sütun içindeyken de kenardan kenara (ortalamaya bağlı değil) */
+/* parça kartı (29 Ekim 2026): ses düğmesi cam yüzeye karışıp kayboluyordu → yöre renginde dolu daire, çalarken altın; kart koyu perdede grileşmesin diye düz yüzey */
+[data-tema] .pk-ses{background:var(--sehir-aksan);color:#fff;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 6px 16px color-mix(in srgb,var(--sehir-aksan) 35%,transparent)}
+[data-tema] .pk-ses[aria-pressed="true"]{background:var(--gold);color:#1C1606;box-shadow:0 6px 16px rgba(201,161,59,.35)}
+[data-tema="cam"] .pk-ses:not([aria-pressed="true"]){background:var(--yore-yazi);color:#12171B}
+[data-tema] body.d .parca-kart{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}
+/* Eser hakkında sağ sütun: sekme çubuğu artık kenardan kenara (61 px) → 3D/fotoğraf sahnesi çubuğun altında başlasın, üstü kesilmesin */
+[data-tema] .hk-d .hk-sahne{top:85px;height:calc(100vh - 64px - 85px - 24px)}
+[data-tema] .hk-d .hk-sahne.uc{height:min(calc(100vh - 64px - 85px - 24px),620px)}
+/* parça kartı mobilde de düz yüzey (koyu perdede cam grileşiyordu) */
+[data-tema] .parca-kart{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}
+/* yöre çizgisi kartın kenarından kopuk duruyordu → kartın kendi üst kenarı (iç gölge yuvarlak köşeyi izler) */
+[data-tema] #eser-kart::after,[data-tema] #eser-pop::after{content:none}
+[data-tema][data-kart="buzlu"] #eser-kart,[data-tema][data-kart="buzlu"] #eser-pop{box-shadow:inset 0 3px 0 var(--sehir-aksan),0 12px 40px rgba(20,27,43,.22),inset 0 0 0 1px rgba(255,255,255,.65)}
+[data-tema="cam"][data-kart="buzlu"] #eser-kart,[data-tema="cam"][data-kart="buzlu"] #eser-pop{box-shadow:inset 0 3px 0 var(--yore-yazi),0 12px 40px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.16)}
+/* listedeki küçük resimler kemer biçiminde (haritadaki pinle aynı dil; temanın 14 px köşesini ezer) */
+[data-tema] .eser-satir img,[data-tema] .eser-satir .gorsel-yok{border-radius:32px 32px 10px 10px}
+[data-tema] .rota-kart img,[data-tema] .rota-kart .gorsel-yok{border-radius:36px 36px 10px 10px}
+
+/* ---------- aktif il çerçevesi (29 Ekim 2026): aramada il rozeti, mobilde il çipi (üst çubuk şeridi denendi, kaldırıldı).
+   Renk ve motif haritanın baktığı ilin kaydından (app.js → haritaIliGuncelle → yoreUygula); il değişince yumuşakça geçer */
+.il-motif{display:inline-block;width:14px;height:14px;flex:none;background:currentColor;-webkit-mask:var(--sehir-desen, linear-gradient(transparent, transparent)) center/contain no-repeat;mask:var(--sehir-desen, linear-gradient(transparent, transparent)) center/contain no-repeat}
+[data-tema] body.d #ust .arama .sehir{display:inline-flex;align-items:center;gap:6px;background:var(--sehir-aksan);color:#fff;transition:background-color .6s}
+[data-tema] body.d #ust .arama .sehir .il-motif{color:var(--sehir-acik)}
+.il-cip{display:none}
+[data-tema] body.m .il-cip{display:inline-flex;align-items:center;gap:6px;background:var(--sehir-aksan);color:#fff;transition:background-color .6s}
+[data-tema] body.m .il-cip .il-motif{color:var(--sehir-acik)}
+
+/* ---------- harita kontrolleri (29 Ekim 2026): yöre renginde simgeler, üzerine gelince yöre renginin açık tonu, basınca hafif çökme;
+   pusula halkası ince altın, kuzey oku altın (kırmızı yerine; arayüzün vurgu rengi) */
+[data-tema] #harita-kontrol .zoom button,[data-tema] #harita-kontrol .daire.kucuk{color:var(--yore-yazi);transition:background-color var(--sure-2),transform var(--sure-1)}
+[data-tema] #harita-kontrol .zoom button:hover,[data-tema] #harita-kontrol .daire.kucuk:hover{background:var(--yore-tint)}
+[data-tema] #harita-kontrol .zoom button:active,[data-tema] #harita-kontrol .daire:active{transform:scale(.93)}
+[data-tema] #b-3d .halka{border:1.5px solid color-mix(in srgb,var(--gold) 70%,transparent);inset:4px;box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--gold) 10%,transparent)}
+[data-tema] #b-3d .kuzey{border-bottom-color:var(--gold)}
+[data-tema] #b-3d b{color:var(--yore-yazi);letter-spacing:.02em}
+[data-tema] #b-3d.egik{background:var(--yore-tint)}
+[data-tema] #b-3d:hover .halka{border-color:var(--gold)}
+
+/* ---------- pusula (29 Ekim 2026, 2. tur: sade): krem disk, ince tek halka, halkayı kesen 4 ana + 4 minik çentik, içte K D G B,
+   ortada beyaz disk üstünde 2D/3D, halkanın üstünde altın topuz (kuzey). Kadran haritayla döner (app.js daireCiz → .halka). Mobilde harfler gizli */
+#b-3d .halka{inset:0!important;border:0!important;box-shadow:none!important}
+#b-3d .kadran{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#b-3d .kh{fill:none;stroke:color-mix(in srgb,var(--sehir-aksan) 60%,transparent);stroke-width:1.5}
+#b-3d .cb{stroke:var(--sehir-aksan);stroke-width:2.6;stroke-linecap:round}
+#b-3d .ck{stroke:color-mix(in srgb,var(--sehir-aksan) 50%,transparent);stroke-width:1.4;stroke-linecap:round}
+#b-3d .ph{font:700 10.5px var(--font);fill:var(--sehir-aksan);text-anchor:middle}
+#b-3d .ic-disk{fill:var(--surface,#fff);filter:drop-shadow(0 1px 2px rgba(20,27,43,.18))}
+#b-3d .topuz{fill:var(--gold,#C9A13B);stroke:var(--surface,#fff);stroke-width:2.5;filter:drop-shadow(0 1px 1.5px rgba(20,27,43,.3))}
+[data-tema] #b-3d{background:color-mix(in srgb,var(--gold) 7%,var(--surface))}
+#b-3d b{position:relative;z-index:1;font:700 13px/1 var(--font)!important;color:var(--sehir-aksan)!important;background:none!important;padding:0!important}
+body.d #harita-kontrol #b-3d{width:84px;height:84px}
+body.m #b-3d .ph,body.m #b-3d .ck{display:none}
+body.m #b-3d .ic-disk{r:22}
+#b-3d{transition:background-color var(--sure-2),transform var(--sure-1)}
+#b-3d:hover .kh{stroke:var(--gold,#C9A13B)}
+[data-tema="cam"] #b-3d .ph{fill:var(--yore-yazi)}
+[data-tema="cam"] #b-3d .cb,[data-tema="cam"] #b-3d .kh{stroke:var(--yore-yazi)}
+[data-tema="cam"] #b-3d b{color:var(--yore-yazi)!important}
+/* sol panel: rol noktası (haritadaki pin rengi), satır üzerine gelince hafif yöre tonu (+ düğmesi eski haliyle kaldı) */
+.rol-nokta{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+[data-tema] .eser-satir{transition:background-color var(--sure-2)}
+[data-tema] body.d .eser-satir:hover{background:color-mix(in srgb,var(--sehir-aksan) 6%,transparent);margin:0 -14px;padding:12px 14px;border-radius:12px}
+
+/* ---------- il rengi = «seçili / etkin», motif = «ilin kimliği» (29 Ekim 2026). Çizgiler, ayırıcılar ve metin nötr kalır */
+/* 1) seçili eser satırı: ilin açık tonu + solda ince il şeridi (haritadaki seçili pinle aynı an) */
+[data-tema] .eser-satir.secili{background:color-mix(in srgb,var(--sehir-aksan) 13%,var(--surface));box-shadow:inset 3px 0 0 var(--sehir-aksan)}
+[data-tema] .eser-satir.secili h3{color:var(--yore-yazi)}
+[data-tema] .eser-satir.secili img,[data-tema] .eser-satir.secili .gorsel-yok{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--sehir-aksan)}
+[data-tema] .eser-satir.secili .arti{background:var(--surface)}
+/* 2) Eserler / Rotalar: kayan seçili zeminin altında ince il çizgisi */
+[data-tema] .sekme-grup.kayan::before{box-shadow:0 1px 3px rgba(20,27,43,.12),inset 0 -2.5px 0 var(--sehir-aksan)}
+/* 3) klavye odağı il renginde */
+[data-tema] :focus-visible{outline-color:var(--sehir-aksan)}
+/* 4) üzerine gelme: başlık bağlantısı ve il rozeti */
+[data-tema] .baslik-satir a{transition:color var(--sure-2)}
+[data-tema] .baslik-satir a:hover{color:var(--yore-yazi)}
+[data-tema] body.d #ust .arama .sehir:hover,[data-tema] body.m .il-cip:hover{filter:brightness(1.12)}
+/* 5) liste başlığının önünde ilin motifi */
+[data-tema] .sekme-icerik>.baslik-satir h2::before,[data-tema] .sekme-icerik>.baslik-satir>a[data-sehirler]::before{content:"";display:inline-block;width:15px;height:15px;margin-right:8px;vertical-align:-2px;background:var(--sehir-aksan);
+  -webkit-mask:var(--sehir-desen, linear-gradient(transparent, transparent)) center/contain no-repeat;mask:var(--sehir-desen, linear-gradient(transparent, transparent)) center/contain no-repeat}
+/* 6) panelin dibinde aşağı doğru koyulaşan çok silik motif dokusu (envanter sayfa köşesi gibi); liste üstünde kalır */
+[data-tema] body.d #panel::after{content:"";position:absolute;left:0;right:0;bottom:0;height:240px;pointer-events:none;z-index:0;background:var(--sehir-aksan);opacity:.07;
+  -webkit-mask:var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100%/56px auto repeat,linear-gradient(transparent,#000);-webkit-mask-composite:source-in;
+  mask:var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100%/56px auto repeat,linear-gradient(transparent,#000);mask-composite:intersect}
+[data-tema] body.d #panel-ic{z-index:1}
+/* ---------- küre görünümü canlı (29 Ekim 2026): her şehir kendi ilinin renginde (veri/sehir → kimlik.zemin) parlayan nokta;
+   eseri olan şehir nabız gibi atar; uzaktayken de adlar görünür, eseri olmayanlar silik */
+[data-tema] .sehir-isaret{background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:0;box-shadow:0 4px 14px rgba(20,27,43,.16)}
+[data-tema] .sehir-isaret i{position:relative;width:12px;height:12px;background:var(--il,#9AA3A6);border:2px solid #fff;box-shadow:0 0 0 1px color-mix(in srgb,var(--il,#9AA3A6) 60%,transparent)}
+[data-tema] .sehir-isaret.hazir i::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--il,var(--gold));animation:sehir-nabiz 2.4s ease-out infinite}
+@keyframes sehir-nabiz{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion:reduce){[data-tema] .sehir-isaret.hazir i::after{animation:none;opacity:.4}}
+[data-tema] .sehir-isaret.hazir small{color:var(--il,var(--primary))}
+[data-tema] .sehir-isaret:not(.hazir){opacity:.82}
+[data-tema] .sehir-isaret:not(.hazir) b{font-weight:500}
+[data-tema] body.sehir-cok-uzak .sehir-isaret:not(.hazir){padding:3px 9px 3px 3px;background:color-mix(in srgb,var(--surface) 70%,transparent);box-shadow:0 2px 8px rgba(20,27,43,.12)}
+[data-tema] body.sehir-cok-uzak .sehir-isaret:not(.hazir) b{display:inline;font-size:12px}
+
+/* harita kartı seçili eserin ilini taşır: üst kenarda kalın il bandı (eser sayfasındaki bandın küçüğü), eser adı il renginde; Dinle mürekkep kalır */
+[data-tema][data-kart="buzlu"] #eser-kart,[data-tema][data-kart="buzlu"] #eser-pop{box-shadow:inset 0 6px 0 var(--sehir-aksan),0 12px 40px rgba(20,27,43,.22),inset 0 0 0 1px rgba(255,255,255,.65)}
+[data-tema="cam"][data-kart="buzlu"] #eser-kart,[data-tema="cam"][data-kart="buzlu"] #eser-pop{box-shadow:inset 0 6px 0 var(--yore-yazi),0 12px 40px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.16)}
+[data-tema][data-kart="buzlu"] .kart-ust h3{color:var(--yore-yazi)}
+
+
+/* ================================================================ şehre göre deneme tonları (29 Ekim 2026): ?tema=sicak | il | bant
+   Üçü de buzlu kurallarını kullanır (data-tema="buzlu") ve şehre göre değişir: il rengi haritanın baktığı ilin kaydından (--sehir-aksan).
+   Ortak: nötrler sıcak; mürekkep envanterin yazı rengine yakın (ciltlerden ölçülen #504233, #393228, #493C36 → #2E2620).
+   sicak: panelin üstünde aşağı doğru kaybolan hafif il ışığı · il: üst çubuk ve panel hafif il tonunda · bant: üst çubuk tamamen il renginde */
+html[data-ton]{
+  --bg:#F2EEE7; --surface:#FBF8F3; --border:#E4DDD1; --text:#2E2620; --text-muted:#6B6056;
+  --primary:#2E2620; --primary-dark:#1C1713; --primary-light:#EDE6DB;
+  --cam:rgba(252,249,244,.64); --cam-yedek:rgba(251,248,243,.96); --kart-cam:rgba(252,249,244,.62);
+  --cam-kenar:inset 0 0 0 1px rgba(255,255,255,.7),inset 0 1px 0 rgba(255,255,255,.9); --cam-golge:0 10px 34px rgba(46,38,32,.13);
+  --zemin:radial-gradient(60% 45% at 12% 8%,color-mix(in srgb,var(--sehir-aksan) 12%,transparent),transparent 70%),radial-gradient(50% 40% at 92% 28%,rgba(201,161,59,.16),transparent 70%),radial-gradient(60% 45% at 38% 100%,rgba(176,150,112,.14),transparent 70%),#F2EEE7;
+  --sahne-ust:#EFEAE2; --sahne-alt:#C3BBAE;
+}
+html[data-ton] #ust .logo img,html[data-ton] .acilis-logo,html[data-ton] .ka-logo{filter:brightness(0) sepia(.35) opacity(.88)}
+/* sicak + il: panelin üstünde il ışığı (sekmelerin arkası), aşağı doğru kaybolur */
+html[data-ton="sicak"] body.d #panel::before,html[data-ton="il"] body.d #panel::before{content:"";position:absolute;left:0;right:0;top:0;height:300px;pointer-events:none;z-index:0;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--sehir-aksan) 11%,transparent),transparent);transition:background .6s}
+/* il: üst çubuk ve panelin camı hafif il tonunda */
+html[data-ton="il"] body.d #ust{background:color-mix(in srgb,var(--sehir-aksan) 8%,var(--cam))}
+html[data-ton="il"] body.d #panel{background:color-mix(in srgb,var(--sehir-aksan) 5%,var(--cam))}
+html[data-ton="il"] body.m .arama.mobil{background:color-mix(in srgb,var(--sehir-aksan) 7%,var(--cam))}
+/* bant: üst çubuk ilin renginde; logo beyaz, arama beyaz cam, dil seçici ve profil açık */
+html[data-ton="bant"] body.d #ust{background:var(--sehir-aksan);box-shadow:0 6px 20px color-mix(in srgb,var(--sehir-aksan) 30%,transparent);transition:background-color .6s}
+html[data-ton="bant"] body.d #ust .logo img{filter:brightness(0) invert(1)}
+html[data-ton="bant"] body.d #ust .arama{background:rgba(255,255,255,.96);border-color:transparent}
+html[data-ton="bant"] body.d #ust .arama .sehir{background:color-mix(in srgb,var(--sehir-aksan) 14%,#fff);color:var(--sehir-aksan)}
+html[data-ton="bant"] body.d #ust .arama .sehir .il-motif{color:var(--sehir-aksan)}
+html[data-ton="bant"] body.d #ust .dil-sec{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+html[data-ton="bant"] body.d #ust .dil-sec button{color:rgba(255,255,255,.8)}
+html[data-ton="bant"] body.d #ust .dil-sec [aria-pressed="true"]{background:#fff;color:var(--sehir-aksan)}
+html[data-ton="bant"] body.d #ust .avatar{background:rgba(255,255,255,.16);color:#fff}
+html[data-ton="bant"] body.d #panel::before{content:"";position:absolute;left:0;right:0;top:0;height:140px;pointer-events:none;z-index:0;background:linear-gradient(180deg,color-mix(in srgb,var(--sehir-aksan) 8%,transparent),transparent)}
+html[data-ton] body.d #panel-ic{z-index:1}
+

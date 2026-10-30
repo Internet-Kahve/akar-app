@@ -1,6 +1,6 @@
 {
  "_aciklama": "veri/fotoatlas/gecmisi_gor_uret.py üretir; elle düzenleme. Kaynak: Foto Atlas, yalnız kullanılabilir kayıtlar. Her fotoğrafta kaynakSatiri gösterilmeli; duzenlenebilir=false (ND) ise kırpma / ekranı doldur yok. Fotoğraf yoksa uygulama «Bu eserin eski görüntüsü henüz yok» gösterir.",
- "uretildi": "2026-10-28",
+ "uretildi": "2026-10-29",
  "eser": "koza-han",
  "ad": "Koza Hanı",
  "konum": [
@@ -73,6 +73,36 @@
    "icMekan": false,
    "eslesme": "kesin",
    "eserMesafesiM": 27
+  },
+  {
+   "fotoAtlasId": 47676,
+   "gorsel": "gorseller/fa-47676.webp",
+   "kucuk": "gorseller/fa-47676_k.webp",
+   "genislik": 922,
+   "yukseklik": 1447,
+   "baslik": "Koza Han Mescidi",
+   "altMetin": "Eski fotoğraf: Koza Han Mescidi, 1908–34",
+   "altMetinTaslak": true,
+   "tarih": {
+    "enErken": 1908,
+    "enGec": 1934,
+    "etiket": "1908–34"
+   },
+   "fotografci": "Albert Gabriel",
+   "kaynakSatiri": "Fotoğraf: Albert Gabriel · © Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie (AG20K005519) · Foto Atlas aracılığıyla",
+   "asilKaynak": "Ministère de la Culture (France)",
+   "asilArsivId": "AG20K005519",
+   "asilArsivUrl": "https://www.pop.culture.gouv.fr/notice/memoire/AG20K005519",
+   "fotoAtlasUrl": "https://fotoatlas.net/image/koza-han-mescidi-3/",
+   "lisans": "© Ministère de la Culture (France), Fonds Albert Gabriel INHA, Médiathèque du patrimoine et de la photographie",
+   "lisansNotu": "Médiathèque du patrimoine izin verdi (Camille Duclert, müdür yardımcısı, 22.10.2026): kredi satırı aynen yazılmak şartıyla yeniden kullanım mümkün",
+   "duzenlenebilir": true,
+   "cekimNoktasi": null,
+   "yon": null,
+   "gorusAcisi": 60,
+   "icMekan": false,
+   "eslesme": "elle",
+   "eserMesafesiM": null
   },
   {
    "fotoAtlasId": 47770,

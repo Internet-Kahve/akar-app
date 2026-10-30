@@ -1,6 +1,32 @@
 # Orhan Gazi Türbesi: 3D üretim klasörü
 
-Güncel sürüm **v02** (21 Ekim 2026; v01 blend, GLB ve kontrol dosyaları **silindi**). Bu klasörde yalnızca son sürüm tutulur; sürümler aşağıdaki tabloda kayıtlıdır, kararlar ve kanıtlar `../orhan-gazi-turbesi_notlar.md` §1 ve `kontrol/v01/kontrol_ozeti.md` içinde.
+Güncel sürüm **v06** (29 Ekim 2026; iç mekân, aşağıda). Önceki not: güncel sürüm **v02** (21 Ekim 2026; v01 blend, GLB ve kontrol dosyaları **silindi**). Bu klasörde yalnızca son sürüm tutulur; sürümler aşağıdaki tabloda kayıtlıdır, kararlar ve kanıtlar `../orhan-gazi-turbesi_notlar.md` §1 ve `kontrol/v01/kontrol_ozeti.md` içinde.
+
+## Güncel sürüm: v06 (29 Ekim 2026) · iç mekân («İçini göster» + ayrıntı; iç parçalar yalnız sunumda)
+
+Betik `build/build_v06.py` → `build/doku_ic_v06.py` (atlas) → `build/build_v06_ic.py` (Blender, v05 blend'ini açar, dokunmaz) → `_kutuphane/blend_hat/uret.py`. **İki dosya:** sunum GLB'si dış + iç; harita GLB'si yalnız dış (`model.json → ic_parcalar`). **Kalkan gruplar** (`ortu_gruplari`): `Kubbe` + `Ic_Kubbe` → `Dehliz`. Kontrol `kontrol/v06/` (`icini_goster.png`, `ic_detay.png`, `ic_kaynak.png`, `dis_esitlik.png`, `tiklama_haritasi.png`, `doku_ic_atlas.png`, `parca_dogrulama.json`, `ic_rapor.json`, `blend_rapor.json`).
+
+| Kök parça | Ne | Ölçü | Kaynak |
+|---|---|---|---|
+| `Govde` (değişti) | Katmanların yatay kapakları (subasman, friz, saçak; üstte ve altta) iç kare kesilerek halka oldu; dışarıdan görünen halka aynı | İç kare 14,20 × 14,20 | E C2 PDF 116 (16,80 kare, duvar 1,30) |
+| `Kubbe` (değişti) | Aşağı bakan 54 alt kapağın yönü yukarı çevrildi: içeriden arkası döner, orta kubbe görünür. Silinmedi; geometri ve UV v05 ile aynı | — | — |
+| `Ic_Duvarlar` | İç duvar yüzü, 11 pencere (içten cam ve kayıt), 22 Hereke perdesi, 11 barok alınlık, duvar üstünde zikzak kuşak, kapı iç yüzü | Pencere 1,69, eşik +0,78, tepe +3,97 (v01); perde, alınlık, kuşak kotları **T** | E C2 PDF 116 («her cephede üçer, giriş cephesinde ikişer pencere», «Hereke kumaşından perdeler», «pencere alınlıkları iri barok motiflerle»); F 02 |
+| `Orta_Kubbe_Sutunlar` | 4 sütun (kare kaide, gövde, başlık, tabla), 4 sivri kemer, pandantifler, çember kuşağı | Eksenler ±3,40, gövde Ø 0,67, kaide 1,0 (P); üzengi +4,75, kemer tepesi +8,05 (**T**) | P Yurt 2024 PDF 224; E C2 PDF 116 («dört sütun üzerine … küçük bir kubbe», «sivri kemerlere oturan pandantifli kubbe»); F 02, Yurt PDF 327–329 |
+| `Ic_Kubbe` (Kubbe ile kalkar) | Kısa kasnak ve orta kubbenin iç yüzü; kalem işi kartuş fotoğraf kırpması | Ø 6,00 (P plan dairesi); etek +8,80, tepe +11,80 (**T**) | E «kartuş düzeninde kalem işleri»; F Yurt 2024 PDF 333 Levha 139 (kırpma perspektifli) |
+| `Dehliz` (ikinci grupta kalkar) | Orta karenin çevresinde yarım beşik tonoz (duvardaki kuşaktan orta kemer tepesine), köşelerde çapraz; çift yüzlü | Duvarda +5,65, ortada +8,05 (**T**) | E «kubbenin çevresi beşik tonozlarla örtülü dehlizli bir düzenleme»; P plandaki köşe çaprazları; F 02 |
+| `Ic_Zemin` | Kırık taş döşeme (kodla); renkler ortak paletin nötr taş rolleri (`ic_zemin_koyu/tas/acik/derz`, arada `mermer`) | 14,20 × 14,20 | Desen F 05; E C2 PDF 117 («döşeme mozaik parçaları»). Fotoğraflardan ölçülen renk sıcak ışık yüzünden turuncuydu (kullanıcı düzeltmesi) |
+| `Orhan_Gazi_Sandukasi` | Mermer kaide, sanduka (beşik üstlü), koyu puşide, kavuk, pirinç şebeke (köşe direkleri ve sivri tepelikler, ≈ 8 cm arayla çubuklar, kuşaklar, üst kuşakta ≈ 24 cm arayla topuzlar; ayrı malzeme `Turbe_Pirinc`, renk `pirinc_sebeke`, metalik 0,5, pürüzlülük 0,35: istenen 0,8 ortam yansıması olmayan görüntüleyicide düz yüzleri koyu gösterdi, karşılaştırma `kontrol/v06/sebeke_metal.png`) | Yer ve boyut F 05 ölçeğiyle (3,6 × 1,75 kaide); yükseklikler **T** | E C2 PDF 117 («yeşil çuha kaplı puşide», «pirinç şebeke», «mermer kaide … ortada»); F 02, 05 |
+| `Sandukalar` | 20 sanduka, mermer görünümlü setler üstünde; desensiz düz kumaş örtü (`sanduka_ortu`), üstleri sivri; ahşap korkuluk | Yerler F 05 ölçeğiyle; yükseklikler **T** | E C2 PDF 117 («yirmi sanduka daha … tuğladan örülmüş ve mermer görünümlü setlerin üzerine»); F 02, 05 |
+
+**Ölçek (F 05, kubbeden aşağı çekim):** sütun dipleri arası 6,80 m = 475 px (x) / 490 px (y); sanduka üstleri kameraya yakın olduğu için konumlar 0,90 ile merkeze çekildi (**T**). Kuzey yukarı (güneyde iki pencere ve kapı görünüyor).
+
+**Doku:** tek atlas `build/doku_ic_v06/ic_atlas.jpg` (1024 × 1024, q80, 166 KB; kaynaklar `kaynak.json`'da). Kodla: döşeme, iç pencere, zikzak kuşak, düz renk blokları. Fotoğraf kırpması: Hereke perdesi, alınlık (F 02), kubbe kalem işi (Yurt PDF 333). Yazı yok. **Yeni renk rolleri:** `puside_koyu`, `turbe_korkuluk` (F 05); `sanduka_govde`, `sanduka_ortu`, `pirinc_sebeke`, `turbe_ic_cam` (F 02). `turbe_zemin_*` (F 05) palette kayıtlı ama kullanılmıyor. Fotoğraflar sıcak ışıkta çekilmiş; ölçüm olduğu gibi. Sütun ve kemer sarısı için ölçüm doygun çıktığından ortak `kasnak_sari_siva`, sıvalar için `krem_siva`, mermer ve pirinç için `mermer`, `musluk_pirinc` kullanıldı.
+
+**Sayılar** (v05 → v06): harita 8 282 → 8 342 üçgen, 260 → 262 KB, 16 çizim çağrısı, 5 doku; sunum 11 618 → 29 320 üçgen, 314 → 523 KB, çizim çağrısı 32 → 43, doku 10 → 11 (8 sınırı v05'te zaten aşılmıştı: dördü ağaç dokusu; kullanıcı kabul etti). Dış eşitlik harita ↔ sunum en çok %0,001. Harita v05 ↔ v06 en büyük fark %0,063 (80°, azimut 200, yakın); öteki açılar %0,033–0,036; sınır %0,1'in altında. Referans denetimi c, d geçti.
+
+**Belirsiz / atlanan:** sandukaların baş yönü ve kavukların yeri (yalnız Orhan Gazi'ye kavuk konuldu, batı ucuna, **T**); sanduka sahiplerinin hangisinin hangi yerde olduğu (E: altısı tanımlı, yerleri yazılı değil); sütun başlığının volütleri ve tabladaki konsollar sade kutu; avize, kandiller, levhalar ve tavan gergileri modellenmedi; pandantif ve pencere alınlıklarının kalem işi yalnız alınlık kırpmasıyla; kemerlerin bordürleri yok. Puşide fotoğraf 05'teki 2023 işlemeli örtü yerine düz koyu renk (kırpmanın üstünde avize var). Diğer sandukalardaki dokuma desen kullanıcı isteğiyle kaldırıldı (düz kumaş).
+
+### v05 ve öncesi
 
 ## İçerik
 
@@ -29,6 +55,7 @@ Güncel sürüm **v02** (21 Ekim 2026; v01 blend, GLB ve kontrol dosyaları **si
 | v04 | 28 Ekim 2026 (gece). 21 Ekim pastel renkleri geri (kullanıcı: fotoğraf renkleri haritada cansız; ton ayarı web'de): her malzeme v02 sürümündeki aynı adlı malzemenin rengi ve dokusu (fark 0 ton; v02'deki köşe rengi gri AO idi, çarpılmadı). Değişen: Cephe_Krem #F5E4C9→#E8DFCB; Mermer #E6E2D6→#F5F4F0. Pişmiş AO v03'den, yeniden pişirilmedi: 512 px tek kanal JPEG q80 (135 → 28 KB). Yer_Golgesi çıkarıldı (web çiziyor). Uygulama GLB 479 → 264 KB (pastel v02: 253 KB). Geometri v03 ile aynı (Draco sıfır alanlı üçgenleri attı; kutu aynı). Betik `_kutuphane/renk_ao_v3/pastel_kucuk.mjs`. Kontrol `kontrol/v04/`. | v03 ile aynı |
 | v04 | v04: blend kaynağı GLB ile eşitlendi (29 Ekim 2026). GLB artık Blender'dan üretiliyor: `build/build_v04.py` → `_kutuphane/blend_hat/` (renk ve doku yalnız `malzeme-paleti.json`'dan; Yer_Golgesi yok; AO tek kanal JPEG). Doğrulama a–g geçti (`kontrol/v04/esitleme.png`). | aynı |
 | v05 | v05: kök parça bölünüşü sadeleştirildi (29 Ekim 2026): 8 → 3 parça (Giris_Holu, Govde, Kubbe). Adımlar: birleşti: Govde, Pencereler, Pilastr_Silme → Govde; birleşti: Giris_Holu, Kapi → Giris_Holu; birleşti: Kubbe, Kasnak, Cati_Etek → Kubbe. Renk, doku, AO ve toplam üçgen (8282) aynı; referanslar yeni adlara çevrildi (eksik 0). Plan `_kutuphane/blend_hat/parca_plan.json`; ayrıntı `kontrol/v05/parca_envanteri.md`, `tiklama_haritasi.png`. | aynı |
+| v06 | 29 Ekim 2026. İç mekân («İçini göster» + ayrıntı), iç parçalar yalnız sunumda: `Ic_Duvarlar`, `Ic_Zemin`, `Orta_Kubbe_Sutunlar`, `Ic_Kubbe`, `Dehliz`, `Sandukalar`, `Orhan_Gazi_Sandukasi`; gruplar [[Kubbe, Ic_Kubbe], [Dehliz]]. Harita 8 282 → 8 342 üçgen; sunum 11 618 → 26 568 üçgen, 314 → 513 KB; harita v05 ↔ v06 en çok %0,063. Ayrıntı yukarıdaki v06 bölümünde. | sunum 26 568 |
 
 Her sürümde açık/manifold olmayan kenar 0, ≥ 0,3 m çakışma 0, 8 yönden arka yüz kırmızı oranı 0 (GECTI).
 

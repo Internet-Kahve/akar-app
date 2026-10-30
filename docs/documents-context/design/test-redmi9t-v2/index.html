@@ -6,24 +6,36 @@
 <meta name="theme-color" content="#F3F5F5">
 <meta http-equiv="Cache-Control" content="no-cache">
 <title>AKAR · Bursa</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.css">
-<link rel="stylesheet" href="app.css?v=20261028">
+<link rel="stylesheet" href="app.css?v=20261030g">
+<link rel="stylesheet" href="temalar.css?v=20261029zu">
+<!-- temalar: asıl tema buzlu (varsayılan, 30 Ekim 2026) | cam (+ deneme: sicak | il | bant), ?tema=sade kapatır; seçim cihazda kalır (akar.tema). Kurallar temalar.css'te. -->
+<script>try{/* tema: [tarayıcı çubuğu rengi, temanın varsayılan harita kartı] */
+const T={buzlu:['#EDEEEA','buzlu'],sicak:['#F2EEE7','buzlu'],il:['#F2EEE7','buzlu'],bant:['#2E2620','buzlu'],cam:['#12171B','cam']};   /* sicak | il | bant = buzlu + ton (data-ton), şehre göre deneme */const L=localStorage,U=new URLSearchParams(location.search);
+const q=U.get('tema');if(q)L.setItem('akar.tema',q);const sec=q||L.getItem('akar.tema')||'buzlu';const t=T[sec]?sec:null;   /* 30 Ekim 2026: asıl tema buzlu (varsayılan); ?tema=sade eski sade görünümü açar */
+/* harita kartı seçeneği: ?kart=cam | perde | buzlu | yok (cihazda kalır: akar.kart); seçilmemişse temanınki */
+const k=U.get('kart');if(k)L.setItem('akar.kart',k);const kk=k||L.getItem('akar.kart')||(t&&T[t][1]);
+if(['cam','perde','buzlu'].includes(kk))document.documentElement.dataset.kart=kk;
+if(t){const ton=['sicak','il','bant'].includes(t);document.documentElement.dataset.tema=ton?'buzlu':t;if(ton)document.documentElement.dataset.ton=t;document.querySelector('meta[name=theme-color]').content=T[t][0]}}catch(e){}</script>
 </head>
 <body>
 <!-- açılış ekranı (Figma akar-yeni: «Amblem · açılış, 3D yükleniyor (çizgi çizgi çizilir)», desen «ilk açılış arka planı» %6–10).
      Şehrin rengi ve deseni app.js'te şehir kaydından (veri/sehir/<şehir>.json → kimlik) konur; harita ilk kez hazır olunca kalkar. -->
 <div id="acilis" role="status" aria-label="AKAR yükleniyor"><div class="acilis-ic">
   <svg class="amblem" viewBox="-84 -84 168 168" aria-hidden="true"><path pathLength="1" d="M-35.36 -35.36L-50.00 -41.42M-50.00 -41.42L-64.64 -35.36M-35.36 -64.64L-41.42 -50.00M-41.42 -50.00L-35.36 -35.36M-64.64 -35.36L-75.00 -10.36M-75.00 -10.36L-50.00 -0.00M-50.00 -0.00L-75.00 10.36M-75.00 10.36L-64.64 35.36M-64.64 35.36L-50.00 41.42M-50.00 41.42L-35.36 35.36M-35.36 35.36L-41.42 50.00M-41.42 50.00L-35.36 64.64M35.36 -64.64L10.36 -75.00M10.36 -75.00L0.00 -50.00M0.00 -50.00L-10.36 -75.00M-10.36 -75.00L-35.36 -64.64M64.64 -35.36L50.00 -41.42M50.00 -41.42L35.36 -35.36M35.36 -35.36L41.42 -50.00M41.42 -50.00L35.36 -64.64M35.36 35.36L10.36 25.00M10.36 25.00L0.00 50.00M0.00 50.00L-10.36 25.00M-10.36 25.00L-35.36 35.36M-35.36 35.36L-25.00 10.36M-25.00 10.36L-50.00 0.00M-50.00 0.00L-25.00 -10.36M-25.00 -10.36L-35.36 -35.36M-35.36 -35.36L-10.36 -25.00M-10.36 -25.00L-0.00 -50.00M-0.00 -50.00L10.36 -25.00M10.36 -25.00L35.36 -35.36M35.36 -35.36L25.00 -10.36M25.00 -10.36L50.00 -0.00M50.00 -0.00L25.00 10.36M25.00 10.36L35.36 35.36M35.36 64.64L41.42 50.00M41.42 50.00L35.36 35.36M35.36 35.36L50.00 41.42M50.00 41.42L64.64 35.36M-35.36 64.64L-10.36 75.00M-10.36 75.00L-0.00 50.00M-0.00 50.00L10.36 75.00M10.36 75.00L35.36 64.64M64.64 35.36L75.00 10.36M75.00 10.36L50.00 0.00M50.00 0.00L75.00 -10.36M75.00 -10.36L64.64 -35.36"/></svg>
-  <div class="acilis-logo">AKAR</div><div class="acilis-sehir serif" id="acilis-sehir"></div><div class="acilis-alt" id="acilis-alt">Harita hazırlanıyor</div>
+  <img class="acilis-logo" src="logo.png" alt="AKAR" width="800" height="237"><div class="acilis-sehir serif" id="acilis-sehir"></div><div class="acilis-alt" id="acilis-alt">Harita hazırlanıyor</div>
 </div></div>
 <div id="app">
   <!-- masaüstü üst çubuk -->
   <header id="ust" class="masaustu">
-    <a class="logo" href="#/">AKAR</a>
-    <label class="arama"><span data-ic="search"></span><input id="arama-d" type="search" placeholder="Eser, şehir veya rota ara" autocomplete="off"><button type="button" class="sehir" data-sehirler title="Şehirler">Bursa</button></label>
-    <span class="avatar">MT</span>
+    <a class="logo" href="#/"><img src="logo.png" alt="AKAR" width="800" height="237"></a>
+    <label class="arama"><span data-ic="search"></span><input id="arama-d" type="search" placeholder="Eser, şehir veya rota ara" autocomplete="off"><button type="button" class="sehir" data-sehirler title="Şehirler"><i class="il-motif" aria-hidden="true"></i><span class="il-ad"></span></button></label>
+    <div class="dil-sec" role="group" aria-label="Dil / Language"><button type="button" data-dil="tr" aria-pressed="true" lang="tr" title="Türkçe">TR</button><button type="button" data-dil="en" aria-pressed="false" lang="en" title="English">EN</button></div><span class="avatar">MT</span>
   </header>
 
   <!-- masaüstü sol panel -->
@@ -36,12 +48,12 @@
 
     <!-- mobil arama + çipler -->
     <div id="harita-ust">
-      <label class="arama mobil"><span data-ic="search"></span><input id="arama-m" type="search" placeholder="Eser, şehir veya rota ara" autocomplete="off"><span class="avatar">MT</span></label>
+      <label class="arama mobil"><img class="isaret" src="isaret-a.png" alt="AKAR" width="91" height="96"><input id="arama-m" type="search" placeholder="Eser, şehir, rota ara" autocomplete="off"><div class="dil-sec" role="group" aria-label="Dil / Language"><button type="button" data-dil="tr" aria-pressed="true" lang="tr" title="Türkçe">TR</button><button type="button" data-dil="en" aria-pressed="false" lang="en" title="English">EN</button></div><span class="avatar">MT</span></label>
       <div class="cipler" id="cipler"></div>
     </div>
 
     <div id="harita-kontrol">
-      <button class="daire" id="b-3d" aria-label="2D haritaya geç"><span class="halka" aria-hidden="true"><i class="kuzey"></i><span class="k">K</span></span><b>2D</b></button>
+      <button class="daire" id="b-3d" aria-label="2D haritaya geç"><span class="halka" aria-hidden="true"><svg class="kadran" viewBox="0 0 100 100" aria-hidden="true"><circle class="kh" cx="50" cy="50" r="40"/><line class="cb" x1="50.0" y1="14.5" x2="50.0" y2="5.5"/><line class="ck" x1="76.9" y1="23.1" x2="79.7" y2="20.3"/><line class="cb" x1="85.5" y1="50.0" x2="94.5" y2="50.0"/><line class="ck" x1="76.9" y1="76.9" x2="79.7" y2="79.7"/><line class="cb" x1="50.0" y1="85.5" x2="50.0" y2="94.5"/><line class="ck" x1="23.1" y1="76.9" x2="20.3" y2="79.7"/><line class="cb" x1="14.5" y1="50.0" x2="5.5" y2="50.0"/><line class="ck" x1="23.1" y1="23.1" x2="20.3" y2="20.3"/><text class="ph" x="50" y="28.5">K</text><text class="ph" x="73" y="54">D</text><text class="ph" x="50" y="79.5">G</text><text class="ph" x="27" y="54">B</text><circle class="ic-disk" cx="50" cy="50" r="15.5"/><circle class="topuz" cx="50" cy="10" r="6"/></svg></span><b>2D</b></button>
       <div class="zoom"><button id="b-yakin" aria-label="Yakınlaştır"><span data-ic="plus"></span></button><button id="b-uzak" aria-label="Uzaklaştır"><span data-ic="minus"></span></button></div>
       <button class="daire kucuk" id="b-konum" aria-label="Konumuma git"><span data-ic="locate-fixed"></span></button>
     </div>
@@ -59,6 +71,6 @@
 </div>
 
 <script type="importmap">{"imports":{"maplibre-gl":"https://unpkg.com/maplibre-gl@6.15.0/dist/maplibre-gl.mjs","three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
-<script type="module" src="app.js?v=20261028"></script>
+<script type="module" src="app.js?v=20261030m"></script>
 </body>
 </html>

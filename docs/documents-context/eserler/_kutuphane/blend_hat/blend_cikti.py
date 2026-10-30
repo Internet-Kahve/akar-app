@@ -204,10 +204,12 @@ def disa(objs, yol, k):
     bpy.context.view_layer.update()
 
 
-# uygulama GLB'si = yapı: sunum ekleri (Zemin*, Cevre*, Olcek* ve model.json sunum_ek) hariç; web ile aynı kural
+# uygulama (harita) GLB'si = yapı: sunum ekleri (Zemin*, Cevre*, Olcek* ve model.json sunum_ek) hariç; web ile aynı kural.
+# 29 Ekim 2026: model.json ic_parcalar (iç mekân parçaları) de yalnız sunum GLB'sinde (eser başına iki model).
 MJ = json.load(open(os.path.join(URETIM, 'model.json')))
-EK = ('Zemin', 'Cevre', 'Olcek', *MJ.get('sunum_ek', []))
-app = [o for o in tum() if not o.name.startswith(EK)]
+EK = ('Zemin', 'Cevre', 'Olcek', *MJ.get('sunum_ek', [])); IC = set(MJ.get('ic_parcalar', []))
+app = [o for o in tum() if not o.name.startswith(EK) and o.name not in IC]
+rapor['parca']['yalniz_sunum_ic'] = sorted(o.name for o in tum() if o.name in IC)
 rapor['parca']['yapi'] = sorted(o.name for o in app)
 for h, objs in (('app', app), ('sunum', tum())):
     rapor.setdefault('kaydirma', {})[h] = [round(x, 4) for x in KAY[h]]

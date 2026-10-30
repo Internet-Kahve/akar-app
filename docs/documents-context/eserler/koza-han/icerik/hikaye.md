@@ -49,3 +49,13 @@ Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model d
 | 10 | Avlu_Revak | 0° | 25° | üst kat revak |  |
 | 11 | Avlu_Zemin | 0° | 60° | avlu |  |
 | 12 | Merkez | 270° (batı) | 30° | bütün yapı | Doğuya, Orhan Bey Camii yönüne bakış (~70 m doğu-güneydoğuda, OSM); kart aks fotoğrafını gösterir |
+
+## Akar akışı
+
+Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.
+
+| # | Akar (gelir veren) | Hayrat (gelir alan) | Hayrat adı | Etiket | Kaynak | Güven |
+|---|---|---|---|---|---|---|
+| 2 | koza-han | 41.0105, 28.9641 | II. Bayezid Külliyesi, İstanbul | Gelir → İstanbul'daki külliyeye | E cilt-2 PDF s.8 | Doğrulanmış |
+
+Hedef 3 km'den uzak olduğu için yay İstanbul yönüne kısa çizilir, ucunda hedefin adı durur. Koordinat (Beyazıt Camii) yalnız yön içindir; kitaptan değil, haritadan alındı.

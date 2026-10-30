@@ -12,3 +12,13 @@
 | Cami_SonCemaat | Son cemaat yeri | Revak, yan ikiz kemerler ve küçük kubbeleriyle. Hikâye vurgusu. |
 | Minare | Minare |  |
 | Sadirvan | Şadırvan | Hikâye vurgusu. |
+| Cami_Ortu | Cami gövdesi | Dış (v11): kurşun damlar; «İçini göster» için ayrıldı. Cami_Govde kartına katılabilir. |
+| Kubbe_Pencereler | Orta kubbe | Dış (v11): kasnak pencere söveleri ve alemler; kubbe kartlarına katılabilir. |
+| Orta_Mekan | Orta mekân | İç mekân (v11). |
+| Mihrap_Eyvani | Mihrap eyvanı (asıl ibadet mekânı) | İç mekân (v11). Dört basamakla çıkılan, tromplu kubbeli bölüm. |
+| Tabhaneler | Tabhaneler | İç mekân (v11). Orta mekânın iki yanındaki konuk odaları; doğudaki bugün kadınlar mahfili. |
+| Giris_Koridoru | Giriş koridoru | İç mekân (v11). |
+| Ic_Mihrap | Alçı mihrap | İç mekân (v11). Hikâye cümlesi 7'nin konusu (vurgu bugün Cami_Mihrap; değişmedi). |
+| Minber | Minber | İç mekân (v11). |
+| Pandantifler, Ic_Kubbeler | Kubbe içleri | İç mekân (v11). Tromplar ve kubbe içi kalem işi. |
+| Ic_Zemin | Halı ve döşeme | İç mekân (v11). |

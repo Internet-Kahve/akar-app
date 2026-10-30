@@ -1,0 +1,76 @@
+{
+  "_aciklama": "Yıldırım Bayezid Bedesteni · görevler ve rozetler (30 Ekim 2026). Onaylandı (30 Ekim 2026, ekip). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta.",
+  "_taslak": false,
+  "gorevler": [
+    {
+      "id": "bed-soru-kubbe",
+      "tur": "soru",
+      "baslik": "Kaç kubbe?",
+      "soru": "Bedestenin üstünü kaç kubbe örter?",
+      "secenekler": [
+        "14",
+        "20",
+        "6",
+        "32"
+      ],
+      "dogru": 0,
+      "ipuclari": [
+        "Tepeden çekilmiş fotoğrafta kubbeleri iki sıra hâlinde say.",
+        "Her sırada yedi kubbe var."
+      ],
+      "dogru_metin": "Bedestenin 15,00 × 56,50 metrelik merkez mekânını, altı ayağa oturan on dört kubbe örter.",
+      "yanlis_metin": "Tekrar dene. İpucu almak istersen aşağıda.",
+      "gorsel": "03_tepeden-14-kubbe.jpg",
+      "parca": "Kubbeler",
+      "kaynak": "E cilt-2 PDF s.29",
+      "guven": "Doğrulanmış",
+      "evden_cozulur": true
+    },
+    {
+      "id": "bed-saha-kapi",
+      "tur": "saha",
+      "baslik": "Dört kapıdan biri",
+      "gorev": "Bedestenin dört kapısından birini bul.",
+      "yerinde": {
+        "yap": "Bedestenin kapılarından birinin önüne gel ve «Buradayım»a dokun.",
+        "konum_yaricap_m": 80,
+        "_not": "Konum eserin noktasından ölçülür (eser.json lat/lon). Öğenin kendi koordinatı ölçülmedi; 80 m yapının çevresini kapsar."
+      },
+      "evden": {
+        "yap": "3D modelde bedestenin kapılarına dokun.",
+        "parca": "Kapilar"
+      },
+      "tamam_metin": "Bedestene dört cephedeki kapılardan girilir; her kapı kubbeyle örtülü bir giriş mekânına açılır.",
+      "gorsel": "05_carsi-icinde.jpg",
+      "kaynak": "E cilt-2 PDF s.29",
+      "guven": "Doğrulanmış"
+    }
+  ],
+  "rozetler": [
+    {
+      "id": "bed-hikaye",
+      "ad": "Bedesten'i dinledin",
+      "metin": "Bedesten'in hikâyesini sonuna kadar dinledin ya da okudun.",
+      "kosul": {
+        "hikaye_bitti": true
+      }
+    },
+    {
+      "id": "bed-on-dort-kubbe",
+      "ad": "On dört kubbe",
+      "metin": "Bedesteni örten kubbeleri saydın.",
+      "kosul": {
+        "gorev": "bed-soru-kubbe"
+      }
+    },
+    {
+      "id": "bed-dort-kapi",
+      "ad": "Dört kapı",
+      "metin": "Bedesten'in kapılarından birini buldun.",
+      "kosul": {
+        "gorev": "bed-saha-kapi"
+      },
+      "yerinde_etiketi": true
+    }
+  ]
+}
