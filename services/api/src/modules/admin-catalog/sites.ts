@@ -21,7 +21,10 @@ import {
   periods,
   regions,
   routeStops,
+  siteMapPlacements,
+  siteAboutChapters,
   siteMedia,
+  siteSectionPhotos,
   siteSections,
   siteSources,
   sites,
@@ -34,7 +37,27 @@ import { AppError } from "../../errors.ts";
 import { recordAudit } from "../../platform/audit.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import { siteDedupeKey, siteSearchText, siteSortName, slugify } from "../catalog/service.ts";
+import {
+  chapterDto,
+  loadChapters,
+  loadPartCards,
+  loadSectionPhotos,
+  loadPlacements,
+  publicPlacement,
+  resolvePlacement,
+  sectionPhotosBySection,
+  siteDedupeKey,
+  siteSearchText,
+  siteSortName,
+  slugify,
+  type ChapterRow,
+  type PartCardRow,
+  type PlacementRow,
+  type SectionPhotoRow,
+} from "../catalog/service.ts";
+import { loadSampleTraces, sampleTraceDto, type SampleTraceRow } from "../catalog/sample-traces.ts";
+import { badgeDto, loadBadges, loadTasks, taskDto, type BadgeRow, type TaskRow } from "../catalog/tasks.ts";
+import { CITIES } from "../ingest/cities.ts";
 import { APPROXIMATE_SOURCES } from "../ingest/geocode.ts";
 import type {
   AdminCardDto,
@@ -47,6 +70,7 @@ import type {
   CreateSiteInput,
   HistoryImagesInput,
   LocationInput,
+  MapPlacementInput,
   ModelInput,
   SectionsInput,
   SiteInfoInput,
@@ -153,12 +177,14 @@ const siteSelection = {
   description: sites.description,
   descriptionEn: sites.descriptionEn,
   minutes: sites.minutes,
+  displayOrder: sites.displayOrder,
   tier: sites.tier,
   trust: sites.trust,
   sourceSummary: sites.sourceSummary,
   status: sites.status,
   editorVersion: sites.editorVersion,
   coverMediaId: sites.coverMediaId,
+  aboutCoverMediaId: sites.aboutCoverMediaId,
   openingCamera: sites.openingCamera,
   lng: sql<number | null>`ST_X(${sites.location})`,
   lat: sql<number | null>`ST_Y(${sites.location})`,
@@ -199,12 +225,14 @@ export type SiteRow = Pick<
   | "description"
   | "descriptionEn"
   | "minutes"
+  | "displayOrder"
   | "tier"
   | "trust"
   | "sourceSummary"
   | "status"
   | "editorVersion"
   | "coverMediaId"
+  | "aboutCoverMediaId"
   | "openingCamera"
   | "locationSource"
   | "dedupeKey"
@@ -224,6 +252,14 @@ export type SiteAggregate = {
   stories: StoryRow[];
   sections: SectionRow[];
   history: HistoryRow[];
+  partCards: PartCardRow[];
+  chapters: ChapterRow[];
+  /** Book photographs of the paragraphs, ordered by (paragraph, position). */
+  sectionPhotos: SectionPhotoRow[];
+  tasks: TaskRow[];
+  badges: BadgeRow[];
+  /** Team-made İz Bırak samples (§11.47), ordered by position. */
+  sampleTraces: SampleTraceRow[];
   /** `site_media` in display order. */
   mediaIds: string[];
   /** `site_sources` in display order. */
@@ -231,6 +267,8 @@ export type SiteAggregate = {
   cards: ReadonlyMap<string, CardRow>;
   media: ReadonlyMap<string, MediaRow>;
   sources: ReadonlyMap<string, SourceRow>;
+  /** The stored map placement, shown or not. */
+  placement: PlacementRow | undefined;
 };
 
 function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {
@@ -259,14 +297,25 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const mediaLinks = await q.select().from(siteMedia).where(inArray(siteMedia.siteId, ids)).orderBy(asc(siteMedia.position));
   const sourceLinks = await q.select().from(siteSources).where(inArray(siteSources.siteId, ids)).orderBy(asc(siteSources.position));
 
+  const partCardRows = await loadPartCards(q, ids);
+  const chapterRows = await loadChapters(q, ids);
+  const sectionPhotoRows = await loadSectionPhotos(q, ids);
+  const taskRows = await loadTasks(q, ids);
+  const badgeRows = await loadBadges(q, ids);
+  const traceRows = await loadSampleTraces(q, ids);
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
     ...mediaLinks.map((l) => l.mediaId),
     ...siteRows.map((s) => s.coverMediaId),
+    ...siteRows.map((s) => s.aboutCoverMediaId),
     ...storyRows.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
     ...cardRows.map((c) => c.mediaId),
     ...historyRows.flatMap((h) => [h.mediaId, h.presentMediaId]),
+    ...partCardRows.flatMap((c) => c.photoIds),
+    ...sectionPhotoRows.map((p) => p.mediaId),
+    ...taskRows.map((t) => t.mediaId),
+    ...traceRows.map((t) => t.mediaId),
   ]);
   const mediaRows = mediaIds.length ? await q.select().from(media).where(inArray(media.id, mediaIds)) : [];
   const sourceIds = distinct([
@@ -275,9 +324,11 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...sectionRows.map((s) => s.sourceId),
     ...cardRows.map((c) => c.sourceId),
     ...historyRows.map((h) => h.sourceId),
+    ...partCardRows.map((c) => c.sourceId),
     ...mediaRows.map((m) => m.sourceId),
   ]);
   const sourceRows = sourceIds.length ? await q.select().from(sources).where(inArray(sources.id, sourceIds)) : [];
+  const placements = await loadPlacements(q, ids);
 
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
   const mediaById = new Map(mediaRows.map((m) => [m.id, m]));
@@ -285,6 +336,12 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const stories = groupBy(storyRows, (r) => r.siteId);
   const sections = groupBy(sectionRows, (r) => r.siteId);
   const history = groupBy(historyRows, (r) => r.siteId);
+  const partCardsOf = groupBy(partCardRows, (r) => r.siteId);
+  const chaptersOf = groupBy(chapterRows, (r) => r.siteId);
+  const sectionPhotosOf = groupBy(sectionPhotoRows, (r) => r.siteId);
+  const tasksOf = groupBy(taskRows, (r) => r.siteId);
+  const badgesOf = groupBy(badgeRows, (r) => r.siteId);
+  const tracesOf = groupBy(traceRows, (r) => r.siteId);
   const mediaOf = groupBy(mediaLinks, (r) => r.siteId);
   const sourcesOf = groupBy(sourceLinks, (r) => r.siteId);
 
@@ -296,11 +353,18 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
         stories: stories.get(site.id) ?? [],
         sections: sections.get(site.id) ?? [],
         history: history.get(site.id) ?? [],
+        partCards: partCardsOf.get(site.id) ?? [],
+        chapters: chaptersOf.get(site.id) ?? [],
+        sectionPhotos: sectionPhotosOf.get(site.id) ?? [],
+        tasks: tasksOf.get(site.id) ?? [],
+        badges: badgesOf.get(site.id) ?? [],
+        sampleTraces: tracesOf.get(site.id) ?? [],
         mediaIds: (mediaOf.get(site.id) ?? []).map((l) => l.mediaId),
         sourceLinks: (sourcesOf.get(site.id) ?? []).map((l) => ({ sourceId: l.sourceId, locator: l.locator })),
         cards: cardById,
         media: mediaById,
         sources: sourceById,
+        placement: placements.get(site.id),
       },
     ]),
   );
@@ -350,6 +414,8 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
     if (b.photoId) story.photoId = b.photoId;
     if (b.sourceId) story.sourceId = b.sourceId;
     if (b.showCard !== null) story.showCard = b.showCard;
+    if (b.camera) story.camera = b.camera;
+    if (b.interior) story.interior = true;
     return story;
   });
 
@@ -382,7 +448,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
   if (s.relatedSiteId) site.relatedSiteId = s.relatedSiteId;
   if (s.coverMediaId) site.coverPhotoId = s.coverMediaId;
   const model = modelOf(a);
-  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust };
+  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups };
   return site;
 }
 
@@ -406,9 +472,14 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     distinct([
       ...a.mediaIds,
       s.coverMediaId,
+      s.aboutCoverMediaId,
       ...a.stories.flatMap((b) => [b.photoId, b.audioMediaId, b.audioEnMediaId]),
       ...distinct(a.stories.map((b) => b.cardId)).flatMap((cardId) => a.cards.get(cardId)?.mediaId ?? []),
       ...a.history.flatMap((h) => [h.mediaId, h.presentMediaId]),
+      ...a.partCards.flatMap((c) => c.photoIds),
+      ...a.sectionPhotos.map((p) => p.mediaId),
+      ...a.tasks.map((t) => t.mediaId),
+      ...a.sampleTraces.map((t) => t.mediaId),
     ]).map((id) => a.media.get(id)),
   );
   // Cards in the order the story first uses them (several sentences may share one card).
@@ -420,10 +491,12 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       ...a.sections.map((x) => x.sourceId),
       ...cardList.map((c) => c.sourceId),
       ...a.history.map((h) => h.sourceId),
+      ...a.partCards.map((c) => c.sourceId),
       ...mediaList.map((m) => m.sourceId),
     ]).map((id) => a.sources.get(id)),
   );
   const cover = s.coverMediaId ? a.media.get(s.coverMediaId) : undefined;
+  const photosOf = sectionPhotosBySection(a.sectionPhotos);
 
   return {
     id: s.id,
@@ -437,6 +510,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     year: s.year,
     coordinates: s.lng === null || s.lat === null ? null : [s.lng, s.lat],
     minutes: s.minutes,
+    displayOrder: s.displayOrder,
     tier: s.tier,
     trust: s.trust,
     description: s.description,
@@ -458,6 +532,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     sourceSummary: s.sourceSummary,
     editorVersion: s.editorVersion === 2 ? 2 : null,
     coverMediaId: s.coverMediaId,
+    aboutCoverMediaId: s.aboutCoverMediaId,
     openingCamera: s.openingCamera,
     updatedAt: s.updatedAt.toISOString(),
     stories: a.stories.map((b) => ({
@@ -472,6 +547,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       showCard: b.showCard,
       cardId: b.cardId,
       camera: b.camera,
+      interior: b.interior,
       highlights: b.highlights,
       audioMediaId: b.audioMediaId,
       audioEnMediaId: b.audioEnMediaId,
@@ -484,7 +560,10 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       bodyEn: x.bodyEn,
       trust: x.trust,
       sourceId: x.sourceId,
+      chapterId: x.chapterId,
+      photos: photosOf.get(x.id) ?? [],
     })),
+    chapters: a.chapters.map(chapterDto),
     cards: cardList.map((c) => ({
       id: c.id,
       kind: c.kind,
@@ -506,7 +585,21 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: h.sourceId,
       trust: h.trust,
       camera: h.camera,
+      presentAngleMatch: h.presentAngleMatch,
     })),
+    sampleTraces: a.sampleTraces.map(sampleTraceDto),
+    partCards: a.partCards.map((c) => ({
+      id: c.id,
+      parts: c.parts,
+      title: c.title,
+      body: c.body,
+      photoIds: c.photoIds,
+      sourceId: c.sourceId,
+      trust: c.trust,
+    })),
+    tasks: a.tasks.map(taskDto),
+    badges: a.badges.map(badgeDto),
+    placement: s.lng === null || s.lat === null ? null : publicPlacement(a.placement, { lng: s.lng, lat: s.lat }, modelOf(a) !== undefined),
     media: mediaList.map((m) => ({
       id: m.id,
       kind: m.kind,
@@ -520,6 +613,8 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: m.sourceId,
       trust: m.trust,
       parts: m.parts,
+      triangles: m.triangles,
+      coverGroups: m.coverGroups,
     })),
     sources: sourceList.map((r) => ({
       id: r.id,
@@ -536,6 +631,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     locationSource: s.locationSource,
     importMeta: s.importMeta && typeof s.importMeta === "object" && !Array.isArray(s.importMeta) ? (s.importMeta as Record<string, unknown>) : null,
     modelMediaId: modelOf(a)?.id ?? null,
+    mapPlacement: a.placement ? { ...resolvePlacement(a.placement, s), visible: a.placement.visible, updatedAt: a.placement.updatedAt.toISOString() } : null,
     photoIds: linked.filter((m) => m.kind === "photo").map((m) => m.id),
     sourceLinks: a.sourceLinks,
     issues: publishIssues(a),
@@ -825,8 +921,8 @@ async function mutate(
 }
 
 /** Zod's optional `label` reads `undefined`; the stored pose only carries the key when set. */
-function toPose({ label, azimuthDeg, elevationDeg, distanceM }: CameraPoseInput): CameraPose {
-  return label === undefined ? { azimuthDeg, elevationDeg, distanceM } : { label, azimuthDeg, elevationDeg, distanceM };
+function toPose({ label, ...pose }: CameraPoseInput): CameraPose {
+  return label === undefined ? pose : { label, ...pose };
 }
 
 /** Creates a draft (editor v2, Tier 1 unless told otherwise); 409 when the city already has the same name and district. */
@@ -1007,6 +1103,69 @@ export function setModel(tx: Tx, ctx: AuditCtx, id: string, input: ModelInput): 
   );
 }
 
+/** The placement as the audit trail keeps it: stored values (no location = the site's own). */
+const placementSnapshot = (p: PlacementRow | undefined) =>
+  p && {
+    lng: p.lng,
+    lat: p.lat,
+    headingDeg: p.headingDeg,
+    scale: p.scale,
+    altitudeM: p.altitudeM,
+    anchorNode: p.anchorNode,
+    hiddenPoints: p.hiddenPoints,
+    keptPoints: p.keptPoints,
+    visible: p.visible,
+  };
+
+/**
+ * The model's place on the map, replaced whole. Only a site with a model has one (409); the placement is
+ * kept when the model is swapped or removed. The city check is the city's bounding box (`CITIES`, the one
+ * the importer rejects geocoder results by); a city without an entry there only gets the WGS84 range check
+ * the schema already did. The site row is locked and touched like every wizard write.
+ */
+export async function setMapPlacement(tx: Tx, ctx: AuditCtx, id: string, input: MapPlacementInput): Promise<AdminSiteDetail> {
+  const before = await lockAndLoad(tx, id);
+  if (!modelOf(before)) throw new AppError(409, "CONFLICT", "Eserin 3B modeli yok; haritada yerleşim için önce model bağla.");
+
+  const errors = new FieldErrors();
+  const box = Object.hasOwn(CITIES, before.site.cityId) ? CITIES[before.site.cityId]?.bbox : undefined;
+  const outside = ({ lng, lat }: { lng: number; lat: number }) => box !== undefined && (lng < box[0] || lat < box[1] || lng > box[2] || lat > box[3]);
+  const cityName = before.site.cityName;
+  const hasLocation = input.lng != null && input.lat != null;
+  if (hasLocation && outside({ lng: input.lng!, lat: input.lat! })) errors.add("lng", `Konum ${cityName} sınırları dışında.`);
+  input.hiddenPoints.forEach((p, i) => outside(p) && errors.add(`hiddenPoints.${i}`, `Nokta ${cityName} sınırları dışında.`));
+  input.keptPoints.forEach((p, i) => outside(p) && errors.add(`keptPoints.${i}`, `Nokta ${cityName} sınırları dışında.`));
+  errors.throwIfAny();
+
+  const values = {
+    location: hasLocation ? ([input.lng!, input.lat!] as [number, number]) : null,
+    headingDeg: input.headingDeg,
+    scale: input.scale,
+    altitudeM: input.altitudeM,
+    anchorNode: input.anchorNode ? input.anchorNode : null,
+    hiddenPoints: input.hiddenPoints,
+    keptPoints: input.keptPoints,
+    visible: input.visible,
+    updatedBy: ctx.actorId,
+    updatedAt: touched,
+  };
+  await tx.insert(siteMapPlacements).values({ siteId: id, ...values }).onConflictDoUpdate({ target: siteMapPlacements.siteId, set: values });
+  // Public readers key off the site's `updatedAt` too; a placement is a change to the site.
+  await tx.update(sites).set({ updatedAt: touched }).where(eq(sites.id, id));
+
+  const after = await requireAggregate(tx, id);
+  await recordAudit(tx, {
+    actorId: ctx.actorId,
+    action: "site.map-placement",
+    entityType: "site",
+    entityId: id,
+    before: placementSnapshot(before.placement) ?? null,
+    after: placementSnapshot(after.placement) ?? null,
+    requestId: ctx.requestId,
+  });
+  return toAdminDetail(after);
+}
+
 /** Adım 3 (Fotoğraflar): ordered photo list and the cover, which must be one of them. */
 export function setPhotos(tx: Tx, ctx: AuditCtx, id: string, input: SiteMediaInput): Promise<AdminSiteDetail> {
   return mutate(
@@ -1104,6 +1263,8 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
         if (b.cardId && !cardSet.has(b.cardId)) errors.add(`blocks.${i}.cardId`, "Kart bulunamadı.");
         const unknownParts = hasModel ? b.highlights.filter((h) => !parts.has(h)) : [];
         if (unknownParts.length) errors.add(`blocks.${i}.highlights`, `Modelde olmayan parça: ${unknownParts.join(", ")}.`);
+        if (hasModel && b.camera?.target && !parts.has(b.camera.target))
+          errors.add(`blocks.${i}.camera.target`, `Modelde olmayan parça: ${b.camera.target}.`);
       });
       errors.throwIfAny();
 
@@ -1124,6 +1285,7 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
             showCard: b.showCard ?? null,
             cardId: b.cardId,
             camera: b.camera ? toPose(b.camera) : null,
+            interior: b.interior,
             highlights: [...new Set(b.highlights)],
             audioMediaId: b.audioMediaId,
             audioEnMediaId: b.audioEnMediaId,
@@ -1143,7 +1305,7 @@ export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsIn
     ctx,
     id,
     (a) => ({ sections: a.sections }),
-    async () => {
+    async (before) => {
       const rows = input.sections.map((s) => ({ ...s, id: s.id ?? newId("sec", s.title) }));
       const errors = new FieldErrors();
       checkUnique(errors, (i) => `sections.${i}.id`, rows.map((r) => r.id), "Aynı kimlik birden fazla bölümde kullanılmış.");
@@ -1153,6 +1315,15 @@ export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsIn
       });
       errors.throwIfAny();
 
+      // The rows are replaced, but what the import attached to them stays: a paragraph that keeps its id keeps its
+      // chapter and book photographs; a new one joins the chapter with the same title (null when there is none).
+      // Paragraphs left out lose their photographs with them (the foreign key cascades); chapters stay.
+      const chapters = await tx.select({ id: siteAboutChapters.id, title: siteAboutChapters.title }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, id)).orderBy(asc(siteAboutChapters.position));
+      const chapterOfTitle = new Map<string, string>();
+      for (const c of chapters) if (!chapterOfTitle.has(c.title)) chapterOfTitle.set(c.title, c.id);
+      const chapterOfSection = new Map(before.sections.map((x) => [x.id, x.chapterId]));
+      const photos = await tx.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, id));
+
       await tx.delete(siteSections).where(eq(siteSections.siteId, id));
       if (rows.length) {
         await tx.insert(siteSections).values(
@@ -1160,6 +1331,7 @@ export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsIn
             siteId: id,
             id: r.id,
             position,
+            chapterId: chapterOfSection.has(r.id) ? chapterOfSection.get(r.id)! : (chapterOfTitle.get(r.title) ?? null),
             kind: r.kind,
             title: r.title,
             body: r.body,
@@ -1168,6 +1340,9 @@ export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsIn
             sourceId: r.sourceId,
           })),
         );
+        const kept = new Set(rows.map((r) => r.id));
+        const restored = photos.filter((p) => kept.has(p.sectionId));
+        if (restored.length) await tx.insert(siteSectionPhotos).values(restored);
       }
       return {};
     },
@@ -1194,6 +1369,7 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
       rows.forEach((r, i) => {
         checkMedia(errors, `images.${i}.mediaId`, r.mediaId, kinds, "photo");
         checkMedia(errors, `images.${i}.presentMediaId`, r.presentMediaId, kinds, "photo");
+        if (r.presentAngleMatch && !r.presentMediaId) errors.add(`images.${i}.presentAngleMatch`, "Açı benzerliği için önce bugünkü görüntüyü seç.");
         if (r.sourceId && !sourceIds.has(r.sourceId)) errors.add(`images.${i}.sourceId`, "Kaynak bulunamadı.");
       });
       errors.throwIfAny();
@@ -1225,6 +1401,7 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
         const values = {
           mediaId: r.mediaId,
           presentMediaId: r.presentMediaId,
+          presentAngleMatch: r.presentMediaId ? r.presentAngleMatch : null,
           caption: r.caption,
           captionEn: r.captionEn || null,
           dateLabel: r.dateLabel,

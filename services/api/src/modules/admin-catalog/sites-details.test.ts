@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
-import { cities, media, sources } from "../../db/schema/index.ts";
+import { eq } from "drizzle-orm";
+import { cities, media, siteAboutChapters, siteBadges, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, sources } from "../../db/schema/index.ts";
 import type { ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -64,7 +65,7 @@ async function publishedSite(name: string): Promise<AdminSiteDetail> {
   const base = `/v1/admin/sites/${draft.id}`;
   const card = (await call<AdminCardDto>("POST", "/v1/admin/cards", editor, { kind: "photo", title: `${name} Kartı`, mediaId: "ph-2", sourceId: "src-vgm", trust: "verified" })).body;
   await send("PUT", `${base}/location`, { coordinates: [29.06, 40.18] });
-  await send("PUT", `${base}/model`, { mediaId: "m-1", openingCamera: { azimuthDeg: 30, elevationDeg: 15, distanceM: 40 } });
+  await send("PUT", `${base}/model`, { mediaId: "m-1", openingCamera: { azimuthDeg: 30, elevationDeg: 15, distance: 0.8 } });
   await send("PUT", `${base}/sources`, { sources: [{ id: "src-vgm", title: "VGM Bursa Envanteri", kind: "book", trust: "verified" }] });
   await send("PUT", `${base}/media`, { photoIds: ["ph-1", "ph-2"], coverPhotoId: "ph-1" });
   await send("PUT", `${base}/stories`, {
@@ -132,6 +133,16 @@ test("every item equals GET /v1/admin/sites/:id, for bare drafts and for a publi
   }
 });
 
+test("the bulk admin detail carries the map order (eser.json sira) like the single detail: the number, or null for an unranked site", async () => {
+  const ranked = await newDraft("Sıralı Han");
+  const unranked = await newDraft("Sırasız Han");
+  await app.deps.db.update(sites).set({ displayOrder: 2 }).where(eq(sites.id, ranked.id));
+  const { body } = await call<DetailPage>("GET", "/v1/admin/site-details?limit=100&query=han", editor);
+  assert.equal(body.items.find((i) => i.id === ranked.id)?.displayOrder, 2);
+  assert.equal(body.items.find((i) => i.id === unranked.id)?.displayOrder, null);
+  assert.equal((await call<AdminSiteDetail>("GET", `/v1/admin/sites/${ranked.id}`, editor)).body.displayOrder, 2);
+});
+
 test("pages hold the same ids in the same order as /v1/admin/sites with the same filters", async () => {
   for (let i = 1; i <= 5; i++) await newDraft(`Sayfa Hanı ${i}`, { city: i % 2 ? "bursa" : "edirne" });
   await publishedSite("Sayfa Hanı Yayında");
@@ -166,4 +177,94 @@ test("a malformed cursor is 400 INVALID_CURSOR and a limit over 100 is refused",
   const tooMany = await call<ErrorBody>("GET", "/v1/admin/site-details?limit=101", editor);
   assert.equal(tooMany.res.statusCode, 400);
   assert.equal(tooMany.body.error.code, "VALIDATION_FAILED");
+});
+
+test("rewriting the paragraphs keeps what the import attached: chapter and book photographs follow the paragraph's id, a new paragraph joins the chapter with its title", async () => {
+  const site = await publishedSite("Okuma Hanı");
+  const base = `/v1/admin/sites/${site.id}`;
+  const db = app.deps.db;
+  const first = site.sections[0]!;
+  const reading = { summary: ["Han 1491'de yapıldı."], figures: [], quotes: [], timeline: [], terms: [], camera: null, interior: false, focusParts: [] };
+  const chapterId = `chapter-${site.id}`;
+  await db.insert(siteAboutChapters).values({ id: chapterId, siteId: site.id, position: 0, title: "Tarihçe", kind: "history", reading });
+  await db.update(siteSections).set({ chapterId }).where(eq(siteSections.siteId, site.id));
+  await db.insert(siteSectionPhotos).values([
+    { siteId: site.id, sectionId: first.id, position: 0, mediaId: "ph-1", aspect: 1.5, alt: "Birinci" },
+    { siteId: site.id, sectionId: first.id, position: 1, mediaId: "ph-2", aspect: null, alt: "İkinci" },
+  ]);
+  await db.update(sites).set({ aboutCoverMediaId: "ph-2" }).where(eq(sites.id, site.id));
+
+  const edited = await send("PUT", `${base}/sections`, {
+    sections: [
+      { kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" },
+      { id: first.id, kind: "history", title: "Tarihçe", body: "Han 1491'de inşa edildi.", trust: "verified", sourceId: "src-vgm" },
+      { kind: "history", title: "Tarihçe", body: "Sonradan eklenen paragraf.", trust: "verified" },
+    ],
+  });
+  assert.deepEqual(edited.sections.map((x) => [x.title, x.chapterId, x.photos.map((p) => p.alt)]), [
+    ["Mimari", null, []],
+    ["Tarihçe", chapterId, ["Birinci", "İkinci"]],
+    ["Tarihçe", chapterId, []],
+  ]);
+  assert.equal(edited.sections[1]!.photos[0]!.aspect, 1.5);
+  assert.deepEqual(edited.chapters.map((c) => c.id), [chapterId]);
+  assert.equal(edited.aboutCoverMediaId, "ph-2");
+
+  // A paragraph left out takes its photographs with it; the chapter and the cover stay.
+  const trimmed = await send("PUT", `${base}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
+  assert.equal(trimmed.sections.length, 1);
+  assert.equal(trimmed.chapters.length, 1);
+  assert.equal(trimmed.aboutCoverMediaId, "ph-2");
+  assert.equal((await db.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, site.id))).length, 0);
+  const listed = await call<DetailPage>("GET", `/v1/admin/site-details?query=${encodeURIComponent("okuma hani")}`, editor);
+  assert.deepEqual(listed.body.items.find((i) => i.id === site.id), (await call<AdminSiteDetail>("GET", base, editor)).body);
+});
+
+test("the admin detail carries the tasks and badges the public detail does, the task photograph resolves from its media, no answer key, and editing the paragraphs leaves them alone", async () => {
+  const site = await publishedSite("Görev Hanı");
+  const db = app.deps.db;
+  await db.insert(siteTasks).values({
+    id: `${site.id}-soru`, siteId: site.id, position: 0, kind: "quiz", title: "Soru", prompt: "Hangisi?", mediaId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified",
+    details: { options: ["A", "B"], hints: ["İpucu"], correctText: "Gizli doğru metin", wrongText: "Tekrar dene", fromHome: false },
+  });
+  await db.insert(siteTaskAnswers).values({ taskId: `${site.id}-soru`, correctIndex: 1 });
+  await db.insert(siteBadges).values({ id: `${site.id}-rozet`, siteId: site.id, position: 0, title: "Rozet", text: "Kazandın", condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false });
+
+  const admin = (await call<AdminSiteDetail>("GET", `/v1/admin/sites/${site.id}`, editor)).body;
+  const pub = (await call<AdminSiteDetail>("GET", `/v1/sites/${site.id}`)).body;
+  assert.deepEqual(admin.tasks, pub.tasks);
+  assert.deepEqual(admin.badges, pub.badges);
+  assert.deepEqual(admin.tasks, [
+    { id: `${site.id}-soru`, kind: "quiz", title: "Soru", prompt: "Hangisi?", photoId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified", quiz: { options: ["A", "B"], hints: ["İpucu"], wrongText: "Tekrar dene", fromHome: false } },
+  ]);
+  assert.deepEqual(admin.badges, [{ id: `${site.id}-rozet`, title: "Rozet", text: "Kazandın", condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false }]);
+  assert.ok(admin.media.some((m) => m.id === "ph-2"), "the task photograph is part of the media list");
+  assert.ok(!JSON.stringify(admin).includes("Gizli doğru metin"));
+
+  const edited = await send("PUT", `/v1/admin/sites/${site.id}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
+  assert.equal(edited.tasks.length, 1);
+  assert.equal(edited.badges.length, 1);
+});
+
+test("the admin detail carries the team's samples as the public detail does, a sample's photograph resolves from its media, and dropping its archive image keeps the sample", async () => {
+  const site = await publishedSite("Örnek Hanı");
+  const db = app.deps.db;
+  const base = `/v1/admin/sites/${site.id}`;
+  await db.insert(media).values({
+    id: "ph-trace", kind: "photo", mime: "image/webp", url: "https://cdn.test/ph-trace.webp", alt: "Aynı eksen.",
+    description: "Fotoğraf: Arşiv (örnek katkı olarak gösteriliyor)", license: "Proje için verildi", trust: "representative",
+  });
+  const imageId = site.historyImages[0]!.id;
+  await db.insert(siteSampleTraces).values({ id: `${site.id}-iz`, siteId: site.id, position: 0, author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "ph-trace", historyImageId: imageId, angleMatch: "near", addedOn: "2026-10-28" });
+
+  const admin = (await call<AdminSiteDetail>("GET", base, editor)).body;
+  const pub = (await call<AdminSiteDetail>("GET", `/v1/sites/${site.id}`)).body;
+  assert.deepEqual(admin.sampleTraces, pub.sampleTraces);
+  assert.deepEqual(admin.sampleTraces, [{ id: `${site.id}-iz`, author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "ph-trace", historyImageId: imageId, angleMatch: "near", addedOn: "2026-10-28" }]);
+  assert.equal(admin.media.find((m) => m.id === "ph-trace")?.description, "Fotoğraf: Arşiv (örnek katkı olarak gösteriliyor)");
+  const listed = await call<DetailPage>("GET", `/v1/admin/site-details?query=${encodeURIComponent("örnek hanı")}`, editor);
+  assert.deepEqual(listed.body.items.find((i) => i.id === site.id)?.sampleTraces, admin.sampleTraces);
+
+  const emptied = await send("PUT", `${base}/history-images`, { images: [] });
+  assert.deepEqual(emptied.sampleTraces.map((t) => [t.id, t.historyImageId]), [[`${site.id}-iz`, null]]);
 });

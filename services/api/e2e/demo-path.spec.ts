@@ -2,7 +2,8 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expect, test, type Browser, type BrowserContextOptions, type Page } from "@playwright/test";
+import { triangleGlb } from "../../../tests/support/triangle-glb.ts";
 
 const API = "http://127.0.0.1:4000";
 const MAILPIT = "http://127.0.0.1:54324";
@@ -15,7 +16,16 @@ const PNG = Buffer.from(
 );
 
 test.beforeAll(async () => {
-  const ready = await fetch(`${API}/ready`).catch(() => null);
+  let ready = await fetch(`${API}/ready`).catch(() => null);
+  // Desktop and mobile share localhost's guest quota. A fast preceding project (or a local rerun)
+  // can exhaust it before the next project signs in. Wait at setup, never retry a failed assertion
+  // or relax the application's rate limit. Reset is seconds until the current window ends.
+  const remaining = ready?.headers.get("x-ratelimit-remaining");
+  const reset = Number(ready?.headers.get("x-ratelimit-reset"));
+  if (remaining !== null && remaining !== undefined && Number(remaining) < 250 && reset > 0 && reset <= 60) {
+    await sleep(reset * 1000 + 100);
+    ready = await fetch(`${API}/ready`).catch(() => null);
+  }
   expect(ready?.ok, "API kapalı: önce repo kökünde `npm run api`").toBe(true);
   const mail = await fetch(`${MAILPIT}/api/v1/info`).catch(() => null);
   expect(mail?.ok, "Mailpit (yerel Supabase) kapalı: `npm run api`").toBe(true);
@@ -57,6 +67,8 @@ function tokenFor(email: string, role: "user" | "editor" | "moderator" | "admin"
 }
 
 async function openSite(page: Page, name: string) {
+  // The page under the opening screen takes no input until the map is drawn (§11.49).
+  await expect(page.locator(".opening")).toHaveCount(0);
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill(name);
   await page.locator(".site-card-main").filter({ hasText: name }).first().click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
@@ -67,8 +79,8 @@ async function openProfile(page: Page) {
   await expect(page.getByRole("heading", { name: "Mirasım", level: 1 })).toBeVisible();
 }
 
-async function guestPage(browser: Browser) {
-  const context = await browser.newContext();
+async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+  const context = await browser.newContext(options);
   const page = await context.newPage();
   await page.goto("/");
   return { context, page };
@@ -387,4 +399,134 @@ test("live photo metadata editing preserves imported licenses and excludes unsup
   await expect(dialog.getByRole("button", { name: "Fotoğrafı güncelle", exact: true })).toBeEnabled();
   await expect(dialog.getByText(/Dosya veya kaynak değişikliği için/)).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("photo-editor.png"), fullPage: true });
+});
+
+test("map settings follow delayed reads without overwriting an edited field", async ({ page }) => {
+  const email = `e2e-map-admin-${randomUUID().slice(0, 8)}@akar.test`;
+  tokenFor(email, "admin");
+  let releaseFirstRead = () => {};
+  const firstRead = new Promise<void>((resolve) => { releaseFirstRead = resolve; });
+  let settings = { maxVisibleModels: 7, modelMinZoom: 18 };
+  await page.route(`${API}/v1/map-settings`, async (route) => {
+    await firstRead;
+    await route.fulfill({ json: settings });
+  });
+  await page.goto("/#view=admin");
+  await page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await signIn(page, email);
+  await page.getByRole("button", { name: "Harita ayarları", exact: true }).click();
+  const models = page.getByLabel("Aynı anda en çok model");
+  const zoom = page.getByLabel("Modellerin yüklendiği yakınlaştırma");
+  await expect(models).toBeVisible();
+  releaseFirstRead();
+  await expect(models).toHaveValue("7");
+  await expect(zoom).toHaveValue("18");
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
+
+  await models.fill("9");
+  settings = { maxVisibleModels: 6, modelMinZoom: 19 };
+  const refreshed = page.waitForResponse(`${API}/v1/map-settings`);
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await refreshed;
+  // Only the touched field belongs to the draft; untouched fields follow the server.
+  await expect(models).toHaveValue("9");
+  await expect(zoom).toHaveValue("19");
+  let submitted: unknown;
+  await page.route(`${API}/v1/admin/map-settings`, async (route) => {
+    submitted = route.request().postDataJSON();
+    await route.fulfill({ json: submitted });
+  });
+  await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+  await expect(page.getByText("Harita ayarları kaydedildi.")).toBeVisible();
+  expect(submitted).toEqual({ maxVisibleModels: 9, modelMinZoom: 19 });
+  await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toBeDisabled();
+});
+
+test("cancelling a field task ignores its delayed completion", async ({ page }) => {
+  await page.route(`${API}/v1/site-details?*`, async (route) => {
+    const response = await route.fetch();
+    const catalog = await response.json();
+    const site = catalog.items.find((s: { id: string }) => s.id === "ulu-cami");
+    site.tasks = [{
+      id: "delayed-field-task", kind: "field", title: "Geciken görev", prompt: "Kapıya dokun.",
+      photoId: null, part: null, source: null, trust: "representative",
+      field: { onSite: { text: "Kapının önüne gel.", radiusM: 80 }, fromHome: { text: "Kapıya dokun.", part: "Tac_Kapi" } },
+    }];
+    site.media = [{ id: "task-model", kind: "model", url: "/delayed-task.glb", parts: ["Tac_Kapi"], title: "Görev modeli", trust: "representative" }];
+    await route.fulfill({ response, json: catalog });
+  });
+  await page.route("**/delayed-task.glb", (route) => route.fulfill({ contentType: "model/gltf-binary", body: triangleGlb("Tac_Kapi") }));
+  let release = () => {};
+  const pending = new Promise<void>((resolve) => { release = resolve; });
+  const path = `${API}/v1/site-tasks/delayed-field-task/complete`;
+  await page.route(path, async (route) => {
+    await pending;
+    await route.fulfill({ json: { doneText: "Kapı bulundu.", onSite: false, earnedBadges: [] } });
+  });
+  try {
+    await page.goto("/#view=detail&site=ulu-cami");
+    await page.getByRole("button", { name: "Geciken görev" }).click();
+    await page.getByRole("button", { name: "Evden yap", exact: true }).click();
+    await expect(page.locator(".model-status")).toHaveCount(0);
+    const request = page.waitForRequest(path);
+    await page.locator(".model-viewer canvas").click();
+    await request;
+    await page.locator(".task-pick-bar").getByRole("button", { name: "Vazgeç" }).click();
+    await expect(page.locator(".task-pick-bar")).toHaveCount(0);
+    const response = page.waitForResponse(path);
+    release();
+    await (await response).finished();
+    // Let the fetch continuation and React commit run before asserting the dialog stays dismissed.
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(page.getByRole("dialog", { name: "Geciken görev" })).toHaveCount(0);
+    await expect(page.locator(".task-pick-bar")).toHaveCount(0);
+  } finally {
+    release();
+  }
+});
+
+test("an admin finds a newly registered member, grants admin access and revokes it", async ({ browser, viewport, isMobile, hasTouch }, info) => {
+  const run = randomUUID().slice(0, 8);
+  const adminEmail = `e2e-member-admin-${run}@akar.test`;
+  const memberEmail = `e2e-member-${run}@akar.test`;
+  tokenFor(adminEmail, "admin");
+  const member = await guestPage(browser, { viewport, isMobile, hasTouch });
+  const admin = await guestPage(browser, { viewport, isMobile, hasTouch });
+  try {
+    // A genuine new account: no profile row and no API-side role setup.
+    await member.page.goto("/#view=admin");
+    await member.page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+    await signIn(member.page, memberEmail);
+    await expect(member.page.getByText("Bu hesabın yönetim yetkisi bulunmuyor.")).toBeVisible();
+
+    await admin.page.goto("/#view=admin");
+    await admin.page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+    await signIn(admin.page, adminEmail);
+    await admin.page.getByRole("button", { name: "Üyeler ve roller", exact: true }).click();
+    await admin.page.getByLabel("E-posta ile üye ara").fill(memberEmail);
+    await admin.page.getByRole("button", { name: "Ara", exact: true }).click();
+    const row = admin.page.getByRole("row").filter({ hasText: memberEmail });
+    await expect(row.getByText("Üye", { exact: true })).toBeVisible();
+    await expect(admin.page.getByRole("row")).toHaveCount(2);
+    await row.getByRole("button").click();
+    const dialog = admin.page.getByRole("dialog", { name: "Üye rolünü değiştir" });
+    await dialog.getByLabel("Yeni rol").selectOption("admin");
+    await dialog.getByRole("button", { name: "Değişikliği onayla" }).click();
+    await expect(row.getByText("Yönetici", { exact: true })).toBeVisible();
+    await admin.page.screenshot({ path: `test-results/${info.project.name}-real-admin-members.png`, fullPage: true });
+    // Same signed-in account; no token replacement or sign-in is required.
+    await member.page.reload();
+    await expect(member.page.getByRole("button", { name: "Üyeler ve roller", exact: true })).toBeVisible();
+
+    await row.getByRole("button").click();
+    await dialog.getByLabel("Yeni rol").selectOption("user");
+    await dialog.getByRole("button", { name: "Değişikliği onayla" }).click();
+    await expect(row.getByText("Üye", { exact: true })).toBeVisible();
+    await member.page.reload();
+    await expect(member.page.getByText("Bu hesabın yönetim yetkisi bulunmuyor.")).toBeVisible();
+    await expect(member.page.getByRole("button", { name: "Üyeler ve roller", exact: true })).toHaveCount(0);
+  } finally {
+    await member.context.close();
+    await admin.context.close();
+  }
 });

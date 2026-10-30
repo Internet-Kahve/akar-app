@@ -33,27 +33,49 @@ import {
 } from "@akar/api-client";
 import {
   approvedMemories,
+  defaultMapSettings,
   filterSites,
   kindLabels,
-  trustLabels,
   normalize,
+  offeredKinds,
+  siteKinds,
   type Command,
   type HeritageSite,
+  type MapPlacement,
+  type MapSettings,
+  type CityRecord,
   type Role,
+  type SiteBadge,
+  type SiteTask,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap } from "./heritage-map";
+import { Cities } from "./city-scenes";
+import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Architecture, Scene } from "./scene";
 import { HistoryView } from "./history-view";
 import { StoryPanel } from "./story-panel";
+import { AboutModal } from "./about-reading";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { MemoryActions } from "./memory-actions";
 import { SignInModal } from "./sign-in-modal";
 import { Modal, Tag, Notice, Back, Motif } from "./ui";
+import {
+  FieldTaskDialog,
+  isFieldTask,
+  isQuizTask,
+  QuizTaskDialog,
+  SiteTasks,
+  TaskPickBar,
+  useSiteProgress,
+  type FieldDone,
+  type FieldTask,
+} from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
 import { apiUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
+import { locateOnce } from "../lib/locate";
 type View =
   | "map"
   | "sites"
@@ -78,9 +100,12 @@ const navigation = [
   { view: "routes" as View, label: "Rotalar", icon: Route },
   { view: "sites" as View, label: "Eserler", icon: Landmark },
 ];
+/** The catalog is read again this often, and whenever the tab comes back to the front. */
+const CATALOG_REFRESH_MS = 5 * 60_000;
 export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
+    [snapshotRevision, setSnapshotRevision] = useState(0),
     [experimental, setExperimental] = useState(false),
     [storyLayout, setStoryLayout] = useState<"panel" | "subtitle">("panel"),
     [view, setView] = useState<View>("map"),
@@ -102,27 +127,79 @@ export function AkarApp() {
     ),
     // `null` = closed; the string says why the dialog opened ("" = user asked).
     [signIn, setSignIn] = useState<string | null>(null);
+  const [taskDialog, setTaskDialog] = useState<{
+    task: SiteTask;
+    result?: FieldDone;
+  } | null>(null);
+  const [pick, setPick] = useState<{ task: FieldTask; hint: string } | null>(
+    null,
+  );
+  const [mapSettings, setMapSettings] =
+    useState<MapSettings>(defaultMapSettings);
+  const [cityRecords, setCityRecords] = useState<CityRecord[]>([]);
+  // The opening screen (§11.49) stays until the map is first drawn; `mapDrawn` says so, `openingLate` gives up waiting.
+  const [opening, setOpening] = useState(true),
+    [mapDrawn, setMapDrawn] = useState(false),
+    [openingLate, setOpeningLate] = useState(false);
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
     accountId = useRef<string | null | undefined>(undefined);
+  const pickBusy = useRef<typeof pick>(null);
+  const currentPick = useRef(pick);
+  currentPick.current = pick;
   const live = !!apiUrl;
   const role: Role = state.role ?? (live ? "user" : "admin");
   const canManage = !live || (!!account && role !== "user");
   const showExperimental = !live && experimental;
+  /** A guest plays the tasks freely, but nothing is stored and no badge is earned; the demo has no sign-in. */
+  const guestPlayer = live && !account;
+  const { progress, refresh: refreshProgress } = useSiteProgress(
+    client,
+    ready,
+    account?.id ?? null,
+    snapshotRevision,
+  );
+  /**
+   * Map settings and city records (§11.42, §11.45) are a refinement: when one cannot be read the map
+   * opens at the demo region and the viewer keeps the values it has.
+   */
+  const loadMapSettings = useCallback(async () => {
+    const c = client.current;
+    if (!c) return;
+    await Promise.all([
+      c.getMapSettings().then(setMapSettings, () => {}),
+      c.getCities().then(setCityRecords, () => {}),
+    ]);
+  }, []);
   const load = useCallback(async () => {
     if (!client.current) return;
     if (!loaded.current) setLoadError("");
     try {
       setState(await client.current.getSnapshot());
+      // Signing in may redeem guest story receipts while loading the snapshot. Read badges again
+      // afterwards, so an earlier auth-event read cannot hide the newly transferred story badge.
+      setSnapshotRevision((revision) => revision + 1);
       loaded.current = true;
       setReady(true);
+      void loadMapSettings();
     } catch (e) {
       const message = describeError(e, "Veriler yüklenemedi.");
       if (loaded.current) setFault(message);
       else setLoadError(message);
     }
-  }, []);
+  }, [loadMapSettings]);
+  /** Background re-read of the catalog (new, moved or removed models); a failure is not worth a message. */
+  const refreshCatalog = useCallback(async () => {
+    if (!client.current || !loaded.current) return;
+    try {
+      const [snapshot] = await Promise.all([
+        client.current.refreshCatalog(),
+        loadMapSettings(),
+      ]);
+      setState(snapshot);
+    } catch {}
+  }, [loadMapSettings]);
   useEffect(() => {
     let storage: Storage | undefined;
     try {
@@ -143,35 +220,17 @@ export function AkarApp() {
           getMemoryConsent: () => consent.current,
           onUploadProgress: setUploadProgress,
           locate: () =>
-            new Promise((resolve, reject) => {
-              if (!navigator.geolocation) {
-                reject(
-                  new Error("Bu cihaz konum doğrulamasını desteklemiyor."),
-                );
-                return;
-              }
-              navigator.geolocation.getCurrentPosition(
-                (p) =>
-                  resolve({
-                    coordinates: [p.coords.longitude, p.coords.latitude],
-                    accuracyM: p.coords.accuracy,
-                  }),
-                (error) =>
-                  reject(
-                    new Error(
-                      error.code === 1
-                        ? "Ziyareti doğrulamak için konum izni vermelisin."
-                        : error.code === 3
-                          ? "Konum alınması zaman aşımına uğradı. Yeniden dene."
-                          : "Konum alınamadı. Konum hizmetlerini kontrol et.",
-                    ),
-                  ),
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-              );
+            locateOnce({
+              unsupported: "Bu cihaz konum doğrulamasını desteklemiyor.",
+              denied: "Ziyareti doğrulamak için konum izni vermelisin.",
+              timeout: "Konum alınması zaman aşımına uğradı. Yeniden dene.",
+              failed: "Konum alınamadı. Konum hizmetlerini kontrol et.",
             }),
         })
       : createMockClient(storage);
     void load();
+    // The opening screen names the default city and draws its pattern: its record is read beside the catalog, not after it.
+    void client.current.getCities().then(setCityRecords, () => {});
     // The first event only reports the stored session; later changes (sign-in,
     // sign-out, rejected token) re-read the state for the new identity.
     const subscription = supabase?.auth.onAuthStateChange((_event, session) => {
@@ -185,6 +244,8 @@ export function AkarApp() {
       }
     }).data.subscription;
     const readLocation = () => {
+      setTaskDialog(null);
+      setPick(null);
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
       if (
@@ -212,15 +273,34 @@ export function AkarApp() {
     };
   }, [load]);
   useEffect(() => {
+    if (!ready) return;
+    const timer = setInterval(() => void refreshCatalog(), CATALOG_REFRESH_MS);
+    const refocus = () => {
+      if (document.visibilityState === "visible") void refreshCatalog();
+    };
+    document.addEventListener("visibilitychange", refocus);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refocus);
+    };
+  }, [ready, refreshCatalog]);
+  useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 4500);
     return () => clearTimeout(t);
   }, [toast]);
+  // A map that never draws must not hold the opening screen for ever.
+  useEffect(() => {
+    const t = setTimeout(() => setOpeningLate(true), OPENING_MAX_MS);
+    return () => clearTimeout(t);
+  }, []);
   const go = useCallback((next: View, id?: string) => {
     setView(next);
     setCollapsed(false);
     if (id) setSiteId(id);
     setOverlay(null);
+    setTaskDialog(null);
+    setPick(null);
     const p = new URLSearchParams({ view: next });
     if (id) p.set("site", id);
     window.location.hash = p.toString();
@@ -242,6 +322,67 @@ export function AkarApp() {
     async (command: Command) => (await run(command)) === null,
     [run],
   );
+  /** A finished task: the badges it earned are announced and the progress is read again. */
+  const taskFinished = useCallback(
+    (badges: SiteBadge[]) => {
+      if (badges.length)
+        setToast(`Yeni rozet: ${badges.map((b) => b.title).join(", ")}`);
+      void refreshProgress();
+    },
+    [refreshProgress],
+  );
+  const signInForBadges = () => setSignIn("Rozetlerin hesabına kaydedilir.");
+  /** The tap of pick mode: the part goes to the server; a wrong one keeps the model waiting. */
+  async function pickPart(part: string) {
+    const current = pick;
+    if (!current || pickBusy.current === current || !client.current) return;
+    const identity = accountId.current;
+    const stillCurrent = () =>
+      currentPick.current === current && accountId.current === identity;
+    pickBusy.current = current;
+    try {
+      const result = await client.current.completeSiteTask(current.task.id, {
+        mode: "fromHome",
+        part,
+      });
+      if (!stillCurrent()) return;
+      if (result.done) {
+        setPick(null);
+        setTaskDialog({ task: current.task, result });
+        taskFinished(result.earnedBadges);
+      } else
+        setPick({
+          ...current,
+          hint: "Bu başka bir parça. Başka bir yere dokunmayı dene.",
+        });
+    } catch (e) {
+      if (stillCurrent())
+        setPick({ ...current, hint: describeError(e, "Görev tamamlanamadı.") });
+    } finally {
+      if (pickBusy.current === current) pickBusy.current = null;
+    }
+  }
+  const loadPlacement = useCallback<AkarClient["getMapPlacement"]>(
+    async (siteId) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.getMapPlacement(siteId);
+    },
+    [],
+  );
+  // Not through `run`: the editor shows the error next to the values it refused.
+  const savePlacement = useCallback(
+    async (siteId: string, placement: MapPlacement) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      setState(
+        await client.current.dispatch({
+          type: "map-placement",
+          siteId,
+          placement,
+        }),
+      );
+    },
+    [],
+  );
   const saveSite = useCallback(async (site: HeritageSite) => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     const result = await client.current.saveSite(site);
@@ -255,9 +396,30 @@ export function AkarApp() {
     },
     [],
   );
+  const loadMembers = useCallback<AkarClient["getMembers"]>(
+    async (query, page) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.getMembers(query, page);
+    },
+    [],
+  );
+  const changeMemberRole = useCallback<AkarClient["setMemberRole"]>(
+    async (userId, role, expectedRole) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.setMemberRole(userId, role, expectedRole);
+    },
+    [],
+  );
   const loadHealth = useCallback(async () => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
+  }, []);
+  /** Admin panel: the saved values become this tab's map settings at once. */
+  const saveMapSettings = useCallback(async (next: MapSettings) => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    const saved = await client.current.setMapSettings(next);
+    setMapSettings(saved);
+    return saved;
   }, []);
   const signOut = () => {
     void getSupabase()?.auth.signOut();
@@ -266,11 +428,17 @@ export function AkarApp() {
   const site = state.sites.find(
     (s) => s.id === siteId && s.status === "published",
   );
+  const dialogTask = taskDialog?.task;
   const filtered = useMemo(
     () =>
       filterSites(state.sites, query, kind, saved ? state.savedIds : undefined),
     [state.sites, state.savedIds, query, kind, saved],
   );
+  // Only the kinds with a site in the city the search points at get a chip (§11.48); the active one stays.
+  const kindChips = useMemo(() => {
+    const offered = offeredKinds(state.sites, query);
+    return siteKinds.filter((k) => offered.includes(k) || k === kind);
+  }, [state.sites, query, kind]);
   const published = useMemo(
     () => state.sites.filter((s) => s.status === "published"),
     [state.sites],
@@ -290,6 +458,14 @@ export function AkarApp() {
     showMap = !["profile", "admin", "history"].includes(view),
     showRoutes =
       (view === "routes" || (view === "map" && tab === "routes")) && !query;
+  // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
+  // to wait for, as soon as the page can show something.
+  const openingDone =
+    mapDrawn ||
+    openingLate ||
+    !!loadError ||
+    (ready && !(showMap && !isDetail));
+  const openingCity = cityRecords.find((c) => c.isDefault);
   function selectSite(id: string) {
     setStoryIndex(0);
     go("detail", id);
@@ -368,8 +544,8 @@ export function AkarApp() {
       )}
     </div>
   );
-  return (
-    <div className="app-shell">
+  const shell = (
+    <div className="app-shell" inert={opening && !openingDone}>
       <a
         className="skip-link"
         href="#main-content"
@@ -528,8 +704,15 @@ export function AkarApp() {
               role={role}
               loadHealth={loadHealth}
               loadModeration={loadModeration}
+              loadMembers={loadMembers}
+              changeMemberRole={changeMemberRole}
+              currentUserId={account?.id ?? "demo-admin"}
               saveSite={saveSite}
+              loadPlacement={loadPlacement}
+              savePlacement={savePlacement}
               live={live}
+              mapSettings={mapSettings}
+              saveMapSettings={saveMapSettings}
             />
           )}
           {view === "history" && site && (
@@ -564,10 +747,16 @@ export function AkarApp() {
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {
+                          const fresh = await refreshProgress();
+                          const earned = (site.badges ?? []).filter((b) =>
+                            fresh.includes(b.id),
+                          );
                           setToast(
-                            state.readIds.includes(site.id)
-                              ? "Hikâyeyi yeniden keşfettin."
-                              : "Hikâye tamamlandı.",
+                            `${
+                              state.readIds.includes(site.id)
+                                ? "Hikâyeyi yeniden keşfettin."
+                                : "Hikâye tamamlandı."
+                            }${earned.length ? ` Yeni rozet: ${earned.map((b) => b.title).join(", ")}` : ""}`,
                           );
                           go("detail", site.id);
                         }
@@ -675,6 +864,11 @@ export function AkarApp() {
                           </button>
                         ))}
                       </div>
+                      <SiteTasks
+                        site={site}
+                        progress={progress}
+                        onOpen={(task) => setTaskDialog({ task })}
+                      />
                       <button
                         className="detail-link"
                         onClick={() => setOverlay("about")}
@@ -779,7 +973,9 @@ export function AkarApp() {
                               <span>
                                 <strong>{s.name}</strong>
                                 <small>
-                                  {s.year} · {s.minutes} dk
+                                  {[s.year, `${s.minutes} dk`]
+                                    .filter(Boolean)
+                                    .join(" · ")}
                                 </small>
                               </span>
                               <ArrowRight size={15} />
@@ -960,16 +1156,7 @@ export function AkarApp() {
                               </button>
                             </div>
                             <div className="filter-row">
-                              {[
-                                "all",
-                                "cami",
-                                "turbe",
-                                "cesme",
-                                "hamam",
-                                "han",
-                                "bedesten",
-                                "egitim",
-                              ].map((k) => (
+                              {["all", ...kindChips].map((k) => (
                                 <button
                                   key={k}
                                   className={kind === k ? "active" : ""}
@@ -1012,12 +1199,25 @@ export function AkarApp() {
                 </button>
                 {isDetail && site ? (
                   <Scene
-                    key={`${site.id}-${view === "story" ? storyIndex : "detail"}`}
+                    key={`${site.id}-${view === "story" && !site.model ? storyIndex : view}`}
+                    context={view === "story" ? "story" : "detail"}
                     site={site}
                     live={live}
                     photoId={
                       view === "story"
                         ? site.stories[storyIndex]?.photoId
+                        : undefined
+                    }
+                    pose={
+                      view === "story"
+                        ? site.stories
+                            .slice(0, storyIndex + 1)
+                            .findLast((s) => s.camera)?.camera
+                        : undefined
+                    }
+                    interior={
+                      view === "story"
+                        ? (site.stories[storyIndex]?.interior ?? false)
                         : undefined
                     }
                     flow={
@@ -1030,16 +1230,29 @@ export function AkarApp() {
                       if (index >= 0) openStory(false, index);
                       else setOverlay("about");
                     }}
+                    onPick={pick ? pickPart : undefined}
                   />
                 ) : (
                   <HeritageMap
                     sites={filtered}
                     selectedId={undefined}
                     onSelect={selectSite}
+                    onFirstDraw={() => setMapDrawn(true)}
                     routeIds={
                       routeId ? routeSites.map((s) => s.id) : state.routeIds
                     }
                     collapsed={collapsed}
+                    mapSettings={mapSettings}
+                    focusCity={
+                      cityRecords.find((c) => c.name === query.trim())?.name
+                    }
+                  />
+                )}
+                {pick && (
+                  <TaskPickBar
+                    task={pick.task}
+                    hint={pick.hint}
+                    onCancel={() => setPick(null)}
                   />
                 )}
                 {!live && (
@@ -1053,6 +1266,43 @@ export function AkarApp() {
           )}
         </>
       )}
+      {taskDialog &&
+        dialogTask &&
+        site &&
+        client.current &&
+        isQuizTask(dialogTask) && (
+          <QuizTaskDialog
+            key={dialogTask.id}
+            task={dialogTask}
+            client={client.current}
+            guest={guestPlayer}
+            done={progress.tasks.some((t) => t.taskId === dialogTask.id)}
+            onClose={() => setTaskDialog(null)}
+            onDone={taskFinished}
+            onSignIn={signInForBadges}
+          />
+        )}
+      {taskDialog &&
+        dialogTask &&
+        site &&
+        client.current &&
+        isFieldTask(dialogTask) && (
+          <FieldTaskDialog
+            key={dialogTask.id}
+            task={dialogTask}
+            site={site}
+            client={client.current}
+            guest={guestPlayer}
+            {...(taskDialog.result && { initial: taskDialog.result })}
+            onClose={() => setTaskDialog(null)}
+            onPickFromHome={() => {
+              setPick({ task: dialogTask, hint: "" });
+              setTaskDialog(null);
+            }}
+            onDone={taskFinished}
+            onSignIn={signInForBadges}
+          />
+        )}
       {overlay === "memory" && site && (
         <MemoryModal
           site={site}
@@ -1086,44 +1336,7 @@ export function AkarApp() {
         />
       )}
       {overlay === "about" && site && (
-        <Modal title="Eser hakkında" onClose={() => setOverlay(null)}>
-          <h3>{site.name}</h3>
-          <p>{site.description}</p>
-          <dl className="facts">
-            <div>
-              <dt>Dönem</dt>
-              <dd>{site.year}</dd>
-            </div>
-            <div>
-              <dt>Mimar</dt>
-              <dd>{site.architect}</dd>
-            </div>
-            <div>
-              <dt>Konum</dt>
-              <dd>
-                {site.city} · {site.district}
-              </dd>
-            </div>
-          </dl>
-          {site.sections?.map((section) => (
-            <section key={section.id}>
-              <h3>{section.title}</h3>
-              <p>{section.body}</p>
-              <Tag tone={section.trust}>{trustLabels[section.trust]}</Tag>
-              <p className="muted">
-                {
-                  site.sources?.find((source) => source.id === section.sourceId)
-                    ?.title
-                }
-              </p>
-            </section>
-          ))}
-          <h3>Kaynak ve içerik durumu</h3>
-          <p>{site.source}</p>
-          {!site.sources?.length && (
-            <Notice>Bu kaydın kaynaklı içerik paketi henüz eklenmedi.</Notice>
-          )}
-        </Modal>
+        <AboutModal site={site} onClose={() => setOverlay(null)} />
       )}
       {overlay === "memories" && site && (
         <Modal title="Yaşayan hafıza" onClose={() => setOverlay(null)}>
@@ -1231,7 +1444,10 @@ export function AkarApp() {
               className="btn"
               onClick={async () => {
                 try {
-                  if (client.current) setState(await client.current.reset());
+                  if (client.current) {
+                    setState(await client.current.reset());
+                    void refreshProgress();
+                  }
                   setOverlay(null);
                   setToast("Demo başlangıca döndürüldü.");
                 } catch (e) {
@@ -1303,6 +1519,19 @@ export function AkarApp() {
       </nav>
     </div>
   );
+  return (
+    <Cities.Provider value={cityRecords}>
+      {shell}
+      {opening && (
+        <OpeningScreen
+          cityName={openingCity?.name}
+          identity={openingCity?.identity ?? null}
+          done={openingDone}
+          onGone={() => setOpening(false)}
+        />
+      )}
+    </Cities.Provider>
+  );
 }
 function PlusIcon() {
   return <span className="plus-circle">+</span>;
@@ -1330,7 +1559,7 @@ function SiteCard({
         </div>
         <span>
           <small>
-            {kindLabels[site.kind]} · {site.year}
+            {[kindLabels[site.kind], site.year].filter(Boolean).join(" · ")}
           </small>
           <strong>{site.name}</strong>
           <span className="site-meta">

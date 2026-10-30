@@ -1,6 +1,10 @@
 import type {
+  CityRecord,
   HeritageRoute,
   HeritageSite,
+  SiteBadge,
+  SiteModel,
+  SiteTask,
   Snapshot,
   StoryBlock,
 } from "@akar/domain";
@@ -12,6 +16,55 @@ export const demoRegion = {
   center: [29.0619, 40.184] as [number, number],
   heroId: "ulu-cami",
 };
+/**
+ * City records (`veri/sehir/*.json`) as the import stores them (§11.42, §11.45); `siteCount` is counted from the
+ * demo catalog. Konya stands for the inventories not yet in the app («Yakında» on the globe).
+ */
+export const demoCities: Array<Omit<CityRecord, "siteCount">> = [
+  {
+    id: "bursa",
+    name: "Bursa",
+    isDefault: true,
+    map: { center: [29.0628, 40.1846], zoom: 16.3, zoomDesktop: 16.7 },
+    inventory: {
+      name: "Bursa Vakıf Eserleri Envanteri",
+      publisher: "Vakıf Katılım, 2026",
+      year: 2025,
+      siteCount: 385,
+    },
+    scene: {
+      light: {
+        ambient: 2,
+        sun: 1,
+        fill: 1,
+        azimuthDeg: 315,
+        elevationDeg: 45,
+        saturation: 1.25,
+        groundShadow: 0.18,
+      },
+      backgroundTop: "#DDE4E5",
+      backgroundBottom: "#A7B4B7",
+    },
+    identity: {
+      accent: "#22566E",
+      pattern: "desen-bursa-sekiz-yildiz.svg",
+      patternColour: "#A4D8E0",
+    },
+  },
+  {
+    id: "konya",
+    name: "Konya",
+    isDefault: false,
+    map: { center: [32.4846, 37.8714], zoom: 14, zoomDesktop: null },
+    inventory: { name: null, publisher: null, year: 2024, siteCount: 289 },
+    scene: null,
+    identity: {
+      accent: "#3D8285",
+      pattern: "desen-konya-on-iki-gulbezek.svg",
+      patternColour: "#E8DD7A",
+    },
+  },
+];
 const story = (id: string, title: string, text: string): StoryBlock => ({
   id,
   title,
@@ -127,8 +180,233 @@ const input: Array<
       "Eğitim filtresini denemek için oluşturulmuş kurmaca kayıt; gerçek bir envanter eseri değildir.",
   },
 ];
+/**
+ * Demo models (`apps/web/public/demo-models`) and where the map draws them. Positions and headings are the
+ * prototype's, matched against OSM building outlines and satellite imagery; the anchor part keeps the
+ * courtyards and side buildings from shifting the base point.
+ */
+/** Part names of the demo GLBs (what the server reads from a model upload), for the placement's main-part list. */
+const demoParts: Record<string, string[]> = {
+  "ulu-cami": [
+    "Alemler",
+    "Avlu_Mermer_Cesme",
+    "Avlu_Sadirvan_Bati",
+    "Avlu_Sadirvan_Dogu",
+    "Cati",
+    "Cephe_Bati",
+    "Cephe_Dogu",
+    "Cephe_Guney",
+    "Cephe_Kuzey",
+    "Giris_Cikintili_Blok",
+    "Govde",
+    "Ic_Sadirvan_Havuz",
+    "Ic_Zemin",
+    "Kapi_Bati",
+    "Kapi_Dogu",
+    "Kasnak_Pencereleri",
+    "Kubbeler_19",
+    "Mermer_Bant",
+    "Minare_1",
+    "Minare_2",
+    "Pencere_Girintileri",
+    "Portal_Silmeleri",
+    "Sadirvan_Iskeleti",
+    "Sadirvan_Kubbe",
+    "Silme_Ust",
+    "Tac_Kapi",
+  ],
+  bedesten: [
+    "Cati",
+    "Dukkan_Kapilari",
+    "Dukkanlar",
+    "Govde",
+    "Kapilar",
+    "Kubbeler",
+    "Pencereler",
+    "Sacak",
+  ],
+  "koza-han": [
+    "Avlu_Cephe",
+    "Avlu_Halka",
+    "Avlu_Mescit",
+    "Avlu_Revak",
+    "Avlu_Zemin",
+    "Baca",
+    "Cati",
+    "Cephe",
+    "Govde_Dis",
+    "Ic_Koza",
+    "Kubbe_Avlu",
+    "Mescit_Dikis",
+    "Mescit_Kubbe",
+    "Portal",
+    "Silme_Kat",
+  ],
+  "orhan-gazi": [
+    "Cami_Govde",
+    "Cami_Mihrap",
+    "Cami_SonCemaat",
+    "Kubbe_Ana",
+    "Kubbe_Mihrap",
+    "Kubbe_SonCemaat",
+    "Kubbe_Tabhane_B",
+    "Kubbe_Tabhane_D",
+    "Minare_1",
+    "Revak_Cephe",
+    "Revak_Kemerler",
+    "Sadirvan",
+  ],
+};
+const demoModel = (
+  name: string,
+  bytes: number,
+  triangles: number,
+  placement: Pick<
+    NonNullable<SiteModel["placement"]>,
+    "lng" | "lat" | "headingDeg" | "anchorNode"
+  >,
+): SiteModel => ({
+  name,
+  bytes,
+  src: `/demo-models/${name}.glb`,
+  parts: demoParts[name] ?? [],
+  trust: "representative",
+  triangles,
+  placement: {
+    scale: 1,
+    altitudeM: 0,
+    hiddenPoints: [],
+    keptPoints: [],
+    ...placement,
+  },
+});
+const demoModels: Record<string, SiteModel> = {
+  "ulu-cami": demoModel("ulu-cami", 834836, 87280, {
+    lng: 29.0618836,
+    lat: 40.1839236,
+    headingDeg: 174,
+    anchorNode: "Govde",
+  }),
+  bedesten: demoModel("bedesten", 171848, 20088, {
+    lng: 29.0621257,
+    lat: 40.1851377,
+    headingDeg: 4,
+    anchorNode: "Govde",
+  }),
+  "koza-han": demoModel("koza-han", 848548, 38624, {
+    lng: 29.0635407,
+    lat: 40.1843748,
+    headingDeg: 4,
+    anchorNode: "Govde_Dis",
+  }),
+  "orhan-gazi": demoModel("orhan-gazi", 274116, 16014, {
+    lng: 29.0640872,
+    lat: 40.1839238,
+    headingDeg: 13,
+    anchorNode: "Cami_Govde",
+  }),
+};
+/**
+ * Ulucami's tasks and badges (`icerik/gorevler.json`, 28 Ekim 2026), as the public API serves them: no
+ * answer key. The key and the texts shown after success are `demoSiteTaskKeys`, which stays inside the mock client.
+ */
+const ulucamiTasks: SiteTask[] = [
+  {
+    id: "ulu-soru-kundekari",
+    kind: "quiz",
+    title: "Minberin sırrı",
+    prompt: "Ulucami'nin ahşap minberi hangi teknikle yapıldı?",
+    part: "Minber",
+    source: "E cilt-1 PDF s.27",
+    trust: "verified",
+    quiz: {
+      options: ["Kündekâri", "Çini", "Kalem işi", "Mukarnas"],
+      hints: [
+        "Minberin parçalarına bak: aralarında çivi ya da tutkal yok, birbirine geçiyorlar.",
+        "Cevap «K» harfiyle başlıyor.",
+      ],
+      wrongText: "Tekrar dene. İpucu almak istersen aşağıda.",
+      fromHome: true,
+    },
+  },
+  {
+    id: "ulu-saha-sahaflar",
+    kind: "field",
+    title: "Sahaflar Kapısı",
+    prompt:
+      "Caminin kuzey cephesindeki mermer taç kapıyı bul. Halk arasında adı «Sahaflar Kapısı».",
+    source: "E cilt-1 PDF s.25",
+    trust: "verified",
+    field: {
+      onSite: {
+        text: "Kapının önüne gel ve «Buradayım»a dokun. İstersen fotoğrafını çekip İz Bırak'a ekle.",
+        radiusM: 80,
+      },
+      fromHome: {
+        text: "3D modelde Sahaflar Kapısı'na dokun.",
+        part: "Tac_Kapi",
+      },
+    },
+  },
+];
+const ulucamiBadges: SiteBadge[] = [
+  {
+    id: "ulu-hikaye",
+    title: "Ulucami'yi dinledin",
+    text: "Ulucami'nin hikâyesini sonuna kadar dinledin ya da okudun.",
+    condition: "story",
+    taskId: null,
+    onSiteLabel: false,
+  },
+  {
+    id: "ulu-kundekari",
+    title: "Kündekâri",
+    text: "Minberin çivisiz, birbirine geçen parçalarını öğrendin.",
+    condition: "task",
+    taskId: "ulu-soru-kundekari",
+    onSiteLabel: false,
+  },
+  {
+    id: "ulu-sahaflar",
+    title: "Sahaflar Kapısı",
+    text: "Ulucami'nin kuzeydeki taç kapısını buldun.",
+    condition: "task",
+    taskId: "ulu-saha-sahaflar",
+    onSiteLabel: true,
+  },
+];
+/** Mock only: answer key of the question and the texts shown once a task is done. Never part of a site. */
+export const demoSiteTaskKeys: Record<
+  string,
+  { correctIndex: number; correctText: string } | { doneText: string }
+> = {
+  "ulu-soru-kundekari": {
+    correctIndex: 0,
+    correctText:
+      "Kündekâri: ahşap parçalar çivi, tutkal ya da başka bir bağlayıcı kullanılmadan birbirine geçirilir. Ulucami minberi bu tekniğin en özgün örneklerinden biridir.",
+  },
+  "ulu-saha-sahaflar": {
+    doneText:
+      "Ulucami'ye üç kapıdan girilir: kuzeyde Sahaflar Kapısı, doğuda Çarşı Kapısı, batıda Müftülük ya da Mahkeme Kapısı.",
+  },
+};
+/** eser.json `sira` of the real demo sites (§11.48); the two fictional ones stay unranked. */
+const demoDisplayOrder: Record<string, number> = {
+  "ulu-cami": 1,
+  bedesten: 2,
+  "koza-han": 3,
+  "orhan-gazi": 4,
+};
 export const sites: HeritageSite[] = input.map((site, i) => ({
   ...site,
+  ...(demoModels[site.id] && { model: demoModels[site.id] }),
+  ...(demoDisplayOrder[site.id] && {
+    displayOrder: demoDisplayOrder[site.id],
+  }),
+  ...(site.id === "ulu-cami" && {
+    tasks: ulucamiTasks,
+    badges: ulucamiBadges,
+  }),
   architect: "—",
   city: demoRegion.city,
   district: demoRegion.district,

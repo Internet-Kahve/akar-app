@@ -2,9 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   reduceSnapshot,
+  categoriesOf,
+  categoryLabels,
   filterSites,
+  kindCategory,
+  offeredKinds,
+  siteCategories,
+  siteKinds,
+  validateCityIdentity,
   validateSite,
   memoryPermissions,
+  type HeritageSite,
   type Memory,
 } from "./index";
 import { createSeed } from "../../api-client/src/seed";
@@ -312,4 +320,50 @@ test("memory permissions: a moderator never decides their own memory, an admin m
     remove: true,
     decide: true,
   });
+});
+const elsewhere = (site: HeritageSite, id: string, city: string, kind: HeritageSite["kind"]): HeritageSite => ({
+  ...site,
+  id,
+  name: `${city} ${kind}`,
+  city,
+  kind,
+});
+test("the filter row offers only kinds that have a published site, in the city the search points at", () => {
+  const sites = createSeed().sites;
+  // The demo Bursa has a mosque, a fountain, an inn, a bedesten and a school, but no tomb or bath.
+  assert.deepEqual(offeredKinds(sites, ""), ["cami", "cesme", "han", "bedesten", "egitim"]);
+  // A draft is not a site a visitor can reach.
+  const drafted = sites.map((s) => (s.kind === "cesme" || s.kind === "egitim" ? { ...s, status: "draft" as const } : s));
+  assert.deepEqual(offeredKinds(drafted, ""), ["cami", "han", "bedesten"]);
+  // A second city: an empty search points at both, a search for one site or one city only at its city.
+  const both = [...sites, elsewhere(sites[0]!, "konya-turbe", "Konya", "turbe")];
+  assert.deepEqual(offeredKinds(both, ""), ["cami", "turbe", "cesme", "han", "bedesten", "egitim"]);
+  assert.deepEqual(offeredKinds(both, "Konya"), ["turbe"]);
+  assert.deepEqual(offeredKinds(both, "Ulucami"), ["cami", "cesme", "han", "bedesten", "egitim"]);
+  assert.deepEqual(offeredKinds(both, "yok böyle bir eser"), []);
+});
+test("every kind belongs to a category; the legend lists only categories with a site and calls the income one «Ticari (akar)»", () => {
+  for (const kind of siteKinds) assert.ok(siteCategories.includes(kindCategory[kind]), kind);
+  assert.equal(categoryLabels.akar, "Ticari (akar)");
+  assert.notEqual(categoryLabels.akar, "Akar");
+  const sites = createSeed().sites;
+  assert.deepEqual(categoriesOf(sites), ["dini", "su", "egitim", "akar"]);
+  const real = sites.filter((s) => !s.id.endsWith("-demo"));
+  assert.deepEqual(categoriesOf(real), ["dini", "akar"]);
+  assert.deepEqual(categoriesOf([]), []);
+  // Hamam, han and bedesten are income buildings; cami and türbe religious.
+  assert.deepEqual(
+    categoriesOf(real.filter((s) => s.kind === "han" || s.kind === "bedesten")),
+    ["akar"],
+  );
+  const unknown = { ...sites[0]!, kind: "tekke" } as unknown as HeritageSite;
+  assert.deepEqual(categoriesOf([unknown]), []);
+});
+test("a city identity needs two #RRGGBB colours and a pattern file name that cannot be a path", () => {
+  const identity = { accent: "#22566E", pattern: "desen-bursa-sekiz-yildiz.svg", patternColour: "#A4D8E0" };
+  validateCityIdentity(identity);
+  assert.throws(() => validateCityIdentity({ ...identity, accent: "petrol" }), /#RRGGBB/);
+  assert.throws(() => validateCityIdentity({ ...identity, patternColour: "#A4D8E" }), /#RRGGBB/);
+  for (const pattern of ["", "desen.png", "../desen.svg", "desenler/desen.svg", "Desen.svg", 'a".svg', "a b.svg", ".svg", "-a.svg"])
+    assert.throws(() => validateCityIdentity({ ...identity, pattern }), /\.svg dosya adı/, pattern);
 });

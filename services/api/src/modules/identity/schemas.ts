@@ -74,3 +74,26 @@ export const InviteResponse = z.object({
     .describe("Davet e-postası gönderildi. Hesap zaten varsa false: rol, e-postayla yapılan ilk girişte verilir"),
 });
 export type InviteResponse = z.infer<typeof InviteResponse>;
+
+export const MemberListQuery = z.object({
+  page: z.coerce.number().int().min(1).max(10000).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  query: z.string().trim().max(254).default(""),
+});
+export type MemberListQuery = z.infer<typeof MemberListQuery>;
+export const MemberDto = z.object({
+  userId: z.string(),
+  email: z.string().nullable(),
+  displayName: z.string().nullable(),
+  role: z.enum(roles),
+  emailConfirmed: z.boolean(),
+  createdAt: z.iso.datetime({ offset: true }),
+  lastSignInAt: z.iso.datetime({ offset: true }).nullable(),
+});
+export type MemberDto = z.infer<typeof MemberDto>;
+export const MemberListResponse = z.object({
+  items: z.array(MemberDto), page: z.number(), nextPage: z.number().nullable(),
+});
+export const MemberRoleBody = z.object({
+  role: z.enum(roles), expectedRole: z.enum(roles).describe("Ekranda görünen rol; eşzamanlı değişiklikte 409"),
+});

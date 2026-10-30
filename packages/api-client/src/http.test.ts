@@ -45,6 +45,7 @@ const detail = (id: string, extra = {}) => ({
   year: "1399",
   coordinates: [29.06, 40.18],
   minutes: 3,
+  displayOrder: null,
   tier: "Hero",
   description: "d",
   descriptionEn: null,
@@ -836,7 +837,12 @@ test("a full editor save goes through the step endpoints in reference order: new
   };
   let model = "glb";
   let upload = 0;
-  const published = () => ({ ...siteA(), sources: [source1] });
+  const camera = { target: null, azimuthDeg: 10, elevationDeg: 20, distance: 0.6 };
+  // The camera and the interior flag travel in the public detail and come back unchanged through the domain site.
+  const published = () => {
+    const site = siteA();
+    return { ...site, sources: [source1], stories: site.stories.map((s) => ({ ...s, camera, interior: true })) };
+  };
   const admin = () => {
     const base = published();
     return {
@@ -847,7 +853,6 @@ test("a full editor save goes through the step endpoints in reference order: new
       stories: base.stories.map((s) => ({
         ...s,
         cardId: "card-1",
-        camera: { azimuthDeg: 10, elevationDeg: 20, distanceM: 30 },
         audioMediaId: "voice",
         audioEnMediaId: null,
       })),
@@ -1043,7 +1048,8 @@ test("a full editor save goes through the step endpoints in reference order: new
               showCard: null,
               highlights: ["minare"],
               cardId: "card-1",
-              camera: { azimuthDeg: 10, elevationDeg: 20, distanceM: 30 },
+              camera: { target: null, azimuthDeg: 10, elevationDeg: 20, distance: 0.6 },
+              interior: true,
               audioMediaId: "voice",
               audioEnMediaId: null,
             },
@@ -1060,6 +1066,7 @@ test("a full editor save goes through the step endpoints in reference order: new
               highlights: [],
               cardId: null,
               camera: null,
+              interior: false,
               audioMediaId: null,
               audioEnMediaId: null,
             },
@@ -2182,4 +2189,801 @@ test("archive attribution and story-only photographs reach the UI without becomi
   assert.equal(site.historyImages?.[0]?.photo.license, "CC BY");
   assert.equal(site.historyImages?.[0]?.sourceId, "archive-source");
   assert.equal(site.historyImages?.[0]?.presentPhoto, undefined);
+});
+
+test("«Eser hakkında» chapters, paragraph photos and the cover reach the UI; none of them become gallery photos; an older API has none", async () => {
+  const chapter = {
+    id: "ch1",
+    title: "Tarihçe",
+    kind: "history",
+    summary: ["Bir cümle."],
+    figures: [{ value: "1399", label: "açılış yılı", evidence: "1399 yılında" }],
+    quotes: [{ text: "Alıntı", by: null }, { text: "Başka", by: "Evliya Çelebi" }],
+    timeline: [{ year: "1399", evidence: "1399 yılında" }],
+    terms: [{ word: "mihrap", definition: "Kıble yönünü gösteren niş" }],
+    camera: { target: null, azimuthDeg: 0, elevationDeg: 30, distance: 1 },
+    interior: true,
+    focusParts: ["Kubbeler_19"],
+  };
+  const base = detail("about", {
+    media: [
+      media("cover", "photo"),
+      media("book1", "photo"),
+      media("book-missing", "model"),
+    ],
+    coverMediaId: "cover",
+    photoIds: ["cover"],
+    aboutCoverMediaId: "book1",
+    chapters: [chapter],
+    sections: [
+      {
+        id: "s1",
+        kind: "history",
+        title: "Tarihçe",
+        body: "Metin.",
+        trust: "verified",
+        sourceId: null,
+        chapterId: "ch1",
+        photos: [
+          { mediaId: "book1", aspect: 1.5, alt: "Kitap fotoğrafı" },
+          { mediaId: "book-missing", aspect: null, alt: "Yok" },
+        ],
+      },
+      {
+        id: "s2",
+        kind: "history",
+        title: "Tarihçe",
+        body: "Bağsız.",
+        trust: "inferred",
+        sourceId: null,
+      },
+    ],
+  });
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [base, detail("old")],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [site, old] = (await client.getSnapshot()).sites;
+  assert.deepEqual(site!.chapters, [
+    {
+      ...chapter,
+      quotes: [{ text: "Alıntı" }, { text: "Başka", by: "Evliya Çelebi" }],
+      camera: chapter.camera,
+    },
+  ]);
+  assert.equal(site!.aboutCover?.id, "book1");
+  assert.deepEqual(
+    site!.photos?.map((p) => p.id),
+    ["cover"],
+  );
+  const [first, second] = site!.sections!;
+  assert.equal(first!.chapterId, "ch1");
+  assert.deepEqual(
+    first!.photos?.map((p) => [p.photo.id, p.aspect, p.alt]),
+    [["book1", 1.5, "Kitap fotoğrafı"]],
+  );
+  assert.equal(second!.chapterId, undefined);
+  assert.equal(second!.photos, undefined);
+  assert.equal(old!.chapters, undefined);
+  assert.equal(old!.aboutCover, undefined);
+});
+
+test("a present-day pair keeps its credit line and angle word, İz Bırak samples reach the UI beside the archive images and are never gallery photos; an older API has none", async () => {
+  const credit = "Fotoğraf: Bursa Vakıf Eserleri Envanteri";
+  const base = detail("pairs", {
+    coverMediaId: "cover",
+    media: [
+      media("cover", "photo"),
+      media("old", "photo", { description: "Fotoğraf: Eski fotoğrafçı" }),
+      media("now", "photo", { description: credit, license: "Proje için verildi" }),
+      media("old-2", "photo"),
+      media("iz", "photo", { description: `${credit} (örnek katkı olarak gösteriliyor)` }),
+      media("iz-lost", "model"),
+    ],
+    historyImages: [
+      { id: "h1", mediaId: "old", presentMediaId: "now", presentAngleMatch: "near", caption: "Eski", dateLabel: "1875–84", sourceId: null, trust: "verified" },
+      { id: "h2", mediaId: "old-2", presentMediaId: null, presentAngleMatch: null, caption: "Eski 2", dateLabel: "1930", sourceId: null, trust: "verified" },
+    ],
+    sampleTraces: [
+      { id: "iz1", author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "iz", historyImageId: "h2", angleMatch: "same", addedOn: "2026-10-28" },
+      { id: "iz2", author: "AKAR ekibi", text: "Avludan.", mediaId: "iz", historyImageId: null, angleMatch: null, addedOn: "2026-10-29" },
+      { id: "iz3", author: "AKAR ekibi", text: "Fotoğrafı yok.", mediaId: "iz-lost", historyImageId: null, angleMatch: null, addedOn: "2026-10-30" },
+    ],
+  });
+  // A version that sends samples but no gallery list leaves the gallery to the media list: a sample's photograph stays out of it.
+  const legacy = detail("legacy", {
+    coverMediaId: "cover",
+    media: [media("cover", "photo"), media("iz", "photo")],
+    sampleTraces: [{ id: "iz1", author: "AKAR ekibi", text: "Aynı eksen.", mediaId: "iz", historyImageId: null, angleMatch: null, addedOn: "2026-10-28" }],
+  });
+  const older = detail("old", { coverMediaId: "cover", media: [media("cover", "photo")] });
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({ items: [{ ...base, photoIds: ["cover"] }, legacy, older], nextCursor: null }),
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: api.fetch });
+  const [site, mid, old] = (await client.getSnapshot()).sites;
+  const [paired, alone] = site!.historyImages!;
+  assert.deepEqual([paired!.presentPhoto?.id, paired!.presentPhoto?.description, paired!.presentAngleMatch], ["now", credit, "near"]);
+  assert.deepEqual([alone!.presentPhoto, alone!.presentAngleMatch], [undefined, undefined]);
+  assert.deepEqual(
+    site!.sampleTraces?.map((t) => [t.id, t.author, t.text, t.photo.id, t.photo.description, t.addedOn, t.historyImageId, t.angleMatch]),
+    [
+      ["iz1", "AKAR ekibi", "Aynı eksen.", "iz", `${credit} (örnek katkı olarak gösteriliyor)`, "2026-10-28", "h2", "same"],
+      ["iz2", "AKAR ekibi", "Avludan.", "iz", `${credit} (örnek katkı olarak gösteriliyor)`, "2026-10-29", undefined, undefined],
+    ],
+    "a sample whose photograph is not in the media list is left out; empty links stay off the object",
+  );
+  assert.deepEqual(site!.photos?.map((p) => p.id), ["cover"], "pair and sample photographs are not gallery photos");
+  assert.deepEqual(mid!.photos?.map((p) => p.id), ["cover"], "without a gallery list a sample's photograph is still not a gallery photo");
+  assert.equal(mid!.sampleTraces?.length, 1);
+  assert.equal(old!.sampleTraces, undefined);
+});
+
+test("member administration uses protected, uncached endpoints and sends the expected role", async () => {
+  const member = {
+    userId: "member-1",
+    email: "uye@akar.test",
+    displayName: null,
+    role: "user",
+    emailConfirmed: true,
+    createdAt: "2026-10-01T00:00:00Z",
+    lastSignInAt: null,
+  };
+  const api = fakeApi({
+    "GET /v1/admin/users": () => ({ items: [member], page: 2, nextPage: 3 }),
+    "PUT /v1/admin/users/member-1/role": () => ({ ...member, role: "admin" }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    getToken: () => "admin-token",
+    fetch: async (input, init) => {
+      if (init?.method === "GET") assert.equal(init.cache, "no-store");
+      return api.fetch(input, init);
+    },
+  });
+  const page = await client.getMembers("uye+test@akar.test", 2);
+  assert.equal(page.nextPage, 3);
+  const query = new URL(`http://api.test${api.calls[0]!.path}`).searchParams;
+  assert.equal(query.get("query"), "uye+test@akar.test");
+  assert.equal(query.get("page"), "2");
+  assert.equal(query.get("pageSize"), "25");
+  assert.equal(
+    (await client.setMemberRole("member-1", "admin", "user")).role,
+    "admin",
+  );
+  assert.deepEqual(api.calls[1]!.body, { role: "admin", expectedRole: "user" });
+  assert.ok(api.calls[1]!.headers["idempotency-key"]);
+  assert.ok(
+    api.calls.every(
+      (call) => call.headers.authorization === "Bearer admin-token",
+    ),
+  );
+});
+
+const placement = (extra = {}) => ({
+  lng: 29.0619,
+  lat: 40.184,
+  headingDeg: 174,
+  scale: 1,
+  altitudeM: 0,
+  anchorNode: "Govde",
+  hiddenPoints: [{ lng: 29.06, lat: 40.18 }],
+  keptPoints: [],
+  ...extra,
+});
+
+test("a model carries its triangle count and the site's placement; both are null when the API has none", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [
+        detail("placed", {
+          media: [media("glb", "model", { triangles: 87280 })],
+          placement: placement(),
+        }),
+        // An older API: neither field exists.
+        detail("old", { media: [media("glb2", "model")] }),
+        // Placement hidden or missing: the model is there, the map shows nothing.
+        detail("hidden", {
+          media: [media("glb3", "model", { triangles: null })],
+          placement: null,
+        }),
+        detail("plain"),
+      ],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [placed, old, hidden, plain] = (await client.getSnapshot()).sites;
+  assert.equal(placed!.model?.triangles, 87280);
+  assert.deepEqual(placed!.model?.placement, placement());
+  assert.equal(old!.model?.triangles, null);
+  assert.equal(old!.model?.placement, null);
+  assert.equal(hidden!.model?.triangles, null);
+  assert.equal(hidden!.model?.placement, null);
+  assert.equal(plain!.model, undefined);
+});
+
+test("a site's displayOrder (eser.json sira) is mapped when it is a number and left out for null or an older API", async () => {
+  const withoutField = () => {
+    const { displayOrder: _omitted, ...rest } = detail("old");
+    return rest;
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [
+        detail("first", { displayOrder: 1 }),
+        detail("seventh", { displayOrder: 7 }),
+        detail("unranked", { displayOrder: null }),
+        withoutField(),
+      ],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [first, seventh, unranked, old] = (await client.getSnapshot()).sites;
+  assert.equal(first!.displayOrder, 1);
+  assert.equal(seventh!.displayOrder, 7);
+  assert.ok(!("displayOrder" in unranked!), "null is unranked, not a value");
+  assert.ok(!("displayOrder" in old!), "an older API has no field");
+});
+
+test("map settings come from GET /v1/map-settings; missing values fall back to the defaults", async () => {
+  let body: unknown = { modelMinZoom: 15.5, maxVisibleModels: 8 };
+  const api = fakeApi({ "GET /v1/map-settings": () => body });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  assert.deepEqual(await client.getMapSettings(), {
+    modelMinZoom: 15.5,
+    maxVisibleModels: 8,
+  });
+  body = { maxVisibleModels: 0 };
+  assert.deepEqual(await client.getMapSettings(), {
+    modelMinZoom: 16,
+    maxVisibleModels: 0,
+  });
+  body = Response.json(
+    { code: "INTERNAL", message: "x", requestId: "r" },
+    { status: 500 },
+  );
+  await assert.rejects(client.getMapSettings(), ApiError);
+});
+
+test("cities come with their identity (§11.49); an API from before it sends none and the screens stay neutral; the route count is not part of the record", async () => {
+  const identity = { accent: "#22566E", pattern: "desen-bursa-sekiz-yildiz.svg", patternColour: "#A4D8E0" };
+  const city = (id: string, extra = {}) => ({ id, name: id, siteCount: 0, routeCount: 3, scene: null, isDefault: false, map: null, inventory: null, ...extra });
+  let items: unknown[] = [city("bursa", { identity }), city("hatay", { identity: null })];
+  const api = fakeApi({ "GET /v1/cities": () => ({ items }) });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: api.fetch });
+  const read = await client.getCities();
+  assert.deepEqual(read.map((c) => [c.id, c.identity]), [["bursa", identity], ["hatay", null]]);
+  assert.ok(read.every((c) => !("routeCount" in c)));
+  items = [city("bursa")];
+  assert.equal((await client.getCities())[0]!.identity, null);
+});
+
+test("refreshCatalog re-reads the catalog, shares concurrent reads and keeps the old data when the read fails", async () => {
+  let heading = 174;
+  let fail = false;
+  let reads = 0;
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => {
+      reads++;
+      if (fail) return Response.json({ message: "down" }, { status: 503 });
+      return {
+        items: [
+          detail("a", {
+            media: [media("glb", "model", { triangles: 10 })],
+            placement: placement({ headingDeg: heading }),
+          }),
+        ],
+        nextCursor: null,
+      };
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const first = await client.getSnapshot();
+  assert.equal(first.sites[0]!.model?.placement?.headingDeg, 174);
+  assert.equal(reads, 1);
+  // The administrator moved the model; two triggers (timer and tab focus) arrive together.
+  heading = 90;
+  const [x, y] = await Promise.all([
+    client.refreshCatalog(),
+    client.refreshCatalog(),
+  ]);
+  assert.equal(reads, 2, "one read for both callers");
+  assert.equal(x.sites[0]!.model?.placement?.headingDeg, 90);
+  assert.deepEqual(y, x);
+  // Later reads of the snapshot see the new catalog without another request.
+  assert.equal(
+    (await client.getSnapshot()).sites[0]!.model?.placement?.headingDeg,
+    90,
+  );
+  assert.equal(reads, 2);
+  // A failed refresh throws and leaves what the visitor already has.
+  fail = true;
+  heading = 45;
+  await assert.rejects(client.refreshCatalog());
+  fail = false;
+  assert.equal(
+    (await client.getSnapshot()).sites[0]!.model?.placement?.headingDeg,
+    90,
+  );
+  assert.equal(
+    (await client.refreshCatalog()).sites[0]!.model?.placement?.headingDeg,
+    45,
+  );
+});
+
+test("the placement command PUTs the whole placement with an Idempotency-Key, re-reads the site, and the panel read keeps a placement the catalog hides", async () => {
+  let stored: Record<string, unknown> | null = null;
+  const withModel = () =>
+    detail("a", {
+      coordinates: [29.06, 40.18],
+      media: [media("glb", "model", { parts: ["Govde"], triangles: 100 })],
+    });
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [withModel()], nextCursor: null }),
+    "GET /v1/admin/sites/a": () => ({
+      ...withModel(),
+      status: "published",
+      openingCamera: null,
+      sourceLinks: [],
+      // What a visitor sees: nothing once `visible` is off.
+      placement: stored && stored.visible ? { ...stored, lng: 29.0619 } : null,
+      // What the panel sees: the saved values in every case; lng/lat null = the site's own location.
+      mapPlacement: stored && {
+        ...stored,
+        lng: stored.lng ?? null,
+        lat: stored.lat ?? null,
+        updatedAt: "2026-10-28T10:00:00Z",
+      },
+    }),
+    "PUT /v1/admin/sites/a/map-placement": (c) => {
+      stored = c.body as Record<string, unknown>;
+      return {};
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  await client.getSnapshot();
+  assert.equal(await client.getMapPlacement("a"), null);
+
+  const hidden = {
+    lng: 29.0625,
+    lat: 40.1841,
+    headingDeg: 90,
+    scale: 1,
+    altitudeM: 1.5,
+    anchorNode: "Govde",
+    hiddenPoints: [{ lng: 29.06, lat: 40.18 }],
+    keptPoints: [],
+    visible: false,
+  };
+  const snap = await client.dispatch({
+    type: "map-placement",
+    siteId: "a",
+    placement: hidden,
+  });
+  const put = api.calls.find((c) => c.method === "PUT")!;
+  assert.equal(put.path, "/v1/admin/sites/a/map-placement");
+  assert.ok(put.headers["idempotency-key"]);
+  assert.deepEqual(put.body, hidden);
+  // The catalog re-read hides it from the map; the panel read still has every value.
+  assert.equal(snap.sites.find((s) => s.id === "a")!.model?.placement, null);
+  assert.deepEqual(await client.getMapPlacement("a"), hidden);
+
+  // A placement without `visible` (the visitor view of one) is sent as shown; a bad value is refused before any request.
+  const { visible: _visible, ...asPublic } = hidden;
+  await client.dispatch({
+    type: "map-placement",
+    siteId: "a",
+    placement: asPublic,
+  });
+  assert.equal(
+    (
+      api.calls.filter((c) => c.method === "PUT").at(-1)!.body as {
+        visible: boolean;
+      }
+    ).visible,
+    true,
+  );
+  const puts = api.calls.filter((c) => c.method === "PUT").length;
+  await assert.rejects(
+    client.dispatch({
+      type: "map-placement",
+      siteId: "a",
+      placement: { ...hidden, headingDeg: 360 },
+    }),
+    /Yön/,
+  );
+  assert.equal(api.calls.filter((c) => c.method === "PUT").length, puts);
+});
+
+test("a placement is saved for a draft too, a model left unchanged is no model change, and API errors reach the editor with their field messages", async () => {
+  const model = () => media("glb", "model", { parts: ["Govde"] });
+  const draft = () => ({
+    ...detail("d1", { media: [model()] }),
+    status: "draft",
+    openingCamera: null,
+    sourceLinks: [],
+    mapPlacement: {
+      lng: null,
+      lat: null,
+      headingDeg: 10,
+      scale: 1,
+      altitudeM: 0,
+      anchorNode: null,
+      hiddenPoints: [],
+      keptPoints: [],
+      visible: true,
+      updatedAt: "2026-10-28T10:00:00Z",
+    },
+  });
+  let answer: Response | null = null;
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/admin/site-details": () => ({
+      items: [draft()],
+      nextCursor: null,
+    }),
+    "GET /v1/admin/sites/d1": () => draft(),
+    "PUT /v1/admin/sites/d1/map-placement": () => answer ?? {},
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const d1 = (await client.getSnapshot()).sites.find((s) => s.id === "d1")!;
+  // The draft shows its saved placement; no location stored = the site's own (the placeholder here).
+  assert.equal(d1.model?.placement?.headingDeg, 10);
+  assert.deepEqual(
+    [d1.model?.placement?.lng, d1.model?.placement?.lat],
+    d1.coordinates,
+  );
+  assert.equal(d1.model?.placement?.visible, true);
+
+  // A site save carrying a stale placement on its model writes nothing about the model.
+  await client.dispatch({
+    type: "site",
+    site: {
+      ...d1,
+      model: {
+        ...d1.model!,
+        placement: { ...d1.model!.placement!, headingDeg: 99 },
+      },
+    },
+  });
+  assert.deepEqual(
+    api.calls.filter((c) => c.method !== "GET").map((c) => c.path),
+    [],
+  );
+
+  answer = Response.json(
+    {
+      error: {
+        code: "VALIDATION_FAILED",
+        message: "Girdi doğrulanamadı.",
+        fieldErrors: { lng: ["Konum Bursa sınırları dışında."] },
+        requestId: "r",
+      },
+    },
+    { status: 400 },
+  );
+  await assert.rejects(
+    client.dispatch({
+      type: "map-placement",
+      siteId: "d1",
+      placement: d1.model!.placement!,
+    }),
+    (e) =>
+      e instanceof ApiError &&
+      e.status === 400 &&
+      e.fieldErrors.lng?.[0] === "Konum Bursa sınırları dışında.",
+  );
+  answer = Response.json(
+    {
+      error: {
+        code: "CONFLICT",
+        message:
+          "Eserin 3B modeli yok; haritada yerleşim için önce model bağla.",
+        fieldErrors: {},
+        requestId: "r",
+      },
+    },
+    { status: 409 },
+  );
+  await assert.rejects(
+    client.dispatch({
+      type: "map-placement",
+      siteId: "d1",
+      placement: d1.model!.placement!,
+    }),
+    (e) => e instanceof ApiError && e.status === 409,
+  );
+});
+
+const taskDto = {
+  id: "t-quiz",
+  kind: "quiz",
+  title: "Minberin sırrı",
+  prompt: "Hangi teknik?",
+  photoId: "p1",
+  part: "Minber",
+  source: "E cilt-1 PDF s.27",
+  trust: "verified",
+  quiz: {
+    options: ["A", "B"],
+    hints: ["ipucu"],
+    wrongText: "Tekrar dene.",
+    fromHome: true,
+  },
+};
+const fieldTaskDto = {
+  id: "t-field",
+  kind: "field",
+  title: "Kapı",
+  prompt: "Kapıyı bul.",
+  photoId: null,
+  part: null,
+  source: null,
+  trust: "verified",
+  field: {
+    onSite: { text: "Önüne gel.", radiusM: 80 },
+    fromHome: { text: "Modelde dokun.", part: "Tac_Kapi" },
+  },
+};
+const badgeDto = {
+  id: "b-task",
+  title: "Kapı",
+  text: "Kapıyı buldun.",
+  condition: "task",
+  taskId: "t-field",
+  onSiteLabel: true,
+};
+
+test("site tasks and badges reach the UI with their photo resolved; the answer key is not in them; an older API has none", async () => {
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({
+      items: [
+        detail("t", {
+          media: [media("p1", "photo")],
+          tasks: [taskDto, fieldTaskDto],
+          badges: [badgeDto],
+        }),
+        detail("old"),
+      ],
+      nextCursor: null,
+    }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const [site, old] = (await client.getSnapshot()).sites;
+  const [quiz, field] = site!.tasks!;
+  assert.equal(quiz!.photo?.id, "p1");
+  assert.equal(quiz!.photo?.src, "https://cdn.test/p1");
+  assert.equal(quiz!.part, "Minber");
+  assert.equal(quiz!.source, "E cilt-1 PDF s.27");
+  assert.deepEqual(quiz!.quiz, taskDto.quiz);
+  assert.equal(field!.photo, undefined);
+  assert.equal(field!.part, undefined);
+  assert.equal(field!.source, undefined);
+  assert.deepEqual(field!.field, fieldTaskDto.field);
+  assert.deepEqual(site!.badges, [badgeDto]);
+  assert.ok(!JSON.stringify(site).includes("correct"));
+  assert.equal(old!.tasks, undefined);
+  assert.equal(old!.badges, undefined);
+  // A task photograph is a site photograph: it stays in the gallery.
+  assert.deepEqual(
+    site!.photos?.map((p) => p.id),
+    ["p1"],
+  );
+});
+
+test("a guest answers and completes tasks without a token; a signed-in user's token is sent; the position goes as lat/lng", async () => {
+  let token: string | null = null;
+  const api = fakeApi({
+    "POST /v1/site-tasks/t-quiz/answer": (c) =>
+      (c.body as { choice: number }).choice === 1
+        ? {
+            correct: true,
+            correctText: "Doğru.",
+            wrongText: null,
+            earnedBadges: token ? [badgeDto] : [],
+          }
+        : {
+            correct: false,
+            correctText: null,
+            wrongText: "Tekrar dene.",
+            earnedBadges: [],
+          },
+    "POST /v1/site-tasks/t-field/complete": (c) => {
+      const body = c.body as { mode: string; part?: string };
+      if (body.mode === "fromHome" && body.part !== "Tac_Kapi")
+        return Response.json(
+          {
+            error: {
+              code: "WRONG_PART",
+              message: "Bu parça değil.",
+              fieldErrors: {},
+              requestId: "r",
+            },
+          },
+          { status: 422 },
+        );
+      if (body.mode === "onSite" && !token)
+        return Response.json(
+          {
+            error: {
+              code: "TOO_FAR",
+              message: "Çok uzaktasın.",
+              fieldErrors: {},
+              requestId: "r",
+            },
+          },
+          { status: 422 },
+        );
+      return {
+        doneText: "Tamam.",
+        onSite: body.mode === "onSite",
+        earnedBadges: token ? [badgeDto] : [],
+      };
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => token,
+    fetch: api.fetch,
+  });
+  const wrong = await client.answerSiteTask("t-quiz", 0);
+  assert.deepEqual(
+    [wrong.correct, wrong.correctText, wrong.wrongText, wrong.earnedBadges],
+    [false, null, "Tekrar dene.", []],
+  );
+  const right = await client.answerSiteTask("t-quiz", 1);
+  assert.deepEqual(
+    [right.correct, right.correctText, right.earnedBadges],
+    [true, "Doğru.", []],
+  );
+  const guestCall = api.calls[1]!;
+  assert.equal(guestCall.headers.authorization, undefined);
+  assert.ok(guestCall.headers["x-device-id"]);
+  assert.ok(guestCall.headers["idempotency-key"]);
+  assert.deepEqual(guestCall.body, { choice: 1 });
+
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "fromHome",
+      part: "Cati",
+    }),
+    { done: false, reason: "wrongPart" },
+  );
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "onSite",
+      coordinates: [29.1, 40.2],
+      accuracyM: 12,
+    }),
+    { done: false, reason: "tooFar" },
+  );
+  assert.deepEqual(api.calls.at(-1)?.body, {
+    mode: "onSite",
+    lat: 40.2,
+    lng: 29.1,
+    accuracyM: 12,
+  });
+
+  token = "tok";
+  const earned = await client.answerSiteTask("t-quiz", 1);
+  assert.deepEqual(earned.earnedBadges, [badgeDto]);
+  assert.equal(api.calls.at(-1)?.headers.authorization, "Bearer tok");
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "onSite",
+      coordinates: [29.1, 40.2],
+    }),
+    { done: true, doneText: "Tamam.", onSite: true, earnedBadges: [badgeDto] },
+  );
+  assert.deepEqual(api.calls.at(-1)?.body, {
+    mode: "onSite",
+    lat: 40.2,
+    lng: 29.1,
+  });
+  assert.deepEqual(
+    await client.completeSiteTask("t-field", {
+      mode: "fromHome",
+      part: "Tac_Kapi",
+    }),
+    { done: true, doneText: "Tamam.", onSite: false, earnedBadges: [badgeDto] },
+  );
+});
+
+test("any other API error of a task request is thrown, not turned into an answer", async () => {
+  const api = fakeApi({
+    "POST /v1/site-tasks/t-field/complete": () =>
+      Response.json(
+        {
+          error: {
+            code: "VALIDATION_FAILED",
+            message: "Geçersiz.",
+            fieldErrors: {},
+            requestId: "r",
+          },
+        },
+        { status: 400 },
+      ),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  await assert.rejects(
+    client.completeSiteTask("t-field", { mode: "fromHome", part: "x" }),
+    (e) => e instanceof ApiError && e.status === 400,
+  );
+});
+
+test("site progress is read for a signed-in user and is empty without a request for a guest", async () => {
+  let token: string | null = null;
+  const progress = {
+    tasks: [
+      { taskId: "t-field", siteId: "t", onSite: true, completedAt: "2026-10-29T10:00:00Z" },
+    ],
+    badges: [
+      { badgeId: "b-task", siteId: "t", onSite: true, earnedAt: "2026-10-29T10:00:00Z" },
+    ],
+  };
+  const api = fakeApi({ "GET /v1/me/site-progress": () => progress });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => token,
+    fetch: api.fetch,
+  });
+  assert.deepEqual(await client.getSiteProgress(), { tasks: [], badges: [] });
+  assert.equal(api.calls.length, 0);
+  token = "tok";
+  assert.deepEqual(await client.getSiteProgress(), progress);
+  assert.equal(api.calls[0]?.headers.authorization, "Bearer tok");
 });

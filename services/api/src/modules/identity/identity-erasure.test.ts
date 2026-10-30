@@ -26,8 +26,13 @@ import {
   staffInvites,
   staffMembers,
   storyProgress,
+  siteBadges,
+  siteTaskAnswers,
+  siteTasks,
   userBadges,
   userRouteStops,
+  userSiteBadges,
+  userSiteTasks,
 } from "../../db/schema/index.ts";
 import { loadCatalog } from "../../db/seed.ts";
 import type { AuthVerifier } from "../../platform/auth.ts";
@@ -45,6 +50,8 @@ const SERVICE_KEY = "service-role-test-key";
 const SITE = "ulu-cami";
 const ROUTE = "hanlar";
 const QUIZ = "ulu-cami-q1";
+const SITE_TASK = "ulu-cami-task";
+const SITE_BADGE = "ulu-cami-badge";
 
 const keys = await generateKeyPair("ES256");
 const jwks = createLocalJWKSet({ keys: [{ ...(await exportJWK(keys.publicKey)), kid: KID, alg: "ES256", use: "sig" }] });
@@ -102,6 +109,12 @@ before(async () => {
   verifier = createJwksVerifier({ jwks, issuer: ISSUER, audience: AUDIENCE, db });
   await loadCatalog(db, { sites: [site], routes: [route] });
   await db.insert(quizzes).values({ id: QUIZ, siteId: SITE, question: "Soru", options: ["A", "B", "C"], trust: "verified" });
+  await db.insert(siteTasks).values({
+    id: SITE_TASK, siteId: SITE, position: 0, kind: "quiz", title: "Soru", prompt: "Hangisi?", trust: "verified",
+    details: { options: ["A", "B"], hints: [], correctText: "Doğru", wrongText: "Yanlış", fromHome: true },
+  });
+  await db.insert(siteTaskAnswers).values({ taskId: SITE_TASK, correctIndex: 0 });
+  await db.insert(siteBadges).values({ id: SITE_BADGE, siteId: SITE, position: 0, title: "Rozet", text: "Kazandın", condition: "task", taskId: SITE_TASK, onSiteLabel: false });
 });
 after(async () => {
   await stop?.();
@@ -198,6 +211,8 @@ async function fullAccount(userId: string, other: string) {
   await db.insert(storyProgress).values({ userId, siteId: SITE, lastBlock: 0 });
   await db.insert(quizProgress).values({ playerId: userId, quizId: QUIZ, wrongAttempts: 1 });
   await db.insert(userBadges).values({ userId, routeId: ROUTE });
+  await db.insert(userSiteTasks).values({ userId, taskId: SITE_TASK, onSite: true });
+  await db.insert(userSiteBadges).values({ userId, badgeId: SITE_BADGE, onSite: true });
   await db.insert(profiles).values({ userId, displayName: "Ayşe" });
   // A former editor's used invite holds their address.
   await db.insert(staffInvites).values({ id: randomUUID(), email: `${userId}@akar.test`, role: "editor", invitedBy: "admin-x", userId, revokedAt: new Date() });

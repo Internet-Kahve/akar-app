@@ -99,6 +99,76 @@
       "when": 1792770775187,
       "tag": "0013_erasure_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793180208436,
+      "tag": "0014_map_placements",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793190503259,
+      "tag": "0015_map_settings_default_10",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793264577680,
+      "tag": "0016_cover_groups",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793269683478,
+      "tag": "0017_part_cards",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793271797302,
+      "tag": "0018_city_scene",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793274391570,
+      "tag": "0019_about_reading",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793279032406,
+      "tag": "0020_site_tasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793284432588,
+      "tag": "0021_city_globe",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793300605906,
+      "tag": "0022_history_extras",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793302870345,
+      "tag": "0023_display_order",
+      "breakpoints": true
     }
   ]
 }

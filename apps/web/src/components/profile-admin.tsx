@@ -11,11 +11,14 @@ import {
   ArrowRight,
   Shield,
   RotateCcw,
+  Map as MapIcon,
 } from "lucide-react";
 import {
   memoryPermissions,
   type Command,
   type HeritageSite,
+  type MapPlacement,
+  type MapSettings,
   type Role,
   type Snapshot,
 } from "@akar/domain";
@@ -24,7 +27,9 @@ import { Modal, Notice, Tag } from "./ui";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
 import { MemoryActions } from "./memory-actions";
+import { AdminMembers } from "./admin-members";
 import { AdminHealthAlert } from "./admin-health";
+import { AdminMapSettings } from "./admin-map-settings";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -307,16 +312,30 @@ export function Admin({
   role,
   loadHealth,
   loadModeration,
+  loadMembers,
+  changeMemberRole,
+  currentUserId,
   saveSite,
+  loadPlacement,
+  savePlacement,
   live,
+  mapSettings,
+  saveMapSettings,
 }: {
   state: Snapshot;
   commit: Commit;
   role: Role;
   loadHealth: () => Promise<AdminHealth>;
   loadModeration: AkarClient["getModerationPage"];
+  loadMembers: AkarClient["getMembers"];
+  changeMemberRole: AkarClient["setMemberRole"];
+  currentUserId: string;
   saveSite: (site: HeritageSite) => Promise<HeritageSite>;
+  loadPlacement: AkarClient["getMapPlacement"];
+  savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
   live: boolean;
+  mapSettings: MapSettings;
+  saveMapSettings: (settings: MapSettings) => Promise<MapSettings>;
 }) {
   const canEdit = role === "editor" || role === "admin";
   const [page, setPage] = useState<ModerationPage>({
@@ -331,7 +350,13 @@ export function Admin({
   const ownIds = new Set(state.memories.map((m) => m.id));
   const [navCollapsed, setNavCollapsed] = useState(false);
   const [tab, setTab] = useState<
-      "sites" | "memories" | "routes" | "photos" | "import"
+      | "sites"
+      | "memories"
+      | "routes"
+      | "photos"
+      | "import"
+      | "members"
+      | "map"
     >(canEdit ? "sites" : "memories"),
     [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
       "pending",
@@ -487,6 +512,26 @@ export function Admin({
             )}
           </button>
         )}
+        {role === "admin" && (
+          <button
+            disabled={!!editing}
+            className={tab === "members" ? "active" : ""}
+            onClick={() => setTab("members")}
+          >
+            <Shield size={18} />
+            Üyeler ve roller
+          </button>
+        )}
+        {role === "admin" && (
+          <button
+            disabled={!!editing}
+            className={tab === "map" ? "active" : ""}
+            onClick={() => setTab("map")}
+          >
+            <MapIcon size={18} />
+            Harita ayarları
+          </button>
+        )}
         {!live && canEdit && (
           <button
             disabled={!!editing}
@@ -526,6 +571,21 @@ export function Admin({
             catalogRoutes={state.catalogRoutes}
             onClose={() => setEditing(null)}
             onSave={saveSite}
+            loadPlacement={loadPlacement}
+            savePlacement={savePlacement}
+            live={live}
+          />
+        ) : tab === "members" && role === "admin" ? (
+          <AdminMembers
+            loadMembers={loadMembers}
+            changeRole={changeMemberRole}
+            currentUserId={currentUserId}
+            live={live}
+          />
+        ) : tab === "map" && role === "admin" ? (
+          <AdminMapSettings
+            settings={mapSettings}
+            onSave={saveMapSettings}
             live={live}
           />
         ) : tab === "routes" ? (

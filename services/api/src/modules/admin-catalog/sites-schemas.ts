@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { cardKinds, publishStatuses, sectionKinds, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
+import { cardKinds, historyAngleMatches, publishStatuses, sectionKinds, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
 import { PageQuery, pageResponse } from "../../platform/pagination.ts";
-import { CardDto, KindSchema, SiteDetail, TrustSchema } from "../catalog/schemas.ts";
+import { CardDto, KindSchema, MapPlacementDto, SiteDetail, TrustSchema } from "../catalog/schemas.ts";
 
 // ── input building blocks ────────────────────────────────────────────────────
 
@@ -25,11 +25,12 @@ export const LngLatInput = z.tuple([z.number().min(-180).max(180), z.number().mi
 export const CameraPoseInput = z
   .object({
     label: text(60).optional(),
+    target: text(200).nullable().default(null),
     azimuthDeg: z.number().min(-360).max(360),
     elevationDeg: z.number().min(-90).max(90),
-    distanceM: z.number().positive().max(10_000),
+    distance: z.number().min(0.1).max(4),
   })
-  .describe("Kamera açısı: azimut ve yükseklik derece, uzaklık metre");
+  .describe("Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)");
 export type CameraPoseInput = z.infer<typeof CameraPoseInput>;
 
 // ── site: list and detail ────────────────────────────────────────────────────
@@ -79,6 +80,14 @@ export const AdminSiteDetail = SiteDetail.extend({
   locationSource: z.string().nullable().describe("Konumun kaynağı; PUT .../location 'manual' yapar"),
   importMeta: z.record(z.string(), z.unknown()).nullable().describe("İçe aktarılan envanter satırı (cilt, sayfa, ham tür, ham adres)"),
   modelMediaId: z.string().nullable().describe("Adım 1: eserin bağlı 3B modeli"),
+  mapPlacement: MapPlacementDto.extend({
+    lng: z.number().nullable().describe("Yerleşimde konum verilmemişse eserin konumu; o da yoksa null"),
+    lat: z.number().nullable().describe("Yerleşimde konum verilmemişse eserin konumu; o da yoksa null"),
+    visible: z.boolean().describe("false = kayıtlı ama ziyaretçi haritasında çizilmez"),
+    updatedAt: z.iso.datetime(),
+  })
+    .nullable()
+    .describe("Kayıtlı harita yerleşimi; `visible` kapalı olsa da, modeli kaldırılmış eserde de döner. Ziyaretçiye giden hâli `placement`"),
   photoIds: z.array(z.string()).describe("Adım 3: eserin sıralı fotoğrafları (kapak dahil)"),
   sourceLinks: z
     .array(z.object({ sourceId: z.string(), locator: z.string().nullable() }))
@@ -135,6 +144,27 @@ export type SiteInfoInput = z.infer<typeof SiteInfoBody>;
 export const LocationBody = z.object({ coordinates: LngLatInput });
 export type LocationInput = z.infer<typeof LocationBody>;
 
+const MapPointInput = z.object({ lng: z.number().min(-180).max(180), lat: z.number().min(-90).max(90) });
+
+export const MapPlacementBody = z
+  .object({
+    lng: z.number().min(-180).max(180).nullable().optional().describe("Modelin boylamı; lat ile birlikte verilir. Yoksa ya da null ise eserin konumu"),
+    lat: z.number().min(-90).max(90).nullable().optional().describe("Modelin enlemi; lng ile birlikte verilir"),
+    headingDeg: z.number().min(0).lt(360).describe("Kuzeyden saat yönünde derece, 0 ≤ x < 360"),
+    scale: z.number().min(0.1).max(10).describe("0,1–10; 1 = model birimi bir metre"),
+    altitudeM: z.number().min(-50).max(200).describe("Zemine oturmuş modelin üstüne eklenen yükseklik, metre"),
+    anchorNode: nullableText(200).describe("Taban noktasının hesaplandığı parça adı; null ya da boş = tüm parçalar"),
+    hiddenPoints: z.array(MapPointInput).max(50).describe("Elle gizlenen OSM binalarından birer nokta; eserin şehrinde olmalı"),
+    keptPoints: z.array(MapPointInput).max(50).describe("Otomatik gizlenip geri istenen OSM binalarından birer nokta; eserin şehrinde olmalı"),
+    visible: z.boolean().describe("false = kaydet ama ziyaretçi haritasında gösterme"),
+  })
+  .superRefine((body, ctx) => {
+    if ((body.lng === undefined || body.lng === null) !== (body.lat === undefined || body.lat === null)) {
+      ctx.addIssue({ code: "custom", path: [body.lng == null ? "lng" : "lat"], message: "Boylam ve enlem birlikte verilmeli ya da ikisi de boş bırakılmalı." });
+    }
+  });
+export type MapPlacementInput = z.infer<typeof MapPlacementBody>;
+
 export const ModelBody = z.object({
   mediaId: Id.nullable().describe("kind=model medya; null = modeli kaldır"),
   openingCamera: CameraPoseInput.nullable().optional().describe("Hikâyenin açılış açısı; verilmezse null olur, modelsiz eserde verilemez"),
@@ -176,6 +206,7 @@ const StoryInput = z.object({
   showCard: z.boolean().nullable().optional(),
   cardId: Id.nullable().default(null).describe("Paylaşılan kart"),
   camera: CameraPoseInput.nullable().default(null),
+  interior: z.boolean().default(false).describe("«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"),
   highlights: z.array(text(200).min(1)).max(50).default([]).describe("Eserin 3B modelindeki parça adları"),
   audioMediaId: Id.nullable().default(null).describe("kind=audio medya (TR)"),
   audioEnMediaId: Id.nullable().default(null).describe("kind=audio medya (EN)"),
@@ -201,6 +232,11 @@ const HistoryImageInput = z.object({
   id: Id.optional().describe("Verilirse görselin kimliği korunur (rota durakları buna bağlanır)"),
   mediaId: Id.describe("kind=photo; eski görsel"),
   presentMediaId: Id.nullable().default(null).describe("kind=photo; aynı açıdan bugünün görüntüsü"),
+  presentAngleMatch: z
+    .enum(historyAngleMatches)
+    .nullable()
+    .default(null)
+    .describe("Bugünkü görüntünün açı benzerliği (same = aynı nokta ve yön, near = yakın açı); yalnız presentMediaId varken verilebilir"),
   caption: text(500).default(""),
   captionEn: nullableText(500).optional(),
   dateLabel: text(100).default(""),

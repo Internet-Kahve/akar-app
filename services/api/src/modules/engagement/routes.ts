@@ -179,7 +179,7 @@ export const engagementRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         tags: ["stories"],
-        summary: "Hikâyeyi tamamla: üye 15 puan alır (tekrarında 0), misafir imzalı makbuz alır. Gövde gerekmez",
+        summary: "Hikâyeyi tamamla: üye 15 puan alır (tekrarında 0) ve eserin hikâye rozetlerini kazanır (earnedBadges), misafir imzalı makbuz alır. Gövde gerekmez",
         params: SiteIdParams,
         headers: DeviceHeaders,
         response: { 200: CompleteResponse },

@@ -1,20 +1,36 @@
 import {
+  defaultMapSettings,
+  validatePlacement,
   validateSite,
+  type AboutChapter,
+  type AngleMatch,
+  type SiteBadge,
+  type CameraPose,
   type Command,
   type HeritageRoute,
+  type CityRecord,
   type HeritageSite,
+  type MapPlacement,
+  type MapSettings,
   type Memory,
   type Role,
   type SiteKind,
   type SitePhoto,
   type SiteSource,
+  type SiteTask,
   type Snapshot,
   type StoryBlock,
   type Trust,
 } from "@akar/domain";
 import type {
   AdminHealth,
+  AdminMember,
+  MemberPage,
   AkarClient,
+  SiteProgress,
+  SiteTaskAnswerResult,
+  SiteTaskCompleteInput,
+  SiteTaskCompletion,
   PlayableQuiz,
   QuizAnswerResult,
   StorageAdapter,
@@ -117,6 +133,10 @@ interface MediaDto {
   sourceId: string | null;
   trust: Trust;
   parts: string[];
+  /** Triangle count of a model; absent on older API versions. */
+  triangles?: number | null;
+  /** "İçini göster" groups of a model; absent on older API versions. */
+  coverGroups?: string[][];
 }
 interface SiteSummaryDto {
   id: string;
@@ -131,6 +151,8 @@ interface SiteDetailDto {
   year: string;
   coordinates: [number, number];
   minutes: number;
+  /** Map draw priority (§11.48), absent on older API versions; null = unranked. */
+  displayOrder?: number | null;
   tier: HeritageSite["tier"];
   description: string;
   descriptionEn: string | null;
@@ -154,9 +176,11 @@ interface SiteDetailDto {
     sourceId: string | null;
     showCard: boolean | null;
     highlights: string[];
+    camera: CameraPose | null;
+    /** Absent on older API versions. */
+    interior?: boolean;
     /** Server-side only fields the domain does not carry; kept as they are on a story save. */
     cardId?: string | null;
-    camera?: CameraPoseDto | null;
     audioMediaId?: string | null;
     audioEnMediaId?: string | null;
   }>;
@@ -167,6 +191,26 @@ interface SiteDetailDto {
     body: string;
     trust: Trust;
     sourceId: string | null;
+    /** Absent on older API versions. */
+    chapterId?: string | null;
+    /** Book photographs after the paragraph; `mediaId` resolves in `media`. Absent on older API versions. */
+    photos?: Array<{ mediaId: string; aspect: number | null; alt: string }>;
+  }>;
+  /** Absent on older API versions. */
+  aboutCoverMediaId?: string | null;
+  /** Absent on older API versions. */
+  chapters?: Array<{
+    id: string;
+    title: string;
+    kind: "history" | "architecture" | "waqf";
+    summary: string[];
+    figures: AboutChapter["figures"];
+    quotes: Array<{ text: string; by: string | null }>;
+    timeline: AboutChapter["timeline"];
+    terms: AboutChapter["terms"];
+    camera: CameraPose | null;
+    interior: boolean;
+    focusParts: string[];
   }>;
   cards: Array<{ mediaId: string }>;
   historyImages: Array<{
@@ -177,17 +221,59 @@ interface SiteDetailDto {
     dateLabel?: string;
     sourceId?: string | null;
     trust?: Trust;
+    /** Absent on older API versions. */
+    presentAngleMatch?: AngleMatch | null;
   }>;
+  /** Team-made İz Bırak samples; absent on older API versions. */
+  sampleTraces?: Array<{
+    id: string;
+    author: string;
+    text: string;
+    /** Resolves in `media`. */
+    mediaId: string;
+    historyImageId: string | null;
+    angleMatch: AngleMatch | null;
+    addedOn: string;
+  }>;
+  /** Absent on older API versions. */
+  partCards?: Array<{
+    id: string;
+    parts: string[];
+    title: string;
+    body: string;
+    photoIds: string[];
+    sourceId: string | null;
+    trust: Trust;
+  }>;
+  /** Absent on older API versions. */
+  tasks?: Array<{
+    id: string;
+    kind: "quiz" | "field";
+    title: string;
+    prompt: string;
+    /** A site photograph; resolves in `media`. */
+    photoId: string | null;
+    part: string | null;
+    source: string | null;
+    trust: Trust;
+    quiz?: NonNullable<SiteTask["quiz"]>;
+    field?: NonNullable<SiteTask["field"]>;
+  }>;
+  /** Absent on older API versions. */
+  badges?: SiteBadge[];
   media: MediaDto[];
+  /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
+  placement?: MapPlacement | null;
   /** Explicit gallery relationship; absent on older API versions. */
   photoIds?: string[];
   sources: SiteSource[];
 }
-interface CameraPoseDto {
-  label?: string;
-  azimuthDeg: number;
-  elevationDeg: number;
-  distanceM: number;
+/** `AdminSiteDetail.mapPlacement`: the saved placement in every case (also while hidden); `lng`/`lat` are null while the model stands on the site's own location. */
+interface AdminPlacementDto extends Omit<MapPlacement, "lng" | "lat"> {
+  lng: number | null;
+  lat: number | null;
+  visible: boolean;
+  updatedAt: string;
 }
 /** `AdminSiteDetail`: the public detail plus status; a draft may lack type and location. */
 interface AdminSiteDetailDto extends Omit<
@@ -197,7 +283,9 @@ interface AdminSiteDetailDto extends Omit<
   kind: string | null;
   coordinates: [number, number] | null;
   status: "draft" | "published";
-  openingCamera: CameraPoseDto | null;
+  openingCamera: CameraPose | null;
+  /** The saved placement; `null` while none was saved; absent on older API versions. */
+  mapPlacement?: AdminPlacementDto | null;
   /** Per-site place inside each source ("s. 42"); the domain source has no such field. */
   sourceLinks: Array<{ sourceId: string; locator: string | null }>;
 }
@@ -306,6 +394,8 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     simple: s.simple,
     trust: s.trust,
     highlights: s.highlights,
+    ...(present(s.camera) && { camera: s.camera }),
+    ...(s.interior && { interior: true }),
     ...(present(s.textEn) && { textEn: s.textEn }),
     ...(present(s.photoId) && { photoId: s.photoId }),
     ...(present(s.sourceId) && { sourceId: s.sourceId }),
@@ -319,6 +409,9 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     [
       ...d.cards.map((c) => c.mediaId),
       ...d.historyImages.flatMap((h) => [h.mediaId, h.presentMediaId]),
+      ...(d.sampleTraces ?? []).map((t) => t.mediaId),
+      ...(d.partCards ?? []).flatMap((c) => c.photoIds),
+      ...(d.sections ?? []).flatMap((s) => (s.photos ?? []).map((p) => p.mediaId)),
     ].filter(present),
   );
   const gallery = d.photoIds ? new Set(d.photoIds) : null;
@@ -329,6 +422,9 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         (gallery ? gallery.has(m.id) : used.has(m.id) || !other.has(m.id)),
     )
     .map(toPhoto);
+  const aboutCover = d.aboutCoverMediaId
+    ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
+    : undefined;
   const model = d.media.find((m) => m.kind === "model");
   return {
     id: d.id,
@@ -348,10 +444,39 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     tier: d.tier,
     photos,
     sources: d.sources,
-    sections: (d.sections ?? []).map((section) => ({
-      ...section,
-      sourceId: section.sourceId ?? "",
-    })),
+    sections: (d.sections ?? []).map(
+      ({ chapterId, photos: aboutPhotos, ...section }) => {
+        const placed = (aboutPhotos ?? []).flatMap((p) => {
+          const m = d.media.find((x) => x.id === p.mediaId && x.kind === "photo");
+          return m
+            ? [
+                {
+                  photo: toPhoto(m),
+                  alt: p.alt,
+                  ...(present(p.aspect) && { aspect: p.aspect }),
+                },
+              ]
+            : [];
+        });
+        return {
+          ...section,
+          sourceId: section.sourceId ?? "",
+          ...(present(chapterId) && { chapterId }),
+          ...(placed.length && { photos: placed }),
+        };
+      },
+    ),
+    ...(d.chapters?.length && {
+      chapters: d.chapters.map(({ camera, quotes, ...chapter }) => ({
+        ...chapter,
+        quotes: quotes.map(({ text, by }) => ({
+          text,
+          ...(present(by) && { by }),
+        })),
+        ...(present(camera) && { camera }),
+      })),
+    }),
+    ...(aboutCover && { aboutCover: toPhoto(aboutCover) }),
     storyPhotos: d.media
       .filter((m) => m.kind === "photo" && used.has(m.id))
       .map(toPhoto),
@@ -371,10 +496,58 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           dateLabel: h.dateLabel ?? "Tarih bilinmiyor",
           sourceId: h.sourceId ?? image.sourceId ?? "",
           trust: h.trust ?? image.trust,
-          ...(current ? { presentPhoto: toPhoto(current) } : {}),
+          ...(current
+            ? {
+                presentPhoto: toPhoto(current),
+                ...(present(h.presentAngleMatch) && {
+                  presentAngleMatch: h.presentAngleMatch,
+                }),
+              }
+            : {}),
         },
       ];
     }),
+    ...(d.sampleTraces?.length && {
+      sampleTraces: d.sampleTraces.flatMap(({ mediaId, historyImageId, angleMatch, ...trace }) => {
+        const m = d.media.find((x) => x.id === mediaId && x.kind === "photo");
+        return m
+          ? [
+              {
+                ...trace,
+                photo: toPhoto(m),
+                ...(present(historyImageId) && { historyImageId }),
+                ...(present(angleMatch) && { angleMatch }),
+              },
+            ]
+          : [];
+      }),
+    }),
+    ...(d.partCards?.length && {
+      partCards: d.partCards.map(({ photoIds, sourceId, ...card }) => ({
+        ...card,
+        photos: photoIds.flatMap((id) => {
+          const m = d.media.find((x) => x.id === id && x.kind === "photo");
+          return m ? [toPhoto(m)] : [];
+        }),
+        ...(present(sourceId) && { sourceId }),
+      })),
+    }),
+    ...(d.tasks?.length && {
+      tasks: d.tasks.map(({ photoId, part, source, quiz, field, ...task }) => {
+        const m = photoId
+          ? d.media.find((x) => x.id === photoId && x.kind === "photo")
+          : undefined;
+        return {
+          ...task,
+          ...(m && { photo: toPhoto(m) }),
+          ...(present(part) && { part }),
+          ...(present(source) && { source }),
+          ...(quiz && { quiz }),
+          ...(field && { field }),
+        };
+      }),
+    }),
+    ...(d.badges?.length && { badges: d.badges }),
     ...(d.editorVersion === 2 && { editorVersion: 2 as const }),
     ...(present(d.nameEn) && { nameEn: d.nameEn }),
     ...(present(d.descriptionEn) && { descriptionEn: d.descriptionEn }),
@@ -383,6 +556,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ...(present(d.address) && { address: d.address }),
     ...(present(d.role) && { role: d.role }),
     ...(present(d.relatedSiteId) && { relatedSiteId: d.relatedSiteId }),
+    ...(typeof d.displayOrder === "number" && { displayOrder: d.displayOrder }),
     ...(present(d.coverMediaId) && { coverPhotoId: d.coverMediaId }),
     ...(model && {
       model: {
@@ -392,23 +566,52 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         src: model.url,
         parts: model.parts,
         trust: model.trust,
+        triangles: model.triangles ?? null,
+        ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
+        placement: d.placement ?? null,
       },
     }),
   };
 }
 
+/** The panel's placement: the saved one with `visible`, on the site's own location where none was stored. */
+const mapAdminPlacement = (
+  p: AdminPlacementDto,
+  at: [number, number],
+): MapPlacement => ({
+  lng: p.lng ?? at[0],
+  lat: p.lat ?? at[1],
+  headingDeg: p.headingDeg,
+  scale: p.scale,
+  altitudeM: p.altitudeM,
+  anchorNode: p.anchorNode,
+  hiddenPoints: p.hiddenPoints,
+  keptPoints: p.keptPoints,
+  visible: p.visible,
+});
+
 /** Panel view of an admin detail. A draft without a type shows "cami"; one without a location shows `placeholder` (decision log §11.23). */
 const mapAdminSite = (
   d: AdminSiteDetailDto,
   placeholder: [number, number],
-): HeritageSite => ({
-  ...mapSite({
-    ...d,
-    kind: d.kind ?? "cami",
-    coordinates: d.coordinates ?? placeholder,
-  }),
-  status: d.status,
-});
+): HeritageSite => {
+  const at = d.coordinates ?? placeholder;
+  const site = mapSite({ ...d, kind: d.kind ?? "cami", coordinates: at });
+  return {
+    ...site,
+    status: d.status,
+    // The panel sees the placement also while it is hidden (`visible: false`).
+    ...(site.model &&
+      d.mapPlacement !== undefined && {
+        model: {
+          ...site.model,
+          placement: d.mapPlacement
+            ? mapAdminPlacement(d.mapPlacement, at)
+            : null,
+        },
+      }),
+  };
+};
 
 const mapRoute = (r: RouteDto): HeritageRoute => ({
   id: r.id,
@@ -742,23 +945,24 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         out.push(feedToMemory(m));
     return out;
   };
+  const fetchCatalog = async (): Promise<Catalog> => {
+    const details = await pages<SiteDetailDto>("/v1/site-details");
+    const [routes, feed] = await Promise.all([
+      loadRoutes(),
+      loadFeed(details.map((d) => d.id)),
+    ]);
+    return {
+      sites: details.map(mapSite),
+      raw: new Map(details.map((d) => [d.id, d])),
+      feed,
+      stale: new Set<string>(),
+      routesStale: false,
+      feedStale: false,
+      ...routes,
+    };
+  };
   const loadCatalog = (): Promise<Catalog> => {
-    catalogLoad ??= (async () => {
-      const details = await pages<SiteDetailDto>("/v1/site-details");
-      const [routes, feed] = await Promise.all([
-        loadRoutes(),
-        loadFeed(details.map((d) => d.id)),
-      ]);
-      return {
-        sites: details.map(mapSite),
-        raw: new Map(details.map((d) => [d.id, d])),
-        feed,
-        stale: new Set<string>(),
-        routesStale: false,
-        feedStale: false,
-        ...routes,
-      };
-    })();
+    catalogLoad ??= fetchCatalog();
     catalogLoad.catch(() => {
       catalogLoad = undefined;
     });
@@ -1334,13 +1538,17 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   ) {
     const photos = site.photos ?? [];
     const sourcesChanged = !same(site.sources ?? [], cur.sources ?? []);
-    const modelChanged = !same(site.model, cur.model);
+    // The placement has its own command; a stale copy on the model is no model change.
+    const modelChanged = !same(
+      site.model && { ...site.model, placement: undefined },
+      cur.model && { ...cur.model, placement: undefined },
+    );
     const photosChanged =
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
     if (!sourcesChanged && !modelChanged && !photosChanged && !storiesChanged)
       return;
-    // What the domain site does not carry: source locators, story cards, cameras and audio.
+    // What the domain site does not carry: source locators, story cards and audio.
     const before = await call<AdminSiteDetailDto>("GET", path);
 
     if (sourcesChanged) {
@@ -1435,7 +1643,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               showCard: s.showCard ?? null,
               highlights: s.highlights ?? [],
               cardId: k?.cardId ?? null,
-              camera: k?.camera ?? null,
+              camera: s.camera ?? null,
+              interior: s.interior ?? false,
               audioMediaId: k?.audioMediaId ?? null,
               audioEnMediaId: k?.audioEnMediaId ?? null,
             };
@@ -1553,7 +1762,12 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   async function run(command: Command): Promise<boolean> {
     const cat = await loadCatalog();
     user = await ensureUser(cat);
-    if ("siteId" in command && !cat.sites.some((s) => s.id === command.siteId))
+    if (
+      "siteId" in command &&
+      // A placement is also saved for drafts, which the published catalog does not list.
+      command.type !== "map-placement" &&
+      !cat.sites.some((s) => s.id === command.siteId)
+    )
       throw new Error("Eser bulunamadı.");
     switch (command.type) {
       case "save": {
@@ -1678,6 +1892,31 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       case "site":
         await updateSite(command.site);
         return false;
+      case "map-placement": {
+        validatePlacement(command.placement);
+        const p = command.placement;
+        const id = createdIds.get(command.siteId) ?? command.siteId;
+        await call(
+          "PUT",
+          `/v1/admin/sites/${encodeURIComponent(id)}/map-placement`,
+          {
+            body: {
+              lng: p.lng,
+              lat: p.lat,
+              headingDeg: p.headingDeg,
+              scale: p.scale,
+              altitudeM: p.altitudeM,
+              anchorNode: p.anchorNode,
+              hiddenPoints: p.hiddenPoints,
+              keptPoints: p.keptPoints,
+              visible: p.visible ?? true,
+            },
+          },
+        );
+        // The answer is the admin detail; the catalog entry (and the visitor's placement in it) is re-read.
+        await refreshAdminSite(id);
+        return false;
+      }
       case "catalog-routes":
         await updateRoutes(command.routes);
         return false;
@@ -1716,6 +1955,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
 
   // One operation at a time: toggles read the cache the previous operation left behind.
   let queue: Promise<unknown> = Promise.resolve();
+  /** The catalog re-read in flight; timers and tab focus share it instead of stacking requests. */
+  let refreshing: Promise<Snapshot> | undefined;
   const enqueue = <T>(task: () => Promise<T>): Promise<T> => {
     const result = queue.then(task);
     queue = result.catch(() => undefined);
@@ -1725,6 +1966,52 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     `/v1/quizzes/${encodeURIComponent(quizId)}`;
   return {
     getSnapshot: () => enqueue(() => build(true)),
+    refreshCatalog: () =>
+      (refreshing ??= enqueue(async () => {
+        // Swap only after the whole read succeeded: a failed refresh keeps what the visitor sees.
+        catalogLoad = Promise.resolve(await fetchCatalog());
+        return build(false);
+      }).finally(() => {
+        refreshing = undefined;
+      })),
+    getMapSettings: async () => {
+      const s = await call<Partial<MapSettings>>("GET", "/v1/map-settings");
+      return {
+        modelMinZoom: Number.isFinite(s.modelMinZoom)
+          ? s.modelMinZoom!
+          : defaultMapSettings.modelMinZoom,
+        maxVisibleModels: Number.isFinite(s.maxVisibleModels)
+          ? s.maxVisibleModels!
+          : defaultMapSettings.maxVisibleModels,
+      };
+    },
+    setMapSettings: (settings) =>
+      call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
+    // An API from before §11.49 sends no `identity`: the loading screens stay neutral.
+    getCities: async () =>
+      (
+        await call<{
+          items: Array<
+            Omit<CityRecord, "identity"> &
+              Partial<Pick<CityRecord, "identity">> & { routeCount: number }
+          >;
+        }>("GET", "/v1/cities")
+      ).items.map(({ routeCount: _routes, identity, ...city }) => ({
+        ...city,
+        identity: identity ?? null,
+      })),
+    // Live state, not queued behind commands: the editor reads it when it opens.
+    getMapPlacement: async (siteId) => {
+      const id = createdIds.get(siteId) ?? siteId;
+      const d = await call<AdminSiteDetailDto>(
+        "GET",
+        `/v1/admin/sites/${encodeURIComponent(id)}`,
+        { cache: "no-store" },
+      );
+      return d.mapPlacement
+        ? mapAdminPlacement(d.mapPlacement, d.coordinates ?? [0, 0])
+        : null;
+    },
     getModerationPage: (status, cursor) =>
       enqueue(async () => {
         const page = await call<{
@@ -1828,7 +2115,68 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           snapshot: await build(false),
         };
       }),
+    // Optional auth: a signed-in user's token earns badges, a guest plays without storing anything.
+    answerSiteTask: (taskId, choice) =>
+      call<SiteTaskAnswerResult>(
+        "POST",
+        `/v1/site-tasks/${encodeURIComponent(taskId)}/answer`,
+        { body: { choice } },
+      ),
+    completeSiteTask: async (taskId, input) => {
+      const body =
+        input.mode === "onSite"
+          ? {
+              mode: "onSite",
+              lat: input.coordinates[1],
+              lng: input.coordinates[0],
+              ...(input.accuracyM !== undefined && {
+                accuracyM: input.accuracyM,
+              }),
+            }
+          : { mode: "fromHome", part: input.part };
+      try {
+        const done = await call<{
+          doneText: string;
+          onSite: boolean;
+          earnedBadges: SiteBadge[];
+        }>(
+          "POST",
+          `/v1/site-tasks/${encodeURIComponent(taskId)}/complete`,
+          { body },
+        );
+        return { done: true, ...done };
+      } catch (e) {
+        // Not a failed request: the visitor is too far away or tapped another part.
+        if (
+          e instanceof ApiError &&
+          e.status === 422 &&
+          (e.code === "TOO_FAR" || e.code === "WRONG_PART")
+        )
+          return {
+            done: false,
+            reason: e.code === "TOO_FAR" ? "tooFar" : "wrongPart",
+          };
+        throw e;
+      }
+    },
+    getSiteProgress: async () =>
+      (await token())
+        ? call<SiteProgress>("GET", "/v1/me/site-progress", {
+            cache: "no-store",
+          })
+        : { tasks: [], badges: [] },
     // Live state, not queued behind commands: the panel re-reads it after each one.
+    getMembers: (query, page) =>
+      call<MemberPage>("GET", "/v1/admin/users", {
+        query: { query, page, pageSize: 25 },
+        cache: "no-store",
+      }),
+    setMemberRole: (userId, role, expectedRole) =>
+      call<AdminMember>(
+        "PUT",
+        `/v1/admin/users/${encodeURIComponent(userId)}/role`,
+        { body: { role, expectedRole } },
+      ),
     getAdminHealth: () =>
       call<AdminHealth>("GET", "/v1/admin/health", { cache: "no-store" }),
   };

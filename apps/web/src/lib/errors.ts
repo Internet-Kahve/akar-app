@@ -13,3 +13,12 @@ export function needsSignIn(error: unknown): boolean {
     return error.status === 401 || error.code === "UNAUTHENTICATED";
   return error instanceof Error && /giriş yapmalısın/i.test(error.message);
 }
+
+/** `describeError`, with the API's per-field messages ("Konum Bursa sınırları dışında.") when it sent any. */
+export function describeFieldError(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    const fields = [...new Set(Object.values(error.fieldErrors).flat())];
+    if (fields.length) return fields.join(" ");
+  }
+  return describeError(error, fallback);
+}

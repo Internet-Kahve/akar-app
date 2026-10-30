@@ -15,7 +15,7 @@
     "build": "npm run build -w @akar/web",
     "start": "npm run start -w @akar/web",
     "typecheck": "npm run typecheck -w @akar/web",
-    "test": "node --import tsx --test packages/domain/src/*.test.ts packages/api-client/src/*.test.ts",
+    "test": "node --import tsx --test packages/domain/src/*.test.ts packages/api-client/src/*.test.ts apps/web/src/lib/*.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:api": "playwright test -c services/api/e2e",
     "check": "bash scripts/check.sh",

@@ -121,9 +121,9 @@ Bu ilk dilim tam Figma uygulaması değildir. Mevcut CSS mimari çizimi, navigas
 
 ## İkinci dilim — admin ve harita (16 Ekim)
 
-- [x] Harita pini: MapLibre'ın konumlandırdığı dış `div` ile etkileşimli iç `button` ayrıldı. Harita transform'unda CSS transition yok; özgün SVG 32 × 38,4 boyutu korunur. Yeniden boyutlandırma ResizeObserver ile izlenir.
+- [x] Harita pini: MapLibre'ın konumlandırdığı dış `div` ile etkileşimli iç `button` ayrıldı. Harita transform'unda CSS transition yok; özgün SVG 32 × 38,4 boyutu korunur. Yeniden boyutlandırma ResizeObserver ile izlenir. **29 Ekim (§11.48):** pinler HTML işaretçisi olmaktan çıktı, harita katmanında çizilir (`apps/web/src/lib/map-pins.ts`); boyut aynı, 18. zoomda küçülür.
 - [x] Sol panel kapatıldığında haritanın 0 genişlikli ilk grid sütununa düşmesi düzeltildi; tam alanı kullanır ve panel tekrar açılır.
-- [x] Yerel stil dosyası [docs harita kaynağı](https://github.com/Internet-Kahve/akar-app/blob/docs/docs/documents-context/tasarim/harita/akar-style.json) ile JSON olarak birebir karşılaştırıldı: 58 katman. Bu dilimde keyfî yeniden renk seçimi yapılmadı. Zemin `#F5F2EA`, yeşil `#adde8c`, su `#79c9fb`, binalar `#fde2c9` / `#D6C6AC`, 3D bina `#d0c6b4`.
+- [x] Yerel stil dosyası [docs harita kaynağı](https://github.com/Internet-Kahve/akar-app/blob/docs/docs/documents-context/tasarim/harita/akar-style.json) ile JSON olarak birebir karşılaştırıldı: 58 katman. Bu dilimde keyfî yeniden renk seçimi yapılmadı. Zemin `#F5F2EA`, yeşil `#adde8c`, su `#79c9fb`, binalar `#fde2c9` / `#D6C6AC`, 3D bina `#d0c6b4`. **29 Ekim (§11.48):** stil kullanıcının `akar-style-ozel-v2.json` dosyasıyla değiştirildi; katmanlar aynı, zemin `#f3f1ed`, binalar `#ede0d4` / `#D6C6AC`, 3D bina `#ddd5c6`.
 - [x] Admin başlıkları için yerel Cormorant Garamond 600 (Latin + Türkçe), Figma panel sekmesi varlığı.
 - [x] Kaynak ve görsel/cümle bağlantıları opsiyonel v2 alanlarıyla mevcut mock kayıtlara zarar vermeden eklendi. Eski kayıt düzenlenince yeni yayın kuralları devreye girer.
 - [x] Fotoğraf dosya türü/boyut kontrolü, hatalı görsel durumu; yeniden kodlama ile metadata temizliği, en uzun kenar 1200 px, çıktı sınırı. Depolama dolarsa başarı gösterilmez ve editördeki taslak korunur.
