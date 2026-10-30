@@ -240,18 +240,26 @@ result['routes'] = [
  dict(id='hanlar-ticaret',name='Hanların İzinde',description='Bedesten, Emir Hanı ve Koza Hanı arasında bir yürüyüş.',siteIds=['bedesten','emir-han','koza-han'],theme='Ticaret yapıları',minutes=0,distance='')]
 # City records (veri/sehir/<city>.json): every city, with or without sites in the app (§11.45: globe markers, «Yakında»).
 # Scene (§11.42): model light from harita_isik, viewer background from kimlik; without both scene stays null (default light).
+# Identity (§11.49): kimlik.zemin, desen and desen_renk, all three or none; the pattern is a file of design/desenler.
 LIGHT = dict(ambient='ortam', sun='gunes', fill='dolgu', azimuthDeg='yon', elevationDeg='yukseklik',
              saturation='doygunluk', groundShadow='yer_golgesi')
 result['cities'] = []
+LOOK = dict(accent='zemin', pattern='desen', patternColour='desen_renk')
 for path in sorted((root / 'veri/sehir').glob('*.json')):
     record = json.loads(path.read_text())
-    light, identity = record.get('harita_isik'), record.get('kimlik') or {}
-    scene = dict(light={k: light[v] for k, v in LIGHT.items()}, backgroundTop=identity['sahne_ust'],
-        backgroundBottom=identity['sahne_alt']) if light and identity.get('sahne_ust') and identity.get('sahne_alt') else None
+    light, kimlik = record.get('harita_isik'), record.get('kimlik') or {}
+    scene = dict(light={k: light[v] for k, v in LIGHT.items()}, backgroundTop=kimlik['sahne_ust'],
+        backgroundBottom=kimlik['sahne_alt']) if light and kimlik.get('sahne_ust') and kimlik.get('sahne_alt') else None
+    look = {k: kimlik.get(v) for k, v in LOOK.items()}
+    if any(look.values()) and not all(look.values()):
+        raise ValueError(f"{path.name}: kimlik needs zemin, desen and desen_renk together")
+    if look['pattern'] and not (root / 'design/desenler' / look['pattern']).is_file():
+        raise ValueError(f"{path.name}: pattern file design/desenler/{look['pattern']} is missing")
     center = record.get('merkez')
     inventory = {k: record.get(v) for k, v in dict(name='envanter_adi', publisher='envanter_yayinci', year='envanter_yili',
         siteCount='envanter_eser_sayisi').items()}
     result['cities'].append(dict(id=record['id'], name=record['ad'], isDefault=bool(record.get('varsayilan')), scene=scene,
+        identity=look if all(look.values()) else None,
         map=dict(center=center, zoom=record['zoom'], zoomDesktop=record.get('zoom_masaustu')) if center else None,
         inventory=inventory if any(v is not None for v in inventory.values()) else None))
 args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')

@@ -4,7 +4,7 @@ import { extname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { and, eq, inArray, like, notInArray, sql } from "drizzle-orm";
-import { validateCityMap, validateCityScene, validateSite, type CityRecord, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
+import { validateCityIdentity, validateCityMap, validateCityScene, validateSite, type CityRecord, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
 import { slugify } from "../modules/catalog/service.ts";
 import { loadConfig } from "../config.ts";
 import type { Tx } from "../platform/idempotency.ts";
@@ -131,6 +131,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     // loadCatalog keys the city row a site creates by slugify(name); the record must land on that row.
     if (city.id !== slugify(city.name)) throw new Error(`City id ${city.id} does not match its name ${city.name}`);
     if (city.scene) validateCityScene(city.scene);
+    if (city.identity) validateCityIdentity(city.identity);
     if (city.map) validateCityMap(city.map);
     else if (city.isDefault) throw new Error(`Default city ${city.id} has no map view`);
   }
@@ -264,12 +265,14 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         }
       }
       await tx.update(sites).set({ status: "draft" }).where(and(inArray(sites.id, manifest.retireSiteIds), like(sites.sourceSummary, "15 Ekim AKAR ürün notları%")));
-      // loadCatalog created the city rows of the sites; the record adds map, inventory and scene, and the cities
-      // without sites (§11.45). The default moves in two steps: the unique index allows one default at a time.
+      // loadCatalog created the city rows of the sites; the record adds map, inventory, scene and identity, and the
+      // cities without sites (§11.45). The default moves in two steps: the unique index allows one default at a time.
       await tx.update(cities).set({ isDefault: false }).where(eq(cities.isDefault, true));
-      for (const { id, map, inventory, ...city } of manifest.cities) {
+      for (const { id, map, inventory, scene, identity, ...city } of manifest.cities) {
         const row = {
           ...city,
+          // One jsonb document holds the 3D scene and the identity of the loading screens (§11.49); null = neither.
+          scene: scene || identity ? { ...scene, ...(identity && { identity }) } : null,
           centerLng: map?.center[0] ?? null,
           centerLat: map?.center[1] ?? null,
           zoom: map?.zoom ?? null,

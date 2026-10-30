@@ -2470,6 +2470,19 @@ test("map settings come from GET /v1/map-settings; missing values fall back to t
   await assert.rejects(client.getMapSettings(), ApiError);
 });
 
+test("cities come with their identity (§11.49); an API from before it sends none and the screens stay neutral; the route count is not part of the record", async () => {
+  const identity = { accent: "#22566E", pattern: "desen-bursa-sekiz-yildiz.svg", patternColour: "#A4D8E0" };
+  const city = (id: string, extra = {}) => ({ id, name: id, siteCount: 0, routeCount: 3, scene: null, isDefault: false, map: null, inventory: null, ...extra });
+  let items: unknown[] = [city("bursa", { identity }), city("hatay", { identity: null })];
+  const api = fakeApi({ "GET /v1/cities": () => ({ items }) });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: api.fetch });
+  const read = await client.getCities();
+  assert.deepEqual(read.map((c) => [c.id, c.identity]), [["bursa", identity], ["hatay", null]]);
+  assert.ok(read.every((c) => !("routeCount" in c)));
+  items = [city("bursa")];
+  assert.equal((await client.getCities())[0]!.identity, null);
+});
+
 test("refreshCatalog re-reads the catalog, shares concurrent reads and keeps the old data when the read fails", async () => {
   let heading = 174;
   let fail = false;

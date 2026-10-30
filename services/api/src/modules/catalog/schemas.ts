@@ -403,12 +403,21 @@ export const CitySceneDto = z
   })
   .describe("Haritadaki ve eser sayfasındaki 3B modellerin ışığı ve sahne zemini (§11.42)");
 
+export const CityIdentityDto = z
+  .object({
+    accent: z.string().describe("Şehrin rengi (#RRGGBB; veri/sehir kimlik.zemin): açılış ekranında şehir adı, açık zeminde desen"),
+    pattern: z.string().describe("Desen karosunun dosya adı (kimlik.desen), web uygulamasının /desenler/ klasöründe; örn. desen-bursa-sekiz-yildiz.svg"),
+    patternColour: z.string().describe("Desenin şehir renginin üstündeki rengi (#RRGGBB; kimlik.desen_renk)"),
+  })
+  .describe("Açılış ekranının ve 3B yükleme kartının şehirden aldığı görünüm (§11.49)");
+
 export const CityDto = z.object({
   id: z.string(),
   name: z.string(),
   siteCount: z.number().int().describe("Yayındaki eser sayısı"),
   routeCount: z.number().int().describe("Yayındaki rota sayısı"),
   scene: CitySceneDto.nullable().describe("null = istemci varsayılan ışığı ve zemini kullanır"),
+  identity: CityIdentityDto.nullable().describe("null = açılış ekranı ve yükleme kartı şehir rengi ve deseni olmadan, nötr çizilir"),
   isDefault: z.boolean().describe("Harita bu şehirde açılır (en çok bir şehir)"),
   map: z
     .object({

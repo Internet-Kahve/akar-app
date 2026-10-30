@@ -5404,3 +5404,189 @@ td small {
   flex-shrink: 0;
   pointer-events: auto;
 }
+/* Loading screens (§11.49): the opening screen and the 3D loading card draw the AKAR emblem stroke by stroke over the
+   city's faint pattern. The city's colour and pattern come from its record (`--city-accent`, `--city-pattern`, set by
+   `identityStyle`); a city without them gets plain screens. */
+.emblem {
+  display: block;
+  color: var(--gold);
+}
+.emblem path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* The path is 1 long (pathLength): one dash as long as the emblem, pushed out of sight and drawn in. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: emblem-draw 2.6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+@keyframes emblem-draw {
+  0% {
+    stroke-dashoffset: 1;
+  }
+  65%,
+  88% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+/* Reduced motion: the emblem stands drawn (the rule above that stops every animation would leave it undrawn). */
+@media (prefers-reduced-motion: reduce) {
+  .emblem path {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes loading-in {
+  from {
+    opacity: 0;
+  }
+}
+.city-pattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* 6–10 % is the design's rule for a pattern behind a title or a loading screen. */
+  opacity: 0.08;
+  background: var(--city-accent, var(--primary));
+  -webkit-mask: var(--city-pattern) 0 0 / 96px auto repeat;
+  mask: var(--city-pattern) 0 0 / 96px auto repeat;
+  animation: loading-in 320ms ease-out;
+}
+.opening {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--bg);
+  transition: opacity 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.opening.done {
+  opacity: 0;
+  pointer-events: none;
+}
+.opening-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.opening .emblem {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 14px;
+}
+.opening-brand {
+  padding-left: 0.32em;
+  color: var(--text);
+  font: 700 15px/20px var(--font);
+  letter-spacing: 0.32em;
+}
+.opening-city {
+  min-height: 40px;
+  color: var(--city-accent, var(--primary));
+  font: 600 34px/40px "Cormorant Garamond", Georgia, serif;
+}
+.opening-city span {
+  display: inline-block;
+  animation: loading-in 320ms ease-out;
+}
+.opening-note {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+/* The 3D loading card sits over the scene; the panel beside the scene stays usable. */
+.model-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  box-sizing: border-box;
+  width: min(420px, calc(100% - 80px));
+  min-width: min(240px, 100%);
+  padding: 24px;
+  transform: translate(-50%, -50%);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 4px 16px #0000001f;
+  text-align: center;
+  animation: loading-in 160ms ease-out;
+}
+.model-loading-emblem {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 12px;
+}
+.model-loading-title {
+  display: block;
+  color: var(--text);
+  font: 600 17px/21px var(--font);
+}
+.model-loading-bar {
+  height: 6px;
+  margin: 12px 0;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--border);
+}
+.model-loading-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms linear;
+}
+/* No length announced: the bar runs without telling a percentage. */
+.model-loading-bar.unknown i {
+  width: 35%;
+  transform: none;
+  animation: model-loading-run 1.2s ease-in-out infinite;
+}
+@keyframes model-loading-run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(290%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .model-loading-bar.unknown i {
+    width: 100%;
+    opacity: 0.3;
+  }
+}
+.model-loading-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 17px;
+}
+/* The stage is short on a phone (the panel is under it): a tighter card keeps clear of the view switch and the credit line. */
+@media (max-width: 900px) {
+  .model-loading {
+    padding: 16px 20px;
+  }
+  .model-loading-emblem {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 6px;
+  }
+  .model-loading-bar {
+    margin: 10px 0;
+  }
+  .model-loading-note {
+    font-size: 13px;
+  }
+}

@@ -1987,13 +1987,19 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     },
     setMapSettings: (settings) =>
       call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
+    // An API from before §11.49 sends no `identity`: the loading screens stay neutral.
     getCities: async () =>
       (
-        await call<{ items: Array<CityRecord & { routeCount: number }> }>(
-          "GET",
-          "/v1/cities",
-        )
-      ).items.map(({ routeCount: _routes, ...city }) => city),
+        await call<{
+          items: Array<
+            Omit<CityRecord, "identity"> &
+              Partial<Pick<CityRecord, "identity">> & { routeCount: number }
+          >;
+        }>("GET", "/v1/cities")
+      ).items.map(({ routeCount: _routes, identity, ...city }) => ({
+        ...city,
+        identity: identity ?? null,
+      })),
     // Live state, not queued behind commands: the editor reads it when it opens.
     getMapPlacement: async (siteId) => {
       const id = createdIds.get(siteId) ?? siteId;

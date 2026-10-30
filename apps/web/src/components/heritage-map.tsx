@@ -74,6 +74,7 @@ export function HeritageMap({
   routeIds,
   collapsed,
   mapSettings,
+  onFirstDraw,
 }: {
   sites: HeritageSite[];
   selectedId?: string;
@@ -82,6 +83,8 @@ export function HeritageMap({
   collapsed: boolean;
   /** Without settings the map draws no models (the route preview in the panel). */
   mapSettings?: MapSettings;
+  /** Called once the map has been drawn for the first time, or has given up (then the schematic view takes over). */
+  onFirstDraw?: () => void;
 }) {
   const scenes = useCityScenes();
   const cities = useCities();
@@ -102,6 +105,11 @@ export function HeritageMap({
     [notice, setNotice] = useState("");
   selectRef.current = onSelect;
   latest.current = { sites, mapSettings, scenes, cities };
+  const drawnRef = useRef(onFirstDraw);
+  drawnRef.current = onFirstDraw;
+  useEffect(() => {
+    if (loaded || failed) drawnRef.current?.();
+  }, [loaded, failed]);
   useEffect(() => {
     let disposed = false;
     import("maplibre-gl")

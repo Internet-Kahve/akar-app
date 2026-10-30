@@ -1,4 +1,4 @@
-import type { CityScene } from "@akar/domain";
+import type { CityIdentity, CityScene } from "@akar/domain";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -67,14 +67,21 @@ export const periods = pgTable("periods", {
 
 // ── places ───────────────────────────────────────────────────────────────────
 
+/**
+ * What `cities.scene` holds: the 3D scene (`light` with `backgroundTop` and `backgroundBottom`, §11.42) and the city's
+ * identity for the loading screens (§11.49). Each side may be missing (a city without sites has an identity but no
+ * scene); the API serves them as `scene` and `identity`.
+ */
+export type StoredCityScene = Partial<CityScene> & { identity?: CityIdentity };
+
 /** City (e.g. "bursa"); `city=` filter matches the slug id. */
 export const cities = pgTable(
   "cities",
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
-    /** 3D model light and viewer background (§11.42); null = clients use `defaultCityScene`. */
-    scene: jsonb("scene").$type<CityScene>(),
+    /** 3D model light and viewer background (§11.42) and the city identity of the loading screens (§11.49); null = neither. */
+    scene: jsonb("scene").$type<StoredCityScene>(),
     /** Map opening point and globe marker (§11.45); all null = not on the globe. */
     centerLng: doublePrecision("center_lng"),
     centerLat: doublePrecision("center_lat"),

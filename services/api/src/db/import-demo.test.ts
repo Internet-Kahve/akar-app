@@ -67,26 +67,37 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
     ] as Array<Record<string, unknown>>,
   }));
   const scene = { light: { ambient: 2, sun: 1, fill: 1, azimuthDeg: 315, elevationDeg: 45, saturation: 1.25, groundShadow: 0.18 }, backgroundTop: "#DDE4E5", backgroundBottom: "#A7B4B7" };
+  const identity = { accent: "#22566E", pattern: "desen-bursa-sekiz-yildiz.svg", patternColour: "#A4D8E0" };
   const bursa = { id: "bursa", name: "Bursa", isDefault: true, map: { center: [29.0628, 40.1846], zoom: 16.3, zoomDesktop: 16.7 },
-    inventory: { name: "Bursa Vakıf Eserleri Envanteri", publisher: null, year: 2025, siteCount: 385 }, scene };
-  // A city with no site in the app: on the globe as «Yakında», no scene.
+    inventory: { name: "Bursa Vakıf Eserleri Envanteri", publisher: null, year: 2025, siteCount: 385 }, scene, identity };
+  // A city with no site in the app: on the globe as «Yakında», no scene; its identity (§11.49) is there all the same.
   const konya = { id: "konya", name: "Konya", isDefault: false, map: { center: [32.4846, 37.8714], zoom: 14, zoomDesktop: null },
-    inventory: { name: null, publisher: null, year: 2024, siteCount: 289 }, scene: null };
-  const manifest = { version: 1, sites, routes: [], retireSiteIds: [], cities: [bursa, konya] };
+    inventory: { name: null, publisher: null, year: 2024, siteCount: 289 }, scene: null,
+    identity: { accent: "#3D8285", pattern: "desen-konya-on-iki-gulbezek.svg", patternColour: "#E8DD7A" } };
+  // Neither scene nor identity.
+  const hatay = { id: "hatay", name: "Hatay", isDefault: false, map: { center: [36.16, 36.2025], zoom: 14, zoomDesktop: null },
+    inventory: { name: null, publisher: null, year: 2022, siteCount: 117 }, scene: null, identity: null };
+  const manifest = { version: 1, sites, routes: [], retireSiteIds: [], cities: [bursa, konya, hatay] };
   const path = join(root, "manifest.json");
   scene.backgroundTop = "gri";
   await writeFile(path, JSON.stringify(manifest));
   await assert.rejects(importDemoContent(path, root, false, {}), /#RRGGBB/);
   scene.backgroundTop = "#DDE4E5";
+  identity.pattern = "../desen.svg";
+  await writeFile(path, JSON.stringify(manifest));
+  await assert.rejects(importDemoContent(path, root, false, {}), /\.svg dosya adı/, "a pattern is a file name, never a path");
+  identity.pattern = "desen-bursa-sekiz-yildiz.svg";
   await writeFile(path, JSON.stringify(manifest));
   const dryRun = await importDemoContent(path, root, false, {});
   assert.deepEqual([dryRun.objects, dryRun.presentPhotos, dryRun.sampleTraces, dryRun.applied], [5, 7, 14, false]);
   for (let i = 0; i < 2; i++) assert.equal((await importDemoContent(path, root, true, env)).objects, 5);
   const served = async () => (await ctx.app.inject({ url: "/v1/cities" })).json().items as Array<{ id: string; siteCount: number } & Record<string, unknown>>;
   const city = (await served()).find((c) => c.id === "bursa")!;
-  assert.deepEqual(city.scene, scene, "the city record's scene is served with the city");
+  assert.deepEqual(city.scene, scene, "the city record's scene is served with the city, without the identity stored beside it");
+  assert.deepEqual(city.identity, identity, "the identity comes back as the record says");
   assert.deepEqual([city.isDefault, city.map, city.inventory], [true, bursa.map, bursa.inventory]);
-  assert.deepEqual((await served()).find((c) => c.id === "konya"), { ...konya, siteCount: 0, routeCount: 0 }, "a city without sites is listed");
+  assert.deepEqual((await served()).find((c) => c.id === "konya"), { ...konya, siteCount: 0, routeCount: 0 }, "a city without sites is listed, with its identity and no scene");
+  assert.deepEqual((await served()).find((c) => c.id === "hatay"), { ...hatay, siteCount: 0, routeCount: 0 }, "a city with neither stays null for both");
   // Moving the default to another city in one import (the unique index allows one default at a time).
   [bursa.isDefault, konya.isDefault] = [false, true];
   await writeFile(path, JSON.stringify(manifest));

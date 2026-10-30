@@ -1,9 +1,21 @@
 import { normalize } from "@akar/domain";
 import { asc, eq, sql } from "drizzle-orm";
 import type { Db } from "../../db/client.ts";
-import { catalogRoutes, cities, periods, roleCategories, siteTypes, sites } from "../../db/schema/index.ts";
+import { catalogRoutes, cities, periods, roleCategories, siteTypes, sites, type StoredCityScene } from "../../db/schema/index.ts";
 import type { CityDto, LookupsResponse } from "./schemas.ts";
 import { published } from "./service.ts";
+
+/**
+ * `cities.scene` holds the 3D scene and the city's identity (§11.49). The scene counts only with all its parts (a
+ * city that has an identity but no sites yet has no scene); the identity stands on its own.
+ */
+function splitScene(stored: StoredCityScene | null): Pick<CityDto, "scene" | "identity"> {
+  const { light, backgroundTop, backgroundBottom, identity } = stored ?? {};
+  return {
+    scene: light && backgroundTop && backgroundBottom ? { light, backgroundTop, backgroundBottom } : null,
+    identity: identity ?? null,
+  };
+}
 
 /**
  * Every city with its published site and route counts; drafts are never counted, and a city without
@@ -29,7 +41,7 @@ export async function listCities(db: Db): Promise<CityDto[]> {
     .map(({ c }) => ({
       id: c.id,
       name: c.name,
-      scene: c.scene,
+      ...splitScene(c.scene),
       isDefault: c.isDefault,
       // The check constraint keeps center and zoom together.
       map: c.centerLng === null ? null : { center: [c.centerLng, c.centerLat!] as [number, number], zoom: c.zoom!, zoomDesktop: c.zoomDesktop },
