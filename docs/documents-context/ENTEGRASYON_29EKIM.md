@@ -163,7 +163,8 @@ Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → y
 Ürünün `map-models.ts` ve `model-viewer.tsx` dosyalarında ışık sabit yazılı. `map-models.ts`'teki değerler prototipin eski değerleri (ortam 2,3 / güneş 1,3). Yeni değerler şehir kaydında: `veri/sehir/bursa.json → harita_isik`.
 
 ```
-yon 220.6 · yukseklik 50 · doygunluk 1 · yer_golgesi 0.18   (yon yapıya göre: modelin kendi ekseninde)
+yon 220.6 · yukseklik 50 · harita_yon 200 · harita_yukseklik 62 · harita_gunes 1.5 · doygunluk 1 · yer_golgesi 0.18
+(yon yapıya göre: modelin kendi ekseninde. yon/yukseklik ve güneş 2.1 detay sahnesi için; haritada güneş daha önden, daha yukarıdan ve 1.5 şiddetle: yakın zoomda açık cepheler patlıyordu)
 ```
 
 **30 Ekim 2026 değişikliği (kullanıcının seçimi):** ışık tanıtım sayfasındaki 3D ile aynı. Işığın kendisi artık sabit; şehir kaydından yalnız güneşin yönü ve açısı gelir. Eski `ortam`, `gunes`, `dolgu` alanları kalktı, dolgu ışığı yok.

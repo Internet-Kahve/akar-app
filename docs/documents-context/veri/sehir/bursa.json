@@ -28,8 +28,11 @@
   "harita_isik": {
     "yon": 220.6,
     "yukseklik": 50,
+    "harita_yon": 200,
+    "harita_yukseklik": 62,
+    "harita_gunes": 1.5,
     "doygunluk": 1,
     "yer_golgesi": 0.18
   },
-  "_harita_isik_not": "Haritadaki ve sunumdaki 3D eserlerin ışığı (30 Ekim 2026): tanıtım sayfasındaki 3D ile aynı, kullanıcının seçimi. Işığın kendisi app.js isikKur içinde sabit (sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme). yon = güneşin geldiği yön, YAPIYA GÖRE: modelin kendi ekseninde (döndürülmemiş GLB) kuzeyden saat yönüne derece; model haritadaki yaw ile döndüğü için güneş de onunla döner, her eserde aynı köşeden (ön sol çapraz) vurur. 220.6 / 50 = tanıtımdaki güneş (-60, 110, 70). yukseklik = güneşin ufuktan açısı, doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Köşe kararması (AO) modellerde pişmiş."
+  "_harita_isik_not": "Haritadaki ve sunumdaki 3D eserlerin ışığı (30 Ekim 2026): tanıtım sayfasındaki 3D ile aynı, kullanıcının seçimi. Işığın kendisi app.js isikKur içinde sabit (sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme). yon = güneşin geldiği yön, YAPIYA GÖRE: modelin kendi ekseninde (döndürülmemiş GLB) kuzeyden saat yönüne derece; model haritadaki yaw ile döndüğü için güneş de onunla döner, her eserde aynı köşeden (ön sol çapraz) vurur. 220.6 / 50 = tanıtımdaki güneş (-60, 110, 70). yukseklik = güneşin ufuktan açısı. Bu ikisi sunum sahnesi için; haritada harita_yon / harita_yukseklik / harita_gunes (30 Ekim: daha önden, daha yukarıdan, daha zayıf; yakın zoomda açık cepheler patlıyordu). doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Köşe kararması (AO) modellerde pişmiş."
 }

@@ -402,21 +402,23 @@ async function haritaPinleriKur() {
 /* --- modellerimiz: MapLibre özel katmanı + three.js (aynı GL bağlamı). Yerleşim test.html ile aynı. --- */
 /* ışık şehir kaydından (veri/sehir/<şehir>.json → harita_isik; önizleme v3 «Pişmiş»). Yoksa eski varsayılanlar.
    Köşe kararması (AO) modellerde pişmiş; gerçek zamanlı gölge yok. Yer gölgesi web'de: kodla üretilen tek bulanık doku, her modelin altında. */
-const ISIK = Object.assign({ yon:216, yukseklik:46, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
+const ISIK = Object.assign({ yon:216, yukseklik:46, harita_yon:200, harita_yukseklik:62, harita_gunes:1.5, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
 const YG_DOKU = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.filter = 'blur(13px)'; x.fillStyle = '#000';
   x.beginPath(); if (x.roundRect) x.roundRect(26, 26, 76, 76, 14); else x.rect(26, 26, 76, 76); x.fill(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
 /* ışık tanıtım sayfasındaki 3D ile aynı (30 Ekim 2026): sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme.
    güneş YAPIYA GÖRE: yon modelin kendi ekseninde (döndürülmemiş GLB), tanıtımdaki gibi; sonra model haritadaki yaw ile döndüğü için güneş de
    aynı açıyla döner. Böylece her eserde ışık aynı köşeden (ön sol çapraz) vurur; harita dönünce gölge yerinde kalır. R: gölge kamerasının yarı genişliği (m) */
-function gunesYonu(g, az, R, merkez, yaw = 0) {   // az: güneşin geldiği yön, modelin kuzeyinden saat yönüne derece. Model ekseni: x doğu, y yukarı, z güney
-  const a = THREE.MathUtils.degToRad(az), y = THREE.MathUtils.degToRad(ISIK.yukseklik);
+function gunesYonu(g, az, yuk, R, merkez, yaw = 0) {   // az: güneşin geldiği yön, modelin kuzeyinden saat yönüne derece; yuk: ufuktan açı. Model ekseni: x doğu, y yukarı, z güney
+  const a = THREE.MathUtils.degToRad(az), y = THREE.MathUtils.degToRad(yuk);
   g.position.set(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y)).applyAxisAngle(new THREE.Vector3(0, 1, 0), -THREE.MathUtils.degToRad(yaw)).multiplyScalar(R * 2.5).add(merkez);
 }
 function isikKur(r, sahne, R, haritada, merkez = new THREE.Vector3(), yaw = 0) {
   r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
   r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
   sahne.add(new THREE.HemisphereLight(0xF4F1EA, 0x8C948F, 1.15));
-  const g = new THREE.DirectionalLight(0xFFF4E0, 2.1); gunesYonu(g, ISIK.yon, R, merkez, yaw); g.target.position.copy(merkez); sahne.add(g.target); g.castShadow = true;
+  /* haritada güneş daha yukarıdan, daha önden ve daha zayıf (harita_*): yakın zoomda açık cepheler patlamasın */
+  const g = new THREE.DirectionalLight(0xFFF4E0, haritada ? ISIK.harita_gunes : 2.1);
+  if (haritada) gunesYonu(g, ISIK.harita_yon, ISIK.harita_yukseklik, R, merkez, yaw); else gunesYonu(g, ISIK.yon, ISIK.yukseklik, R, merkez, yaw); g.target.position.copy(merkez); sahne.add(g.target); g.castShadow = true;
   const n = haritada ? 1024 : 2048; g.shadow.mapSize.set(n, n); g.shadow.bias = -0.0004; g.shadow.normalBias = R / n;
   Object.assign(g.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R * 0.5, far:R * 5 }); sahne.add(g); return g;
 }
