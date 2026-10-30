@@ -169,9 +169,10 @@ test("the photo card stays clear of the model, is dragged away and opens the par
   const placed = (await card.boundingBox())!.y;
   await next(page);
   await expect(page.locator(".story-text")).toContainText("Cümle 3");
+  // Within a pixel: the y can land on either side of a half pixel.
   await expect
-    .poll(async () => Math.round((await card.boundingBox())?.y ?? 0))
-    .toBe(Math.round(placed));
+    .poll(async () => Math.abs(((await card.boundingBox())?.y ?? 0) - placed))
+    .toBeLessThan(1);
   await card.click();
   await expect(page.locator(".about-lightbox")).toBeVisible();
   await page.locator(".about-lightbox-close").click();
