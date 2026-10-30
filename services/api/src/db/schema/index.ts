@@ -10,3 +10,4 @@ export * from "./admin-catalog.ts";
 export * from "./moderation.ts";
 export * from "./engagement.ts";
 export * from "./settings.ts";
+export * from "./narrations.ts";

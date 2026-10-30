@@ -16,6 +16,8 @@ import { AppError, registerErrorHandling } from "./errors.ts";
 import type { AuthVerifier } from "./platform/auth.ts";
 import type { JobQueue } from "./platform/jobs.ts";
 import type { StorageBuckets } from "./platform/storage.ts";
+import type { Translator } from "./platform/translate.ts";
+import type { TtsProvider } from "./platform/tts.ts";
 import type { Geocoder } from "./modules/ingest/geocode.ts";
 import type { CityConfig } from "./modules/ingest/cities.ts";
 import { adminHealthRoutes } from "./modules/admin-health/routes.ts";
@@ -32,6 +34,7 @@ import { moderationRoutes } from "./modules/moderation/routes.ts";
 import { catalogRouteRoutes } from "./modules/routes/routes.ts";
 import { settingsRoutes } from "./modules/settings/routes.ts";
 import { siteTaskRoutes } from "./modules/site-tasks/routes.ts";
+import { narrationRoutes } from "./modules/narrations/routes.ts";
 
 /**
  * Runtime dependencies. Optional services are null when not configured; a module that needs one
@@ -45,6 +48,10 @@ export type AppDeps = {
   jobs: JobQueue | null;
   /** Builds the import geocoder for a city and the inventory rows it will locate (network-backed in the server, fake in tests). */
   geocoderFor: ((city: CityConfig, rows: Record<string, string>[]) => Promise<Geocoder>) | null;
+  /** Voice-over provider (Deepgram); null without `DEEPGRAM_API_KEY`: generating narrations answers 503. */
+  tts: TtsProvider | null;
+  /** Turkish → English translation provider (Gemini); null without `GEMINI_API_KEY`: translating answers 503. */
+  translator: Translator | null;
 };
 
 declare module "fastify" {
@@ -71,6 +78,7 @@ const MODULES: ModulePlugin[] = [
   engagementRoutes,
   siteTaskRoutes,
   settingsRoutes,
+  narrationRoutes,
 ];
 
 /**

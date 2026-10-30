@@ -186,8 +186,12 @@ interface SiteDetailDto {
     flow?: StoryFlow | null;
     /** Server-side only fields the domain does not carry; kept as they are on a story save. */
     cardId?: string | null;
-    audioMediaId?: string | null;
-    audioEnMediaId?: string | null;
+    /** English simple text and the status (machine draft or reviewed) of the English texts; absent on older API versions. The save leaves `simpleEn` as stored. */
+    simpleEn?: string | null;
+    textEnStatus?: "machine" | "reviewed" | null;
+    simpleEnStatus?: "machine" | "reviewed" | null;
+    /** AI voice-overs that match the current text; absent on older API versions. */
+    narrations?: Array<{ variant: "text" | "simple"; lang: "tr" | "en"; voice: "female" | "male"; mediaId: string }>;
   }>;
   sections?: Array<{
     id: string;
@@ -1666,8 +1670,6 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               interior: s.interior ?? false,
               routeOnly: s.routeOnly ?? false,
               flow: s.flow ?? null,
-              audioMediaId: k?.audioMediaId ?? null,
-              audioEnMediaId: k?.audioEnMediaId ?? null,
             };
           }),
         },

@@ -853,8 +853,6 @@ test("a full editor save goes through the step endpoints in reference order: new
       stories: base.stories.map((s) => ({
         ...s,
         cardId: "card-1",
-        audioMediaId: "voice",
-        audioEnMediaId: null,
       })),
       media: [
         ...base.media.filter((m) => m.kind !== "model"),
@@ -1052,8 +1050,6 @@ test("a full editor save goes through the step endpoints in reference order: new
               interior: true,
               routeOnly: false,
               flow: null,
-              audioMediaId: "voice",
-              audioEnMediaId: null,
             },
             {
               id: "s-new",
@@ -1071,8 +1067,6 @@ test("a full editor save goes through the step endpoints in reference order: new
               interior: false,
               routeOnly: false,
               flow: null,
-              audioMediaId: null,
-              audioEnMediaId: null,
             },
           ],
         },

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import {
   cardKinds,
+  narrationLangs,
+  narrationVariants,
+  narrationVoices,
+  translationStatuses,
   historyAngleMatches,
   mediaKinds,
   sectionKinds,
@@ -147,6 +151,14 @@ export type SiteSummary = z.infer<typeof SiteSummary>;
 
 export const SiteListResponse = pageResponse(SiteSummary);
 
+export const NarrationDto = z.object({
+  variant: z.enum(narrationVariants).describe("text = hikâye metni, simple = sade anlatım"),
+  lang: z.enum(narrationLangs),
+  voice: z.enum(narrationVoices),
+  mediaId: z.string().describe("SiteDetail.media içindeki ses dosyası (kind=audio)"),
+});
+export type NarrationDto = z.infer<typeof NarrationDto>;
+
 export const StoryBlockDto = z.object({
   id: z.string(),
   title: z.string(),
@@ -174,8 +186,12 @@ export const StoryBlockDto = z.object({
     .nullable()
     .describe("«Akar akışı»: bu cümlede haritada çizilen gelir yolu"),
   highlights: z.array(z.string()),
-  audioMediaId: z.string().nullable().describe("Türkçe ses kaydı (SiteDetail.media, kind=audio)"),
-  audioEnMediaId: z.string().nullable().describe("İngilizce ses kaydı (SiteDetail.media, kind=audio)"),
+  simpleEn: z.string().nullable().describe("Sade anlatımın İngilizcesi"),
+  textEnStatus: z.enum(translationStatuses).nullable().describe("textEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok ya da izlenmiyor"),
+  simpleEnStatus: z.enum(translationStatuses).nullable().describe("simpleEn kaynağı (textEnStatus ile aynı anlam)"),
+  narrations: z
+    .array(NarrationDto)
+    .describe("Yapay zekâ seslendirmeleri (güncel olanlar: metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"),
 });
 
 export const MediaDto = z.object({

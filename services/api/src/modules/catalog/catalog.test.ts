@@ -14,10 +14,13 @@ import {
   siteSources,
   sites as siteTable,
   sources,
+  narrations,
   storyBlocks,
 } from "../../db/schema/index.ts";
 import type { ErrorBody } from "../../errors.ts";
 import { startTestApp } from "../../test/harness.ts";
+import { spokenFor } from "../narrations/read.ts";
+import { narrationHash } from "../narrations/spoken.ts";
 import type { LookupsResponse, SiteDetail, SiteSummary } from "./schemas.ts";
 import type { RouteDto } from "../routes/schemas.ts";
 
@@ -80,6 +83,24 @@ const mediaRow = (id: string, kind: MediaInsert["kind"], over: Partial<MediaInse
 });
 const pose = { label: "Giriş", target: null, azimuthDeg: 45, elevationDeg: 20, distance: 0.6 };
 
+/** A current recording of a sentence: the hash is computed from the text the sentence has when this runs. */
+async function narrate(db: App["deps"]["db"], siteId: string, blockId: string, variant: "text" | "simple", lang: "tr" | "en", mediaId: string) {
+  const [block] = await db.select().from(storyBlocks).where(and(eq(storyBlocks.siteId, siteId), eq(storyBlocks.id, blockId)));
+  const model = `flux-test-${lang}`;
+  await db.insert(narrations).values({
+    id: `nar-${blockId}-${variant}-${lang}`,
+    siteId,
+    subjectType: "story_block",
+    subjectId: blockId,
+    variant,
+    lang,
+    voice: "female",
+    mediaId,
+    textHash: narrationHash(model, spokenFor(block!, variant, lang)),
+    model,
+  });
+}
+
 /**
  * Content the domain model cannot express (periods, audio, cards, sections, archive images). Matrix:
  *
@@ -128,7 +149,7 @@ async function seedV2(db: App["deps"]["db"]) {
   // iznik-han: three sentences, two cards; card-b is used first and again by the last sentence.
   await db
     .update(storyBlocks)
-    .set({ photoId: "m-story", sourceId: "src-story", cardId: "card-b", camera: pose, audioMediaId: "m-audio-tr", audioEnMediaId: "m-audio-en" })
+    .set({ photoId: "m-story", sourceId: "src-story", cardId: "card-b", camera: pose, simpleEn: "English simple", simpleEnStatus: "machine" })
     .where(and(eq(storyBlocks.siteId, "iznik-han"), eq(storyBlocks.id, "iznik-han-s1")));
   await db.insert(storyBlocks).values(
     [
@@ -136,11 +157,13 @@ async function seedV2(db: App["deps"]["db"]) {
       { id: "iznik-han-s3", position: 2, cardId: "card-b" },
     ].map((b) => ({ siteId: "iznik-han", title: "Başlık", text: "Metin", simple: "Metin", trust: "representative" as const, ...b })),
   );
-  await db
-    .update(storyBlocks)
-    .set({ audioEnMediaId: "m-audio-en", cardId: "card-other" })
-    .where(eq(storyBlocks.id, "han-a-s1"));
-  await db.update(storyBlocks).set({ audioMediaId: "m-audio-tr" }).where(eq(storyBlocks.id, "taslak-s1"));
+  await db.update(storyBlocks).set({ simpleEn: "English simple", simpleEnStatus: "machine", cardId: "card-other" }).where(eq(storyBlocks.id, "han-a-s1"));
+  await db.update(storyBlocks).set({ simpleEn: "English simple", simpleEnStatus: "machine" }).where(eq(storyBlocks.id, "taslak-s1"));
+  // Recordings: iznik-han has Turkish and English, han-a English only, the draft Turkish only.
+  await narrate(db, "iznik-han", "iznik-han-s1", "text", "tr", "m-audio-tr");
+  await narrate(db, "iznik-han", "iznik-han-s1", "simple", "en", "m-audio-en");
+  await narrate(db, "han-a", "han-a-s1", "simple", "en", "m-audio-en");
+  await narrate(db, "taslak", "taslak-s1", "text", "tr", "m-audio-tr");
 
   // Inserted out of order on purpose: the API orders by position.
   await db.insert(siteSections).values([

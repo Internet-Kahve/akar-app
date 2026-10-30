@@ -59,6 +59,8 @@ Tüm değişkenler `.env.example` içinde; `src/config.ts` doğrular.
 | `STORAGE_BUCKET` | `media` | Herkese açık okunan medya kovası; yalnız sunucu yazar |
 | `STORAGE_UPLOAD_BUCKET` | `uploads` | Herkese kapalı yükleme kovası; istemci imzalı PUT ile buraya yükler, `complete` doğrulanan dosyayı `STORAGE_BUCKET`'a kopyalar. `STORAGE_BUCKET` ile aynı olamaz. Yerelde `supabase start` (çalışan yığında `supabase seed buckets --local`) açar; bulutta elle, herkese kapalı açılmalı |
 | `STORAGE_QUOTA_MB` | `1024` | Yönetim panelinin depolama uyarısının ölçtüğü kota, MB (pozitif tam sayı); `1024` = Supabase Free. Ücretli plana geçilince büyütülür. Üretimde zorunlu değil (§11.21) |
+| `DEEPGRAM_API_KEY`, `TTS_VOICES`, `TTS_DAILY_CHAR_LIMIT` | yok, dört Flux sesi, `100000` | Hikâye seslendirmesi (§11.56). Anahtar yoksa `POST /v1/admin/sites/:id/narrations` 503 döner; `TTS_VOICES` `dil.ses=model` listesidir (dört birleşim zorunlu); sınır son 24 saatte seslendirilen karakter üst sınırıdır (aşılırsa 429). Üretimde zorunlu değil |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | yok, `gemini-2.5-flash` | Boş İngilizce hikâye metinlerinin makine çevirisi (§11.56). Anahtar yoksa `POST /v1/admin/sites/:id/translate` 503 döner. Üretimde zorunlu değil |
 
 ### İlk yönetici
 

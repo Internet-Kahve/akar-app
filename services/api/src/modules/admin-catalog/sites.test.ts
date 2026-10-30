@@ -437,7 +437,7 @@ test("the DB publish CHECK is told apart from other database errors, however the
   assert.equal(asPublishBlocked(duplicateKey), duplicateKey);
 });
 
-test("story blocks must point at real photo, source, card and audio, and highlights at parts of the linked model; a refused save writes nothing", async () => {
+test("story blocks must point at a real photo, source and card, and highlights at parts of the linked model; a refused save writes nothing", async () => {
   const draft = await newDraft("Hikâye Hanı");
   const base = `/v1/admin/sites/${draft.id}`;
   await send("PUT", `${base}/model`, { mediaId: "m-1" });
@@ -451,13 +451,12 @@ test("story blocks must point at real photo, source, card and audio, and highlig
   const bad = await call<ErrorBody>("PUT", `${base}/stories`, editor, {
     blocks: [
       story({ highlights: ["minare"] }),
-      story({ photoId: "yok", sourceId: "yok", cardId: "yok", audioMediaId: "ph-1", audioEnMediaId: "au-1", highlights: ["kubbe", "avlu"], camera: { ...camera, target: "avlu" } }),
+      story({ photoId: "au-1", sourceId: "yok", cardId: "yok", highlights: ["kubbe", "avlu"], camera: { ...camera, target: "avlu" } }),
     ],
   });
   assert.equal(bad.res.statusCode, 400);
   assert.equal(bad.body.error.code, "VALIDATION_FAILED");
   assert.deepEqual(Object.keys(bad.body.error.fieldErrors).sort(), [
-    "blocks.1.audioMediaId",
     "blocks.1.camera.target",
     "blocks.1.cardId",
     "blocks.1.highlights",

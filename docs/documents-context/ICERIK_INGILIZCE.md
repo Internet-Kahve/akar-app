@@ -41,7 +41,7 @@
 |---|---|---|
 | Eser adı, tanıtım | `sites.nameEn`, `descriptionEn` | var |
 | Hikâye cümlesi | `story_blocks.text_en` | var |
-| Hikâye sesi (İngilizce) | `story_blocks.audio_en_media_id` | var |
+| Hikâye sesi (İngilizce) | `narrations` (`lang=en`, §11.56) | var |
 | Kart (hikâye kartı) | `cards.title_en`, `body_en` | var |
 | Fotoğraf | `SitePhoto.titleEn` | var |
 | **Parça kartı** | yeni tablo `site_parts` (ENTEGRASYON §5.1): `title_en`, `body_en` | eklenmeli |

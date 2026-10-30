@@ -1,3 +1,4 @@
+import { DEFAULT_TTS_VOICES, parseVoiceModels } from "./platform/tts.ts";
 import { z } from "zod";
 
 const optionalUrl = z
@@ -73,6 +74,26 @@ const Env = z.object({
     .optional(),
   /** Visit check radius in metres (D4). */
   VISIT_RADIUS_M: z.coerce.number().positive().default(30),
+
+  // AI voice-over and translation of site texts (decision §11.56). Both keys are optional, also in production:
+  // without them the endpoints answer 503 and nothing else is affected.
+  DEEPGRAM_API_KEY: optionalText,
+  /** Voice model per language and voice: `tr.female=flux-dilek-tr,…`; all four are required. */
+  TTS_VOICES: z
+    .string()
+    .default(DEFAULT_TTS_VOICES)
+    .transform((v, ctx) => {
+      const models = parseVoiceModels(v);
+      if (typeof models === "string") {
+        ctx.addIssue({ code: "custom", message: models });
+        return z.NEVER;
+      }
+      return models;
+    }),
+  /** Characters of speech the editors may generate per rolling 24 hours (counted from the `narration.generate` audit rows). */
+  TTS_DAILY_CHAR_LIMIT: z.coerce.number().int().positive().default(100_000),
+  GEMINI_API_KEY: optionalText,
+  GEMINI_MODEL: z.string().trim().min(1).default("gemini-2.5-flash"),
 });
 
 export type Config = z.infer<typeof Env>;

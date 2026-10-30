@@ -198,7 +198,8 @@ const StoryInput = z.object({
   id: Id.optional().describe("Verilirse cümlenin kimliği korunur"),
   title: text(200),
   text: text(2000),
-  textEn: nullableText(2000).optional(),
+  textEn: nullableText(2000).optional().describe("İngilizce metin; kaydedilen İngilizce metin 'reviewed' (gözden geçirilmiş) olur, değişmediyse önceki durumu korur"),
+  simpleEn: nullableText(2000).optional().describe("İngilizce sade anlatım; verilmezse kayıtlı değer ve durumu korunur, null ya da boş metin siler"),
   simple: text(2000).describe("Sade anlatım"),
   trust: TrustSchema,
   photoId: Id.nullable().default(null).describe("kind=photo medya; yayın için zorunlu ve eserin fotoğrafı olmalı"),
@@ -222,8 +223,6 @@ const StoryInput = z.object({
     .default(null)
     .describe("«Akar akışı»: bu cümlede haritada çizilen gelir yolu"),
   highlights: z.array(text(200).min(1)).max(50).default([]).describe("Eserin 3B modelindeki parça adları"),
-  audioMediaId: Id.nullable().default(null).describe("kind=audio medya (TR)"),
-  audioEnMediaId: Id.nullable().default(null).describe("kind=audio medya (EN)"),
 });
 
 export const StoriesBody = z.object({ blocks: z.array(StoryInput).max(100).describe("Hikâye cümleleri, sırasıyla") });
