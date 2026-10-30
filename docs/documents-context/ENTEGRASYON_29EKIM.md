@@ -171,7 +171,8 @@ Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → y
 Şehir kaydı (`harita_isik`) ve eser başına model kaydı (`3d/model.json → on_yonu`):
 
 ```
-capraz 40 · yukseklik 50 · harita_capraz 20 · harita_yukseklik 62 · harita_gunes 1.5 · doygunluk 1 · yer_golgesi 0.18
+yon 221 · capraz 40 · yukseklik 50 · harita_capraz 20 · harita_yukseklik 62 · harita_gunes 1.5 · doygunluk 1 · yer_golgesi 0.18
+(yon: ürünün tek sabit güneş açısı; services/api/scripts/prepare-demo-content.py okur, silinmez. Prototip on_yonu + capraz kullanır)
 on_yonu: Ulucami 354 · Bedesten 4 · Koza Han 4 · Orhan Bey Camii 13 · Emir Hanı 7 · Orhan Bey Hamamı 186 · Orhan Gazi Türbesi 182
 ```
 
