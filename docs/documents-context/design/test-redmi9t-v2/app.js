@@ -754,7 +754,7 @@ class Sahne3D {
     this.kont = new OrbitControls(this.kam, this.r.domElement);
     this.kont.enableDamping = true; this.kont.dampingFactor = 0.09; this.kont.maxPolarAngle = Math.PI * 0.49;
     this.kont.addEventListener('change', () => (this.kirli = true));
-    this.kont.addEventListener('start', () => { this.turIste = false; this.kont.autoRotate = false; });   // kullanıcı döndürünce tur durur
+    this.kont.addEventListener('start', () => { this.turIste = false; this.turAci = null; this.kont.autoRotate = false; });   // kullanıcı döndürünce tur durur
     this.secili = new Set(); this.vurgulu = new Set(); this.flas = 0; this.kart = null;
     this.ro = new ResizeObserver(() => this.boyut()); this.ro.observe(kap);
     this.isaretci();
@@ -840,7 +840,9 @@ class Sahne3D {
     this.tween = { t0:performance.now(), k0:this.kam.position.clone(), h0:this.kont.target.clone(), k1:konum, h1:hedef };
   }
   /* genel görünüm: cümle belli bir parçayı göstermiyorsa yapı yavaşça döner (360°, ~30 sn); kamera geçişi bitince başlar, dokununca durur */
-  tur(acik) { this.turIste = !!acik; if (!acik) this.kont.autoRotate = false; this.kont.autoRotateSpeed = 2; this.kirli = true; }
+  tur(acik, aci = null) { this.turIste = !!acik; this.turAci = acik ? aci : null; if (!acik) this.kont.autoRotate = false; this.kont.autoRotateSpeed = 2; this.kirli = true; }
+  /* arka arkaya vurgusuz cümlelerde kamera başa dönmez, tur sürer */
+  turSurer(aci) { return !!this.turIste && !!aci && JSON.stringify(this.turAci) === JSON.stringify(aci); }
   vurgula(adlar) { this.vurgulu = new Set((adlar || []).filter((a) => this.parcalar && this.parcalar.has(a))); this.vurguT0 = performance.now(); this.boya(); }
   /* bir kartın bütün parçaları birlikte seçilir ve vurgulanır (ör. Ulucami: dört cephe + pencere girintileri tek kart); kartı olmayan parça tek başına */
   grup(ad) { const k = ad && this.eser?.parcalar?.find((p) => p.adlar.includes(ad)); return k ? k.adlar : (ad ? [ad] : []); }
@@ -946,7 +948,7 @@ class Sahne3D {
       const dt = this.kalkanT == null ? 1 / 60 : Math.min(0.05, (t - this.kalkanT) / 1000);
       this.kalkanT = t; this.kalkanAktif = this.kalkanAdim(dt); this.kirli = true;
     }
-    if (this.turIste && !this.tween && !this.kont.autoRotate && !matchMedia('(prefers-reduced-motion: reduce)').matches) this.kont.autoRotate = true;
+    this.kont.autoRotate = !!this.turIste && !this.tween && !matchMedia('(prefers-reduced-motion: reduce)').matches;   // kamera geçişi sürerken dönmez
     if (this.kont.update()) this.kirli = true;
     if (!this.kirli || !this.kok) return;
     this.kirli = false;
@@ -1446,7 +1448,7 @@ function k3Ac(k) {
   if (!k || !k._f) return;
   if (k._parca) { if (anlat.oynuyor) oynat(false); parcaKartAc(k._parca); return; }
   const b = document.createElement('button'); b.dataset.isik = k._f.url; b.dataset.kunye = [k._f.baslik, k._f.kaynak].filter(Boolean).join(' · ');
-  b.innerHTML = resim(k._f); hkIsikAc(b);
+  b.innerHTML = resim(k._f); hkIsikAc(b); hk.isik.donus = k;   // kapanınca odak karta döner
 }
 function k3Surukle(k) {
   if (!k) return; let b = null;
@@ -1464,7 +1466,7 @@ function k3Surukle(k) {
     else if (e.type === 'pointerup') k3Ac(k);
   };
   k.addEventListener('pointerup', bit); k.addEventListener('pointercancel', bit);
-  k.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); k3Ac(k); } });
+  k.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); k3Ac(k); } });   // boşluk anlatımı ilerletmesin
 }
 function anlatAcikCiz() {
   if (durum.masaustu) return;
@@ -1473,6 +1475,9 @@ function anlatAcikCiz() {
   const alan = $('#anlat-alan'); alan.style.bottom = acik ? `calc(100% - 360px - var(--sat))` : '0';
   alan.style.setProperty('--foto-alt', acik ? '0px' : (($('#hikaye-kart')?.offsetHeight || 0) + 24) + 'px');
   $('#ilerleme').classList.toggle('acik', false);
+  /* sayfa açılıp kapanınca görünür alan değişir: kart yerine döner, kadraj yeniden hesaplanır */
+  const k = $('#kart3d');
+  if (k) { delete k.dataset.serbest; Object.assign(k.style, { left:'', top:'', right:'', bottom:'', width:'' }); sahneUygula(true); }
 }
 /* anlatım sahnesi: fotoğraf ya da 3D */
 function anlatSahne() {
@@ -1508,6 +1513,7 @@ function sahneUygula(gecis = true) {
     const k = $('#kart3d'), f = c.kart && foto(e, c.foto);
     if (f) {
       k.innerHTML = `${resim(f)}<div class="k3-yazi"><b>${esc(f.baslik)}</b><small>${esc(f.kisa)}</small></div><span class="k3-tutamak" aria-hidden="true"></span>`;
+      k.querySelector('img')?.setAttribute('loading', 'eager');   // kart gizliyken konduğu için tembel yükleme görseli geciktirir
       k._f = f; k._parca = c.vurgu.find((a) => parcaBilgi(a)) || null;
       k.setAttribute('role', 'button'); k.tabIndex = 0; k.setAttribute('aria-label', `${f.baslik}: ${k._parca ? 'parça kartını aç' : 'fotoğrafı büyüt'}. Sürükleyerek taşınabilir.`);
       if (!durum.masaustu && !k.dataset.serbest) k.style.bottom = (!anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 24 : 12) + 'px';
@@ -1515,8 +1521,10 @@ function sahneUygula(gecis = true) {
     } else k.hidden = true;
     s3d.boyut();
     s3d.kubbeler(!!c.ic, gecis);   // v2: iç mekân cümlelerinde kubbeler kalkar
-    s3d.aci(c.aci, gecis); s3d.vurgula(c.vurgu);
-    s3d.tur(!c.vurgu.length);   // belli bir parçası olmayan cümle (ör. «Ulucami'yi Yıldırım Bayezid yaptırdı»): yapı yavaşça döner
+    const genel = !c.vurgu.length;
+    if (!(gecis && genel && s3d.turSurer(c.aci))) s3d.aci(c.aci, gecis);
+    s3d.vurgula(c.vurgu);
+    s3d.tur(genel, c.aci);   // belli bir parçası olmayan cümle (ör. «Ulucami'yi Yıldırım Bayezid yaptırdı»): yapı yavaşça döner
   }
 }
 /* ---------- Akar akışı (29 Ekim 2026; Figma D 1:2893 «Anlatım · Akar akışı», fikir: Kılıç Ali Paşa prototipi `flow`) ----------
@@ -1673,6 +1681,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (!anlat.eser || e.target.matches('input')) return;
+  if ([$('#parca-kart'), $('#hk-isik')].some((k) => k && !k.hidden)) return;   // üstte pencere varken tuşlar anlatıma gitmez
   if (e.key === 'Escape') location.hash = '#/eser/' + anlat.eser.id;
   else if (e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); anlat.mod === 'oku' ? cumleGit(anlat.i + 1, 'tik') : oynat(); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); cumleGit(anlat.i - 1, 'tik'); }
