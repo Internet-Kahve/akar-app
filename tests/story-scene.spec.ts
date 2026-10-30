@@ -6,7 +6,7 @@ const SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="#49684d"/></svg>';
 
 /** Five sentences: two about the whole building, one with a part and its card, one with a photograph only, one with neither. */
-async function openStory(page: Page) {
+async function openStory(page: Page, modelServed?: Promise<void>) {
   const snapshot = createSeed();
   const site = snapshot.sites[0]!;
   site.model = {
@@ -73,12 +73,13 @@ async function openStory(page: Page) {
   ];
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.route("**/story-model.glb", (route) =>
-    route.fulfill({
+  await page.route("**/story-model.glb", async (route) => {
+    await modelServed;
+    await route.fulfill({
       contentType: "model/gltf-binary",
       body: triangleGlb("Roof"),
-    }),
-  );
+    });
+  });
   await page.route(/\.svg$/, (route) =>
     route.fulfill({ contentType: "image/svg+xml", body: SVG }),
   );
@@ -116,6 +117,16 @@ test("a sentence about the whole building turns the model, a highlighted one hol
     targetPosition: { x: 170, y: 200 },
   });
   await expect(tour(page)).toHaveAttribute("data-tour", "off");
+  expect(errors).toEqual([]);
+});
+
+test("the turn waits for the model to be drawn", async ({ page }) => {
+  const gate = Promise.withResolvers<void>();
+  const errors = await openStory(page, gate.promise);
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 0");
+  await expect(tour(page)).not.toHaveAttribute("data-tour", "on");
+  gate.resolve();
+  await expect(tour(page)).toHaveAttribute("data-tour", "on");
   expect(errors).toEqual([]);
 });
 
@@ -158,9 +169,10 @@ test("the photo card stays clear of the model, is dragged away and opens the par
   const placed = (await card.boundingBox())!.y;
   await next(page);
   await expect(page.locator(".current .story-text")).toContainText("Cümle 3");
+  // Within a pixel: the y can land on either side of a half pixel.
   await expect
-    .poll(async () => Math.round((await card.boundingBox())?.y ?? 0))
-    .toBe(Math.round(placed));
+    .poll(async () => Math.abs(((await card.boundingBox())?.y ?? 0) - placed))
+    .toBeLessThan(1);
   await card.click();
   await expect(page.locator(".about-lightbox")).toBeVisible();
   await page.locator(".about-lightbox-close").click();

@@ -81,6 +81,8 @@ async function openProfile(page: Page) {
 test("discovery, story, memory moderation and persistence form one complete flow", async ({
   page,
 }) => {
+  // The longest journey of the suite, drawn in software on the CI browsers.
+  test.slow();
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");

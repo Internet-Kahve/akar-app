@@ -88,7 +88,9 @@ export function StoryPhotoCard({
         onPointerUp={up}
         onPointerCancel={up}
         onClick={() => {
-          if (!dragged.current) setOpen(true);
+          // A drag ends in a click; skip that one, keyboard opens after it.
+          if (dragged.current) dragged.current = false;
+          else setOpen(true);
         }}
       >
         <img src={photo.src} alt="" draggable={false} />

@@ -3276,7 +3276,8 @@ td small {
   -webkit-line-clamp: 2;
 }
 @media (max-width: 999.98px) {
-  .media-scene:has(.story-photo-card:not(.placed)) .model-inside {
+  .media-scene:has(.story-photo-card:not(.placed)) .model-inside,
+  .media-scene:has(.story-photo-card:not(.placed)) .model-part-name {
     bottom: 120px;
   }
   .media-scene:has(.story-photo-card:not(.placed)) .scene-photo-credit {
