@@ -70,7 +70,8 @@ async function openSite(page: Page, name: string) {
   // The page under the opening screen takes no input until the map is drawn (§11.49).
   await expect(page.locator(".opening")).toHaveCount(0);
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill(name);
-  await page.locator(".site-card-main").filter({ hasText: name }).first().click();
+  await page.locator(".site-row-main").filter({ hasText: name }).first().click();
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 }
 

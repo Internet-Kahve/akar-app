@@ -14,6 +14,7 @@ import history_extras
 parser = argparse.ArgumentParser()
 parser.add_argument('--content', type=Path, required=True, help='docs/documents-context directory')
 parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--reader', type=Path, default=Path(__file__).resolve().parent / 'editorial_reader.py')
 args = parser.parse_args()
 root = args.content.resolve()
 # Draft task packages must be reviewed before publication. Stop before generating/replacing a manifest;
@@ -22,9 +23,11 @@ for path in sorted(root.glob('eserler/*/icerik/gorevler.json')):
     if json.loads(path.read_text()).get('_taslak', False) is not False:
         raise ValueError(f'Unreviewed task file: {path.relative_to(root)}; review the content and set _taslak to false before preparing an import.')
 # Readers only: identity, model and placement come from each site's eser.json and 3d/model.json.
-spec = importlib.util.spec_from_file_location('editorial', root / 'design/test-redmi9t-v2/hazirla.py')
+spec = importlib.util.spec_from_file_location('editorial', args.reader)
 editorial = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(editorial)
+if hasattr(editorial, 'configure'):
+    editorial.configure(root)
 IDS = {'yildirim-bayezid-bedesteni': 'bedesten', 'orhan-bey-kulliyesi': 'orhan-gazi'}
 KINDS = {'Cami': 'cami', 'Bedesten': 'bedesten', 'Han': 'han', 'Hamam': 'hamam', 'Türbe': 'turbe', 'Çeşme': 'cesme', 'Medrese': 'egitim'}
 TRUST = {'Doğrulanmış': 'verified', 'Tarihsel çıkarım': 'inferred', 'Temsili içerik': 'representative'}

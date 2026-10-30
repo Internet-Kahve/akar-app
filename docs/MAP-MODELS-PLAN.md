@@ -126,7 +126,7 @@ Tek kural: **1 birim = 1 metre.** Başlangıç noktası ve zemin kodla hesapland
 
 ## Başlangıç verisi
 
-Prototipteki yerleşimler (OSM ve uyduya göre düzeltilmiş konum ve yön, `hazirla.py` `OSM_DUZELTME`) ve ana parçalar (`app.js` `ANA_PARCA`: Ulucami ve Bedesten `Govde`, Koza Han `Govde_Dis`, Orhan Bey `Cami_Govde`, Emir Hanı `Emir_Hani`, Orhan Gazi Türbesi `Govde`) canlıya panelden girilir.
+Prototipteki yerleşimler (OSM ve uyduya göre düzeltilmiş konum ve yön, kaldırılan v1 `hazirla.py` `OSM_DUZELTME`) ve ana parçalar (`app.js` `ANA_PARCA`: Ulucami ve Bedesten `Govde`, Koza Han `Govde_Dis`, Orhan Bey `Cami_Govde`, Emir Hanı `Emir_Hani`, Orhan Gazi Türbesi `Govde`) canlıya panelden girilir.
 
 ## Uygulama sırası
 

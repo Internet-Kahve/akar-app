@@ -511,3 +511,9 @@ Karar: Hikâye cümlesinin `highlights` alanı boşsa 3B model kamera geçişi b
 Neden: ENTEGRASYON_29EKIM §2b. Belli bir yeri anlatmayan cümlede hareketsiz model boş kalıyordu; `showCard` verisi vardı ama ürün onu göstermiyordu.
 Karar veren / tarih: Tamer, 30 Eki (prototip #72'den ürüne taşıma); `tour` ve `frame` adları, kartın dar ekranda kredi satırının yerini alması ve kartı açan bileşenin sahnede durması inceleme önerisi.
 Nasıl değiştirilir: kart ölçüleri `apps/web/src/lib/story-scene.ts` ve `globals.css` `.story-photo-card`, tur hızı `model-viewer.tsx`. Hikâyede vurgulanan parçanın yanması, `camera_mode` kutucuğu, prototipin yeni ışığı ve parça kartı okları bu işin dışında.
+
+**11.54 Tasarımın yeri `apps/web`; prototip kaldırıldı.**
+Karar: `design/test-redmi9t-v2/` tasarımı `apps/web` içine taşındı ve prototip silindi. Okuyucular `services/api/scripts/editorial_reader.py`, içerik araçları `scripts/content/`. Üç yeni alan (`story_blocks.route_only`, `story_blocks.flow`, `history_images.viewpoint`) ayrı PR'dadır; arayüz bu alanlar gelene dek onlarsız çalışır. Konum yalnız tarayıcıda kullanılır, sunucuya gitmez.
+Neden: içerik ekibinin önizlemesi ile ürün iki ayrı arayüz olarak ayrışıyordu; `main` ürünü tek arayüz olsun. Kod `docs` içinde kalmasın.
+Karar veren / tarih: Tamer Akdeniz, 30 Eki.
+Nasıl değiştirilir: arayüz `apps/web`'de değişir. Bu karar canlı veritabanını ve katalogu değiştirmez.

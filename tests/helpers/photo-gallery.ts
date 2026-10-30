@@ -217,7 +217,7 @@ export function photoGalleryTests() {
         await expect(figures).toHaveCount(3);
         await expect(
           page.getByRole("button", { name: "Fotoğraf", exact: true }),
-        ).toHaveCSS("background-color", "rgb(46, 87, 62)");
+        ).toHaveCSS("background-color", "rgb(31, 43, 49)");
       }
       await page.screenshot({
         path: `test-results/${info.project.name}-${browserName}-gallery-${model}.png`,
@@ -262,16 +262,10 @@ export function photoGalleryTests() {
     const gallery = page.getByRole("region", {
       name: "Eser fotoğraf galerisi",
     });
-    await expect(gallery.locator("figure")).toHaveCount(1);
-    await expect(gallery.locator("img")).toHaveAttribute(
-      "alt",
-      "Yalnız hikâyeye ait fotoğraf",
-    );
+    const shown = page.locator(".story-photo-main");
+    await expect(shown).toHaveAttribute("alt", "Yalnız hikâyeye ait fotoğraf");
     await page.getByRole("button", { name: "Devam et", exact: true }).click();
-    await expect(gallery.locator("img")).toHaveAttribute(
-      "alt",
-      "Eser fotoğrafı 3",
-    );
+    await expect(shown).toHaveAttribute("alt", "Eser fotoğrafı 3");
     await page.getByRole("button", { name: "Devam et", exact: true }).click();
     await expect(gallery.locator("figure")).toHaveCount(0);
     await expect(gallery.getByRole("status")).toHaveText(

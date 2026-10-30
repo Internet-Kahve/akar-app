@@ -223,12 +223,42 @@ export interface StoryBlock {
   camera?: CameraPose;
   /** "İç mekân (3D)": the model's cover groups lift for this sentence. */
   interior?: boolean;
+  /** "Yalnız rotada": read only when the site was opened from a route (it leads to the next stop). */
+  routeOnly?: boolean;
+  /** "Akar akışı": this sentence shows the income road of the waqf on the map. */
+  flow?: StoryFlow;
+}
+/** A waqf's income road: from the site that earns to the site (or a place outside the catalog) it supports. */
+export interface StoryFlow {
+  fromSiteId: string;
+  toSiteId: string | null;
+  /** `[lng, lat]` of a target that is no site in the app. */
+  toPoint: [number, number] | null;
+  /** Second line of the card, e.g. a building that no longer stands. */
+  toName: string;
+  /** The card's title, as the source words it. */
+  label: string;
+  source: string;
+  trust: Trust;
 }
 /** How close a present-day photograph's view is to the old one: the same point and direction, or close but not the same point. */
 export type AngleMatch = "same" | "near";
+/** Where an old photograph was taken from and which way it looks. */
+export interface HistoryViewpoint {
+  lng: number;
+  lat: number;
+  /** Clockwise from north. */
+  bearingDeg: number;
+  /** Width of the view. */
+  fieldDeg: number;
+  /** Taken inside a place of worship: the camera asks for respect first. */
+  interior: boolean;
+}
 export interface HistoryImage {
   id: string;
   photo: SitePhoto;
+  /** Absent when the place of the shot is not known. */
+  viewpoint?: HistoryViewpoint;
   /** The same view today. Its credit line is `description` and is shown word for word. */
   presentPhoto?: SitePhoto;
   /** Set with `presentPhoto`; `near` makes the screen say the two were not taken from exactly the same point. */

@@ -15,6 +15,11 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   use: {
     baseURL: "http://127.0.0.1:3001",
+    // The first-visit card covers the map.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: "http://127.0.0.1:3001", localStorage: [{ name: "akar.karsilama", value: "1" }] }],
+    },
     // Bundled Chromium locally; opt into the hosted runner's preinstalled Chrome in CI.
     channel: process.env.AKAR_E2E_BROWSER_CHANNEL === "chrome" ? "chrome" : undefined,
     trace: "retain-on-failure",

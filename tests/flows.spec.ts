@@ -68,22 +68,31 @@ const pinsFollowSites = (page: Page) =>
     return visible > 0 && found === visible;
   });
 
+/** A phone's site page has no top bar: the profile is one step back, on the map. */
+async function openProfile(page: Page) {
+  const profile = page.getByRole("button", { name: "Mirasım profilini aç" });
+  if (!(await profile.isVisible())) {
+    await page.goto("/#view=map");
+    await page.reload();
+  }
+  await profile.click();
+}
+
 test("discovery, story, memory moderation and persistence form one complete flow", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "Şehrin hikâyesine karış." }),
-  ).toBeVisible();
   // The page under the opening screen takes no input until the map is drawn (§11.49).
   await expect(page.locator(".opening")).toHaveCount(0);
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Ulucami");
-  await expect(page.locator(".site-card")).toHaveCount(1);
-  await page.locator(".site-card-main").filter({ hasText: "Ulucami" }).click();
+  await expect(page.locator(".site-row")).toHaveCount(1);
+  await page.locator(".site-row-main").filter({ hasText: "Ulucami" }).click();
+  await expect(page.locator(".site-peek h3")).toHaveText("Ulucami");
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
@@ -94,13 +103,16 @@ test("discovery, story, memory moderation and persistence form one complete flow
   for (let i = 0; i < 8; i++)
     await page.getByRole("button", { name: "Devam et", exact: true }).click();
   await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
+  const finished = page.getByRole("dialog");
+  await expect(finished).toContainText("Hikâye tamamlandı");
+  await finished.getByRole("button", { name: "Devam et" }).click();
   await page.getByRole("button", { name: "Yanındayım", exact: true }).click();
   await page.getByRole("button", { name: "Demo ziyaretini tamamla" }).click();
   await expect(
     page.getByRole("heading", { name: "Demo ziyareti pasaportunda" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
-  await page.getByRole("button", { name: "İz Bırak", exact: true }).click();
+  await page.getByRole("button", { name: /^İz Bırak/ }).click();
   await page
     .getByLabel("Anın", { exact: true })
     .fill("Avludaki ışığı ve sessizliği hatırlayacağım.");
@@ -111,7 +123,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Yaşayan hafıza" }).click();
   await expect(page.getByText("İlk iz senin olsun.")).toBeVisible();
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
-  await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
+  await openProfile(page);
   await expect(
     page.getByRole("button", { name: /Ulucami Hikâye tamamlandı/ }),
   ).toBeVisible();
@@ -128,7 +140,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(
     page.getByText("Avludaki ışığı ve sessizliği hatırlayacağım."),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
+  await openProfile(page);
   await expect(
     page.getByText("Avludaki ışığı ve sessizliği hatırlayacağım."),
   ).toBeVisible();
@@ -250,21 +262,22 @@ test("admin photo wizard publishes complete content and persists shared images",
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Kütüphane");
-  await expect(page.locator(".site-card-main img")).toHaveAttribute(
+  await expect(page.locator(".site-row-main img")).toHaveAttribute(
     "alt",
     "Güncellenen ortak görsel",
   );
-  await page.locator(".site-card-main").click();
+  await page.locator(".site-row-main").click();
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(page.locator(".scene-photo")).toHaveAttribute(
     "alt",
     "Güncellenen ortak görsel",
   );
   await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await expect(page.locator(".story-text")).toContainText(
+  await expect(page.locator(".current .story-text")).toContainText(
     "bir fotoğraf ve bir kaynakla",
   );
   await page.reload();
-  await expect(page.locator(".scene-photo")).toHaveAttribute(
+  await expect(page.locator(".story-photo-main")).toHaveAttribute(
     "alt",
     "Güncellenen ortak görsel",
   );
@@ -286,16 +299,16 @@ test("deferred features are hidden and the empty archive remains keyboard access
   await page.getByRole("button", { name: "Eser hakkında" }).click();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Geçmişi Gör", exact: true }).click();
+  await page.getByRole("button", { name: /^Geçmişi Gör/ }).click();
   await expect(
     page.getByRole("heading", { name: "Bu eserin eski görüntüsü henüz yok" }),
   ).toBeVisible();
   await expect(page.getByRole("slider")).toHaveCount(0);
-  await page.getByRole("button", { name: "Bir fotoğraf paylaş" }).focus();
+  await page.getByRole("button", { name: /eski fotoğraf paylaş/ }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
+  await openProfile(page);
   await expect(page.getByRole("heading", { name: "Mirasım" })).toBeVisible();
   await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
 });
@@ -303,6 +316,8 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
   page,
 }, info) => {
   await page.goto("/");
+  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Rotalar" }).click();
   await expect(page.locator(".route-card")).toHaveCount(3);
   expect(
     await page.evaluate(
@@ -340,6 +355,36 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
   expect(assets.every((a) => a.loaded && a.width > 0)).toBe(true);
 });
 
+test.describe("first visit", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+  test("the welcome card opens once and Evden gez asks for no position", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const card = page.getByRole("dialog", {
+      name: "Şehrin hikâyesine karış.",
+    });
+    await expect(card).toBeVisible();
+    await card.getByRole("button", { name: "Vakıf nedir? ›" }).click();
+    await expect(page.getByRole("dialog", { name: "Vakıf nedir?" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await card.getByRole("button", { name: "Evden gez" }).click();
+    await expect(card).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator(".opening")).toHaveCount(0);
+    await expect(page.locator(".welcome")).toHaveCount(0);
+  });
+});
+test("a trust tag tells where the statement comes from", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.locator(".site-row-main").first().click();
+  await page.locator(".site-peek .trust-tag").click();
+  const sheet = page.getByRole("dialog", { name: "Bu bilgi nereden geliyor?" });
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+});
 test("route search opens a usable route and selection persists", async ({
   page,
 }) => {
@@ -394,12 +439,13 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
     "Harita yüklenemedi · Şematik konum görünümü",
   );
   await page.locator(".fallback-pin").filter({ hasText: "Ulucami" }).click();
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Oku", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Bursa’da bir başlangıç" }),
+    page.getByRole("button", { name: /Bursa’da bir başlangıç/ }),
   ).toBeVisible();
 });
 
@@ -416,39 +462,9 @@ test("experimental UI can be inspected without enabling it for the main journey"
   await page.getByRole("button", { name: "Birlikte Gez", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("Senkron sesli tur");
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
+  await openProfile(page);
   await page.getByLabel("Deneysel arayüzleri göster").uncheck();
   await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
-});
-
-test("desktop narration layouts preserve the active story and player instance", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== "desktop", "Desktop comparison only");
-  await page.goto("/#view=detail&site=ulu-cami");
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
-  const text = await page.locator(".story-text").innerText();
-  await page
-    .locator(".story-panel")
-    .evaluate((el) => el.setAttribute("data-player-check", "same"));
-  await page.getByRole("button", { name: "Altyazı", exact: true }).click();
-  await expect(page.locator(".workspace")).toHaveClass(/story-subtitle/);
-  await expect(page.locator(".story-text")).toHaveText(text);
-  await expect(page.locator(".story-panel")).toHaveAttribute(
-    "data-player-check",
-    "same",
-  );
-  await page.screenshot({
-    path: "test-results/desktop-narration-subtitle.png",
-    fullPage: true,
-  });
-  await page.getByRole("button", { name: "Panel", exact: true }).click();
-  await expect(page.locator(".story-text")).toHaveText(text);
-  await page.screenshot({
-    path: "test-results/desktop-narration-panel.png",
-    fullPage: true,
-  });
 });
 
 test("admin imports drafts and persists route stop order", async ({ page }) => {
@@ -581,10 +597,13 @@ test("map pins stay on their sites through zoom and panel resize, and a click on
   await page.getByRole("button", { name: "Uzaklaştır", exact: true }).click();
   await expect.poll(() => at(false, zoom + 0.1)).toBe(true);
   await expect.poll(() => pinsFollowSites(page)).toBe(true);
-  await page.getByRole("button", { name: "Paneli kapat", exact: true }).click();
-  await expect.poll(() => pinsFollowSites(page)).toBe(true);
-  await page.getByRole("button", { name: "Paneli aç", exact: true }).click();
-  await expect.poll(() => pinsFollowSites(page)).toBe(true);
+  // A phone has the sheet instead of the panel.
+  if (await page.getByRole("button", { name: "Paneli kapat" }).isVisible()) {
+    await page.getByRole("button", { name: "Paneli kapat", exact: true }).click();
+    await expect.poll(() => pinsFollowSites(page)).toBe(true);
+    await page.getByRole("button", { name: "Paneli aç", exact: true }).click();
+    await expect.poll(() => pinsFollowSites(page)).toBe(true);
+  }
   // The click lands on the pin itself: 19 px above Ulucami's point.
   const pin = await page.evaluate(async () => {
     const map = window.akarMap!;
@@ -595,6 +614,8 @@ test("map pins stay on their sites through zoom and panel resize, and a click on
     return { x: canvas.left + foot.x, y: canvas.top + foot.y - 19 };
   });
   await page.mouse.click(pin.x, pin.y);
+  await expect(page.locator(".site-peek h3")).toHaveText("Ulucami");
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
@@ -637,21 +658,12 @@ test("naming a city takes the map there, and a later refresh leaves it there", a
   expect(await center()).toEqual(arrived);
 });
 
-test("the legend and the kind chips leave out what the city has no site of, and the income category is «Ticari (akar)»", async ({
+test("the role chips leave out what the city has no site of, and the income category is «Ticari (akar)»", async ({
   page,
 }) => {
-  await page.goto("/#view=sites");
-  const legend = page.locator(".map-caption span");
-  const chips = page.locator(".filter-row button");
-  await expect(legend).toHaveText(["Dinî", "Su", "Eğitim", "Ticari (akar)"]);
-  await expect(chips).toHaveText([
-    "Tümü",
-    "Cami",
-    "Çeşme",
-    "Han",
-    "Bedesten",
-    "Eğitim",
-  ]);
+  await page.goto("/");
+  const chips = page.locator(".map-chips .chip[aria-pressed]");
+  await expect(chips).toHaveText(["Dinî", "Su", "Eğitim", "Ticari (akar)"]);
   // Without the fountain and the school the city has no water or education category.
   const snapshot = createSeed();
   for (const site of snapshot.sites)
@@ -661,32 +673,12 @@ test("the legend and the kind chips leave out what the city has no site of, and 
     snapshot,
   );
   await page.reload();
-  await expect(legend).toHaveText(["Dinî", "Ticari (akar)"]);
-  await expect(legend.last()).toHaveAttribute("title", /gelir getiren/);
-  await expect(chips).toHaveText(["Tümü", "Cami", "Han", "Bedesten"]);
-  // A second city with a tomb: a search that points back at Bursa keeps the chip of the active kind.
-  snapshot.sites.push({
-    ...snapshot.sites[4]!,
-    id: "konya-turbe",
-    name: "Konya Türbesi",
-    city: "Konya",
-    kind: "turbe",
-    status: "published",
-    coordinates: [32.49, 37.87],
-  });
-  await page.evaluate(
-    (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
-    snapshot,
-  );
-  await page.reload();
-  await expect(chips).toHaveText(["Tümü", "Cami", "Türbe", "Han", "Bedesten"]);
-  await chips.filter({ hasText: "Türbe" }).click();
-  await page
-    .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
-    .fill("Ulucami");
-  await expect(chips).toHaveText(["Tümü", "Cami", "Türbe", "Han", "Bedesten"]);
-  await expect(chips.filter({ hasText: "Türbe" })).toHaveClass(/active/);
-  // Clearing the kind leaves only what Bursa has.
-  await chips.filter({ hasText: "Tümü" }).click();
-  await expect(chips).toHaveText(["Tümü", "Cami", "Han", "Bedesten"]);
+  await expect(chips).toHaveText(["Dinî", "Ticari (akar)"]);
+  await expect(chips.last()).toHaveAttribute("title", /gelir getiren/);
+  // The first tap keeps one role, the next adds another, taking all away brings them back.
+  await chips.first().click();
+  await expect(chips.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(chips.last()).toHaveAttribute("aria-pressed", "false");
+  await chips.first().click();
+  await expect(chips.last()).toHaveAttribute("aria-pressed", "true");
 });

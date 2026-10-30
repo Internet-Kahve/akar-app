@@ -1,5 +1,8 @@
 # AKAR · Prototipte olup üründe olmayanlar: ekran ekran tam liste (29 Ekim 2026; ek §13: 30 Ekim)
 
+> **Durum (30 Ekim 2026):** `design/test-redmi9t-v2/` prototipi kaldırıldı. Tasarım `apps/web` içinde (tema `apps/web/src/app/design.css`, token'lar `packages/design-tokens`, harita stili `apps/web/public/harita/akar-style.json`, tanıtım `/tanitim`). İçerik okuyucuları `services/api/scripts/editorial_reader.py`, içerik araçları `scripts/content/`, iş emirleri `promptlar/` altında. Aşağıdaki `app.js`, `app.css`, `temalar.css`, `hazirla.py` adları tarihsel kayıttır; eski dosyalar Git geçmişindedir. Kalan farklar: [`docs/documents-context/YAPILACAKLAR.md`](YAPILACAKLAR.md) §Entegrasyon.
+
+
 **Kim için:** Tamer, Burak. Bu belge [`ENTEGRASYON_29EKIM.md`](ENTEGRASYON_29EKIM.md)'nin ekidir. O belge veriyi, içe aktarmayı ve şemayı anlatır. Bu belge arayüzü anlatır: her ekranda hangi düğme nerede, ne yapar ve üründe bugün ne var.
 
 **Neyle karşılaştırıldı:**

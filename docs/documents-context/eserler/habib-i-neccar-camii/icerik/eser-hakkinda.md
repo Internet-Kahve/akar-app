@@ -1,6 +1,6 @@
 # Habib-i Neccar Camii · Eser hakkında
 
-30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Hatay İli Vakıf Eserleri, PDF s.28–36 (Habib-i Neccar Camii ve Külliyesi kaydı; PDF'te her sayfa kitabın iki sayfası) (Türkçe metin; İngilizce paralel metin alınmadı). Hatay kitabının düzeni farklı (Times New Roman, Türkçe ve İngilizce sütunlar karışık sırada); metin `design/test-redmi9t-v2/_araclar/envanter_metni_cikar_hatay.py` ile bloklar hâlinde çıkarıldı, İngilizce bloklar dil denetimiyle ayıklandı. **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
+30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Hatay İli Vakıf Eserleri, PDF s.28–36 (Habib-i Neccar Camii ve Külliyesi kaydı; PDF'te her sayfa kitabın iki sayfası) (Türkçe metin; İngilizce paralel metin alınmadı). Hatay kitabının düzeni farklı (Times New Roman, Türkçe ve İngilizce sütunlar karışık sırada); metin `scripts/content/envanter_metni_cikar_hatay.py` ile bloklar hâlinde çıkarıldı, İngilizce bloklar dil denetimiyle ayıklandı. **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
 
 Bölüm başlıkları (Cami, Medrese, Şadırvan, Habib-i Neccar Türbesi, Aziz Pavlos'un Türbesi) kitabın kendi başlıklarıdır; ilk bölüm («Tarihçe») eklendi. Kitabın sırası bozulmadı.
 

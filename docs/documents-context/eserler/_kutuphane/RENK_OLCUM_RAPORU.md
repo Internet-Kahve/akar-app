@@ -2,7 +2,7 @@
 
 > **KARAR — 28 Ekim 2026, kullanıcı: fotoğraf renkleri haritada cansız; 21 Ekim pastel renkleri geri; ton ayarı web'de.** Bu rapordaki fotoğraf ölçümleri kayıt olarak durur; uygulama modelleri (Ulucami v29, Bedesten v08, Koza Han v16, Orhan Bey Camii v09, Hamam v07, Emir Hanı v07, Türbe v04) 21 Ekim pastel renklerini kullanır. `malzeme-paleti.json`: «hex» = pastel, «foto_olcum» = bu rapordaki değer.
 
-28 Ekim 2026. İş emri: `design/test-redmi9t-v2/_promptlar/PROMPT_foto_renk_ve_ao_pisirme_7_eser.md`. Kullanıcı 28 Ekim'de öneriyi onayladı («önerdiğin şekilde devam et»): kurşun, mermer, tuğla yedi eserde ortak; duvar esere göre; eser tuğla istisnaları kaldırıldı (tek küçük bölgeden geldikleri için). Uygulandı: `_kutuphane/renk_ao_v3/` (2. aşama).
+28 Ekim 2026. İş emri: `promptlar/PROMPT_foto_renk_ve_ao_pisirme_7_eser.md`. Kullanıcı 28 Ekim'de öneriyi onayladı («önerdiğin şekilde devam et»): kurşun, mermer, tuğla yedi eserde ortak; duvar esere göre; eser tuğla istisnaları kaldırıldı (tek küçük bölgeden geldikleri için). Uygulandı: `_kutuphane/renk_ao_v3/` (2. aşama).
 
 ## Yöntem
 

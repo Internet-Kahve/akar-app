@@ -1,5 +1,5 @@
 {
-  "_aciklama": "Eski fotoğrafların bugünkü eşleri (ekip seçti). gecmisi-gor.json'u üreten betik bu dosyaya dokunmaz. Görseller bugun/ klasöründe; design/test-redmi9t-v2/_araclar/bugunku_es_uret.py kaynakDosya + kirpma'dan üretir (genislik/yukseklik'i de o yazar).",
+  "_aciklama": "Eski fotoğrafların bugünkü eşleri (ekip seçti). gecmisi-gor.json'u üreten betik bu dosyaya dokunmaz. Görseller bugun/ klasöründe; scripts/content/bugunku_es_uret.py kaynakDosya + kirpma'dan üretir (genislik/yukseklik'i de o yazar).",
   "esler": [
     {
       "fotoAtlasId": 14286,

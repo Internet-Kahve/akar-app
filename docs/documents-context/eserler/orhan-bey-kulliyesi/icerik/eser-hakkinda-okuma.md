@@ -2,7 +2,7 @@
 
 30 Ekim 2026. «Eser hakkında» sayfasının okuma düzeni için seçmeler: bölüm özeti, rakam kartları, büyük alıntı, zaman çizelgesi, terim açıklamaları ve masaüstünde metinle birlikte dönen 3D açısı. Biçim ve kurallar Ulucami'deki dosyayla aynı (`ulu-cami/icerik/eser-hakkinda-okuma.md`).
 
-**Kural: bu dosyada yeni metin yazılmaz.** Özet cümleleri, alıntılar, «kanıt» parçaları ve terim tanımları `eser-hakkinda.md`'deki envanter metninden **kelimesi kelimesine** seçilir; `hazirla.py` her birini denetler, geçmeyen satır sayfaya girmez. Kendi sözümüz yalnız rakam kartlarının kısa etiketidir.
+**Kural: bu dosyada yeni metin yazılmaz.** Özet cümleleri, alıntılar, «kanıt» parçaları ve terim tanımları `eser-hakkinda.md`'deki envanter metninden **kelimesi kelimesine** seçilir; `services/api/scripts/editorial_reader.py` her birini denetler, geçmeyen satır sayfaya girmez. Kendi sözümüz yalnız rakam kartlarının kısa etiketidir.
 
 ## Tarihçe
 

@@ -18,4 +18,4 @@
 
 [İlk yol haritası](ROADMAP.md), [frontend yenileme planı](FRONTEND-REFRESH.md), [ilk doğrulama raporu](VERIFICATION.md), [backend başlangıç planı](BACKEND-PLAN.md), [haritada 3B modeller planı](MAP-MODELS-PLAN.md) (onaylandı, uygulanıyor), [rotalarda yürüme yolu planı](ROUTE-WALKING-PLAN.md) (inceleme notları işlendi; uygulama ayrı) ve [tasarım notları](DESIGN-SOURCES.md) yazıldıkları tarihteki durumu anlatır. Eksik özellik listeleri güncel canlı sürümün kapsamı değildir. Aktif kurulum için yukarıdaki rehberleri kullan.
 
-`documents-context/` eser üretim dosyalarını, lisans/kaynak kayıtlarını ve tasarım prototiplerini saklar. `reviews/` tarihli incelemeler içindir; buradaki raporlar test komutu veya kurulum talimatı yerine geçmez. Üretilen OpenAPI dosyası elle düzenlenmez.
+`documents-context/` eser üretim dosyalarını, lisans/kaynak kayıtlarını ve tasarım referanslarını saklar. `reviews/` tarihli incelemeler içindir; buradaki raporlar test komutu veya kurulum talimatı yerine geçmez. Üretilen OpenAPI dosyası elle düzenlenmez.

@@ -13,14 +13,14 @@ test("content preparation refuses draft task files without replacing an existing
   try {
     const tasks = join(root, "eserler/koza-han/icerik");
     await mkdir(tasks, { recursive: true });
-    const reader = join(root, "design/test-redmi9t-v2");
+    const reader = join(root, "reader");
     await mkdir(reader, { recursive: true });
     await writeFile(join(reader, "hazirla.py"), "def eserleri_bul():\n    return []\n");
     const output = join(root, "manifest.json");
     await writeFile(output, "previous reviewed manifest");
     for (const flag of [true, "true", "false", null, 0]) {
       await writeFile(join(tasks, "gorevler.json"), JSON.stringify({ _taslak: flag, gorevler: [], rozetler: [] }));
-      const run = spawnSync("python3", [script, "--content", root, "--output", output], { encoding: "utf8" });
+      const run = spawnSync("python3", [script, "--content", root, "--output", output, "--reader", join(root, "reader/hazirla.py")], { encoding: "utf8" });
       assert.notEqual(run.status, 0);
       assert.match(run.stderr, /Unreviewed task file:.*koza-han/);
       assert.equal(await readFile(output, "utf8"), "previous reviewed manifest");
@@ -28,7 +28,7 @@ test("content preparation refuses draft task files without replacing an existing
     // Minimal approved package: no source archive is required in CI.
     for (const data of [{ gorevler: [], rozetler: [] }, { _taslak: false, gorevler: [], rozetler: [] }]) {
       await writeFile(join(tasks, "gorevler.json"), JSON.stringify(data));
-      const run = spawnSync("python3", [script, "--content", root, "--output", output], { encoding: "utf8" });
+      const run = spawnSync("python3", [script, "--content", root, "--output", output, "--reader", join(root, "reader/hazirla.py")], { encoding: "utf8" });
       assert.equal(run.status, 0, run.stderr);
       assert.equal(JSON.parse(await readFile(output, "utf8")).version, 1);
     }
@@ -67,7 +67,7 @@ def model_oku(folder):
 test("content preparation reads a photo-only site from its own city", async () => {
   const root = await mkdtemp(join(tmpdir(), "akar-photo-only-"));
   try {
-    const reader = join(root, "design/test-redmi9t-v2"), photos = join(root, "eserler/medrese/icerik/foto/kitap"), cities = join(root, "veri/sehir");
+    const reader = join(root, "reader"), photos = join(root, "eserler/medrese/icerik/foto/kitap"), cities = join(root, "veri/sehir");
     for (const dir of [reader, photos, cities, join(root, "design/desenler")]) await mkdir(dir, { recursive: true });
     await writeFile(join(reader, "hazirla.py"), photoOnlyReader);
     await writeFile(join(photos, "s1-01.jpg"), "photo");
@@ -79,7 +79,7 @@ test("content preparation reads a photo-only site from its own city", async () =
     // A city with its colours but no pattern yet.
     await city("hatay", "Hatay", { kimlik: { zemin: "#7A6340", desen_renk: "#DBCDB5" } });
     const output = join(root, "manifest.json");
-    const prepare = () => spawnSync("python3", [script, "--content", root, "--output", output], { encoding: "utf8" });
+    const prepare = () => spawnSync("python3", [script, "--content", root, "--output", output, "--reader", join(root, "reader/hazirla.py")], { encoding: "utf8" });
     const run = prepare();
     assert.equal(run.status, 0, run.stderr);
     const { sites: [site], cities: records } = JSON.parse(await readFile(output, "utf8"));

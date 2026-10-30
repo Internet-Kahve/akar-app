@@ -1,5 +1,8 @@
 # AKAR · Prototipten ürüne entegrasyon notu (29 Ekim 2026; güncelleme 30 Ekim 2026)
 
+> **Durum (30 Ekim 2026):** `design/test-redmi9t-v2/` prototipi kaldırıldı. Tasarım `apps/web` içinde (tema `apps/web/src/app/design.css`, token'lar `packages/design-tokens`, harita stili `apps/web/public/harita/akar-style.json`, tanıtım `/tanitim`). İçerik okuyucuları `services/api/scripts/editorial_reader.py`, içerik araçları `scripts/content/`, iş emirleri `promptlar/` altında. Aşağıdaki `app.js`, `app.css`, `temalar.css`, `hazirla.py` adları tarihsel kayıttır; eski dosyalar Git geçmişindedir. Kalan farklar: [`docs/documents-context/YAPILACAKLAR.md`](YAPILACAKLAR.md) §Entegrasyon.
+
+
 **Kim için:** Tamer, Burak.
 
 **Ne:** `design/test-redmi9t-v2/` prototipinde olup üründe (`main`: `apps/web`, `services/api`, `packages/`) henüz olmayanlar ve bunların veri kaynakları.
@@ -38,11 +41,11 @@ Yollar `docs/documents-context/` altına göredir.
 ### 0.1 Veri: yedi eser Ulucami seviyesinde
 - **Parça kartları** (`icerik/parcalar.md`): Emir Hanı 4, Koza Han 7, Orhan Bey Hamamı 4, Orhan Bey Camii 11, Orhan Gazi Türbesi 7, Bedesten 8 kart. Hikâyede vurgulanan bütün parçaların kartı var. İç mekânı olan üç eserde (Bedesten, Orhan Bey Camii, Orhan Gazi Türbesi) iç parçaların da kartı var; Emir Hanı, Koza Han ve Hamam'da iç mekân yok (yalnız dış). Kartı olmayan parçalar ve nedenleri her dosyanın sonunda. Eski taslaklar `icerik/_eski/parcalar_taslak.md`.
 - **Bulmaca, saha görevi, rozetler** (`icerik/gorevler.json`, **taslak**, `_taslak: true`): her eserde bir soru (4 şık, 2 ipucu, fotoğrafla çözülür) ve bir saha görevi (evden karşılığı 3D parçası). Rozet: hikâye (Orhan Gazi Türbesi'nde hikâye olmadığı için yok) + soru + saha. Toplam rozet: Ulucami 3 + diğer altı eser 17 = **20**. Cami ve türbe içinde görev yok. Çarşının ortasındaki Emir Hanı ve Hamam'da konum yarıçapı 60 m (komşu esere taşmasın), öbürlerinde 80 m.
-- **Eser hakkında = envanter metninin tamamı** (`icerik/eser-hakkinda.md`): Ulucami'deki gibi kitaptan kelimesi kelimesine (`_araclar/envanter_metni_cikar.py`), bölüm başlıkları kitabın sırası bozulmadan eklendi, rivayet/tahmin içeren paragraflar «Tarihsel çıkarım». Önceki özet metinler `eser-hakkinda-ozet.md`'ye taşındı (uygulama okumaz; «Vakıf ve akar» bölümü oradan aynen alındı). Sayfalar: Emir Hanı C1 s.108–109; Hamam C1 s.104–107; Orhan Bey Camii C1 s.96–103; Koza Han C2 s.8–11 + köşk mescit C1 s.194–195; Bedesten C2 s.27–29; Orhan Gazi Türbesi C2 s.115–117.
+- **Eser hakkında = envanter metninin tamamı** (`icerik/eser-hakkinda.md`): Ulucami'deki gibi kitaptan kelimesi kelimesine (`scripts/content/envanter_metni_cikar.py`), bölüm başlıkları kitabın sırası bozulmadan eklendi, rivayet/tahmin içeren paragraflar «Tarihsel çıkarım». Önceki özet metinler `eser-hakkinda-ozet.md`'ye taşındı (uygulama okumaz; «Vakıf ve akar» bölümü oradan aynen alındı). Sayfalar: Emir Hanı C1 s.108–109; Hamam C1 s.104–107; Orhan Bey Camii C1 s.96–103; Koza Han C2 s.8–11 + köşk mescit C1 s.194–195; Bedesten C2 s.27–29; Orhan Gazi Türbesi C2 s.115–117.
 - **Okuma katmanı** (`icerik/eser-hakkinda-okuma.md`): her bölüme özet cümleleri, rakam kartları, zaman çizelgesi, terimler ve masaüstü 3D açısı. `hazirla.py` hepsini kitap metninde birebir buldu (uyarı yok).
 - **Kitaptaki fotoğraflar** (`icerik/kitap-fotograflari.md` + `icerik/foto/kitap/`): Orhan Bey Camii 26, Hamam 14, Koza Han 12, Emir Hanı 6, Türbe 6, Bedesten 5. Kitabın PDF'inden kesildi (220 dpi, uzun kenar ≤ 1280 px); Ulucami'deki gibi arşiv eşleştirmesi yapılmadı, alt metinler geçici.
 - **Kapak** (`eser.json → hakkinda_kapak`): altı eserde de envanterin açılış fotoğrafı (Orhan Gazi Türbesi'nde açılış fotoğrafı galeride yok; dış fotoğraf seçildi).
-- **Geçmişi Gör:** Foto Atlas'ta izinli bütün kayıtlar tarandı. Koza Han'a 47676 «Koza Han Mescidi» (1908–34) eklendi (5 → 6; `veri/fotoatlas/eslesme_elle.csv`'ye onay, Git dışında). Bedesten, Emir Hanı ve Orhan Bey Hamamı için Foto Atlas'ta kullanılabilir (ya da izin bekleyen) **hiç kayıt yok**; bu eserlerde «eski görüntü henüz yok» ekranı kalır. Bugünkü eş ve örnek iz Ulucami dışında yapılmadı (`_promptlar/PROMPT_gecmisi_gor_diger_eserler.md` hâlâ açık).
+- **Geçmişi Gör:** Foto Atlas'ta izinli bütün kayıtlar tarandı. Koza Han'a 47676 «Koza Han Mescidi» (1908–34) eklendi (5 → 6; `veri/fotoatlas/eslesme_elle.csv`'ye onay, Git dışında). Bedesten, Emir Hanı ve Orhan Bey Hamamı için Foto Atlas'ta kullanılabilir (ya da izin bekleyen) **hiç kayıt yok**; bu eserlerde «eski görüntü henüz yok» ekranı kalır. Bugünkü eş ve örnek iz Ulucami dışında yapılmadı (`promptlar/PROMPT_gecmisi_gor_diger_eserler.md` hâlâ açık).
 
 İçe aktarma için değişen bir biçim yok: dosyalar Ulucami'dekiyle aynı alanları taşır. Yeni olan tek alan `gorevler.json → _taslak` (alt çizgili, uygulama okumaz).
 
@@ -378,7 +381,7 @@ Figma `akar-yeni`'de değişen her ekranın altında «29 Ekim: …» notu var. 
   - içerik en çok 1360 px.
 
 **«İçini göster» (dört eserde)**
-- Ulucami'ye ek olarak Bedesten, Orhan Gazi Türbesi ve Orhan Bey Camii'nde iç mekân var (29 Ekim; `_promptlar/PROMPT_icini_goster_3_eser.md`). İç parçaların kartları 30 Ekim'de yazıldı.
+- Ulucami'ye ek olarak Bedesten, Orhan Gazi Türbesi ve Orhan Bey Camii'nde iç mekân var (29 Ekim; `promptlar/PROMPT_icini_goster_3_eser.md`). İç parçaların kartları 30 Ekim'de yazıldı.
 - Kod aynı kalır. Düğme, eserin `model.json → ortu_gruplari` alanı dolunca görünür. Ürün de koşulu veriden okumalı; düğmeyi «yalnız Ulucami» diye kodda açmasın.
 - Orhan Bey Hamamı'na iç mekân yapılmayacak.
 
@@ -425,7 +428,7 @@ Figma'da olup prototipte eksik olan dört ekran eklendi; ayrıntı ve ölçüler
 - `design/test-redmi9t/` (v1): donmuş. İçe aktarma v2'ye geçince eski GLB'lerle birlikte silinecek:
   - `v26`/`v27`, `v14`, `v06`, `v07` (cami), `v05` (hamam/emir), `v02`.
 - `design/harita/akar-harita-onizleme*.html`: tasarım aracı (ışık/renk paneli), ürün değil.
-- `design/test-redmi9t-v2/_promptlar/`: 3D ve içerik ajanlarına verilen iş emirleri; kayıt amaçlı.
+- `promptlar/`: 3D ve içerik ajanlarına verilen iş emirleri; kayıt amaçlı.
 - `design/test-redmi9t-v2/temalar.css` içindeki deneme tonları (`data-ton=sicak|il|bant`) (`tema-vakif.css`, `ornek-vasa.html`, `harita/akar-style-galeri.json`, `akar-style-minyatur.json` 30 Ekim 2026'da silindi).
 - `eserler/_kutuphane/renk_ao_v3/`: bir kerelik geçiş; kullanılmaz.
 - `.gitignore`'da olanlar ekip Drive'ında:

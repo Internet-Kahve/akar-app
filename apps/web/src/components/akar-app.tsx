@@ -1,26 +1,27 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   ArrowRight,
   Search,
-  ChevronDown,
   MapPin,
   Route,
-  Landmark,
-  Compass,
   Bookmark,
-  Clock3,
-  Footprints,
   Headphones,
   BookOpen,
+  ChevronLeft,
   History,
   MessageSquare,
   X,
   Check,
   PanelLeftClose,
   PanelLeftOpen,
-  Sparkles,
-  Coffee,
   Puzzle,
   Users,
 } from "lucide-react";
@@ -33,12 +34,11 @@ import {
 } from "@akar/api-client";
 import {
   approvedMemories,
+  categoriesOf,
   defaultMapSettings,
   filterSites,
-  kindLabels,
-  normalize,
-  offeredKinds,
-  siteKinds,
+  kindCategory,
+  siteCategories,
   type Command,
   type HeritageSite,
   type MapPlacement,
@@ -46,21 +46,35 @@ import {
   type CityRecord,
   type Role,
   type SiteBadge,
+  type SiteCategory,
   type SiteTask,
   type Snapshot,
 } from "@akar/domain";
-import { HeritageMap } from "./heritage-map";
+import { HeritageMap, type MapFlight } from "./heritage-map";
+import {
+  ExplorePanel,
+  MapChips,
+  RoutePreview,
+  toggleCategory,
+  type ExploreTab,
+  type PlaceMode,
+} from "./explore-panel";
+import { SitePeek } from "./site-peek";
+import { SourceSheetProvider, WaqfSheet } from "./side-sheet";
+import { WelcomeCard } from "./welcome-card";
 import { Cities } from "./city-scenes";
 import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
-import { Architecture, Scene } from "./scene";
+import { Scene } from "./scene";
 import { HistoryView } from "./history-view";
-import { StoryPanel } from "./story-panel";
-import { AboutModal } from "./about-reading";
+import { StoryPanel, StoryProgress } from "./story-panel";
+import { StoryFlowMap } from "./story-flow-map";
+import { CompletionCard } from "./completion-card";
+import { AboutModal, useWide } from "./about-reading";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { MemoryActions } from "./memory-actions";
 import { SignInModal } from "./sign-in-modal";
-import { Modal, Tag, Notice, Back, Motif } from "./ui";
+import { Modal, Notice, Motif, Tag } from "./ui";
 import {
   FieldTaskDialog,
   isFieldTask,
@@ -76,6 +90,17 @@ import { describeError, needsSignIn } from "../lib/errors";
 import { apiUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
+import {
+  clampSheet,
+  settleSheet,
+  SHEET_TAP_PX,
+  toggleSheet,
+} from "../lib/bottom-sheet";
+import { cityIdentityStyle } from "../lib/city-identity";
+import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
+import { cityCase } from "../lib/place-names";
+import { readPreference, writePreference } from "../lib/preferences";
+import { siteMeta } from "../lib/site-meta";
 type View =
   | "map"
   | "sites"
@@ -92,14 +117,10 @@ type Overlay =
   | "visit"
   | "about"
   | "memories"
-  | "city"
   | "reset"
   | null;
-const navigation = [
-  { view: "map" as View, label: "Harita", icon: Compass },
-  { view: "routes" as View, label: "Rotalar", icon: Route },
-  { view: "sites" as View, label: "Eserler", icon: Landmark },
-];
+/** Share of a phone's height the panel takes on a site's page; the scene stays above it. */
+const SITE_SHEET = 0.46;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
 const CATALOG_REFRESH_MS = 5 * 60_000;
 export function AkarApp() {
@@ -107,13 +128,24 @@ export function AkarApp() {
     [ready, setReady] = useState(false),
     [snapshotRevision, setSnapshotRevision] = useState(0),
     [experimental, setExperimental] = useState(false),
-    [storyLayout, setStoryLayout] = useState<"panel" | "subtitle">("panel"),
     [view, setView] = useState<View>("map"),
     [siteId, setSiteId] = useState("ulu-cami"),
     [query, setQuery] = useState(""),
-    [kind, setKind] = useState("all"),
-    [saved, setSaved] = useState(false),
-    [tab, setTab] = useState<"routes" | "sites">("routes"),
+    [roles, setRoles] = useState<Set<SiteCategory>>(
+      () => new Set(siteCategories),
+    ),
+    [tab, setTab] = useState<ExploreTab>("sites"),
+    [place, setPlace] = useState<PlaceMode>("home"),
+    [nearPoint, setNearPoint] = useState<[number, number] | null>(null),
+    [peekId, setPeekId] = useState<string>(),
+    [cityInView, setCityInView] = useState<CityRecord | null>(null),
+    [flight, setFlight] = useState<MapFlight>(),
+    [lang, setLang] = useState<"tr" | "en">("tr"),
+    [welcome, setWelcome] = useState(false),
+    [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
+    [waqf, setWaqf] = useState(false),
+    [sheetHeight, setSheetHeight] = useState(0),
+    [sheetDragging, setSheetDragging] = useState(false),
     [routeId, setRouteId] = useState<string>(),
     [collapsed, setCollapsed] = useState(false),
     [overlay, setOverlay] = useState<Overlay>(null),
@@ -141,6 +173,7 @@ export function AkarApp() {
   const [opening, setOpening] = useState(true),
     [mapDrawn, setMapDrawn] = useState(false),
     [openingLate, setOpeningLate] = useState(false);
+  const wide = useWide();
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -298,6 +331,7 @@ export function AkarApp() {
     setView(next);
     setCollapsed(false);
     if (id) setSiteId(id);
+    setPeekId(undefined);
     setOverlay(null);
     setTaskDialog(null);
     setPick(null);
@@ -429,16 +463,30 @@ export function AkarApp() {
     (s) => s.id === siteId && s.status === "published",
   );
   const dialogTask = taskDialog?.task;
+  // «Yalnız rotada» sentences lead to the next stop: they are read only on a route.
+  const storySite = useMemo(() => {
+    if (!site) return undefined;
+    const stories = site.stories.filter((s) => !s.routeOnly || !!routeId);
+    return stories.length ? { ...site, stories } : undefined;
+  }, [site, routeId]);
+  const storyBlock = view === "story" ? storySite?.stories[storyIndex] : undefined;
+  const flowEnds = useMemo(() => {
+    const flow = storyBlock?.flow;
+    if (!flow) return null;
+    const at = (id: string | null) =>
+      state.sites.find((s) => s.id === id)?.coordinates;
+    const from = at(flow.fromSiteId),
+      to = flow.toPoint ?? at(flow.toSiteId);
+    const fromName = state.sites.find((s) => s.id === flow.fromSiteId)?.name;
+    return from && to && fromName ? { from, to, fromName } : null;
+  }, [storyBlock, state.sites]);
   const filtered = useMemo(
     () =>
-      filterSites(state.sites, query, kind, saved ? state.savedIds : undefined),
-    [state.sites, state.savedIds, query, kind, saved],
+      filterSites(state.sites, query).filter((s) =>
+        roles.has(kindCategory[s.kind]),
+      ),
+    [state.sites, query, roles],
   );
-  // Only the kinds with a site in the city the search points at get a chip (§11.48); the active one stays.
-  const kindChips = useMemo(() => {
-    const offered = offeredKinds(state.sites, query);
-    return siteKinds.filter((k) => offered.includes(k) || k === kind);
-  }, [state.sites, query, kind]);
   const published = useMemo(
     () => state.sites.filter((s) => s.status === "published"),
     [state.sites],
@@ -447,17 +495,34 @@ export function AkarApp() {
     (r) => r.status !== "draft",
   );
   const cities = [...new Set(published.map((s) => s.city))];
-  const firstStory = published.find((s) => s.stories.length > 0);
+  const defaultCity = cityRecords.find((c) => c.isDefault);
+  const activeCity = cityInView ?? defaultCity ?? null;
+  const cityName = activeCity?.name ?? cities[0] ?? "Bursa";
+  // The list shows the city the map looks at; a search reaches every city.
+  const listed = useMemo(() => {
+    const here = query
+      ? filtered
+      : filtered.filter((s) => !s.city || s.city === cityName);
+    return nearPoint ? nearestFirst(here, nearPoint) : here;
+  }, [filtered, query, cityName, nearPoint]);
+  const chipCategories = useMemo(() => categoriesOf(published), [published]);
+  const peekSite = published.find((s) => s.id === peekId);
+  const pageCity = view === "detail" || view === "story" ? site?.city : undefined;
+  const lookCity =
+    cityRecords.find((c) => c.name === pageCity) ?? activeCity;
+  const cityLook = cityIdentityStyle(lookCity?.identity ?? null);
   const route = routes.find((r) => r.id === routeId);
   const routeSites = (
     routeId === "custom" ? state.routeIds : (route?.siteIds ?? [])
   )
     .map((id) => published.find((s) => s.id === id))
     .filter((s): s is HeritageSite => !!s);
+  const nextStop = routeId
+    ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
+    : undefined;
   const isDetail = ["detail", "story"].includes(view),
     showMap = !["profile", "admin", "history"].includes(view),
-    showRoutes =
-      (view === "routes" || (view === "map" && tab === "routes")) && !query;
+    showRoutes = tab === "routes" && !query;
   // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
   // to wait for, as soon as the page can show something.
   const openingDone =
@@ -466,14 +531,69 @@ export function AkarApp() {
     !!loadError ||
     (ready && !(showMap && !isDetail));
   const openingCity = cityRecords.find((c) => c.isDefault);
+  /** A pick on the map or in the list: the map goes there and the short card opens. */
+  function pickSite(id: string) {
+    setPeekId(id);
+  }
   function selectSite(id: string) {
     setStoryIndex(0);
     go("detail", id);
   }
-  function openStory(listen = false, index = 0) {
-    setStoryIndex(index);
+  function openStory(listen = false, index?: number, id = siteId) {
+    const kept = Number(readPreference(`akar.ilerleme.${id}`));
+    setStoryIndex(index ?? (Number.isInteger(kept) ? kept : 0));
     setListening(listen);
-    go("story", siteId);
+    go("story", id);
+  }
+  function chooseHome(fly = true) {
+    setPlace("home");
+    setNearPoint(null);
+    writePreference("akar.konum", "home");
+    if (fly) setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "home" }));
+  }
+  /** The position is used here and only here: it never leaves the device. */
+  function chooseNear() {
+    const centre = (activeCity ?? defaultCity)?.map?.center;
+    void locateOnce({
+      unsupported: "Bu cihazda konum yok · Evden gez açık",
+      denied: `Konum izni yok · Evden gez: ${cityName}`,
+      timeout: `Konum alınamadı · Evden gez: ${cityName}`,
+      failed: `Konum alınamadı · Evden gez: ${cityName}`,
+    }).then(
+      ({ coordinates: point }) => {
+        if (centre && distanceM(centre, point) > NEAR_CITY_MAX_M) {
+          setToast(
+            `Konumun ${cityName} dışında · Evden gez ile şehir merkezinden başladık`,
+          );
+          chooseHome();
+          return;
+        }
+        setPlace("near");
+        setNearPoint(point);
+        writePreference("akar.konum", "near");
+        setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "point", point }));
+      },
+      (e) => {
+        setToast(describeError(e, "Konum alınamadı."));
+        chooseHome(false);
+      },
+    );
+  }
+  function closeWelcome() {
+    writePreference("akar.karsilama", "1");
+    setWelcome(false);
+  }
+  function changeLanguage(next: "tr" | "en") {
+    setLang(next);
+    writePreference("akar.dil", next);
+    if (next === "en" && published.some((s) => !s.nameEn))
+      setToast("Çevirisi olmayan metinler Türkçe kalır.");
+  }
+  async function toggleRoute(id: string) {
+    const name = published.find((s) => s.id === id)?.name ?? "Eser";
+    const inRoute = state.routeIds.includes(id);
+    if (await commit({ type: "route", siteId: id }))
+      setToast(inRoute ? `${name} Rotam'dan çıkarıldı` : `${name} Rotam'a eklendi`);
   }
   function togglePanel() {
     const next = !collapsed;
@@ -486,66 +606,54 @@ export function AkarApp() {
     try {
       setCollapsed(sessionStorage.getItem("akar-panel") === "true");
     } catch {}
+    if (readPreference("akar.dil") === "en") setLang("en");
   }, []);
-  const list = (
-    <div className="site-list">
-      {query &&
-        routes
-          .filter((r) => normalize(r.name).includes(normalize(query)))
-          .map((r) => (
-            <button
-              key={r.id}
-              className="search-route-result"
-              onClick={() => {
-                setQuery("");
-                setRouteId(r.id);
-                go("routes");
-              }}
-            >
-              <Route size={18} />
-              <span>
-                <strong>{r.name}</strong>
-                <small>Rota · {r.siteIds.length} durak</small>
-              </span>
-              <ArrowRight size={16} />
-            </button>
-          ))}
-      {filtered.length ? (
-        filtered.map((s) => (
-          <SiteCard
-            live={live}
-            key={s.id}
-            site={s}
-            saved={state.savedIds.includes(s.id)}
-            visited={state.visitedIds.includes(s.id)}
-            onClick={() => selectSite(s.id)}
-            onSave={() => void commit({ type: "save", siteId: s.id })}
-          />
-        ))
-      ) : query &&
-        routes.some((r) =>
-          normalize(r.name).includes(normalize(query)),
-        ) ? null : (
-        <div className="empty-state">
-          <Search size={30} />
-          <h3>Bu keşif henüz başlamadı.</h3>
-          <p>Başka bir eser ara veya filtrelerini temizle.</p>
-          <button
-            className="btn secondary"
-            onClick={() => {
-              setQuery("");
-              setKind("all");
-              setSaved(false);
-            }}
-          >
-            Filtreleri temizle
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  useEffect(() => {
+    if (view === "routes" || view === "sites")
+      setTab(view === "routes" ? "routes" : "sites");
+  }, [view]);
+  // First visit on the map only: someone arriving by a shared link is not stopped.
+  useEffect(() => {
+    if (
+      !opening &&
+      ready &&
+      showMap &&
+      !isDetail &&
+      !window.location.hash.slice(1) &&
+      !readPreference("akar.karsilama")
+    )
+      setWelcome(true);
+  }, [opening, ready, showMap, isDetail]);
+  // The sheet's lowest stop shows the handle, the tabs and the heading line.
+  const sheet = useRef<HTMLElement>(null),
+    sheetDrag = useRef<{
+      y: number;
+      height: number;
+      handle: boolean;
+      moved: boolean;
+    } | null>(null);
+  const sheetLowest = () => {
+    const head = sheet.current?.querySelector<HTMLElement>(".explore-heading");
+    return head?.offsetHeight
+      ? Math.round(
+          head.getBoundingClientRect().bottom -
+            sheet.current!.getBoundingClientRect().top +
+            8,
+        )
+      : 128;
+  };
+  useEffect(() => {
+    if (!ready || wide) return;
+    setSheetHeight(
+      isDetail ? Math.round(innerHeight * SITE_SHEET) : sheetLowest(),
+    );
+  }, [ready, isDetail, wide]);
   const shell = (
-    <div className="app-shell" inert={opening && !openingDone}>
+    <div
+      className="app-shell"
+      style={cityLook}
+      inert={opening && !openingDone}
+    >
       <a
         className="skip-link"
         href="#main-content"
@@ -566,18 +674,27 @@ export function AkarApp() {
           }}
           aria-label="Akar ana sayfa"
         >
-          <span className="brand-mark">
-            <Landmark size={22} />
-          </span>
-          <span>
-            akar<span className="brand-dot">.</span>
-          </span>
+          <img
+            className="brand-logo"
+            src="/logo/logo-web.png"
+            alt=""
+            width={800}
+            height={237}
+          />
+          <img
+            className="brand-mark"
+            src="/logo/isaret-a-96.png"
+            alt=""
+            width={91}
+            height={96}
+          />
         </button>
         <div className="global-search">
           <Search size={18} />
           <input
             aria-label="Eser, şehir veya rota ara"
             placeholder="Eser, şehir veya rota ara"
+            autoComplete="off"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -593,47 +710,38 @@ export function AkarApp() {
               <X size={15} />
             </button>
           )}
-          <button className="city-chip" onClick={() => setOverlay("city")}>
-            {ready && cities.length === 1 ? cities[0] : "Şehirler"}
-            <ChevronDown size={13} />
-          </button>
-        </div>
-        <nav aria-label="Ana navigasyon">
-          {navigation.map(({ view: v, label, icon: Icon }) => (
-            <button
-              key={v}
-              className={
-                view === v || (v === "map" && isDetail) ? "active" : ""
-              }
-              onClick={() => {
-                setRouteId(undefined);
-                setQuery("");
-                go(v);
-              }}
-            >
-              <Icon size={16} />
-              {label}
-            </button>
-          ))}
           <button
-            className={view === "story" ? "active" : ""}
-            disabled={!ready || !firstStory}
+            className="city-chip"
+            title="Şehirler"
             onClick={() => {
-              setStoryIndex(0);
-              setListening(false);
-              if (firstStory) go("story", firstStory.id);
+              if (view !== "map") go("map");
+              setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "globe" }));
             }}
           >
-            <Headphones size={16} />
-            Evden gez
+            <i className="city-motif" aria-hidden="true" />
+            {cityName}
           </button>
-        </nav>
+        </div>
+        <div className="lang-switch" role="group" aria-label="Dil / Language">
+          {(["tr", "en"] as const).map((l) => (
+            <button
+              key={l}
+              lang={l}
+              aria-pressed={lang === l}
+              onClick={() => changeLanguage(l)}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
         <button
           className={`profile-button ${view === "profile" ? "active" : ""}`}
           aria-label="Mirasım profilini aç"
           onClick={() => go("profile")}
         >
-          <span className="avatar">G</span>
+          <span className="avatar">
+            {(account?.email?.[0] ?? "G").toLocaleUpperCase("tr")}
+          </span>
         </button>
       </header>
       {!ready ? (
@@ -719,60 +827,121 @@ export function AkarApp() {
             <HistoryView
               key={site.id}
               site={site}
+              sites={published}
               onBack={() => go("detail", site.id)}
               onMemory={() => setOverlay("memory")}
+              onSite={selectSite}
             />
           )}
           {showMap && (
             <main
               id="main-content"
               tabIndex={-1}
-              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${view === "story" && storyLayout === "subtitle" ? "story-subtitle" : ""}`}
+              style={
+                sheetHeight
+                  ? ({ "--sheet-h": `${sheetHeight}px` } as CSSProperties)
+                  : undefined
+              }
+              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite ? "peeking" : ""}`}
             >
               <aside
-                className="side-panel"
+                ref={sheet}
+                className={`side-panel${sheetDragging ? " dragging" : ""}`}
                 aria-label="Keşif paneli"
                 hidden={collapsed}
+                onPointerDown={(e) => {
+                  const target = (e.target as HTMLElement).closest(
+                    isDetail
+                      ? ".sheet-grip"
+                      : ".sheet-grip, .explore-tabs, .explore-heading",
+                  );
+                  if (!target) return;
+                  sheetDrag.current = {
+                    y: e.clientY,
+                    height: sheetHeight,
+                    handle: target.classList.contains("sheet-grip"),
+                    moved: false,
+                  };
+                }}
+                onPointerMove={(e) => {
+                  const drag = sheetDrag.current;
+                  if (!drag || Math.abs(drag.y - e.clientY) < SHEET_TAP_PX)
+                    return;
+                  if (!drag.moved) {
+                    drag.moved = true;
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    setSheetDragging(true);
+                  }
+                  setSheetHeight(
+                    clampSheet(
+                      drag.height + drag.y - e.clientY,
+                      sheetLowest(),
+                      innerHeight,
+                    ),
+                  );
+                }}
+                onPointerUp={(e) => {
+                  const drag = sheetDrag.current;
+                  sheetDrag.current = null;
+                  if (!drag) return;
+                  setSheetDragging(false);
+                  const lowest = sheetLowest();
+                  if (drag.moved)
+                    setSheetHeight(
+                      settleSheet(
+                        drag.height + drag.y - e.clientY,
+                        lowest,
+                        innerHeight,
+                      ),
+                    );
+                  else if (drag.handle)
+                    setSheetHeight(toggleSheet(drag.height, lowest, innerHeight));
+                }}
+                onPointerCancel={() => {
+                  sheetDrag.current = null;
+                  setSheetDragging(false);
+                }}
               >
+                <div className="sheet-grip" aria-hidden="true" />
                 {isDetail && site ? (
-                  view === "story" && site.stories.length > 0 ? (
+                  view === "story" && storySite ? (
                     <StoryPanel
-                      key={site.id}
-                      site={site}
+                      key={storySite!.id}
+                      site={storySite!}
                       index={storyIndex}
                       onIndex={setStoryIndex}
                       startListening={listening}
-                      layout={storyLayout}
-                      onLayoutChange={setStoryLayout}
+                      lang={lang}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {
+                          writePreference(`akar.ilerleme.${site.id}`, "0");
                           const fresh = await refreshProgress();
-                          const earned = (site.badges ?? []).filter((b) =>
-                            fresh.includes(b.id),
-                          );
-                          setToast(
-                            `${
-                              state.readIds.includes(site.id)
-                                ? "Hikâyeyi yeniden keşfettin."
-                                : "Hikâye tamamlandı."
-                            }${earned.length ? ` Yeni rozet: ${earned.map((b) => b.title).join(", ")}` : ""}`,
-                          );
                           go("detail", site.id);
+                          setCompletion({
+                            earned: (site.badges ?? []).filter((b) =>
+                              fresh.includes(b.id),
+                            ),
+                          });
                         }
                       }}
                     />
                   ) : (
                     <div className="detail-panel">
-                      <Back onClick={() => go("map")}>Haritaya dön</Back>
+                      <button
+                        className="back-to-map"
+                        onClick={() => go("map")}
+                      >
+                        <span>
+                          <ChevronLeft size={18} />
+                        </span>
+                        Harita
+                      </button>
                       <div className="detail-title">
-                        <div className="row between">
-                          <Tag>
-                            {kindLabels[site.kind]} ·{" "}
-                            {site.district.split(" · ")[0]}
-                          </Tag>
+                        <div className="detail-title-row">
+                          <h1>{site.name}</h1>
                           <button
-                            className={`icon-btn ${state.savedIds.includes(site.id) ? "saved" : ""}`}
+                            className={`round-btn plain ${state.savedIds.includes(site.id) ? "saved" : ""}`}
                             aria-label="Eseri kaydet"
                             aria-pressed={state.savedIds.includes(site.id)}
                             onClick={() =>
@@ -782,47 +951,32 @@ export function AkarApp() {
                             <Bookmark size={19} />
                           </button>
                         </div>
-                        <h1>{site.name}</h1>
-                        <p>
-                          {[site.architect, site.year]
-                            .filter((value) => value && value !== "—")
-                            .join(" · ")}
-                        </p>
-                        <Tag tone="representative">
-                          {site.sources?.length
-                            ? "Kaynaklı içerik"
-                            : "Örnek veri · doğrulama bekliyor"}
-                        </Tag>
+                        <p>{siteMeta(site)}</p>
                       </div>
                       <Motif />
                       <p className="description">{site.description}</p>
-                      <div className="detail-metadata">
-                        <span>
-                          <Clock3 size={15} />
-                          {site.minutes} dk keşif
-                        </span>
-                        <span>
-                          <BookOpen size={15} />
-                          {site.stories.length} bölüm
-                        </span>
-                      </div>
                       {site.stories.length > 0 ? (
-                        <div className="story-actions">
-                          <button
-                            className="btn"
-                            onClick={() => openStory(true)}
-                          >
-                            <Headphones size={18} />
-                            Hikâyeyi dinle
-                          </button>
-                          <button
-                            className="btn secondary"
-                            onClick={() => openStory()}
-                          >
-                            <BookOpen size={18} />
-                            Oku
-                          </button>
-                        </div>
+                        <>
+                          <p className="detail-chapters">
+                            Yapının hikâyesi · {site.stories.length} bölüm
+                          </p>
+                          <div className="story-actions">
+                            <button
+                              className={`btn${state.readIds.includes(site.id) ? " finished" : ""}`}
+                              onClick={() => openStory(true)}
+                            >
+                              <Headphones size={18} />
+                              Dinle · {site.minutes} dk
+                            </button>
+                            <button
+                              className="btn secondary"
+                              onClick={() => openStory()}
+                            >
+                              <BookOpen size={18} />
+                              Oku
+                            </button>
+                          </div>
+                        </>
                       ) : (
                         <Notice>Bu eserin anlatımı henüz hazırlanmadı.</Notice>
                       )}
@@ -831,39 +985,52 @@ export function AkarApp() {
                           Deneysel arayüzler açık · kapsam kararı bekleniyor
                         </p>
                       )}
-                      <div className="experience-grid">
-                        {[
-                          {
-                            icon: History,
-                            label: "Geçmişi Gör",
-                            action: () => go("history", site.id),
-                          },
-                          {
-                            icon: MessageSquare,
-                            label: "İz Bırak",
-                            action: () => setOverlay("memory"),
-                          },
-                          ...(showExperimental
-                            ? [
-                                {
-                                  icon: Puzzle,
-                                  label: "Bulmaca",
-                                  action: () => setOverlay("quiz"),
-                                },
-                                {
-                                  icon: Users,
-                                  label: "Birlikte Gez",
-                                  action: () => setOverlay("together"),
-                                },
-                              ]
-                            : []),
-                        ].map(({ icon: Icon, label, action }) => (
-                          <button key={label} onClick={action}>
-                            <Icon size={21} />
-                            <span>{label}</span>
-                          </button>
-                        ))}
-                      </div>
+                      <button
+                        className="detail-link"
+                        onClick={() => setOverlay("about")}
+                      >
+                        <span>
+                          <strong>Eser hakkında</strong>
+                          <small>Tarihçe, mimari, kaynaklar</small>
+                        </span>
+                        <ArrowRight size={17} />
+                      </button>
+                      <button
+                        className="detail-link"
+                        onClick={() => go("history", site.id)}
+                      >
+                        <History size={18} />
+                        <span>
+                          <strong>Geçmişi Gör</strong>
+                          <small>
+                            {site.historyImages?.length
+                              ? `${site.historyImages.length} eski fotoğraf`
+                              : "Eski görüntü henüz yok"}
+                          </small>
+                        </span>
+                        <ArrowRight size={17} />
+                      </button>
+                      {showExperimental && (
+                        <div className="experience-grid">
+                          {[
+                            {
+                              icon: Puzzle,
+                              label: "Bulmaca",
+                              action: () => setOverlay("quiz"),
+                            },
+                            {
+                              icon: Users,
+                              label: "Birlikte Gez",
+                              action: () => setOverlay("together"),
+                            },
+                          ].map(({ icon: Icon, label, action }) => (
+                            <button key={label} onClick={action}>
+                              <Icon size={21} />
+                              <span>{label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       <SiteTasks
                         site={site}
                         progress={progress}
@@ -871,11 +1038,12 @@ export function AkarApp() {
                       />
                       <button
                         className="detail-link"
-                        onClick={() => setOverlay("about")}
+                        onClick={() => setOverlay("memory")}
                       >
+                        <MessageSquare size={18} />
                         <span>
-                          <strong>Eser hakkında</strong>
-                          <small>Tarihçe, mimari ve kaynaklar</small>
+                          <strong>İz Bırak</strong>
+                          <small>Fotoğrafını ya da anını paylaş</small>
                         </span>
                         <ArrowRight size={17} />
                       </button>
@@ -895,16 +1063,7 @@ export function AkarApp() {
                       <div className="detail-bottom">
                         <button
                           className="btn secondary"
-                          onClick={async () => {
-                            if (
-                              await commit({ type: "route", siteId: site.id })
-                            )
-                              setToast(
-                                state.routeIds.includes(site.id)
-                                  ? "Eser rotandan çıkarıldı."
-                                  : "Eser rotana eklendi.",
-                              );
-                          }}
+                          onClick={() => void toggleRoute(site.id)}
                         >
                           <Route size={17} />
                           {state.routeIds.includes(site.id)
@@ -933,254 +1092,67 @@ export function AkarApp() {
                 ) : (
                   <div className="discovery-panel">
                     {routeId && showRoutes ? (
-                      <>
-                        <Back onClick={() => setRouteId(undefined)}>
-                          Tüm rotalar
-                        </Back>
-                        <div className="route-cover">
-                          <SiteArtwork site={routeSites[0]} live={live} />
-                          <Tag>
-                            {routeId === "custom"
-                              ? "SENİN ROTAN"
-                              : "KÜRATÖRLÜ KEŞİF"}
-                          </Tag>
-                        </div>
-                        <h1>
-                          {routeId === "custom"
-                            ? "Kendi hikâyeni çiz"
-                            : route?.name}
-                        </h1>
-                        <p className="muted">
-                          {routeSites.length} durak{" "}
-                          {route && `· ${route.minutes} dk · ${route.distance}`}
-                        </p>
-                        <p>
-                          {route?.description ??
-                            "Seçtiğin eserleri sırayla keşfet. Her durak yeni bir hikâye."}
-                        </p>
-                        <div className="route-stop-list">
-                          {routeSites.map((s, i) => (
-                            <button key={s.id} onClick={() => selectSite(s.id)}>
-                              <span
-                                className={`stop-number ${state.visitedIds.includes(s.id) ? "visited" : ""}`}
-                              >
-                                {state.visitedIds.includes(s.id) ? (
-                                  <Check size={15} />
-                                ) : (
-                                  i + 1
-                                )}
-                              </span>
-                              <span>
-                                <strong>{s.name}</strong>
-                                <small>
-                                  {[s.year, `${s.minutes} dk`]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </small>
-                              </span>
-                              <ArrowRight size={15} />
-                            </button>
-                          ))}
-                        </div>
-                        {routeSites.length === 0 ? (
-                          <Notice>
-                            Başlamak için bir eser aç ve “Rotama ekle”yi seç.
-                          </Notice>
-                        ) : (
-                          <>
-                            <Notice>
-                              Durakları birleştiren çizgi şematiktir; yürüyüş
-                              yol tarifi değildir.
-                            </Notice>
-                            <button
-                              className="btn full"
-                              onClick={async () => {
-                                const ids = routeSites.map((s) => s.id);
-                                if (
-                                  await commit({
-                                    type: "set-route",
-                                    siteIds: ids,
-                                  })
-                                ) {
-                                  selectSite(
-                                    ids.find(
-                                      (id) => !state.visitedIds.includes(id),
-                                    ) ?? ids[0],
-                                  );
-                                  setToast(
-                                    "Rotan hazır. Durakları keşfetmeye başla.",
-                                  );
-                                }
-                              }}
-                            >
-                              <Footprints size={18} />
-                              {routeSites.every((s) =>
-                                state.visitedIds.includes(s.id),
-                              )
-                                ? "Rotayı yeniden keşfet"
-                                : "Rotayı başlat"}
-                            </button>
-                          </>
-                        )}
-                      </>
+                      <RoutePreview
+                        route={route}
+                        custom={routeId === "custom"}
+                        sites={routeSites}
+                        live={live}
+                        visitedIds={state.visitedIds}
+                        onBack={() => setRouteId(undefined)}
+                        onSite={selectSite}
+                        onStart={async () => {
+                          const ids = routeSites.map((s) => s.id);
+                          if (await commit({ type: "set-route", siteIds: ids })) {
+                            selectSite(
+                              ids.find((id) => !state.visitedIds.includes(id)) ??
+                                ids[0]!,
+                            );
+                            setToast("Rotan hazır. Durakları keşfetmeye başla.");
+                          }
+                        }}
+                      />
                     ) : (
-                      <>
-                        <div className="discovery-intro">
-                          <div className="eyebrow">
-                            <span className="live-dot" />
-                            BURSA’YI YENİDEN KEŞFET
-                          </div>
-                          <h1>
-                            Şehrin hikâyesine <br />
-                            karış.
-                          </h1>
-                          <p>Geçmişi gör. Hikâyesini dinle. İzini bırak.</p>
-                        </div>
-                        <div className="segmented discovery-tabs">
-                          <button
-                            className={showRoutes ? "active" : ""}
-                            onClick={() => {
-                              setQuery("");
-                              setTab("routes");
-                              go("map");
-                            }}
-                          >
-                            <Route size={16} />
-                            Rotalar
-                          </button>
-                          <button
-                            className={!showRoutes ? "active" : ""}
-                            onClick={() => {
-                              setTab("sites");
-                              go("sites");
-                            }}
-                          >
-                            <Landmark size={16} />
-                            Eserler
-                          </button>
-                        </div>
-                        {showRoutes ? (
-                          <>
-                            <div className="section-heading">
-                              <h2>Sana ilham verecek rotalar</h2>
-                              <span>
-                                {
-                                  routes.filter((r) =>
-                                    normalize(r.name).includes(
-                                      normalize(query),
-                                    ),
-                                  ).length
-                                }{" "}
-                                rota
-                              </span>
-                            </div>
-                            <div className="route-cards">
-                              {routes
-                                .filter((r) =>
-                                  normalize(r.name).includes(normalize(query)),
-                                )
-                                .map((r, i) => (
-                                  <button
-                                    className="route-card"
-                                    key={r.id}
-                                    onClick={() => setRouteId(r.id)}
-                                  >
-                                    <div className={`route-art art-${i}`}>
-                                      <SiteArtwork
-                                        site={published.find((s) =>
-                                          r.siteIds.includes(s.id),
-                                        )}
-                                        live={live}
-                                      />
-                                      <span>
-                                        {String(i + 1).padStart(2, "0")}
-                                      </span>
-                                    </div>
-                                    <div className="route-card-body">
-                                      <small>{r.theme}</small>
-                                      <h3>{r.name}</h3>
-                                      <p>
-                                        <MapPin size={12} />
-                                        {r.siteIds.length} durak <i />{" "}
-                                        {r.minutes} dk <i />
-                                        {r.distance}
-                                      </p>
-                                    </div>
-                                    <ArrowRight size={18} />
-                                  </button>
-                                ))}
-                            </div>
-                            <button
-                              className="custom-route"
-                              onClick={() => {
-                                setRouteId("custom");
-                                go("routes");
-                              }}
-                            >
-                              <span className="route-circle">
-                                <Route size={22} />
-                              </span>
-                              <span>
-                                <strong>Kendi rotanı oluştur</strong>
-                                <small>
-                                  {state.routeIds.length
-                                    ? `${state.routeIds.length} eser seni bekliyor`
-                                    : "Merak ettiğin yerleri bir araya getir"}
-                                </small>
-                              </span>
-                              <PlusIcon />
-                            </button>
-                            <div className="daily-note">
-                              <Sparkles size={20} />
-                              <p>
-                                <strong>Bir yapı, diğerini yaşatır.</strong>
-                                Vakıf eserlerinin görünmeyen bağlarını keşfet.
-                              </p>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="section-heading">
-                              <h2>
-                                {saved
-                                  ? "Kaydettiklerin"
-                                  : "Keşfedilecek eserler"}
-                              </h2>
-                              <button
-                                className={`small-icon ${saved ? "active" : ""}`}
-                                onClick={() => setSaved(!saved)}
-                                aria-label="Yalnızca kaydedilenleri göster"
-                                aria-pressed={saved}
-                              >
-                                <Bookmark size={18} />
-                              </button>
-                            </div>
-                            <div className="filter-row">
-                              {["all", ...kindChips].map((k) => (
-                                <button
-                                  key={k}
-                                  className={kind === k ? "active" : ""}
-                                  onClick={() => setKind(k)}
-                                >
-                                  {k === "all"
-                                    ? "Tümü"
-                                    : kindLabels[k as keyof typeof kindLabels]}
-                                </button>
-                              ))}
-                            </div>
-                            <p className="results-count">
-                              {filtered.length} eser {query && `· “${query}”`}
-                            </p>
-                            {list}
-                          </>
-                        )}
-                      </>
+                      <ExplorePanel
+                        tab={tab}
+                        onTab={(next) => {
+                          setTab(next);
+                          setRouteId(undefined);
+                          if (next === "routes") setQuery("");
+                        }}
+                        mode={place}
+                        city={cityName}
+                        sites={listed}
+                        total={published.length}
+                        routes={routes}
+                        allSites={published}
+                        live={live}
+                        query={query}
+                        routeIds={state.routeIds}
+                        visitedIds={state.visitedIds}
+                        selectedId={peekId}
+                        onPick={pickSite}
+                        onRoute={(id) => void toggleRoute(id)}
+                        onOpenRoute={(id) => {
+                          setQuery("");
+                          setTab("routes");
+                          setRouteId(id);
+                        }}
+                        onCustomRoute={() => {
+                          setTab("routes");
+                          setRouteId("custom");
+                        }}
+                        onCities={() =>
+                          setFlight((f) => ({
+                            key: (f?.key ?? 0) + 1,
+                            to: "globe",
+                          }))
+                        }
+                        onClearFilters={() => {
+                          setQuery("");
+                          setRoles(new Set(siteCategories));
+                        }}
+                      />
                     )}
-                    <footer className="panel-footer">
-                      <Coffee size={14} />
-                      <span>İnternet Kahve</span>
-                      <span>KÖK&KOD 2026</span>
-                    </footer>
                   </div>
                 )}
               </aside>
@@ -1199,39 +1171,40 @@ export function AkarApp() {
                 </button>
                 {isDetail && site ? (
                   <Scene
-                    key={`${site.id}-${view === "story" && !site.model ? storyIndex : view}`}
+                    key={`${site.id}-${view}`}
                     context={view === "story" ? "story" : "detail"}
                     site={site}
                     live={live}
                     photoId={
                       view === "story"
-                        ? site.stories[storyIndex]?.photoId
+                        ? storyBlock?.photoId
                         : undefined
                     }
                     pose={
                       view === "story"
-                        ? site.stories
+                        ? storySite?.stories
                             .slice(0, storyIndex + 1)
                             .findLast((s) => s.camera)?.camera
                         : undefined
                     }
                     interior={
                       view === "story"
-                        ? (site.stories[storyIndex]?.interior ?? false)
+                        ? (storyBlock?.interior ?? false)
                         : undefined
                     }
                     photoCard={
-                      view === "story" && site.stories[storyIndex]?.showCard
+                      view === "story" && storyBlock?.showCard
                     }
                     highlights={
                       view === "story"
-                        ? site.stories[storyIndex]?.highlights
+                        ? storyBlock?.highlights
                         : undefined
                     }
                     flow={
                       !live &&
                       view === "story" &&
-                      site.stories[storyIndex]?.id === "akar"
+                      storyBlock?.id === "akar" &&
+                      !flowEnds
                     }
                     onHotspot={(id) => {
                       const index = site.stories.findIndex((s) => s.id === id);
@@ -1241,19 +1214,89 @@ export function AkarApp() {
                     onPick={pick ? pickPart : undefined}
                   />
                 ) : (
-                  <HeritageMap
-                    sites={filtered}
-                    selectedId={undefined}
-                    onSelect={selectSite}
-                    onFirstDraw={() => setMapDrawn(true)}
-                    routeIds={
-                      routeId ? routeSites.map((s) => s.id) : state.routeIds
-                    }
-                    collapsed={collapsed}
-                    mapSettings={mapSettings}
-                    focusCity={
-                      cityRecords.find((c) => c.name === query.trim())?.name
-                    }
+                  <>
+                    <HeritageMap
+                      sites={filtered}
+                      selectedId={peekId}
+                      onSelect={pickSite}
+                      onClear={() => setPeekId(undefined)}
+                      onFirstDraw={() => setMapDrawn(true)}
+                      onCityInView={setCityInView}
+                      onLocate={chooseNear}
+                      flight={flight}
+                      bottomInset={peekSite ? 0 : sheetHeight}
+                      routeIds={
+                        routeId ? routeSites.map((s) => s.id) : state.routeIds
+                      }
+                      collapsed={collapsed}
+                      mapSettings={mapSettings}
+                      focusCity={
+                        cityRecords.find((c) => c.name === query.trim())?.name
+                      }
+                      peek={
+                        peekSite && (
+                          <SitePeek
+                            site={peekSite}
+                            live={live}
+                            finished={state.readIds.includes(peekSite.id)}
+                            openTasks={
+                              (peekSite.tasks ?? []).filter(
+                                (t) =>
+                                  !progress.tasks.some((p) => p.taskId === t.id),
+                              ).length
+                            }
+                            next={published.find(
+                              (s) =>
+                                s.id !== peekSite.id &&
+                                !state.readIds.includes(s.id),
+                            )}
+                            saved={state.routeIds.includes(peekSite.id)}
+                            onOpen={() => selectSite(peekSite.id)}
+                            onListen={() => openStory(true, 0, peekSite.id)}
+                            onTasks={() => selectSite(peekSite.id)}
+                            onNext={pickSite}
+                            onRoute={() => void toggleRoute(peekSite.id)}
+                            onClose={() => setPeekId(undefined)}
+                          />
+                        )
+                      }
+                    />
+                    <MapChips
+                      mode={place}
+                      city={cityName}
+                      categories={chipCategories}
+                      active={roles}
+                      onMode={(mode) =>
+                        mode === "near" ? chooseNear() : chooseHome()
+                      }
+                      onToggle={(category) =>
+                        setRoles((current) =>
+                          toggleCategory(current, category, siteCategories),
+                        )
+                      }
+                      onCities={() =>
+                        setFlight((f) => ({
+                          key: (f?.key ?? 0) + 1,
+                          to: "globe",
+                        }))
+                      }
+                    />
+                  </>
+                )}
+                {view === "story" && storySite && (
+                  <StoryProgress
+                    stories={storySite.stories}
+                    index={storyIndex}
+                    onIndex={setStoryIndex}
+                  />
+                )}
+                {view === "story" && storyBlock?.flow && flowEnds && (
+                  <StoryFlowMap
+                    key={storyBlock.id}
+                    flow={storyBlock.flow}
+                    fromName={flowEnds.fromName}
+                    from={flowEnds.from}
+                    to={flowEnds.to}
                   />
                 )}
                 {pick && (
@@ -1383,41 +1426,6 @@ export function AkarApp() {
           </button>
         </Modal>
       )}
-      {overlay === "city" && (
-        <Modal
-          title="Nerede keşfetmek istersin?"
-          onClose={() => setOverlay(null)}
-        >
-          {cities.map((city) => (
-            <button
-              key={city}
-              className="city-option"
-              onClick={() => {
-                setOverlay(null);
-                setQuery(city);
-                setKind("all");
-                setSaved(false);
-                setRouteId(undefined);
-                go("map");
-              }}
-            >
-              <MapPin />
-              <span>
-                <strong>{city}</strong>
-                <small>
-                  {published.filter((s) => s.city === city).length} eser
-                </small>
-              </span>
-              <ArrowRight />
-            </button>
-          ))}
-          {!cities.length && <p>Henüz yayında eser yok.</p>}
-          <Notice>
-            Yayındaki eserleri haritada keşfedebilir, kendi rotanı
-            oluşturabilirsin.
-          </Notice>
-        </Modal>
-      )}
       {showExperimental && overlay === "together" && (
         <Modal title="Birlikte Gez" onClose={() => setOverlay(null)}>
           <div className="empty-state">
@@ -1503,33 +1511,82 @@ export function AkarApp() {
           </button>
         </div>
       )}
-      <nav className="mobile-nav" aria-label="Mobil navigasyon">
-        {navigation.map(({ view: v, label, icon: Icon }) => (
-          <button
-            key={v}
-            className={view === v ? "active" : ""}
-            onClick={() => {
-              setRouteId(undefined);
-              go(v);
-            }}
-          >
-            <Icon size={19} />
-            <span>{label}</span>
-          </button>
-        ))}
-        <button
-          onClick={() => go("profile")}
-          className={view === "profile" ? "active" : ""}
-        >
-          <Bookmark size={19} />
-          <span>Mirasım</span>
-        </button>
-      </nav>
     </div>
   );
   return (
     <Cities.Provider value={cityRecords}>
-      {shell}
+      <SourceSheetProvider
+        fallback={defaultCity?.inventory?.name ?? ""}
+        report={() =>
+          setToast("Teşekkürler. Bildirimin içerik ekibine iletilmek üzere not edildi.")
+        }
+      >
+        {shell}
+        {welcome && (
+          <WelcomeCard
+            site={published[0]}
+            style={cityLook}
+            onHome={() => {
+              closeWelcome();
+              chooseHome(false);
+            }}
+            onNear={() => {
+              closeWelcome();
+              chooseNear();
+            }}
+            onWaqf={() => setWaqf(true)}
+            onDismiss={closeWelcome}
+          />
+        )}
+        {completion && site && (
+          <CompletionCard
+            site={site}
+            style={cityLook}
+            chapters={site.stories.length}
+            earned={completion.earned}
+            owned={progress.badges.map((b) => b.badgeId)}
+            openTasks={
+              (site.tasks ?? []).filter(
+                (t) => !progress.tasks.some((p) => p.taskId === t.id),
+              ).length
+            }
+            nextStop={nextStop}
+            guest={guestPlayer}
+            onClose={() => setCompletion(null)}
+            onTasks={() => {
+              setCompletion(null);
+              const task = (site.tasks ?? []).find(
+                (t) => !progress.tasks.some((p) => p.taskId === t.id),
+              );
+              if (task) setTaskDialog({ task });
+            }}
+            onNextStop={(id) => {
+              setCompletion(null);
+              selectSite(id);
+            }}
+            onProfile={() => {
+              setCompletion(null);
+              go("profile");
+            }}
+            onSignIn={() => {
+              setCompletion(null);
+              signInForBadges();
+            }}
+          />
+        )}
+        {waqf && (
+          <WaqfSheet
+            sites={published}
+            inventory={defaultCity?.inventory?.name ?? ""}
+            onSite={(id) => {
+              setWaqf(false);
+              closeWelcome();
+              selectSite(id);
+            }}
+            onClose={() => setWaqf(false)}
+          />
+        )}
+      </SourceSheetProvider>
       {opening && (
         <OpeningScreen
           cityName={openingCity?.name}
@@ -1539,73 +1596,5 @@ export function AkarApp() {
         />
       )}
     </Cities.Provider>
-  );
-}
-function PlusIcon() {
-  return <span className="plus-circle">+</span>;
-}
-function SiteCard({
-  site,
-  live,
-  saved,
-  visited,
-  onClick,
-  onSave,
-}: {
-  site: HeritageSite;
-  live: boolean;
-  saved: boolean;
-  visited: boolean;
-  onClick: () => void;
-  onSave: () => void;
-}) {
-  return (
-    <article className="site-card">
-      <button className="site-card-main" onClick={onClick}>
-        <div className={`site-thumb ${site.kind}`}>
-          <SiteArtwork site={site} live={live} />
-        </div>
-        <span>
-          <small>
-            {[kindLabels[site.kind], site.year].filter(Boolean).join(" · ")}
-          </small>
-          <strong>{site.name}</strong>
-          <span className="site-meta">
-            <Clock3 size={12} />
-            {site.minutes} dk{" "}
-            {visited && <Tag tone="success">Ziyaret edildi</Tag>}
-          </span>
-        </span>
-      </button>
-      <button
-        className={`small-icon ${saved ? "saved" : ""}`}
-        onClick={onSave}
-        aria-label={`${site.name} kaydet`}
-        aria-pressed={saved}
-      >
-        <Bookmark size={17} />
-      </button>
-    </article>
-  );
-}
-
-function SiteArtwork({ site, live }: { site?: HeritageSite; live: boolean }) {
-  const photo =
-    site?.photos?.find((p) => p.id === site.coverPhotoId) ?? site?.photos?.[0];
-  if (photo)
-    return (
-      <img
-        className="site-photo"
-        src={photo.src}
-        alt={photo.alt}
-        loading="lazy"
-      />
-    );
-  return live ? (
-    <div className="artwork-placeholder" aria-label="Görsel eklenmedi">
-      <Landmark aria-hidden="true" size={32} />
-    </div>
-  ) : (
-    <Architecture kind={site?.kind} />
   );
 }

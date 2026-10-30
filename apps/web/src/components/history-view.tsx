@@ -1,14 +1,17 @@
 "use client";
 import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { ArrowRight, History } from "lucide-react";
+import { ArrowRight, Camera, ChevronLeft, History, MapPin } from "lucide-react";
 import {
-  trustLabels,
   type HeritageSite,
   type HistoryImage,
   type SampleTrace,
 } from "@akar/domain";
 import { pairOf, type HistoryPair } from "../lib/history-pair";
-import { Back, Notice, Tag } from "./ui";
+import { seenFrom } from "../lib/viewpoint";
+import { HistoryCamera } from "./history-camera";
+import { TrustTag } from "./side-sheet";
+import { Notice, Tag } from "./ui";
+import { ViewpointMap } from "./viewpoint-map";
 
 /** Said under the photographs when the present-day one was not taken from exactly the old one's point. */
 const NEAR_ANGLE = "Yakın açı: iki fotoğraf birebir aynı noktadan çekilmedi.";
@@ -149,20 +152,27 @@ function SampleTraces({
 
 export function HistoryView({
   site,
+  sites,
   onBack,
   onMemory,
+  onSite,
 }: {
   site: HeritageSite;
+  /** Every published site: a site with no old photograph may stand in another's view. */
+  sites: HeritageSite[];
   onBack: () => void;
   onMemory: () => void;
+  onSite: (id: string) => void;
 }) {
-  const [selected, setSelected] = useState(0);
+  const [selected, setSelected] = useState(0),
+    [camera, setCamera] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
   const images = site.historyImages ?? [];
   const image = images[selected] ?? images[0];
   const source = site.sources?.find((s) => s.id === image?.sourceId);
   const pair = image ? pairOf(site, image) : null;
   const traces = site.sampleTraces ?? [];
+  const farViews = image ? [] : seenFrom(site, sites);
   const samples = traces.length > 0 && (
     <SampleTraces
       traces={traces}
@@ -175,15 +185,27 @@ export function HistoryView({
   );
   return (
     <main id="main-content" tabIndex={-1} className="history-page">
-      <Back onClick={onBack} />
-      <div className="row between">
+      <header className="history-head">
+        <button className="round-btn" aria-label="Esere dön" onClick={onBack}>
+          <ChevronLeft size={20} />
+        </button>
         <div>
-          <small className="eyebrow">AYNI YER, BAŞKA BİR ZAMAN</small>
           <h1>Geçmişi Gör</h1>
           <p className="muted">{site.name}</p>
         </div>
-        {image && <Tag tone={image.trust}>{trustLabels[image.trust]}</Tag>}
-      </div>
+        {image && (
+          <>
+            <span className="history-count">
+              {selected + 1} / {images.length}
+            </span>
+            <TrustTag
+              trust={image.trust}
+              quote={image.caption}
+              sources={source ? [{ title: source.title }] : []}
+            />
+          </>
+        )}
+      </header>
       {image ? (
         <>
           <div className="history-grid" ref={stage}>
@@ -226,6 +248,22 @@ export function HistoryView({
                   Bu fotoğrafın bugünkü eş görüntüsü henüz eklenmedi.
                 </Notice>
               )}
+              <h3 className="history-where">
+                <MapPin size={16} />
+                Nereden çekildi?
+              </h3>
+              {image.viewpoint ? (
+                <ViewpointMap images={images} selected={image} />
+              ) : (
+                <p>
+                  Bu fotoğrafın çekim yeri bilinmiyor. Kamerayı açıp eski
+                  fotoğrafı yine de hizalayabilirsin.
+                </p>
+              )}
+              <button className="btn full" onClick={() => setCamera(true)}>
+                <Camera size={17} />
+                Kamerayı aç
+              </button>
               <button className="btn secondary full" onClick={onMemory}>
                 Bu açıdan fotoğrafın var mı?
                 <ArrowRight size={16} />
@@ -266,12 +304,39 @@ export function HistoryView({
             <h2>Bu eserin eski görüntüsü henüz yok</h2>
             <p>Kaynağı bilinen eski fotoğraflar eklendiğinde burada görünecek.</p>
             <button className="btn secondary" onClick={onMemory}>
-              Bir fotoğraf paylaş
-              <ArrowRight size={16} />
+              + İz Bırak · eski fotoğraf paylaş
             </button>
           </div>
+          {farViews.length > 0 && (
+            <section className="far-views">
+              <h2>Uzaktan görünüyor</h2>
+              {farViews.map((v) => (
+                <button key={v.image.id} onClick={() => onSite(v.site.id)}>
+                  <img src={v.image.photo.src} alt={v.image.photo.alt} loading="lazy" />
+                  <span>
+                    <strong>{v.site.name}</strong>
+                    <small>
+                      {v.image.dateLabel} · {v.distance} m uzaktan
+                    </small>
+                  </span>
+                  <ArrowRight size={16} />
+                </button>
+              ))}
+            </section>
+          )}
           {samples}
         </>
+      )}
+      {camera && image && (
+        <HistoryCamera
+          site={site}
+          image={image}
+          onClose={() => setCamera(false)}
+          onMemory={() => {
+            setCamera(false);
+            onMemory();
+          }}
+        />
       )}
     </main>
   );
