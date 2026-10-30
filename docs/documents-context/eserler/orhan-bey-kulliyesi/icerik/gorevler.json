@@ -1,6 +1,5 @@
 {
-  "_aciklama": "Orhan Bey Camii · görevler ve rozetler (30 Ekim 2026). TASLAK: içerik sorumlusu gözden geçirecek (`_taslak`). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Cami içinde görev yok; saha görevi dışarıda, son cemaat yerinin yan cephesinde. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta.",
-  "_taslak": true,
+  "_aciklama": "Orhan Bey Camii · görevler ve rozetler (30 Ekim 2026). Onaylandı (30 Ekim 2026, ekip). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var) + hikâye rozeti. Puan yok, süre yok, yanlış cevapta ceza yok. Cami içinde görev yok; saha görevi dışarıda, son cemaat yerinin yan cephesinde. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta.",
   "gorevler": [
     {
       "id": "obc-soru-alci-mihrap",

@@ -402,11 +402,11 @@ async function haritaPinleriKur() {
 /* --- modellerimiz: MapLibre özel katmanı + three.js (aynı GL bağlamı). Yerleşim test.html ile aynı. --- */
 /* ışık şehir kaydından (veri/sehir/<şehir>.json → harita_isik; önizleme v3 «Pişmiş»). Yoksa eski varsayılanlar.
    Köşe kararması (AO) modellerde pişmiş; gerçek zamanlı gölge yok. Yer gölgesi web'de: kodla üretilen tek bulanık doku, her modelin altında. */
-const ISIK = Object.assign({ yon:216, yukseklik:46, kamera_farki:40, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
+const ISIK = Object.assign({ yon:216, yukseklik:46, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
 const YG_DOKU = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.filter = 'blur(13px)'; x.fillStyle = '#000';
   x.beginPath(); if (x.roundRect) x.roundRect(26, 26, 76, 76, 14); else x.rect(26, 26, 76, 76); x.fill(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
 /* ışık tanıtım sayfasındaki 3D ile aynı (30 Ekim 2026): sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme.
-   güneşin yüksekliği şehir kaydından; yönü sunumda şehir kaydından (yon), haritada kameradan (gunesYonu). R: gölge kamerasının yarı genişliği (m) */
+   güneşin yönü ve yüksekliği şehir kaydından, sabit (harita dönünce gölge yerinde kalır). R: gölge kamerasının yarı genişliği (m) */
 function gunesYonu(g, az, R, merkez) {   // az: güneşin geldiği yön, kuzeyden saat yönüne derece. Model ekseni: x doğu, y yukarı, z güney
   const a = THREE.MathUtils.degToRad(az), y = THREE.MathUtils.degToRad(ISIK.yukseklik);
   g.position.set(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y)).multiplyScalar(R * 2.5).add(merkez);
@@ -436,7 +436,7 @@ const yapiKatman = {
       const grup = new THREE.Group(); gltf.scene.position.set(-c.x, -kutu.min.y, -c.z); grup.add(gltf.scene);
       grup.rotation.y = -THREE.MathUtils.degToRad(e.yaw || 0);
       const sahne = new THREE.Scene(); sahne.add(grup);
-      const R = kutu.getSize(new THREE.Vector3()).length() * 0.65, gunes = isikKur(this.r, sahne, R, true);
+      const R = kutu.getSize(new THREE.Vector3()).length() * 0.65; isikKur(this.r, sahne, R, true);
       gltf.scene.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
       /* gölge harita zeminine: yalnız gölgeyi çizen saydam düzlem (ışık modelle sabit, gölge haritası bir kez çizilir) */
       const gz = new THREE.Mesh(new THREE.PlaneGeometry(R * 2, R * 2), new THREE.ShadowMaterial({ opacity:0.3, depthWrite:false, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:8 }));
@@ -448,7 +448,7 @@ const yapiKatman = {
       }
       const mc = maplibregl.MercatorCoordinate.fromLngLat([e.lon, e.lat], 0), k = mc.meterInMercatorCoordinateUnits();
       const l = new THREE.Matrix4().makeTranslation(mc.x, mc.y, mc.z).scale(new THREE.Vector3(k, -k, k)).multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
-      this.items.push({ id:e.id, sahne, l, gunes, R, az:null });
+      this.items.push({ id:e.id, sahne, l, golge:false });
       const kes = tabanIzi(e, kutu.min.x - c.x, kutu.max.x - c.x, kutu.min.z - c.z, kutu.max.z - c.z, 1);
       IZLER.push({ id:e.id, cokgen:tabanIzi(e, kutu.min.x - c.x, kutu.max.x - c.x, kutu.min.z - c.z, kutu.max.z - c.z, 3), kes:turf.polygon([[...kes, kes[0]]]), ana:anaObj ? new THREE.Box3().setFromObject(anaObj).getSize(new THREE.Vector3()) : kutu.getSize(new THREE.Vector3()) });
       binalariGuncelle(); this.map.triggerRepaint();
@@ -460,14 +460,12 @@ const yapiKatman = {
        mercator matrisidir; geçiş sürerken mercator yedeği (fallbackMatrix) kullanılır, modeller kürenin üstünde yüzmez */
     const d = girdi.defaultProjectionData, p = new THREE.Matrix4().fromArray(d.projectionTransition > 0 ? d.fallbackMatrix : d.mainMatrix);
     this.r.resetState();
-    /* güneş izleyicinin arkasından, kamera_farki kadar yandan vurur: harita nasıl dönerse dönsün görünen cepheler aydınlık.
-       gölge haritası yalnız güneş yön değiştirince (harita 2°'den fazla dönünce) yeniden çizilir */
-    const az = this.map.getBearing() + 180 + ISIK.kamera_farki;
+    /* gölge haritası her model için bir kez çizilir (güneş modelle sabit). Gölge geçişi bitince three çizim alanını kendi bildiği
+       tuval boyuna döndürür; tuval sonradan büyümüşse (yüksek DPI, pencere boyu) model yanlış yere çizilip kaybolur. Bu yüzden her karede güncel boy */
+    this.r.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
     this.r.shadowMap.autoUpdate = false;
     for (const it of this.items) {
-      const yeni = it.az === null || Math.abs(((az - it.az) % 360 + 540) % 360 - 180) > 2;
-      if (yeni) { it.az = az; gunesYonu(it.gunes, az, it.R, new THREE.Vector3()); }
-      this.kamera.projectionMatrix.copy(p).multiply(it.l); this.r.shadowMap.needsUpdate = yeni; this.r.render(it.sahne, this.kamera);
+      this.kamera.projectionMatrix.copy(p).multiply(it.l); this.r.shadowMap.needsUpdate = !it.golge; it.golge = true; this.r.render(it.sahne, this.kamera);
     }
   },
 };

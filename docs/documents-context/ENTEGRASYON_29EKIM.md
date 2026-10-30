@@ -163,12 +163,12 @@ Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → y
 Ürünün `map-models.ts` ve `model-viewer.tsx` dosyalarında ışık sabit yazılı. `map-models.ts`'teki değerler prototipin eski değerleri (ortam 2,3 / güneş 1,3). Yeni değerler şehir kaydında: `veri/sehir/bursa.json → harita_isik`.
 
 ```
-yon 221 · yukseklik 50 · kamera_farki 40 · doygunluk 1 · yer_golgesi 0.18
+yon 221 · yukseklik 50 · doygunluk 1 · yer_golgesi 0.18
 ```
 
 **30 Ekim 2026 değişikliği (kullanıcının seçimi):** ışık tanıtım sayfasındaki 3D ile aynı. Işığın kendisi artık sabit; şehir kaydından yalnız güneşin yönü ve açısı gelir. Eski `ortam`, `gunes`, `dolgu` alanları kalktı, dolgu ışığı yok.
 
-Prototipteki karşılığı (`app.js`, `isikKur` ve `gunesYonu`). Harita ve eser detayı aynı ışığı kullanır, yalnız güneşin yönü farklı belirlenir:
+Prototipteki karşılığı (`app.js`, `isikKur` ve `gunesYonu`). Harita ve eser detayı aynı ışığı ve aynı sabit güneşi kullanır:
 
 ```js
 renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
@@ -177,12 +177,11 @@ new HemisphereLight(0xF4F1EA, 0x8C948F, 1.15);
 const gunes = new DirectionalLight(0xFFF4E0, 2.1);            // castShadow; gölge kamerası yapı boyunda (R)
 // az: güneşin geldiği yön (kuzeyden saat yönüne), y = deg(yukseklik); model ekseni: x doğu, y yukarı, z güney
 gunes.position = (sin(az)*cos(y), sin(y), -cos(az)*cos(y)) * R * 2.5;
-// detay sahnesi: az = yon (sabit, 221 = güneybatı)
-// harita: az = harita bearing + 180 + kamera_farki → güneş izleyicinin arkasından; harita dönse de görünen cepheler aydınlık
+// az = yon (221 = güneybatı; harita açılışta güneye dönük cepheleri görür). Sabit: harita dönünce gölge yerinde kalır
 // doygunluk: her malzeme rengi HSL'de s *= doygunluk (en çok 1)
 ```
 
-**Haritada gölge:** her modelin altında `ShadowMaterial` (opaklık 0,3) düzlemi, model gölgesini harita zeminine düşürür. Gölge haritası her karede değil, yalnız güneş yönü değişince (harita 2°'den fazla dönünce) yeniden çizilir (`shadowMap.autoUpdate = false`).
+**Haritada gölge:** her modelin altında `ShadowMaterial` (opaklık 0,3) düzlemi, model gölgesini harita zeminine düşürür. Gölge haritası her model için bir kez çizilir (`shadowMap.autoUpdate = false`, ilk karede `needsUpdate`). **Dikkat:** MapLibre ile ortak GL bağlamında gölge geçişinden sonra three çizim alanını kendi bildiği tuval boyuna döndürür; tuval büyümüşse (yüksek DPI, pencere boyu) model yanlış yere çizilip kaybolur. Her karede `renderer.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)`.
 
 **Yer gölgesi:** Kodla üretilen tek doku kullanılır:
 - 128 px tuval;

@@ -76,6 +76,8 @@ svg.ic{display:block;flex:none}
 #harita-ust{position:absolute;left:0;right:0;top:0;padding:calc(12px + var(--sat)) 16px 0;pointer-events:none;z-index:3}
 #harita-ust>*{pointer-events:auto}
 .arama{display:flex;align-items:center;gap:10px;height:48px;padding:0 6px 0 16px;background:var(--surface);border-radius:999px;box-shadow:var(--golge);color:var(--text-muted)}
+/* mobil arama çubuğunda logonun kubbeli «A» işareti (design/logo/isaret-a-96.png) */
+.arama .isaret{display:block;height:24px;width:auto;flex:none;margin-left:-2px}
 .arama input{flex:1;min-width:0;border:0;outline:0;background:none;font-size:15px;color:var(--text)}
 .arama input::placeholder{color:var(--text-muted)}
 .avatar{width:36px;height:36px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:grid;place-items:center;font:600 13px var(--font);flex:none}

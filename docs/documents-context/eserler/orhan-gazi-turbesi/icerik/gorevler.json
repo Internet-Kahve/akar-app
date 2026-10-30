@@ -1,6 +1,5 @@
 {
-  "_aciklama": "Orhan Gazi Türbesi · görevler ve rozetler (30 Ekim 2026). TASLAK: içerik sorumlusu gözden geçirecek (`_taslak`). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var). Puan yok, süre yok, yanlış cevapta ceza yok. Türbe içinde görev yok; saha görevi dışarıda. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta. Bu eserin hikâyesi (hikaye.md) olmadığı için hikâye rozeti yok.",
-  "_taslak": true,
+  "_aciklama": "Orhan Gazi Türbesi · görevler ve rozetler (30 Ekim 2026). Onaylandı (30 Ekim 2026, ekip). Ulucami'deki dosyayla aynı biçim (`ulu-cami/icerik/gorevler.json`). Bir soru (evden çözülür) + bir saha görevi (evden karşılığı var). Puan yok, süre yok, yanlış cevapta ceza yok. Türbe içinde görev yok; saha görevi dışarıda. Görseller icerik/foto/ içinden; parça adları 3D modeldeki adlar (parcalar.md). Metinler envanterden (eser-hakkinda.md); kaynak sayfası her kayıtta. Bu eserin hikâyesi (hikaye.md) olmadığı için hikâye rozeti yok.",
   "gorevler": [
     {
       "id": "ogt-soru-nilufer",

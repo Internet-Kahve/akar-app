@@ -28,9 +28,8 @@
   "harita_isik": {
     "yon": 221,
     "yukseklik": 50,
-    "kamera_farki": 40,
     "doygunluk": 1,
     "yer_golgesi": 0.18
   },
-  "_harita_isik_not": "Haritadaki ve sunumdaki 3D eserlerin ışığı (30 Ekim 2026): tanıtım sayfasındaki 3D ile aynı, kullanıcının seçimi. Işığın kendisi app.js isikKur içinde sabit (sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme); buradan yalnız güneşin yönü ve açısı gelir. yon = sunum sahnesinde güneşin geldiği yön, kuzeyden saat yönüne derece (221 = güneybatı), kamera_farki = haritada güneş izleyicinin arkasından gelir, bu kadar derece sağa kayık (harita dönse de görünen cepheler aydınlık), yukseklik = güneşin ufuktan açısı, doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Köşe kararması (AO) modellerde pişmiş."
+  "_harita_isik_not": "Haritadaki ve sunumdaki 3D eserlerin ışığı (30 Ekim 2026): tanıtım sayfasındaki 3D ile aynı, kullanıcının seçimi. Işığın kendisi app.js isikKur içinde sabit (sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme); buradan yalnız güneşin yönü ve açısı gelir. yon = güneşin geldiği yön, kuzeyden saat yönüne derece (221 = güneybatı: harita açılışta güneye dönük cepheleri görür, onlar aydınlık; güneş sabit, harita dönünce gölge yerinde kalır), yukseklik = güneşin ufuktan açısı, doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Köşe kararması (AO) modellerde pişmiş."
 }

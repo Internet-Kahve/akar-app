@@ -4,7 +4,7 @@
 
 ## Şu anki durum (bir bakışta)
 
-- **Prototip** (`design/test-redmi9t-v2/`): 11 eser, 3 il (Bursa 9, Konya 1, Hatay 1), 4 rol (Dinî, Ticari, Su, Eğitim); 7 eser 3D modelli, 4 eser yalnız fotoğraf (30 Ekim gece); asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (Ulucami dışındakiler taslak), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
+- **Prototip** (`design/test-redmi9t-v2/`): 11 eser, 3 il (Bursa 9, Konya 1, Hatay 1), 4 rol (Dinî, Ticari, Su, Eğitim); 7 eser 3D modelli, 4 eser yalnız fotoğraf (30 Ekim gece); asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (30 Ekim'de onaylandı), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
 - **Modeller:** pastel renkler + pişmiş AO, yer gölgesi web'de. Toplam ≈ 2,7 MB.
 - **Harita önizlemesi:** `design/harita/akar-harita-onizleme-v3.html` (ışık/renk paneli, «Pişmiş» hazır ayarı).
 - **Git:** `docs` dalında commit var, **push edilmedi**.
@@ -16,7 +16,7 @@
 | 1 | `git push origin docs` | Muhammed (terminal) | Bu bağlantıdan push yapılamıyor (sanal makinede SSH anahtarı yok). Sonra PR: https://github.com/Internet-Kahve/akar-app/pull/new/docs |
 | 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `_promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
 | 3 | ~~Redmi 9T denemesi~~ yapıldı (29 Ekim, Muhammed): sorun yok. | — | — |
-| 4 | ~~Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları~~ yapıldı (30 Ekim gece, Claude; `yaptiklarim-2.md` §75). Kalan: görevlerin gözden geçirilmesi (`_taslak`), bugünkü eş / örnek iz (Koza Han, Orhan Bey Camii, Türbe) | Talha | Ayrıntı aşağıda. |
+| 4 | ~~Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları~~ yapıldı (30 Ekim gece, Claude; `yaptiklarim-2.md` §75). Görevler 30 Ekim'de onaylandı. Kalan: bugünkü eş / örnek iz (Koza Han, Orhan Bey Camii, Türbe) | Talha | Ayrıntı aşağıda. |
 
 ### Talha'nın işleri (7 eserin hepsi Ulucami seviyesine)
 

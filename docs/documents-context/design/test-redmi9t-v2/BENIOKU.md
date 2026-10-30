@@ -2,7 +2,9 @@
 
 ## 30 Ekim 2026 · 3D ışığı tanıtım sayfasındaki gibi
 
-Harita ve eser detayındaki bütün modeller tanıtım sayfasının ışığını kullanır (`app.js` → `isikKur`): ACES ton eşleme, sıcak gök ışığı, gerçek gölge düşüren tek güneş. Detay sahnesinde güneş güneybatıdan (`harita_isik.yon` 221°). Haritada güneş izleyicinin arkasından, 40° sağa kayık gelir (`kamera_farki`); harita döndükçe döner, görünen cepheler hep aydınlık, gölge harita zeminine düşer. Ürüne aktarım: `ENTEGRASYON_29EKIM.md` §3.
+Harita ve eser detayındaki bütün modeller tanıtım sayfasının ışığını kullanır (`app.js` → `isikKur`): ACES ton eşleme, sıcak gök ışığı, gerçek gölge düşüren tek güneş. Güneş sabit, güneybatıdan (`harita_isik.yon` 221°, 50°): harita açılışta güneye dönük cepheleri görür, onlar aydınlık; harita dönünce gölge yerinde kalır, harita zeminine düşer. Haritada gölge her model için bir kez çizilir; ardından çizim alanı her karede tuvalin güncel boyuna ayarlanır (yoksa yüksek DPI'da ve pencere boyu değişince model kayboluyordu). Ürüne aktarım: `ENTEGRASYON_29EKIM.md` §3.
+
+Aynı gün: mobil arama çubuğunda logonun kubbeli «A» işareti, favicon ve ana ekran simgesi (`design/logo/isaret-a*.png`, `favicon-*.png`, `apple-touch-icon.png`); tanıtım sayfasının 3D bölümünün altında öbür 3D eserler ve «Haritada 3D gez». Bulmacalar onaylandı (`_taslak` kalktı).
 
 ## 30 Ekim 2026 · tanıtım sayfası (landing): `tanitim.html`
 
@@ -20,7 +22,7 @@ Jüri ve ilk kez gelenler için: projeyi anlatır, sonra haritaya yönlendirir. 
 
 **Altı eserin verisi** (Bedesten, Koza Han, Orhan Bey Camii, Orhan Bey Hamamı, Emir Hanı, Orhan Gazi Türbesi). Kod değişmedi; hepsi veri:
 - **Parça kartları** (`icerik/parcalar.md`): Emir Hanı 4, Koza Han 7, Orhan Bey Hamamı 4, Orhan Bey Camii 11, Orhan Gazi Türbesi 7, Bedesten 8 kart. Hikâyede vurgulanan bütün parçaların kartı var. İç mekânı olan üç eserde (Bedesten, Orhan Bey Camii, Orhan Gazi Türbesi) iç parçaların da kartı var; Emir Hanı, Koza Han ve Hamam'da iç mekân yok (yalnız dış). Kartı olmayan parçalar ve nedenleri her dosyanın sonunda. Eski taslaklar `icerik/_eski/parcalar_taslak.md`.
-- **Bulmaca, saha görevi, rozetler** (`icerik/gorevler.json`, **taslak**, `_taslak: true`): her eserde bir soru (4 şık, 2 ipucu, fotoğrafla çözülür) ve bir saha görevi (evden karşılığı 3D parçası). Rozet: hikâye (Orhan Gazi Türbesi'nde hikâye olmadığı için yok) + soru + saha. Toplam rozet: Ulucami 3 + diğer altı eser 17 = **20**. Cami ve türbe içinde görev yok. Çarşının ortasındaki Emir Hanı ve Hamam'da konum yarıçapı 60 m (komşu esere taşmasın), öbürlerinde 80 m.
+- **Bulmaca, saha görevi, rozetler** (`icerik/gorevler.json`; 30 Ekim'de onaylandı): her eserde bir soru (4 şık, 2 ipucu, fotoğrafla çözülür) ve bir saha görevi (evden karşılığı 3D parçası). Rozet: hikâye (Orhan Gazi Türbesi'nde hikâye olmadığı için yok) + soru + saha. Toplam rozet: Ulucami 3 + diğer altı eser 17 = **20**. Cami ve türbe içinde görev yok. Çarşının ortasındaki Emir Hanı ve Hamam'da konum yarıçapı 60 m (komşu esere taşmasın), öbürlerinde 80 m.
 - **Eser hakkında = envanter metninin tamamı** (`icerik/eser-hakkinda.md`): Ulucami'deki gibi kitaptan kelimesi kelimesine (`_araclar/envanter_metni_cikar.py`), bölüm başlıkları kitabın sırası bozulmadan eklendi, rivayet/tahmin içeren paragraflar «Tarihsel çıkarım». Önceki özet metinler `eser-hakkinda-ozet.md`'ye taşındı (uygulama okumaz; «Vakıf ve akar» bölümü oradan aynen alındı). Sayfalar: Emir Hanı C1 s.108–109; Hamam C1 s.104–107; Orhan Bey Camii C1 s.96–103; Koza Han C2 s.8–11 + köşk mescit C1 s.194–195; Bedesten C2 s.27–29; Orhan Gazi Türbesi C2 s.115–117.
 - **Okuma katmanı** (`icerik/eser-hakkinda-okuma.md`): her bölüme özet cümleleri, rakam kartları, zaman çizelgesi, terimler ve masaüstü 3D açısı. `hazirla.py` hepsini kitap metninde birebir buldu (uyarı yok).
 - **Kitaptaki fotoğraflar** (`icerik/kitap-fotograflari.md` + `icerik/foto/kitap/`): Orhan Bey Camii 26, Hamam 14, Koza Han 12, Emir Hanı 6, Türbe 6, Bedesten 5. Kitabın PDF'inden kesildi (220 dpi, uzun kenar ≤ 1280 px); Ulucami'deki gibi arşiv eşleştirmesi yapılmadı, alt metinler geçici.
@@ -196,7 +198,7 @@ Betik yalnız bu klasörün sayfalarını, harita stilini, 14 GLB'yi (7 normal +
   - Orhan Bey Hamamı: «Hamamın bugünkü adı» (Eski Aynalı Çarşı) · «Aynalı Çarşı girişi» (`Hamam_Giris`) · «Aynalı Çarşı», «Üç giriş».
   - Emir Hanı: «Revakları taşıyan ayaklar» (kesme taş ve tuğla) · «Avludaki şadırvan» (`Sadirvan`) · «Taş ve tuğla», «Han avlusu».
   - Orhan Gazi Türbesi: «Türbedeki sandukalar» (Nilüfer Hatun) · «Tek kubbeli türbe» (`Kubbe`) · «Nilüfer Hatun», «Tek kubbe» (hikâye rozeti yok).
-  - Hikâyesi olan beş esere ayrıca «… dinledin» rozeti. Toplam 20 rozet. İçerik sorumlusu gözden geçirince `_taslak` kaldırılır.
+  - Hikâyesi olan beş esere ayrıca «… dinledin» rozeti. Toplam 20 rozet. 30 Ekim'de onaylandı, `_taslak` kaldırıldı.
 - **Üründe:** İlerleme `kullanici_ilerleme` tablosuna gider. Misafirken biriken ilerleme girişten sonra hesaba taşınır.
 
 ## Küre ve şehirler · 28 Ekim 2026

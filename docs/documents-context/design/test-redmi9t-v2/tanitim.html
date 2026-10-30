@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EDEEEA">
 <title>AKAR · Vakıf eserlerinin hikâyesi</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="description" content="AKAR, vakıf eserlerini haritada, anlatımda ve 3D'de; kaynağıyla ve güven etiketiyle anlatan bir keşif uygulaması.">
 <!-- 30 Ekim 2026 · AKAR tanıtım (landing) sayfası. Prototiple aynı sunucudan açılır (sunucu.sh → /tanitim.html) ve «Haritayı aç» ile index.html'e geçer.
      Görsel dil: asıl tema «buzlu» (temalar.css): taş/kireç zemin, mürekkep yazı, altın vurgu, cam yüzeyler, il rengi yalnız esere ait yüzeylerde.
@@ -146,6 +149,16 @@ button{font:inherit;color:inherit;cursor:pointer}
 .ucd-yukle{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--soluk);font:italic 400 19px var(--serif);transition:opacity .5s}
 .ucd-yukle .cubuk{width:180px;height:4px;margin:14px auto 0;border-radius:2px;background:rgba(26,35,40,.1);overflow:hidden}
 .ucd-yukle .cubuk i{display:block;height:100%;width:0;background:var(--altin);transition:width .2s}
+/* Ulucami dışındaki 3D eserler: uygulamada haritaya ya da esere götürür */
+.ucd-diger{margin-top:22px;display:flex;align-items:center;gap:18px 24px;flex-wrap:wrap;padding:20px 22px;border-radius:26px;background:var(--kagit);box-shadow:inset 0 0 0 1px var(--cizgi)}
+.ucd-diger-yazi{flex:1 1 220px}
+.ucd-diger-yazi b{display:block;font:500 24px/1.1 var(--serif)}
+.ucd-diger-yazi span{display:block;margin-top:4px;font-size:14.5px;color:var(--soluk)}
+.ucd-diger .cipler{flex:2 1 360px}
+.ucd-diger .cip{text-decoration:none;color:var(--murekkep)}
+.ucd-diger .cip:hover{border-color:var(--murekkep)}
+.ucd-diger .btn{flex:none}
+@media (max-width:640px){.ucd-diger .btn{width:100%;justify-content:center}}
 @media (max-width:640px){.ucd-bilgi{left:12px;right:12px;bottom:auto;top:62px;max-width:none}}
 
 /* ---------------- geçmişi gör */
@@ -371,6 +384,11 @@ footer img{height:20px;width:auto;filter:brightness(0) invert(1);opacity:.85}
         <a class="btn ana" href="index.html#/eser/ulu-cami">Uygulamada aç <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
     </div>
+    <div class="ucd-diger gel" id="ucd-diger">
+      <div class="ucd-diger-yazi"><b>Diğer eserler haritada</b><span id="ucd-diger-say">Hanlar, bedesten, hamam, türbe: hepsi kendi yerinde, 3D.</span></div>
+      <div class="cipler" id="ucd-cipler"></div>
+      <a class="btn ana" href="index.html#/">Haritada 3D gez <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
   </div>
 </section>
 
@@ -530,6 +548,12 @@ if (VERI) {
     $('#cipler').querySelectorAll('.cip').forEach((c) => c.setAttribute('aria-pressed', c === b));
     document.querySelectorAll('#izgara .kart').forEach((k) => { k.hidden = !!b.dataset.il && k.dataset.il !== b.dataset.il; }); });
 
+  /* 3D bölümünün altı: Ulucami dışındaki 3D eserler */
+  const ucd = E.filter((e) => e.glb && e.id !== 'ulu-cami');
+  if (ucd.length) {
+    $('#ucd-cipler').innerHTML = ucd.map((e) => `<a class="cip" href="index.html#/eser/${esc(e.id)}">${esc(e.ad)}</a>`).join('');
+    $('#ucd-diger-say').textContent = `${ucd.length} eser daha 3D: her biri haritada kendi yerinde, içine girilebilir.`;
+  } else $('#ucd-diger').hidden = true;
   const rota = VERI.rotalar?.[0];
   if (rota) {
     $('#rota-aciklama').textContent = rota.aciklama;
