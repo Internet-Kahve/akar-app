@@ -410,6 +410,21 @@ test("a link to a site closes the short card and shows the site's panel", async 
   await expect(page.locator(".site-peek")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Koza Hanı", level: 1 })).toBeVisible();
 });
+test("a route shows only its stops on the map, as numbered stars", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect.poll(() => pinIds(page)).toHaveLength(6);
+  await page.getByRole("tab", { name: "Rotalar" }).click();
+  await page.locator(".route-card").first().click();
+  await expect.poll(async () => (await pinIds(page)).length).toBe(3);
+  const icons = await page.evaluate(async () => {
+    const data = await window.akarMap!.getSource("pins")!.getData();
+    return data.features.map((f) => f.properties.icon as string);
+  });
+  expect(icons.every((icon) => icon.startsWith("stop-"))).toBe(true);
+});
 test("a trust tag tells where the statement comes from", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".opening")).toHaveCount(0);
