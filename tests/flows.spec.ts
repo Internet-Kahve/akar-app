@@ -392,6 +392,20 @@ test("reading keeps the chosen sentence while the list follows it, and the visit
   await page.mouse.wheel(0, 400);
   await expect(count).not.toHaveText("3 / 9");
 });
+test("a link to a site closes the short card and shows the site's panel", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.locator(".explore-tabs").waitFor();
+  await page.locator(".site-row-main").first().evaluate((el) => (el as HTMLElement).click());
+  await expect(page.locator(".site-peek")).toBeVisible();
+  await page.evaluate(() => {
+    location.hash = "view=detail&site=koza-han";
+  });
+  await expect(page.locator(".site-peek")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Koza Hanı", level: 1 })).toBeVisible();
+});
 test("a trust tag tells where the statement comes from", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".opening")).toHaveCount(0);
