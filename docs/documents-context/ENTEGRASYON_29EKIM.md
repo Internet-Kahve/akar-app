@@ -163,7 +163,7 @@ Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → y
 Ürünün `map-models.ts` ve `model-viewer.tsx` dosyalarında ışık sabit yazılı. `map-models.ts`'teki değerler prototipin eski değerleri (ortam 2,3 / güneş 1,3). Yeni değerler şehir kaydında: `veri/sehir/bursa.json → harita_isik`.
 
 ```
-yon 221 · yukseklik 50 · doygunluk 1 · yer_golgesi 0.18
+yon 220.6 · yukseklik 50 · doygunluk 1 · yer_golgesi 0.18   (yon yapıya göre: modelin kendi ekseninde)
 ```
 
 **30 Ekim 2026 değişikliği (kullanıcının seçimi):** ışık tanıtım sayfasındaki 3D ile aynı. Işığın kendisi artık sabit; şehir kaydından yalnız güneşin yönü ve açısı gelir. Eski `ortam`, `gunes`, `dolgu` alanları kalktı, dolgu ışığı yok.
@@ -177,7 +177,9 @@ new HemisphereLight(0xF4F1EA, 0x8C948F, 1.15);
 const gunes = new DirectionalLight(0xFFF4E0, 2.1);            // castShadow; gölge kamerası yapı boyunda (R)
 // az: güneşin geldiği yön (kuzeyden saat yönüne), y = deg(yukseklik); model ekseni: x doğu, y yukarı, z güney
 gunes.position = (sin(az)*cos(y), sin(y), -cos(az)*cos(y)) * R * 2.5;
-// az = yon (221 = güneybatı; harita açılışta güneye dönük cepheleri görür). Sabit: harita dönünce gölge yerinde kalır
+// az = yon, MODELİN KENDİ EKSENİNDE (döndürülmemiş GLB; 220.6 / 50 = tanıtımdaki güneş (-60, 110, 70)).
+// Sonra yön, modelin harita dönüşüyle aynı açıda döndürülür: dir.applyAxisAngle(Y, -deg(yaw)).
+// Her eserde ışık aynı köşeden (ön sol çapraz) vurur; harita dönünce gölge yerinde kalır
 // doygunluk: her malzeme rengi HSL'de s *= doygunluk (en çok 1)
 ```
 

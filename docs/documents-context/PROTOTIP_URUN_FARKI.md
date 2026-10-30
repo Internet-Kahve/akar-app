@@ -52,7 +52,7 @@
 | Rotalar sekmesi | «Bursa'daki rotalar» / «Yakınındaki rotalar» (kipe göre), rota kartı: 72 px fotoğraf, ad, «4 durak · ~10 dk · 0,5 km», durum hapı «Başlanmadı» ya da «Devam et · 2/4». | farklı: rota kartları, «Kendi rotanı oluştur» |
 | Küre ve şehirler | Zoom 9'un altında pinler yerine **şehir işaretleri**: <br>• eseri olan il altın nokta ve «n eser» (30 Ekim: Bursa 9, Konya 1, Hatay 1); dokununca şehre uçar; <br>• eseri olmayan il (Kütahya) gri nokta, «Yakında»; dokununca envanter künyesi uyarısı. <br>Diğer ayrıntılar: <br>• zoom 3,2'nin altında yalnız noktalar; <br>• **küre ortalı**: eser kartı için verilen padding sıfırlanır; <br>• kürenin arkası şehir sahne renginde elips geçiş; <br>• gökyüzü ve atmosfer uzakta görünür. | yok |
 | OSM binaları | Ürünle aynı kural (bkz. ENTEGRASYON §4). | var |
-| Model ışığı, yer gölgesi, renk doygunluğu | Tanıtım sayfasındaki ışık (ACES, gök ışığı, gölgeli güneş); güneş sabit, güneybatıdan; gölge harita zeminine düşer. Açı ve yer gölgesi şehir kaydından (`harita_isik`). Ayrıntı ENTEGRASYON §3. | farklı: sabit, eski değerler |
+| Model ışığı, yer gölgesi, renk doygunluğu | Tanıtım sayfasındaki ışık (ACES, gök ışığı, gölgeli güneş); güneş yapıya göre sabit (her eserde ön sol çapraz, modelin yaw'ı ile döner); gölge harita zeminine düşer. Açı ve yer gölgesi şehir kaydından (`harita_isik`). Ayrıntı ENTEGRASYON §3. | farklı: sabit, eski değerler |
 
 ## 3. Eser detayı
 

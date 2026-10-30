@@ -2,7 +2,7 @@
 
 ## 30 Ekim 2026 · 3D ışığı tanıtım sayfasındaki gibi
 
-Harita ve eser detayındaki bütün modeller tanıtım sayfasının ışığını kullanır (`app.js` → `isikKur`): ACES ton eşleme, sıcak gök ışığı, gerçek gölge düşüren tek güneş. Güneş sabit, güneybatıdan (`harita_isik.yon` 221°, 50°): harita açılışta güneye dönük cepheleri görür, onlar aydınlık; harita dönünce gölge yerinde kalır, harita zeminine düşer. Haritada gölge her model için bir kez çizilir; ardından çizim alanı her karede tuvalin güncel boyuna ayarlanır (yoksa yüksek DPI'da ve pencere boyu değişince model kayboluyordu). Ürüne aktarım: `ENTEGRASYON_29EKIM.md` §3.
+Harita ve eser detayındaki bütün modeller tanıtım sayfasının ışığını kullanır (`app.js` → `isikKur`): ACES ton eşleme, sıcak gök ışığı, gerçek gölge düşüren tek güneş. Güneş yapıya göre, tanıtımdakiyle birebir: modelin kendi ekseninde 220,6° / 50° (tanıtımdaki güneş (-60, 110, 70)); model haritadaki yaw ile döndüğü için güneş de onunla döner, her eserde aynı köşeden (ön sol çapraz) vurur. Ulucami'de (yaw 174) bu, kuzeydeki taçkapı cephesi ve doğu minaresi tarafıdır; haritanın açılış açısından güneydeki kıble duvarı gölgede görünür. Harita dönünce gölge yerinde kalır, harita zeminine düşer. Haritada gölge her model için bir kez çizilir; ardından çizim alanı her karede tuvalin güncel boyuna ayarlanır (yoksa yüksek DPI'da ve pencere boyu değişince model kayboluyordu). Ürüne aktarım: `ENTEGRASYON_29EKIM.md` §3.
 
 Aynı gün: mobil arama çubuğunda logonun kubbeli «A» işareti, favicon ve ana ekran simgesi (`design/logo/isaret-a*.png`, `favicon-*.png`, `apple-touch-icon.png`); tanıtım sayfasının 3D bölümünün altında öbür 3D eserler ve «Haritada 3D gez». Bulmacalar onaylandı (`_taslak` kalktı).
 

@@ -26,10 +26,10 @@
     "_not": "tokens.css --sehir-bursa-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
   },
   "harita_isik": {
-    "yon": 221,
+    "yon": 220.6,
     "yukseklik": 50,
     "doygunluk": 1,
     "yer_golgesi": 0.18
   },
-  "_harita_isik_not": "Haritadaki ve sunumdaki 3D eserlerin ışığı (30 Ekim 2026): tanıtım sayfasındaki 3D ile aynı, kullanıcının seçimi. Işığın kendisi app.js isikKur içinde sabit (sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme); buradan yalnız güneşin yönü ve açısı gelir. yon = güneşin geldiği yön, kuzeyden saat yönüne derece (221 = güneybatı: harita açılışta güneye dönük cepheleri görür, onlar aydınlık; güneş sabit, harita dönünce gölge yerinde kalır), yukseklik = güneşin ufuktan açısı, doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Köşe kararması (AO) modellerde pişmiş."
+  "_harita_isik_not": "Haritadaki ve sunumdaki 3D eserlerin ışığı (30 Ekim 2026): tanıtım sayfasındaki 3D ile aynı, kullanıcının seçimi. Işığın kendisi app.js isikKur içinde sabit (sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme). yon = güneşin geldiği yön, YAPIYA GÖRE: modelin kendi ekseninde (döndürülmemiş GLB) kuzeyden saat yönüne derece; model haritadaki yaw ile döndüğü için güneş de onunla döner, her eserde aynı köşeden (ön sol çapraz) vurur. 220.6 / 50 = tanıtımdaki güneş (-60, 110, 70). yukseklik = güneşin ufuktan açısı, doygunluk = malzeme renklerinin doygunluk çarpanı, yer_golgesi = web'de çizilen yumuşak yer gölgesinin opaklığı (0 = yok). Köşe kararması (AO) modellerde pişmiş."
 }
