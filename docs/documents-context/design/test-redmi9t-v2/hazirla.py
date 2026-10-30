@@ -424,6 +424,14 @@ def izler_oku(eid, cikti):
     return izler
 
 
+def ornek_hafiza(eid):
+    """ornek-hafiza.json (yalnız prototip, 30 Ekim 2026): ekibin yazdığı örnek anılar; arayüzde «Örnek» etiketiyle, gerçek ziyaretçi değil."""
+    yol = os.path.join(BURASI, 'ornek-hafiza.json')
+    if not os.path.exists(yol):
+        return []
+    return [dict({k: v for k, v in i.items() if k != 'eser'}, ornek=True, durum='onaylandi') for i in json_oku(yol).get('izler', []) if i.get('eser') == eid]
+
+
 def kucult(kaynak, hedef):
     """sips (macOS) ile uzun kenar 1280 px, JPEG kalite 72; önbellekte varsa kopyalar."""
     os.makedirs(os.path.dirname(hedef), exist_ok=True)
@@ -474,7 +482,7 @@ def main():
                 p.pop('_sayfa', None)
         parcalar = parcalar_oku(eid)
         en = en_oku(eid, hikaye, parcalar, fotolar, hakkinda)
-        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda, terimler=terimler, gecmis=gecmis_oku(eid, cikti), izler=izler_oku(eid, cikti), parcalar=parcalar, model=model, en_alan=en,
+        kayit = dict(e, fotolar=fotolar, hikaye=hikaye, hakkinda=hakkinda, terimler=terimler, gecmis=gecmis_oku(eid, cikti), izler=izler_oku(eid, cikti) + ornek_hafiza(eid), parcalar=parcalar, model=model, en_alan=en,
                      gorevler=gorevler_oku(eid)[0], rozetler=gorevler_oku(eid)[1],
                      sure=max(1, round(sum(len(c['metin'].split()) for c in hikaye) / 130)) if hikaye else 0)
         veri['eserler'].append(kayit)

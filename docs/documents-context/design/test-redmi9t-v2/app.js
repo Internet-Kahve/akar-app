@@ -54,6 +54,8 @@ const IK = {
   puzzle:'<path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/>',
   history:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
   landmark:'<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  'message-circle':'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>', flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>', user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  'image-plus':'<path d="M16 5h6"/><path d="M19 2v6"/><path d="M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/>',
   house:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
 };
 const ic = (ad, boy = 20) => `<svg class="ic" width="${boy}" height="${boy}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IK[ad] || ''}</svg>`;
@@ -1171,7 +1173,11 @@ const seciciHTML = (koyu) => `<div class="ust-kontrol gizlenir${koyu ? ' koyu-ze
 
 function galeriHTML(e) {
   const f = galeriFoto(e);
-  return `<div class="galeri" id="galeri">${f.map((x, i) => `<figure class="${i % 3 === 0 ? 'buyuk' : 'kucuk'}"><button class="galeri-f" data-isik="${esc(x.url)}" data-kunye="${esc([x.baslik, x.kaynak].filter(Boolean).join(' · '))}" aria-label="Fotoğrafı büyüt: ${esc(x.alt)}">${resim(x)}${BUYUT()}</button>${i === 0 ? guven(x.guven, { alinti:x.baslik, kaynak:x.kaynak }) : ''}</figure>`).join('')}</div>`
+  /* 30 Ekim 2026: resmî fotoğraflardan sonra ziyaretçilerin fotoğraflı izleri (Yaşayan hafıza), kullanıcı adıyla; en sonda «Fotoğrafını ekle» */
+  const z = hafizaIzleri(e).filter(izFoto), sinif = (i) => (i % 3 === 0 ? 'buyuk' : 'kucuk');
+  const ziy = z.map((x, j) => `<figure class="${sinif(f.length + j)} ziyaretci"><button class="galeri-f" data-isik="${esc(izFoto(x))}" data-kunye="${esc(izKunye(x))}" aria-label="Fotoğrafı büyüt: ${esc(x.kullanici)} adlı ziyaretçinin fotoğrafı"><img src="${esc(izFoto(x))}" alt="${esc(x.kullanici)} adlı ziyaretçinin fotoğrafı" loading="lazy" decoding="async">${BUYUT()}</button><figcaption class="zf-kim">${ic('user', 13)}<b>${esc(x.kullanici)}</b>${x.benim ? '<span>İnceleniyor</span>' : x.ornek ? '<span>Örnek</span>' : ''}</figcaption></figure>`).join('');
+  const ekle = `<figure class="kucuk ekle"><button class="galeri-ekle" data-hz-ekle>${ic('image-plus', 24)}Fotoğrafını ekle<small>Ziyaretçi fotoğrafları adınla burada görünür</small></button></figure>`;
+  return `<div class="galeri" id="galeri">${f.map((x, i) => `<figure class="${sinif(i)}"><button class="galeri-f" data-isik="${esc(x.url)}" data-kunye="${esc([x.baslik, x.kaynak].filter(Boolean).join(' · '))}" aria-label="Fotoğrafı büyüt: ${esc(x.alt)}">${resim(x)}${BUYUT()}</button>${i === 0 ? guven(x.guven, { alinti:x.baslik, kaynak:x.kaynak }) : ''}</figure>`).join('')}${ziy}${ekle}</div>`
     ;   /* masaüstünde oklar fotoğrafların üstünde değil, araç satırının sağında (seciciHTML → arac-oklar) */
 }
 /* eser detayının keşif yolları (Eser hakkında · Geçmişi Gör · Bulmaca): her satır kendi içeriğinden bir ipucu gösterir.
@@ -1190,6 +1196,7 @@ function kesifYollari(e) {
   /* «Eser hakkında» burada değil: kısa hikâyenin tamamı olduğu için hikâye bloğunda (hikayeBlok). Bu liste yalnız etkinlikler */
   return `<div class="kesif-bas" id="kesif-bas">Keşfet</div><nav class="kesif-yollari" aria-labelledby="kesif-bas">
     ${yol(`data-git="#/gecmis/${e.id}"`, gecmisIk, 'Geçmişi Gör', e.gecmis.length ? `${e.gecmis.length} eski fotoğraf${eski?.tarih?.enErken ? ` · ${eski.tarih.enErken}'den` : ''}` : 'Eski görüntü henüz yok')}
+    ${(() => { const iz = hafizaIzleri(e); return yol(`data-git="#/hafiza/${e.id}"`, hafizaIkon(iz), 'Yaşayan hafıza', `Ziyaretçi anıları · ${iz.length ? `${iz.length} iz` : 'henüz iz yok'} · Sen de ekle`); })()}
     ${yol('data-bulmaca', bulmacaHalka(e, 44), 'Bulmaca', g.length ? (tamam === g.length ? `${g.length} görevin hepsi tamam` : `${g.length} görev · ${tamam} tamam`) : 'Görev henüz yok')}
   </nav>`;
 }
@@ -1254,8 +1261,8 @@ function aracGuncelle() {
   const b = $('#arac-bilgi'); if (!b) return;
   const g = $('#galeri');
   if (durum.gorunum !== 'foto' || !g) { b.innerHTML = `${ic('move', 14)}<span>Sürükle: döndür · Tekerlek: yakınlaştır · Dokun: parça</span>`; return; }
-  const sh = aktifSehir(), f = [...g.querySelectorAll('figure')], kunye = sh.envanter_adi || sh.foto_kunye || '';
-  b.innerHTML = `<b>${f.length} fotoğraf</b><span>${kunye ? `· ${esc(kunye)}` : ''}</span>`;   // aralık («4–6 / 12») gereksiz bulundu: yalnız toplam ve künye
+  const sh = aktifSehir(), f = [...g.querySelectorAll('figure:not(.ziyaretci):not(.ekle)')], z = g.querySelectorAll('figure.ziyaretci').length, kunye = sh.envanter_adi || sh.foto_kunye || '';
+  b.innerHTML = `<b>${f.length} fotoğraf</b>${z ? `<span>· ${z} ziyaretçiden</span>` : ''}<span>${kunye ? `· ${esc(kunye)}` : ''}</span>`;   // aralık («4–6 / 12») gereksiz bulundu: yalnız toplam ve künye
   const geri = $('#arac-geri'), ileri = $('#arac-ileri');
   if (geri) geri.disabled = g.scrollLeft < 4;
   if (ileri) ileri.disabled = g.scrollLeft + g.clientWidth > g.scrollWidth - 4;
@@ -1916,6 +1923,7 @@ function hakkinda(id) {
   const son = `<section class="hk-son hk-gir">${SUSLEME}<h2 class="hk-h2">Okudun. Şimdi ne yapalım?</h2><div class="hk-son-dugmeler">
       ${e.hikaye.length ? `<button class="btn ana" data-git="#/anlat/${id}/dinle">${ic('headphones')}Hikâyeyi dinle</button>` : ''}
       <button class="btn ikincil" data-git="#/gecmis/${id}">${ic('history')}Geçmişi Gör${e.gecmis.length ? ` · ${e.gecmis.length}` : ''}</button>
+      <button class="btn ikincil" data-git="#/hafiza/${id}">${ic('message-circle')}Yaşayan hafıza${hafizaIzleri(e).length ? ` · ${hafizaIzleri(e).length}` : ''}</button>
       ${e.gorevler?.length ? `<button class="btn ikincil" data-git="#/gorev/${id}">${ic('puzzle')}Bulmaca · ${e.gorevler.length} görev</button>` : ''}</div>
       <h3 class="hk-h3">Kaynaklar</h3><ul class="hk-kitap">${kitaplar}</ul><p class="hk-not">Metin, envanterin kendi metnidir; bölüm başlıkları, «Kitaptan» özetleri, rakam kartları ve alıntılar okumayı kolaylaştırmak için kitaptan seçilmiştir, kelimesi değiştirilmemiştir.</p></section>`;
   const bolumler = e.hakkinda.map(hkBolum).join(SUSLEME);   // süsleme çizgisi: tokens.css'e göre «Eser hakkında bölüm araları»nda kullanılır
@@ -2297,7 +2305,12 @@ document.addEventListener('click', (ev) => {
   const a = ev.target.closest('[data-gg-adim]'); if (a) { ggSec(gg.i + +a.dataset.ggAdim); return; }
   if (ev.target.closest('[data-gg-ac]')) { ggAcKapa(!gg.acik); return; }
   if (ev.target.closest('[data-gg-kamera]')) { location.hash = `#/kamera/${gg.eser.id}/${gg.i}`; return; }
-  if (ev.target.closest('[data-gg-izbirak]')) { toast('İz Bırak prototipte yok; uygulamada eski fotoğraf kaynağıyla paylaşılır.'); return; }
+  if (ev.target.closest('[data-gg-izbirak]')) {   // 30 Ekim 2026: İz Bırak formu; kameradan geldiyse fotoğraf hazır, «… ile aynı açı» etiketiyle
+    const e = gg.eser, f = e.gecmis[gg.i];
+    if (!location.hash.startsWith('#/cekildi/') || !gg.cekilen) { izFormAc({ eser:e.id }); return; }
+    fotoKucult(gg.cekilen).then((foto) => izFormAc({ eser:e.id, foto, ayniAci:f?.tarih?.etiket || '', ayniAciFotoAtlasId:f?.fotoAtlasId })).catch(() => izFormAc({ eser:e.id }));
+    return;
+  }
 });
 document.addEventListener('keydown', (ev) => {
   if (!location.hash.startsWith('#/gecmis/') || !gg.eser?.gecmis.length) return;
@@ -2387,6 +2400,213 @@ document.addEventListener('click', (ev) => {
     else toast('Bu tarayıcı paylaşmayı desteklemiyor.');
   }
 });
+
+/* =====================================================================
+   YAŞAYAN HAFIZA · İZ BIRAK (30 Ekim 2026)
+   Figma akar-yeni: «D · Yaşayan hafıza (revize)» 82:2735, tüm izler 86:2733, «WF · Yaşayan hafıza (revize)» mobil 108:2765.
+   Giriş: eser detayındaki «Keşfet» listesi (Bulmaca'nın üstü) → #/hafiza/<eser> (önce o eserin izleri).
+   «Tümünü gör» → #/hafiza/<eser>/tumu: bütün eserlerin izleri, Şehir ve Eser seçicisiyle; Eser «Tümü»yken o eserin izleri yine başta.
+   Süzgeç: En yeni · Fotoğraflı · Aynı açıdan · Benim izlerim. «+ İz Bırak» formu: kullanıcı adı, anı, isteğe bağlı fotoğraf.
+   Veri: e.izler = gecmisi-gor/izler.json'daki onaylı izler + ornek-hafiza.json (yalnız prototip; ekibin yazdığı, «Örnek» etiketli).
+   Gönderilen izler bu cihazda (akar.izlerim) «İnceleniyor» olarak durur; üründe moderasyondan sonra herkese görünür.
+   Fotoğraflı izler eserin fotoğraf galerisinde de kullanıcı adıyla görünür (galeriHTML).
+   ===================================================================== */
+const hz = { eser:null, tumu:false, suz:'yeni', sehir:'hepsi', secEser:'hepsi', sinir:10, form:null };
+const izlerim = () => { try { return JSON.parse(yerel('akar.izlerim') || '[]'); } catch { return []; } };
+const izlerimYaz = (l) => { try { localStorage.setItem('akar.izlerim', JSON.stringify(l)); return true; } catch { return false; } };
+const izFoto = (i) => i.gorsel || (i.dosya && i.eser?.fotolar?.find((f) => f.dosya === i.dosya)?.url) || '';
+const aciMetni = (x) => (/bilinmiyor/i.test(x) ? 'Eski fotoğrafla aynı açı' : `${x} ile aynı açı`);   // «1930'lar ile aynı açı»; tarihsizse genel
+const izAci = (i) => i.ayniAci || (i.ayniAciFotoAtlasId && i.eser?.gecmis?.find((g) => g.fotoAtlasId === i.ayniAciFotoAtlasId)?.tarih?.etiket) || '';
+function hafizaIzleri(e) {   // bu eserin izleri: önce senin gönderdiklerin, sonra en yeniden eskiye
+  const l = [...(e.izler || []).map((i) => ({ ...i, eser:e })), ...izlerim().filter((i) => i.eser === e.id).map((i) => ({ ...i, eser:e, benim:true }))];
+  return l.sort((a, b) => (!!b.benim - !!a.benim) || String(b.tarih || '').localeCompare(String(a.tarih || '')));
+}
+const tumIzler = () => VERI.eserler.flatMap(hafizaIzleri);
+const izTarih = (t) => { const d = new Date(t); return isNaN(d) ? '' : d.toLocaleDateString('tr-TR', { day:'numeric', month:'long', year:'numeric' }); };
+function izGoreli(t) {   // «3 gün önce», «2 hafta önce» (Figma); 2 aydan eskiyse tarih
+  const d = new Date(t); if (isNaN(d)) return '';
+  const g = Math.floor((Date.now() - d) / 864e5);
+  return g < 1 ? 'Bugün' : g < 2 ? 'Dün' : g < 7 ? `${g} gün önce` : g < 60 ? `${Math.floor(g / 7)} hafta önce` : izTarih(t);
+}
+const basHarf = (ad) => esc(String(ad || '?').trim().split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toLocaleUpperCase('tr') || '–');
+const izKunye = (i) => ['Ziyaretçi fotoğrafı', i.kullanici, izTarih(i.tarih), i.benim ? 'İnceleniyor' : i.ornek ? 'Örnek katkı' : '', i.kaynakSatiri || ''].filter(Boolean).join(' · ');
+/* «Keşfet» satırının ikonu: son iz bırakanların baş harfleri (üst üste üç daire); iz yoksa konuşma balonu */
+function hafizaIkon(iz) {
+  const k = [...new Map(iz.map((i) => [i.kullanici, i])).values()].slice(0, 3);
+  return k.length ? `<span class="ky-yuzler" aria-hidden="true">${k.map((i) => `<i>${basHarf(i.kullanici).slice(0, 1)}</i>`).join('')}</span>` : `<span class="ky-daire">${ic('message-circle', 22)}</span>`;
+}
+
+/* --- sayfa: #/hafiza/<eser>[/tumu] --- */
+function hafizaSayfa(id, kip) {
+  const e = ESER[id]; if (!e) return (location.hash = '#/');
+  durum.secili = id; rotaKaldir(); yoreUygula(e);
+  const tumu = kip === 'tumu';
+  if (hz.eser !== e || hz.tumu !== tumu) Object.assign(hz, { eser:e, tumu, suz:'yeni', sinir:10, sehir:tumu ? (e.il || 'hepsi') : 'hepsi', secEser:'hepsi' });
+  hafizaCiz(true);
+}
+function hafizaListe() {
+  const e = hz.eser;
+  let l = hz.tumu ? [...hafizaIzleri(e), ...tumIzler().filter((i) => i.eser !== e)] : hafizaIzleri(e);   // Tümü'nde de bu eserin izleri başta
+  if (hz.tumu && hz.sehir !== 'hepsi') l = l.filter((i) => (i.eser.il || '') === hz.sehir);
+  if (hz.tumu && hz.secEser !== 'hepsi') l = l.filter((i) => i.eser.id === hz.secEser);
+  return l;
+}
+function hafizaCiz(basa = false) {
+  const e = hz.eser; if (!e) return;
+  const kap = $('#hz-kaydir'), ust = basa ? 0 : (kap?.scrollTop || 0);
+  const taban = hafizaListe(), tum = tumIzler(), ilIz = tum.filter((i) => i.eser.il === e.il);
+  const sayi = { foto:taban.filter(izFoto).length, aci:taban.filter(izAci).length, benim:taban.filter((i) => i.benim).length };
+  const l = taban.filter((i) => hz.suz === 'foto' ? izFoto(i) : hz.suz === 'aci' ? izAci(i) : hz.suz === 'benim' ? i.benim : true);
+  const gor = l.slice(0, hz.sinir), kalan = l.length - gor.length;
+  const cip = (k, metin) => `<button class="cip${hz.suz === k ? ' koyu' : ''}" data-hz-suz="${k}" aria-pressed="${hz.suz === k}">${metin}</button>`;
+  const suzgec = `<div class="hz-suzgec" role="group" aria-label="Süzgeç">${cip('yeni', 'En yeni')}${cip('foto', `Fotoğraflı${sayi.foto ? ` · ${sayi.foto}` : ''}`)}${cip('aci', `${durum.masaustu ? 'Aynı açıdan çekilenler' : 'Aynı açıdan'}${sayi.aci ? ` · ${sayi.aci}` : ''}`)}${cip('benim', 'Benim izlerim')}</div>`;
+  const tumLink = e.il ? `${yerEki(e.il)}ki tüm izler (${ilIz.length})` : `Tüm izler (${tum.length})`;
+  /* Tümü: Şehir ve Eser seçicileri (eser başına iz sayısı) */
+  const sehirler = [...new Set(VERI.eserler.map((x) => x.il).filter(Boolean))];
+  const eserler = VERI.eserler.filter((x) => hz.sehir === 'hepsi' || x.il === hz.sehir).map((x) => [x, hafizaIzleri(x).length]).filter(([, n]) => n).sort((a, b) => b[1] - a[1]);
+  const secici = hz.tumu ? `<div class="hz-seciciler"><label><span>Şehir</span><select id="hz-sehir"><option value="hepsi">Bütün şehirler · ${tum.length}</option>${sehirler.map((s) => `<option value="${esc(s)}"${hz.sehir === s ? ' selected' : ''}>${esc(s)} · ${tum.filter((i) => i.eser.il === s).length}</option>`).join('')}</select></label>
+    <label><span>Eser</span><select id="hz-eser"><option value="hepsi">Tümü · ${eserler.reduce((n, [, k]) => n + k, 0)} iz</option>${eserler.map(([x, n]) => `<option value="${x.id}"${hz.secEser === x.id ? ' selected' : ''}>${esc(x.ad)} · ${n}</option>`).join('')}</select></label>
+    <small>${eserler.length} eserde ${eserler.reduce((n, [, k]) => n + k, 0)} iz</small></div>` : '';
+  const ornekVar = taban.some((i) => i.ornek);
+  const not = ornekVar ? `<p class="hz-ornek-not">${ic('info', 14)}<span>«Örnek» etiketli izleri prototip için AKAR ekibi yazdı; gerçek ziyaretçi anısı değildir.</span></p>` : '';
+  const bos = l.length ? '' : `<div class="hz-bos"><b>${hz.suz === 'benim' ? 'Henüz iz bırakmadın' : hz.suz === 'yeni' ? 'Burası senin anınla başlayabilir' : 'Bu süzgeçte iz yok'}</b>${hz.suz === 'yeni' || hz.suz === 'benim' ? `Bu eserle ilgili bir fotoğrafın ya da anın varsa ilk izi sen bırak.<br><button class="btn ana" data-hz-ekle style="margin-top:14px">${ic('plus', 18)}İz Bırak</button>` : 'Başka bir süzgeç seç.'}</div>`;
+  const liste = `<div class="hz-liste">${gor.map(hzKart).join('')}</div>${bos}${kalan > 0 ? `<button class="hz-daha" data-hz-daha>Daha fazla göster (${kalan})</button>` : ''}`;
+  const benimki = izlerim().filter((i) => i.eser === e.id).at(-1);
+  if (durum.masaustu) {
+    /* masaüstü (30 Ekim 2026, 2. tasarım): üstte eserin fotoğrafıyla kapak (başlık, sayılar, İz Bırak); altında yapışık süzgeç çubuğu;
+       anı duvarı üç sütun (fotoğraflı iz fotoğrafla, yazılı anı alıntı gibi serif); duvarın ilk kartı davet. Yan kutu yok */
+    const kf = kapak(e), il = e.il || '';
+    const baslik = hz.tumu ? `Şehrin <em>hafızası</em>` : `${esc(e.ad)}<br><em>hafızası</em>`;
+    const sayilar = [[taban.length, 'iz'], [sayi.foto, 'fotoğraf'], [sayi.aci, 'aynı açı']].filter(([n], k) => k === 0 || n).map(([n, t]) => `<span><b>${n}</b>${t}</span>`).join('');
+    const geri = hz.tumu ? `#/hafiza/${e.id}` : `#/eser/${e.id}`;
+    const kapakHTML = `<header class="hzd-kapak">${kf ? `<img class="hzd-kapak-foto" src="${esc(kf.url)}" alt="" aria-hidden="true">` : ''}<div class="hzd-kapak-ic">
+      <button class="hzd-geri" data-git="${geri}">${ic('chevron-left', 16)}${hz.tumu ? 'Yaşayan hafıza' : esc(e.ad)}</button>
+      <div class="hzd-bas"><span class="hzd-ust">Yaşayan hafıza${il ? ` · ${esc(il)}` : ''}</span><h1 class="hzd-h1">${baslik}</h1>
+        <p class="hzd-alt">${hz.tumu ? 'Ziyaretçilerin vakıf eserlerinde bıraktığı anılar ve fotoğraflar.' : `${esc(ziyaretEki(e.ad))} ziyaret edenlerin anıları ve fotoğrafları. Bir yer, onu hatırlayanlarla yaşar.`}</p></div>
+      <div class="hzd-kapak-alt"><div class="hzd-sayilar">${sayilar}</div><button class="btn ana hzd-ekle" data-hz-ekle>${ic('plus', 18)}İz Bırak</button></div></div></header>`;
+    const sagLink = hz.tumu ? '' : `<button class="hzd-tumu" data-git="#/hafiza/${e.id}/tumu">${esc(tumLink)} ›</button>`;
+    const cubuk = `<div class="hzd-cubuk"><div class="hzd-cubuk-ic">${suzgec}${hz.tumu ? secici : ''}${sagLink}</div></div>`;
+    const davet = hz.suz === 'yeni' || hz.suz === 'benim' ? `<button class="hzd-davet" data-hz-ekle><span class="hzd-tirnak" aria-hidden="true">“</span><b>Senin de bir anın var mı?</b>
+      <span>${hz.tumu ? 'Önce eseri seç, sonra bir fotoğraf ya da kısa bir anı bırak.' : 'Bu yerde ne gördün, kimi hatırladın? Bir fotoğraf ya da birkaç cümle yeter.'}</span><span class="hzd-davet-btn">${ic('plus', 16)}İz Bırak</span>
+      <small>İncelendikten sonra herkes görür. Yüz ve kişisel bilgi içeren fotoğraflar yayımlanmaz.</small></button>` : '';
+    const duvar = l.length || davet ? `<div class="hzd-duvar">${davet}${gor.map(hzdKart).join('')}</div>` : '';
+    const bosD = l.length ? '' : (davet ? '' : bos);
+    const altLinkler = hz.tumu ? `<div class="hzd-alt-link"><b>${il ? `${esc(yerEki(il))} en çok iz` : 'En çok iz'}</b>${VERI.eserler.filter((x) => x.il === e.il).map((x) => [x, hafizaIzleri(x).length]).filter(([, n]) => n).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([x, n]) => `<button data-git="#/hafiza/${x.id}">${esc(x.ad)} · ${n} iz ›</button>`).join('')}</div>`
+      : `<div class="hzd-alt-link"><b>Bu eserde</b>${e.hikaye.length ? `<button data-git="#/anlat/${e.id}/dinle">Hikâyeyi dinle · ${e.sure} dk ›</button>` : ''}${e.gecmis.length ? `<button data-git="#/gecmis/${e.id}">Geçmişi Gör · ${e.gecmis.length} eski fotoğraf ›</button>` : ''}<button data-git="#/eser/${e.id}">Eser sayfası ›</button></div>`;
+    gorusAc(`<div class="hz hz-d" id="hz-kaydir">${kapakHTML}${cubuk}<div class="hzd-icerik">${not}${duvar}${bosD}${kalan > 0 ? `<button class="hz-daha hzd-daha" data-hz-daha>Daha fazla göster (${kalan})</button>` : ''}${altLinkler}</div></div>`, 'hz-gorus');
+  } else {
+    const benimM = benimki && hz.suz !== 'benim' ? `<button class="hz-benim-m" data-hz-suz="benim">${benimki.gorsel ? `<img src="${esc(benimki.gorsel)}" alt="">` : `<span class="hz-benim-bos">${ic('message-circle', 18)}</span>`}<div><span>Senin izin · ${esc((benimki.metin || 'Fotoğraf').slice(0, 26))}${(benimki.metin || '').length > 26 ? '…' : ''}</span><span class="hz-etiket bekliyor">İnceleniyor</span></div></button>` : '';
+    gorusAc(`<div class="hz hz-m"><header class="gv-ust"><button class="yuvarlak" data-git="${hz.tumu ? `#/hafiza/${e.id}` : `#/eser/${e.id}`}" aria-label="Geri">${ic('chevron-left', 20)}</button><div class="gv-ust-yazi"><b>Yaşayan hafıza</b><small>${hz.tumu ? `Tüm izler · ${taban.length}` : `${esc(e.ad)} · ${taban.length} iz`}</small></div><span style="width:40px"></span></header>
+      <div class="hz-kaydir" id="hz-kaydir">${secici}${suzgec}${hz.tumu ? '' : `<button class="hz-tumu" data-git="#/hafiza/${e.id}/tumu">Tümünü gör · ${esc(tumLink)} ›</button>`}${benimM}${not}${liste}</div>
+      <div class="hz-alt-cubuk"><button class="btn ana tam" data-hz-ekle>${ic('plus', 18)}İz Bırak</button></div></div>`, 'hz-gorus');
+  }
+  const k2 = $('#hz-kaydir'); if (k2) k2.scrollTop = ust;
+}
+const ziyaretEki = (ad) => { const s = String(ad).toLocaleLowerCase('tr'), son = s.at(-1), u = [...s].reverse().find((c) => 'aeıioöuü'.includes(c)) || 'e';   // Ulucami'yi, Koza Hanı'nı, Bedesten'i
+  const v = { a:'ı', ı:'ı', e:'i', i:'i', o:'u', u:'u', ö:'ü', ü:'ü' }[u]; return `${ad}'${'aeıioöuü'.includes(son) ? (/\s/.test(ad.trim()) ? 'n' : 'y') : ''}${v}`; };   // tamlamada (Koza Hanı) kaynaştırma n
+/* masaüstü duvar kartı: fotoğraflı izde fotoğraf üstte (kendi oranında), yazılı anıda büyük serif alıntı; altta kim, ne zaman, etiketler */
+function hzdKart(i) {
+  const f = izFoto(i), aci = izAci(i);
+  const etiket = i.benim ? '<span class="hz-etiket bekliyor">İnceleniyor</span>' : i.ornek ? '<span class="hz-etiket ornek" title="Prototip için AKAR ekibinin yazdığı örnek; gerçek ziyaretçi anısı değil">Örnek</span>' : '';
+  const eserEt = hz.tumu ? `<button class="hz-eser" data-git="#/eser/${i.eser.id}">${esc(i.eser.ad)}</button>` : '';
+  const sag = i.benim ? `<button class="hz-bildir" data-hz-sil="${esc(i.id)}">Geri çek</button>` : `<button class="hz-bildir" data-hz-bildir aria-label="Bu izi bildir">${ic('flag', 14)}</button>`;
+  const oran = i.genislik && i.yukseklik ? ` style="aspect-ratio:${i.genislik}/${i.yukseklik}"` : '';
+  const foto = f ? `<button class="hzd-foto" data-isik="${esc(f)}" data-kunye="${esc(izKunye(i))}" aria-label="Fotoğrafı büyüt: ${esc(i.kullanici)} adlı ziyaretçinin fotoğrafı"${oran}><img src="${esc(f)}" alt="${esc(i.kullanici)} adlı ziyaretçinin fotoğrafı" loading="lazy" decoding="async">${aci ? `<span class="hz-aci">${esc(aciMetni(aci))}</span>` : ''}</button>` : '';
+  const uzun = (i.metin || '').length > 140;
+  return `<article class="hzd-iz${f ? ' fotolu' : ''}${i.benim ? ' benim' : ''}">${foto}${i.metin ? `<p class="hzd-metin${f ? '' : ' alinti'}${uzun ? ' uzun' : ''}">${esc(i.metin)}</p>` : ''}
+    <div class="hzd-kim"><span class="hz-avatar" aria-hidden="true">${basHarf(i.kullanici)}</span><div><b>${esc(i.kullanici)}</b><small>${esc(izGoreli(i.tarih))}</small></div>${sag}</div>
+    ${etiket || eserEt ? `<div class="hzd-etiketler">${etiket}${eserEt}</div>` : ''}</article>`;
+}
+function hzKart(i) {
+  const f = izFoto(i), aci = izAci(i), m = durum.masaustu, e = hz.eser;
+  const etiket = i.benim ? '<span class="hz-etiket bekliyor">İnceleniyor</span>' : i.ornek ? '<span class="hz-etiket ornek" title="Prototip için AKAR ekibinin yazdığı örnek; gerçek ziyaretçi anısı değil">Örnek</span>' : '';
+  const eserEt = hz.tumu ? `<button class="hz-eser" data-git="#/eser/${i.eser.id}">${esc(i.eser.ad)}</button>` : '';
+  const sag = i.benim ? `<button class="hz-bildir" data-hz-sil="${esc(i.id)}">Geri çek</button>` : `<button class="hz-bildir" data-hz-bildir>Bildir</button>`;
+  const foto = f ? `<button class="hz-foto" data-isik="${esc(f)}" data-kunye="${esc(izKunye(i))}" aria-label="Fotoğrafı büyüt: ${esc(i.kullanici)} adlı ziyaretçinin fotoğrafı"><img src="${esc(i.kucuk && !m ? i.kucuk : f)}" alt="${esc(i.kullanici)} adlı ziyaretçinin fotoğrafı" loading="lazy" decoding="async">${aci ? `<span class="hz-aci">${esc(aciMetni(aci))}</span>` : ''}</button>` : '';
+  if (m) return `<article class="hz-iz${f ? ' fotolu' : ''}">${foto}<div class="hz-govde"><div class="hz-kim"><span class="hz-avatar" aria-hidden="true">${basHarf(i.kullanici)}</span><div><b>${esc(i.kullanici)}</b><small>${esc(izGoreli(i.tarih))}</small></div>${etiket}${eserEt}${sag}</div>${i.metin ? `<p>${esc(i.metin)}</p>` : ''}</div></article>`;
+  return `<article class="hz-iz${f ? ' fotolu' : ''}">${foto}<div class="hz-govde">${i.metin ? `<p>${esc(i.metin)}</p>` : ''}<div class="hz-ayak"><span>${esc(i.kullanici)} · ${esc(izGoreli(i.tarih))}</span>${etiket}${eserEt}${sag}</div></div></article>`;
+}
+
+/* --- İz Bırak formu (alt sayfa; masaüstünde ortada kart) --- */
+function izFormAc(on = {}) {
+  hz.form = { foto:on.foto || null, ayniAci:on.ayniAci || '', ayniAciFotoAtlasId:on.ayniAciFotoAtlasId || null, eser:on.eser || (hz.tumu && hz.secEser !== 'hepsi' ? hz.secEser : null) || durum.secili || VERI.eserler[0].id };
+  let k = $('#iz-form'); if (!k) { k = document.createElement('div'); k.id = 'iz-form'; k.className = 'hz-form-arka'; document.body.appendChild(k); }
+  const ad = yerel('akar.kullanici') || '';
+  const secenek = VERI.eserler.map((x) => `<option value="${x.id}"${x.id === hz.form.eser ? ' selected' : ''}>${esc(x.ad)}${x.il ? ` · ${esc(x.il)}` : ''}</option>`).join('');
+  k.innerHTML = `<form class="hz-form" id="hzf" role="dialog" aria-modal="true" aria-labelledby="hzf-baslik" novalidate>
+    <div class="hzf-bas"><h2 id="hzf-baslik">İz Bırak</h2><button type="button" class="yuvarlak" data-hzf-kapat aria-label="Kapat">${ic('x', 18)}</button></div>
+    ${durum.masaustu ? '<p class="hzf-alt-baslik">Bir fotoğraf, birkaç cümle ya da ikisi birden. İncelendikten sonra eserin hafızasına eklenir.</p><div class="hzf-iki"><div class="hzf-foto" id="hzf-foto"></div><div class="hzf-alanlar">' : ''}
+    <label class="hzf-alan"><span>Eser</span><select id="hzf-eser">${secenek}</select></label>
+    ${durum.masaustu ? '' : '<div class="hzf-foto" id="hzf-foto"></div>'}
+    <label class="hzf-alan"><span>Anın</span><textarea id="hzf-metin" maxlength="280" rows="${durum.masaustu ? 6 : 4}" placeholder="Bu yerde ne gördün, kimi hatırladın?"></textarea><small class="hzf-sayac" id="hzf-sayac">0 / 280</small></label>
+    <label class="hzf-alan"><span>Kullanıcı adın <small>(izin altında görünür)</small></span><input id="hzf-ad" maxlength="30" autocomplete="nickname" value="${esc(ad)}" placeholder="Ör. Zeynep A."></label>
+    <p class="hzf-not">${ic('info', 14)}<span>İzin incelendikten sonra herkese görünür. Yüz veya kişisel bilgi içeren fotoğraflar yayımlanmaz; fotoğrafın konum bilgisi silinir. Prototip: iz yalnız bu cihazda saklanır.</span></p>
+    <button type="submit" class="btn ana tam" id="hzf-gonder" disabled>Gönder</button>
+    ${durum.masaustu ? '</div></div>' : ''}
+  </form>`;
+  hzfFotoCiz(); hzfDenetle();
+  k.hidden = false; requestAnimationFrame(() => k.classList.add('acik'));
+  setTimeout(() => $(ad ? '#hzf-metin' : '#hzf-ad')?.focus({ preventScroll:true }), 250);
+}
+function izFormKapat() { const k = $('#iz-form'); if (!k || k.hidden) return; k.classList.remove('acik'); k.hidden = true; k.innerHTML = ''; hz.form = null; }
+function hzfFotoCiz() {
+  const a = $('#hzf-foto'), f = hz.form?.foto; if (!a) return;
+  a.innerHTML = f ? `<div class="hzf-onizleme"><img src="${esc(f.url)}" alt="Seçtiğin fotoğraf">${hz.form.ayniAci ? `<span class="hz-aci">${esc(aciMetni(hz.form.ayniAci))}</span>` : ''}<button type="button" class="yuvarlak hzf-kaldir" data-hzf-kaldir aria-label="Fotoğrafı kaldır">${ic('x', 16)}</button></div>`
+    : `<label class="hzf-sec">${durum.masaustu ? `<span class="hzf-sec-ik">${ic('image-plus', 26)}</span><b>Fotoğraf ekle</b><small>İsteğe bağlı · bir eski fotoğrafla aynı açıdan çektiysen hafızada yan yana durur</small>` : `${ic('image-plus', 20)}Fotoğraf ekle <small>(isteğe bağlı)</small>`}<input type="file" accept="image/*" id="hzf-dosya" hidden></label>`;
+}
+function hzfDenetle() {
+  const m = $('#hzf-metin'), ad = $('#hzf-ad'), g = $('#hzf-gonder'); if (!m || !g) return;
+  $('#hzf-sayac').textContent = `${m.value.length} / 280`;
+  g.disabled = !(ad.value.trim() && (m.value.trim() || hz.form?.foto));
+}
+/* fotoğraf küçültülür (uzun kenar 1280 px, JPEG) ve yeniden kodlanır: EXIF (konum dahil) atılır */
+function fotoKucult(kaynak, uzun = 1280) {
+  const oku = typeof kaynak === 'string' ? Promise.resolve(kaynak) : new Promise((ok, red) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = red; r.readAsDataURL(kaynak); });
+  return oku.then((src) => new Promise((ok, red) => {
+    const img = new Image();
+    img.onload = () => { const o = Math.min(1, uzun / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * o); c.height = Math.round(img.naturalHeight * o); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      ok({ url:c.toDataURL('image/jpeg', 0.8), genislik:c.width, yukseklik:c.height }); };
+    img.onerror = red; img.src = src;
+  }));
+}
+function izGonder() {
+  const f = hz.form; if (!f) return;
+  const ad = $('#hzf-ad').value.trim(), metin = $('#hzf-metin').value.trim(), eser = $('#hzf-eser').value;
+  if (!ad || !(metin || f.foto)) return;
+  const iz = { id:'benim-' + Date.now(), eser, kullanici:ad, metin, tarih:new Date().toISOString(), durum:'inceleniyor' };
+  if (f.foto) Object.assign(iz, { gorsel:f.foto.url, genislik:f.foto.genislik, yukseklik:f.foto.yukseklik });
+  if (f.ayniAci) Object.assign(iz, { ayniAci:f.ayniAci, ayniAciFotoAtlasId:f.ayniAciFotoAtlasId });
+  if (!izlerimYaz([...izlerim(), iz])) { toast('Bu cihazda yer kalmadı; daha küçük bir fotoğraf dene ya da eski bir izini geri çek.'); return; }
+  yerel('akar.kullanici', ad);
+  izFormKapat(); toast('Gönderildi · incelendikten sonra herkese görünür');
+  const h = `#/hafiza/${eser}`;
+  if (location.hash.startsWith('#/hafiza/') && hz.eser?.id === eser) { hz.suz = 'yeni'; hafizaCiz(true); }
+  else if (location.hash.startsWith('#/hafiza/') && hz.tumu) hafizaCiz(true);
+  else location.hash = h;
+}
+document.addEventListener('click', (ev) => {
+  const t = ev.target;
+  if (t.closest('[data-hz-ekle]')) { izFormAc(); return; }
+  if (t.closest('[data-hzf-kapat]') || t.id === 'iz-form') { izFormKapat(); return; }
+  if (t.closest('[data-hzf-kaldir]')) { Object.assign(hz.form, { foto:null, ayniAci:'', ayniAciFotoAtlasId:null }); hzfFotoCiz(); hzfDenetle(); return; }
+  const s = t.closest('[data-hz-suz]'); if (s) { hz.suz = s.dataset.hzSuz; hz.sinir = 10; hafizaCiz(s.classList.contains('hz-benim-m')); return; }
+  if (t.closest('[data-hz-daha]')) { hz.sinir += 10; hafizaCiz(); return; }
+  if (t.closest('[data-hz-bildir]')) { toast('Bildirimin alındı; ekip inceleyecek.'); return; }
+  const sil = t.closest('[data-hz-sil]'); if (sil) { izlerimYaz(izlerim().filter((i) => i.id !== sil.dataset.hzSil)); toast('İzin geri çekildi'); hafizaCiz(); }
+});
+document.addEventListener('input', (ev) => { if (ev.target.closest?.('#iz-form')) hzfDenetle(); });
+document.addEventListener('change', async (ev) => {
+  const t = ev.target;
+  if (t.id === 'hz-sehir') { hz.sehir = t.value; hz.secEser = 'hepsi'; hz.sinir = 10; hafizaCiz(true); return; }
+  if (t.id === 'hz-eser') { hz.secEser = t.value; hz.sinir = 10; hafizaCiz(true); return; }
+  if (t.id === 'hzf-eser' && hz.form) { hz.form.eser = t.value; return; }
+  if (t.id !== 'hzf-dosya' || !t.files[0] || !hz.form) return;
+  try { hz.form.foto = await fotoKucult(t.files[0]); } catch { toast('Fotoğraf açılamadı; başka bir fotoğraf dene.'); }
+  hzfFotoCiz(); hzfDenetle();
+});
+document.addEventListener('submit', (ev) => { if (ev.target.id === 'hzf') { ev.preventDefault(); izGonder(); } });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && $('#iz-form') && !$('#iz-form').hidden) { ev.stopImmediatePropagation(); izFormKapat(); } }, true);
 
 /* =====================================================================
    YÖNLENDİRME
@@ -2614,10 +2834,10 @@ document.addEventListener('click', (e) => { const a = e.target.closest('[data-ka
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#karsilama') && !($('#yan-sayfa') && !$('#yan-sayfa').hidden)) { e.stopImmediatePropagation(); karsilamaKapat(null); } }, true);
 
 function yonlendir() {
-  yanSayfaKapat(); konumMenu(false); if ($('#karsilama')) karsilamaKapat(null);   // sayfa değişince açık katmanlar kapanır
+  yanSayfaKapat(); konumMenu(false); izFormKapat(); if ($('#karsilama')) karsilamaKapat(null);   // sayfa değişince açık katmanlar kapanır
   const [ad, id, mod] = location.hash.replace(/^#\/?/, '').split('/');
   document.body.classList.toggle('gorus-acik', !!ad && ad !== 'rota');
-  document.body.classList.toggle('tam-sayfa', ['hakkinda', 'profil', 'gorev'].includes(ad) && durum.masaustu);
+  document.body.classList.toggle('tam-sayfa', ['hakkinda', 'profil', 'gorev', 'hafiza'].includes(ad) && durum.masaustu);
   if (ad !== 'eser' && ad !== 'gorev') gv.bul = null;
   if (ad !== 'anlat') anlatDur();
   if (!ad) durum.rotada = false;
@@ -2631,6 +2851,7 @@ function yonlendir() {
     case 'son': durum.tebrik = { id, yeni:[] }; return location.replace('#/eser/' + id);   // eski «hikâye sonrası» adresi: eser + tebrik kartı
     case 'hakkinda': return hakkinda(id);
     case 'gecmis': return gecmisSayfa(id, mod);
+    case 'hafiza': return hafizaSayfa(id, mod);
     case 'kamera': return kameraSayfa(id, mod);
     case 'cekildi': return cekildiSayfa(id, mod);
     case 'rota': return rotaOnizleme(id);

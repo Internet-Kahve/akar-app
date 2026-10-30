@@ -1,5 +1,18 @@
 # Redmi 9T prototipi ve performans testi · v2
 
+## 30 Ekim 2026 · Yaşayan hafıza ve İz Bırak
+
+Figma `akar-yeni`: masaüstü `82:2735`, tüm izler `86:2733`, mobil `108:2765`.
+- **Giriş:** eser detayında «Keşfet» listesinde Bulmaca'nın üstünde «Yaşayan hafıza · Ziyaretçi anıları · n iz · Sen de ekle» (ikon: son iz bırakanların baş harfleri). «Eser hakkında» sonundaki düğmelerde de var.
+- **`#/hafiza/<eser>`:** önce o eserin izleri. Süzgeç: En yeni · Fotoğraflı · Aynı açıdan · Benim izlerim; 10'ar 10'ar «Daha fazla göster». Mobilde altta sabit «+ İz Bırak».
+- **Masaüstü (2. tasarım, aynı gün; ilki beğenilmedi):** üstte eserin kapak fotoğrafıyla kapak: «Yaşayan hafıza · Bursa», büyük serif «Ulucami *hafızası*» («Tüm izler»de «Şehrin *hafızası*»), iz / fotoğraf / aynı açı sayıları, beyaz «İz Bırak». Altında kaydırınca yapışık kalan süzgeç çubuğu (Tüm izler'de Şehir ve Eser seçicisi de burada). İzler üç sütunlu duvar (`.hzd-duvar`): fotoğraflı iz fotoğrafla, yazılı anı altın tırnaklı büyük serif alıntı; altta baş harf, ad, zaman, bildir bayrağı, etiketler. Duvarın ilk kartı davet («Senin de bir anın var mı?»); sağ yan kutu kaldırıldı, «Bu eserde» bağlantıları sayfanın altında. Senin izin altın çerçeveli. İz Bırak formu masaüstünde iki sütun: solda büyük fotoğraf alanı, sağda eser, anı, kullanıcı adı.
+- **«Tümünü gör» → `#/hafiza/<eser>/tumu`:** bütün eserlerin izleri; Şehir ve Eser seçicisi (eser başına iz sayısı), her izde eser etiketi; eser «Tümü»yken açılan eserin izleri yine başta. Masaüstünde sayfanın altında «Bursa'da en çok iz».
+- **İz Bırak formu:** eser, isteğe bağlı fotoğraf, anı (280 karakter), kullanıcı adı (cihazda hatırlanır, `akar.kullanici`). Fotoğraf uzun kenar 1280 px JPEG'e küçültülüp yeniden kodlanır (EXIF/konum silinir). Gönderilen iz bu cihazda kalır (`akar.izlerim`), «İnceleniyor» etiketiyle yalnız gönderene görünür, «Geri çek» ile silinir. Ürün: moderasyon (beklemede → onaylandı/reddedildi).
+- **Geçmişi Gör → Çekildi → «İz Bırak olarak gönder»** artık formu açıyor: kameradaki fotoğraf hazır, «1930'lar ile aynı açı» etiketiyle (tarihsizse «Eski fotoğrafla aynı açı»).
+- **Galeri:** resmî fotoğraflardan sonra ziyaretçilerin fotoğraflı izleri, üstünde kullanıcı adı (ve «İnceleniyor»/«Örnek»); en sonda «Fotoğrafını ekle» kutusu. Araç satırı: «12 fotoğraf · 2 ziyaretçiden».
+- **Veri:** `e.izler` = `gecmisi-gor/izler.json` onaylı izler + **`ornek-hafiza.json`** (yalnız prototip, `hazirla.py → ornek_hafiza`). Örnekleri ekip yazdı; her biri «Örnek» etiketli, sayfada açıklama notu var, tarihî bilgi içermez, fotoğrafsız (envanter fotoğrafı ziyaretçi fotoğrafı diye gösterilmez). Ürüne taşınmaz. Veri değişince sunucu yeniden başlatılmalı.
+- «Bildir» prototipte yalnız bildirim gösterir.
+
 ## 30 Ekim 2026 · bulmacadan 3D, parça kartında fotoğraf okları
 
 - **«3D modelde bul»** (saha görevi) eseri her zaman 3D görünümde açar; kayıtlı tercih «Fotoğraf» olsa da (tercih değişmez). `gorunumAyar` → `gv.bul`.

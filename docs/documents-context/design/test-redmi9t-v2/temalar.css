@@ -287,3 +287,11 @@ html[data-ton="bant"] body.d #ust .avatar{background:rgba(255,255,255,.16);color
 html[data-ton="bant"] body.d #panel::before{content:"";position:absolute;left:0;right:0;top:0;height:140px;pointer-events:none;z-index:0;background:linear-gradient(180deg,color-mix(in srgb,var(--sehir-aksan) 8%,transparent),transparent)}
 html[data-ton] body.d #panel-ic{z-index:1}
 
+
+/* Yaşayan hafıza (30 Ekim 2026): kartlar cam yüzey, sayfa zemini temanın */
+[data-tema] .hz{background:var(--zemin)}
+[data-tema] .hz-iz,[data-tema] .hzd-iz,[data-tema] .hz-kart,[data-tema] .hz-benim-m,[data-tema] .hz-form{background:var(--cam);-webkit-backdrop-filter:var(--bulan);backdrop-filter:var(--bulan);box-shadow:var(--cam-kenar),var(--cam-golge);border-color:transparent}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){[data-tema] .hzd-iz,[data-tema] .hz-iz,[data-tema] .hz-kart,[data-tema] .hz-benim-m,[data-tema] .hz-form{background:var(--cam-yedek)}}
+[data-tema] .hz-alt-cubuk{background:linear-gradient(to top,var(--zemin-alt, transparent) 0,transparent)}
+[data-tema] .hz-iz,[data-tema] .hz-kart{border-radius:22px}
+[data-tema] .hzd-iz.benim{box-shadow:inset 0 0 0 2px #E9C75A,var(--cam-golge)}

@@ -1,0 +1,17 @@
+{
+  "_aciklama": "Yalnız prototip (30 Ekim 2026): Yaşayan hafıza boş görünmesin diye AKAR ekibinin yazdığı örnek anılar. Gerçek ziyaretçi anısı DEĞİL; arayüzde her biri «Örnek» etiketiyle ve sayfada açıklama notuyla görünür. Tarihî bilgi içermez (yalnız kişisel izlenim). Fotoğrafsızdır: ziyaretçi fotoğrafı diye envanter fotoğrafı gösterilmez. hazirla.py okur (ornek_hafiza); ürüne taşınmaz.",
+  "izler": [
+    { "id": "ornek-ulu-01", "eser": "ulu-cami", "kullanici": "Zeynep A.", "tarih": "2026-10-27", "metin": "Babaannemle ilk geldiğimizde şadırvanın sesini duyunca durup bir süre dinlemiştik. Her gelişimde hâlâ ilk oraya bakıyorum." },
+    { "id": "ornek-ulu-02", "eser": "ulu-cami", "kullanici": "Mehmet D.", "tarih": "2026-10-23", "metin": "Duvardaki yazıları tek tek okumaya çalıştık; çoğunu çözemedik. Bir dahaki sefere okuyabilen biriyle geleceğim." },
+    { "id": "ornek-ulu-03", "eser": "ulu-cami", "kullanici": "Elif Y.", "tarih": "2026-10-16", "metin": "Kar yağarken girdim. İçerisi dışarıdan çok daha sessizdi, insan kendi adımlarını duyuyor." },
+    { "id": "ornek-ulu-04", "eser": "ulu-cami", "kullanici": "Hasan T.", "tarih": "2026-10-09", "metin": "Dedem çarşıdan dönerken buraya uğrarmış. Onun oturduğu söylenen köşeye oturup biraz bekledim." },
+    { "id": "ornek-ulu-05", "eser": "ulu-cami", "kullanici": "Selin D.", "tarih": "2026-10-02", "metin": "Okul gezisiyle geldik; kubbeleri saymaya çalıştık, herkes başka bir sayı söyledi." },
+    { "id": "ornek-ulu-06", "eser": "ulu-cami", "kullanici": "Anonim", "tarih": "2026-09-25", "metin": "Cuma namazlarına dedemle gelirdik." },
+    { "id": "ornek-koza-01", "eser": "koza-han", "kullanici": "Ayşe K.", "tarih": "2026-10-24", "metin": "Avluda annemle çay içip bir eşarp seçtik. O eşarbı hâlâ saklıyorum." },
+    { "id": "ornek-koza-02", "eser": "koza-han", "kullanici": "Can E.", "tarih": "2026-10-11", "metin": "Yaz akşamı avluda oturduk; çarşının kalabalığı kapının dışında kalmış gibiydi." },
+    { "id": "ornek-bed-01", "eser": "yildirim-bayezid-bedesteni", "kullanici": "Fatma S.", "tarih": "2026-10-20", "metin": "Nişan yüzüğümüzü buradan aldık. Kapıdan girince ışığın nasıl düştüğünü hiç unutmadım." },
+    { "id": "ornek-orhan-01", "eser": "orhan-bey-kulliyesi", "kullanici": "Yusuf K.", "tarih": "2026-10-18", "metin": "Çarşının kalabalığından kaçıp birkaç dakika oturduğum en sessiz yer." },
+    { "id": "ornek-emir-01", "eser": "emir-han", "kullanici": "Deniz Ö.", "tarih": "2026-10-14", "metin": "Kahvemi avluda içip güvercinleri izledim; kimse acele etmiyordu." },
+    { "id": "ornek-karatay-01", "eser": "karatay-medresesi", "kullanici": "Kerem A.", "tarih": "2026-10-05", "metin": "Çinilerin rengini fotoğraflarda görmüştüm; yerinde görünce bambaşkaydı." }
+  ]
+}
