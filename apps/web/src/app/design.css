@@ -1203,7 +1203,7 @@ h1,
   .explore-heading {
     touch-action: none;
   }
-  .wide-only {
+  .explore-heading .wide-only {
     display: none;
   }
   .narrow-only {

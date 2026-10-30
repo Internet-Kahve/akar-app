@@ -319,6 +319,10 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
 }, info) => {
   await page.goto("/");
   await expect(page.locator(".opening")).toHaveCount(0);
+  // One heading above the list: the city line on a phone, the sentence on a wide screen.
+  await expect(
+    page.locator(".explore-heading > :visible"),
+  ).toHaveCount(1);
   await page.getByRole("tab", { name: "Rotalar" }).click();
   await expect(page.locator(".route-card")).toHaveCount(3);
   expect(
