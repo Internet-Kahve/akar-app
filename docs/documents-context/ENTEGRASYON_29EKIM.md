@@ -158,30 +158,43 @@ Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → y
   - Bedesten 25.224.
 - **Kaynak:** GLB'ler yalnız Blender'dan üretilir (`_kutuphane/blend_hat/`, eserin `build/build_vXX.py`'si). Blend ve build dosyaları repoda değil, Drive'da.
 
+## 2b. Anlatımda genel görünüm ve fotoğraf kartı (30 Ekim 2026)
+
+- **Genel görünüm (eserden bağımsız kural):** hikâye cümlesinin vurgusu boşsa (`story_blocks.highlights` boş) 3D sahnede yapı yavaşça döner (360°, ~30 sn; OrbitControls `autoRotate`, hız 2). Kamera geçişi bitince başlar, kullanıcı dokununca durur, hareket azaltmada dönmez. Belli bir yeri anlatmayan cümleler («Ulucami'yi Yıldırım Bayezid yaptırdı», «mimarı bilinmiyor») için. Ulucami'de 3. cümlenin taç kapı vurgusu bu yüzden kaldırıldı.
+- **Tur sürekliliği:** arka arkaya vurgusuz ve aynı açılı cümlelerde kamera başa dönmez, tur sürer; kamera geçişi sürerken `autoRotate` kapalıdır. Mobilde hikâye sayfası açılıp kapanınca kart yerine döner, kadraj yeniden hesaplanır. Parça kartı ya da büyük fotoğraf açıkken klavye anlatımı ilerletmez.
+- **Admin paneli (öneri):** cümle düzenleme ekranında vurgu boş bırakılınca «Genel görünüm: yapı döner» yazısı ve isteğe bağlı «Döndürme» kutucuğu (`story_blocks.camera_mode`: `tur` | `sabit`; boş = vurgu yoksa `tur`). Kural varsayılan olarak çalışır, alan yalnız istisna için.
+- **Fotoğraf kartı (`kart: evet`):** artık vurgulanan noktanın üstüne değil kenara yaslanır: mobilde hikâye kartının hemen üstünde yatay (96 px fotoğraf + başlık), masaüstünde sahnenin sol altında (320 px). Kamera kadrajı kartın kapladığı yer kadar kayar (`setViewOffset`: mobilde yukarı, masaüstünde sağa), vurgulanan parça açıkta kalır. Kart sürüklenerek taşınır (taşınınca kadraj yeniden ortalanır); dokununca vurgulanan parçanın kartı, parça kartı yoksa fotoğraf büyük açılır.
+
 ## 3. Haritada ve detayda ışık, renk, yer gölgesi
 
 Ürünün `map-models.ts` ve `model-viewer.tsx` dosyalarında ışık sabit yazılı. `map-models.ts`'teki değerler prototipin eski değerleri (ortam 2,3 / güneş 1,3). Yeni değerler şehir kaydında: `veri/sehir/bursa.json → harita_isik`.
 
+Şehir kaydı (`harita_isik`) ve eser başına model kaydı (`3d/model.json → on_yonu`):
+
 ```
-yon 220.6 · yukseklik 50 · doygunluk 1 · yer_golgesi 0.18   (yon yapıya göre: modelin kendi ekseninde)
+yon 221 · capraz 40 · yukseklik 50 · harita_capraz 20 · harita_yukseklik 62 · harita_gunes 1.5 · doygunluk 1 · yer_golgesi 0.18
+(yon: ürünün tek sabit güneş açısı; services/api/scripts/prepare-demo-content.py okur, silinmez. Prototip on_yonu + capraz kullanır)
+on_yonu: Ulucami 354 · Bedesten 4 · Koza Han 4 · Orhan Bey Camii 13 · Emir Hanı 7 · Orhan Bey Hamamı 186 · Orhan Gazi Türbesi 182
 ```
 
-**30 Ekim 2026 değişikliği (kullanıcının seçimi):** ışık tanıtım sayfasındaki 3D ile aynı. Işığın kendisi artık sabit; şehir kaydından yalnız güneşin yönü ve açısı gelir. Eski `ortam`, `gunes`, `dolgu` alanları kalktı, dolgu ışığı yok.
+**30 Ekim 2026 değişikliği (kullanıcının seçimi):** ışık tanıtım sayfasındaki 3D ile aynı. Işığın kendisi sabit; eski `ortam`, `gunes`, `dolgu` alanları kalktı, dolgu ışığı yok. **Güneş her eserin ön cephesine göre:** `on_yonu` ana girişin baktığı yön (dünya, kuzeyden saat yönüne). Güneş o cephenin önünden, cepheye bakan kişinin solundan gelir: her eserde ön yüz aydınlık, gölge arkaya-sağa düşer. Model eksenine bağlı güneş denendi ve bırakıldı: modellerin önü farklı yönlere bakıyor (Ulucami kuzey, Türbe güney), bazılarında güneş arkadan vuruyordu.
 
-Prototipteki karşılığı (`app.js`, `isikKur` ve `gunesYonu`). Harita ve eser detayı aynı ışığı ve aynı sabit güneşi kullanır:
+Prototipteki karşılığı (`app.js`, `isikKur` ve `gunesYonu`):
 
 ```js
 renderer.toneMapping = ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = PCFSoftShadowMap;
 new HemisphereLight(0xF4F1EA, 0x8C948F, 1.15);
-const gunes = new DirectionalLight(0xFFF4E0, 2.1);            // castShadow; gölge kamerası yapı boyunda (R)
-// az: güneşin geldiği yön (kuzeyden saat yönüne), y = deg(yukseklik); model ekseni: x doğu, y yukarı, z güney
+const gunes = new DirectionalLight(0xFFF4E0, haritada ? harita_gunes : 2.1);   // castShadow; gölge kamerası yapı boyunda (R)
+const az = (on_yonu ?? 180) + (haritada ? harita_capraz : capraz);          // dünya açısı; model dönüşünden bağımsız
+const y = deg(haritada ? harita_yukseklik : yukseklik);                        // sahne ekseni: x doğu, y yukarı, z güney
 gunes.position = (sin(az)*cos(y), sin(y), -cos(az)*cos(y)) * R * 2.5;
-// az = yon, MODELİN KENDİ EKSENİNDE (döndürülmemiş GLB; 220.6 / 50 = tanıtımdaki güneş (-60, 110, 70)).
-// Sonra yön, modelin harita dönüşüyle aynı açıda döndürülür: dir.applyAxisAngle(Y, -deg(yaw)).
-// Her eserde ışık aynı köşeden (ön sol çapraz) vurur; harita dönünce gölge yerinde kalır
+// tanıtımdaki Ulucami: on_yonu 354 + 40 = 34° → aynı köşe. Harita dönünce gölge yerinde kalır.
+// haritada daha önden, daha yukarıdan, daha zayıf: yakın zoomda açık cepheler patlıyordu
 // doygunluk: her malzeme rengi HSL'de s *= doygunluk (en çok 1)
 ```
+
+**Admin paneli (öneri):** 3D model yüklerken «Ön cephe yönü» alanı olmalı (`models.front_azimuth`, 0–359). Arayüz: haritada modelin üstünde döndürülen bir ok ya da 8 yönlü pusula (K, KD, D, …) + derece; yanında «ana girişin baktığı yön» açıklaması ve canlı ışık önizlemesi. Öneri değeri modelden çıkarılabilir: kök düğüm adı `Portal`, `Tac_Kapi`, `Giris*`, `*SonCemaat` olan parçanın ana gövdeye göre yönü + `yaw` (prototipteki değerler böyle bulundu). Boş bırakılırsa 180 (güneye bakan cephe, güneş güney-güneybatıdan). Şehir düzeyindeki `capraz` / `yukseklik` / `harita_*` değerleri harita ayarlarında kalır, eser başına değişmez.
 
 **Haritada gölge:** her modelin altında `ShadowMaterial` (opaklık 0,3) düzlemi, model gölgesini harita zeminine düşürür. Gölge haritası her model için bir kez çizilir (`shadowMap.autoUpdate = false`, ilk karede `needsUpdate`). **Dikkat:** MapLibre ile ortak GL bağlamında gölge geçişinden sonra three çizim alanını kendi bildiği tuval boyuna döndürür; tuval büyümüşse (yüksek DPI, pencere boyu) model yanlış yere çizilip kaybolur. Her karede `renderer.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)`.
 

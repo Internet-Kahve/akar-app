@@ -402,21 +402,24 @@ async function haritaPinleriKur() {
 /* --- modellerimiz: MapLibre özel katmanı + three.js (aynı GL bağlamı). Yerleşim test.html ile aynı. --- */
 /* ışık şehir kaydından (veri/sehir/<şehir>.json → harita_isik; önizleme v3 «Pişmiş»). Yoksa eski varsayılanlar.
    Köşe kararması (AO) modellerde pişmiş; gerçek zamanlı gölge yok. Yer gölgesi web'de: kodla üretilen tek bulanık doku, her modelin altında. */
-const ISIK = Object.assign({ yon:216, yukseklik:46, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
+const ISIK = Object.assign({ capraz:40, yukseklik:50, harita_capraz:20, harita_yukseklik:62, harita_gunes:1.5, doygunluk:1, yer_golgesi:0 }, SEHIR.harita_isik || {});
 const YG_DOKU = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.filter = 'blur(13px)'; x.fillStyle = '#000';
   x.beginPath(); if (x.roundRect) x.roundRect(26, 26, 76, 76, 14); else x.rect(26, 26, 76, 76); x.fill(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
 /* ışık tanıtım sayfasındaki 3D ile aynı (30 Ekim 2026): sıcak gök ışığı + gölge düşüren tek güneş, ACES ton eşleme.
-   güneş YAPIYA GÖRE: yon modelin kendi ekseninde (döndürülmemiş GLB), tanıtımdaki gibi; sonra model haritadaki yaw ile döndüğü için güneş de
-   aynı açıyla döner. Böylece her eserde ışık aynı köşeden (ön sol çapraz) vurur; harita dönünce gölge yerinde kalır. R: gölge kamerasının yarı genişliği (m) */
-function gunesYonu(g, az, R, merkez, yaw = 0) {   // az: güneşin geldiği yön, modelin kuzeyinden saat yönüne derece. Model ekseni: x doğu, y yukarı, z güney
-  const a = THREE.MathUtils.degToRad(az), y = THREE.MathUtils.degToRad(ISIK.yukseklik);
-  g.position.set(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y)).applyAxisAngle(new THREE.Vector3(0, 1, 0), -THREE.MathUtils.degToRad(yaw)).multiplyScalar(R * 2.5).add(merkez);
+   güneş her eserin ÖN CEPHESİNE göre: model.json → on_yonu (ana girişin baktığı yön, dünya, kuzeyden saat yönüne). Güneş o cephenin önünden,
+   cepheye bakan kişinin solundan (capraz derece) gelir; her eserde ön yüz aydınlık, gölge arkaya-sağa düşer. on_yonu yoksa güneye bakan cephe varsayılır.
+   Tanıtımdaki Ulucami: on_yonu 354 + 40 → aynı köşe. Haritada güneş daha önden, daha yukarıdan ve daha zayıf (harita_*). R: gölge kamerasının yarı genişliği (m) */
+function gunesYonu(g, az, yuk, R, merkez) {   // az: güneşin geldiği yön (dünya), kuzeyden saat yönüne derece; yuk: ufuktan açı. Sahne ekseni: x doğu, y yukarı, z güney
+  const a = THREE.MathUtils.degToRad(az), y = THREE.MathUtils.degToRad(yuk);
+  g.position.set(Math.sin(a) * Math.cos(y), Math.sin(y), -Math.cos(a) * Math.cos(y)).multiplyScalar(R * 2.5).add(merkez);
 }
-function isikKur(r, sahne, R, haritada, merkez = new THREE.Vector3(), yaw = 0) {
+function isikKur(r, sahne, R, haritada, merkez, e) {
   r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
   r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
   sahne.add(new THREE.HemisphereLight(0xF4F1EA, 0x8C948F, 1.15));
-  const g = new THREE.DirectionalLight(0xFFF4E0, 2.1); gunesYonu(g, ISIK.yon, R, merkez, yaw); g.target.position.copy(merkez); sahne.add(g.target); g.castShadow = true;
+  const on = e.on_yonu ?? 180, g = new THREE.DirectionalLight(0xFFF4E0, haritada ? ISIK.harita_gunes : 2.1);
+  gunesYonu(g, on + (haritada ? ISIK.harita_capraz : ISIK.capraz), haritada ? ISIK.harita_yukseklik : ISIK.yukseklik, R, merkez);
+  g.target.position.copy(merkez); sahne.add(g.target); g.castShadow = true;
   const n = haritada ? 1024 : 2048; g.shadow.mapSize.set(n, n); g.shadow.bias = -0.0004; g.shadow.normalBias = R / n;
   Object.assign(g.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R * 0.5, far:R * 5 }); sahne.add(g); return g;
 }
@@ -437,7 +440,7 @@ const yapiKatman = {
       const grup = new THREE.Group(); gltf.scene.position.set(-c.x, -kutu.min.y, -c.z); grup.add(gltf.scene);
       grup.rotation.y = -THREE.MathUtils.degToRad(e.yaw || 0);
       const sahne = new THREE.Scene(); sahne.add(grup);
-      const R = kutu.getSize(new THREE.Vector3()).length() * 0.65; isikKur(this.r, sahne, R, true, new THREE.Vector3(), e.yaw || 0);
+      const R = kutu.getSize(new THREE.Vector3()).length() * 0.65; isikKur(this.r, sahne, R, true, new THREE.Vector3(), e);
       gltf.scene.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
       /* gölge harita zeminine: yalnız gölgeyi çizen saydam düzlem (ışık modelle sabit, gölge haritası bir kez çizilir) */
       const gz = new THREE.Mesh(new THREE.PlaneGeometry(R * 2, R * 2), new THREE.ShadowMaterial({ opacity:0.3, depthWrite:false, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:8 }));
@@ -739,8 +742,8 @@ function zeminKatmanlari(meshler) {
 }
 
 class Sahne3D {
-  constructor(kap, { onParca, altBosluk } = {}) {
-    this.kap = kap; this.onParca = onParca; this.altBosluk = altBosluk || (() => 0);
+  constructor(kap, { onParca, altBosluk, solBosluk } = {}) {
+    this.kap = kap; this.onParca = onParca; this.altBosluk = altBosluk || (() => 0); this.solBosluk = solBosluk || (() => 0);
     this.r = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
     // tuval saydam: zemin .sahne3d'nin CSS geçişinden gelir (şehrin rengi)
     this.r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.r.setClearColor(0x000000, 0);
@@ -751,6 +754,7 @@ class Sahne3D {
     this.kont = new OrbitControls(this.kam, this.r.domElement);
     this.kont.enableDamping = true; this.kont.dampingFactor = 0.09; this.kont.maxPolarAngle = Math.PI * 0.49;
     this.kont.addEventListener('change', () => (this.kirli = true));
+    this.kont.addEventListener('start', () => { this.turIste = false; this.turAci = null; this.kont.autoRotate = false; });   // kullanıcı döndürünce tur durur
     this.secili = new Set(); this.vurgulu = new Set(); this.flas = 0; this.kart = null;
     this.ro = new ResizeObserver(() => this.boyut()); this.ro.observe(kap);
     this.isaretci();
@@ -759,10 +763,10 @@ class Sahne3D {
   boyut() {
     const w = this.kap.clientWidth, h = this.kap.clientHeight; if (!w || !h) return;
     this.r.setSize(w, h, false); this.kam.aspect = w / h;
-    /* altta kart varsa kadrajın merkezi kartın yarısı kadar yukarı kayar (görünür alanın ortası) */
-    const a = Math.min(this.altBosluk(), h * 0.6);
-    if (a > 0) this.kam.setViewOffset(w, h + a, 0, a, w, h); else this.kam.clearViewOffset();
-    this.gorunurH = h - a; this.kam.updateProjectionMatrix(); this.kirli = true;
+    /* altta kart varsa kadrajın merkezi kartın yarısı kadar yukarı, solda kart varsa yarısı kadar sağa kayar (görünür alanın ortası) */
+    const a = Math.min(this.altBosluk(), h * 0.6), s = Math.min(this.solBosluk(), w * 0.5);
+    if (a > 0 || s > 0) this.kam.setViewOffset(w + s, h + a, 0, a, w, h); else this.kam.clearViewOffset();
+    this.gorunurH = h - a; this.gorunurW = w - s; this.kam.updateProjectionMatrix(); this.kirli = true;
   }
   async yukle(e) {
     this.eser = e;
@@ -776,7 +780,7 @@ class Sahne3D {
     for (const o of gltf.scene.children) if (!sunumEk(e, o.name) && !yerGolgesiMi(o)) this.kutu.expandByObject(o);
     const c = this.kutu.getCenter(new THREE.Vector3()), b = this.kutu.getSize(new THREE.Vector3());
     this.yaricap = b.length() / 2; this.boyY = b.y;
-    isikKur(this.r, this.sahne, this.yaricap * 1.3, false, c, e.yaw || 0);
+    isikKur(this.r, this.sahne, this.yaricap * 1.3, false, c, e);
     this.merkez = new THREE.Vector3(c.x, this.kutu.min.y + b.y * 0.25, c.z);   // Merkez: kutunun yatay ortası (kadraj için tabandan biraz yukarıda)
     this.parcalar = new Map(); this.meshler = [];
     const adlar = new Set(gltf.parser.json.nodes.filter((n) => n.mesh !== undefined && !sunumEk(e, n.name)).map((n) => n.name));
@@ -823,7 +827,7 @@ class Sahne3D {
     if (!this.kok || !a) return;
     const u = a.uzaklik || '', R = this.yaricap;
     /* yapının tamamı (sınır küresi) görünür alana sığacak uzaklık; «yakın / orta / çatı» bunun kesirleri */
-    const w = this.kap.clientWidth || 1, gh = this.gorunurH || this.kap.clientHeight || 1;
+    const w = this.gorunurW || this.kap.clientWidth || 1, gh = this.gorunurH || this.kap.clientHeight || 1;
     const vfov = THREE.MathUtils.degToRad(this.kam.fov) * Math.min(1, gh / (this.kap.clientHeight || gh));
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * (w / gh));
     const sigdir = R / Math.sin(Math.min(vfov, hfov) / 2);
@@ -835,6 +839,10 @@ class Sahne3D {
     if (!gecis || matchMedia('(prefers-reduced-motion: reduce)').matches) { this.kam.position.copy(konum); this.kont.target.copy(hedef); this.kont.update(); this.kirli = true; return; }
     this.tween = { t0:performance.now(), k0:this.kam.position.clone(), h0:this.kont.target.clone(), k1:konum, h1:hedef };
   }
+  /* genel görünüm: cümle belli bir parçayı göstermiyorsa yapı yavaşça döner (360°, ~30 sn); kamera geçişi bitince başlar, dokununca durur */
+  tur(acik, aci = null) { this.turIste = !!acik; this.turAci = acik ? aci : null; if (!acik) this.kont.autoRotate = false; this.kont.autoRotateSpeed = 2; this.kirli = true; }
+  /* arka arkaya vurgusuz cümlelerde kamera başa dönmez, tur sürer */
+  turSurer(aci) { return !!this.turIste && !!aci && JSON.stringify(this.turAci) === JSON.stringify(aci); }
   vurgula(adlar) { this.vurgulu = new Set((adlar || []).filter((a) => this.parcalar && this.parcalar.has(a))); this.vurguT0 = performance.now(); this.boya(); }
   /* bir kartın bütün parçaları birlikte seçilir ve vurgulanır (ör. Ulucami: dört cephe + pencere girintileri tek kart); kartı olmayan parça tek başına */
   grup(ad) { const k = ad && this.eser?.parcalar?.find((p) => p.adlar.includes(ad)); return k ? k.adlar : (ad ? [ad] : []); }
@@ -940,6 +948,7 @@ class Sahne3D {
       const dt = this.kalkanT == null ? 1 / 60 : Math.min(0.05, (t - this.kalkanT) / 1000);
       this.kalkanT = t; this.kalkanAktif = this.kalkanAdim(dt); this.kirli = true;
     }
+    this.kont.autoRotate = !!this.turIste && !this.tween && !matchMedia('(prefers-reduced-motion: reduce)').matches;   // kamera geçişi sürerken dönmez
     if (this.kont.update()) this.kirli = true;
     if (!this.kirli || !this.kok) return;
     this.kirli = false;
@@ -1287,7 +1296,10 @@ function parcaKartAc(ad) {
   const b = parcaBilgi(ad); if (!b) return;   // kartı olmayan parça kart açmaz (yalnız adı görünür)
   pkSesDur();
   const fl = (b.fotolar.length ? b.fotolar : [kapak(e)?.dosya]).map((d) => foto(e, d)).filter(Boolean);
-  const nokta = fl.length > 1 ? `<div class="pk-nokta">${fl.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : '';
+  /* birden çok fotoğrafta: sağ/sol okları ve dokunulabilir noktalar (kaydırmayla da gezilir) */
+  const coklu = fl.length > 1;
+  const nokta = coklu ? `<div class="pk-nokta" role="group" aria-label="Fotoğraflar">${fl.map((_, i) => `<button type="button" data-pk-git="${i}" class="${i ? '' : 'on'}" aria-label="${i + 1}. fotoğraf"${i ? '' : ' aria-current="true"'}><i></i></button>`).join('')}</div>
+    <button type="button" class="yuvarlak pk-ok sol" data-pk-adim="-1" aria-label="Önceki fotoğraf" disabled>${ic('chevron-left', 20)}</button><button type="button" class="yuvarlak pk-ok sag" data-pk-adim="1" aria-label="Sonraki fotoğraf">${ic('chevron-right', 20)}</button>` : '';
   let k = $('#parca-kart');
   if (!k) { k = document.createElement('div'); k.id = 'parca-kart'; k.className = 'parca-kart-arka'; document.body.appendChild(k); }
   k.innerHTML = `<section class="parca-kart" role="dialog" aria-modal="true" aria-labelledby="pk-baslik">
@@ -1298,8 +1310,18 @@ function parcaKartAc(ad) {
   </section>`;
   k.hidden = false; k.dataset.ad = ad; k._bilgi = b;
   const sh = $('#pk-fotolar');
-  sh.addEventListener('scroll', () => { const i = Math.round(sh.scrollLeft / sh.clientWidth); $$('.pk-nokta i', k).forEach((n, j) => n.classList.toggle('on', j === i)); }, { passive:true });
+  sh.addEventListener('scroll', () => pkFotoDurum(k), { passive:true });
   requestAnimationFrame(() => k.classList.add('acik'));
+}
+const pkFotoSira = (sh) => Math.round(sh.scrollLeft / (sh.clientWidth || 1));
+function pkFotoDurum(k) {   // etkin nokta ve okların açık/kapalı hâli kaydırma konumundan
+  const sh = $('#pk-fotolar'); if (!sh) return; const i = pkFotoSira(sh), n = sh.children.length;
+  $$('[data-pk-git]', k).forEach((b, j) => { b.classList.toggle('on', j === i); if (j === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+  const sol = k.querySelector('.pk-ok.sol'), sag = k.querySelector('.pk-ok.sag'); if (sol) sol.disabled = i <= 0; if (sag) sag.disabled = i >= n - 1;
+}
+function pkFotoGit(i) {
+  const sh = $('#pk-fotolar'); if (!sh) return; const n = sh.children.length; i = Math.max(0, Math.min(n - 1, i));
+  sh.scrollTo({ left:i * sh.clientWidth, behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 function parcaKartKapat(secimiBirak = true) {
   const k = $('#parca-kart'); pkSesDur(); if (!k || k.hidden) return;
@@ -1309,6 +1331,13 @@ function parcaKartKapat(secimiBirak = true) {
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-pk-kapat]') || e.target.id === 'parca-kart') { parcaKartKapat(); return; }
   if (e.target.closest('[data-pk-ses]')) { const k = $('#parca-kart'); if (pkSes) pkSesDur(); else if (k && k._bilgi) pkSesBaslat(k._bilgi); }
+  const git = e.target.closest('[data-pk-git]'); if (git) { pkFotoGit(+git.dataset.pkGit); return; }
+  const adim = e.target.closest('[data-pk-adim]'); if (adim) { const sh = $('#pk-fotolar'); if (sh) pkFotoGit(pkFotoSira(sh) + +adim.dataset.pkAdim); }
+});
+/* kart açıkken klavyede ← → fotoğraflar arasında gezer */
+document.addEventListener('keydown', (e) => {
+  const k = $('#parca-kart'); if (!k || k.hidden || !$('#pk-fotolar') || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+  e.preventDefault(); pkFotoGit(pkFotoSira($('#pk-fotolar')) + (e.key === 'ArrowRight' ? 1 : -1));
 });
 /* mobil eser kartı sürükleme: tutamak ya da başlık parmağı izler, bırakılan yükseklikte kalır (en az: üst bölüm, en çok: içerik ya da ekranın %75'i);
    kenara 40 px'ten yakınsa oraya oturur. Tutamağa dokunmak kapalı ↔ tam açık */
@@ -1414,6 +1443,31 @@ function anlatim(id, mod) {
   setTimeout(okuGozlem, 400);
   if (mod === 'dinle') setTimeout(() => oynat(true), 300);
 }
+/* anlatımdaki fotoğraf kartı: sürüklenerek taşınır; dokununca vurgulanan parçanın kartı (yoksa fotoğraf büyük) açılır */
+function k3Ac(k) {
+  if (!k || !k._f) return;
+  if (k._parca) { if (anlat.oynuyor) oynat(false); parcaKartAc(k._parca); return; }
+  const b = document.createElement('button'); b.dataset.isik = k._f.url; b.dataset.kunye = [k._f.baslik, k._f.kaynak].filter(Boolean).join(' · ');
+  b.innerHTML = resim(k._f); hkIsikAc(b); hk.isik.donus = k;   // kapanınca odak karta döner
+}
+function k3Surukle(k) {
+  if (!k) return; let b = null;
+  k.addEventListener('pointerdown', (e) => { if (e.button) return; b = { x:e.clientX, y:e.clientY, l:k.offsetLeft, t:k.offsetTop, id:e.pointerId, oyna:false }; });
+  k.addEventListener('pointermove', (e) => {
+    if (!b) return; const dx = e.clientX - b.x, dy = e.clientY - b.y;
+    if (!b.oyna) { if (Math.hypot(dx, dy) < 6) return; b.oyna = true; k.setPointerCapture(b.id); k.classList.add('suruk'); k.style.width = k.offsetWidth + 'px'; }
+    const p = k.offsetParent; if (!p) return;
+    const l = Math.min(Math.max(8, b.l + dx), p.clientWidth - k.offsetWidth - 8), t = Math.min(Math.max(8, b.t + dy), p.clientHeight - k.offsetHeight - 8);
+    Object.assign(k.style, { left:l + 'px', top:t + 'px', right:'auto', bottom:'auto' });
+  });
+  const bit = (e) => {
+    if (!b) return; const oyna = b.oyna; b = null; k.classList.remove('suruk');
+    if (oyna) { k.dataset.serbest = '1'; if (s3d) { s3d.boyut(); s3d.kirli = true; } }   // kart elle taşındı: model yeniden ortalanır
+    else if (e.type === 'pointerup') k3Ac(k);
+  };
+  k.addEventListener('pointerup', bit); k.addEventListener('pointercancel', bit);
+  k.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); k3Ac(k); } });   // boşluk anlatımı ilerletmesin
+}
 function anlatAcikCiz() {
   if (durum.masaustu) return;
   const acik = anlat.acik;
@@ -1421,6 +1475,9 @@ function anlatAcikCiz() {
   const alan = $('#anlat-alan'); alan.style.bottom = acik ? `calc(100% - 360px - var(--sat))` : '0';
   alan.style.setProperty('--foto-alt', acik ? '0px' : (($('#hikaye-kart')?.offsetHeight || 0) + 24) + 'px');
   $('#ilerleme').classList.toggle('acik', false);
+  /* sayfa açılıp kapanınca görünür alan değişir: kart yerine döner, kadraj yeniden hesaplanır */
+  const k = $('#kart3d');
+  if (k) { delete k.dataset.serbest; Object.assign(k.style, { left:'', top:'', right:'', bottom:'', width:'' }); sahneUygula(true); }
 }
 /* anlatım sahnesi: fotoğraf ya da 3D */
 function anlatSahne() {
@@ -1432,8 +1489,13 @@ function anlatSahne() {
   $('#ilerleme').classList.toggle('acik', !koyu);
   if (koyu) alan.innerHTML = `<div class="foto-sahne${durum.doldur ? ' doldur' : ''}" id="foto-sahne"><img class="bulanik" alt=""><img class="ana" alt=""><div class="ust-golge"></div><div class="alt-bilgi"><span id="foto-guven"></span><span class="kunye">${esc(aktifSehir().foto_kunye)}</span></div></div>`;
   else {
-    alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Model gelince sahne kendiliğinden açılır.')}</div><div class="kart3d" id="kart3d" style="opacity:0"></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
-    s3dKur($('#s3d'), anlat.eser, { onParca:parcaSecildi, altBosluk:() => (!durum.masaustu && !anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) }, anlatSahne, () => sahneUygula(false));
+    alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Model gelince sahne kendiliğinden açılır.')}</div><div class="kart3d" id="kart3d" hidden></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
+    k3Surukle($('#kart3d'));
+    /* fotoğraf kartı kenara yaslanır, model onun yanında kalır: mobilde kartın üstünde, masaüstünde sağında. Kart sürüklenip bırakılınca kadraj ortalanır */
+    const k3 = () => { const k = $('#kart3d'); return k && !k.hidden && !k.dataset.serbest ? k : null; };
+    s3dKur($('#s3d'), anlat.eser, { onParca:parcaSecildi,
+      altBosluk:() => (durum.masaustu ? 0 : (!anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) + (k3() ? k3().offsetHeight + 12 : 0)),
+      solBosluk:() => (durum.masaustu && k3() ? k3().offsetWidth + 32 : 0) }, anlatSahne, () => sahneUygula(false));
   }
   $$('[data-gorunum]').forEach((b) => b.setAttribute('aria-checked', b.dataset.gorunum === durum.gorunum));
   sahneUygula(false);
@@ -1447,11 +1509,22 @@ function sahneUygula(gecis = true) {
     if (ana.dataset.url !== f.url) { ana.style.opacity = 0; const yeni = new Image(); yeni.onload = () => { ana.src = f.url; $('.bulanik', fs).src = f.url; ana.dataset.url = f.url; ana.alt = f.alt; ana.style.opacity = 1; }; yeni.src = f.url; }
     $('#foto-guven').innerHTML = guven(f.guven, { alinti:f.baslik, kaynak:f.kaynak });
   } else if (s3d && s3d.kok) {
+    /* fotoğraf kartı: önce kart konur (yer kaplar), sonra kadraj ve kamera onun yanına göre hesaplanır */
+    const k = $('#kart3d'), f = c.kart && foto(e, c.foto);
+    if (f) {
+      k.innerHTML = `${resim(f)}<div class="k3-yazi"><b>${esc(f.baslik)}</b><small>${esc(f.kisa)}</small></div><span class="k3-tutamak" aria-hidden="true"></span>`;
+      k.querySelector('img')?.setAttribute('loading', 'eager');   // kart gizliyken konduğu için tembel yükleme görseli geciktirir
+      k._f = f; k._parca = c.vurgu.find((a) => parcaBilgi(a)) || null;
+      k.setAttribute('role', 'button'); k.tabIndex = 0; k.setAttribute('aria-label', `${f.baslik}: ${k._parca ? 'parça kartını aç' : 'fotoğrafı büyüt'}. Sürükleyerek taşınabilir.`);
+      if (!durum.masaustu && !k.dataset.serbest) k.style.bottom = (!anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 24 : 12) + 'px';
+      k.hidden = false;
+    } else k.hidden = true;
+    s3d.boyut();
     s3d.kubbeler(!!c.ic, gecis);   // v2: iç mekân cümlelerinde kubbeler kalkar
-    s3d.aci(c.aci, gecis); s3d.vurgula(c.vurgu);
-    const k = $('#kart3d');
-    if (c.kart) { const f = foto(e, c.foto); k.innerHTML = `${resim(f)}<div><b>${esc(f.baslik)}</b><small>${esc(f.kisa)}</small></div>`; s3d.kartBagla(k, c.vurgu[0] || (c.aci && c.aci.hedef) || 'Merkez'); }
-    else { k.style.opacity = 0; s3d.kartBagla(null); }
+    const genel = !c.vurgu.length;
+    if (!(gecis && genel && s3d.turSurer(c.aci))) s3d.aci(c.aci, gecis);
+    s3d.vurgula(c.vurgu);
+    s3d.tur(genel, c.aci);   // belli bir parçası olmayan cümle (ör. «Ulucami'yi Yıldırım Bayezid yaptırdı»): yapı yavaşça döner
   }
 }
 /* ---------- Akar akışı (29 Ekim 2026; Figma D 1:2893 «Anlatım · Akar akışı», fikir: Kılıç Ali Paşa prototipi `flow`) ----------
@@ -1608,6 +1681,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (!anlat.eser || e.target.matches('input')) return;
+  if ([$('#parca-kart'), $('#hk-isik')].some((k) => k && !k.hidden)) return;   // üstte pencere varken tuşlar anlatıma gitmez
   if (e.key === 'Escape') location.hash = '#/eser/' + anlat.eser.id;
   else if (e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); anlat.mod === 'oku' ? cumleGit(anlat.i + 1, 'tik') : oynat(); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); cumleGit(anlat.i - 1, 'tik'); }
