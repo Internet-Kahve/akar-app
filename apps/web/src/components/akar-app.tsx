@@ -100,7 +100,7 @@ import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
 import { cityCase } from "../lib/place-names";
 import { readPreference, writePreference } from "../lib/preferences";
-import { siteMeta } from "../lib/site-meta";
+import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 type View =
   | "map"
   | "sites"
@@ -503,7 +503,7 @@ export function AkarApp() {
     const here = query
       ? filtered
       : filtered.filter((s) => !s.city || s.city === cityName);
-    return nearPoint ? nearestFirst(here, nearPoint) : here;
+    return nearPoint ? nearestFirst(here, nearPoint) : byDisplayOrder(here);
   }, [filtered, query, cityName, nearPoint]);
   const chipCategories = useMemo(() => categoriesOf(published), [published]);
   const peekSite = published.find((s) => s.id === peekId);
@@ -1524,7 +1524,7 @@ export function AkarApp() {
         {shell}
         {welcome && (
           <WelcomeCard
-            site={published[0]}
+            site={byDisplayOrder(published)[0]}
             style={cityLook}
             onHome={() => {
               closeWelcome();
