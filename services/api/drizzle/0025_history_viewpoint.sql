@@ -1,0 +1,1 @@
+ALTER TABLE "history_images" ADD COLUMN "viewpoint" jsonb;

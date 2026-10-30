@@ -160,6 +160,19 @@ export const StoryBlockDto = z.object({
   cardId: z.string().nullable().describe("Cümlede modelin üstünde gösterilen kart (SiteDetail.cards)"),
   camera: CameraPoseDto.nullable().describe("Cümlenin kamera açısı; null = önceki cümlenin açısı korunur"),
   interior: z.boolean().describe("«İç mekân (3D)»: bu cümlede modelin örtü grupları kalkar"),
+  routeOnly: z.boolean().describe("«Yalnız rotada»: yalnız eser rotadan açılınca okunur"),
+  flow: z
+    .object({
+      fromSiteId: z.string(),
+      toSiteId: z.string().nullable(),
+      toPoint: z.tuple([z.number(), z.number()]).nullable().describe("Uygulamada eser olmayan hedefin [boylam, enlem] konumu"),
+      toName: z.string(),
+      label: z.string(),
+      source: z.string(),
+      trust: TrustSchema,
+    })
+    .nullable()
+    .describe("«Akar akışı»: bu cümlede haritada çizilen gelir yolu"),
   highlights: z.array(z.string()),
   audioMediaId: z.string().nullable().describe("Türkçe ses kaydı (SiteDetail.media, kind=audio)"),
   audioEnMediaId: z.string().nullable().describe("İngilizce ses kaydı (SiteDetail.media, kind=audio)"),
@@ -257,6 +270,10 @@ export const HistoryImageDto = z.object({
   sourceId: z.string().nullable(),
   trust: TrustSchema,
   camera: CameraPoseDto.nullable().describe("Bugünün görüntüsüyle hizalama açısı"),
+  viewpoint: z
+    .object({ lng: z.number(), lat: z.number(), bearingDeg: z.number(), fieldDeg: z.number(), interior: z.boolean() })
+    .nullable()
+    .describe("Çekim noktası ve görüş konisi; null = bilinmiyor"),
   presentAngleMatch: z
     .enum(historyAngleMatches)
     .nullable()

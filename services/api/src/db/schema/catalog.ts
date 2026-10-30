@@ -289,6 +289,20 @@ export const sectionKinds = ["history", "architecture", "waqf"] as const;
 export const sectionKindEnum = pgEnum("section_kind", sectionKinds);
 
 /** The reading layer of an "Eser hakkında" chapter, every string quoted verbatim from the chapter's paragraphs. */
+export type HistoryViewpoint = { lng: number; lat: number; bearingDeg: number; fieldDeg: number; interior: boolean };
+
+/** "Akar akışı" row of a story: from the site that earns to the site or place it supports. */
+export type StoryFlow = {
+  fromSiteId: string;
+  toSiteId: string | null;
+  /** `[lng, lat]` of a target that is no site in the app. */
+  toPoint: [number, number] | null;
+  toName: string;
+  label: string;
+  source: string;
+  trust: "verified" | "inferred" | "representative";
+};
+
 export type AboutReading = {
   summary: string[];
   figures: Array<{ value: string; label: string; evidence: string }>;
@@ -404,6 +418,10 @@ export const storyBlocks = pgTable(
     camera: jsonb("camera").$type<CameraPose>(),
     /** "İç mekân (3D)": the model's cover groups lift for this sentence. */
     interior: boolean("interior").notNull().default(false),
+    /** "Yalnız rotada": read only when the site was opened from a route. */
+    routeOnly: boolean("route_only").notNull().default(false),
+    /** "Akar akışı": the waqf's income road, drawn on the map for this sentence. */
+    flow: jsonb("flow").$type<StoryFlow>(),
     highlights: text("highlights").array().notNull().default(sql`'{}'::text[]`),
     audioMediaId: text("audio_media_id").references(() => media.id),
     audioEnMediaId: text("audio_en_media_id").references(() => media.id),
@@ -442,6 +460,8 @@ export const historyImages = pgTable(
     camera: jsonb("camera").$type<CameraPose>(),
     /** The present-day photograph's view against the old one; null while there is no present-day photograph. */
     presentAngleMatch: text("present_angle_match", { enum: historyAngleMatches }),
+    /** Where the photograph was taken from; null = unknown. */
+    viewpoint: jsonb("viewpoint").$type<HistoryViewpoint>(),
   },
   (t) => [
     unique("history_images_order_uq").on(t.siteId, t.position),

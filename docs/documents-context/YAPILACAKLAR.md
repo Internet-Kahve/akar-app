@@ -14,7 +14,7 @@ Kalan farklar:
 - «Bir hata mı gördün? Bildir» yalnız teşekkür gösteriyor, bildirim kaydı yok (`POST /reports` gerekir).
 - İngilizce içerik dosyaları içe aktarılmıyor; dil seçici var, çeviri olan alanlar değişmiyor.
 - Puan defteri ürün tarafında duruyor (tasarım puansız); karar bekliyor.
-- `route_only`, `flow`, `viewpoint` alanları ayrı PR'da; migration canlıya uygulanmadan birleştirilmez. Altın gelir yolu, «Yalnız rotada» ve çekim haritası veri gelince açılır.
+- Migration `0024`, `0025` canlıya uygulanmadı; altın gelir yolu, «Yalnız rotada» ve çekim haritası içerik yeniden aktarılınca açılır.
 
 ## Şu anki durum (bir bakışta)
 

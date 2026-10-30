@@ -517,3 +517,9 @@ Karar: `design/test-redmi9t-v2/` tasarımı `apps/web` içine taşındı ve prot
 Neden: içerik ekibinin önizlemesi ile ürün iki ayrı arayüz olarak ayrışıyordu; `main` ürünü tek arayüz olsun. Kod `docs` içinde kalmasın.
 Karar veren / tarih: Tamer Akdeniz, 30 Eki.
 Nasıl değiştirilir: arayüz `apps/web`'de değişir. Bu karar canlı veritabanını ve katalogu değiştirmez.
+
+**11.55 «Yalnız rotada», «Akar akışı» ve çekim noktası veritabanına eklendi.**
+Karar: `story_blocks.route_only`, `story_blocks.flow` ve `history_images.viewpoint` (migration 0024, 0025). Üçü de içe aktarmayla dolar; panel bu alanları düzenlemez, kaydederken korur.
+Neden: arayüz bu verilerle altın gelir yolunu, rotaya özel cümleleri ve çekim haritasını gösterir.
+Karar veren / tarih: Tamer Akdeniz, 30 Eki.
+Nasıl değiştirilir: migration'lar bu PR birleşmeden önce canlıya uygulanır (§11.35); deploy migration çalıştırmaz. Veri, içerik yeniden aktarılınca gelir.

@@ -38,6 +38,23 @@ city_records = [(path, json.loads(path.read_text())) for path in sorted((root / 
 inventories = {record['ad']: record.get('envanter_adi') for _, record in city_records}
 skipped_traces = 0  # izler.json records that are not approved team samples; they are never imported
 
+def viewpoint(image):
+    """Where an archive photograph was taken from; `None` when the record does not say."""
+    point = image.get('cekimNoktasi')
+    if not point or image.get('yon') is None:
+        return None
+    return dict(lng=point['lng'], lat=point['lat'], bearingDeg=image['yon'], fieldDeg=image.get('gorusAcisi') or 60,
+                interior=bool(image.get('icMekan')))
+
+def flow(row):
+    """«Akar akışı»: one row of a story; a target outside the catalog is a point."""
+    if not row:
+        return None
+    return dict(fromSiteId=IDS.get(row['kaynak_eser'], row['kaynak_eser']),
+                toSiteId=IDS.get(row['hedef_eser'], row['hedef_eser']) if row['hedef_eser'] else None,
+                toPoint=row['hedef_nokta'], toName=row['hedef_ad'], label=row['etiket'], source=row['kaynak'],
+                trust=trust(row['guven']))
+
 def trust(value):
     if value not in TRUST:
         raise ValueError('Unknown trust label: ' + value)
@@ -88,16 +105,14 @@ for entry in editorial.eserleri_bul():
     by_name = {p['file'].split('/icerik/foto/', 1)[1]: p for p in photos}
     stories = []
     for item in editorial.hikaye_oku(folder):
-        # «Yalnız rotada» sentences lead to the next stop; the product has no route-only story block, so they stay out.
-        if item.get('rota'):
-            continue
         photo = by_name.get(item['foto'])
         if not photo:
             raise ValueError(f'Missing story photograph: {folder} {item["foto"]}')
         stories.append(dict(id=f'{sid}-story-{item["no"]}', title=photo['title'], text=item['metin'],
                             simple=item['metin'], trust=trust(item['guven']), photoId=photo['id'],
                             sourceId=source(item['kaynak']), showCard=item['kart'], highlights=item['vurgu'],
-                            interior=item['ic'], **({'camera': camera(item['aci'])} if item['aci'] else {})))
+                            interior=item['ic'], routeOnly=bool(item.get('rota')), flow=flow(item.get('akis')),
+                            **({'camera': camera(item['aci'])} if item['aci'] else {})))
     # "Eser hakkında": one chapter per heading of eser-hakkinda.md, its paragraphs, the reading layer of
     # eser-hakkinda-okuma.md (verbatim-checked by okuma_oku, which warns and drops what the book text lacks) and the
     # book photographs of kitap-fotograflari.md.
@@ -219,7 +234,7 @@ for entry in editorial.eserleri_bul():
         history.append(dict(id=key, file=f'eserler/{folder}/gecmisi-gor/{image["gorsel"]}',
                             caption=image['baslik'], dateLabel=image['tarih']['etiket'],
                             alt=image['altMetin'], license=image['lisans'], credit=image['kaynakSatiri'],
-                            trust=credibility, sourceId=source(image['kaynakSatiri'], 'archive',
+                            trust=credibility, viewpoint=viewpoint(image), sourceId=source(image['kaynakSatiri'], 'archive',
                             image.get('asilArsivUrl') or image['fotoAtlasUrl'], image.get('fotografci', ''), credibility)))
     # Present-day pairs (bugunku-esler.json) and the team's İz Bırak samples (izler.json), §11.47.
     sample_traces, skipped = history_extras.read_extras(
