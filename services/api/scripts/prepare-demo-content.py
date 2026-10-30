@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an upload manifest from the seven reviewed editorial packages; no network or database writes."""
+"""Build an upload manifest from the reviewed editorial packages; no network or database writes."""
 import argparse
 import importlib.util
 import json
@@ -26,9 +26,13 @@ spec = importlib.util.spec_from_file_location('editorial', root / 'design/test-r
 editorial = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(editorial)
 IDS = {'yildirim-bayezid-bedesteni': 'bedesten', 'orhan-bey-kulliyesi': 'orhan-gazi'}
-KINDS = {'Cami': 'cami', 'Bedesten': 'bedesten', 'Han': 'han', 'Hamam': 'hamam', 'Türbe': 'turbe'}
+KINDS = {'Cami': 'cami', 'Bedesten': 'bedesten', 'Han': 'han', 'Hamam': 'hamam', 'Türbe': 'turbe', 'Çeşme': 'cesme', 'Medrese': 'egitim'}
 TRUST = {'Doğrulanmış': 'verified', 'Tarihsel çıkarım': 'inferred', 'Temsili içerik': 'representative'}
+# The district these sites were published with; a later site takes its eser.json `ilce`.
+DISTRICTS = {'orhan-gazi-turbesi': 'Hisar', **dict.fromkeys(['ulu-cami', 'emir-han', 'koza-han', 'orhan-bey-hamami', 'orhan-bey-kulliyesi', 'yildirim-bayezid-bedesteni'], 'Hanlar Bölgesi')}
 result = {'version': 1, 'sites': [], 'routes': [], 'retireSiteIds': ['bursa-cesme-demo', 'bursa-mektep-demo']}
+city_records = [(path, json.loads(path.read_text())) for path in sorted((root / 'veri/sehir').glob('*.json'))]
+inventories = {record['ad']: record.get('envanter_adi') for _, record in city_records}
 skipped_traces = 0  # izler.json records that are not approved team samples; they are never imported
 
 def trust(value):
@@ -36,7 +40,8 @@ def trust(value):
         raise ValueError('Unknown trust label: ' + value)
     return TRUST[value]
 
-BOOK_LICENSE = 'Vakıf Katılım, Bursa Vakıf Eserleri Envanteri ve fotoğraf arşivi. Proje için verildi; kullanılabilir'
+def book_license(inventory):
+    return f'Vakıf Katılım, {inventory} ve fotoğraf arşivi. Proje için verildi; kullanılabilir'
 
 # Distance words of the "Açı" table, as fractions of the distance at which the whole model fits the view
 # (prototype Sahne3D.aci); anything else ("bütün yapı", "kadrajın yarısı") is the whole building.
@@ -52,6 +57,9 @@ def camera(angle):
 for entry in editorial.eserleri_bul():
     folder = entry['id']
     sid = IDS.get(folder, folder)
+    inventory = inventories.get(entry['il'])
+    if not inventory:
+        raise ValueError(f'No inventory name in the city record: {folder} {entry["il"]}')
     sources = []
     def source(title, kind='book', url='', author='', credibility='verified'):
         for item in sources:
@@ -69,13 +77,17 @@ for entry in editorial.eserleri_bul():
         rel = f'eserler/{folder}/icerik/foto/{filename}'
         if not (root / rel).is_file() or not h[7].strip():
             raise ValueError('Missing image/license: ' + rel)
-        photos.append(dict(id=f'{sid}-photo-{filename.split("_")[0]}', file=rel, src='', alt=h[5],
+        photos.append(dict(id=f'{sid}-photo-{Path(filename).stem.split("_")[0]}', file=rel, src='', alt=h[5],
                            title=h[3], titleEn='', description=h[4], license=h[7], trust=trust(h[8]),
                            sourceId=source(editorial.kaynak_bicim(h[6])),
                            galleryPosition=int(h[2]) if h[2].isdigit() else None))
-    by_name = {Path(p['file']).name: p for p in photos}
+    # Keyed by the path under icerik/foto/: a photo-only site's gallery is its kitap/ crops.
+    by_name = {p['file'].split('/icerik/foto/', 1)[1]: p for p in photos}
     stories = []
     for item in editorial.hikaye_oku(folder):
+        # «Yalnız rotada» sentences lead to the next stop; the product has no route-only story block, so they stay out.
+        if item.get('rota'):
+            continue
         photo = by_name.get(item['foto'])
         if not photo:
             raise ValueError(f'Missing story photograph: {folder} {item["foto"]}')
@@ -118,7 +130,6 @@ for entry in editorial.eserleri_bul():
     book_photos = []
     book_path = root / 'eserler' / folder / 'icerik/kitap-fotograflari.md'
     if book_path.is_file() and sections:
-        by_rel = {p['file'].split('/icerik/foto/', 1)[1]: p for p in photos}
         found = []
         for h in editorial.tablo(editorial.oku(book_path), 'Dosya'):
             if len(h) < 6:
@@ -134,12 +145,12 @@ for entry in editorial.eserleri_bul():
         for rel, h, page in found:
             earlier = [i for i in eligible if pages[i] <= page]
             target = sections[earlier[-1] if earlier else 0]
-            if rel in by_rel:
-                media_id = by_rel[rel]['id']
+            if rel in by_name:
+                media_id = by_name[rel]['id']
             else:
                 media_id = f'{sid}-book-{Path(rel).stem}'
                 book_photos.append(dict(id=media_id, file=f'eserler/{folder}/icerik/foto/{rel}', alt=h[4], title=f'{entry["ad"]} · Envanter Cilt {page[0]} · s. {page[1]}',
-                                        description=h[5], license=BOOK_LICENSE, trust='verified',
+                                        description=h[5], license=book_license(inventory), trust='verified',
                                         sourceId=source(f'Envanter Cilt {page[0]} · s. {page[1]}')))
             target['photos'].append(dict(id=media_id, aspect=float(h[3].replace(',', '.')), alt=h[4]))
     cover_name = entry.get('hakkinda_kapak')
@@ -195,7 +206,9 @@ for entry in editorial.eserleri_bul():
             badges.append(dict(id=b['id'], title=b['ad'], text=b['metin'], condition=kind, taskId=task_id,
                                onSiteLabel=bool(b.get('yerinde_etiketi'))))
     history = []
-    archive = json.loads((root / 'eserler' / folder / 'gecmisi-gor/gecmisi-gor.json').read_text())
+    # A photo-only site may have no archive package; the viewer then says there is no old image yet.
+    archive_path = root / 'eserler' / folder / 'gecmisi-gor/gecmisi-gor.json'
+    archive = json.loads(archive_path.read_text()) if archive_path.is_file() else dict(fotograflar=[])
     for image in archive['fotograflar']:
         credibility = 'verified' if image['eslesme'] in ['kesin', 'elle'] else 'inferred'
         # Keep the full credit and licence; the web viewer displays the uncropped original.
@@ -210,27 +223,28 @@ for entry in editorial.eserleri_bul():
         root / 'eserler' / folder / 'gecmisi-gor', f'eserler/{folder}/gecmisi-gor', sid,
         {image['fotoAtlasId']: entry for image, entry in zip(archive['fotograflar'], history)})
     skipped_traces += skipped
+    # A site without a 3d/ folder is a photo-only site; a 3d/ folder without its model.json is a broken package.
     model_info = editorial.model_oku(folder)
-    if not model_info:
+    if not model_info and (root / 'eserler' / folder / '3d').exists():
         raise ValueError('Missing 3d/model.json: ' + folder)
-    shift = model_info.get('kaydirma_m') or {}
+    shift = (model_info or {}).get('kaydirma_m') or {}
     east, north = shift.get('dogu', 0), shift.get('kuzey', 0)
     coords = [entry['lon'] + east/(111320*math.cos(math.radians(entry['lat']))), entry['lat'] + north/110540]
     model = dict(name=entry['ad']+' · temsili 3B model', file=f'eserler/{folder}/3d/export/{model_info["glb"]}_sunum.glb',
-                 src='', bytes=0, parts=[], trust='representative', coverGroups=model_info.get('ortu_gruplari') or [])
+                 src='', bytes=0, parts=[], trust='representative', coverGroups=model_info.get('ortu_gruplari') or []) if model_info else None
     # eser.json `sira` (§11.48): map draw priority, a whole number from 1 up; absent = unranked (None).
     display_order = entry.get('sira')
     if display_order is not None and (isinstance(display_order, bool) or not isinstance(display_order, int) or display_order < 1):
         raise ValueError(f'sira must be an integer of at least 1: {folder} {display_order!r}')
     gallery = sorted((p for p in photos if p['galleryPosition'] is not None), key=lambda p:p['galleryPosition'])
-    result['sites'].append(dict(id=sid, name=entry.get('uzun_ad') or entry['ad'], city='Bursa',
-        district='Hisar' if folder=='orhan-gazi-turbesi' else 'Hanlar Bölgesi', year=entry['yil'], architect='—',
+    result['sites'].append(dict(id=sid, name=entry.get('uzun_ad') or entry['ad'], city=entry['il'],
+        district=DISTRICTS.get(folder, entry['ilce']), year=entry['yil'], architect='—',
         patron=entry['yaptiran'], kind=KINDS[entry['tur']], coordinates=coords, minutes=max(1,round(sum(len(s['text'].split()) for s in stories)/130)) if stories else 0,
         displayOrder=display_order,
         description=entry['kisa'], status='published', tier='Hero' if sid=='ulu-cami' else 'Tier 2',
-        source='Bursa Vakıf Eserleri Envanteri · ekip tarafından hazırlanan kaynaklı içerik',
+        source=f'{inventory} · ekip tarafından hazırlanan kaynaklı içerik',
         role='akar' if entry['rol']=='akar' else 'hayrat', stories=stories, photos=photos, sources=sources,
-        coverPhotoId=gallery[0]['id'], model=model, historyImages=history, sampleTraces=sample_traces, sections=sections, chapters=chapters, bookPhotos=book_photos,
+        coverPhotoId=gallery[0]['id'], **({'model': model} if model else {}), historyImages=history, sampleTraces=sample_traces, sections=sections, chapters=chapters, bookPhotos=book_photos,
         aboutCoverPhotoId=by_name[cover_name]['id'] if cover_name else None, partCards=part_cards,
         tasks=tasks, badges=badges,
         relatedSiteId={'bedesten':'ulu-cami','orhan-bey-hamami':'orhan-gazi','emir-han':'orhan-gazi'}.get(sid)))
@@ -241,17 +255,18 @@ result['routes'] = [
 # City records (veri/sehir/<city>.json): every city, with or without sites in the app (§11.45: globe markers, «Yakında»).
 # Scene (§11.42): model light from harita_isik, viewer background from kimlik; without both scene stays null (default light).
 # Identity (§11.49): kimlik.zemin, desen and desen_renk, all three or none; the pattern is a file of design/desenler.
-LIGHT = dict(ambient='ortam', sun='gunes', fill='dolgu', azimuthDeg='yon', elevationDeg='yukseklik',
-             saturation='doygunluk', groundShadow='yer_golgesi')
+# A city whose pattern is not drawn yet has no identity: its screens stay neutral.
+LIGHT = dict(azimuthDeg='yon', elevationDeg='yukseklik', saturation='doygunluk', groundShadow='yer_golgesi')
+# The record dropped these with the prototype's new rig (ENTEGRASYON §3); the product's lights keep the last reviewed values.
+LIGHT_RIG = dict(ambient=2, sun=1, fill=1)
 result['cities'] = []
 LOOK = dict(accent='zemin', pattern='desen', patternColour='desen_renk')
-for path in sorted((root / 'veri/sehir').glob('*.json')):
-    record = json.loads(path.read_text())
+for path, record in city_records:
     light, kimlik = record.get('harita_isik'), record.get('kimlik') or {}
-    scene = dict(light={k: light[v] for k, v in LIGHT.items()}, backgroundTop=kimlik['sahne_ust'],
+    scene = dict(light=dict(LIGHT_RIG, **{k: light[v] for k, v in LIGHT.items()}), backgroundTop=kimlik['sahne_ust'],
         backgroundBottom=kimlik['sahne_alt']) if light and kimlik.get('sahne_ust') and kimlik.get('sahne_alt') else None
     look = {k: kimlik.get(v) for k, v in LOOK.items()}
-    if any(look.values()) and not all(look.values()):
+    if look['pattern'] and not all(look.values()):
         raise ValueError(f"{path.name}: kimlik needs zemin, desen and desen_renk together")
     if look['pattern'] and not (root / 'design/desenler' / look['pattern']).is_file():
         raise ValueError(f"{path.name}: pattern file design/desenler/{look['pattern']} is missing")
