@@ -22,7 +22,7 @@ ONBELLEK = os.path.join(BURASI, '.onbellek')
 
 # 28 Ekim 2026: bu dosyada esere, şehre ya da rotaya özel hiçbir değer yok. Hepsi veriden okunur:
 #   eserler/<eser>/eser.json        kimlik (ad, yıl, yaptıran, tür, rol, il, ilçe, konum, sıra)
-#   eserler/<eser>/3d/model.json    model (glb, yaw, ana_parca, kaydirma_m, ortu_gruplari)
+#   eserler/<eser>/3d/model.json    model (glb, yaw, on_yonu, ana_parca, kaydirma_m, ortu_gruplari)
 #   eserler/<eser>/icerik/*.md      hikâye, fotoğraflar, eser hakkında, parça kartları
 #   eserler/<eser>/icerik/gorevler.json  görevler (soru, saha görevi) ve rozetler
 #   veri/sehir/<sehir>.json         harita açılışı, şehir künyeleri
@@ -451,6 +451,7 @@ def main():
         model = model_oku(eid)
         if model:
             e['glb'], e['yaw'] = model.get('glb'), model.get('yaw', 0)
+            if model.get('on_yonu') is not None: e['on_yonu'] = model['on_yonu']   # ön cephenin baktığı yön (güneş buna göre)
             k = model.get('kaydirma_m') or {}
             dogu, kuzey = k.get('dogu', 0), k.get('kuzey', 0)
         else:

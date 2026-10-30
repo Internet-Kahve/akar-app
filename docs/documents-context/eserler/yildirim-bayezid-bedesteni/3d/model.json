@@ -2,6 +2,8 @@
   "_aciklama": "3D model ayarı (28 Ekim 2026). glb: export/ içindeki dosya adı (uzantısız; _sunum otomatik). yaw: Haritada kuzeye göre dönüş (derece). OSM yön açısı 90°'ye indirgendiği için 180° belirsizdir; Ulucami 22 Ekim'de 174 yapıldı. ana_parca: Haritada modeli konuma oturtmak için ortası alınan parça; avlu, şadırvan gibi ek yapılar kutuyu kaydırmaz. Boşsa bütün modelin kutusu kullanılır. kaydirma_m: 22 Ekim 2026: modelin ana gövdesi tepeden OSM bina sınırlarıyla karşılaştırılıp metre cinsinden kaydırıldı (doğu, kuzey). Pin de bu noktaya oturur. ic_parcalar: yalnız sunum GLB'sinde olan iç mekân parçaları; harita GLB'sinde yok (29 Ekim 2026, eser başına iki model).",
   "glb": "bedesten_v11",
   "yaw": 4,
+  "on_yonu": 4,
+  "_on_yonu_not": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönüne derece (dünya). Güneş her eserde bu cepheye ön sol çaprazdan vurur. Kaynak: kuzey kapı; dört yönde kapı var, kuzey seçildi (tahmin).",
   "ana_parca": "Govde",
   "kaydirma_m": {
     "dogu": 6.1,
