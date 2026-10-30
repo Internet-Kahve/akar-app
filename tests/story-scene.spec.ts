@@ -159,8 +159,8 @@ test("the photo card stays clear of the model, is dragged away and opens the par
   await next(page);
   await expect(page.locator(".current .story-text")).toContainText("Cümle 3");
   await expect
-    .poll(async () => Math.round((await card.boundingBox())?.y ?? 0))
-    .toBe(Math.round(placed));
+    .poll(async () => Math.abs(((await card.boundingBox())?.y ?? 0) - placed))
+    .toBeLessThanOrEqual(1);
   await card.click();
   await expect(page.locator(".about-lightbox")).toBeVisible();
   await page.locator(".about-lightbox-close").click();

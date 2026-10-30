@@ -56,13 +56,18 @@ export function StoryPanel({
     list = useRef<HTMLOListElement>(null),
     // Only the visitor's own scrolling picks a sentence; a scroll that follows the sentence never does.
     scrolledByHand = useRef(0),
-    pickedByScroll = useRef(false);
+    pickedByScroll = useRef(false),
+    // The end of the speech and a tap can both reach the last sentence's end.
+    finished = useRef(false);
   const stories = site.stories;
   const block = stories[index] ?? stories[0]!;
   const last = index >= stories.length - 1;
   function go(next: number) {
-    if (next >= stories.length) onComplete();
-    else onIndex(Math.max(0, next));
+    if (next < stories.length) onIndex(Math.max(0, next));
+    else if (!finished.current) {
+      finished.current = true;
+      onComplete();
+    }
   }
   const advance = useRef(go);
   advance.current = go;
