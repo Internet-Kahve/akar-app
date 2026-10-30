@@ -12,8 +12,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
+import { NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
+import { useWide } from "./about-reading";
 import { useCityIdentity, useCityScene } from "./city-scenes";
 import { ModelStage } from "./model-stage";
+import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
 
 /** Desktop scrolls down the gallery; mobile swipes across it without trapping page scrolling. */
 function PhotoGallery({
@@ -196,6 +199,8 @@ export function Scene({
   photoId,
   pose,
   interior,
+  photoCard,
+  highlights,
   onHotspot,
   onPick,
   context = "detail",
@@ -208,6 +213,10 @@ export function Scene({
   pose?: CameraPose;
   /** Story sentence's "İç mekân (3D)": lift the model's cover groups. */
   interior?: boolean;
+  /** The story sentence shows its photograph beside the model. */
+  photoCard?: boolean;
+  /** Story sentence's highlighted parts; a sentence with none is about the whole building and the model turns. */
+  highlights?: string[];
   onHotspot: (id: string) => void;
   /** A site task waits for a tap on a model part (pick mode); the model is shown for it. */
   onPick?: (part: string) => void;
@@ -216,6 +225,9 @@ export function Scene({
 }) {
   const cityScene = useCityScene(site.city);
   const identity = useCityIdentity(site.city);
+  const wide = useWide();
+  // Where the visitor dragged the photo card; it stays there through the sentences.
+  const [cardPlace, setCardPlace] = useState<CardPlace | null>(null);
   // A model site opens on the model, also in the story (its camera follows the sentences).
   const [mode, setMode] = useState<"photo" | "model">(
     photoId && !site.model ? "photo" : "model",
@@ -250,7 +262,8 @@ export function Scene({
         onModel={site.model ? () => setMode("model") : undefined}
       />
     );
-  if (site.model && !flow)
+  if (site.model && !flow) {
+    const card = photoCard && !onPick && mode === "model" ? photo : undefined;
     return (
       <div className="scene media-scene">
         <div
@@ -285,6 +298,8 @@ export function Scene({
             context={context}
             pose={pose}
             interior={interior}
+            tour={context === "story" && !onPick && !highlights?.length}
+            frame={card && !cardPlace ? storyCardFrame(wide) : NO_FRAME}
             partCards={site.partCards}
             onPick={onPick}
             sources={site.sources}
@@ -293,9 +308,20 @@ export function Scene({
             Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için
             kaydır.
           </div>
+          {card && (
+            <StoryPhotoCard
+              key={card.id}
+              photo={card}
+              card={storyPartCard(site.partCards ?? [], highlights ?? [])}
+              sources={site.sources ?? []}
+              place={cardPlace}
+              onPlace={setCardPlace}
+            />
+          )}
         </>
       </div>
     );
+  }
   if (live)
     return (
       <div className="scene">
