@@ -1,11 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
-  categoriesOf,
-  categoryHints,
-  categoryLabels,
   CITY_MARKER_MAX_ZOOM,
   type CityRecord,
   type HeritageSite,
@@ -25,23 +22,22 @@ import {
   pinFiles,
   syncPins,
 } from "../lib/map-pins";
+import { nearestCity, type LngLat } from "../lib/nearby";
 import { useCities, useCityScenes } from "./city-scenes";
-import {
-  LocateFixed,
-  Plus,
-  Minus,
-  Layers,
-  Compass,
-  MapPin,
-  RotateCcw,
-} from "lucide-react";
+import { MapControls } from "./map-controls";
+import { MapPin, RotateCcw } from "lucide-react";
 declare global {
   interface Window {
     /** The discovery map; browser tests read pins and project coordinates through it. Development builds only. */
     akarMap?: MapType;
   }
 }
-const WIDE = "(min-width: 1000px)";
+const WIDE = "(min-width: 900px)";
+/** Keeps the short card clear of the top of the map and of the right edge. */
+const PEEK_WIDTH = 360;
+const PEEK_TOP = 80;
+/** A site's pin keeps at least this zoom when it is picked. */
+const SITE_ZOOM = 17;
 /** Angled view the map opens with; the tilt button toggles between this and 0 (top view). */
 const TILT_PITCH = 50;
 /** Where the globe flies out to: Türkiye whole on the screen. */
@@ -69,19 +65,31 @@ function comingSoon(city: CityRecord) {
   const inv = city.inventory;
   return `${city.name}: ${inv?.siteCount ? `${inv.siteCount} vakıf eseri ` : ""}envanterde belgelendi${inv?.year ? ` (${inv.year})` : ""}. Uygulamaya ekleniyor.`;
 }
+/** A camera move the page asks for; a new `key` asks again. */
+export type MapFlight =
+  | { key: number; to: "globe" | "home" }
+  | { key: number; to: "point"; point: LngLat };
 export function HeritageMap({
   sites,
   selectedId,
   onSelect,
+  onClear,
   routeIds,
   collapsed,
   mapSettings,
   focusCity,
   onFirstDraw,
+  onCityInView,
+  onLocate,
+  flight,
+  bottomInset = 0,
+  peek,
 }: {
   sites: HeritageSite[];
-  selectedId?: string;
+  selectedId?: string | undefined;
   onSelect: (id: string) => void;
+  /** A tap on the map itself, away from any site. */
+  onClear?: () => void;
   routeIds: string[];
   collapsed: boolean;
   /** Without settings the map draws no models (the route preview in the panel). */
@@ -90,6 +98,15 @@ export function HeritageMap({
   focusCity?: string;
   /** Called once the map has been drawn for the first time, or has given up (then the schematic view takes over). */
   onFirstDraw?: () => void;
+  /** The city nearest to the map's centre whenever the map comes to rest. */
+  onCityInView?: (city: CityRecord) => void;
+  /** The position button; the page decides what «near me» means. */
+  onLocate?: () => void;
+  flight?: MapFlight | undefined;
+  /** Height of the sheet over the map on a phone: pins stay above it. */
+  bottomInset?: number;
+  /** The short card of the picked site; it follows the pin on a wide screen. */
+  peek?: ReactNode;
 }) {
   const scenes = useCityScenes();
   const cities = useCities();
@@ -98,18 +115,35 @@ export function HeritageMap({
     cityMarkers = useRef<MarkerType[]>([]),
     models = useRef<MapModels | null>(null),
     selectRef = useRef(onSelect),
+    clearRef = useRef(onClear),
+    cityRef = useRef(onCityInView),
+    selectedRef = useRef(selectedId),
+    peekRef = useRef<HTMLDivElement>(null),
     // Set once the visitor moves the map: a late city record must not pull the map back.
     moved = useRef(false),
     latest = useRef({ sites, mapSettings, scenes, cities });
   const [loaded, setLoaded] = useState(false),
     [failed, setFailed] = useState(false),
-    [tilt, setTilt] = useState(true),
     [cityMode, setCityMode] = useState<
       "" | " city-mode" | " city-mode city-far"
     >(""),
     [notice, setNotice] = useState("");
   selectRef.current = onSelect;
+  clearRef.current = onClear;
+  cityRef.current = onCityInView;
+  selectedRef.current = selectedId;
   latest.current = { sites, mapSettings, scenes, cities };
+  /** Puts the short card beside its pin; on a phone the stylesheet docks it and ignores these. */
+  const placePeek = () => {
+    const card = peekRef.current,
+      m = map.current,
+      site = latest.current.sites.find((s) => s.id === selectedRef.current);
+    if (!card || !m || !site) return;
+    const point = m.project(site.coordinates),
+      width = container.current?.clientWidth ?? 0;
+    card.style.left = `${Math.min(width - PEEK_WIDTH - 20, Math.max(16, point.x + 28))}px`;
+    card.style.top = `${Math.max(PEEK_TOP, point.y - 120)}px`;
+  };
   const drawnRef = useRef(onFirstDraw);
   drawnRef.current = onFirstDraw;
   useEffect(() => {
@@ -141,7 +175,15 @@ export function HeritageMap({
               pinAt(m, e.point.x, e.point.y) ??
               models.current?.pick(e.point.x, e.point.y);
             if (id) selectRef.current(id);
+            else clearRef.current?.();
           });
+          m.on("move", placePeek);
+          const reportCity = () => {
+            const { lng, lat } = m.getCenter();
+            const city = nearestCity(latest.current.cities, [lng, lat]);
+            if (city) cityRef.current?.(city);
+          };
+          m.on("moveend", reportCity);
           m.on("mouseenter", [PIN_LAYER, PIN_LABEL_LAYER], () => {
             m.getCanvas().style.cursor = "pointer";
           });
@@ -186,6 +228,7 @@ export function HeritageMap({
             });
             mode();
             setLoaded(true);
+            reportCity();
             // A load event can follow a tile error; keep discovery available
             // through the schematic view for the lifetime of this map.
             // Models and the OSM building layer are an addition: whatever
@@ -342,45 +385,66 @@ export function HeritageMap({
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);
+  // A new pick goes to the site; a background refresh of `sites` must not pull the camera back.
   useEffect(() => {
-    const site = sites.find((s) => s.id === selectedId);
-    if (site && loaded)
-      map.current?.easeTo({
-        center: site.coordinates,
-        zoom: 16,
-        duration: 600,
+    const m = map.current,
+      site = latest.current.sites.find((s) => s.id === selectedId);
+    if (!site || !loaded || !m) return;
+    m.easeTo({
+      center: site.coordinates,
+      zoom: Math.max(m.getZoom(), SITE_ZOOM),
+      duration: 700,
+      padding: matchMedia(WIDE).matches
+        ? { right: PEEK_WIDTH + 20, top: 0, bottom: 0, left: 0 }
+        : { bottom: 240, top: 0, left: 0, right: 0 },
+    });
+  }, [selectedId, loaded]);
+  useEffect(() => {
+    placePeek();
+  });
+  // On a phone the sheet covers the bottom of the map: the map's centre moves up with it.
+  useEffect(() => {
+    if (!loaded || matchMedia(WIDE).matches) return;
+    map.current?.setPadding({
+      top: 110,
+      bottom: Math.min(bottomInset, innerHeight * 0.6),
+      left: 0,
+      right: 0,
+    });
+  }, [bottomInset, loaded]);
+  useEffect(() => {
+    const m = map.current;
+    if (!flight || !loaded || !m) return;
+    moved.current = true;
+    const flat = { left: 0, right: 0, top: 0, bottom: 0 };
+    if (flight.to === "point")
+      m.easeTo({ center: flight.point, zoom: 16.5, duration: 900 });
+    else if (flight.to === "home")
+      m.easeTo({
+        ...openingView(latest.current.cities),
+        pitch: TILT_PITCH,
+        bearing: 0,
+        padding: flat,
+        duration: 900,
       });
-  }, [selectedId, loaded, sites]);
+    else
+      // `padding` lasts until it is changed: a card's padding would push the globe off centre.
+      m.flyTo({
+        center: COUNTRY.center,
+        zoom: matchMedia(WIDE).matches ? COUNTRY.zoomWide : COUNTRY.zoom,
+        pitch: 0,
+        bearing: 0,
+        padding: flat,
+        duration: 2600,
+        essential: true,
+      });
+  }, [flight, loaded]);
   useEffect(() => {
     if (!container.current) return;
     const observer = new ResizeObserver(() => map.current?.resize());
     observer.observe(container.current);
     return () => observer.disconnect();
   }, [collapsed]);
-  function locate() {
-    moved.current = true;
-    if (!navigator.geolocation) {
-      setNotice("Tarayıcın konumu desteklemiyor.");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        map.current?.flyTo({
-          center: [p.coords.longitude, p.coords.latitude],
-          zoom: 15,
-        });
-        setNotice("Konumuna gidildi. Eserler Bursa keşif bölgesinde.");
-      },
-      () =>
-        setNotice(
-          "Konum alınamadı. Bursa keşif bölgesinde keşfe devam edebilirsin.",
-        ),
-      { timeout: 8000 },
-    );
-  }
-  // The legend names only the categories that have a pin on this map (§11.48).
-  const categories = categoriesOf(sites);
-  const openingCity = cities.find((c) => c.isDefault)?.name;
   return (
     <div className={`map-wrap${cityMode}`}>
       <div
@@ -418,92 +482,24 @@ export function HeritageMap({
           ))}
         </div>
       )}
-      <div className="map-location">
-        <span className="live-dot" />
-        {focusCity && focusCity !== openingCity ? (
-          focusCity
-        ) : (
-          <>
-            Bursa <span>/</span> Hanlar Bölgesi <TagText />
-          </>
-        )}
-      </div>
-      <div className="map-tools">
-        <button
-          className="icon-btn"
-          title="Konumuma git"
-          aria-label="Konumuma git"
-          onClick={locate}
-        >
-          <LocateFixed size={20} />
-        </button>
-        <button
-          className="icon-btn"
-          aria-label="Yakınlaştır"
-          onClick={() => {
-            moved.current = true;
-            map.current?.zoomIn();
-          }}
-          disabled={!loaded}
-        >
-          <Plus size={20} />
-        </button>
-        <button
-          className="icon-btn"
-          aria-label="Uzaklaştır"
-          onClick={() => {
-            moved.current = true;
-            map.current?.zoomOut();
-          }}
-          disabled={!loaded}
-        >
-          <Minus size={20} />
-        </button>
-        <button
-          className={`icon-btn ${tilt ? "active" : ""}`}
-          aria-label="Harita eğimini değiştir"
-          disabled={!loaded}
-          onClick={() => {
-            moved.current = true;
-            setTilt(!tilt);
-            map.current?.easeTo({
-              pitch: tilt ? 0 : TILT_PITCH,
-              duration: 500,
-            });
-          }}
-        >
-          <Layers size={20} />
-        </button>
-      </div>
-      <button
-        className="compass icon-btn"
-        aria-label="Keşif bölgesine dön"
-        onClick={() => {
+      <MapControls
+        map={loaded ? map.current : null}
+        ready={loaded}
+        tiltPitch={TILT_PITCH}
+        onMove={() => {
           moved.current = true;
-          map.current?.easeTo({
-            ...openingView(cities),
-            bearing: 0,
-            pitch: TILT_PITCH,
-          });
-          setTilt(true);
         }}
-      >
-        <Compass size={28} />
-      </button>
+        onLocate={() => onLocate?.()}
+      />
+      {selectedId && peek && (
+        <div ref={peekRef} className="peek-anchor">
+          {peek}
+        </div>
+      )}
       {notice && (
         <button className="location-notice" onClick={() => setNotice("")}>
           {notice} ×
         </button>
-      )}
-      {categories.length > 0 && (
-        <div className="map-caption">
-          {categories.map((category) => (
-            <span key={category} title={categoryHints[category]}>
-              <i className={`dot ${category}`} />
-              {categoryLabels[category]}
-            </span>
-          ))}
-        </div>
       )}
       {failed && (
         <button className="map-retry" onClick={() => window.location.reload()}>
@@ -513,7 +509,4 @@ export function HeritageMap({
       )}
     </div>
   );
-}
-function TagText() {
-  return <small>HANLAR BÖLGESİ</small>;
 }

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { CityIdentity } from "@akar/domain";
-import { identityStyle } from "./city-identity";
+import { cityIdentityStyle, identityStyle } from "./city-identity";
 import { EMBLEM_PATH, EMBLEM_VIEW_BOX } from "./emblem";
 
 const repo = new URL("../../../../", import.meta.url);
@@ -30,4 +30,16 @@ test("the inline emblem is the one of design/desenler/amblem-akar-yildiz.svg", (
   assert.equal(/ d="([^"]+)"/.exec(svg)?.[1], EMBLEM_PATH);
   const viewBox = /viewBox="([^"]+)"/.exec(svg)?.[1]?.split(/\s+/).map(Number);
   assert.deepEqual(viewBox, EMBLEM_VIEW_BOX.split(" ").map(Number));
+});
+
+test("the shell takes the city's colour and motif, and stays neutral without them", () => {
+  assert.deepEqual(cityIdentityStyle(null), {});
+  const style = cityIdentityStyle({
+    accent: "#22566E",
+    pattern: "desen-bursa-sekiz-yildiz.svg",
+    patternColour: "#A4D8E0",
+  }) as Record<string, string>;
+  assert.equal(style["--sehir-aksan"], "#22566E");
+  assert.equal(style["--sehir-acik"], "#A4D8E0");
+  assert.equal(style["--sehir-desen"], 'url("/desenler/desen-bursa-sekiz-yildiz.svg")');
 });

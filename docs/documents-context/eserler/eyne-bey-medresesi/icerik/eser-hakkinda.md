@@ -1,6 +1,6 @@
 # Eyne Bey (İnebey) Medresesi · Eser hakkında
 
-30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 2, PDF s.34–36 (Eyne Bey Subaşı Medresesi kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `design/test-redmi9t-v2/_araclar/envanter_metni_cikar.py` ile PDF'ten çıkarıldı. **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
+30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 2, PDF s.34–36 (Eyne Bey Subaşı Medresesi kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `scripts/content/envanter_metni_cikar.py` ile PDF'ten çıkarıldı. **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
 
 Bölüm başlıkları kitapta yok; okumayı kolaylaştırmak için eklendi. Kitabın sırası bozulmadı.
 

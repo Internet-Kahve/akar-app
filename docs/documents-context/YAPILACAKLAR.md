@@ -2,9 +2,23 @@
 
 *29 Ekim 2026'da yazıldı. Ayrıntılı geçmiş: `yaptiklarim-2.md`. Bir iş bitince buradan silinir ya da «Bitti» altına taşınır.*
 
+## Entegrasyon (30 Ekim 2026)
+
+Prototip `apps/web`'e taşındı ve `docs` içinden kaldırıldı. Üründe olan: buzlu tema, il kimliği, üst çubuk, Eserler | Rotalar paneli, rol çipleri, konum kipi, kısa kart, pusula, mobil alt sayfa, karşılama, kaynak detayı, Vakıf nedir?, anlatım listesi ve oynatıcı, «Yalnız rotada», altın gelir yolu, tebrik kartı, Geçmişi Gör çekim haritası ve kamera, 3D açılamazsa kartı, tanıtım sayfası (`/tanitim`).
+
+Kalan farklar:
+- `cam` (gece) teması bağlanmadı; harita stili `design/harita/akar-style-cam.json`.
+- Rota çizgisi hâlâ pinlerde numara; sekiz köşeli yıldız işaretleri yok.
+- Harita pinleri rol rengi + tür simgesi yerine Figma pin görselleri; `medrese` pini kodla çiziliyor.
+- Adresler `#view=…&site=…`; prototipin `#/eser/<id>` biçimi yok.
+- «Bir hata mı gördün? Bildir» yalnız teşekkür gösteriyor, bildirim kaydı yok (`POST /reports` gerekir).
+- İngilizce içerik dosyaları içe aktarılmıyor; dil seçici var, çeviri olan alanlar değişmiyor.
+- Puan defteri ürün tarafında duruyor (tasarım puansız); karar bekliyor.
+- `route_only`, `flow`, `viewpoint` alanları ayrı PR'da; migration canlıya uygulanmadan birleştirilmez. Altın gelir yolu, «Yalnız rotada» ve çekim haritası veri gelince açılır.
+
 ## Şu anki durum (bir bakışta)
 
-- **Prototip** (`design/test-redmi9t-v2/`): 11 eser, 3 il (Bursa 9, Konya 1, Hatay 1), 4 rol (Dinî, Ticari, Su, Eğitim); 7 eser 3D modelli, 4 eser yalnız fotoğraf (30 Ekim gece); asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (30 Ekim'de onaylandı), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
+- **İçerik paketi** (prototip kaldırıldı, tasarım `apps/web`'de): 11 eser, 3 il (Bursa 9, Konya 1, Hatay 1), 4 rol (Dinî, Ticari, Su, Eğitim); 7 eser 3D modelli, 4 eser yalnız fotoğraf (30 Ekim gece); asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (30 Ekim'de onaylandı), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
 - **Modeller:** pastel renkler + pişmiş AO, yer gölgesi web'de. Toplam ≈ 2,7 MB.
 - **Harita önizlemesi:** `design/harita/akar-harita-onizleme-v3.html` (ışık/renk paneli, «Pişmiş» hazır ayarı).
 - **Git:** `docs` dalında commit var, **push edilmedi**.
@@ -14,7 +28,7 @@
 | # | İş | Kim | Not |
 |---|---|---|---|
 | 1 | `git push origin docs` | Muhammed (terminal) | Bu bağlantıdan push yapılamıyor (sanal makinede SSH anahtarı yok). Sonra PR: https://github.com/Internet-Kahve/akar-app/pull/new/docs |
-| 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `_promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
+| 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
 | 3 | ~~Redmi 9T denemesi~~ yapıldı (29 Ekim, Muhammed): sorun yok. | — | — |
 | 4 | ~~Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları~~ yapıldı (30 Ekim gece, Claude; `yaptiklarim-2.md` §75). Görevler 30 Ekim'de onaylandı. Kalan: bugünkü eş / örnek iz (Koza Han, Orhan Bey Camii, Türbe) | Talha | Ayrıntı aşağıda. |
 
@@ -22,7 +36,7 @@
 
 **Ulucami neredeyse hazır ve ana referans.** Diğer altı eserde (Bedesten, Koza Han, Orhan Bey Camii, Orhan Bey Hamamı, Emir Hanı, Orhan Gazi Türbesi) aynı üç iş yapılacak. Her işte biçim, ton ve uzunluk Ulucami'nin dosyasından alınır. Metin yalnız kaynaktan; kaynak sayfa kodu ve güven etiketi her kayıtta.
 
-| İş | Ulucami'deki referans | Diğer eserlerde yazılacak dosya | Prompt (`design/test-redmi9t-v2/_promptlar/`) |
+| İş | Ulucami'deki referans | Diğer eserlerde yazılacak dosya | Prompt (`promptlar/`) |
 |---|---|---|---|
 | Bulmaca, saha görevi, rozetler | `eserler/ulu-cami/icerik/gorevler.json` | `eserler/<eser>/icerik/gorevler.json` | `PROMPT_gorevler_diger_eserler.md` |
 | Geçmişi Gör (eski fotoğraflar, bugünkü eş, örnek iz) | `eserler/ulu-cami/gecmisi-gor/` | `eserler/<eser>/gecmisi-gor/` | `PROMPT_gecmisi_gor_diger_eserler.md` |
@@ -41,7 +55,7 @@ Notlar:
 
 - [x] **Asıl tema buzlu** (30 Ekim, Talha): prototipte varsayılan; ürüne taşınacak (`ENTEGRASYON_29EKIM.md` §5.13). Deneme tonları (`sicak`, `il`, `bant`) ve kullanılmayan tema dosyaları temizlenebilir.
 
-- [x] **Figma güncellemesi** (29 Ekim, `_promptlar/PROMPT_figma_guncelle_29ekim.md`): dokuz madde işlendi, Claude ekran görüntülerinden kontrol etti. Kalan küçük düzeltmeler (mobil geri düğmesi, sekme solması, lejant) ikinci prompt'la verildi.
+- [x] **Figma güncellemesi** (29 Ekim, `promptlar/PROMPT_figma_guncelle_29ekim.md`): dokuz madde işlendi, Claude ekran görüntülerinden kontrol etti. Kalan küçük düzeltmeler (mobil geri düğmesi, sekme solması, lejant) ikinci prompt'la verildi.
 - [ ] **3D eser ekranı, masaüstünde sol panelin alt yarısı boş** (karar bekliyor): kısa künye (yaptıran, malzeme, envanter sayfası) ya da «İçini göster / parçalara dokun» ipucu.
 - [ ] **Pin çakışması:** düzeltildi (etiket yer bulamazsa öbür yana geçer, önemli eser önce çizilir, yakında pin küçülür) ama **etiketler test ortamında çizilemedi** (yazı tipi indirilemiyor). Gerçek haritada ve Redmi'de bak.
 - [x] **Diğer eserlerin kapak fotoğrafı:** 30 Ekim'de altı esere de yazıldı (envanterin açılış fotoğrafı; Türbe'de galeride olmadığı için dış fotoğraf).

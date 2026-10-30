@@ -1,6 +1,6 @@
 # Ulucami · 3D parça kartları
 
-28 Ekim 2026. 3D modelde bir parçaya dokununca açılan kartların içeriği. Uygulama bu tabloyu `hazirla.py` ile okur; üründe aynı alanlar `parca_bilgi` tablosuna karşılık gelir (bkz. frontend/backend notu).
+28 Ekim 2026. 3D modelde bir parçaya dokununca açılan kartların içeriği. Uygulama bu tabloyu `services/api/scripts/editorial_reader.py` ile okur; üründe aynı alanlar `parca_bilgi` tablosuna karşılık gelir (bkz. frontend/backend notu).
 
 **Kural:** Kartı olan parça tıklanır, kartı olmayan tıklanmaz. Bir parçayı tıklanabilir yapmak için bu tabloya bir satır eklemek ya da var olan satırın «Parçalar» hücresine parçanın model adını yazmak yeter; kod değişmez.
 

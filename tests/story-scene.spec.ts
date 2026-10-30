@@ -103,18 +103,18 @@ test("a sentence about the whole building turns the model, a highlighted one hol
   const errors = await openStory(page);
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
   await next(page);
-  await expect(page.locator(".story-text")).toContainText("Cümle 1");
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 1");
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
   await next(page);
-  await expect(page.locator(".story-text")).toContainText("Cümle 2");
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 2");
   await expect(tour(page)).toHaveAttribute("data-tour", "off");
   await next(page);
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
   // Pressing the model stops the turn where the visitor took over.
   const canvas = page.locator(".model-canvas canvas");
   await canvas.dragTo(canvas, {
-    sourcePosition: { x: 40, y: 40 },
-    targetPosition: { x: 80, y: 40 },
+    sourcePosition: { x: 120, y: 200 },
+    targetPosition: { x: 170, y: 200 },
   });
   await expect(tour(page)).toHaveAttribute("data-tour", "off");
   expect(errors).toEqual([]);
@@ -123,7 +123,7 @@ test("a sentence about the whole building turns the model, a highlighted one hol
 test("the turn waits for the model to be drawn", async ({ page }) => {
   const gate = Promise.withResolvers<void>();
   const errors = await openStory(page, gate.promise);
-  await expect(page.locator(".story-text")).toContainText("Cümle 0");
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 0");
   await expect(tour(page)).not.toHaveAttribute("data-tour", "on");
   gate.resolve();
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
@@ -133,7 +133,7 @@ test("the turn waits for the model to be drawn", async ({ page }) => {
 test("with reduced motion the model does not turn", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openStory(page);
-  await expect(page.locator(".story-text")).toContainText("Cümle 0");
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 0");
   await expect(tour(page)).not.toHaveAttribute("data-tour", "on");
 });
 
@@ -168,7 +168,7 @@ test("the photo card stays clear of the model, is dragged away and opens the par
   // The next card stays where the visitor left it; with no part card it opens the photograph.
   const placed = (await card.boundingBox())!.y;
   await next(page);
-  await expect(page.locator(".story-text")).toContainText("Cümle 3");
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 3");
   // Within a pixel: the y can land on either side of a half pixel.
   await expect
     .poll(async () => Math.abs(((await card.boundingBox())?.y ?? 0) - placed))

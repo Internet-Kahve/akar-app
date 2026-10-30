@@ -21,3 +21,19 @@ export function identityStyle(identity: CityIdentity | null): CSSProperties {
     "--city-pattern": `url("${PATTERN_DIR}${identity.pattern}")`,
   } as CSSProperties;
 }
+
+/**
+ * The same identity for the whole interface: `.app-shell` takes the active city's colour and motif, and every
+ * surface that belongs to a place reads them from `--sehir-aksan`, `--sehir-acik` and `--sehir-desen`. The
+ * shared interface stays neutral.
+ */
+export function cityIdentityStyle(identity: CityIdentity | null): CSSProperties {
+  const base = identityStyle(identity);
+  if (!identity || !("--city-accent" in base)) return {};
+  return {
+    ...base,
+    "--sehir-aksan": identity.accent,
+    "--sehir-acik": identity.patternColour,
+    "--sehir-desen": `url("${PATTERN_DIR}${identity.pattern}")`,
+  } as CSSProperties;
+}

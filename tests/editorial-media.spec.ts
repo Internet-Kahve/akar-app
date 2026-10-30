@@ -168,7 +168,7 @@ test("model survives its loading state, photo switch and uncropped archive retai
     page.getByRole("dialog").getByText("Kaynaklı tarihçe metni."),
   ).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Geçmişi Gör", exact: true }).click();
+  await page.getByRole("button", { name: /^Geçmişi Gör/ }).click();
   await expect(page.locator(".archive-photo img")).toBeVisible();
   await expect(page.locator(".archive-photo img")).toHaveCSS(
     "object-fit",

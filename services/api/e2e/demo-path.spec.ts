@@ -70,7 +70,8 @@ async function openSite(page: Page, name: string) {
   // The page under the opening screen takes no input until the map is drawn (§11.49).
   await expect(page.locator(".opening")).toHaveCount(0);
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill(name);
-  await page.locator(".site-card-main").filter({ hasText: name }).first().click();
+  await page.locator(".site-row-main").filter({ hasText: name }).first().click();
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 }
 
@@ -101,7 +102,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   const errors: string[] = [];
   visitor.page.on("pageerror", (e) => errors.push(e.message));
   await openSite(visitor.page, MEMORY_SITE.name);
-  await visitor.page.getByRole("button", { name: "İz Bırak", exact: true }).click();
+  await visitor.page.getByRole("button", { name: /^İz Bırak/ }).click();
   const form = visitor.page.getByRole("dialog").filter({ has: visitor.page.getByRole("heading", { name: "İz Bırak" }) });
   await form.getByLabel("Anı fotoğrafı").setInputFiles({ name: "iz.png", mimeType: "image/png", buffer: PNG });
   await expect(form.getByAltText("Paylaşılacak fotoğrafın önizlemesi")).toBeVisible();

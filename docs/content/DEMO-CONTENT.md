@@ -1,6 +1,6 @@
 # Bursa demo içerik paketi
 
-Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`, `3d/model.json`, `icerik/`, `gecmisi-gor/`); okuyucular `design/test-redmi9t-v2/hazirla.py` içinde (§11.38). Şehrin 3B ışığı ve eser sahnesi zemini `veri/sehir/<şehir>.json` dosyasından (`harita_isik`, `kimlik.sahne_ust / sahne_alt`, §11.42). Ham çalışma arşivi uygulama paketine alınmaz.
+Kaynak: `docs/documents-context/eserler/` altındaki eser paketleri (`eser.json`, `3d/model.json`, `icerik/`, `gecmisi-gor/`); okuyucular `services/api/scripts/editorial_reader.py` içinde (§11.38). Şehrin 3B ışığı ve eser sahnesi zemini `veri/sehir/<şehir>.json` dosyasından (`harita_isik`, `kimlik.sahne_ust / sahne_alt`, §11.42). Ham çalışma arşivi uygulama paketine alınmaz.
 
 - 11 eser (Bursa 9, Konya 1, Hatay 1), 7 Draco sıkıştırmalı GLB; modeller temsili olarak etiketlenir. Dört eser yalnız fotoğraflıdır.
 - 102 kaynaklı eser fotoğrafı, 37 tarihî fotoğraf eşleşmesi, 86 hikâye adımı, 18 görev.

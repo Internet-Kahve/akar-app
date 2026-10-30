@@ -10,7 +10,8 @@ Akar, **Internet-Kahve/akar-app** içinde bir monorepodur. Web ve API aynı söz
 | `packages/api-client`       | HTTP ve yerel mock istemcileri                                      |
 | `packages/design-tokens`    | Ortak renk ve ölçüler                                               |
 | `tests`, `services/api/e2e` | Web ve gerçek API tarayıcı testleri                                 |
-| `docs/documents-context`    | İçerik ekibinin kaynakları ve tasarım prototipleri                  |
+| `docs/documents-context`    | İçerik ekibinin kaynakları ve tasarım referansları                  |
+| `scripts/content`           | İçerik paketi araçları (envanter metni, bugünkü eş görselleri)      |
 | `.github/workflows`         | Frontend CI, API CI, API browser E2E                                |
 
 `apps/mobile` henüz yoktur. React Native uygulaması eklendiğinde domain/API/token paketlerini paylaşabilir; web UI bileşenleri DOM/CSS içerir.
@@ -23,7 +24,7 @@ Akar, **Internet-Kahve/akar-app** içinde bir monorepodur. Web ve API aynı söz
 4. PR kontrolleri geçince birleştir. `main` web ve API üretim dağıtımlarını tetikler.
 5. Birleşmiş konu dalını sil; ekip üyesinin birleşmemiş commitlerini temizleme kapsamına alma.
 
-Frontend'e sunucu sırları konulmaz. Yerel `.env`, Vercel bağlantı dosyaları, test çıktıları ve bağımlılıklar Git dışında kalır. Tek kök `package-lock.json` çalışma paketlerinin bağımlılıklarını yönetir; içerik arşivindeki eski prototipler workspace değildir.
+Frontend'e sunucu sırları konulmaz. Yerel `.env`, Vercel bağlantı dosyaları, test çıktıları ve bağımlılıklar Git dışında kalır. Tek kök `package-lock.json` çalışma paketlerinin bağımlılıklarını yönetir; çalışan arayüz kodu yalnız `apps/web` altındadır.
 
 ## Yeni klon
 

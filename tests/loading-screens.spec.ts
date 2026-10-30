@@ -166,7 +166,7 @@ test("the 3D card tells the percentage and the megabytes of the download itself,
     await expect(page.locator(".model-loading")).toHaveCount(0);
     await expect(page.locator(".model-viewer .city-pattern")).toHaveCount(0);
     await expect(page.locator(".model-viewer canvas")).toBeVisible();
-    await expect(page.locator(".model-status")).toHaveCount(0);
+    await expect(page.locator(".model-failed")).toHaveCount(0);
   } finally {
     await model.close();
   }
@@ -195,6 +195,6 @@ test("a response without a length gives a bar without a percentage and the megab
 test("a model that cannot be loaded takes the card away and says so", async ({ page }) => {
   await page.route("**/missing-model.glb", (route) => route.fulfill({ status: 404, body: "yok" }));
   await openUlucamiWithModel(page, "/missing-model.glb");
-  await expect(page.locator(".model-status")).toHaveText("3B model yüklenemedi. Fotoğraflardan devam edebilirsin.");
+  await expect(page.locator(".model-failed h3")).toHaveText("3D model açılamadı");
   await expect(page.locator(".model-loading")).toHaveCount(0);
 });

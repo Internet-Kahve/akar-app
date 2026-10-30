@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import dynamic from "next/dynamic";
+import { Box } from "lucide-react";
 import type { CityIdentity, CityScene } from "@akar/domain";
 import { identityStyle } from "../lib/city-identity";
 import {
@@ -45,16 +46,20 @@ export function ModelStage({
   scene,
   identity,
   context,
+  onPhotos,
   ...viewer
 }: {
   scene: CityScene;
   identity: CityIdentity | null;
   context: ModelLoadingContext;
+  /** «Görsellerle devam et» when the model cannot open; absent when the site has no photographs. */
+  onPhotos?: (() => void) | undefined;
 } & Omit<
   ComponentProps<typeof ModelViewer>,
   "scene" | "onProgress" | "onSettled"
 >) {
-  const [phase, setPhase] = useState<"loading" | "ready" | "failed">("loading");
+  const [phase, setPhase] = useState<"loading" | "ready" | "failed">("loading"),
+    [attempt, setAttempt] = useState(0);
   // A viewer that joins a download in progress starts from what has been read.
   const [progress, setProgress] = useState<DownloadProgress | null>(() =>
     downloadSoFar(viewer.model.src),
@@ -83,6 +88,7 @@ export function ModelStage({
       }
     >
       <ModelViewer
+        key={attempt}
         {...viewer}
         scene={scene}
         onProgress={onProgress}
@@ -90,6 +96,30 @@ export function ModelStage({
       />
       {card && "--city-pattern" in look && <CityPattern />}
       {card && <ModelLoadingCard progress={progress} context={context} />}
+      {phase === "failed" && (
+        <div className="model-failed" role="alert">
+          <Box size={28} />
+          <h3>3D model açılamadı</h3>
+          <p>
+            Bağlantı kesildi ya da dosya bozuk. Hikâye görsellerle aynı şekilde
+            devam eder.
+          </p>
+          <button
+            className="btn"
+            onClick={() => {
+              setPhase("loading");
+              setAttempt((n) => n + 1);
+            }}
+          >
+            Yeniden dene
+          </button>
+          {onPhotos && (
+            <button className="btn secondary" onClick={onPhotos}>
+              Görsellerle devam et
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

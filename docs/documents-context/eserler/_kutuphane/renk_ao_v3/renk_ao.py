@@ -1,6 +1,6 @@
 # Bir kerelik geçiş işiydi; kaynak artık Blender + malzeme-paleti.json (_kutuphane/blend_hat/). Yeniden kullanma.
 """AKAR · renk_ao_v3: fotoğraftan ölçülen palet + dokuya pişmiş AO + yer gölgesi düzlemi (28 Ekim 2026).
-İş emri: design/test-redmi9t-v2/_promptlar/PROMPT_foto_renk_ve_ao_pisirme_7_eser.md (2. aşama).
+İş emri: promptlar/PROMPT_foto_renk_ve_ao_pisirme_7_eser.md (2. aşama).
 
 Geometri değişmez. Yapılan:
   1) Renk: _kutuphane/malzeme-paleti.json (eser_malzeme: malzeme → rol). Düz malzemede renk düğümü hedef hex olur;

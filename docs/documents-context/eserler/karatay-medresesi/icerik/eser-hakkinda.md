@@ -1,6 +1,6 @@
 # Karatay Medresesi · Eser hakkında
 
-30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Konya Vakıf Eserleri Cilt 2, PDF s.45–47 (Karatay Medresesi kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `design/test-redmi9t-v2/_araclar/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (Konya kitabının düzeni Bursa'nınkiyle aynı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
+30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Konya Vakıf Eserleri Cilt 2, PDF s.45–47 (Karatay Medresesi kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `scripts/content/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (Konya kitabının düzeni Bursa'nınkiyle aynı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
 
 Bölüm başlıkları kitapta yok; okumayı kolaylaştırmak için eklendi. Kitabın sırası bozulmadı.
 

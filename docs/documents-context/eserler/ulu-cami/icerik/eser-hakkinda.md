@@ -1,6 +1,6 @@
 # Ulucami · Eser hakkında
 
-28 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 1, PDF s.19–39 (Ulucami kaydının Türkçe metni; İngilizce paralel metin alınmadı). Metin `design/test-redmi9t-v2/_araclar/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (Türkçe metin BrandonGrotesque-Regular, İngilizce Light; satır sonu tirelemeleri birleştirildi, sayfa geçişinde bölünen paragraflar tek paragraf yapıldı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir.
+28 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 1, PDF s.19–39 (Ulucami kaydının Türkçe metni; İngilizce paralel metin alınmadı). Metin `scripts/content/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (Türkçe metin BrandonGrotesque-Regular, İngilizce Light; satır sonu tirelemeleri birleştirildi, sayfa geçişinde bölünen paragraflar tek paragraf yapıldı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir.
 
 Bölüm başlıkları kitapta yok (kitapta yalnız «Bursa'nın İncisi Ulucami» başlığı var); uygulamada okumayı kolaylaştırmak için kitabın sırası bozulmadan eklendi. Son bölüm («Vakıf ve akar») bu kaydın dışından, envanterin Bedesten sayfalarından tek paragraftır.
 

@@ -2,7 +2,7 @@
 
 28 Ekim 2026. «Eser hakkında» sayfasının okuma düzeni için seçmeler: bölüm özeti, rakam kartları, büyük alıntı, zaman çizelgesi, terim açıklamaları ve masaüstünde metinle birlikte dönen 3D açısı. Uygulama bu dosyayı `design/test-redmi9t-v2/hazirla.py` ile okur.
 
-**Kural: bu dosyada yeni metin yazılmaz.** Özet cümleleri, alıntılar, «kanıt» parçaları ve terim tanımları `eser-hakkinda.md`'deki envanter metninden **kelimesi kelimesine** seçilir. `hazirla.py` her birinin o bölümün metninde (terimler için bütün metinde) birebir geçtiğini denetler; geçmeyen satır sayfaya girmez ve uyarı yazılır. Kendi sözümüz yalnız rakam kartlarının kısa etiketidir (ör. «kubbe»); kartın altında kitaptaki ifade («kanıt») gösterilir. Rakam kartında «Yirmi» → «20» gibi yalnız yazıyı rakama çevirme yapılır.
+**Kural: bu dosyada yeni metin yazılmaz.** Özet cümleleri, alıntılar, «kanıt» parçaları ve terim tanımları `eser-hakkinda.md`'deki envanter metninden **kelimesi kelimesine** seçilir. `services/api/scripts/editorial_reader.py` her birinin o bölümün metninde (terimler için bütün metinde) birebir geçtiğini denetler; geçmeyen satır sayfaya girmez ve uyarı yazılır. Kendi sözümüz yalnız rakam kartlarının kısa etiketidir (ör. «kubbe»); kartın altında kitaptaki ifade («kanıt») gösterilir. Rakam kartında «Yirmi» → «20» gibi yalnız yazıyı rakama çevirme yapılır.
 
 Biçim (bölüm başlıkları `eser-hakkinda.md` ile aynı):
 - `Özet:` altında `- cümle` satırları (bölümün başında, kitaptan seçme olarak gösterilir; tam metin «Derinine in» ile açılır)

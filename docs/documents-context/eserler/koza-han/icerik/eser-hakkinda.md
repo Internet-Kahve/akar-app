@@ -1,6 +1,6 @@
 # Koza Han · Eser hakkında
 
-30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 2, PDF s.8–11 (Koza Han kaydı) ve Cilt 1, PDF s.194–195 (Koza Han Köşk Mescidi kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `design/test-redmi9t-v2/_araclar/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (satır sonu tirelemeleri birleştirildi, sayfa geçişinde bölünen paragraflar tek paragraf yapıldı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
+30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 2, PDF s.8–11 (Koza Han kaydı) ve Cilt 1, PDF s.194–195 (Koza Han Köşk Mescidi kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `scripts/content/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (satır sonu tirelemeleri birleştirildi, sayfa geçişinde bölünen paragraflar tek paragraf yapıldı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
 
 Bölüm başlıkları kitapta yok; uygulamada okumayı kolaylaştırmak için kitabın sırası bozulmadan eklendi. Son bölüm («Vakıf ve akar») kitaptan birebir değil, önceki özet metinden (`eser-hakkinda-ozet.md`) aynen alındı. Açılış tarihi kitapta iki farklı geçer (Cilt 2 s.8 «30 Eylül 1491», Cilt 1 s.194 «1491 yılı, Ekim ayında»); ikisi de kitaptaki yerinde bırakıldı.
 

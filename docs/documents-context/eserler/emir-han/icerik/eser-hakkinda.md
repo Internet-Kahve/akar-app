@@ -1,6 +1,6 @@
 # Emir Hanı · Eser hakkında
 
-30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 1, PDF s.108–109 (Emir Hanı kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `design/test-redmi9t-v2/_araclar/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (satır sonu tirelemeleri birleştirildi, sayfa geçişinde bölünen paragraflar tek paragraf yapıldı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
+30 Ekim 2026. **Envanter metninin tamamı**, kitaptaki sırasıyla: Bursa Vakıf Eserleri Envanteri Cilt 1, PDF s.108–109 (Emir Hanı kaydı) (Türkçe metin; İngilizce paralel metin alınmadı). Metin `scripts/content/envanter_metni_cikar.py` ile PDF'ten çıkarıldı (satır sonu tirelemeleri birleştirildi, sayfa geçişinde bölünen paragraflar tek paragraf yapıldı). **Kelimesine dokunulmadı**; yazım ve noktalama kitaptaki gibidir. Ulucami'deki yöntemin aynısı (`ulu-cami/icerik/eser-hakkinda.md`).
 
 Bölüm başlıkları kitapta yok; uygulamada okumayı kolaylaştırmak için kitabın sırası bozulmadan eklendi. Son bölüm («Vakıf ve akar») kitaptan birebir değil, önceki özet metinden (`eser-hakkinda-ozet.md`) aynen alındı.
 

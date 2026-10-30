@@ -1,25 +1,28 @@
 :root {
   --sehir-bursa-zemin: #22566e;
   --sehir-konya-aksan: #2f6e71;
-  --sehir-aksan: var(--sehir-bursa-zemin);
-  --bg: #f3f5f5;
-  --surface: #ffffff;
-  --text: #141b2b;
-  --text-muted: #4a5466;
-  --border: #dae1e2;
-  --primary: #25477b;
-  --primary-dark: #1b355c;
-  --primary-light: #e6ecf5;
+  /* Neutral until the active city's identity (§11.49) overrides them on `.app-shell`. */
+  --sehir-aksan: #2f3b41;
+  --sehir-acik: #c9d0d2;
+  --city-tint: color-mix(in srgb, var(--sehir-aksan) 13%, #ffffff);
+  --bg: #edeeea;
+  --surface: #f8f8f6;
+  --text: #1a2328;
+  --text-muted: #56616a;
+  --border: #d9dcd7;
+  --primary: #1f2b31;
+  --primary-dark: #11191d;
+  --primary-light: #e2e5e1;
   --on-primary: #ffffff;
   --gold: #c9a13b;
-  --gold-text: #8a6a16;
+  --gold-text: #86650f;
   --error: #b3261e;
-  --verified: #1e6b4a;
-  --verified-bg: #e3f2ea;
-  --inferred: #8a5a00;
-  --inferred-bg: #fbefd6;
+  --verified: #2e6b4c;
+  --verified-bg: #dcebe0;
+  --inferred: #7a5d22;
+  --inferred-bg: #f2e7cf;
   --representative: #5b4e86;
-  --representative-bg: #ece8f5;
+  --representative-bg: #e7e4f1;
   --pin-dini: #2e7d32;
   --pin-su: #2a6fb0;
   --pin-egitim: #25477b;
@@ -29,8 +32,27 @@
   --radius-lg: 16px;
   --radius-pill: 999px;
   --font: "Inter", system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, serif;
   --shadow: 0 8px 32px #141b2b12;
-  --overlay: #141b2b99;
+  --overlay: #141b2b73;
+  /* Frosted surfaces: whatever floats over the map or a page. */
+  --glass: rgba(255, 255, 255, 0.56);
+  --glass-solid: rgba(250, 252, 251, 0.95);
+  --glass-blur: blur(22px) saturate(1.7);
+  --glass-edge:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 10px 34px rgba(18, 38, 46, 0.14);
+  --ground:
+    radial-gradient(
+      60% 45% at 12% 8%,
+      color-mix(in srgb, var(--sehir-aksan) 17%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(50% 40% at 92% 28%, rgba(201, 161, 59, 0.18), transparent 70%),
+    radial-gradient(60% 45% at 38% 100%, rgba(176, 160, 132, 0.16), transparent 70%),
+    #edeeea;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 [data-contrast="high"] {
   --text: #080f1d;

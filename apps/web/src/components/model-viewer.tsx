@@ -7,7 +7,7 @@ import type {
   SiteModel,
   SiteSource,
 } from "@akar/domain";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Pointer } from "lucide-react";
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -42,6 +42,8 @@ const PICK_GLOW = 0.55;
 const TAP_SLOP = 6;
 const TAP_MS = 600;
 
+/** How long each tappable part lights up when the visitor asks to see them. */
+const PART_PULSE_MS = 700;
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
  * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
@@ -117,7 +119,6 @@ export default function ModelViewer({
   const [picked, setPicked] = useState<{ part: string; card?: PartCard } | null>(null);
   const partsKey = JSON.stringify([model.parts, partCards.map((c) => c.parts)]);
   /** Why there is no model, in the visitor's words; empty while it loads (the stage's card shows that) and once it is drawn. */
-  const [status, setStatus] = useState("");
   /** null = the model has no usable cover groups (no button). */
   const [inside, setInside] = useState<boolean | null>(null);
   const heading = model.placement?.headingDeg ?? 0;
@@ -595,7 +596,6 @@ export default function ModelViewer({
           spin.current?.(!!tourRef.current);
           tourPose.current = tourRef.current ? JSON.stringify(poseRef.current ?? null) : "";
           render();
-          setStatus("");
           settledRef.current?.("ready");
         },
         // The bytes the browser has read of the response, for the stage's loading card (§11.49).
@@ -607,14 +607,10 @@ export default function ModelViewer({
         () => {
           forgetDownload(model.src);
           if (disposed) return;
-          setStatus("3B model yüklenemedi. Fotoğraflardan devam edebilirsin.");
           settledRef.current?.("failed");
         },
       );
     } catch {
-      setStatus(
-        "Bu cihazda 3B görünüm açılamadı. Fotoğraflardan devam edebilirsin.",
-      );
       settledRef.current?.("failed");
     }
     return () => {
@@ -671,10 +667,26 @@ export default function ModelViewer({
   return (
     <>
       <div className="model-canvas" ref={host} />
-      {status && (
-        <p className="model-status" role="status">
-          {status}
-        </p>
+      {!!partCards?.length && !onPick && (
+        <button
+          className="model-show-parts"
+          aria-label="Tıklanabilir parçaları göster"
+          title="Tıklanabilir parçaları göster"
+          onClick={() => {
+            partCards.forEach((card, i) =>
+              setTimeout(
+                () => select.current?.(card.parts),
+                i * PART_PULSE_MS,
+              ),
+            );
+            setTimeout(
+              () => select.current?.(highlightRef.current ?? []),
+              partCards.length * PART_PULSE_MS,
+            );
+          }}
+        >
+          <Pointer size={18} />
+        </button>
       )}
       {inside !== null && (
         <button

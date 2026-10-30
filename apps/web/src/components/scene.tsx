@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Landmark,
@@ -10,13 +10,62 @@ import {
   Maximize2,
   ChevronLeft,
   ChevronRight,
+  Expand,
+  Shrink,
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
+import { readPreference, writePreference } from "../lib/preferences";
 import { NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
 import { useWide } from "./about-reading";
 import { useCityIdentity, useCityScene } from "./city-scenes";
 import { ModelStage } from "./model-stage";
 import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
+
+/** How long the story's photo keeps its controls while nobody touches it. */
+const CONTROLS_MS = 3000;
+
+/** A sentence's photograph: fitted over its own blur, or filling the stage; the choice stays on the device. */
+function StoryPhoto({ photo }: { photo: SitePhoto }) {
+  const [fill, setFill] = useState(false),
+    [quiet, setQuiet] = useState(false);
+  useEffect(() => setFill(readPreference("akar.fotoKip") === "fill"), []);
+  useEffect(() => {
+    if (quiet) return;
+    const timer = setTimeout(() => setQuiet(true), CONTROLS_MS);
+    return () => clearTimeout(timer);
+  }, [quiet, photo.id]);
+  return (
+    <section
+      className={`story-photo${quiet ? " quiet" : ""}`}
+      aria-label={photo.title || photo.alt}
+      onPointerMove={() => setQuiet(false)}
+      onPointerDown={() => setQuiet(false)}
+    >
+      <img className="story-photo-blur" src={photo.src} alt="" />
+      <img
+        className={`story-photo-main${fill ? " fill" : ""}`}
+        src={photo.src}
+        alt={photo.alt}
+      />
+      <button
+        className="story-photo-fill"
+        aria-pressed={fill}
+        onClick={() => {
+          writePreference("akar.fotoKip", fill ? "fit" : "fill");
+          setFill(!fill);
+        }}
+      >
+        {fill ? <Shrink size={16} /> : <Expand size={16} />}
+        {fill ? "Sığdır" : "Ekranı doldur"}
+      </button>
+      {(photo.title || photo.license) && (
+        <p className="story-photo-credit">
+          {[photo.title, photo.license].filter(Boolean).join(" · ")}
+        </p>
+      )}
+    </section>
+  );
+}
 
 /** Desktop scrolls down the gallery; mobile swipes across it without trapping page scrolling. */
 function PhotoGallery({
@@ -229,9 +278,17 @@ export function Scene({
   // Where the visitor dragged the photo card; it stays there through the sentences.
   const [cardPlace, setCardPlace] = useState<CardPlace | null>(null);
   // A model site opens on the model, also in the story (its camera follows the sentences).
-  const [mode, setMode] = useState<"photo" | "model">(
+  const [mode, setModeState] = useState<"photo" | "model">(
     photoId && !site.model ? "photo" : "model",
   );
+  const setMode = (next: "photo" | "model") => {
+    writePreference("akar.gorunum", next);
+    setModeState(next);
+  };
+  useEffect(() => {
+    if (site.model && readPreference("akar.gorunum") === "photo")
+      setModeState("photo");
+  }, [site.model]);
   const photo = [...(site.photos ?? []), ...(site.storyPhotos ?? [])].find(
     (p) => p.id === (photoId || site.coverPhotoId),
   );
@@ -254,7 +311,25 @@ export function Scene({
     (photos.length > 0 || !!photoId) &&
     (!site.model || (mode === "photo" && !onPick))
   )
-    return (
+    return context === "story" && photo ? (
+      <>
+        <StoryPhoto key={photo.id} photo={photo} />
+        {site.model && (
+          <div className="scene-media-switch" role="group" aria-label="Eser görünümü">
+            <button className="btn secondary" aria-pressed={true}>
+              Fotoğraf
+            </button>
+            <button
+              className="btn secondary"
+              aria-pressed={false}
+              onClick={() => setMode("model")}
+            >
+              3B model
+            </button>
+          </div>
+        )}
+      </>
+    ) : (
       <PhotoGallery
         key={photoId || site.id}
         site={site}
@@ -303,10 +378,15 @@ export function Scene({
             partCards={site.partCards}
             onPick={onPick}
             sources={site.sources}
+            onPhotos={photos.length ? () => setMode("photo") : undefined}
           />
-          <div className="scene-photo-credit">
-            Temsili 3B model · Döndürmek için sürükle, yakınlaştırmak için
-            kaydır.
+          <div className="model-label">
+            <i />
+            3D model · Temsili
+          </div>
+          <div className="model-hint">
+            Sürükle: döndür · {wide ? "Tekerlek" : "İki parmak"}: yakınlaştır ·
+            Dokun: parça
           </div>
           {card && (
             <StoryPhotoCard

@@ -13,14 +13,13 @@ documents-context/
 ├── hackathon/                Yarışma PDF'leri ve rehber
 ├── design/
 │   ├── README.md
-│   ├── tokens.css
 │   ├── ikonlar/
 │   ├── desenler/
 │   ├── harita/
 │   ├── ekranlar-15ekim/
 │   ├── karsilastirma/
-│   ├── test-redmi9t/         Telefon prototipi (Figma ekranları, gerçek içerik) + performans testi
-│   └── ilk-prototip-…/       Eski uygulama; tasarım referansı
+│   └── PROTOTIP_KAYDI.md     Kaldırılan prototipin tarihli notları
+├── promptlar/                3D ve içerik ajanlarına verilen iş emirleri
 ├── eserler/
 │   ├── README.md
 │   ├── _kutuphane/           Ortak Blender yardımcıları ve yöntem
@@ -49,7 +48,7 @@ documents-context/
 - `eser.md` kimlik, ölçü ve kaynakların giriş noktasıdır. Model kararları eserin notlarında veya üretim klasörünün README'sinde tutulur.
 - Üretim dizininin adı `3d/` olur (araç adı taşımaz; 22 Ekim 2026 itibarıyla modeli olan yedi eserin hepsi bu düzende: Ulu Cami, Koza Han, Bedesten, Orhan Bey Camii, Orhan Bey Hamamı, Emir Hanı, Orhan Gazi Türbesi. `claude/` ya da `gpt/` adlı dizin kalmadı). Yalnız son sürüm tutulur; sürüm geçmişi `3d/README.md` içinde yazılı kalır. İçlerinde `build/` betikleri, `blend/` kaynak sahneleri, `export/` GLB teslimleri, `kontrol/` render ve raporlar bulunur. Sırf standart olsun diye boş klasör açılmaz.
 - Ortak modelleme yardımcıları `eserler/_kutuphane/`; tür şablonları `veri/bursa/sablonlar/` altındadır.
-- `design/` arayüz tasarımı içindir. Eski prototip canlı uygulama değildir; referans olarak korunur.
+- `design/` tasarım kaynakları ve tarihli referanslar içindir. Çalışan arayüz kodu burada tutulmaz; `apps/web` altındadır. İçerik okuyucuları `services/api/scripts/`, içerik araçları `scripts/content/` altındadır.
 - CSV'ler doğrulanmadan yayın verisi sayılmaz. Model sürümünün varlığı, doğrulama veya mobil performans testinin geçtiği anlamına gelmez.
 - Büyük kaynak arşivinin yerelde bulunması Git'te takip edildiği anlamına gelmez. Mevcut ignore kuralları korunur.
 - Dosya taşınırken ilgili Markdown bağlantıları ve Python göreli yolları birlikte kontrol edilir. Tarihsel arşiv yolları geçmiş kayıt olarak kalabilir.
@@ -68,7 +67,7 @@ documents-context/
 
 ## Eser klasörü: `icerik/` (30 Ekim 2026, yedi eserde aynı)
 
-Yalnız fotoğraflı dört eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii) `3d/`, `parcalar.md` ve `eser-hakkinda-okuma.md` yok; fotoğraflar `foto/kitap/` içinde (envanter kitabından). Hatay kitabının metni `design/test-redmi9t-v2/_araclar/envanter_metni_cikar_hatay.py` ile çıkarılır.
+Yalnız fotoğraflı dört eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii) `3d/`, `parcalar.md` ve `eser-hakkinda-okuma.md` yok; fotoğraflar `foto/kitap/` içinde (envanter kitabından). Hatay kitabının metni `scripts/content/envanter_metni_cikar_hatay.py` ile çıkarılır.
 
 | Dosya | Ne | Uygulama okur mu |
 | --- | --- | --- |

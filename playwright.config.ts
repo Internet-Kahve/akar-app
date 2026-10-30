@@ -7,6 +7,16 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:3000",
+    // The first-visit card covers the map; only its own test goes without this.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: "http://127.0.0.1:3000",
+          localStorage: [{ name: "akar.karsilama", value: "1" }],
+        },
+      ],
+    },
     channel: process.env.CI ? undefined : "chrome",
     trace: "retain-on-failure",
   },
