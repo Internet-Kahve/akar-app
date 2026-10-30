@@ -158,6 +158,12 @@ Bu yüzden model ve içerik **aynı içe aktarmayla** güncellenmeli. Eski → y
   - Bedesten 25.224.
 - **Kaynak:** GLB'ler yalnız Blender'dan üretilir (`_kutuphane/blend_hat/`, eserin `build/build_vXX.py`'si). Blend ve build dosyaları repoda değil, Drive'da.
 
+## 2b. Anlatımda genel görünüm ve fotoğraf kartı (30 Ekim 2026)
+
+- **Genel görünüm (eserden bağımsız kural):** hikâye cümlesinin vurgusu boşsa (`story_blocks.highlights` boş) 3D sahnede yapı yavaşça döner (360°, ~30 sn; OrbitControls `autoRotate`, hız 2). Kamera geçişi bitince başlar, kullanıcı dokununca durur, hareket azaltmada dönmez. Belli bir yeri anlatmayan cümleler («Ulucami'yi Yıldırım Bayezid yaptırdı», «mimarı bilinmiyor») için. Ulucami'de 3. cümlenin taç kapı vurgusu bu yüzden kaldırıldı.
+- **Admin paneli (öneri):** cümle düzenleme ekranında vurgu boş bırakılınca «Genel görünüm: yapı döner» yazısı ve isteğe bağlı «Döndürme» kutucuğu (`story_blocks.camera_mode`: `tur` | `sabit`; boş = vurgu yoksa `tur`). Kural varsayılan olarak çalışır, alan yalnız istisna için.
+- **Fotoğraf kartı (`kart: evet`):** artık vurgulanan noktanın üstüne değil kenara yaslanır: mobilde hikâye kartının hemen üstünde yatay (96 px fotoğraf + başlık), masaüstünde sahnenin sol altında (320 px). Kamera kadrajı kartın kapladığı yer kadar kayar (`setViewOffset`: mobilde yukarı, masaüstünde sağa), vurgulanan parça açıkta kalır. Kart sürüklenerek taşınır (taşınınca kadraj yeniden ortalanır); dokununca vurgulanan parçanın kartı, parça kartı yoksa fotoğraf büyük açılır.
+
 ## 3. Haritada ve detayda ışık, renk, yer gölgesi
 
 Ürünün `map-models.ts` ve `model-viewer.tsx` dosyalarında ışık sabit yazılı. `map-models.ts`'teki değerler prototipin eski değerleri (ortam 2,3 / güneş 1,3). Yeni değerler şehir kaydında: `veri/sehir/bursa.json → harita_isik`.

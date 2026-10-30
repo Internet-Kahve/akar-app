@@ -742,8 +742,8 @@ function zeminKatmanlari(meshler) {
 }
 
 class Sahne3D {
-  constructor(kap, { onParca, altBosluk } = {}) {
-    this.kap = kap; this.onParca = onParca; this.altBosluk = altBosluk || (() => 0);
+  constructor(kap, { onParca, altBosluk, solBosluk } = {}) {
+    this.kap = kap; this.onParca = onParca; this.altBosluk = altBosluk || (() => 0); this.solBosluk = solBosluk || (() => 0);
     this.r = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
     // tuval saydam: zemin .sahne3d'nin CSS geçişinden gelir (şehrin rengi)
     this.r.setPixelRatio(Math.min(devicePixelRatio, 1.5)); this.r.setClearColor(0x000000, 0);
@@ -754,6 +754,7 @@ class Sahne3D {
     this.kont = new OrbitControls(this.kam, this.r.domElement);
     this.kont.enableDamping = true; this.kont.dampingFactor = 0.09; this.kont.maxPolarAngle = Math.PI * 0.49;
     this.kont.addEventListener('change', () => (this.kirli = true));
+    this.kont.addEventListener('start', () => { this.turIste = false; this.kont.autoRotate = false; });   // kullanıcı döndürünce tur durur
     this.secili = new Set(); this.vurgulu = new Set(); this.flas = 0; this.kart = null;
     this.ro = new ResizeObserver(() => this.boyut()); this.ro.observe(kap);
     this.isaretci();
@@ -762,10 +763,10 @@ class Sahne3D {
   boyut() {
     const w = this.kap.clientWidth, h = this.kap.clientHeight; if (!w || !h) return;
     this.r.setSize(w, h, false); this.kam.aspect = w / h;
-    /* altta kart varsa kadrajın merkezi kartın yarısı kadar yukarı kayar (görünür alanın ortası) */
-    const a = Math.min(this.altBosluk(), h * 0.6);
-    if (a > 0) this.kam.setViewOffset(w, h + a, 0, a, w, h); else this.kam.clearViewOffset();
-    this.gorunurH = h - a; this.kam.updateProjectionMatrix(); this.kirli = true;
+    /* altta kart varsa kadrajın merkezi kartın yarısı kadar yukarı, solda kart varsa yarısı kadar sağa kayar (görünür alanın ortası) */
+    const a = Math.min(this.altBosluk(), h * 0.6), s = Math.min(this.solBosluk(), w * 0.5);
+    if (a > 0 || s > 0) this.kam.setViewOffset(w + s, h + a, 0, a, w, h); else this.kam.clearViewOffset();
+    this.gorunurH = h - a; this.gorunurW = w - s; this.kam.updateProjectionMatrix(); this.kirli = true;
   }
   async yukle(e) {
     this.eser = e;
@@ -826,7 +827,7 @@ class Sahne3D {
     if (!this.kok || !a) return;
     const u = a.uzaklik || '', R = this.yaricap;
     /* yapının tamamı (sınır küresi) görünür alana sığacak uzaklık; «yakın / orta / çatı» bunun kesirleri */
-    const w = this.kap.clientWidth || 1, gh = this.gorunurH || this.kap.clientHeight || 1;
+    const w = this.gorunurW || this.kap.clientWidth || 1, gh = this.gorunurH || this.kap.clientHeight || 1;
     const vfov = THREE.MathUtils.degToRad(this.kam.fov) * Math.min(1, gh / (this.kap.clientHeight || gh));
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * (w / gh));
     const sigdir = R / Math.sin(Math.min(vfov, hfov) / 2);
@@ -838,6 +839,8 @@ class Sahne3D {
     if (!gecis || matchMedia('(prefers-reduced-motion: reduce)').matches) { this.kam.position.copy(konum); this.kont.target.copy(hedef); this.kont.update(); this.kirli = true; return; }
     this.tween = { t0:performance.now(), k0:this.kam.position.clone(), h0:this.kont.target.clone(), k1:konum, h1:hedef };
   }
+  /* genel görünüm: cümle belli bir parçayı göstermiyorsa yapı yavaşça döner (360°, ~30 sn); kamera geçişi bitince başlar, dokununca durur */
+  tur(acik) { this.turIste = !!acik; if (!acik) this.kont.autoRotate = false; this.kont.autoRotateSpeed = 2; this.kirli = true; }
   vurgula(adlar) { this.vurgulu = new Set((adlar || []).filter((a) => this.parcalar && this.parcalar.has(a))); this.vurguT0 = performance.now(); this.boya(); }
   /* bir kartın bütün parçaları birlikte seçilir ve vurgulanır (ör. Ulucami: dört cephe + pencere girintileri tek kart); kartı olmayan parça tek başına */
   grup(ad) { const k = ad && this.eser?.parcalar?.find((p) => p.adlar.includes(ad)); return k ? k.adlar : (ad ? [ad] : []); }
@@ -943,6 +946,7 @@ class Sahne3D {
       const dt = this.kalkanT == null ? 1 / 60 : Math.min(0.05, (t - this.kalkanT) / 1000);
       this.kalkanT = t; this.kalkanAktif = this.kalkanAdim(dt); this.kirli = true;
     }
+    if (this.turIste && !this.tween && !this.kont.autoRotate && !matchMedia('(prefers-reduced-motion: reduce)').matches) this.kont.autoRotate = true;
     if (this.kont.update()) this.kirli = true;
     if (!this.kirli || !this.kok) return;
     this.kirli = false;
@@ -1437,6 +1441,31 @@ function anlatim(id, mod) {
   setTimeout(okuGozlem, 400);
   if (mod === 'dinle') setTimeout(() => oynat(true), 300);
 }
+/* anlatımdaki fotoğraf kartı: sürüklenerek taşınır; dokununca vurgulanan parçanın kartı (yoksa fotoğraf büyük) açılır */
+function k3Ac(k) {
+  if (!k || !k._f) return;
+  if (k._parca) { if (anlat.oynuyor) oynat(false); parcaKartAc(k._parca); return; }
+  const b = document.createElement('button'); b.dataset.isik = k._f.url; b.dataset.kunye = [k._f.baslik, k._f.kaynak].filter(Boolean).join(' · ');
+  b.innerHTML = resim(k._f); hkIsikAc(b);
+}
+function k3Surukle(k) {
+  if (!k) return; let b = null;
+  k.addEventListener('pointerdown', (e) => { if (e.button) return; b = { x:e.clientX, y:e.clientY, l:k.offsetLeft, t:k.offsetTop, id:e.pointerId, oyna:false }; });
+  k.addEventListener('pointermove', (e) => {
+    if (!b) return; const dx = e.clientX - b.x, dy = e.clientY - b.y;
+    if (!b.oyna) { if (Math.hypot(dx, dy) < 6) return; b.oyna = true; k.setPointerCapture(b.id); k.classList.add('suruk'); k.style.width = k.offsetWidth + 'px'; }
+    const p = k.offsetParent; if (!p) return;
+    const l = Math.min(Math.max(8, b.l + dx), p.clientWidth - k.offsetWidth - 8), t = Math.min(Math.max(8, b.t + dy), p.clientHeight - k.offsetHeight - 8);
+    Object.assign(k.style, { left:l + 'px', top:t + 'px', right:'auto', bottom:'auto' });
+  });
+  const bit = (e) => {
+    if (!b) return; const oyna = b.oyna; b = null; k.classList.remove('suruk');
+    if (oyna) { k.dataset.serbest = '1'; if (s3d) { s3d.boyut(); s3d.kirli = true; } }   // kart elle taşındı: model yeniden ortalanır
+    else if (e.type === 'pointerup') k3Ac(k);
+  };
+  k.addEventListener('pointerup', bit); k.addEventListener('pointercancel', bit);
+  k.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); k3Ac(k); } });
+}
 function anlatAcikCiz() {
   if (durum.masaustu) return;
   const acik = anlat.acik;
@@ -1455,8 +1484,13 @@ function anlatSahne() {
   $('#ilerleme').classList.toggle('acik', !koyu);
   if (koyu) alan.innerHTML = `<div class="foto-sahne${durum.doldur ? ' doldur' : ''}" id="foto-sahne"><img class="bulanik" alt=""><img class="ana" alt=""><div class="ust-golge"></div><div class="alt-bilgi"><span id="foto-guven"></span><span class="kunye">${esc(aktifSehir().foto_kunye)}</span></div></div>`;
   else {
-    alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Model gelince sahne kendiliğinden açılır.')}</div><div class="kart3d" id="kart3d" style="opacity:0"></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
-    s3dKur($('#s3d'), anlat.eser, { onParca:parcaSecildi, altBosluk:() => (!durum.masaustu && !anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) }, anlatSahne, () => sahneUygula(false));
+    alan.innerHTML = `<div class="sahne3d" id="s3d">${yuklemeKart('Model gelince sahne kendiliğinden açılır.')}</div><div class="kart3d" id="kart3d" hidden></div><div class="parca-ad" id="parca-ad" style="bottom:16px" hidden></div>`;
+    k3Surukle($('#kart3d'));
+    /* fotoğraf kartı kenara yaslanır, model onun yanında kalır: mobilde kartın üstünde, masaüstünde sağında. Kart sürüklenip bırakılınca kadraj ortalanır */
+    const k3 = () => { const k = $('#kart3d'); return k && !k.hidden && !k.dataset.serbest ? k : null; };
+    s3dKur($('#s3d'), anlat.eser, { onParca:parcaSecildi,
+      altBosluk:() => (durum.masaustu ? 0 : (!anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 12 : 0) + (k3() ? k3().offsetHeight + 12 : 0)),
+      solBosluk:() => (durum.masaustu && k3() ? k3().offsetWidth + 32 : 0) }, anlatSahne, () => sahneUygula(false));
   }
   $$('[data-gorunum]').forEach((b) => b.setAttribute('aria-checked', b.dataset.gorunum === durum.gorunum));
   sahneUygula(false);
@@ -1470,11 +1504,19 @@ function sahneUygula(gecis = true) {
     if (ana.dataset.url !== f.url) { ana.style.opacity = 0; const yeni = new Image(); yeni.onload = () => { ana.src = f.url; $('.bulanik', fs).src = f.url; ana.dataset.url = f.url; ana.alt = f.alt; ana.style.opacity = 1; }; yeni.src = f.url; }
     $('#foto-guven').innerHTML = guven(f.guven, { alinti:f.baslik, kaynak:f.kaynak });
   } else if (s3d && s3d.kok) {
+    /* fotoğraf kartı: önce kart konur (yer kaplar), sonra kadraj ve kamera onun yanına göre hesaplanır */
+    const k = $('#kart3d'), f = c.kart && foto(e, c.foto);
+    if (f) {
+      k.innerHTML = `${resim(f)}<div class="k3-yazi"><b>${esc(f.baslik)}</b><small>${esc(f.kisa)}</small></div><span class="k3-tutamak" aria-hidden="true"></span>`;
+      k._f = f; k._parca = c.vurgu.find((a) => parcaBilgi(a)) || null;
+      k.setAttribute('role', 'button'); k.tabIndex = 0; k.setAttribute('aria-label', `${f.baslik}: ${k._parca ? 'parça kartını aç' : 'fotoğrafı büyüt'}. Sürükleyerek taşınabilir.`);
+      if (!durum.masaustu && !k.dataset.serbest) k.style.bottom = (!anlat.acik ? ($('#hikaye-kart')?.offsetHeight || 0) + 24 : 12) + 'px';
+      k.hidden = false;
+    } else k.hidden = true;
+    s3d.boyut();
     s3d.kubbeler(!!c.ic, gecis);   // v2: iç mekân cümlelerinde kubbeler kalkar
     s3d.aci(c.aci, gecis); s3d.vurgula(c.vurgu);
-    const k = $('#kart3d');
-    if (c.kart) { const f = foto(e, c.foto); k.innerHTML = `${resim(f)}<div><b>${esc(f.baslik)}</b><small>${esc(f.kisa)}</small></div>`; s3d.kartBagla(k, c.vurgu[0] || (c.aci && c.aci.hedef) || 'Merkez'); }
-    else { k.style.opacity = 0; s3d.kartBagla(null); }
+    s3d.tur(!c.vurgu.length);   // belli bir parçası olmayan cümle (ör. «Ulucami'yi Yıldırım Bayezid yaptırdı»): yapı yavaşça döner
   }
 }
 /* ---------- Akar akışı (29 Ekim 2026; Figma D 1:2893 «Anlatım · Akar akışı», fikir: Kılıç Ali Paşa prototipi `flow`) ----------

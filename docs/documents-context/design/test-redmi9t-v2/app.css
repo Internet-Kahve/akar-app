@@ -339,12 +339,17 @@ body.d .kunye{font-size:11px}
 .cumleler li.aktif .no{background:var(--primary);border-color:var(--primary);color:#fff}
 .cumleler li.aktif p{font-weight:500}
 .cumle-sayfa .oynatici{padding:10px 16px calc(10px + var(--sab));margin:0}
-.kart3d{position:absolute;z-index:4;width:200px;background:var(--surface);border-radius:12px;box-shadow:0 6px 20px rgba(20,27,43,.25);overflow:hidden;transform:translate(-50%,calc(-100% - 14px));transition:opacity var(--sure-2);pointer-events:none}
-.kart3d img{width:100%;height:110px;object-fit:cover;display:block}
-.kart3d div{padding:8px 10px}
-.kart3d b{display:block;font-size:13px}
-.kart3d small{display:block;color:var(--text-muted);font-size:12px;line-height:16px}
-.kart3d::after{content:"";position:absolute;left:50%;bottom:-6px;width:12px;height:12px;background:var(--surface);transform:translateX(-50%) rotate(45deg)}
+/* anlatımdaki fotoğraf kartı (30 Ekim 2026): kenara yaslanır (mobil: hikâye kartının üstünde yatay; masaüstü: solda), model yanında kalır.
+   Sürüklenerek taşınır, dokununca parça kartı ya da büyük fotoğraf açılır */
+.kart3d{position:absolute;z-index:4;left:12px;right:12px;bottom:12px;display:grid;grid-template-columns:96px 1fr;align-items:center;background:var(--surface);border-radius:16px;box-shadow:0 8px 24px rgba(20,27,43,.22);overflow:hidden;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:box-shadow var(--sure-1),transform var(--sure-1)}
+.kart3d[hidden]{display:none}
+.kart3d.suruk{cursor:grabbing;box-shadow:0 16px 36px rgba(20,27,43,.32);transform:scale(1.02)}
+.kart3d img{width:96px;height:96px;object-fit:cover;display:block;pointer-events:none}
+.kart3d .k3-yazi{padding:10px 30px 10px 14px;min-width:0}
+.kart3d b{display:block;font-size:15px;line-height:20px;margin-bottom:2px}
+.kart3d small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text-muted);font-size:13px;line-height:18px}
+.kart3d .k3-tutamak{position:absolute;right:10px;top:50%;width:10px;height:18px;transform:translateY(-50%);opacity:.45;background:radial-gradient(circle,var(--text-muted) 1.4px,transparent 1.6px) 0 0/5px 6px}
+.kart3d:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 body.d .anlat-panel{display:flex;flex-direction:column;height:100%;margin:-20px -24px -24px}
 body.d .anlat-panel .bas{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
 body.d .anlat-panel .bas .sekme-grup{flex:0 0 200px}
@@ -575,16 +580,12 @@ body.d .parca-kart{border-radius:20px;height:min(86vh,760px)}
 .pk-kaynak,.pk-kunye{font:500 12px/1.5 var(--font);color:var(--text-muted)}
 
 /* v2 · anlatım kartları büyük (27 Ekim 2026; 28 Ekim'de bir kademe daha büyütüldü) */
-.kart3d{width:min(90vw,380px);border-radius:18px}
-.kart3d img{height:min(54vw,240px)}
-.kart3d div{padding:14px 16px 16px}
-.kart3d b{font-size:18px;line-height:24px;margin-bottom:6px}
-.kart3d small{font-size:15px;line-height:22px}
-.kart3d::after{left:calc(50% + var(--ok-x,0px))}
-body.d .kart3d{width:520px}
-body.d .kart3d img{height:320px}
-body.d .kart3d b{font-size:21px;line-height:28px}
-body.d .kart3d small{font-size:16px;line-height:24px}
+body.d .kart3d{left:20px;right:auto;bottom:20px;width:320px;display:block}
+body.d .kart3d img{width:100%;height:200px}
+body.d .kart3d .k3-yazi{padding:12px 16px 14px}
+body.d .kart3d b{font-size:18px;line-height:24px}
+body.d .kart3d small{font-size:14px;line-height:20px;-webkit-line-clamp:3}
+body.d .kart3d .k3-tutamak{top:auto;bottom:14px;transform:none}
 
 /* ===== v2 · «Eser hakkında» okuma düzeni (28 Ekim 2026): kapak, yapışık bölüm sekmeleri, kitaptan özet/rakam/alıntı/zaman, «Derinine in» tam metin, masaüstünde yapışık 3D ===== */
 body.d.tam-sayfa #panel,body.d.tam-sayfa #panel-sekme{display:none}

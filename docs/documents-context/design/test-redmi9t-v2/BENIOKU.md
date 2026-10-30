@@ -1,5 +1,9 @@
 # Redmi 9T prototipi ve performans testi · v2
 
+## 30 Ekim 2026 · anlatımda genel görünüm ve kenara yaslanan fotoğraf kartı
+
+Vurgusu boş cümlede 3D'de yapı yavaşça döner (dokununca durur); Ulucami 3. cümledeki taç kapı vurgusu kaldırıldı. Fotoğraf kartı vurgulanan yerin üstüne binmez: mobilde hikâye kartının üstünde, masaüstünde sol altta; model kartın yanında kalır. Kart sürüklenir, dokununca parça kartı (yoksa büyük fotoğraf) açılır. Ayrıntı: `ENTEGRASYON_29EKIM.md` §2b.
+
 ## 30 Ekim 2026 · 3D ışığı tanıtım sayfasındaki gibi
 
 Harita ve eser detayındaki bütün modeller tanıtım sayfasının ışığını kullanır (`app.js` → `isikKur`): ACES ton eşleme, sıcak gök ışığı, gerçek gölge düşüren tek güneş. Güneş her eserin ön cephesine göre: `3d/model.json → on_yonu` (ana girişin baktığı yön); güneş o cephenin önünden, cepheye bakanın solundan 40° (`capraz`) gelir, her eserde ön yüz aydınlık. Tanıtımdaki Ulucami ile aynı köşe. Değerler modeldeki giriş parçalarından çıkarıldı (Ulucami 354, Bedesten 4, Koza Han 4, Orhan Bey Camii 13, Emir Hanı 7, Hamam 186, Türbe 182; Bedesten'in dört yönde kapısı var, kuzey seçildi). Haritada güneş daha önden, daha yukarıdan ve daha zayıf (`harita_capraz` 20°, `harita_yukseklik` 62°, `harita_gunes` 1,5; detayda 2,1): yakın zoomda açık cepheler patlıyordu. Harita dönünce gölge yerinde kalır, harita zeminine düşer. Haritada gölge her model için bir kez çizilir; ardından çizim alanı her karede tuvalin güncel boyuna ayarlanır (yoksa yüksek DPI'da ve pencere boyu değişince model kayboluyordu). Ürüne aktarım: `ENTEGRASYON_29EKIM.md` §3.

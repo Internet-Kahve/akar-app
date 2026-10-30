@@ -8,7 +8,7 @@ Hero eser: 12 cümle (~1,5–2 dk). Her cümle tek bilgi, en fazla ~20 kelime.
 |---|---|---|---|---|---|---|---|
 | 1 | Ulucami'yi Sultan Yıldırım Bayezid yaptırdı. | 01_dis-havadan-kuzey.jpg | hayır | — | E cilt-1 PDF s.20 | Doğrulanmış | hayır |
 | 2 | Üç yıl süren inşaatın ardından cami, 1399'da bir cuma günü ibadete açıldı. | 01_dis-havadan-kuzey.jpg | hayır | — | E cilt-1 PDF s.19 | Doğrulanmış | hayır |
-| 3 | Caminin mimarı kesin olarak bilinmiyor. | 08_tac-kapi.jpg | hayır | Tac_Kapi | E cilt-1 PDF s.20, s.21 | Doğrulanmış | hayır |
+| 3 | Caminin mimarı kesin olarak bilinmiyor. | 08_tac-kapi.jpg | hayır | — | E cilt-1 PDF s.20, s.21 | Doğrulanmış | hayır |
 | 4 | Yaklaşık 55'e 69 metrelik yapının üstünü yirmi kubbe örter. | 04_dis-tepeden.jpg | hayır | Kubbeler_19 | E cilt-1 PDF s.25 | Doğrulanmış | hayır |
 | 5 | On bir metre çapındaki kubbeler, on iki kare payenin üzerine oturur. | 02_ic-genel.jpg | evet | Payeler | E cilt-1 PDF s.26 | Doğrulanmış | evet |
 | 6 | Ortadaki kubbenin tepesi, içeriye ışık ve hava girsin diye açık bırakıldı. | 04_dis-tepeden.jpg | hayır | Sadirvan_Kubbe | E cilt-1 PDF s.25, s.31, s.33 | Doğrulanmış | hayır |
@@ -20,6 +20,8 @@ Hero eser: 12 cümle (~1,5–2 dk). Her cümle tek bilgi, en fazla ~20 kelime.
 | 12 | Sonraki durak, Ulucami'ye gelir sağlayan Bedesten. | 14_sonraki-durak-bedesten.jpg | evet | — | E cilt-1 PDF s.11; E cilt-2 PDF s.29 | Doğrulanmış | hayır |
 
 ## Notlar
+
+- **Genel görünüm (30 Ekim 2026):** Vurgu sütunu boş («—») olan cümlede 3D sahnede yapı yavaşça döner (360°; dokununca durur). Belli bir yeri anlatmayan cümleler (1, 2, 3, 10, 12) böyle. Cümle 3'ün vurgusu taç kapıydı; mimar bilgisi kapıyla ilgili değil, kaldırıldı.
 
 - **«İç mekân (3D)» sütunu (28 Ekim 2026):** «evet» olan cümlede uygulama 3D görünümde modelin örtüsünü kaldırır («İçini göster»; gruplar `../3d/model.json` içinde), «hayır» olanda örtü yerindedir. Modeli olmayan eserde bu sütun dikkate alınmaz. Panelde cümle düzenleme ekranında tek kutucuk.
 
@@ -42,7 +44,7 @@ Görev dosyasında `hikaye.md` tablosunda Açı sütunu yok; açı panelde model
 |---|---|---|---|---|---|
 | 1 | Merkez | 0° (kuzey) | 30° | bütün yapı + minareler kadrajda | Kapak fotoğrafıyla aynı yön |
 | 2 | — | (1'de kalır) | | | |
-| 3 | Tac_Kapi | 0° | 10° | yakın, kapı kadrajın yarısı | Taç kapı fotoğrafıyla aynı |
+| 3 | — | (1'de kalır) | | | Genel görünüm: yapı döner (mimarın belli bir parçası yok) |
 | 4 | Kubbeler_19 | 0° | 70° | bütün çatı | Yirmi kubbenin sayılabildiği tepeden görünüş |
 | 5 | Payeler | 20° | 55° | orta | İçini göster: kubbeler kalkar, on iki paye ve kemerler görünür |
 | 6 | Sadirvan_Kubbe | 0° | 80° | orta kubbe ve çevresindeki 8 kubbe | Açık kubbe öne çıksın |
