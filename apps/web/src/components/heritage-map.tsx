@@ -25,6 +25,7 @@ import {
 import { nearestCity, type LngLat } from "../lib/nearby";
 import { useCities, useCityScenes } from "./city-scenes";
 import { MapControls } from "./map-controls";
+import { useI18n, type I18n } from "./i18n";
 import { MapPin, RotateCcw } from "lucide-react";
 declare global {
   interface Window {
@@ -61,9 +62,13 @@ function openingView(cities: CityRecord[]) {
   return city ? cityView(city) : { center: demoRegion.center, zoom: 16 };
 }
 /** The text a city marker says, and what tapping a city without sites tells (§11.45). */
-function comingSoon(city: CityRecord) {
+function comingSoon(city: CityRecord, t: I18n["t"]) {
   const inv = city.inventory;
-  return `${city.name}: ${inv?.siteCount ? `${inv.siteCount} vakıf eseri ` : ""}envanterde belgelendi${inv?.year ? ` (${inv.year})` : ""}. Uygulamaya ekleniyor.`;
+  return t("map.comingSoon", {
+    name: city.name,
+    sites: inv?.siteCount ? `${t("map.inventorySites", { count: inv.siteCount })} ` : "",
+    year: inv?.year ? ` (${inv.year})` : "",
+  });
 }
 /** A camera move the page asks for; a new `key` asks again. */
 export type MapFlight =
@@ -115,6 +120,7 @@ export function HeritageMap({
   /** The route's city colour, for its line and stop stars. */
   routeColour?: string;
 }) {
+  const { lang, t, text } = useI18n();
   const scenes = useCityScenes();
   const cities = useCities();
   const container = useRef<HTMLDivElement>(null),
@@ -309,19 +315,19 @@ export function HeritageMap({
           el.setAttribute(
             "aria-label",
             city.siteCount
-              ? `${city.name}: ${city.siteCount} eser, haritada aç`
-              : `${city.name}: yakında`,
+              ? t("map.cityAria", { name: city.name, count: city.siteCount })
+              : t("map.cityAriaSoon", { name: city.name }),
           );
           const dot = document.createElement("i");
           const name = document.createElement("b");
           name.textContent = city.name;
           const count = document.createElement("small");
           count.textContent = city.siteCount
-            ? `${city.siteCount} eser`
-            : "Yakında";
+            ? t("map.cityCount", { count: city.siteCount })
+            : t("map.soon");
           el.append(dot, name, count);
           el.onclick = () => {
-            if (!city.siteCount) return setNotice(comingSoon(city));
+            if (!city.siteCount) return setNotice(comingSoon(city, t));
             moved.current = true;
             setNotice("");
             m.flyTo({
@@ -344,7 +350,7 @@ export function HeritageMap({
     return () => {
       cancelled = true;
     };
-  }, [cities, loaded]);
+  }, [cities, loaded, t]);
   // The route line and the site pins follow the sites, the route and the selection (§11.48).
   useEffect(() => {
     const m = map.current;
@@ -384,6 +390,7 @@ export function HeritageMap({
       pinFeatures(sites, routeIds, selectedId, {
         ...(finishedIds && { finishedIds }),
         accent: routeColour,
+        lang,
       }),
       () => cancelled,
       routeColour,
@@ -393,7 +400,7 @@ export function HeritageMap({
     return () => {
       cancelled = true;
     };
-  }, [sites, selectedId, routeIds, loaded, finishedIds, routeColour]);
+  }, [sites, selectedId, routeIds, loaded, finishedIds, routeColour, lang]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);
@@ -486,17 +493,17 @@ export function HeritageMap({
       <div
         ref={container}
         className="map-canvas"
-        aria-label="Bursa eser haritası"
+        aria-label={t("map.aria")}
       />
       {(!loaded || failed) && (
         <div className="map-fallback">
           <div className="fallback-grid" />
-          <span className="water-label">HANLAR BÖLGESİ</span>
+          <span className="water-label">{t("map.district")}</span>
           <div className="fallback-note">
             <MapPin size={16} />
             {failed
-              ? "Harita yüklenemedi · Şematik konum görünümü"
-              : "Harita hazırlanıyor · Şematik konum görünümü"}
+              ? t("map.failed")
+              : t("map.preparing")}
           </div>
           {sites.map((site, i) => (
             <button
@@ -513,7 +520,7 @@ export function HeritageMap({
               ) : (
                 <img src={`/figma/${pinFiles[site.kind]}`} alt="" />
               )}
-              <span>{site.name}</span>
+              <span>{text(site.name, site.nameEn)}</span>
             </button>
           ))}
         </div>
@@ -540,7 +547,7 @@ export function HeritageMap({
       {failed && (
         <button className="map-retry" onClick={() => window.location.reload()}>
           <RotateCcw size={14} />
-          Yeniden dene
+          {t("common.retry")}
         </button>
       )}
     </div>

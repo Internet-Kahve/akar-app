@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, Image as ImageIcon, RotateCcw, Share2, X } from "lucide-react";
 import type { HistoryImage, HeritageSite } from "@akar/domain";
+import { useI18n } from "./i18n";
 
 /**
  * Matches the old photograph with the live camera: the old one lies over the view, half see-through, and two
@@ -18,6 +19,9 @@ export function HistoryCamera({
   onClose: () => void;
   onMemory: () => void;
 }) {
+  const i18n = useI18n(),
+    { t } = i18n,
+    siteName = i18n.text(site.name, site.nameEn);
   const [consent, setConsent] = useState(!image.viewpoint?.interior),
     [denied, setDenied] = useState(false),
     [shot, setShot] = useState(""),
@@ -84,7 +88,7 @@ export function HistoryCamera({
   const share = async () => {
     const blob = await (await fetch(shot)).blob();
     const file = new File([blob], `${site.id}.jpg`, { type: "image/jpeg" });
-    const text = `${site.name} · ${image.dateLabel}\n${image.photo.description}`;
+    const text = `${siteName} · ${image.dateLabel}\n${image.photo.description}`;
     if (navigator.canShare?.({ files: [file] }))
       await navigator.share({ files: [file], text }).catch(() => {});
     else {
@@ -94,20 +98,18 @@ export function HistoryCamera({
       link.click();
     }
   };
-  const title = `${site.name} · ${image.dateLabel}`;
+  const title = `${siteName} · ${image.dateLabel}`;
   if (!consent)
     return (
       <div className="camera" role="dialog" aria-modal="true" aria-label={title}>
         <div className="camera-note">
-          <h2>İç mekânda fotoğraf</h2>
-          <p>
-            Namaz vaktinde çekim yapma, kişilerin yüzünü çekme ve flaş kullanma.
-          </p>
+          <h2>{t("site.cameraInteriorTitle")}</h2>
+          <p>{t("site.cameraInteriorNote")}</p>
           <button className="btn" onClick={() => setConsent(true)}>
-            Anladım
+            {t("site.cameraUnderstood")}
           </button>
           <button className="btn secondary" onClick={onClose}>
-            Vazgeç
+            {t("common.cancel")}
           </button>
         </div>
       </div>
@@ -115,23 +117,23 @@ export function HistoryCamera({
   return (
     <div className="camera" role="dialog" aria-modal="true" aria-label={title}>
       <header>
-        <button className="round-btn" aria-label="Kamerayı kapat" onClick={onClose}>
+        <button className="round-btn" aria-label={t("site.cameraClose")} onClick={onClose}>
           <X size={18} />
         </button>
         <span>{title}</span>
       </header>
       {shot ? (
         <>
-          <div className="camera-tabs" role="group" aria-label="Karşılaştırma">
+          <div className="camera-tabs" role="group" aria-label={t("site.cameraCompare")}>
             <button aria-pressed={compare === "slider"} onClick={() => setCompare("slider")}>
-              Kaydırıcı
+              {t("site.cameraSlider")}
             </button>
             <button aria-pressed={compare === "side"} onClick={() => setCompare("side")}>
-              Yan yana
+              {t("site.cameraSideBySide")}
             </button>
           </div>
           <div className={`camera-result ${compare}`}>
-            <img src={shot} alt="Senin fotoğrafın" />
+            <img src={shot} alt={t("site.cameraYourPhoto")} />
             <img
               src={image.photo.src}
               alt={image.photo.alt}
@@ -145,7 +147,7 @@ export function HistoryCamera({
           {compare === "slider" && (
             <input
               type="range"
-              aria-label="Eski ve yeni fotoğrafı karşılaştır"
+              aria-label={t("site.cameraCompareRange")}
               value={split}
               onChange={(e) => setSplit(Number(e.target.value))}
             />
@@ -158,19 +160,19 @@ export function HistoryCamera({
                 onMemory();
               }}
             >
-              İz Bırak olarak gönder
+              {t("site.cameraSendTrace")}
             </button>
             <div>
               <button className="btn secondary" onClick={() => void share()}>
                 <Share2 size={17} />
-                Paylaş
+                {t("site.cameraShare")}
               </button>
               <button className="btn secondary" onClick={() => setShot("")}>
                 <RotateCcw size={17} />
-                Tekrar çek
+                {t("site.cameraRetake")}
               </button>
             </div>
-            <small>Paylaşılan görselde kaynak satırı otomatik yazılır.</small>
+            <small>{t("site.cameraShareNote")}</small>
           </div>
         </>
       ) : (
@@ -196,38 +198,38 @@ export function HistoryCamera({
             />
             {denied && (
               <div className="camera-note">
-                <h2>Kameraya izin verilmedi</h2>
+                <h2>{t("site.cameraDenied")}</h2>
                 <button className="btn" onClick={() => void startCamera()}>
-                  Tekrar dene
+                  {t("site.cameraRetry")}
                 </button>
                 <button
                   className="btn secondary"
                   onClick={() => pickFile.current?.click()}
                 >
-                  Galeriden seç
+                  {t("site.cameraPickFile")}
                 </button>
               </div>
             )}
           </div>
-          <p className="camera-hint">Eski fotoğrafı görüntüyle çakıştır</p>
+          <p className="camera-hint">{t("site.cameraHint")}</p>
           <label className="camera-fade">
-            Eski
+            {t("site.cameraOld")}
             <input
               type="range"
-              aria-label="Eski fotoğrafın saydamlığı"
+              aria-label={t("site.cameraFadeRange")}
               value={100 - fade}
               onChange={(e) => setFade(100 - Number(e.target.value))}
             />
-            Bugün
+            {t("site.cameraToday")}
           </label>
           <div className="camera-bar">
             <img src={image.photo.src} alt="" />
-            <button className="camera-shutter" aria-label="Fotoğraf çek" onClick={capture}>
+            <button className="camera-shutter" aria-label={t("site.cameraShutter")} onClick={capture}>
               <Camera size={26} />
             </button>
             <button
               className="round-btn"
-              aria-label="Galeriden seç"
+              aria-label={t("site.cameraPickFile")}
               onClick={() => pickFile.current?.click()}
             >
               <ImageIcon size={20} />

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import type { GeoJSONSource, Map as MapType } from "maplibre-gl";
 import type { HistoryImage } from "@akar/domain";
 import { viewCone } from "../lib/viewpoint";
+import { useI18n } from "./i18n";
 
 const featureOf = (image: HistoryImage) => ({
   type: "Feature" as const,
@@ -21,6 +22,7 @@ export function ViewpointMap({
   images: HistoryImage[];
   selected: HistoryImage;
 }) {
+  const { t } = useI18n();
   const box = useRef<HTMLDivElement>(null),
     map = useRef<MapType | null>(null),
     ready = useRef(false);
@@ -89,5 +91,5 @@ export function ViewpointMap({
     };
   }, []);
   useEffect(draw, [selected, images]);
-  return <div ref={box} className="viewpoint-map" aria-label="Çekim yeri haritası" />;
+  return <div ref={box} className="viewpoint-map" aria-label={t("site.viewpointMap")} />;
 }

@@ -21,6 +21,7 @@ import {
   ModelLoadingCard,
   type ModelLoadingContext,
 } from "./loading-screens";
+import { useI18n } from "./i18n";
 
 const ModelViewer = dynamic(() => import("./model-viewer"), { ssr: false });
 
@@ -58,6 +59,7 @@ export function ModelStage({
   ComponentProps<typeof ModelViewer>,
   "scene" | "onProgress" | "onSettled"
 >) {
+  const { t } = useI18n();
   const [phase, setPhase] = useState<"loading" | "ready" | "failed">("loading"),
     [attempt, setAttempt] = useState(0);
   // A viewer that joins a download in progress starts from what has been read.
@@ -99,11 +101,8 @@ export function ModelStage({
       {phase === "failed" && (
         <div className="model-failed" role="alert">
           <Box size={28} />
-          <h3>3D model açılamadı</h3>
-          <p>
-            Bağlantı kesildi ya da dosya bozuk. Hikâye görsellerle aynı şekilde
-            devam eder.
-          </p>
+          <h3>{t("site.modelFailedTitle")}</h3>
+          <p>{t("site.modelFailedBody")}</p>
           <button
             className="btn"
             onClick={() => {
@@ -111,11 +110,11 @@ export function ModelStage({
               setAttempt((n) => n + 1);
             }}
           >
-            Yeniden dene
+            {t("site.retryModel")}
           </button>
           {onPhotos && (
             <button className="btn secondary" onClick={onPhotos}>
-              Görsellerle devam et
+              {t("site.continueWithPhotos")}
             </button>
           )}
         </div>

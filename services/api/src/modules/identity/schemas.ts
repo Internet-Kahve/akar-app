@@ -14,11 +14,25 @@ export const UserIdParams = z.object({ userId: z.string().min(1).max(200) });
 export const AccountIdParams = z.object({ userId: z.uuid() });
 export const InviteIdParams = z.object({ id: z.string().min(1).max(100) });
 
+export const PreferencesDto = z.object({
+  siteLang: z.enum(["tr", "en"]).nullable().describe("Site dili; henüz seçilmediyse null"),
+  voiceLang: z.enum(["tr", "en"]).nullable().describe("Sesli anlatım dili; henüz seçilmediyse null"),
+  voiceGender: z.enum(["female", "male"]).nullable().describe("Sesli anlatım sesi; henüz seçilmediyse null"),
+});
+
 export const MeResponse = z.object({
   id: z.string().describe("Kullanıcı kimliği (Supabase JWT sub)"),
   role: z.enum(roles).describe("Sunucuda atanmış rol; yetkili kaydı olmayan oturum user olur"),
   email: z.string().nullable().describe("Girişte kullanılan e-posta (token'dan)"),
   displayName: z.string().nullable().describe("Onaylı anılarda görünen ad; henüz belirlenmediyse null"),
+  preferences: PreferencesDto.describe("Site ve ses tercihleri; seçilmeyenler null"),
+});
+
+/** Any subset of the keys: a value sets it, null clears it, a missing key stays as it was. */
+export const PreferencesBody = z.object({
+  siteLang: z.enum(["tr", "en"], "Site dili tr ya da en olmalı.").nullable().optional(),
+  voiceLang: z.enum(["tr", "en"], "Ses dili tr ya da en olmalı.").nullable().optional(),
+  voiceGender: z.enum(["female", "male"], "Ses female ya da male olmalı.").nullable().optional(),
 });
 
 export const ProfileBody = z.object({

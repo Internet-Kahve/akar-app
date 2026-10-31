@@ -17,13 +17,13 @@ import {
 } from "lucide-react";
 import type { AkarClient, SiteProgress } from "@akar/api-client";
 import {
-  trustLabels,
   type HeritageSite,
   type SiteBadge,
   type SiteTask,
 } from "@akar/domain";
 import { describeError } from "../lib/errors";
 import { locateOnce } from "../lib/locate";
+import { Localized, useI18n } from "./i18n";
 import { Modal, Notice, Tag } from "./ui";
 
 export type QuizTask = SiteTask & { quiz: NonNullable<SiteTask["quiz"]> };
@@ -99,9 +99,6 @@ export function useSiteProgress(
   };
 }
 
-const kindLabel = (task: SiteTask) =>
-  task.kind === "quiz" ? "Soru" : "Saha görevi";
-
 /** «Görevler» area of the site detail: task cards and the badge strip. */
 export function SiteTasks({
   site,
@@ -112,13 +109,15 @@ export function SiteTasks({
   progress: SiteProgress;
   onOpen: (task: SiteTask) => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   const tasks = site.tasks ?? [],
     badges = site.badges ?? [];
   if (!tasks.length && !badges.length) return null;
   return (
     <section className="site-tasks" aria-labelledby="site-tasks-title">
       <div className="section-heading">
-        <h2 id="site-tasks-title">Görevler</h2>
+        <h2 id="site-tasks-title">{t("site.tasksTitle")}</h2>
       </div>
       {tasks.length > 0 && (
         <ul className="task-list">
@@ -133,10 +132,12 @@ export function SiteTasks({
                     <MapPin size={20} />
                   )}
                   <span className="grow">
-                    <strong>{task.title}</strong>
-                    <small>{kindLabel(task)}</small>
+                    <strong lang={content}>{task.title}</strong>
+                    <small>
+                      {t(task.kind === "quiz" ? "site.kindQuiz" : "site.kindField")}
+                    </small>
                   </span>
-                  {done && <Tag tone="success">Tamamlandı</Tag>}
+                  {done && <Tag tone="success">{t("site.taskDone")}</Tag>}
                 </button>
               </li>
             );
@@ -144,26 +145,32 @@ export function SiteTasks({
         </ul>
       )}
       {badges.length > 0 && (
-        <ul className="badge-strip" aria-label="Rozetler">
+        <ul className="badge-strip" aria-label={t("site.badges")}>
           {badges.map((badge) => {
             const held = progress.badges.find((b) => b.badgeId === badge.id);
             const needs =
               badge.condition === "story"
-                ? "Hikâyeyi sonuna kadar dinle ya da oku."
-                : `«${tasks.find((t) => t.id === badge.taskId)?.title ?? "Görev"}» görevini tamamla.`;
+                ? t("site.badgeNeedsStory")
+                : t("site.badgeNeedsTask", {
+                    title:
+                      tasks.find((x) => x.id === badge.taskId)?.title ??
+                      t("site.taskFallback"),
+                  });
             return (
               <li
                 key={badge.id}
                 className={`badge-item ${held ? "earned" : "locked"}`}
               >
                 {held ? <Award size={22} /> : <Lock size={20} />}
-                <strong>{badge.title}</strong>
-                <small>{held ? badge.text : needs}</small>
+                <strong lang={content}>{badge.title}</strong>
+                <small lang={held ? content : undefined}>
+                  {held ? badge.text : needs}
+                </small>
                 <span className="sr-only">
-                  {held ? "Kazanıldı" : "Henüz kazanılmadı"}
+                  {held ? t("site.badgeEarned") : t("site.badgeLocked")}
                 </span>
                 {held && badge.onSiteLabel && held.onSite && (
-                  <Tag tone="gold">Yerinde</Tag>
+                  <Tag tone="gold">{t("site.onSiteTag")}</Tag>
                 )}
               </li>
             );
@@ -180,7 +187,8 @@ function TaskPhoto({ task }: { task: SiteTask }) {
     <figure className="task-photo">
       <img src={task.photo.src} alt={task.photo.alt} />
       <figcaption>
-        {task.photo.title} · {task.photo.license}
+        <Localized tr={task.photo.title} en={task.photo.titleEn} /> ·{" "}
+        {task.photo.license}
       </figcaption>
     </figure>
   );
@@ -202,27 +210,35 @@ function TaskResult({
   guest: boolean;
   onSignIn: () => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   return (
     <div className="task-result" role="status">
       <p className="task-result-text">
         <CheckCircle2 size={18} />
-        <span>{text}</span>
+        <span lang={content}>{text}</span>
       </p>
       <div className="row task-result-meta">
-        <Tag tone={task.trust}>{trustLabels[task.trust]}</Tag>
-        {onSite && <Tag tone="gold">Yerinde</Tag>}
+        <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>
+        {onSite && <Tag tone="gold">{t("site.onSiteTag")}</Tag>}
       </div>
-      {task.source && <p className="muted">Kaynak: {task.source}</p>}
+      {task.source && (
+        <p className="muted">
+          {t("site.sourceLabel")} <span lang={content}>{task.source}</span>
+        </p>
+      )}
       {badges.map((badge) => (
         <p className="task-badge-note" key={badge.id}>
           <Award size={16} />
-          <span>Yeni rozet: {badge.title}</span>
+          <span>
+            {t("site.newBadge")} <span lang={content}>{badge.title}</span>
+          </span>
         </p>
       ))}
       {guest && (
         <div className="task-guest">
           <button className="btn secondary" onClick={onSignIn}>
-            Rozet kazanmak için giriş yap
+            {t("site.badgeSignIn")}
           </button>
         </div>
       )}
@@ -249,6 +265,8 @@ export function QuizTaskDialog({
   onDone: (badges: SiteBadge[]) => void;
   onSignIn: () => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   const { quiz } = task;
   const [choice, setChoice] = useState<number>(),
     [tried, setTried] = useState<number[]>([]),
@@ -275,18 +293,20 @@ export function QuizTaskDialog({
         setWrongText(answer.wrongText ?? quiz.wrongText);
       }
     } catch (e) {
-      setError(describeError(e, "Cevap kontrol edilemedi."));
+      setError(describeError(e, t("site.quizCheckFailed"), lang));
     }
     setBusy(false);
   }
   return (
     <Modal title={task.title} onClose={onClose}>
       <div className="row between">
-        <Tag>Soru</Tag>
-        {done && !result && <Tag tone="success">Tamamlandı</Tag>}
+        <Tag>{t("site.kindQuiz")}</Tag>
+        {done && !result && <Tag tone="success">{t("site.taskDone")}</Tag>}
       </div>
       <TaskPhoto task={task} />
-      <h3 className="quiz-question">{task.prompt}</h3>
+      <h3 className="quiz-question" lang={content}>
+        {task.prompt}
+      </h3>
       <div className="quiz-options">
         {quiz.options.map((option, i) => (
           <button
@@ -294,6 +314,7 @@ export function QuizTaskDialog({
             disabled={!!result || busy || tried.includes(i)}
             className={`quiz-option ${choice === i ? "selected" : ""} ${tried.includes(i) ? "tried" : ""}`}
             aria-pressed={choice === i}
+            lang={content}
             onClick={() => setChoice(i)}
           >
             <span>{String.fromCharCode(65 + i)}</span>
@@ -301,9 +322,13 @@ export function QuizTaskDialog({
           </button>
         ))}
       </div>
-      {!result && wrongText && tried.length > 0 && <Notice>{wrongText}</Notice>}
+      {!result && wrongText && tried.length > 0 && (
+        <Notice>
+          <span lang={content}>{wrongText}</span>
+        </Notice>
+      )}
       {quiz.hints.slice(0, hints).map((hint) => (
-        <p className="hint task-hint" key={hint}>
+        <p className="hint task-hint" key={hint} lang={content}>
           <Lightbulb size={14} /> {hint}
         </p>
       ))}
@@ -324,7 +349,7 @@ export function QuizTaskDialog({
           />
           <div className="modal-actions">
             <button className="btn" onClick={onClose}>
-              Tamam
+              {t("site.ok")}
             </button>
           </div>
         </>
@@ -337,7 +362,7 @@ export function QuizTaskDialog({
               onClick={() => setHints(hints + 1)}
             >
               <Lightbulb size={16} />
-              İpucu al ({hints + 1}/{quiz.hints.length})
+              {t("site.takeHint", { n: hints + 1, total: quiz.hints.length })}
             </button>
           )}
           <button
@@ -345,7 +370,7 @@ export function QuizTaskDialog({
             disabled={choice === undefined || busy}
             onClick={check}
           >
-            {busy ? "Kontrol ediliyor…" : "Cevabı kontrol et"}
+            {busy ? t("site.checking") : t("site.checkAnswer")}
           </button>
         </div>
       )}
@@ -379,6 +404,8 @@ export function FieldTaskDialog({
   onDone: (badges: SiteBadge[]) => void;
   onSignIn: () => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   const { field } = task;
   const [done, setDone] = useState<FieldDone | undefined>(initial),
     [busy, setBusy] = useState(false),
@@ -392,10 +419,10 @@ export function FieldTaskDialog({
     setNotice("");
     try {
       const position = await locateOnce({
-        unsupported: "Bu cihaz konum özelliğini desteklemiyor.",
-        denied: "Yerinde yapmak için konum izni vermelisin.",
-        timeout: "Konum alınması zaman aşımına uğradı. Yeniden dene.",
-        failed: "Konum alınamadı. Konum hizmetlerini kontrol et.",
+        unsupported: t("site.locateUnsupported"),
+        denied: t("site.locateDenied"),
+        timeout: t("site.locateTimeout"),
+        failed: t("site.locateFailed"),
       });
       const result = await client.completeSiteTask(task.id, {
         mode: "onSite",
@@ -406,21 +433,21 @@ export function FieldTaskDialog({
         setDone(result);
         onDone(result.earnedBadges);
       } else
-        setNotice(
-          `Henüz görevin yeri yakınında görünmüyorsun. Biraz yaklaşıp yeniden dene.${canPick ? " İstersen evden de yapabilirsin." : ""}`,
-        );
+        setNotice(t(canPick ? "site.notNearCanPick" : "site.notNear"));
     } catch (e) {
-      setError(describeError(e, "Görev tamamlanamadı."));
+      setError(describeError(e, t("site.taskFailed"), lang));
     }
     setBusy(false);
   }
   return (
     <Modal title={task.title} onClose={onClose}>
       <div className="row between">
-        <Tag>Saha görevi</Tag>
+        <Tag>{t("site.kindField")}</Tag>
       </div>
       <TaskPhoto task={task} />
-      <p className="task-prompt">{task.prompt}</p>
+      <p className="task-prompt" lang={content}>
+        {task.prompt}
+      </p>
       {done ? (
         <>
           <TaskResult
@@ -433,31 +460,31 @@ export function FieldTaskDialog({
           />
           <div className="modal-actions">
             <button className="btn" onClick={onClose}>
-              Tamam
+              {t("site.ok")}
             </button>
           </div>
         </>
       ) : (
         <>
           <section className="task-way">
-            <h3>Yerinde yap</h3>
-            <p>{field.onSite.text}</p>
+            <h3>{t("site.doOnSite")}</h3>
+            <p lang={content}>{field.onSite.text}</p>
             <button className="btn" disabled={busy} onClick={here}>
               <MapPin size={16} />
-              {busy ? "Konum doğrulanıyor…" : "Buradayım"}
+              {busy ? t("site.locating") : t("site.taskImHere")}
             </button>
           </section>
           {canPick && field.fromHome && (
             <section className="task-way">
-              <h3>Evden yap</h3>
-              <p>{field.fromHome.text}</p>
+              <h3>{t("site.doFromHome")}</h3>
+              <p lang={content}>{field.fromHome.text}</p>
               <button
                 className="btn secondary"
                 disabled={busy}
                 onClick={onPickFromHome}
               >
                 <Box size={16} />
-                Evden yap
+                {t("site.doFromHome")}
               </button>
             </section>
           )}
@@ -483,15 +510,17 @@ export function TaskPickBar({
   hint: string;
   onCancel: () => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   return (
     <div className="task-pick-bar" role="status">
       <span className="grow">
-        <strong>{task.title}</strong>
-        <small>{task.field.fromHome?.text}</small>
+        <strong lang={content}>{task.title}</strong>
+        <small lang={content}>{task.field.fromHome?.text}</small>
         {hint && <small className="task-pick-hint">{hint}</small>}
       </span>
       <button className="btn secondary" onClick={onCancel}>
-        Vazgeç
+        {t("common.cancel")}
       </button>
     </div>
   );

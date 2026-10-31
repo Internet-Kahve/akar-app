@@ -23,6 +23,7 @@ import {
   type Snapshot,
   type StoryBlock,
   type Trust,
+  type UserPreferences,
 } from "@akar/domain";
 import type {
   AdminHealth,
@@ -327,6 +328,8 @@ interface MeDto {
   id: string;
   role: Role;
   displayName: string | null;
+  /** Absent from an API older than §26. */
+  preferences?: UserPreferences;
 }
 interface PassportDto {
   points: number;
@@ -409,6 +412,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ...(s.routeOnly && { routeOnly: true }),
     ...(s.flow && { flow: s.flow }),
     ...(present(s.textEn) && { textEn: s.textEn }),
+    ...(present(s.simpleEn) && { simpleEn: s.simpleEn }),
     ...(present(s.photoId) && { photoId: s.photoId }),
     ...(present(s.sourceId) && { sourceId: s.sourceId }),
     ...(present(s.showCard) && { showCard: s.showCard }),
@@ -795,6 +799,8 @@ interface UserState {
   signedIn: boolean;
   role: MeDto["role"];
   name: string;
+  /** The account's preferences; null for a guest (the device keeps them). */
+  preferences: UserPreferences | null;
   savedIds: string[];
   /** "Rotam": the account's when signed in, the device's for a guest. */
   routeIds: string[];
@@ -1224,6 +1230,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         signedIn: false,
         role: "user",
         name: "Gezgin",
+        preferences: null,
         savedIds: local.saved,
         routeIds: local.route,
         readIds: subjects("story.complete"),
@@ -1277,6 +1284,11 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       signedIn: true,
       role: me.role,
       name,
+      preferences: me.preferences ?? {
+        siteLang: null,
+        voiceLang: null,
+        voiceGender: null,
+      },
       savedIds: lists.saved,
       routeIds: lists.route,
       readIds: union(passport.read, subjects("story.complete")),
@@ -1344,6 +1356,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       quizIds: user.quizIds,
       points: user.points,
       name: user.name,
+      ...(user.preferences && { preferences: user.preferences }),
       catalogRoutes: [...cat.routes, ...(drafts?.routes ?? [])],
     };
     return structuredClone(snapshot);
@@ -2029,6 +2042,14 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     },
     setMapSettings: (settings) =>
       call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
+    savePreferences: async (patch) => {
+      const saved = await call<UserPreferences>("PUT", "/v1/me/preferences", {
+        body: patch,
+      });
+      // The server returns the whole object; keep the cached account state in step with it.
+      if (user?.signedIn) user = { ...user, preferences: saved };
+      return saved;
+    },
     // An API from before §11.49 sends no `identity`: the loading screens stay neutral.
     getCities: async () =>
       (

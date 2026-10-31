@@ -2,6 +2,7 @@
 import { useRef, useState, type PointerEvent } from "react";
 import type { PartCard, SitePhoto, SiteSource } from "@akar/domain";
 import { Lightbox } from "./about-reading";
+import { Localized, useI18n } from "./i18n";
 import { PartCardDialog } from "./part-card";
 
 /** A press that moves less than this (px) is a tap, not a drag. */
@@ -29,6 +30,7 @@ export function StoryPhotoCard({
   onPlace: (place: CardPlace) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { t, text, lang } = useI18n();
   const press = useRef<{
     x: number;
     y: number;
@@ -82,7 +84,9 @@ export function StoryPhotoCard({
         type="button"
         className={`story-photo-card${place ? " placed" : ""}`}
         style={place ?? undefined}
-        aria-label={`${photo.title}: ${card ? "parça kartını aç" : "fotoğrafı büyüt"}. Sürükleyerek taşınabilir.`}
+        aria-label={t(card ? "site.photoCardOpenPart" : "site.photoCardEnlarge", {
+          title: text(photo.title, photo.titleEn),
+        })}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -95,8 +99,12 @@ export function StoryPhotoCard({
       >
         <img src={photo.src} alt="" draggable={false} />
         <span>
-          <strong>{photo.title}</strong>
-          {photo.description && <small>{photo.description}</small>}
+          <strong>
+            <Localized tr={photo.title} en={photo.titleEn} />
+          </strong>
+          {photo.description && (
+            <small lang={lang === "en" ? "tr" : undefined}>{photo.description}</small>
+          )}
         </span>
       </button>
       {open &&
@@ -112,7 +120,7 @@ export function StoryPhotoCard({
               {
                 src: photo.src,
                 alt: photo.alt,
-                caption: [photo.title, photo.license]
+                caption: [text(photo.title, photo.titleEn), photo.license]
                   .filter(Boolean)
                   .join(" · "),
               },

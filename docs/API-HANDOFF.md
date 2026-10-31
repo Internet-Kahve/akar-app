@@ -24,6 +24,7 @@ UI yalnızca `AkarClient.getSnapshot()`, `dispatch(command)` ve `reset()` çağ�
 | `GET /v1/sites/:id`                                  | Detay, story blocks, medya ve kaynak ilişkileri                               |
 | `GET /v1/routes`, `GET /v1/routes/:id`               | Rotanın durakları ve süre bilgisi                                             |
 | `GET /v1/me`, `GET /v1/me/passport`                  | Profil, kaydedilenler, okunanlar, ziyaretler, puan, rozet                     |
+| `PUT /v1/me/preferences`                             | Site/ses tercihi: `{siteLang?, voiceLang?, voiceGender?}` (`tr`/`en`, `female`/`male`; `null` temizler, eksik anahtar değişmez); `GET /v1/me` `preferences` döner |
 | `PUT/DELETE /v1/me/saved/:siteId`                    | Açıkça istenen favori durumu; ağ retry'ında toggle kullanılmaz                |
 | `GET/PUT /v1/me/route`                               | Rotam: sıralı `siteIds`, PUT listenin tamamını yazar (en çok 100; §11.30)     |
 | `DELETE /v1/me`                                      | Hesabı ve tüm verileri kalıcı siler (KVKK, §11.31); yetkili hesap `409`       |

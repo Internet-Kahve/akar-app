@@ -15,6 +15,8 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   use: {
     baseURL: "http://127.0.0.1:3001",
+    // The site language follows the browser (§11.57); the suite reads the Turkish texts.
+    locale: "tr-TR",
     // The first-visit card covers the map.
     storageState: {
       cookies: [],

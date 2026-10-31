@@ -454,6 +454,7 @@ test("the display name is trimmed, replaced on every save and returned by /v1/me
     role: "user",
     email: "Profile@akar.test",
     displayName: null,
+    preferences: { siteLang: null, voiceLang: null, voiceGender: null },
   });
 
   const saved = await call("PUT", "/v1/me/profile", headers, { displayName: "  Ayşe  " });
@@ -470,6 +471,45 @@ test("the display name is trimmed, replaced on every save and returned by /v1/me
     assert.ok(res.json<ErrorBody>().error.fieldErrors.displayName);
   }
   assert.equal((await call("GET", "/v1/me", headers)).json<{ displayName: string }>().displayName, "Ayşe Yılmaz");
+});
+
+test("preferences: partial PUT keeps the other keys, null clears, a name-less account gets a row, invalid values are 400", async () => {
+  assert.equal((await call("PUT", "/v1/me/preferences", {}, { siteLang: "en" })).statusCode, 401);
+
+  // No profile row yet: the PUT creates one without a display name.
+  const headers = await login("user-prefs", "prefs@akar.test");
+  const first = await call("PUT", "/v1/me/preferences", headers, { siteLang: "en" });
+  assert.equal(first.statusCode, 200);
+  assert.deepEqual(first.json(), { siteLang: "en", voiceLang: null, voiceGender: null });
+  assert.match(first.headers["cache-control"] as string, /no-store/);
+
+  const second = await call("PUT", "/v1/me/preferences", headers, { voiceLang: "tr", voiceGender: "male" });
+  assert.deepEqual(second.json(), { siteLang: "en", voiceLang: "tr", voiceGender: "male" });
+  assert.deepEqual((await call("GET", "/v1/me", headers)).json(), {
+    id: "user-prefs",
+    role: "user",
+    email: "prefs@akar.test",
+    displayName: null,
+    preferences: { siteLang: "en", voiceLang: "tr", voiceGender: "male" },
+  });
+
+  assert.deepEqual((await call("PUT", "/v1/me/preferences", headers, { voiceGender: null })).json(), { siteLang: "en", voiceLang: "tr", voiceGender: null });
+  assert.deepEqual((await call("PUT", "/v1/me/preferences", headers, {})).json(), { siteLang: "en", voiceLang: "tr", voiceGender: null });
+
+  // The display name and the preferences share one row and do not overwrite each other.
+  await call("PUT", "/v1/me/profile", headers, { displayName: "Ayşe" });
+  await call("PUT", "/v1/me/preferences", headers, { siteLang: null });
+  const me = (await call("GET", "/v1/me", headers)).json<{ displayName: string; preferences: unknown }>();
+  assert.equal(me.displayName, "Ayşe");
+  assert.deepEqual(me.preferences, { siteLang: null, voiceLang: "tr", voiceGender: null });
+  assert.equal((await app.deps.db.select().from(profiles)).length, 1);
+
+  for (const body of [{ siteLang: "de" }, { voiceLang: "fr" }, { voiceGender: "other" }, { siteLang: 1 }]) {
+    const res = await call("PUT", "/v1/me/preferences", headers, body);
+    assert.equal(res.statusCode, 400, JSON.stringify(body));
+    assert.equal(res.json<ErrorBody>().error.code, "VALIDATION_FAILED");
+  }
+  assert.deepEqual((await call("GET", "/v1/me", headers)).json<{ preferences: unknown }>().preferences, { siteLang: null, voiceLang: "tr", voiceGender: null });
 });
 
 test("the bootstrap CLI stores an admin invite that the first sign-in turns into the admin role", async () => {

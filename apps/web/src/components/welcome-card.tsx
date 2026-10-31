@@ -4,11 +4,13 @@ import { Headphones, History, House, Landmark, MapPin } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { HeritageSite } from "@akar/domain";
 import { Motif } from "./ui";
+import { useI18n } from "./i18n";
+import type { MessageKey } from "../lib/messages";
 
-const POINTS = [
-  { Icon: Headphones, title: "Dinle ya da oku", text: "Her eserin kısa, kaynaklı hikâyesi" },
-  { Icon: History, title: "Geçmişini gör", text: "Eski fotoğrafı bugünle karşılaştır" },
-  { Icon: Landmark, title: "Vakfı anla", text: "Bu yapıyı yüzyıllardır ne ayakta tuttu?" },
+const POINTS: { Icon: typeof Headphones; title: MessageKey; text: MessageKey }[] = [
+  { Icon: Headphones, title: "welcome.listenTitle", text: "welcome.listenText" },
+  { Icon: History, title: "welcome.pastTitle", text: "welcome.pastText" },
+  { Icon: Landmark, title: "welcome.waqfTitle", text: "welcome.waqfText" },
 ];
 
 /** First visit only: what the app does, and whether to start from home or from the visitor's position. */
@@ -27,6 +29,7 @@ export function WelcomeCard({
   onWaqf: () => void;
   onDismiss: () => void;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null),
     titleId = useId();
   const photo = site?.photos?.find((p) => p.id === site.coverPhotoId) ?? site?.photos?.[0];
@@ -51,9 +54,9 @@ export function WelcomeCard({
           </div>
         )}
         <img className="welcome-logo" src="/logo/logo-web.png" alt="AKAR" width={800} height={237} />
-        <p className="welcome-kicker">Vakıf eserlerini keşfet</p>
-        <h2 id={titleId}>Şehrin hikâyesine karış.</h2>
-        <p className="welcome-lead">Geçmişi gör. Hikâyesini dinle. İzini bırak.</p>
+        <p className="welcome-kicker">{t("welcome.kicker")}</p>
+        <h2 id={titleId}>{t("welcome.title")}</h2>
+        <p className="welcome-lead">{t("welcome.lead")}</p>
         <Motif />
         <ul>
           {POINTS.map(({ Icon, title, text }) => (
@@ -62,8 +65,8 @@ export function WelcomeCard({
                 <Icon size={18} />
               </span>
               <div>
-                <b>{title}</b>
-                <small>{text}</small>
+                <b>{t(title)}</b>
+                <small>{t(text)}</small>
               </div>
             </li>
           ))}
@@ -71,17 +74,17 @@ export function WelcomeCard({
         <div className="welcome-actions">
           <button className="btn" onClick={onHome}>
             <House size={18} />
-            Evden gez
+            {t("place.home")}
           </button>
           <button className="btn secondary" onClick={onNear}>
             <MapPin size={18} />
-            Konumumu kullan
+            {t("place.near")}
           </button>
         </div>
         <div className="welcome-foot">
-          <small>Konumun sadece cihazında kullanılır.</small>
+          <small>{t("welcome.privacy")}</small>
           <button className="text-btn" onClick={onWaqf}>
-            Vakıf nedir? ›
+            {t("welcome.waqfLink")}
           </button>
         </div>
       </section>

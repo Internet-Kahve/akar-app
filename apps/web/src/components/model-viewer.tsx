@@ -12,6 +12,7 @@ import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addSceneLights, groundShadow, saturate } from "../lib/scene-light";
@@ -87,6 +88,7 @@ export default function ModelViewer({
   onProgress?: (progress: DownloadProgress) => void;
   onSettled?: (outcome: "ready" | "failed") => void;
 }) {
+  const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const aim = useRef<((pose: CameraPose) => void) | null>(null);
   const lift = useRef<((open: boolean, raise: boolean) => void) | null>(null);
@@ -97,6 +99,13 @@ export default function ModelViewer({
   const tourPose = useRef("");
   /** The sentence pose the camera last went to; a sentence without its own camera reuses it and keeps the visitor's view. */
   const aimedPose = useRef<CameraPose | undefined>(undefined);
+  // The canvas label follows the site language without rebuilding the renderer.
+  const canvasLabel = t("site.modelCanvas", { name });
+  const labelRef = useRef(canvasLabel);
+  labelRef.current = canvasLabel;
+  useEffect(() => {
+    host.current?.querySelector("canvas")?.setAttribute("aria-label", canvasLabel);
+  }, [canvasLabel]);
   const tourRef = useRef(tour);
   tourRef.current = tour;
   const frameRef = useRef(frame);
@@ -153,10 +162,7 @@ export default function ModelViewer({
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       // No tone mapping: the map draws the same light without it.
-      renderer.domElement.setAttribute(
-        "aria-label",
-        `${name} 3B modeli. Döndürmek için sürükle, yakınlaştırmak için iki parmağını kullan.`,
-      );
+      renderer.domElement.setAttribute("aria-label", labelRef.current);
       renderer.domElement.setAttribute("role", "img");
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
@@ -670,8 +676,8 @@ export default function ModelViewer({
       {!!partCards?.length && !onPick && (
         <button
           className="model-show-parts"
-          aria-label="Tıklanabilir parçaları göster"
-          title="Tıklanabilir parçaları göster"
+          aria-label={t("site.showParts")}
+          title={t("site.showParts")}
           onClick={() => {
             partCards.forEach((card, i) =>
               setTimeout(
@@ -698,7 +704,7 @@ export default function ModelViewer({
           }}
         >
           {inside ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          {inside ? "Dışını göster" : "İçini göster"}
+          {inside ? t("site.showOutside") : t("site.showInside")}
         </button>
       )}
       {picked && !picked.card && (

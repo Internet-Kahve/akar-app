@@ -5,6 +5,7 @@ import type { GeoJSONSource, Map as MapType } from "maplibre-gl";
 import type { StoryFlow } from "@akar/domain";
 import { flowArc, flowEnd } from "../lib/story-flow";
 import { TrustTag } from "./side-sheet";
+import { useI18n } from "./i18n";
 
 const DRAW_MS = 2200;
 const COIN_MS = 2600;
@@ -22,6 +23,8 @@ export function StoryFlowMap({
   from: [number, number];
   to: [number, number];
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let disposed = false,
@@ -148,12 +151,12 @@ export function StoryFlowMap({
       <div className="story-flow-card">
         <small>
           <Landmark size={14} />
-          VAKIF DÜZENİ · GELİR YOLU
+          {t("site.flowCardTag")}
         </small>
-        <h3>
+        <h3 lang={content}>
           {fromName} → {flow.toName}
         </h3>
-        <p>{flow.label}</p>
+        <p lang={content}>{flow.label}</p>
         <TrustTag
           trust={flow.trust}
           quote={flow.label}

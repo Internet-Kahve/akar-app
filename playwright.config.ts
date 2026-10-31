@@ -7,6 +7,8 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:3000",
+    // The site language follows the browser (§11.57); the suite reads the Turkish texts.
+    locale: "tr-TR",
     // The first-visit card covers the map; only its own test goes without this.
     storageState: {
       cookies: [],

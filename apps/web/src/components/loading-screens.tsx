@@ -4,6 +4,8 @@ import type { CityIdentity } from "@akar/domain";
 import { identityStyle } from "../lib/city-identity";
 import { EMBLEM_PATH, EMBLEM_VIEW_BOX } from "../lib/emblem";
 import { describeDownload, type DownloadProgress } from "../lib/model-download";
+import type { MessageKey } from "../lib/messages";
+import { useI18n } from "./i18n";
 
 /** The opening screen leaves after this, whatever the map does (a map that never draws must not hold the page). */
 export const OPENING_MAX_MS = 8000;
@@ -49,6 +51,7 @@ export function OpeningScreen({
   done: boolean;
   onGone: () => void;
 }) {
+  const { t } = useI18n();
   const gone = useRef(onGone);
   gone.current = onGone;
   useEffect(() => {
@@ -63,7 +66,7 @@ export function OpeningScreen({
       // While it fades out it is no longer news: hidden from assistive technology.
       {...(done
         ? { "aria-hidden": true }
-        : { role: "status", "aria-label": "AKAR yükleniyor" })}
+        : { role: "status", "aria-label": t("opening.aria") })}
       style={style}
     >
       {"--city-pattern" in style && <CityPattern />}
@@ -73,7 +76,7 @@ export function OpeningScreen({
         <div className="opening-city">
           {cityName && <span key={cityName}>{cityName}</span>}
         </div>
-        <div className="opening-note">Vakıf eserleri yükleniyor</div>
+        <div className="opening-note">{t("opening.note")}</div>
       </div>
     </div>
   );
@@ -81,12 +84,10 @@ export function OpeningScreen({
 
 /** Where the model is shown decides what the card tells the visitor to do meanwhile. */
 export type ModelLoadingContext = "detail" | "story" | "reading";
-const HINTS: Record<ModelLoadingContext, string> = {
-  detail:
-    "Bu sırada Dinle ya da Oku ile başlayabilirsin; model gelince sahne kendiliğinden açılır.",
-  story: "Model gelince sahne kendiliğinden açılır.",
-  reading:
-    "Bu sırada okumaya devam edebilirsin; model gelince sahne kendiliğinden açılır.",
+const HINTS: Record<ModelLoadingContext, MessageKey> = {
+  detail: "model.hintDetail",
+  story: "model.hintStory",
+  reading: "model.hintReading",
 };
 
 /**
@@ -100,12 +101,13 @@ export function ModelLoadingCard({
   progress: DownloadProgress | null;
   context: ModelLoadingContext;
 }) {
-  const view = describeDownload(progress);
+  const { lang, t } = useI18n();
+  const view = describeDownload(progress, lang);
   return (
-    <div className="model-loading" role="group" aria-label="3D model yükleniyor">
+    <div className="model-loading" role="group" aria-label={t("model.loading")}>
       {/* One calm announcement; the numbers below change too often to be read out. */}
       <p className="sr-only" role="status">
-        3D model yükleniyor
+        {t("model.loading")}
       </p>
       <Emblem className="model-loading-emblem" />
       <b className="model-loading-title" aria-hidden="true">
@@ -114,12 +116,12 @@ export function ModelLoadingCard({
       <div
         className={`model-loading-bar${view.percent === null ? " unknown" : ""}`}
         role="progressbar"
-        aria-label="3D model yükleniyor"
+        aria-label={t("model.loading")}
         aria-valuemin={0}
         aria-valuemax={100}
         {...(view.percent !== null && {
           "aria-valuenow": view.percent,
-          "aria-valuetext": `%${view.percent}`,
+          "aria-valuetext": t("model.percent", { percent: view.percent }),
         })}
       >
         <i
@@ -132,7 +134,7 @@ export function ModelLoadingCard({
       </div>
       <p className="model-loading-note">
         {view.sizes && `${view.sizes} `}
-        {HINTS[context]}
+        {t(HINTS[context])}
       </p>
     </div>
   );
