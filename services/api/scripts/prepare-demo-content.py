@@ -250,6 +250,10 @@ for entry in editorial.eserleri_bul():
     coords = [entry['lon'] + east/(111320*math.cos(math.radians(entry['lat']))), entry['lat'] + north/110540]
     model = dict(name=entry['ad']+' · temsili 3B model', file=f'eserler/{folder}/3d/export/{model_info["glb"]}_sunum.glb',
                  src='', bytes=0, parts=[], trust='representative', coverGroups=model_info.get('ortu_gruplari') or []) if model_info else None
+    # Night theme model (1 Nov 2026): `glb_gece` names its export like `glb`; the presentation file is the one used.
+    if model and model_info.get('glb_gece'):
+        model['nightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece"]}_sunum.glb'
+
     # eser.json `sira` (§11.48): map draw priority, a whole number from 1 up; absent = unranked (None).
     display_order = entry.get('sira')
     if display_order is not None and (isinstance(display_order, bool) or not isinstance(display_order, int) or display_order < 1):

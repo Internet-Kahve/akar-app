@@ -2714,6 +2714,21 @@ td small {
   max-height: 220px;
   overflow: auto;
 }
+/* Adım 1: the night model, under the day model's parts. */
+.editor-night-model {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding: 14px 0 0;
+  margin: 0 0 16px;
+}
+.editor-night-model h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.editor-night-model p {
+  margin: 0;
+}
 .photo-pool {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

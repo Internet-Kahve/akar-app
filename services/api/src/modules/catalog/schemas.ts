@@ -392,6 +392,12 @@ export const SiteDetail = SiteSummary.extend({
   editorVersion: z.literal(2).nullable(),
   coverMediaId: z.string().nullable(),
   aboutCoverMediaId: z.string().nullable().describe("«Eser hakkında» sayfasının kapak fotoğrafı (SiteDetail.media); null = galerinin kapağı"),
+  nightModelId: z
+    .string()
+    .nullable()
+    .describe(
+      "Gece temasında gösterilen 3B modelin medya kimliği (SiteDetail.media, kind=model); null = gece de gündüz modeli. Gündüz modeli listedeki ilk kind=model kaydıdır; gece modeli parça adlarını, yerleşimi ve «İçini göster» gruplarını gündüz modeliyle paylaşır",
+    ),
   openingCamera: CameraPoseDto.nullable().describe("3B hikâyenin açılış açısı"),
   updatedAt: z.iso.datetime(),
   stories: z.array(StoryBlockDto),

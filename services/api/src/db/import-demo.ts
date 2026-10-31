@@ -36,8 +36,8 @@ type ContentTask = {
 type ContentBadge = { id: string; title: string; text: string; condition: "story" | "task"; taskId: string | null; onSiteLabel: boolean };
 type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "sampleTraces" | "partCards" | "chapters" | "aboutCover" | "sections" | "tasks" | "badges"> & {
   photos: Array<NonNullable<HeritageSite["photos"]>[number] & { file: string; galleryPosition: number | null }>;
-  /** Absent for a photo-only site. */
-  model?: NonNullable<HeritageSite["model"]> & { file: string };
+  /** Absent for a photo-only site. `nightFile`: the night theme's model (`3d/model.json → glb_gece`), absent = none. */
+  model?: NonNullable<HeritageSite["model"]> & { file: string; nightFile?: string };
   historyImages: ArchiveEntry[];
   /** Team-made İz Bırak samples (`gecmisi-gor/izler.json`, §11.47); empty for a site without any. */
   sampleTraces: SampleTrace[];
@@ -109,9 +109,12 @@ function validateHistoryExtras(site: ContentSite): void {
   }
 }
 
+/** Media id of a site's night model (`sites.night_model_media_id`), beside the day model's `<site>-model`. */
+const nightModelId = (siteId: string) => `${siteId}-model-gece`;
+
 /** Present-day photographs and sample traces become `media` rows keyed by their ids, so no id may repeat another photograph's. */
 function checkExtraMediaIds(manifest: Manifest): void {
-  const taken = new Set(manifest.sites.flatMap((s) => [`${s.id}-model`, ...[...s.photos, ...s.bookPhotos, ...s.historyImages].map((x) => x.id)]));
+  const taken = new Set(manifest.sites.flatMap((s) => [`${s.id}-model`, nightModelId(s.id), ...[...s.photos, ...s.bookPhotos, ...s.historyImages].map((x) => x.id)]));
   for (const id of manifest.sites.flatMap((s) => [...s.historyImages.flatMap((h) => (h.present ? [h.present.id] : [])), ...s.sampleTraces.map((t) => t.id)])) {
     if (taken.has(id)) throw new Error(`Media id used twice: ${id}`);
     taken.add(id);
@@ -158,6 +161,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   const files = new Map<string, { body: Buffer; key: string; mime: string }>();
   const mediaFiles = new Map<string, string>();
   const triangles = new Map<string, number>();
+  const nightParts = new Map<string, string[]>();
   for (const site of manifest.sites) {
     validateDisplayOrder(site);
     const { tasks: _tasks, badges: _badges, sampleTraces: _traces, ...validated } = site;
@@ -170,7 +174,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     if (site.aboutCoverPhotoId !== null && !ids.has(site.aboutCoverPhotoId)) throw new Error(`Unresolved about cover photograph: ${site.id}`);
     if (site.sections.some((s) => (s.chapterId !== null && !chapterIds.has(s.chapterId)) || s.photos.some((p) => !bookIds.has(p.id)))) throw new Error(`Unresolved chapter or section photographs: ${site.id}`);
     const extraPhotos = [...site.historyImages.flatMap((h) => (h.present ? [h.present] : [])), ...site.sampleTraces];
-    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, ...extraPhotos, ...(site.model ? [{ ...site.model, id: `${site.id}-model` }] : [])]) {
+    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, ...extraPhotos, ...(site.model ? [{ ...site.model, id: `${site.id}-model` }] : []), ...(site.model?.nightFile ? [{ id: nightModelId(site.id), file: site.model.nightFile }] : [])]) {
       const file = await realpath(resolve(root, item.file));
       if (!file.startsWith(root + sep)) throw new Error("Content path leaves the supplied root");
       if (!files.has(item.file)) {
@@ -187,6 +191,17 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       site.model.parts = partNames(gltf);
       triangles.set(`${site.id}-model`, countTriangles(gltf));
       site.model.bytes = model.body.length;
+      // The night model shares the day model's part names (highlights, cards, tasks, cover groups); extra parts may
+      // light the night, a missing one would silently drop what names it.
+      if (site.model.nightFile) {
+        const night = files.get(site.model.nightFile)!;
+        const nightGltf = await readGlbJson(night.body.length, async ({ start, end }) => night.body.subarray(start, end + 1));
+        const names = partNames(nightGltf);
+        const lacking = site.model.parts.filter((part) => !names.includes(part));
+        if (lacking.length) throw new Error(`Night model lacks day model parts: ${site.id} ${lacking.join(", ")}`);
+        nightParts.set(site.id, names);
+        triangles.set(nightModelId(site.id), countTriangles(nightGltf));
+      }
     }
     // A photo-only site has no parts, so anything that names one stops the import.
     const parts = site.model?.parts ?? [];
@@ -272,6 +287,25 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           if (placed.length) await tx.insert(siteSectionPhotos).values(placed);
         }
         await tx.update(sites).set({ aboutCoverMediaId: site.aboutCoverPhotoId }).where(eq(sites.id, site.id));
+        // A night model from the package; without one the site keeps what the panel set (none by default).
+        if (site.model?.nightFile) {
+          const file = files.get(site.model.nightFile)!;
+          const row = {
+            kind: "model" as const,
+            mime: file.mime,
+            url: storage.publicUrl(file.key),
+            title: `${site.model.name} · gece`,
+            license: "AKAR ekip üretimi · temsili model",
+            trust: site.model.trust,
+            bytes: file.body.length,
+            triangles: triangles.get(nightModelId(site.id))!,
+            parts: nightParts.get(site.id)!,
+            coverGroups: site.model.coverGroups ?? [],
+            partsStatus: "done" as const,
+          };
+          await tx.insert(media).values({ id: nightModelId(site.id), ...row }).onConflictDoUpdate({ target: media.id, set: row });
+          await tx.update(sites).set({ nightModelMediaId: nightModelId(site.id) }).where(eq(sites.id, site.id));
+        }
         // The panel owns the part cards of a site that is already in the database (§11.52): only a new site gets the
         // manifest's cards, unless the run says to replace them. Photos cascade with their card.
         if (replacePartCards || !existing.has(site.id)) {

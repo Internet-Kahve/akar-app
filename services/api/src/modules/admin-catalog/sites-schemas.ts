@@ -171,6 +171,11 @@ export const ModelBody = z.object({
 });
 export type ModelInput = z.infer<typeof ModelBody>;
 
+export const NightModelBody = z.object({
+  mediaId: Id.nullable().describe("kind=model medya, gündüz modeliyle aynı parça adlarıyla; null = gece de gündüz modeli"),
+});
+export type NightModelInput = z.infer<typeof NightModelBody>;
+
 export const SiteMediaBody = z.object({
   photoIds: z.array(Id).max(60).describe("kind=photo medya, gösterim sırasıyla"),
   coverPhotoId: Id.nullable().describe("photoIds içinden biri; kapak fotoğrafı"),

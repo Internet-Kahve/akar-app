@@ -429,6 +429,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         editorVersion: sites.editorVersion,
         coverMediaId: sites.coverMediaId,
         aboutCoverMediaId: sites.aboutCoverMediaId,
+        nightModelMediaId: sites.nightModelMediaId,
         openingCamera: sites.openingCamera,
         updatedAt: sites.updatedAt,
       })
@@ -518,6 +519,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...sectionPhotos.map((p) => p.mediaId),
       ...tasks.map((t) => t.mediaId),
       ...traces.map((t) => t.mediaId),
+      // After the linked media: the day model stays the first model of the list.
+      extra.nightModelMediaId,
     ]);
     const contentSourceIds = distinct([
       ...(sourceLinksOf.get(id) ?? []).map((s) => s.id),
@@ -563,6 +566,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       editorVersion: extra.editorVersion === 2 ? 2 : null,
       coverMediaId: extra.coverMediaId,
       aboutCoverMediaId: extra.aboutCoverMediaId,
+      nightModelId: extra.nightModelMediaId,
       openingCamera: extra.openingCamera,
       updatedAt: extra.updatedAt.toISOString(),
       stories: stories.map((b) => ({

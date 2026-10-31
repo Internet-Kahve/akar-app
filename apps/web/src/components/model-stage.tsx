@@ -9,7 +9,7 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { Box } from "lucide-react";
-import type { CityIdentity, CityScene } from "@akar/domain";
+import { modelFileFor, type CityIdentity, type CityScene } from "@akar/domain";
 import { identityStyle } from "../lib/city-identity";
 import {
   describeDownload,
@@ -22,6 +22,7 @@ import {
   type ModelLoadingContext,
 } from "./loading-screens";
 import { useI18n } from "./i18n";
+import { useTheme } from "../lib/theme";
 
 const ModelViewer = dynamic(() => import("./model-viewer"), { ssr: false });
 
@@ -43,7 +44,7 @@ function useAfter(ms: number) {
  * viewer's own code (three.js, loaded on demand) is on its way and stays one card from the first moment to the last.
  * The viewer reports the bytes it has read and whether the model came.
  */
-export function ModelStage({
+function Stage({
   scene,
   identity,
   context,
@@ -121,5 +122,20 @@ export function ModelStage({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * The stage in the page theme: by night a site with a night file shows that file (`SiteModel.night`). Another file is
+ * a fresh stage (key), loading card and all; the parts, placement and cover groups stay the day model's.
+ */
+export function ModelStage(props: ComponentProps<typeof Stage>) {
+  const src = modelFileFor(props.model, useTheme()).src;
+  return (
+    <Stage
+      key={src}
+      {...props}
+      model={src === props.model.src ? props.model : { ...props.model, src }}
+    />
   );
 }

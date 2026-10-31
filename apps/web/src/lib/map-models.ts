@@ -1,6 +1,7 @@
 import {
   CITY_MARKER_MAX_ZOOM,
   defaultMapSettings,
+  modelFileFor,
   type CityScene,
   type HeritageSite,
   type MapPlacement,
@@ -552,12 +553,15 @@ export function createMapModels(
     buildings?.dispose();
     buildings = null;
   }
+  let last: Parameters<MapModels["update"]> | null = null;
   return {
     update(
       sites: HeritageSite[],
       settings: MapSettings,
       scenes: Record<string, CityScene>,
     ) {
+      last = [sites, settings, scenes];
+      const theme = currentTheme();
       models.setSettings(settings);
       models.setSites(
         sites.flatMap((s) =>
@@ -565,7 +569,8 @@ export function createMapModels(
             ? [
                 {
                   id: s.id,
-                  src: s.model.src,
+                  // The night file by night; a new source reloads the model (`reconcile`).
+                  src: modelFileFor(s.model, theme).src,
                   placement: s.model.placement,
                   light: sceneOf(s, scenes).light,
                   ...(s.model.interiorParts?.length && {
@@ -578,7 +583,10 @@ export function createMapModels(
       );
     },
     pick: (x, y) => models.pick(x, y),
-    setTheme: (theme) => models.setTheme(theme),
+    setTheme(theme) {
+      models.setTheme(theme);
+      if (last) this.update(...last);
+    },
     dispose() {
       buildings?.dispose();
       if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);

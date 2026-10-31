@@ -203,6 +203,34 @@ export function validateCityMap(map: CityMapView) {
     if (!Number.isFinite(z) || z < CITY_MARKER_MAX_ZOOM || z > 22)
       throw new Error(`Şehir açılış yakınlığı ${CITY_MARKER_MAX_ZOOM}–22 arasında olmalı`);
 }
+/** One GLB file of a site's model. */
+export interface SiteModelFile {
+  name: string;
+  bytes: number;
+  src: string;
+  parts: string[];
+  triangles?: number | null;
+}
+/** The file a theme shows: the night file by night when the site has one, the day model otherwise. */
+export const modelFileFor = (model: SiteModel, theme: "day" | "night"): SiteModelFile =>
+  theme === "night" && model.night ? model.night : model;
+/**
+ * Part names the site's content uses that its night file lacks: story highlights and cameras, "Eser hakkında"
+ * chapters, part cards, tasks and cover groups. They would not show by night. Only names in use are compared: a
+ * file's part list may also carry mesh names, read differently by the server and by the editor.
+ */
+export function nightPartsMissing(site: HeritageSite): string[] {
+  const night = site.model?.night;
+  if (!night?.parts.length) return [];
+  const used = new Set([
+    ...site.stories.flatMap((s) => [...(s.highlights ?? []), ...(s.camera?.target ? [s.camera.target] : [])]),
+    ...(site.chapters ?? []).flatMap((c) => [...c.focusParts, ...(c.camera?.target ? [c.camera.target] : [])]),
+    ...(site.partCards ?? []).flatMap((c) => c.parts),
+    ...(site.tasks ?? []).flatMap((t) => [...(t.part ? [t.part] : []), ...(t.field?.fromHome ? [t.field.fromHome.part] : [])]),
+    ...(site.model?.coverGroups ?? []).flat(),
+  ]);
+  return [...used].filter((part) => !night.parts.includes(part));
+}
 export interface SiteModel {
   name: string;
   bytes: number;
@@ -218,6 +246,11 @@ export interface SiteModel {
    * prototype's map file has none. Absent or empty = the map draws every part but the scenery.
    */
   interiorParts?: string[];
+  /**
+   * The night theme's file of the same model (`SiteDetail.nightModelId`, `3d/model.json → glb_gece`); absent = the day
+   * file at night too. It carries the day file's part names, so placement, highlights, cards and cover groups hold.
+   */
+  night?: SiteModelFile;
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
 }

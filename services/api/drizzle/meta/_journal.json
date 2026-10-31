@@ -197,6 +197,13 @@
       "when": 1793431466508,
       "tag": "0027_profile_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793483148879,
+      "tag": "0028_night_model",
+      "breakpoints": true
     }
   ]
 }

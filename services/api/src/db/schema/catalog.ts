@@ -174,6 +174,11 @@ export const sites = pgTable(
     coverMediaId: text("cover_media_id").references(() => media.id),
     /** Cover photograph of the "Eser hakkında" page; null = the gallery cover. */
     aboutCoverMediaId: text("about_cover_media_id").references(() => media.id),
+    /**
+     * Night variant of the site's 3D model (kind = model), shown in the night theme; null = the day model at night
+     * too. Same part names as the day model: placement, story highlights, part cards and cover groups are shared.
+     */
+    nightModelMediaId: text("night_model_media_id").references(() => media.id),
     /** "Açılış açısı": camera pose the 3D story opens with. */
     openingCamera: jsonb("opening_camera").$type<CameraPose>(),
     /** Null = "konum bulunamadı" import draft; required to publish. */

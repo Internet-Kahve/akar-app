@@ -592,6 +592,7 @@ export async function expireUploads(deps: { db: Db; storage: StorageBuckets }, o
 export const MEDIA_REFERENCES = [
   sites.coverMediaId,
   sites.aboutCoverMediaId,
+  sites.nightModelMediaId,
   siteMedia.mediaId,
   cards.mediaId,
   storyBlocks.photoId,

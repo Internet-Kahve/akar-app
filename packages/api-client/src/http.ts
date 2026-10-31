@@ -208,6 +208,8 @@ interface SiteDetailDto {
   }>;
   /** Absent on older API versions. */
   aboutCoverMediaId?: string | null;
+  /** The night theme's model in `media`; null or absent (older API versions) = none. */
+  nightModelId?: string | null;
   /** Absent on older API versions. */
   chapters?: Array<{
     id: string;
@@ -441,7 +443,11 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
   const aboutCover = d.aboutCoverMediaId
     ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
     : undefined;
-  const model = d.media.find((m) => m.kind === "model");
+  // The day model is the first model that is not the night one (the server lists it first).
+  const model = d.media.find((m) => m.kind === "model" && m.id !== d.nightModelId);
+  const night = d.nightModelId
+    ? d.media.find((m) => m.id === d.nightModelId && m.kind === "model")
+    : undefined;
   return {
     id: d.id,
     name: d.name,
@@ -585,6 +591,15 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         trust: model.trust,
         triangles: model.triangles ?? null,
         ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
+        ...(night && {
+          night: {
+            name: night.title || night.id,
+            bytes: 0,
+            src: night.url,
+            parts: night.parts,
+            triangles: night.triangles ?? null,
+          },
+        }),
         placement: d.placement ?? null,
       },
     }),
@@ -1569,6 +1584,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       site.model && { ...site.model, placement: undefined },
       cur.model && { ...cur.model, placement: undefined },
     );
+    const nightChanged = !same(site.model?.night, cur.model?.night);
     const photosChanged =
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
@@ -1576,6 +1592,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     if (
       !sourcesChanged &&
       !modelChanged &&
+      !nightChanged &&
       !photosChanged &&
       !storiesChanged &&
       !partCardsChanged
@@ -1646,6 +1663,22 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
             body: { trust: model.trust },
           },
         );
+      }
+    }
+
+    // After the day model: the night one needs it. Removing the day model removed the night one too (server).
+    if (nightChanged && site.model) {
+      const night = site.model.night;
+      if (!night)
+        await call("PUT", `${path}/night-model`, { body: { mediaId: null } });
+      else if (night.src.startsWith("data:")) {
+        const id = await editorUpload(
+          `${site.id}:model-night`,
+          "model",
+          night.src,
+          { title: night.name, license: CONTRIBUTOR_LICENSE, trust: site.model.trust },
+        );
+        await call("PUT", `${path}/night-model`, { body: { mediaId: id } });
       }
     }
 

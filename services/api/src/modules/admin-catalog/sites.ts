@@ -78,6 +78,7 @@ import type {
   LocationInput,
   MapPlacementInput,
   ModelInput,
+  NightModelInput,
   PartCardsInput,
   SectionsInput,
   SiteInfoInput,
@@ -192,6 +193,7 @@ const siteSelection = {
   editorVersion: sites.editorVersion,
   coverMediaId: sites.coverMediaId,
   aboutCoverMediaId: sites.aboutCoverMediaId,
+  nightModelMediaId: sites.nightModelMediaId,
   openingCamera: sites.openingCamera,
   lng: sql<number | null>`ST_X(${sites.location})`,
   lat: sql<number | null>`ST_Y(${sites.location})`,
@@ -240,6 +242,7 @@ export type SiteRow = Pick<
   | "editorVersion"
   | "coverMediaId"
   | "aboutCoverMediaId"
+  | "nightModelMediaId"
   | "openingCamera"
   | "locationSource"
   | "dedupeKey"
@@ -319,6 +322,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...mediaLinks.map((l) => l.mediaId),
     ...siteRows.map((s) => s.coverMediaId),
     ...siteRows.map((s) => s.aboutCoverMediaId),
+    ...siteRows.map((s) => s.nightModelMediaId),
     ...storyRows.map((b) => b.photoId),
     ...narrationList.map((n) => n.mediaId),
     ...cardRows.map((c) => c.mediaId),
@@ -488,6 +492,8 @@ function referencesOf(a: SiteAggregate): { mediaList: MediaRow[]; cardList: Card
       ...a.mediaIds,
       s.coverMediaId,
       s.aboutCoverMediaId,
+      // After the linked media, so the day model stays the first model of the list (SiteDetail.nightModelId).
+      s.nightModelMediaId,
       ...a.stories.map((b) => b.photoId),
       ...a.narrations.map((n) => n.mediaId),
       ...distinct(a.stories.map((b) => b.cardId)).flatMap((cardId) => a.cards.get(cardId)?.mediaId ?? []),
@@ -556,6 +562,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     editorVersion: s.editorVersion === 2 ? 2 : null,
     coverMediaId: s.coverMediaId,
     aboutCoverMediaId: s.aboutCoverMediaId,
+    nightModelId: s.nightModelMediaId,
     openingCamera: s.openingCamera,
     updatedAt: s.updatedAt.toISOString(),
     stories: a.stories.map((b) => ({
@@ -1126,7 +1133,35 @@ export function setModel(tx: Tx, ctx: AuditCtx, id: string, input: ModelInput): 
       errors.throwIfAny();
 
       await rewriteSiteMedia(tx, id, before, { model: input.mediaId });
-      return { openingCamera: input.mediaId !== null && input.openingCamera ? toPose(input.openingCamera) : null };
+      return {
+        openingCamera: input.mediaId !== null && input.openingCamera ? toPose(input.openingCamera) : null,
+        // The night model is a variant of the day one: it goes with it.
+        ...(input.mediaId === null && { nightModelMediaId: null }),
+      };
+    },
+  );
+}
+
+/**
+ * Night model: the site's 3D model as the night theme shows it, or none (the day model then). It needs a day model
+ * and should carry the same part names (placement, highlights, part cards and cover groups are the day model's);
+ * the editor compares the names once both are extracted, as extraction runs after the upload.
+ */
+export function setNightModel(tx: Tx, ctx: AuditCtx, id: string, input: NightModelInput): Promise<AdminSiteDetail> {
+  return mutate(
+    tx,
+    ctx,
+    id,
+    (a) => ({ nightModelMediaId: a.site.nightModelMediaId }),
+    async (before) => {
+      const errors = new FieldErrors();
+      if (input.mediaId !== null) {
+        if (!modelOf(before)) errors.add("mediaId", "Gece modeli için önce gündüz modelini bağla.");
+        else if (input.mediaId === modelOf(before)?.id) errors.add("mediaId", "Gece modeli gündüz modelinden ayrı bir dosya olmalı.");
+        checkMedia(errors, "mediaId", input.mediaId, await mediaKindsOf(tx, [input.mediaId]), "model");
+      }
+      errors.throwIfAny();
+      return { nightModelMediaId: input.mediaId };
     },
   );
 }

@@ -12,6 +12,8 @@ import {
   validateCityIdentity,
   validateSite,
   memoryPermissions,
+  modelFileFor,
+  nightPartsMissing,
   type HeritageSite,
   type Memory,
 } from "./index";
@@ -373,4 +375,30 @@ test("a pattern scale is optional and, when given, a number from 0.25 to 8", () 
   validateCityIdentity({ ...identity, patternScale: 0.25 });
   for (const patternScale of [0, 0.2, 9, Number.NaN, Number.POSITIVE_INFINITY, "4" as unknown as number])
     assert.throws(() => validateCityIdentity({ ...identity, patternScale }), /Desen ölçeği/, String(patternScale));
+});
+test("the night theme shows a site's night file when it has one, the day model otherwise", () => {
+  const day = { name: "Gündüz", bytes: 1, src: "/gunduz.glb", parts: ["Kubbe"], trust: "representative" as const };
+  const night = { name: "Gece", bytes: 1, src: "/gece.glb", parts: ["Kubbe"] };
+  assert.equal(modelFileFor(day, "night").src, "/gunduz.glb");
+  assert.equal(modelFileFor({ ...day, night }, "day").src, "/gunduz.glb");
+  assert.equal(modelFileFor({ ...day, night }, "night").src, "/gece.glb");
+});
+test("a night file is checked against the part names the content uses, not against mesh names", () => {
+  const seed = createSeed().sites[0];
+  const site: HeritageSite = {
+    ...seed,
+    stories: [{ ...seed.stories[0], highlights: ["Kubbe"], camera: { target: "Minare", azimuthDeg: 0, elevationDeg: 20, distance: 1 } }],
+    partCards: [{ id: "kart", parts: ["Kubbe"], title: "Kubbe", body: "", photos: [], trust: "verified" }],
+    tasks: [],
+    chapters: [],
+    model: {
+      name: "Model", bytes: 1, src: "/gunduz.glb", trust: "representative",
+      // "Kubbe.001" is a mesh name: the editor reads node names only, so it must not count as missing.
+      parts: ["Kubbe", "Kubbe.001", "Minare", "Avlu"],
+      coverGroups: [["Avlu"]],
+      night: { name: "Gece", bytes: 1, src: "/gece.glb", parts: ["Kubbe", "Avlu", "Fener"] },
+    },
+  };
+  assert.deepEqual(nightPartsMissing(site), ["Minare"]);
+  assert.deepEqual(nightPartsMissing({ ...site, model: { ...site.model!, night: { ...site.model!.night!, parts: [] } } }), []);
 });

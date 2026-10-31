@@ -16,8 +16,10 @@ import {
 import {
   kindLabels,
   trustLabels,
+  nightPartsMissing,
   publicationIssues,
   type HeritageSite,
+  type SiteModel,
   type SitePhoto,
   type SiteSource,
   type StoryBlock,
@@ -378,6 +380,15 @@ export function SiteEditor({
                       ))}
                     </ul>
                   </details>
+                  <NightModel
+                    site={{ ...draft, model: draft.model }}
+                    busy={busy}
+                    onUpload={(file) => void uploadNightModel(file)}
+                    onRemove={() => {
+                      const { night: _night, ...day } = draft.model!;
+                      field("model", day);
+                    }}
+                  />
                   <PlacementSection
                     editor={placement}
                     siteId={draft.id}
@@ -1091,13 +1102,90 @@ export function SiteEditor({
     setBusy(true);
     setError("");
     try {
-      field("model", await prepareModel(file));
+      const model = await prepareModel(file);
+      // A new day file keeps the night one: the part names are compared below the upload.
+      field("model", draft.model?.night ? { ...model, night: draft.model.night } : model);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Model okunamadı.");
     } finally {
       setBusy(false);
     }
   }
+  async function uploadNightModel(file?: File) {
+    if (!file || !draft.model) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { name, bytes, src, parts, triangles } = await prepareModel(file);
+      field("model", {
+        ...draft.model,
+        night: { name, bytes, src, parts, ...(triangles !== undefined && { triangles }) },
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gece modeli okunamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+}
+/**
+ * Adım 1, gece modeli: the night theme's file of the same model. Optional; without it the night shows the day model.
+ * Its part names should be the day model's, as highlights, part cards and tasks name them.
+ */
+function NightModel({
+  site,
+  busy,
+  onUpload,
+  onRemove,
+}: {
+  site: HeritageSite & { model: SiteModel };
+  busy: boolean;
+  onUpload: (file?: File) => void;
+  onRemove: () => void;
+}) {
+  const { model } = site;
+  const missing = nightPartsMissing(site);
+  return (
+    <section className="editor-night-model">
+      <h3>Gece modeli</h3>
+      <p className="muted">
+        İsteğe bağlı. Gece temasında bu dosya gösterilir; yoksa gece de gündüz
+        modeli görünür. Parça adları gündüz modeliyle aynı olmalı: hikâye
+        vurguları, parça kartları ve görevler bu adlarla çalışır.
+      </p>
+      {model.night && (
+        <div className="row between">
+          <Tag>
+            {model.night.name}
+            {model.night.bytes > 0 &&
+              ` · ${(model.night.bytes / 1024 / 1024).toFixed(2)} MB`}{" "}
+            · {model.night.parts.length} parça
+          </Tag>
+          <button className="btn secondary" onClick={onRemove}>
+            Gece modelini kaldır
+          </button>
+        </div>
+      )}
+      <label className="field">
+        {model.night ? "Gece modelini değiştir" : "Gece modeli dosyası"}
+        <input
+          type="file"
+          accept=".glb"
+          disabled={busy}
+          onChange={(e) => {
+            onUpload(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+      </label>
+      {missing.length > 0 && (
+        <Notice>
+          Gece modelinde içeriğin kullandığı şu parçalar yok: {missing.join(", ")}.
+          Bu parçalardaki vurgu, kart ve görevler gece temasında görünmez.
+        </Notice>
+      )}
+    </section>
+  );
 }
 function PhotoPreview({
   photo,
