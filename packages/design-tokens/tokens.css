@@ -73,3 +73,59 @@
 [data-sehir="konya"] {
   --sehir-aksan: var(--sehir-konya-aksan);
 }
+
+/*
+ * Night theme (1 Nov 2026), from the prototype's «cam» theme lifted from near black to blue-grey, so dark glass
+ * still reads over the night map (`public/harita/akar-style-gece.json`). Set on <html> by the theme switch.
+ */
+[data-theme="night"] {
+  color-scheme: dark;
+  --bg: #161d27;
+  --surface: #1e2733;
+  --text: #e8ecf0;
+  --text-muted: #a3adba;
+  --border: rgba(255, 255, 255, 0.14);
+  --primary: #e6eaee;
+  --primary-dark: #c9d0d7;
+  --primary-light: rgba(255, 255, 255, 0.1);
+  --on-primary: #141b24;
+  --gold: #e3bc5e;
+  --gold-text: #ebcb7c;
+  --error: #ff8a80;
+  --verified: #86d9ad;
+  --verified-bg: rgba(134, 217, 173, 0.14);
+  --inferred: #ebcb7c;
+  --inferred-bg: rgba(227, 188, 94, 0.16);
+  --representative: #c2b3ee;
+  --representative-bg: rgba(194, 179, 238, 0.16);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --overlay: rgba(5, 9, 14, 0.62);
+  --glass: rgba(26, 34, 46, 0.55);
+  --glass-solid: rgba(26, 34, 46, 0.95);
+  --glass-blur: blur(18px) saturate(1.5);
+  --glass-edge:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+}
+/* Declared again on the city's elements, as the day ground is (see above). */
+[data-theme="night"],
+[data-theme="night"] .app-shell,
+[data-theme="night"] [data-sehir] {
+  --city-tint: color-mix(in srgb, var(--sehir-aksan) 30%, #161d27);
+  --ground:
+    radial-gradient(
+      60% 45% at 12% 8%,
+      color-mix(in srgb, var(--sehir-aksan) 40%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(50% 40% at 92% 28%, rgba(227, 188, 94, 0.1), transparent 70%),
+    radial-gradient(60% 45% at 38% 100%, rgba(120, 108, 90, 0.14), transparent 70%),
+    #161d27;
+}
+[data-theme="night"][data-contrast="high"] {
+  --text: #ffffff;
+  --text-muted: #d4dae1;
+  --border: #8c99a8;
+  --primary: #ffffff;
+}

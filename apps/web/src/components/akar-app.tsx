@@ -18,6 +18,8 @@ import {
   X,
   Check,
   Users,
+  Moon,
+  Sun,
 } from "lucide-react";
 import {
   createHttpClient,
@@ -96,6 +98,7 @@ import { cityCase } from "../lib/place-names";
 import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
 import type { MessageKey } from "../lib/messages";
 import { readPreference, writePreference } from "../lib/preferences";
+import { applyTheme, useTheme } from "../lib/theme";
 import { LangProvider, Localized } from "./i18n";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 type View =
@@ -144,6 +147,7 @@ export function AkarApp() {
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
     [sheetDragging, setSheetDragging] = useState(false),
+    theme = useTheme(),
     [routeId, setRouteId] = useState<string>(),
     [collapsed, setCollapsed] = useState(false),
     [overlay, setOverlay] = useState<Overlay>(null),
@@ -780,6 +784,14 @@ export function AkarApp() {
             </button>
           ))}
         </div>
+        <button
+          className="theme-switch"
+          aria-label={t(theme === "night" ? "theme.toDay" : "theme.toNight")}
+          title={t(theme === "night" ? "theme.toDay" : "theme.toNight")}
+          onClick={() => applyTheme(theme === "night" ? "day" : "night")}
+        >
+          {theme === "night" ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
         <button
           className={`profile-button ${view === "profile" ? "active" : ""}`}
           aria-label={t("header.profile")}

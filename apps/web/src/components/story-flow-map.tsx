@@ -6,6 +6,7 @@ import type { StoryFlow } from "@akar/domain";
 import { flowArc, flowEnd } from "../lib/story-flow";
 import { TrustTag } from "./side-sheet";
 import { useI18n } from "./i18n";
+import { followTheme, mapStyle } from "../lib/map-theme";
 
 const DRAW_MS = 2200;
 const COIN_MS = 2600;
@@ -29,7 +30,8 @@ export function StoryFlowMap({
   useEffect(() => {
     let disposed = false,
       frame = 0,
-      map: MapType | null = null;
+      map: MapType | null = null,
+      unfollow: (() => void) | undefined;
     const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const end = flowEnd(from, to);
     const arc = flowArc(from, end);
@@ -40,7 +42,7 @@ export function StoryFlowMap({
         const bounds = new lib.LngLatBounds(from, from).extend(end);
         map = new lib.Map({
           container: box.current,
-          style: "/harita/akar-style.json",
+          style: mapStyle(),
           bounds,
           fitBoundsOptions: { padding: 110, maxZoom: 17 },
           pitch: 52,
@@ -48,6 +50,7 @@ export function StoryFlowMap({
           attributionControl: { compact: true },
         });
         const m = map;
+        unfollow = followTheme(m);
         m.on("load", () => {
           if (disposed) return;
           m.addSource("flow", {
@@ -142,6 +145,7 @@ export function StoryFlowMap({
     return () => {
       disposed = true;
       cancelAnimationFrame(frame);
+      unfollow?.();
       map?.remove();
     };
   }, [from, to]);

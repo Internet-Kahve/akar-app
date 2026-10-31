@@ -13,6 +13,8 @@ import "@akar/design-tokens/tokens.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import "./design.css";
+import "./theme.css";
+import { THEME_BOOT } from "../lib/theme-boot";
 export const metadata: Metadata = {
   title: "AKAR · Şehrin hikâyesine karış",
   description:
@@ -33,7 +35,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -1,3 +1,4 @@
+import { PAINT_FROM } from "./map-theme";
 import type {
   AllPaintProperties,
   GeoJSONSource,
@@ -71,6 +72,8 @@ export class OsmBuildingLayer {
         type: "fill-extrusion",
         source: SOURCE_ID,
         minzoom: style?.minzoom ?? 15,
+        // The theme switch repaints it from the style's layer too (map-theme.ts).
+        metadata: { [PAINT_FROM]: STYLE_LAYER },
         paint: {
           "fill-extrusion-color": paint(
             "fill-extrusion-color",

@@ -24,6 +24,7 @@ import {
 } from "../lib/osm-buildings";
 import { arrowStep, type PlacementDraft } from "../lib/placement";
 import { useCityScene } from "./city-scenes";
+import { followTheme, mapStyle } from "../lib/map-theme";
 
 /** What a click on the map does. */
 export type PlacementMode = "none" | "fit" | "buildings";
@@ -186,7 +187,8 @@ export const PlacementMap = forwardRef<
   }));
 
   useEffect(() => {
-    let disposed = false;
+    let disposed = false,
+      unfollow: (() => void) | undefined;
     Promise.all([
       import("maplibre-gl"),
       import("../lib/map-models"),
@@ -203,9 +205,10 @@ export const PlacementMap = forwardRef<
           pitch: 55,
           maxPitch: 70,
           attributionControl: { compact: true },
-          style: "/harita/akar-style.json",
+          style: mapStyle(),
         });
         map.current = m;
+        unfollow = followTheme(m);
         // Arrow keys move the model, not the map.
         m.keyboard.disable();
         m.on("error", () => {
@@ -277,6 +280,7 @@ export const PlacementMap = forwardRef<
       .catch(() => report({ map: "failed" }));
     return () => {
       disposed = true;
+      unfollow?.();
       marker.current?.remove();
       buildings.current?.dispose();
       map.current?.remove();

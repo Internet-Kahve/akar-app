@@ -14,6 +14,8 @@ import type {
   Marker as MarkerType,
 } from "maplibre-gl";
 import type { MapModels } from "../lib/map-models";
+import { followTheme, MAP_SKY, mapStyle } from "../lib/map-theme";
+import { currentTheme, type Theme } from "../lib/theme";
 import {
   PIN_LABEL_LAYER,
   PIN_LAYER,
@@ -21,6 +23,7 @@ import {
   pinFeatures,
   pinFiles,
   syncPins,
+  themePinLabels,
 } from "../lib/map-pins";
 import { nearestCity, type LngLat } from "../lib/nearby";
 import { useCities, useCityScenes } from "./city-scenes";
@@ -34,6 +37,14 @@ declare global {
   }
 }
 const WIDE = "(min-width: 900px)";
+/** The globe view's sky in `theme` (colours in map-theme.ts); the atmosphere fades out as a city comes near. */
+const sky = (theme: Theme) => ({
+  ...MAP_SKY[theme],
+  "sky-horizon-blend": 0.6,
+  "horizon-fog-blend": 0.4,
+  "fog-ground-blend": 1,
+  "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 8, 0] as ["interpolate", ["linear"], ["zoom"], ...number[]],
+});
 /** Keeps the short card clear of the top of the map and of the right edge. */
 const PEEK_WIDTH = 360;
 const PEEK_TOP = 80;
@@ -168,7 +179,8 @@ export function HeritageMap({
     if (loaded || failed) drawnRef.current?.();
   }, [loaded, failed]);
   useEffect(() => {
-    let disposed = false;
+    let disposed = false,
+      unfollow: (() => void) | undefined;
     import("maplibre-gl")
       .then((lib) => {
         if (disposed || !container.current) return;
@@ -183,9 +195,14 @@ export function HeritageMap({
             maxZoom: 19.5,
             maxPitch: 65,
             attributionControl: { compact: true },
-            style: "/harita/akar-style.json",
+            style: mapStyle(),
           });
           map.current = m;
+          unfollow = followTheme(m, (theme) => {
+            m.setSky(sky(theme));
+            themePinLabels(m);
+            models.current?.setTheme(theme);
+          });
           // Only a visitor's gesture carries an original DOM event; jumpTo and flyTo from code do not.
           m.on("movestart", (e) => {
             if (e.originalEvent) moved.current = true;
@@ -228,26 +245,7 @@ export function HeritageMap({
             if (disposed) return;
             // Globe view (§11.45): far out the earth is round, near a city MapLibre turns flat by itself.
             m.setProjection({ type: "globe" });
-            m.setSky({
-              // The frosted theme's sky: light blue far out, warm light at the horizon.
-              "sky-color": "#9ACBF0",
-              "horizon-color": "#F4F2EA",
-              "sky-horizon-blend": 0.6,
-              "fog-color": "#F4F2EA",
-              "horizon-fog-blend": 0.4,
-              "fog-ground-blend": 1,
-              "atmosphere-blend": [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                0,
-                1,
-                5,
-                1,
-                8,
-                0,
-              ],
-            });
+            m.setSky(sky(currentTheme()));
             mode();
             setLoaded(true);
             reportCity();
@@ -279,6 +277,7 @@ export function HeritageMap({
       .catch(() => setFailed(true));
     return () => {
       disposed = true;
+      unfollow?.();
       delete window.akarMap;
       models.current?.dispose();
       models.current = null;

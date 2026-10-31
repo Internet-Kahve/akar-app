@@ -5,6 +5,7 @@ import {
   type SceneLight,
 } from "@akar/domain";
 import * as THREE from "three";
+import type { Theme } from "./theme";
 
 /** The scene of a site's city; the default when the city has none (§11.42). */
 export function sceneOf(
@@ -54,6 +55,34 @@ export const MAP_LIGHT = {
   /** Opacity of the cast shadow on the map's ground. */
   shadowOpacity: 0.3,
 };
+/**
+ * The map's night light (1 Nov 2026): a cool moonlit sky and a dim moon in the sun's place, a little less exposure.
+ * The models stay readable, as they are what the night map is about; lit windows come from a site's night model.
+ */
+export const MAP_NIGHT_LIGHT = {
+  exposure: 0.9,
+  sky: 0x8fa3c8,
+  ground: 0x1b2330,
+  ambient: 0.95,
+  colour: 0xd6e2ff,
+  sun: 0.85,
+  shadowOpacity: 0.38,
+};
+/** Sets the lights `addMapLights` put in `scene` and its shadow floor to `theme`'s; the renderer's exposure is apart. */
+export function themeMapLights(scene: THREE.Scene, theme: Theme) {
+  const light = theme === "night" ? MAP_NIGHT_LIGHT : MAP_LIGHT;
+  scene.traverse((node) => {
+    if (node instanceof THREE.HemisphereLight) {
+      node.color.setHex(light.sky);
+      node.groundColor.setHex(light.ground);
+      node.intensity = light.ambient;
+    } else if (node instanceof THREE.DirectionalLight && node.castShadow) {
+      node.color.setHex(light.colour);
+      node.intensity = light.sun;
+    } else if (node instanceof THREE.Mesh && node.material instanceof THREE.ShadowMaterial)
+      node.material.opacity = light.shadowOpacity;
+  });
+}
 /** Where the map's sun comes from, degrees clockwise from north. */
 export const mapSunAzimuth = (
   frontDeg: number | null | undefined,

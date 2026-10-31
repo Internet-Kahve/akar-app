@@ -1,0 +1,120 @@
+/* Theme switch and the night theme's own rules (1 Nov 2026). Colours come from the tokens (`[data-theme="night"]`
+   in tokens.css); this file only holds what a token cannot reach: the switch itself and fixed day colours. */
+.theme-switch {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  margin-left: 8px;
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+  transition: transform 0.2s var(--ease);
+}
+.theme-switch:active {
+  transform: scale(0.94);
+}
+.theme-switch:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .theme-switch {
+    background: var(--glass-solid);
+  }
+}
+@media (max-width: 899.98px) {
+  .theme-switch {
+    position: relative;
+    margin-left: 6px;
+  }
+  /* A 44 px touch target around the 32 px button, as the language buttons have. */
+  .theme-switch::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
+}
+
+/* ---------------- night: what a token does not reach */
+/* The logo is drawn black and dimmed (design.css); by night the same mark in white. */
+[data-theme="night"] .brand-logo {
+  filter: brightness(0) invert(1) opacity(0.9);
+}
+/* The city's dark accent stays the colour of city surfaces (headers, covers); as ink on the dark ground it turns
+   to the city's light tint, or it would not read. */
+[data-theme="night"] :is(
+    .btn.secondary,
+    .round-btn.plain,
+    .explore-all:hover,
+    .site-row.selected strong,
+    .map-zoom button,
+    .map-round,
+    .map-dial b,
+    .peek-head h3,
+    .peek-more,
+    .detail-panel .ik-sag,
+    .about-h2,
+    .about-figure b,
+    .modal .about-quote p,
+    .about-timeline b,
+    .about-deep-button
+  ) {
+  color: var(--sehir-acik);
+}
+[data-theme="night"] :focus-visible {
+  outline-color: var(--gold);
+}
+[data-theme="night"] .about-tab[aria-current="true"] {
+  border-color: var(--sehir-acik);
+}
+[data-theme="night"] .dial-ring {
+  stroke: color-mix(in srgb, var(--sehir-acik) 60%, transparent);
+}
+[data-theme="night"] .dial-major {
+  stroke: var(--sehir-acik);
+}
+[data-theme="night"] .dial-tick {
+  stroke: color-mix(in srgb, var(--sehir-acik) 50%, transparent);
+}
+[data-theme="night"] .dial-letter {
+  fill: var(--sehir-acik);
+}
+/* MapLibre's own controls: the attribution box (OSM licence) and the compact ⓘ button are white by default. */
+[data-theme="night"] .maplibregl-ctrl-attrib,
+[data-theme="night"] .maplibregl-ctrl-attrib.maplibregl-compact {
+  background: var(--glass-solid);
+  color: var(--text-muted);
+}
+[data-theme="night"] .maplibregl-ctrl-attrib a {
+  color: var(--text-muted);
+}
+[data-theme="night"] .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+/* The Photo | 3D switch: white ink on the dark primary by day (written `white`); by night the primary is light. */
+[data-theme="night"] .scene-media-switch .btn[aria-pressed="true"] {
+  color: var(--on-primary);
+}
+[data-theme="night"] .scene-media-switch .btn[aria-pressed="false"] {
+  color: var(--text);
+}
+/* Other places written as white ink on the primary or text colour, both light by night. */
+[data-theme="night"] :is(.hotspot > span, .stop-number, .about-term-card, .profile-language [aria-pressed="true"]) {
+  color: var(--on-primary);
+}
+/* The 3D viewer's backdrop: by day the city's (inline) or the detail view's neutral one (design.css, !important);
+   by night one dark backdrop everywhere, the prototype's «cam» stage lifted to the night map's blue-grey. */
+[data-theme="night"] :is(.model-viewer, .detail-model) {
+  --scene-top: #202a37 !important;
+  --scene-bottom: #0f141b !important;
+}
+/* The model's trust label carries the «representative» colours written out (design.css); the tokens at night. */
+[data-theme="night"] .detail-scene .model-label {
+  background: var(--representative-bg);
+  color: var(--representative);
+}

@@ -19,9 +19,12 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { modelBase, PRESENTATION_PARTS, type ModelBase } from "./model-anchor";
 import { OsmBuildingLayer } from "./map-buildings";
 import { pinLayersOn } from "./map-pins";
+import { currentTheme, type Theme } from "./theme";
 import { footprintRing, type HideRule, type Ring } from "./osm-buildings";
 import {
   addMapLights,
+  MAP_NIGHT_LIGHT,
+  themeMapLights,
   aimMapSun,
   groundShadow,
   MAP_LIGHT,
@@ -133,6 +136,7 @@ export class MapModelLayer implements CustomLayerInterface {
   private readonly failed = new Map<string, string>();
 
   private opacity = 1;
+  private theme: Theme = currentTheme();
 
   constructor(
     private readonly mercator: typeof MercatorCoordinate,
@@ -159,7 +163,7 @@ export class MapModelLayer implements CustomLayerInterface {
     // The prototype's look (§3 of the integration notes): filmic tone mapping and real shadows. Each model's
     // shadow map is drawn once, again only when it moves; the light stays put when the map turns.
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = MAP_LIGHT.exposure;
+    this.renderer.toneMappingExposure = (this.theme === "night" ? MAP_NIGHT_LIGHT : MAP_LIGHT).exposure;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
@@ -192,6 +196,18 @@ export class MapModelLayer implements CustomLayerInterface {
   setSettings(settings: MapSettings) {
     this.settings = settings;
     this.reconcile();
+  }
+
+  /** Lights every model in `theme`; the night model files come with the sites (`setSites`). */
+  setTheme(theme: Theme) {
+    this.theme = theme;
+    if (this.renderer)
+      this.renderer.toneMappingExposure = (theme === "night" ? MAP_NIGHT_LIGHT : MAP_LIGHT).exposure;
+    for (const entry of this.loaded.values()) {
+      themeMapLights(entry.scene, theme);
+      entry.shadowDirty = true;
+    }
+    this.map?.triggerRepaint();
   }
 
   /** 1 = as modelled, below 1 the models are see-through (the preview over a satellite picture). */
@@ -435,6 +451,7 @@ export class MapModelLayer implements CustomLayerInterface {
         floor,
         shadowDirty: true,
       };
+      themeMapLights(scene, this.theme);
       this.applyOpacity(entry.model);
       this.place(entry, site);
       this.loaded.set(site.id, entry);
@@ -512,6 +529,8 @@ export interface MapModels {
     scenes: Record<string, CityScene>,
   ): void;
   pick(x: number, y: number): string | null;
+  /** Relights the models for the page theme. */
+  setTheme(theme: Theme): void;
   dispose(): void;
 }
 
@@ -559,6 +578,7 @@ export function createMapModels(
       );
     },
     pick: (x, y) => models.pick(x, y),
+    setTheme: (theme) => models.setTheme(theme),
     dispose() {
       buildings?.dispose();
       if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);

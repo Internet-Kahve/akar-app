@@ -12,6 +12,7 @@ import type {
   Map as MapLibreMap,
 } from "maplibre-gl";
 import { localize, type Lang } from "./i18n";
+import { currentTheme, type Theme } from "./theme";
 
 /**
  * The map's site pins (§11.48): one GeoJSON source with an icon layer and a label layer, so the map itself
@@ -214,8 +215,8 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "symbol-sort-key": ["get", "order"],
     },
     paint: {
-      "text-color": colors.primary,
-      "text-halo-color": colors.surface,
+      "text-color": LABEL_INK[currentTheme()].glyphInk,
+      "text-halo-color": LABEL_INK[currentTheme()].glyphHalo,
       "text-halo-width": 2,
     },
   };
@@ -331,7 +332,8 @@ async function pinImage(kind: SiteKind, finished: boolean, selected = false) {
  */
 const LABEL_FONT = '600 34px "Cormorant Garamond"';
 const LABEL_HEIGHT = 46;
-export const labelImageId = (name: string) => `name:${name}`;
+const LABEL_PREFIX = "name:";
+export const labelImageId = (name: string) => `${LABEL_PREFIX}${name}`;
 async function labelFontReady(names: string[]) {
   try {
     await document.fonts.load(LABEL_FONT, names.join(""));
@@ -350,11 +352,26 @@ function labelImage(name: string) {
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
   ctx.lineWidth = 7;
-  ctx.strokeStyle = "rgba(255,255,255,.95)";
+  ctx.strokeStyle = LABEL_INK[currentTheme()].halo;
   ctx.strokeText(name, 8, LABEL_HEIGHT / 2 + 1);
-  ctx.fillStyle = colors.text;
+  ctx.fillStyle = LABEL_INK[currentTheme()].ink;
   ctx.fillText(name, 8, LABEL_HEIGHT / 2 + 1);
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+/** Ink and halo of the site names: dark on a white halo by day, light on a dark halo by night. */
+const LABEL_INK: Record<Theme, { ink: string; halo: string; glyphInk: string; glyphHalo: string }> = {
+  day: { ink: colors.text, halo: "rgba(255,255,255,.95)", glyphInk: colors.primary, glyphHalo: colors.surface },
+  night: { ink: "#EEF1F4", halo: "rgba(22,29,39,.92)", glyphInk: "#EEF1F4", glyphHalo: "#161D27" },
+};
+/** Redraws the site names already on `m` in the page theme (same image ids), and the glyph text that stands in. */
+export function themePinLabels(m: MapLibreMap) {
+  const theme = currentTheme();
+  if (m.getLayer(PIN_LABEL_LAYER)) {
+    m.setPaintProperty(PIN_LABEL_LAYER, "text-color", LABEL_INK[theme].glyphInk);
+    m.setPaintProperty(PIN_LABEL_LAYER, "text-halo-color", LABEL_INK[theme].glyphHalo);
+  }
+  for (const id of m.listImages())
+    if (id.startsWith(LABEL_PREFIX)) m.updateImage(id, labelImage(id.slice(LABEL_PREFIX.length)));
 }
 /** Draws the names the map does not have yet and points each pin at its image; without the font the text stays. */
 async function addLabelImages(map: MapLibreMap, pins: PinCollection) {

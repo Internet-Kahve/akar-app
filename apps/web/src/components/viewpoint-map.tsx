@@ -4,6 +4,7 @@ import type { GeoJSONSource, Map as MapType } from "maplibre-gl";
 import type { HistoryImage } from "@akar/domain";
 import { viewCone } from "../lib/viewpoint";
 import { useI18n } from "./i18n";
+import { followTheme, mapStyle } from "../lib/map-theme";
 
 const featureOf = (image: HistoryImage) => ({
   type: "Feature" as const,
@@ -40,7 +41,8 @@ export function ViewpointMap({
     m.easeTo({ center: [v.lng, v.lat], zoom: 15.5, duration: 500 });
   };
   useEffect(() => {
-    let disposed = false;
+    let disposed = false,
+      unfollow: (() => void) | undefined;
     import("maplibre-gl")
       .then((lib) => {
         const v = selected.viewpoint;
@@ -48,12 +50,13 @@ export function ViewpointMap({
         lib.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
         const m = new lib.Map({
           container: box.current,
-          style: "/harita/akar-style.json",
+          style: mapStyle(),
           center: [v.lng, v.lat],
           zoom: 15.5,
           attributionControl: { compact: true },
           dragRotate: false,
         });
+        unfollow = followTheme(m);
         map.current = m;
         m.on("load", () => {
           if (disposed) return;
@@ -85,6 +88,7 @@ export function ViewpointMap({
       .catch(() => {});
     return () => {
       disposed = true;
+      unfollow?.();
       ready.current = false;
       map.current?.remove();
       map.current = null;
