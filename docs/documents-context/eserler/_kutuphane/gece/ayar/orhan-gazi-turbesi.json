@@ -1,9 +1,9 @@
 {
   "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md.",
   "eser": "orhan-gazi-turbesi",
-  "dosya": "orhan-gazi-turbesi_v02",
+  "dosya": "orhan-gazi-turbesi_v06",
   "ana_parca": "Govde",
-  "bolunecek": "Govde|Giris_Holu|Pilastr_Silme",
+  "bolunecek": "Govde|Giris_Holu",
   "malzeme": {
     "^(Pencere_Bosluk|Hol_Cam)": {
       "parla": "#FFD08A",

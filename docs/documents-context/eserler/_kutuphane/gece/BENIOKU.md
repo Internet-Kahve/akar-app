@@ -11,9 +11,9 @@ blender -b --python gece_uret.py -- ayar/<eser>.json hepsi
 
 ## Durum
 
-Bu dosyalar main'in eski sürümlerinden üretildi: Ulucami v27, Bedesten v06, Koza Han v14, Orhan Bey Camii v07, Orhan Gazi Türbesi v02, Orhan Bey Hamamı v05, Emir Hanı v05. Güncel sürümler için `ayar/<eser>.json` içindeki `dosya`, malzeme adları ve kotlar kontrol edilip yeniden üretilmelidir. Haritaya bağlı değildir.
+Girdiler: Ulucami v32, Bedesten v11, Koza Han v18, Orhan Bey Camii v11, Orhan Gazi Türbesi v06, Orhan Bey Hamamı v08, Emir Hanı v08. Haritaya bağlı değildir.
 
-Mobil bütçe (`FRONTEND_BACKEND_NOTLARI.md`: 40 bin üçgen, 60 draw call, 1 MB; Ulucami 87 bin, 91 draw call): Ulucami (126 532, 103, 1,37 MB) ve Koza Han (79 392, 1,15 MB) aşıyor. Telefonda ölçülmedi.
+Mobil bütçe (`FRONTEND_BACKEND_NOTLARI.md`: 40 bin üçgen, 60 draw call, 1 MB; Ulucami 87 bin, 91 draw call): Ulucami (102 074 üçgen, 97 draw call, 1,45 MB) ve Koza Han (50 346 üçgen) aşıyor; diğerleri uygun. Yedi uygulama modeli toplam 281 164 üçgen (gündüz 204 876). Telefonda ölçülmedi.
 
 ## Çıktılar
 
@@ -28,7 +28,7 @@ Mobil bütçe (`FRONTEND_BACKEND_NOTLARI.md`: 40 bin üçgen, 60 draw call, 1 MB
 1. Gündüz GLB'si içe alınır; `bolunecek` nesnelerde uzun kenarlar bölünür.
 2. Gece ışıkları kurulur: duvar dibinde yukarı bakan ışık şeritleri, minare ve iç mekân noktaları, zayıf mavi gök. Değerler `ayar/<eser>.json` içinde.
 3. Cycles ile ışınım köşe rengine pişirilir, yumuşatılır, gece dolgusu eklenir.
-4. GLB yazılır: `KHR_materials_unlit`, normal yok, Draco. Görünüş `baseColor × COLOR_0` olur, uygulamanın ışıklarına bağlı değildir.
+4. GLB yazılır: `KHR_materials_unlit`, normal yok, Draco, doku WebP. Gündüz AO dokusu ve ikinci UV atılır (pişmiş ışık yerini alır). Görünüş `baseColor × COLOR_0` olur, uygulamanın ışıklarına bağlı değildir.
 
 ## Ayar
 

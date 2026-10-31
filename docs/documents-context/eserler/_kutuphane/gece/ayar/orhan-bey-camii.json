@@ -1,10 +1,10 @@
 {
   "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md. Son cemaat: ayak diplerinde turuncu şerit (sıcak, yakın), tonoz içi parlak sıcak-beyaz; minare sakin.",
   "eser": "orhan-bey-kulliyesi",
-  "dosya": "orhan-bey-camii_v07",
+  "dosya": "orhan-bey-camii_v11",
   "ana_parca": "Cami_Govde",
-  "bolunecek": "Cami_Govde|Cami_Mihrap|Cami_SonCemaat|Revak_Kemerler",
-  "ince_bolunecek": "Minare_1",
+  "bolunecek": "Cami_Govde|Cami_Mihrap|Cami_SonCemaat",
+  "ince_bolunecek": "Minare",
   "malzeme": {
     "^Pencere$": {
       "parla": "#FFD08A",
@@ -136,7 +136,7 @@
     ],
     "minare": [
       {
-        "nesne": "Minare_1",
+        "nesne": "Minare",
         "merkez": [
           11.55,
           1.02

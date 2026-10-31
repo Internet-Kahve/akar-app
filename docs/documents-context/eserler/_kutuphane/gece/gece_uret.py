@@ -365,6 +365,19 @@ def kayma_bul(kj):
     return Vector((d[0], -d[2], d[1]))
 
 
+def gunduz_ao_temizle(ns):
+    """Gündüz AO dokusu ve UV'si: pişmiş gece ışığı yerini alır, dosyada yer kaplamasın."""
+    for m in bpy.data.materials:
+        if not m.use_nodes:
+            continue
+        for n in list(m.node_tree.nodes):
+            if n.type == 'TEX_IMAGE' and n.image and '_ao' in n.image.name:
+                m.node_tree.nodes.remove(n)
+    for o in ns:
+        while len(o.data.uv_layers) > 1:
+            o.data.uv_layers.remove(o.data.uv_layers[-1])
+
+
 def calistir(tur):
     global KAYMA
     tab = AYAR['dosya']; ek = '' if tur == 'app' else '_sunum'
@@ -387,9 +400,10 @@ def calistir(tur):
     for o in list(bpy.data.objects):
         if o.type == 'LIGHT':
             bpy.data.objects.remove(o)
+    gunduz_ao_temizle(ns)
     bpy.ops.export_scene.gltf(filepath=gec, export_format='GLB', export_vertex_color='ACTIVE', export_all_vertex_colors=False,
-                              export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6, export_draco_position_quantization=14, export_draco_normal_quantization=8,
-                              export_draco_texcoord_quantization=10, export_draco_color_quantization=6, export_normals=False, export_cameras=False, export_lights=False)
+                              export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=10, export_draco_position_quantization=14, export_draco_normal_quantization=8,
+                              export_draco_texcoord_quantization=10, export_draco_color_quantization=5, export_normals=False, export_image_format='WEBP', export_image_quality=80, export_cameras=False, export_lights=False)
     son_islem(gec, cikti, kj); os.remove(gec)
     j, _ = glb_oku(cikti)
     kd = {n.get('name'): n.get('translation') for n in kj['nodes']}; yd = {n.get('name'): n.get('translation') for n in j['nodes']}

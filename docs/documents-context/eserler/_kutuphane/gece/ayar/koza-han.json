@@ -1,10 +1,10 @@
 {
   "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md. Mescit: alt kemerlerin içi güçlü sıcak ışık, üst duvarda aplik halkası, koyu kubbe. Revak: her gözün içi yanar, taş ayaklar koyu kalır.",
   "eser": "koza-han",
-  "dosya": "koza-han_v14",
+  "dosya": "koza-han_v18",
   "ana_parca": "Govde_Dis",
-  "bolunecek": "Govde_Dis|Cati|Avlu_Revak|Avlu_Zemin|Ic_Koza|Avlu_Halka|Avlu_Cephe",
-  "ince_bolunecek": "Avlu_Mescit",
+  "bolunecek": "Govde_Dis|Avlu_Zemin|Avlu_Revak",
+  "ince_bolunecek": "Mescit",
   "malzeme": {
     "^Pencere_Izgara": {
       "parla": "#FFC87E",
@@ -89,8 +89,8 @@
     "duvar_guc": 40,
     "hedef_yukseklik": 6,
     "pay": 2.5,
-    "kenar": 4.5,
-    "ince_kenar": 1.2,
+    "kenar": 6.0,
+    "ince_kenar": 2.2,
     "poz": 0.8,
     "gok": 0.12,
     "ornek": 128,
@@ -110,7 +110,7 @@
     ],
     "minare": [
       {
-        "nesne": "Avlu_Mescit",
+        "nesne": "Mescit",
         "merkez": [
           -18.25,
           -5.75

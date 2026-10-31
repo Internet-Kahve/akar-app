@@ -1,8 +1,8 @@
 {
   "_aciklama": "Gece varyantı ayarı. malzeme: ad ifadesi → parla (kendi ışığı; hex), oran (yanan pencere oranı), sonuk (sönenin parlaklığı), carpan (gündüz rengini koyulaştırır), renk (gündüz rengi yerine). Sıra önemli: ilk eşleşme geçer. isik: gece ışıkları; kotlar blend koordinatında metre.",
   "eser": "ulu-cami",
-  "dosya": "ulu-cami_v27",
-  "bolunecek": "Cephe_.*|Govde|Giris_Cikintili_Blok|Kapi_.*|Mermer_Bant|Silme_Ust|Portal_Silmeleri",
+  "dosya": "ulu-cami_v32",
+  "bolunecek": "Cephe_.*|Govde",
   "malzeme": {
     "^Minare_Tugla_Derzi": {
       "doku_renk": "#F0C48C",
@@ -47,7 +47,7 @@
     "hedef_yukseklik": 9,
     "pay": 2.5,
     "adim": 8.0,
-    "kenar": 4.5,
+    "kenar": 7.0,
     "poz": 0.8,
     "gok": 0.12,
     "minare": [
@@ -197,7 +197,8 @@
         "r": 2.0
       }
     ],
-    "ornek": 128
+    "ornek": 128,
+    "ince_kenar": 3.2
   },
   "ince_bolunecek": "Minare_.*",
   "yakin": [

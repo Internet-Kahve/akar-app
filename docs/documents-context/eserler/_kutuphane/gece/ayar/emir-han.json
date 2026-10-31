@@ -1,9 +1,9 @@
 {
   "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md. Avlu revakları Koza Han'daki gibi içeriden yanar.",
   "eser": "emir-han",
-  "dosya": "emir-hani_v05",
+  "dosya": "emir-hani_v08",
   "ana_parca": "Emir_Hani",
-  "bolunecek": "Emir_Hani|Han_Avlu|Dis_Cephe|Girisler",
+  "bolunecek": "Emir_Hani|Han_Avlu|Girisler",
   "malzeme": {
     "^Pencere_Cam": {
       "parla": "#FFD08A",

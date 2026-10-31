@@ -1,8 +1,8 @@
 {
   "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json. Bant çatısı (+5,0) gövde duvarını dipten kapattığı için üst duvar, bant üstündeki yukarı bakan ışık şeritleriyle (serit) aydınlanır.",
   "eser": "yildirim-bayezid-bedesteni",
-  "dosya": "bedesten_v06",
-  "bolunecek": "Govde|Dukkanlar|Sacak|Cati",
+  "dosya": "bedesten_v11",
+  "bolunecek": "Govde|Dukkanlar",
   "malzeme": {
     "^Dukkan_Vitrin": {
       "parla": "#FFCF8C",
@@ -30,7 +30,7 @@
     "duvar_guc": 55,
     "hedef_yukseklik": 6,
     "pay": 2.5,
-    "kenar": 4.5,
+    "kenar": 6.0,
     "poz": 0.8,
     "gok": 0.12,
     "ornek": 128,

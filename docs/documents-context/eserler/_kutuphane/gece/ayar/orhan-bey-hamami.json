@@ -1,8 +1,8 @@
 {
   "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md. Plan girintili olduğu için her kütle kendi ışık şeridini alır.",
   "eser": "orhan-bey-hamami",
-  "dosya": "orhan-bey-hamami_v05",
-  "ana_parca": "Hamam_Detay",
+  "dosya": "orhan-bey-hamami_v08",
+  "ana_parca": "Hamam_Sicaklik",
   "bolunecek": "Hamam_.*",
   "malzeme": {
     "^Pencere$": {
