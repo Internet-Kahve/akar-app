@@ -93,7 +93,7 @@ test("the archive's present-day pair is a slider, both photographs whole, with e
   await expect(page.locator(".history-compare-layer")).toHaveCount(2);
   await fits(page, ".history-compare-layer:not(.history-compare-old)");
   await fits(page, ".history-compare-old");
-  await expect(page.locator("aside .archive-credit")).toHaveText(OLD_CREDIT);
+  await expect(page.locator(".history-info .archive-credit")).toHaveText(OLD_CREDIT);
   await expect(page.locator(".archive-credit-today")).toHaveText(`Bugünkü fotoğraf ${PAIR_CREDIT}`);
   await expect(page.getByText("CC BY-NC-ND 4.0", { exact: true })).toBeVisible();
   await expect(page.locator(".history-near")).toHaveText(
@@ -136,7 +136,7 @@ test("without the archive's pair the newest linked sample stands in, tagged «Ö
   await expect(page.getByRole("slider")).toHaveCount(0);
   await expect(page.locator(".archive-photo > img")).toBeVisible();
   await fits(page, ".archive-photo > img");
-  await expect(page.getByText("Bu fotoğrafın bugünkü eş görüntüsü henüz eklenmedi.")).toBeVisible();
+  await expect(page.getByText("Bu açının bugünkü hali yok")).toBeVisible();
 
   const dots = page.locator(".archive-timeline .history-pair-dot");
   await expect(dots).toHaveCount(2);
@@ -159,7 +159,7 @@ test("the team's samples are listed with the «Örnek» tag, their credit line w
 
   await cards.first().getByRole("button", { name: "Eski fotoğrafı göster" }).click();
   await expect(page.locator(".archive-timeline button").nth(1)).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".archive-photo figcaption")).toContainText("Tarih bilinmiyor");
+  await expect(page.locator(".history-date")).toContainText("Tarih bilinmiyor");
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
   ).toBe(true);

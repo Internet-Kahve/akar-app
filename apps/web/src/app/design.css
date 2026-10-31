@@ -2883,3 +2883,64 @@ h1,
     top: calc(70px + env(safe-area-inset-top, 0px));
   }
 }
+
+/* Geçmişi Gör: archive, present-day card and optional mobile viewpoint map. */
+.history-grid {
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-areas: "photo info" "photo today" "archive location";
+  gap: 16px 28px;
+  align-items: start;
+}
+.history-stage { grid-area: photo; }
+.history-info { grid-area: info; min-width: 0; }
+.history-info h2 { margin: 0 0 2px; font: 600 17px/22px var(--font); }
+.history-date { margin: 0; color: var(--text-muted); font-size: 13px; }
+.history-info .archive-credit { margin: 6px 0 0; color: var(--text-muted); font-size: 11px; line-height: 16px; }
+.archive-photo { position: relative; }
+.archive-photo > img, .archive-photo .history-compare { height: max(380px, min(700px, calc(100vh - 290px))); }
+.history-count { position: absolute; top: 12px; right: 12px; padding: 4px 10px; border-radius: 24px; color: white; background: #0006; }
+.history-photo-trust { position: absolute; left: 12px; bottom: 12px; }
+.history-today { grid-area: today; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 14px; border-radius: 16px; background: var(--glass); box-shadow: var(--glass-edge), var(--glass-shadow); }
+.history-today-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--sehir-acik); color: var(--sehir-aksan); }
+.history-today b { display: block; font: 600 15px/20px var(--font); }
+.history-today small { display: block; margin-top: 2px; color: var(--text-muted); font: 400 13px/18px var(--font); }
+.history-today .btn { grid-column: 1 / -1; min-height: 48px; }
+.history-archive { grid-area: archive; min-width: 0; }
+.history-archive h3 { display: flex; justify-content: space-between; margin: 0 0 8px; font: 600 14px/20px var(--font); }
+.history-archive h3 small { color: var(--text-muted); }
+.archive-timeline { display: flex; gap: 8px; margin: 0; padding: 0 0 4px; scrollbar-width: none; }
+.archive-timeline button { flex: 0 0 118px; min-width: 0; width: 118px; padding: 0; border: 0; background: none; text-align: left; }
+.archive-timeline img { width: 118px; height: 80px; object-fit: cover; border: 3px solid transparent; border-radius: 8px; }
+.archive-timeline .active img { border-color: var(--sehir-aksan); }
+.archive-timeline strong { display: block; margin-top: 6px; font: 600 12px/16px var(--font); }
+.archive-timeline small { display: block; font: 400 11px/14px var(--font); color: var(--text-muted); }
+.history-location { grid-area: location; min-width: 0; }
+.history-map-toggle { display: none; }
+.history-location .viewpoint-map { height: 230px; }
+@media (max-width: 899.98px) {
+  .history-page { padding: 16px 16px 24px; }
+  .history-head { position: relative; height: 44px; margin-bottom: 16px; }
+  .history-head > div { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+  .history-head h1 { font: 600 17px/22px var(--font); }
+  .history-head p { font: 400 12px/16px var(--font); }
+  .history-head .round-btn { width: 44px; height: 44px; }
+  .history-grid { display: flex; flex-direction: column; gap: 0; }
+  .history-grid > * { width: 100%; }
+  .history-stage { position: sticky; top: 0; z-index: 2; }
+  .archive-photo > img { height: auto; min-height: 240px; max-height: min(500px, calc(100vh - 330px)); }
+  .archive-photo .history-compare { height: clamp(240px, 70vw, 500px); }
+  .history-info h2 { margin-top: 16px; font-size: 16px; }
+  .history-today { margin-top: 14px; }
+  .history-archive { margin-top: 16px; }
+  .archive-timeline button { flex-basis: 72px; width: 72px; }
+  .archive-timeline img { width: 72px; height: 72px; border-radius: 12px; }
+  .history-location { margin-top: 20px; }
+  .history-map-toggle { display: block; min-height: 44px; }
+  .history-location-map { display: none; }
+  .history-location.open .history-location-map { display: block; }
+}
+.history-info .archive-license,
+.history-info .archive-credit-today { margin: 6px 0 0; color: var(--text-muted); font-size: 11px; line-height: 16px; }
+.history-info > a { display: inline-block; margin-top: 6px; font-size: 11px; }
+.archive-timeline button.active { background: none; box-shadow: none; }
+.history-photo-trust .trust-tag { font-size: 11px; padding: 3px 7px; }

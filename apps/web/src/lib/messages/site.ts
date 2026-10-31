@@ -1,5 +1,15 @@
 /** Site page: story, 3D viewer, about, history, tasks. */
 export const tr = {
+  "site.todayExists": "Bugünkü hali var",
+  "site.todayMissing": "Bu açının bugünkü hali yok",
+  "site.todayCompare": "Fotoğraftaki kaydırıcıyla o gün ↔ bugün karşılaştır.",
+  "site.todayLocate": "Fotoğrafçının durduğu yer aşağıdaki haritada. Oraya git; eski fotoğraf kamerada saydam görünür, hizalayıp çek.",
+  "site.todayUnknown": "Çekim yeri bilinmiyor; benzer açıyı bulup çekebilirsin.",
+  "site.takeAnother": "Sen de çek",
+  "site.takeToday": "Bugününü sen çek",
+  "site.showMap": "Haritayı aç",
+  "site.hideMap": "Haritayı kapat",
+
   // Scene: photos and 3D model
   "site.fitPhoto": "Sığdır",
   "site.fillPhoto": "Ekranı doldur",
@@ -205,6 +215,16 @@ export const tr = {
 } as const;
 
 export const en = {
+  "site.todayExists": "A present-day view is available",
+  "site.todayMissing": "This angle has no present-day photo",
+  "site.todayCompare": "Use the photo slider to compare then and now.",
+  "site.todayLocate": "The map below shows where the photographer stood. Go there, align the translucent old photo in the camera, and take your shot.",
+  "site.todayUnknown": "The original location is unknown; find a similar angle and take a photo.",
+  "site.takeAnother": "Take your own",
+  "site.takeToday": "Capture today’s view",
+  "site.showMap": "Show map",
+  "site.hideMap": "Hide map",
+
   // Scene: photos and 3D model
   "site.fitPhoto": "Fit",
   "site.fillPhoto": "Fill screen",
