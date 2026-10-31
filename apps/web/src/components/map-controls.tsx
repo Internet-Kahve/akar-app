@@ -7,10 +7,10 @@ import { useI18n } from "./i18n";
 
 const TICKS = Array.from({ length: 8 }, (_, i) => (i * Math.PI) / 4);
 const LETTERS: { label: MessageKey; x: number; y: number }[] = [
-  { label: "map.compassN", x: 50, y: 28 },
-  { label: "map.compassE", x: 75, y: 54 },
-  { label: "map.compassS", x: 50, y: 79 },
-  { label: "map.compassW", x: 25, y: 54 },
+  { label: "map.compassN", x: 50, y: 28.5 },
+  { label: "map.compassE", x: 73, y: 54 },
+  { label: "map.compassS", x: 50, y: 79.5 },
+  { label: "map.compassW", x: 27, y: 54 },
 ];
 /** A pointer that moved less than this tapped the dial. */
 const DRAG_PX = 4;
@@ -185,10 +185,10 @@ export function MapControls({
             <line
               key={a}
               className={i % 2 ? "dial-tick" : "dial-major"}
-              x1={50 + Math.sin(a) * (i % 2 ? 37 : 35.5)}
-              y1={50 - Math.cos(a) * (i % 2 ? 37 : 35.5)}
-              x2={50 + Math.sin(a) * (i % 2 ? 43 : 44.5)}
-              y2={50 - Math.cos(a) * (i % 2 ? 43 : 44.5)}
+              x1={50 + Math.sin(a) * (i % 2 ? 38 : 35.5)}
+              y1={50 - Math.cos(a) * (i % 2 ? 38 : 35.5)}
+              x2={50 + Math.sin(a) * (i % 2 ? 42 : 44.5)}
+              y2={50 - Math.cos(a) * (i % 2 ? 42 : 44.5)}
             />
           ))}
           {LETTERS.map(({ label, x, y }) => (
@@ -196,8 +196,8 @@ export function MapControls({
               {t(label)}
             </text>
           ))}
-          <circle className="dial-disc" cx="50" cy="50" r="15" />
-          <circle className="dial-north" cx="50" cy="10" r="5" />
+          <circle className="dial-disc" cx="50" cy="50" r="15.5" />
+          <circle className="dial-north" cx="50" cy="10" r="6" />
         </svg>
         <b>{tilted ? "2D" : "3D"}</b>
       </button>

@@ -80,7 +80,7 @@ export function ModelStage({
   const card = phase === "loading" && waited;
   return (
     <div
-      className="model-viewer"
+      className={`model-viewer${context === "detail" ? " detail-model" : ""}`}
       style={
         {
           "--scene-top": scene.backgroundTop,
@@ -93,6 +93,7 @@ export function ModelStage({
         key={attempt}
         {...viewer}
         scene={scene}
+        detail={context === "detail"}
         onProgress={onProgress}
         onSettled={setPhase}
       />

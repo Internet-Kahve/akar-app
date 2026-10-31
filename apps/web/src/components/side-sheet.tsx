@@ -55,6 +55,7 @@ export function TrustTag({
       }}
     >
       {t(`trust.${trust}`)}
+      <span className="info" aria-hidden="true">ⓘ</span>
     </button>
   );
 }

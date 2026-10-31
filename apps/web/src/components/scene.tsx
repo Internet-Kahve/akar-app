@@ -2,6 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  ImageIcon,
+  Box,
+  Move,
+  Info,
   Landmark,
   Store,
   Wrench,
@@ -205,7 +209,9 @@ function PhotoGallery({
                 </strong>
                 {photo.license && <span>{photo.license}</span>}
                 {source?.title && (
-                  <span lang={lang === "en" ? "tr" : undefined}>{source.title}</span>
+                  <span lang={lang === "en" ? "tr" : undefined}>
+                    {source.title}
+                  </span>
                 )}
               </figcaption>
             </figure>
@@ -329,7 +335,11 @@ export function Scene({
       <>
         <StoryPhoto key={photo.id} photo={photo} />
         {site.model && (
-          <div className="scene-media-switch" role="group" aria-label={t("site.viewSwitch")}>
+          <div
+            className="scene-media-switch"
+            role="group"
+            aria-label={t("site.viewSwitch")}
+          >
             <button className="btn secondary" aria-pressed={true}>
               {t("site.photo")}
             </button>
@@ -354,7 +364,9 @@ export function Scene({
   if (site.model && !flow) {
     const card = photoCard && !onPick && mode === "model" ? photo : undefined;
     return (
-      <div className="scene media-scene">
+      <div
+        className={`scene media-scene${context === "detail" ? " detail-scene" : ""}`}
+      >
         <div
           className="scene-media-switch"
           role="group"
@@ -365,7 +377,8 @@ export function Scene({
             aria-pressed={mode === "model"}
             onClick={() => setMode("model")}
           >
-            {t("site.model3d")}
+            <Box size={18} />
+            {context === "detail" ? t("site.model3dShort") : t("site.model3d")}
           </button>
           {(photos.length > 0 || !!photoId) && (
             <button
@@ -373,6 +386,7 @@ export function Scene({
               aria-pressed={mode === "photo"}
               onClick={() => setMode("photo")}
             >
+              <ImageIcon size={18} />
               {t("site.photo")}
             </button>
           )}
@@ -397,8 +411,10 @@ export function Scene({
           <div className="model-label">
             <i />
             {t("site.modelLabel")}
+            <Info size={13} />
           </div>
           <div className="model-hint">
+            <Move size={14} />
             {t("site.modelHint", {
               zoom: wide ? t("site.hintWheel") : t("site.hintTwoFingers"),
             })}
@@ -479,19 +495,22 @@ export function Scene({
             className="hotspot dome-spot"
             onClick={() => onHotspot("kubbe")}
           >
-            <span>1</span>{t("site.hotspotDome")}
+            <span>1</span>
+            {t("site.hotspotDome")}
           </button>
           <button
             className="hotspot courtyard-spot"
             onClick={() => onHotspot("avlu")}
           >
-            <span>2</span>{t("site.hotspotCourtyard")}
+            <span>2</span>
+            {t("site.hotspotCourtyard")}
           </button>
           <button
             className="hotspot bath-spot"
             onClick={() => onHotspot("akar")}
           >
-            <span>3</span>{t("site.hotspotWaqf")}
+            <span>3</span>
+            {t("site.hotspotWaqf")}
           </button>
         </>
       )}

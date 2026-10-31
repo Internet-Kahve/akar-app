@@ -7,13 +7,14 @@ import type {
   SiteModel,
   SiteSource,
 } from "@akar/domain";
-import { ChevronDown, ChevronUp, Pointer } from "lucide-react";
+import { ChevronDown, ChevronUp, MousePointerClick } from "lucide-react";
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
+import { liftGroundLayers } from "../lib/ground-layers";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addSceneLights, groundShadow, saturate } from "../lib/scene-light";
 import {
@@ -61,6 +62,7 @@ const PART_PULSE_MS = 700;
  */
 export default function ModelViewer({
   model,
+  detail = false,
   name,
   scene: cityScene,
   pose,
@@ -75,6 +77,7 @@ export default function ModelViewer({
   onSettled,
 }: {
   model: SiteModel;
+  detail?: boolean;
   name: string;
   scene: CityScene;
   pose?: CameraPose;
@@ -161,13 +164,19 @@ export default function ModelViewer({
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      // No tone mapping: the map draws the same light without it.
+      if (detail) {
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.05;
+        renderer.shadowMap.enabled = true;
+        // Three r186 removed PCFSoftShadowMap; its supported replacement is PCF.
+        renderer.shadowMap.type = THREE.PCFShadowMap;
+      }
       renderer.domElement.setAttribute("aria-label", labelRef.current);
       renderer.domElement.setAttribute("role", "img");
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 10000);
-      addSceneLights(scene, JSON.parse(lightKey));
+      const camera = new THREE.PerspectiveCamera(detail ? 38 : 40, 1, 0.01, 10000);
+      if (!detail) addSceneLights(scene, JSON.parse(lightKey));
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enablePan = false;
       controls.maxPolarAngle = Math.PI * 0.49;
@@ -265,10 +274,41 @@ export default function ModelViewer({
           // Turned like on the map, so a pose's azimuth (0 = from the north) means the real north.
           object.rotation.y = -THREE.MathUtils.degToRad(heading);
           object.updateMatrixWorld(true);
-          const box = new THREE.Box3().setFromObject(object);
+          const box = new THREE.Box3();
+          if (detail) {
+            object.traverse(item => {
+              if (!(item instanceof THREE.Mesh)) return;
+              item.castShadow = item.receiveShadow = true;
+              for (let node: THREE.Object3D | null = item; node && node !== object; node = node.parent) {
+                if (/^Yer_Golgesi/.test(node.name)) { item.visible = false; return; }
+                if (PRESENTATION_PARTS.test(node.name)) return;
+              }
+              box.expandByObject(item);
+            });
+          }
+          // Coplanar ground surfaces keep one drawing order from every angle (no flicker on the courtyard).
+          liftGroundLayers(object);
+          if (box.isEmpty()) box.setFromObject(object);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
+          if (detail) center.y = box.min.y + size.y * 0.25;
           object.position.sub(center);
+          if (detail) {
+            const R = size.length() / 2 * 1.3;
+            scene.add(new THREE.HemisphereLight(0xf4f1ea, 0x8c948f, 1.15));
+            const sun = new THREE.DirectionalLight(0xfff4e0, 2.1);
+            const az = THREE.MathUtils.degToRad((model.placement?.frontDeg ?? 180) + 40);
+            const el = THREE.MathUtils.degToRad(50);
+            const target = new THREE.Vector3(0, size.y * 0.25, 0);
+            sun.position.set(Math.sin(az)*Math.cos(el), Math.sin(el), -Math.cos(az)*Math.cos(el)).multiplyScalar(R*2.5).add(target);
+            sun.target.position.copy(target);
+            sun.castShadow = true;
+            sun.shadow.mapSize.set(2048,2048);
+            sun.shadow.bias = -0.0004;
+            sun.shadow.normalBias = R / 2048;
+            Object.assign(sun.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R*0.5, far:R*5 });
+            scene.add(sun, sun.target);
+          }
           scene.add(object);
           if (light.groundShadow > 0) {
             // Under the building only: the presentation ground disc and trees do not size it.
@@ -306,8 +346,9 @@ export default function ModelViewer({
           const root = object;
           const radius = Math.max(size.x, size.y, size.z, 1);
           const sphere = size.length() / 2 || 1;
-          camera.near = radius / 1000;
-          camera.far = radius * 20;
+          // As the prototype: a near plane this far out keeps enough depth precision for surfaces millimetres apart.
+          camera.near = sphere / 100;
+          camera.far = sphere * 30;
           camera.position.set(radius * 1.15, radius * 0.9, radius * 1.15);
           camera.updateProjectionMatrix();
           controls!.minDistance = radius * 0.35;
@@ -598,6 +639,15 @@ export default function ModelViewer({
           if (highlightRef.current?.length) select.current(highlightRef.current);
           reframe.current?.();
           if (poseRef.current) aim.current(poseRef.current);
+          else if (detail) {
+            const { width, height } = element.getBoundingClientRect();
+            const fit = sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
+            const d = Math.min(sphere * 4, fit * 0.95);
+            const az = THREE.MathUtils.degToRad(30), el = THREE.MathUtils.degToRad(28);
+            camera.position.set(Math.sin(az)*Math.cos(el)*d, Math.sin(el)*d, -Math.cos(az)*Math.cos(el)*d);
+            controls!.target.set(0,0,0);
+            controls!.update();
+          }
           aimedPose.current = poseRef.current;
           spin.current?.(!!tourRef.current);
           tourPose.current = tourRef.current ? JSON.stringify(poseRef.current ?? null) : "";
@@ -639,7 +689,7 @@ export default function ModelViewer({
       renderer?.forceContextLoss();
       renderer?.domElement.remove();
     };
-  }, [model.src, name, heading, groupsKey, partsKey, lightKey]);
+  }, [model.src, name, heading, model.placement?.frontDeg, groupsKey, partsKey, lightKey, detail]);
   // Before the pose: a sentence's camera is worked out for the frame of that sentence.
   useEffect(() => {
     reframe.current?.();
@@ -691,7 +741,7 @@ export default function ModelViewer({
             );
           }}
         >
-          <Pointer size={18} />
+          <MousePointerClick size={18} />
         </button>
       )}
       {inside !== null && (

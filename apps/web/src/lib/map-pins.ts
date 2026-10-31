@@ -81,18 +81,24 @@ export type PinCollection = GeoJSON.FeatureCollection<
   PinProperties
 >;
 
-/** Image id: a route stop is the numbered star in the route's colour; any other pin is its kind, ticked once finished. */
+/**
+ * Image id: a route stop is the numbered star in the route's colour; any other pin is its kind, ticked once finished,
+ * ringed in gold while selected.
+ */
 export const pinImageId = (
   kind: SiteKind,
   stop = 0,
   finished = false,
   accent: string = colors.cityBursa,
+  selected = false,
 ) =>
   stop
     ? `stop-${stop}-${accent}`
-    : finished
-      ? `pin-${kind}-done`
-      : `pin-${kind}`;
+    : selected
+      ? `pin-${kind}-selected`
+      : finished
+        ? `pin-${kind}-done`
+        : `pin-${kind}`;
 
 export function pinFeatures(
   sites: HeritageSite[],
@@ -108,6 +114,7 @@ export function pinFeatures(
       .map((site) => {
         const stop = routeIds.indexOf(site.id) + 1;
         const finished = look.finishedIds?.includes(site.id) ?? false;
+        const selected = site.id === selectedId;
         return {
           type: "Feature",
           geometry: { type: "Point", coordinates: site.coordinates },
@@ -116,10 +123,10 @@ export function pinFeatures(
             name: localize(look.lang ?? "tr", site.name, site.nameEn).text,
             kind: site.kind,
             stop,
-            icon: pinImageId(site.kind, stop, finished, look.accent),
+            icon: pinImageId(site.kind, stop, finished, look.accent, selected),
             finished,
             order: site.displayOrder ?? UNRANKED,
-            selected: site.id === selectedId,
+            selected,
             label: "",
           },
         };
@@ -144,7 +151,7 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "icon-anchor": "bottom",
       "icon-allow-overlap": true,
       // The prototype's size: its 44 px arch at 0.8 by zoom 16 and 0.66 by zoom 18 (here a 32 px canvas), so
-      // 1.1 and 0.9075; the selected pin is a quarter larger.
+      // 1.1 and 0.9075; the selected pin keeps the arch's full 44 px at every zoom, 2 px lower, drawn above the rest.
       "icon-size": [
         "interpolate",
         ["linear"],
@@ -152,9 +159,20 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
         16,
         ["case", ["get", "selected"], 1.375, 1.1],
         18,
-        ["case", ["get", "selected"], 1.134, 0.9075],
+        ["case", ["get", "selected"], 1.375, 0.9075],
       ],
-      "symbol-sort-key": ["get", "order"],
+      "icon-offset": [
+        "case",
+        ["get", "selected"],
+        ["literal", [0, 2 / 1.375]],
+        ["literal", [0, 0]],
+      ],
+      "symbol-sort-key": [
+        "case",
+        ["get", "selected"],
+        UNRANKED + 1,
+        ["get", "order"],
+      ],
     },
   };
   if (!labels) return [icons];
@@ -229,11 +247,17 @@ function loadSymbol(icon: string): Promise<HTMLImageElement> {
 const ARCH_PATH = "M20 1.5C26 5 33 11 33.5 20V33C33.5 34.6667 32.8333 36 31.5 37L22 45.5C20.6667 46.6333 19.3333 46.6333 18 45.5L8.5 37C7.16667 36 6.5 34.6667 6.5 33V20C7 11 14 5 20 1.5Z";
 const ARCH_SCALE = PIN_WIDTH / 44;
 
-function drawArch(ctx: CanvasRenderingContext2D, colour: string) {
+function drawArch(ctx: CanvasRenderingContext2D, colour: string, selected = false) {
   ctx.save();
   ctx.scale(ARCH_SCALE, ARCH_SCALE);
   ctx.translate(2, 2);
   const arch = new Path2D(ARCH_PATH);
+  if (selected) {
+    // The prototype's selected pin: a gold ring around the white edge.
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = colors.gold;
+    ctx.stroke(arch);
+  }
   ctx.fillStyle = colour;
   ctx.fill(arch);
   ctx.lineWidth = 2;
@@ -287,14 +311,14 @@ function stopImage(stop: number, accent: string) {
   return ctx.getImageData(0, 0, size, size);
 }
 
-async function pinImage(kind: SiteKind, finished: boolean) {
+async function pinImage(kind: SiteKind, finished: boolean, selected = false) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.ceil(PIN_WIDTH * PIXEL_RATIO);
   canvas.height = Math.ceil(PIN_HEIGHT * PIXEL_RATIO);
   // The pixels are read back at once, so the canvas stays on the CPU.
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
-  drawArch(ctx, ROLE_COLOURS[kindCategory[kind]]);
+  drawArch(ctx, ROLE_COLOURS[kindCategory[kind]], selected);
   ctx.drawImage(await loadSymbol(kindIcons[kind]), 8.7, 10.9, 14.5, 14.5);
   if (finished) drawTick(ctx);
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -359,7 +383,9 @@ async function addPinImages(
       async ([id, p]) =>
         [
           id,
-          p.stop ? stopImage(p.stop, accent) : await pinImage(p.kind, p.finished),
+          p.stop
+            ? stopImage(p.stop, accent)
+            : await pinImage(p.kind, p.finished, p.selected),
         ] as const,
     ),
   );

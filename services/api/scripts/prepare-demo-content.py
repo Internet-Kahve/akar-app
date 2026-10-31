@@ -255,7 +255,7 @@ for entry in editorial.eserleri_bul():
     if display_order is not None and (isinstance(display_order, bool) or not isinstance(display_order, int) or display_order < 1):
         raise ValueError(f'sira must be an integer of at least 1: {folder} {display_order!r}')
     gallery = sorted((p for p in photos if p['galleryPosition'] is not None), key=lambda p:p['galleryPosition'])
-    result['sites'].append(dict(id=sid, name=entry.get('uzun_ad') or entry['ad'], city=entry['il'],
+    result['sites'].append(dict(id=sid, name=entry['ad'], city=entry['il'],
         district=DISTRICTS.get(folder, entry['ilce']), year=entry['yil'], architect='—',
         patron=entry['yaptiran'], kind=KINDS[entry['tur']], coordinates=coords, minutes=max(1,round(sum(len(s['text'].split()) for s in stories)/130)) if stories else 0,
         displayOrder=display_order,

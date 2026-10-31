@@ -27,6 +27,8 @@ async function openUlucami(page: Page) {
     }),
   );
   await page.goto("/#view=detail&site=ulu-cami");
+  // The tasks open from the panel's «Bulmaca» row.
+  await page.getByRole("button", { name: /^Bulmaca/ }).click();
   await expect(page.getByRole("heading", { name: "Görevler" })).toBeVisible();
   return errors;
 }
@@ -66,6 +68,8 @@ test("the question can be retried, hints come one by one, a right answer earns t
     /puan/,
   );
   await quiz.getByRole("button", { name: "Tamam" }).click();
+  // The task window replaced the list; the list opens again from the row.
+  await page.getByRole("button", { name: /^Bulmaca/ }).click();
   await expect(earned).toHaveCount(1);
   await expect(earned).toContainText("Kündekâri");
   await expect(
@@ -93,6 +97,7 @@ test("the question can be retried, hints come one by one, a right answer earns t
     /puan/,
   );
   await done.getByRole("button", { name: "Tamam" }).click();
+  await page.getByRole("button", { name: /^Bulmaca/ }).click();
   await expect(earned).toHaveCount(2);
   await expect(page.locator(".badge-item.earned", { hasText: "Yerinde" })).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -119,6 +124,7 @@ test("on site the position decides: too far gets a friendly message, near the si
   await expect(field.locator(".task-result-meta")).toContainText("Yerinde");
   await expect(field).toContainText("Yeni rozet: Sahaflar Kapısı");
   await field.getByRole("button", { name: "Tamam" }).click();
+  await page.getByRole("button", { name: /^Bulmaca/ }).click();
   await expect(
     page.locator(".badge-item.earned", { hasText: "Yerinde" }),
   ).toHaveCount(1);

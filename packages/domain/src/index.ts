@@ -200,6 +200,11 @@ export interface SiteModel {
   triangles?: number | null;
   /** "İçini göster": part-name groups lifted top to bottom (first group first); absent or empty = no button. */
   coverGroups?: string[][];
+  /**
+   * Interior parts of the presentation file (`3d/model.json → ic_parcalar`): the map leaves them out, as the
+   * prototype's map file has none. Absent or empty = the map draws every part but the scenery.
+   */
+  interiorParts?: string[];
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
 }

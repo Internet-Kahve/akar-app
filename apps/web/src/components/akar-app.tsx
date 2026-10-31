@@ -12,17 +12,11 @@ import {
   Search,
   MapPin,
   Route,
-  Bookmark,
   Headphones,
-  BookOpen,
   ChevronLeft,
-  History,
   MessageSquare,
   X,
   Check,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Puzzle,
   Users,
 } from "lucide-react";
 import {
@@ -59,6 +53,7 @@ import {
   type ExploreTab,
   type PlaceMode,
 } from "./explore-panel";
+import { SiteDetail } from "./site-detail";
 import { SitePeek } from "./site-peek";
 import { SourceSheetProvider, WaqfSheet } from "./side-sheet";
 import { WelcomeCard } from "./welcome-card";
@@ -74,20 +69,19 @@ import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { MemoryActions } from "./memory-actions";
 import { SignInModal } from "./sign-in-modal";
-import { Modal, Notice, Motif, Tag } from "./ui";
+import { Modal, Notice, Tag } from "./ui";
 import {
   FieldTaskDialog,
   isFieldTask,
   isQuizTask,
   QuizTaskDialog,
-  SiteTasks,
   TaskPickBar,
   useSiteProgress,
   type FieldDone,
   type FieldTask,
 } from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
-import { apiUrl, getSupabase } from "../lib/supabase";
+import { apiUrl, demoContentUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
 import {
@@ -141,6 +135,7 @@ export function AkarApp() {
     [place, setPlace] = useState<PlaceMode>("home"),
     [nearPoint, setNearPoint] = useState<[number, number] | null>(null),
     [peekId, setPeekId] = useState<string>(),
+    [hoverId, setHoverId] = useState<string>(),
     [cityInView, setCityInView] = useState<CityRecord | null>(null),
     [flight, setFlight] = useState<MapFlight>(),
     [lang, setLang] = useState<Lang>("tr"),
@@ -282,7 +277,7 @@ export function AkarApp() {
               failed: t("verify.failed"),
             }),
         })
-      : createMockClient(storage);
+      : createMockClient(storage, demoContentUrl);
     void load();
     // The opening screen names the default city and draws its pattern: its record is read beside the catalog, not after it.
     void client.current.getCities().then(setCityRecords, () => {});
@@ -975,159 +970,11 @@ export function AkarApp() {
                     />
                   ) : (
                     <div className="detail-panel">
-                      <button
-                        className="back-to-map"
-                        onClick={() => go("map")}
-                      >
-                        <span>
-                          <ChevronLeft size={18} />
-                        </span>
-                        {t("app.map")}
-                      </button>
-                      <div className="detail-title">
-                        <div className="detail-title-row">
-                          <h1><Localized tr={site.name} en={site.nameEn} /></h1>
-                          <button
-                            className={`round-btn plain ${state.savedIds.includes(site.id) ? "saved" : ""}`}
-                            aria-label={t("app.save")}
-                            aria-pressed={state.savedIds.includes(site.id)}
-                            onClick={() =>
-                              void commit({ type: "save", siteId: site.id })
-                            }
-                          >
-                            <Bookmark size={19} />
-                          </button>
-                        </div>
-                        <p>{siteMeta(site)}</p>
-                      </div>
-                      <Motif />
-                      <p className="description">
-                        <Localized tr={site.description} en={site.descriptionEn} />
-                      </p>
-                      {site.stories.length > 0 ? (
-                        <>
-                          <p className="detail-chapters">
-                            {t(site.stories.length === 1 ? "app.chaptersOne" : "app.chapters", { count: site.stories.length })}
-                          </p>
-                          <div className="story-actions">
-                            <button
-                              className={`btn${state.readIds.includes(site.id) ? " finished" : ""}`}
-                              onClick={() => openStory(true)}
-                            >
-                              <Headphones size={18} />
-                              {t("site.listen", { minutes: site.minutes })}
-                            </button>
-                            <button
-                              className="btn secondary"
-                              onClick={() => openStory()}
-                            >
-                              <BookOpen size={18} />
-                              {t("app.read")}
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <Notice>{t("app.noStory")}</Notice>
-                      )}
-                      {showExperimental && (
-                        <p className="muted">
-                          {t("app.experimentalOn")}
-                        </p>
-                      )}
-                      <button
-                        className="detail-link"
-                        onClick={() => setOverlay("about")}
-                      >
-                        <span>
-                          <strong>{t("site.about")}</strong>
-                          <small>{t("site.aboutHint")}</small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      <button
-                        className="detail-link"
-                        onClick={() => go("history", site.id)}
-                      >
-                        <History size={18} />
-                        <span>
-                          <strong>{t("site.history")}</strong>
-                          <small>
-                            {site.historyImages?.length
-                              ? t(site.historyImages.length === 1 ? "site.historyCountOne" : "site.historyCount", { count: site.historyImages.length })
-                              : t("site.historyNone")}
-                          </small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      {showExperimental && (
-                        <div className="experience-grid">
-                          {[
-                            {
-                              icon: Puzzle,
-                              label: t("site.puzzle"),
-                              action: () => setOverlay("quiz"),
-                            },
-                            {
-                              icon: Users,
-                              label: t("site.together"),
-                              action: () => setOverlay("together"),
-                            },
-                          ].map(({ icon: Icon, label, action }) => (
-                            <button key={label} onClick={action}>
-                              <Icon size={21} />
-                              <span>{label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      <SiteTasks
-                        site={site}
-                        progress={progress}
-                        onOpen={(task) => setTaskDialog({ task })}
-                      />
-                      <button
-                        className="detail-link"
-                        onClick={() => setOverlay("memory")}
-                      >
-                        <MessageSquare size={18} />
-                        <span>
-                          <strong>{t("site.leaveTrace")}</strong>
-                          <small>{t("site.leaveTraceHint")}</small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      <button
-                        className="detail-link"
-                        onClick={() => setOverlay("memories")}
-                      >
-                        <span>
-                          <strong>{t("site.memories")}</strong>
-                          <small>
-                            {t(memoryCount === 1 ? "site.memoriesCountOne" : "site.memoriesCount", { count: memoryCount })}
-                          </small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      <div className="detail-bottom">
-                        <button
-                          className="btn secondary"
-                          onClick={() => void toggleRoute(site.id)}
-                        >
-                          <Route size={17} />
-                          {state.routeIds.includes(site.id)
-                            ? t("site.removeRoute")
-                            : t("site.addRoute")}
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => setOverlay("visit")}
-                        >
-                          <MapPin size={17} />
-                          {state.visitedIds.includes(site.id)
-                            ? t("site.visited")
-                            : t("site.imHere")}
-                        </button>
-                      </div>
+                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
+                        onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
+                        onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
+                        onMemories={() => setOverlay("memories")} onTask={(task) => setTaskDialog({ task })}
+                        nextStop={nextStop} onNextStop={selectSite} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1178,6 +1025,7 @@ export function AkarApp() {
                         routeIds={state.routeIds}
                         visitedIds={state.visitedIds}
                         selectedId={peekId}
+                        onHover={setHoverId}
                         onPick={pickSite}
                         onRoute={(id) => void toggleRoute(id)}
                         onOpenRoute={(id) => {
@@ -1211,11 +1059,7 @@ export function AkarApp() {
                   aria-expanded={!collapsed}
                   onClick={togglePanel}
                 >
-                  {collapsed ? (
-                    <PanelLeftOpen size={18} />
-                  ) : (
-                    <PanelLeftClose size={18} />
-                  )}
+                  <ChevronLeft size={16} />
                 </button>
                 {isDetail && site ? (
                   <Scene
@@ -1266,6 +1110,7 @@ export function AkarApp() {
                     <HeritageMap
                       sites={routeId && routeSites.length ? routeSites : filtered}
                       selectedId={peekId}
+                      highlightId={hoverId}
                       finishedIds={state.readIds}
                       {...(lookCity?.identity && {
                         routeColour: lookCity.identity.accent,
@@ -1358,7 +1203,7 @@ export function AkarApp() {
                     onCancel={() => setPick(null)}
                   />
                 )}
-                {!live && (
+                {!live && !isDetail && (
                   <div className="demo-label">
                     <span />
                     {t("app.demoLabel")}
@@ -1443,6 +1288,16 @@ export function AkarApp() {
       )}
       {overlay === "memories" && site && (
         <Modal title={t("site.memories")} onClose={() => setOverlay(null)}>
+          {/* The sample traces are counted on the detail panel's row, so they are listed here too. */}
+          {(site.sampleTraces ?? []).map((trace) => (
+            <article className="card memory-public" key={trace.id}>
+              <img src={trace.photo.src} alt={trace.photo.alt || t("memories.photoAlt")} />
+              <strong lang={tr}>{trace.author}</strong>
+              <p lang={tr}>{trace.text}</p>
+              {trace.photo.description && <small>{trace.photo.description}</small>}
+              <Tag>{t("site.sampleTrace")}</Tag>
+            </article>
+          ))}
           {approvedMemories(state, site.id).length ? (
             approvedMemories(state, site.id).map((m) => (
               <article className="card memory-public" key={m.id}>
@@ -1465,7 +1320,7 @@ export function AkarApp() {
                 </div>
               </article>
             ))
-          ) : (
+          ) : site.sampleTraces?.length ? null : (
             <div className="empty-state">
               <MessageSquare size={36} />
               <h3>{t("memories.emptyTitle")}</h3>

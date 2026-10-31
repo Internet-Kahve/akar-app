@@ -4,7 +4,6 @@
   /* Neutral until the active city's identity (§11.49) overrides them on `.app-shell`. */
   --sehir-aksan: #2f3b41;
   --sehir-acik: #c9d0d2;
-  --city-tint: color-mix(in srgb, var(--sehir-aksan) 13%, #ffffff);
   --bg: #edeeea;
   --surface: #f8f8f6;
   --text: #1a2328;
@@ -43,6 +42,17 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.72),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --glass-shadow: 0 10px 34px rgba(18, 38, 46, 0.14);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/*
+ * Tokens made from the city's colour. A custom property resolves where it is declared, so these are declared again
+ * wherever the city's colour is set (`.app-shell` takes the active city's identity, §11.49); declared on `:root` alone
+ * they would keep the neutral colour under every city.
+ */
+:root,
+.app-shell,
+[data-sehir] {
+  --city-tint: color-mix(in srgb, var(--sehir-aksan) 13%, #ffffff);
   --ground:
     radial-gradient(
       60% 45% at 12% 8%,
@@ -52,7 +62,6 @@
     radial-gradient(50% 40% at 92% 28%, rgba(201, 161, 59, 0.18), transparent 70%),
     radial-gradient(60% 45% at 38% 100%, rgba(176, 160, 132, 0.16), transparent 70%),
     #edeeea;
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 [data-contrast="high"] {
   --text: #080f1d;

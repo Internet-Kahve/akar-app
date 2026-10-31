@@ -38,6 +38,8 @@ export interface MapModelSite {
   placement: MapPlacement;
   /** The city's model light (§11.42); a change reloads the model. */
   light: SceneLight;
+  /** Interior parts left out on the map (`SiteModel.interiorParts`). */
+  interiorParts?: string[];
 }
 interface Entry {
   site: MapModelSite;
@@ -63,13 +65,15 @@ const LAYER_ID = "akar-models";
 const VIEW_MARGIN = 0.25;
 /**
  * The map draws the building only: presentation files carry ground discs, trees and scale figures that
- * would cover the street and the OSM blocks around the model. Removed before the first render, so nothing
+ * would cover the street and the OSM blocks around the model, and interior parts the map file of the prototype
+ * does not have (they would add hidden faces and shadows). Removed before the first render, so nothing
  * of theirs reached the GPU; materials may be shared with the building and are left alone.
  */
-function stripScenery(root: THREE.Object3D) {
+function stripScenery(root: THREE.Object3D, interior: string[] = []) {
   const scenery: THREE.Object3D[] = [];
   root.traverse((node) => {
-    if (node !== root && PRESENTATION_PARTS.test(node.name)) scenery.push(node);
+    if (node !== root && (PRESENTATION_PARTS.test(node.name) || interior.includes(node.name)))
+      scenery.push(node);
   });
   for (const node of scenery) node.removeFromParent();
 }
@@ -112,7 +116,11 @@ export class MapModelLayer implements CustomLayerInterface {
   private decoder: DRACOLoader | null = null;
   private loader: GLTFLoader | null = null;
   private readonly camera = new THREE.Camera();
+  /** Where a pass that only refreshes shadow maps draws its throwaway picture. */
+  private readonly offscreen = new THREE.WebGLRenderTarget(1, 1);
   private readonly projection = new THREE.Matrix4();
+  private readonly clip = new THREE.Matrix4();
+  private readonly eye = new THREE.Vector4();
   private rendered = false;
   private sites = new Map<string, MapModelSite>();
   private settings: MapSettings = { ...defaultMapSettings };
@@ -171,6 +179,7 @@ export class MapModelLayer implements CustomLayerInterface {
     this.loaded.clear();
     this.decoder?.dispose();
     this.renderer?.dispose();
+    this.offscreen.dispose();
     this.decoder = this.loader = this.renderer = this.map = null;
     this.rendered = false;
   }
@@ -244,18 +253,43 @@ export class MapModelLayer implements CustomLayerInterface {
     );
     this.rendered = true;
     renderer.resetState();
-    // The map may have resized its canvas since three.js saw it.
-    renderer.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    for (const entry of this.loaded.values()) {
-      this.camera.projectionMatrix.multiplyMatrices(
-        this.projection,
-        entry.matrix,
-      );
+    // three.js shades by the direction from each surface to the camera. The map hands over one matrix (model
+    // metres → clip), so the camera is put where the map's eye is in the model's metres and the projection is the
+    // rest of that matrix; with the camera left at the origin roofs and façades came out darker than the prototype.
+    const aim = (entry: Entry) => {
+      const clip = this.clip.multiplyMatrices(this.projection, entry.matrix);
+      this.eye.set(0, 0, 1, 0).applyMatrix4(this.camera.projectionMatrixInverse.copy(clip).invert());
+      if (Math.abs(this.eye.w) > 1e-12)
+        this.camera.position.set(this.eye.x / this.eye.w, this.eye.y / this.eye.w, this.eye.z / this.eye.w);
+      else this.camera.position.set(0, 0, 0);
+      this.camera.updateMatrixWorld();
+      this.camera.projectionMatrix.multiplyMatrices(clip, this.camera.matrixWorld);
       this.camera.projectionMatrixInverse
         .copy(this.camera.projectionMatrix)
         .invert();
-      renderer.shadowMap.needsUpdate = entry.shadowDirty;
-      entry.shadowDirty = false;
+    };
+    // MapLibre narrows the depth range of a 3D custom layer, and three.js writes shadow maps as hardware depth, which
+    // takes that range on: drawn inside it a shadow map shades every roof of its own model. So the shadow maps are
+    // drawn off screen on the full range, and the map's range is given back for the models themselves.
+    const dirty = [...this.loaded.values()].filter((e) => e.shadowDirty);
+    if (dirty.length) {
+      const range = gl.getParameter(gl.DEPTH_RANGE) as Float32Array;
+      gl.depthRange(0, 1);
+      renderer.setRenderTarget(this.offscreen);
+      for (const entry of dirty) {
+        aim(entry);
+        renderer.shadowMap.needsUpdate = true;
+        renderer.render(entry.scene, this.camera);
+        entry.shadowDirty = false;
+      }
+      renderer.setRenderTarget(null);
+      gl.depthRange(range[0]!, range[1]!);
+      renderer.resetState();
+    }
+    // The map may have resized its canvas since three.js saw it.
+    renderer.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    for (const entry of this.loaded.values()) {
+      aim(entry);
       renderer.render(entry.scene, this.camera);
     }
   }
@@ -378,7 +412,7 @@ export class MapModelLayer implements CustomLayerInterface {
       // Pose and building overrides can change while the same file is in flight. Reconcile keeps
       // that download, so place its result from the current catalog rather than the request's copy.
       site = this.sites.get(site.id)!;
-      stripScenery(gltf.scene);
+      stripScenery(gltf.scene, site.interiorParts);
       saturate(gltf.scene, site.light.saturation);
       gltf.scene.traverse((node) => {
         if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = true;
@@ -515,6 +549,9 @@ export function createMapModels(
                   src: s.model.src,
                   placement: s.model.placement,
                   light: sceneOf(s, scenes).light,
+                  ...(s.model.interiorParts?.length && {
+                    interiorParts: s.model.interiorParts,
+                  }),
                 },
               ]
             : [],

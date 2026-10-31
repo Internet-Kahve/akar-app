@@ -91,13 +91,16 @@ export function SitePeek({
       <button className="peek-close" aria-label={t("common.close")} onClick={onClose}>
         <X size={18} />
       </button>
-      <div className="peek-head">
-        <button className="peek-photo" aria-label={t("peek.openPage", { name: text(site.name, site.nameEn) })} onClick={onOpen}>
+      {/* As the prototype's card top: photo, name and line are one area that opens the site; the name is its button. */}
+      <div className="peek-head" onClick={onOpen}>
+        <div className="peek-photo">
           <SiteArtwork site={site} live={live} />
-        </button>
+        </div>
         <div>
           <h3>
-            <button onClick={onOpen}><Localized tr={site.name} en={site.nameEn} /></button>
+            <button aria-label={t("peek.openPage", { name: text(site.name, site.nameEn) })}>
+              <Localized tr={site.name} en={site.nameEn} />
+            </button>
           </h3>
           <p className="peek-meta">{siteMeta(site)}</p>
           <TrustTag trust={site.sources?.length ? "verified" : "representative"} quote={text(site.description, site.descriptionEn)} />
@@ -108,7 +111,7 @@ export function SitePeek({
         <>
           <div className="peek-actions">
             <button className="btn" onClick={onListen}>
-              <Headphones size={18} />
+              <Headphones size={20} />
               {t("site.listen", { minutes: site.minutes })}
             </button>
             {route}
@@ -122,7 +125,7 @@ export function SitePeek({
         <>
           <div className="peek-actions">
             <button className="btn" onClick={onOpen}>
-              <BookOpenText size={18} />
+              <BookOpenText size={20} />
               {t("peek.explore")}
             </button>
             {route}

@@ -43,3 +43,6 @@ Desktop.ini
 
 # Draco decoder copied from the locked Three.js package.
 /apps/web/public/draco/
+
+# Local demo content (npm run dev:content): a link to docs/documents-context/eserler and the generated catalog.
+/apps/web/public/icerik/

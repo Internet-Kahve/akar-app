@@ -30,6 +30,8 @@ test("a pin's image is its kind, ticked once finished; a route stop is the numbe
   assert.equal(pinImageId("han"), "pin-han");
   assert.equal(pinImageId("han", 0, true), "pin-han-done");
   assert.equal(pinImageId("han", 3, true, "#3D8285"), "stop-3-#3D8285");
+  assert.equal(pinImageId("han", 0, true, "#3D8285", true), "pin-han-selected");
+  assert.equal(pinImageId("han", 2, false, "#3D8285", true), "stop-2-#3D8285");
 });
 
 test("the star has eight points inside its box", () => {
@@ -92,8 +94,10 @@ test("the icons shrink as the visitor comes closer and are placed by rank, over 
     assert.equal(layer.source, PIN_SOURCE);
     // Pins give way to the city markers of the globe view.
     assert.equal(layer.minzoom, CITY_MARKER_MAX_ZOOM);
-    assert.deepEqual(layer.layout["symbol-sort-key"], ["get", "order"]);
   }
+  assert.deepEqual(names!.layout["symbol-sort-key"], ["get", "order"]);
+  // The selected pin is drawn last, over the others.
+  assert.deepEqual(icons!.layout["symbol-sort-key"], ["case", ["get", "selected"], 1000, ["get", "order"]]);
   const { layout } = icons!;
   assert.equal(layout["icon-allow-overlap"], true);
   assert.deepEqual(layout["icon-image"], ["get", "icon"]);

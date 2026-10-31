@@ -2,6 +2,10 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /** API mode is on only when the web app is pointed at a real API. */
 export const apiUrl = process.env.NEXT_PUBLIC_API_URL || undefined;
+/** Demo without an API on the real editorial content (`npm run dev:content`); otherwise the seed catalog. */
+export const demoContentUrl = process.env.NEXT_PUBLIC_DEMO_CONTENT
+  ? "/icerik/demo-content.json"
+  : undefined;
 
 let instance: SupabaseClient | null | undefined;
 

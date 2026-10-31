@@ -80,6 +80,7 @@ export type MapFlight =
 export function HeritageMap({
   sites,
   selectedId,
+  highlightId,
   onSelect,
   onClear,
   routeIds,
@@ -97,6 +98,8 @@ export function HeritageMap({
 }: {
   sites: HeritageSite[];
   selectedId?: string | undefined;
+  /** A site the list points at (a row under the pointer): its pin shows as selected, the camera stays. */
+  highlightId?: string | undefined;
   onSelect: (id: string) => void;
   /** A tap on the map itself, away from any site. */
   onClear?: () => void;
@@ -393,7 +396,7 @@ export function HeritageMap({
     // The pins draw over the route line; without them the schematic view keeps discovery usable.
     syncPins(
       m,
-      pinFeatures(sites, routeIds, selectedId, {
+      pinFeatures(sites, routeIds, highlightId ?? selectedId, {
         ...(finishedIds && { finishedIds }),
         accent: routeColour,
         lang,
@@ -406,7 +409,7 @@ export function HeritageMap({
     return () => {
       cancelled = true;
     };
-  }, [sites, selectedId, routeIds, loaded, finishedIds, routeColour, lang]);
+  }, [sites, selectedId, highlightId, routeIds, loaded, finishedIds, routeColour, lang]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);

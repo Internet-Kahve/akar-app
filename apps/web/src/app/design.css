@@ -3,6 +3,7 @@
    Everything that floats over the map or a page is a glass surface. */
 body {
   overscroll-behavior: none;
+  line-height: 20px;
 }
 .app-shell {
   background: var(--ground);
@@ -11,6 +12,9 @@ body {
 }
 .topbar,
 .side-panel,
+.global-search,
+.lang-switch,
+.panel-toggle,
 .chip,
 .map-zoom,
 .map-round,
@@ -26,6 +30,9 @@ body {
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .topbar,
   .side-panel,
+  .global-search,
+  .lang-switch,
+  .panel-toggle,
   .chip,
   .map-zoom,
   .map-round,
@@ -97,11 +104,26 @@ h1,
   color: #fff;
 }
 .tag.trust-tag {
+  height: 24px;
+  gap: 6px;
+  padding: 0 10px;
   cursor: pointer;
   border: 0;
   font: inherit;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.tag.trust-tag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.tag.trust-tag .info {
+  margin-left: 2px;
+  opacity: 0.7;
 }
 
 /* top bar */
@@ -143,7 +165,7 @@ h1,
   padding: 0 4px 0 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  background: var(--glass);
+  box-shadow: none;
   color: var(--text-muted);
 }
 .global-search input {
@@ -187,9 +209,8 @@ h1,
   flex: none;
   margin-left: auto;
   padding: 2px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  background: var(--glass);
 }
 .lang-switch button {
   min-width: 32px;
@@ -274,6 +295,11 @@ h1,
     linear-gradient(transparent, #000);
   mask-composite: intersect;
 }
+/* behind the globe (the canvas is clear outside it): the prototype's frosted scene grey, light in the middle */
+.map-wrap,
+.map-canvas {
+  background: radial-gradient(ellipse 75% 75% at 50% 50%, #e6e8e5 0%, #b4bbba 100%);
+}
 .main-stage {
   position: relative;
   grid-column: auto;
@@ -290,9 +316,15 @@ h1,
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 0 12px 12px 0;
-  background: var(--glass-solid);
-  box-shadow: var(--glass-shadow);
+  border-radius: 0 8px 8px 0;
+  color: var(--text);
+  /* The prototype's tab hangs off its frosted panel, so the browser draws it as glass over the map without blurring
+     what is behind (the map shows through a white veil); the same look here, where the tab sits on the map. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.panel-collapsed .panel-toggle svg {
+  transform: rotate(180deg);
 }
 .sheet-grip {
   display: none;
@@ -345,7 +377,21 @@ h1,
   color: var(--text);
 }
 .explore-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   margin: 16px 0 4px;
+}
+.explore-all {
+  padding: 0;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text);
+  transition: color 200ms;
+}
+.explore-all:hover {
+  color: var(--sehir-aksan);
 }
 .explore-heading h2 {
   display: flex;
@@ -388,7 +434,7 @@ h1,
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
   border-bottom: 1px solid var(--border);
   transition: background-color 200ms;
 }
@@ -402,8 +448,19 @@ h1,
   background: color-mix(in srgb, var(--sehir-aksan) 6%, transparent);
 }
 .site-row.selected {
+  border-radius: 8px;
   background: color-mix(in srgb, var(--sehir-aksan) 13%, var(--surface));
   box-shadow: inset 3px 0 0 var(--sehir-aksan);
+}
+.site-row.selected .site-photo,
+.site-row.selected .artwork-placeholder,
+.site-row.selected .architecture {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--sehir-aksan);
+}
+.site-row.selected .site-row-add {
+  background: var(--surface);
 }
 .site-row-main {
   display: grid;
@@ -425,6 +482,7 @@ h1,
 }
 .site-row strong {
   display: block;
+  margin-bottom: 2px;
   font-size: 16px;
   line-height: 22px;
   font-weight: 600;
@@ -437,7 +495,12 @@ h1,
   align-items: center;
   gap: 6px;
   font-size: 13px;
+  line-height: 20px;
   color: var(--text-muted);
+}
+.site-row small .dot {
+  width: 8px;
+  height: 8px;
 }
 .site-row em {
   display: inline-block;
@@ -528,7 +591,7 @@ h1,
   gap: 6px;
   height: 32px;
   padding: 0 12px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
   font-size: 13px;
   font-weight: 500;
@@ -621,6 +684,7 @@ h1,
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border: 1px solid transparent;
   border-radius: 22px;
 }
 .map-zoom button,
@@ -636,7 +700,14 @@ h1,
     transform 120ms;
 }
 .map-round {
+  border: 1px solid transparent;
   border-radius: 50%;
+}
+/* The prototype's press: the control sinks a little. */
+.map-zoom button:not(:disabled):active,
+.map-round:not(:disabled):active,
+.map-dial:not(:disabled):active {
+  transform: scale(0.93);
 }
 .map-zoom button + button {
   border-top: 1px solid var(--border);
@@ -651,11 +722,15 @@ h1,
   height: 84px;
   display: grid;
   place-items: center;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 50%;
   background: color-mix(in srgb, var(--gold) 7%, var(--surface));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
   cursor: grab;
   touch-action: none;
+}
+.map-dial.tilted {
+  background: var(--city-tint);
 }
 .map-dial svg {
   position: absolute;
@@ -702,6 +777,7 @@ h1,
   fill: var(--gold);
   stroke: var(--surface);
   stroke-width: 2.5;
+  filter: drop-shadow(0 1px 1.5px rgba(20, 27, 43, 0.3));
 }
 .map-dial:hover .dial-ring {
   stroke: var(--gold);
@@ -713,9 +789,8 @@ h1,
 }
 .site-peek {
   position: relative;
-  padding: 18px 16px 16px;
+  padding: 16px;
   border-radius: 24px;
-  background: var(--glass-solid);
   box-shadow:
     inset 0 6px 0 var(--sehir-aksan),
     0 12px 40px rgba(20, 27, 43, 0.22);
@@ -723,19 +798,25 @@ h1,
 }
 .peek-close {
   position: absolute;
-  top: 14px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
+  padding: 0;
   border-radius: 50%;
+  background: rgba(127, 127, 127, 0.16);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 .peek-head {
   display: grid;
   grid-template-columns: 96px 1fr;
   gap: 14px;
-  padding-right: 22px;
+  padding-right: 42px;
+  cursor: pointer;
 }
 .peek-photo {
   width: 96px;
@@ -743,6 +824,7 @@ h1,
   padding: 0;
   overflow: hidden;
   border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(20, 27, 43, 0.25);
 }
 .peek-photo img {
   width: 100%;
@@ -763,12 +845,17 @@ h1,
   color: inherit;
   text-align: left;
 }
+.peek-head h3 button:active {
+  transform: none;
+}
 .peek-meta {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
+  line-height: 20px;
   color: var(--text-muted);
 }
 .peek-text {
   margin: 12px 0 0;
+  line-height: 20px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -776,15 +863,26 @@ h1,
 }
 .peek-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 12px;
+  margin-top: 16px;
 }
 .peek-actions .btn {
   flex: 1;
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 15px;
+  line-height: 20px;
 }
 .peek-actions .round-btn {
   width: 44px;
   height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+  color: var(--text);
 }
 .peek-more {
   display: inline-flex;
@@ -2174,4 +2272,596 @@ h1,
   .model-hint {
     display: none;
   }
+}
+
+/* Site detail: dimensions and treatments from the editorial prototype. */
+.detail-panel .eb-bas {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: -20px -24px 0;
+  padding: 20px 24px 24px;
+  background: var(--sehir-aksan);
+  color: #fff;
+}
+.detail-panel .eb-bas.desenli::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--sehir-acik);
+  opacity: 0.1;
+  -webkit-mask:
+    var(--sehir-desen) 0 0/88px auto repeat,
+    linear-gradient(240deg, #000 20%, transparent 75%);
+  -webkit-mask-composite: source-in;
+  mask:
+    var(--sehir-desen) 0 0/88px auto repeat,
+    linear-gradient(240deg, #000 20%, transparent 75%);
+  mask-composite: intersect;
+}
+.detail-panel .eb-bas .geri {
+  background: none;
+  color: #fff;
+}
+.detail-panel .eb-bas .ikon-btn {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.detail-panel .eb-govde {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-top: 18px;
+}
+.detail-panel .eb-foto {
+  flex: none;
+  width: 88px;
+  height: 112px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #2a3346;
+}
+.detail-panel .eb-foto img,
+.detail-panel .eb-foto .gorsel-yok {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.detail-panel .eb-bas .panel-baslik {
+  color: #fff;
+  text-wrap: balance;
+}
+.detail-panel .eb-bas .panel-meta {
+  color: rgba(255, 255, 255, 0.85);
+}
+.detail-panel .kesif-yollari {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  display: grid;
+}
+.detail-panel .ky {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  color: var(--text);
+  transition: transform var(--sure-2) var(--egri);
+}
+.detail-panel .ky-yazi b {
+  display: block;
+  font: 600 19px/22px var(--font-display);
+  font-variant-numeric: lining-nums;
+}
+.detail-panel .ky-yazi small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 17px;
+  margin-top: 1px;
+}
+.detail-panel .ky-ok {
+  color: var(--primary);
+  transition: transform var(--sure-2) var(--egri);
+}
+.detail-panel .ky-ik {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  transition: transform var(--sure-2) var(--egri);
+}
+.detail-panel .ky-daire {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.detail-panel .ky-foto {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #c9bba0;
+  box-shadow: 0 1px 2px rgba(20, 27, 43, 0.12);
+}
+.detail-panel .ky-foto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: sepia(0.55) contrast(1.05);
+}
+.detail-panel .ky-foto img.bugun {
+  filter: none;
+  opacity: 0;
+  transition: opacity var(--sure-3);
+}
+.detail-panel .hb-bas,
+.detail-panel .kesif-bas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 12px/16px var(--font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.detail-panel .hikaye-blok {
+  margin-top: 4px;
+}
+.detail-panel .ikili {
+  --h: 48px;
+  display: flex;
+  margin-top: 8px;
+}
+.detail-panel .ikili button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--h);
+  border-radius: 999px;
+  font: 600 15px/1 var(--font);
+  transition: transform var(--sure-1);
+}
+.detail-panel .ikili button:active {
+  transform: scale(0.98);
+}
+/* sol yarım: sağ ucu sağdaki hapın yuvarlağına içbükey oturur (maske ::before'da, ✓ işareti kırpılmasın) */
+.detail-panel .ik-sol {
+  flex: 1;
+  color: var(--on-primary, #fff);
+}
+.detail-panel .ik-sol::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 999px 0 0 999px;
+  background: var(--primary);
+  -webkit-mask: radial-gradient(
+    circle at calc(100% + 8px) 50%,
+    transparent calc(var(--h) / 2 + 3.5px),
+    #000 calc(var(--h) / 2 + 4px)
+  );
+  mask: radial-gradient(
+    circle at calc(100% + 8px) 50%,
+    transparent calc(var(--h) / 2 + 3.5px),
+    #000 calc(var(--h) / 2 + 4px)
+  );
+}
+.detail-panel .ik-sol:active::before {
+  background: var(--primary-dark);
+}
+.detail-panel .ik-sol .bitti-tik {
+  right: auto;
+  left: -7px;
+}
+.detail-panel .ik-sag {
+  flex: none;
+  margin-left: -16px;
+  padding: 0 24px;
+  background: var(--yore-tint, var(--primary-light));
+  color: var(--yore-yazi, var(--primary));
+}
+.detail-panel .kesif-bas {
+  margin-top: 22px;
+}
+.detail-panel .kesif-bas + .kesif-yollari {
+  margin-top: 8px;
+}
+.detail-panel .derinlik {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 2px;
+}
+.detail-panel .derinlik i {
+  width: 5px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.detail-panel .derinlik i.d {
+  background: var(--gold);
+}
+.detail-panel .tam-kart {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px 16px 14px 18px;
+  border-radius: 18px;
+  background: var(--sehir-aksan);
+  color: #fff;
+  text-align: left;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--sehir-aksan) 30%, transparent);
+  transition: transform var(--sure-2) var(--egri);
+}
+.detail-panel .tam-kart.desenli::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--sehir-acik);
+  opacity: 0.14;
+  -webkit-mask:
+    var(--sehir-desen) 0 0/72px auto repeat,
+    linear-gradient(250deg, #000 15%, transparent 70%);
+  -webkit-mask-composite: source-in;
+  mask:
+    var(--sehir-desen) 0 0/72px auto repeat,
+    linear-gradient(250deg, #000 15%, transparent 70%);
+  mask-composite: intersect;
+}
+.detail-panel .tam-kart:active {
+  transform: scale(0.985);
+}
+.detail-panel .tk-yazi small {
+  display: block;
+  font: 600 11px/14px var(--font);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sehir-acik);
+}
+.detail-panel .tk-yazi b {
+  display: block;
+  margin-top: 2px;
+  font: 600 24px/28px var(--font-display);
+  color: #fff;
+}
+.detail-panel .tk-alt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+.detail-panel .tk-alt .derinlik i {
+  background: rgba(255, 255, 255, 0.25);
+}
+.detail-panel .tk-alt .derinlik i.d {
+  background: var(--gold);
+}
+.detail-panel .tk-ok {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  transition: transform var(--sure-2) var(--egri);
+}
+.detail-panel .tam-kart:hover .tk-ok,
+.detail-panel .tam-kart:focus-visible .tk-ok {
+  transform: translateX(3px);
+}
+.detail-panel .ky-yuzler {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 44px;
+}
+.detail-panel .ky-yuzler i {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 2px solid var(--surface);
+  font: 600 12px/1 var(--font);
+  font-style: normal;
+}
+.detail-panel .ky-yuzler i:nth-child(1) {
+  left: 0;
+  top: 1px;
+}
+.detail-panel .ky-yuzler i:nth-child(2) {
+  left: 19px;
+  top: 1px;
+  background: #f1e6cc;
+  color: #7a5a16;
+}
+.detail-panel .ky-yuzler i:nth-child(3) {
+  left: 9px;
+  top: 17px;
+  background: #e3ece6;
+  color: #2f5b45;
+}
+
+.detail-panel {
+  padding: 20px 24px;
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+}
+.detail-panel .panel-baslik {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 38px;
+}
+.detail-panel .panel-meta {
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.detail-panel .back-to-map {
+  gap: 12px;
+  color: white;
+  height: 32px;
+}
+.detail-panel .back-to-map span {
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  color: white;
+}
+.detail-panel .detail-save {
+  position: absolute;
+  right: 24px;
+  top: 20px;
+  color: white;
+  background: rgba(255, 255, 255, 0.14);
+  width: 32px;
+  height: 32px;
+}
+.detail-panel .detail-ornament {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 12px;
+  margin: 14px 0 12px;
+  color: var(--gold);
+}
+.detail-ornament span {
+  flex: 1;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+}
+.detail-panel .detail-summary {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 20px;
+}
+.detail-panel .ik-sag {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, var(--sehir-aksan) 55%, transparent);
+  color: var(--sehir-aksan);
+}
+.detail-panel .ikili button {
+  backdrop-filter: none;
+}
+.detail-panel .bitti-tik {
+  position: absolute;
+  left: -7px;
+  top: -5px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2f7855;
+  color: white;
+  border: 2px solid var(--surface);
+}
+.detail-panel .detail-task-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: #99751e;
+}
+.detail-task-ring > svg:first-child {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 4;
+}
+.detail-task-ring > svg:first-child circle + circle {
+  stroke: var(--gold);
+  stroke-dasharray: 1;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+.detail-panel .ky:hover .bugun {
+  opacity: 1;
+}
+.detail-panel .detail-next-stop {
+  margin-top: 16px;
+}
+.detail-panel .detail-task-ring.bitti {
+  color: var(--verified);
+}
+@media (min-width: 901px) {
+  .side-panel:has(.detail-panel) {
+    padding: 0;
+  }
+  /* The panel's pattern band is pulled out over a 24px padding; with no padding it would stick out on the right
+     and give the panel a sideways scroll bar. */
+  .side-panel:has(.detail-panel)::after {
+    bottom: 0;
+    margin: 0 0 -200px;
+  }
+}
+
+.detail-model {
+  --scene-top: #e6e8e5 !important;
+  --scene-bottom: #b4bbba !important;
+}
+.detail-scene .scene-media-switch {
+  left: 36px;
+  right: auto;
+  top: 16px;
+  flex-direction: row-reverse;
+}
+.detail-scene .scene-media-switch .btn {
+  font-size: 14px;
+  gap: 8px;
+  padding: 0 12px;
+  height: 32px;
+}
+.detail-scene .model-hint {
+  top: 24px;
+  right: 24px;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  background: none;
+  color: var(--text-muted);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.detail-scene .model-label {
+  top: auto;
+  bottom: 18px;
+  left: 24px;
+  background: none;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+@media (max-width: 900px) {
+  .detail-scene .model-hint {
+    display: none;
+  }
+  .detail-scene .scene-media-switch {
+    left: 16px;
+  }
+}
+.detail-panel .hikaye-blok {
+  display: flow-root;
+  margin-top: 18px;
+}
+.detail-panel .ik-sol {
+  padding: 0;
+}
+.detail-panel .ik-sag {
+  box-shadow:
+    inset 0 0 0 1.5px color-mix(in srgb, var(--sehir-aksan) 55%, transparent),
+    0 2px 8px rgba(20, 27, 43, 0.08);
+}
+.detail-panel .back-to-map:active,
+.detail-panel .detail-save:active {
+  transform: none;
+}
+.detail-scene .scene-media-switch,
+.detail-scene .model-show-parts,
+.detail-scene .model-inside {
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid transparent;
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+}
+.detail-scene .scene-media-switch .btn {
+  font: 600 13px/16px var(--font);
+  gap: 6px;
+  color: var(--text);
+}
+.detail-scene .scene-media-switch .btn[aria-pressed="true"] {
+  color: white;
+}
+.detail-scene .scene-media-switch svg {
+  width: 16px;
+  height: 16px;
+}
+.detail-scene .model-show-parts {
+  top: 16px;
+}
+.detail-scene .model-hint {
+  top: 27px;
+  right: 80px;
+  font: 500 13px/18px var(--font);
+}
+.detail-scene .model-label {
+  left: 36px;
+  bottom: 24px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #e7e4f1;
+  color: #5b4e86;
+  font: 500 12px/16px var(--font);
+}
+.detail-scene .model-label i {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+}
+.detail-scene .model-inside {
+  right: 24px;
+  bottom: 24px;
+  height: 40px;
+  min-height: 0;
+  padding: 0 14px;
+  font: 600 13px var(--font);
+  gap: 6px;
+  color: var(--text);
+}
+/* Keep the short story within reach in the mobile sheet. */
+@media (max-width: 900px) {
+  .detail-panel { display:flex; flex-direction:column; padding:16px 24px; }
+  .detail-panel .eb-bas { margin:0; padding:0; background:none; color:var(--text); overflow:visible; }
+  .detail-panel .eb-bas::before, .detail-panel .eb-foto, .detail-panel .back-to-map { display:none; }
+  .detail-panel .eb-govde { margin:0; padding-right:40px; }
+  .detail-panel .eb-bas .panel-baslik { color:var(--text); font-size:28px; line-height:34px; }
+  .detail-panel .eb-bas .panel-meta { color:var(--text-muted); font-size:12px; }
+  .detail-panel .detail-save { top:0; right:0; color:var(--sehir-aksan); background:var(--primary-light); }
+  .detail-panel .hikaye-blok { margin-top:16px; }
+  .detail-panel .detail-ornament { order:3; }
+  .detail-panel .detail-summary { order:4; }
 }

@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "npm run dev -w @akar/web",
     "dev:api": "bash services/api/scripts/web-api.sh",
+    "dev:content": "node apps/web/scripts/prepare-demo-content.mjs && NEXT_PUBLIC_DEMO_CONTENT=1 npm run dev -w @akar/web",
     "api": "npm run local -w @akar/api",
     "api:token": "npm run -s local:token -w @akar/api --",
     "build": "npm run build -w @akar/web",
