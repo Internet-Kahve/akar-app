@@ -14,7 +14,6 @@ import {
   Route,
   Headphones,
   ChevronLeft,
-  MessageSquare,
   X,
   Check,
   Users,
@@ -41,7 +40,6 @@ import {
   type Role,
   type SiteBadge,
   type SiteCategory,
-  type SiteTask,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap, type MapFlight } from "./heritage-map";
@@ -61,20 +59,18 @@ import { Cities } from "./city-scenes";
 import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Scene } from "./scene";
 import { HistoryView } from "./history-view";
+import { LivingMemory } from "./living-memory";
+import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { StoryPanel, StoryProgress } from "./story-panel";
 import { StoryFlowMap } from "./story-flow-map";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
-import { MemoryActions } from "./memory-actions";
 import { SignInModal } from "./sign-in-modal";
-import { Modal, Notice, Tag } from "./ui";
+import { Modal, Notice } from "./ui";
 import {
-  FieldTaskDialog,
   isFieldTask,
-  isQuizTask,
-  QuizTaskDialog,
   TaskPickBar,
   useSiteProgress,
   type FieldDone,
@@ -106,14 +102,14 @@ type View =
   | "story"
   | "profile"
   | "admin"
-  | "history";
+  | "history"
+  | "memories";
 type Overlay =
   | "memory"
   | "quiz"
   | "together"
   | "visit"
   | "about"
-  | "memories"
   | "reset"
   | null;
 /** Share of a phone's height the panel takes on a site's page; the scene stays above it. */
@@ -157,10 +153,7 @@ export function AkarApp() {
     ),
     // `null` = closed; the string says why the dialog opened ("" = user asked).
     [signIn, setSignIn] = useState<string | null>(null);
-  const [taskDialog, setTaskDialog] = useState<{
-    task: SiteTask;
-    result?: FieldDone;
-  } | null>(null);
+  const [puzzle, setPuzzle] = useState<{ start: number; found?: FieldDone } | null>(null);
   const [pick, setPick] = useState<{ task: FieldTask; hint: string } | null>(
     null,
   );
@@ -294,7 +287,7 @@ export function AkarApp() {
       }
     }).data.subscription;
     const readLocation = () => {
-      setTaskDialog(null);
+      setPuzzle(null);
       setPick(null);
       setPeekId(undefined);
       const p = new URLSearchParams(location.hash.slice(1));
@@ -310,6 +303,7 @@ export function AkarApp() {
           "profile",
           "admin",
           "history",
+          "memories",
         ].includes(v)
       )
         setView(v as View);
@@ -351,7 +345,7 @@ export function AkarApp() {
     if (id) setSiteId(id);
     setPeekId(undefined);
     setOverlay(null);
-    setTaskDialog(null);
+    setPuzzle(null);
     setPick(null);
     const p = new URLSearchParams({ view: next });
     if (id) p.set("site", id);
@@ -402,7 +396,10 @@ export function AkarApp() {
       if (!stillCurrent()) return;
       if (result.done) {
         setPick(null);
-        setTaskDialog({ task: current.task, result });
+        setPuzzle({
+          start: Math.max(0, (site?.tasks ?? []).findIndex((x) => x.id === current.task.id)),
+          found: result,
+        });
         taskFinished(result.earnedBadges);
       } else
         setPick({
@@ -485,7 +482,6 @@ export function AkarApp() {
   const site = state.sites.find(
     (s) => s.id === siteId && s.status === "published",
   );
-  const dialogTask = taskDialog?.task;
   const memoryCount = site ? approvedMemories(state, site.id).length : 0;
   // «Yalnız rotada» sentences lead to the next stop: they are read only on a route.
   const storySite = useMemo(() => {
@@ -545,7 +541,7 @@ export function AkarApp() {
     ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
     : undefined;
   const isDetail = ["detail", "story"].includes(view),
-    showMap = !["profile", "admin", "history"].includes(view),
+    showMap = !["profile", "admin", "history", "memories"].includes(view),
     showRoutes = tab === "routes" && !query;
   // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
   // to wait for, as soon as the page can show something.
@@ -875,6 +871,17 @@ export function AkarApp() {
               onSite={selectSite}
             />
           )}
+          {view === "memories" && site && (
+            <LivingMemory
+              key={site.id}
+              site={site}
+              state={state}
+              onBack={() => go("detail", site.id)}
+              onAdd={() => setOverlay("memory")}
+              onHistory={() => go("history", site.id)}
+              onAbout={() => setOverlay("about")}
+            />
+          )}
           {showMap && (
             <main
               id="main-content"
@@ -973,7 +980,7 @@ export function AkarApp() {
                       <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
-                        onMemories={() => setOverlay("memories")} onTask={(task) => setTaskDialog({ task })}
+                        onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
                         nextStop={nextStop} onNextStop={selectSite} />
                     </div>
                   )
@@ -1214,43 +1221,27 @@ export function AkarApp() {
           )}
         </>
       )}
-      {taskDialog &&
-        dialogTask &&
-        site &&
-        client.current &&
-        isQuizTask(dialogTask) && (
-          <QuizTaskDialog
-            key={dialogTask.id}
-            task={dialogTask}
-            client={client.current}
-            guest={guestPlayer}
-            done={progress.tasks.some((t) => t.taskId === dialogTask.id)}
-            onClose={() => setTaskDialog(null)}
-            onDone={taskFinished}
-            onSignIn={signInForBadges}
-          />
-        )}
-      {taskDialog &&
-        dialogTask &&
-        site &&
-        client.current &&
-        isFieldTask(dialogTask) && (
-          <FieldTaskDialog
-            key={dialogTask.id}
-            task={dialogTask}
-            site={site}
-            client={client.current}
-            guest={guestPlayer}
-            {...(taskDialog.result && { initial: taskDialog.result })}
-            onClose={() => setTaskDialog(null)}
-            onPickFromHome={() => {
-              setPick({ task: dialogTask, hint: "" });
-              setTaskDialog(null);
-            }}
-            onDone={taskFinished}
-            onSignIn={signInForBadges}
-          />
-        )}
+      {puzzle && site && client.current && (
+        <SitePuzzle
+          key={`${site.id}-${puzzle.start}-${puzzle.found ? "found" : "open"}`}
+          site={site}
+          client={client.current}
+          progress={progress}
+          guest={guestPlayer}
+          wide={wide}
+          start={puzzle.start}
+          found={puzzle.found}
+          onClose={() => setPuzzle(null)}
+          onDone={taskFinished}
+          onSignIn={signInForBadges}
+          onPick={(task) => {
+            if (isFieldTask(task)) setPick({ task, hint: "" });
+            setPuzzle(null);
+          }}
+          onBadges={() => go("profile")}
+          onToast={setToast}
+        />
+      )}
       {overlay === "memory" && site && (
         <MemoryModal
           site={site}
@@ -1285,53 +1276,6 @@ export function AkarApp() {
       )}
       {overlay === "about" && site && (
         <AboutModal site={site} onClose={() => setOverlay(null)} />
-      )}
-      {overlay === "memories" && site && (
-        <Modal title={t("site.memories")} onClose={() => setOverlay(null)}>
-          {/* The sample traces are counted on the detail panel's row, so they are listed here too. */}
-          {(site.sampleTraces ?? []).map((trace) => (
-            <article className="card memory-public" key={trace.id}>
-              <img src={trace.photo.src} alt={trace.photo.alt || t("memories.photoAlt")} />
-              <strong lang={tr}>{trace.author}</strong>
-              <p lang={tr}>{trace.text}</p>
-              {trace.photo.description && <small>{trace.photo.description}</small>}
-              <Tag>{t("site.sampleTrace")}</Tag>
-            </article>
-          ))}
-          {approvedMemories(state, site.id).length ? (
-            approvedMemories(state, site.id).map((m) => (
-              <article className="card memory-public" key={m.id}>
-                {m.photo && (
-                  <img src={m.photo} alt={t("memories.photoAlt")} />
-                )}
-                <strong lang={tr}>{m.author}</strong>
-                <p lang={tr}>{m.text}</p>
-                <Tag tone="success">
-                  {live ? t("memories.approved") : t("memories.demoApproved")}
-                </Tag>
-                <div className="memory-actions">
-                  <MemoryActions
-                    memory={m}
-                    siteName={site.name}
-                    role={role}
-                    own={state.memories.some((x) => x.id === m.id)}
-                    commit={commit}
-                  />
-                </div>
-              </article>
-            ))
-          ) : site.sampleTraces?.length ? null : (
-            <div className="empty-state">
-              <MessageSquare size={36} />
-              <h3>{t("memories.emptyTitle")}</h3>
-              <p>{t("memories.emptyText")}</p>
-            </div>
-          )}
-          <button className="btn full" onClick={() => setOverlay("memory")}>
-            {t("memories.add")}
-            <ArrowRight size={17} />
-          </button>
-        </Modal>
       )}
       {showExperimental && overlay === "together" && (
         <Modal title={t("site.together")} onClose={() => setOverlay(null)}>
@@ -1456,10 +1400,7 @@ export function AkarApp() {
             onClose={() => setCompletion(null)}
             onTasks={() => {
               setCompletion(null);
-              const task = (site.tasks ?? []).find(
-                (t) => !progress.tasks.some((p) => p.taskId === t.id),
-              );
-              if (task) setTaskDialog({ task });
+              setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) });
             }}
             onNextStop={(id) => {
               setCompletion(null);

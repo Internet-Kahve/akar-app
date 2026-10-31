@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -12,13 +11,12 @@ import {
   MessageCircle,
   Puzzle,
 } from "lucide-react";
-import type { HeritageSite, SiteTask } from "@akar/domain";
+import type { HeritageSite } from "@akar/domain";
 import type { SiteProgress } from "@akar/api-client";
 import { readingMinutes, wordCount } from "../lib/about-reading";
 import { siteMeta } from "../lib/site-meta";
 import { Localized, useI18n } from "./i18n";
-import { Modal, Notice } from "./ui";
-import { SiteTasks } from "./site-tasks";
+import { Notice } from "./ui";
 
 function Depth({ minutes }: { minutes: number }) {
   return (
@@ -47,7 +45,7 @@ export function SiteDetail({
   onAbout,
   onHistory,
   onMemories,
-  onTask,
+  onPuzzle,
   nextStop,
   onNextStop,
 }: {
@@ -62,13 +60,12 @@ export function SiteDetail({
   onAbout: () => void;
   onHistory: () => void;
   onMemories: () => void;
-  onTask: (task: SiteTask) => void;
+  onPuzzle: () => void;
   /** On a route: the stop after this one (the prototype's «Sonraki durak»). */
   nextStop?: HeritageSite;
   onNextStop?: (id: string) => void;
 }) {
   const { t } = useI18n();
-  const [tasksOpen, setTasksOpen] = useState(false);
   const cover =
     [...(site.storyPhotos ?? []), ...(site.photos ?? [])].find(
       (p) => p.id === site.coverPhotoId,
@@ -241,7 +238,7 @@ export function SiteDetail({
           </span>
           <ChevronRight className="ky-ok" size={18} />
         </button>
-        <button className="ky" onClick={() => setTasksOpen(true)}>
+        <button className="ky" onClick={onPuzzle}>
           <span className="ky-ik">
             <span className={`detail-task-ring${allDone ? " bitti" : ""}`}>
               <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -282,18 +279,6 @@ export function SiteDetail({
           {t("completion.nextStop", { name: nextStop.name })}
           <ArrowRight size={16} />
         </button>
-      )}
-      {tasksOpen && (
-        <Modal title={t("site.puzzle")} onClose={() => setTasksOpen(false)}>
-          <SiteTasks
-            site={site}
-            progress={progress}
-            onOpen={(task) => {
-              setTasksOpen(false);
-              onTask(task);
-            }}
-          />
-        </Modal>
       )}
     </>
   );
