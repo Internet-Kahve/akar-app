@@ -208,6 +208,16 @@ export interface CameraPose {
   elevationDeg: number;
   distance: number;
 }
+/** Where an English story text came from: a machine draft nobody has saved yet, or one an editor saved. */
+export type TranslationStatus = "machine" | "reviewed";
+/** One voice-over of a sentence: a recording of its plain or simple wording, in a language and a voice. */
+export interface StoryNarration {
+  variant: "text" | "simple";
+  lang: "tr" | "en";
+  voice: "female" | "male";
+  /** Playable mp3 address. */
+  url: string;
+}
 export interface StoryBlock {
   id: string;
   title: string;
@@ -217,6 +227,12 @@ export interface StoryBlock {
   textEn?: string;
   /** English of `simple`. */
   simpleEn?: string;
+  /** Source of `textEn`; absent when there is no English text or the API does not track it. */
+  textEnStatus?: TranslationStatus;
+  /** Source of `simpleEn`. */
+  simpleEnStatus?: TranslationStatus;
+  /** Voice-overs that match the current text; absent or empty = none recorded (the player then uses the browser voice). */
+  narrations?: StoryNarration[];
   photoId?: string;
   sourceId?: string;
   showCard?: boolean;

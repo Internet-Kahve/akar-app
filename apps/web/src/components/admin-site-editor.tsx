@@ -24,7 +24,7 @@ import {
   type MapPlacement,
   type Trust,
 } from "@akar/domain";
-import { routes } from "@akar/api-client";
+import { ApiError, routes, type AkarClient } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
@@ -77,6 +77,30 @@ const siteKey = (site: HeritageSite) =>
       ? { ...site, model: { ...site.model, placement: undefined } }
       : site,
   );
+/** The Turkish text of a failed voice-over or translation request. */
+function storyJobError(kind: "translate" | "narrate", error: unknown) {
+  if (error instanceof ApiError && error.status === 503)
+    return kind === "narrate"
+      ? "Seslendirme hizmeti yapılandırılmamış."
+      : "Çeviri hizmeti yapılandırılmamış.";
+  if (error instanceof ApiError && error.status === 429)
+    return "Günlük seslendirme sınırına ulaşıldı. Yarın yeniden dene.";
+  return error instanceof Error && error.message
+    ? error.message
+    : "İşlem yapılamadı. Biraz sonra yeniden dene.";
+}
+const translationLabels = {
+  machine: "makine çevirisi",
+  reviewed: "onaylı",
+} as const;
+/** EN column of a sentence in the panel: what is written and where it came from. */
+function englishLabel(s: StoryBlock) {
+  const parts = [
+    s.textEn && `Cümle ${translationLabels[s.textEnStatus ?? "reviewed"]}`,
+    s.simpleEn && `sade ${translationLabels[s.simpleEnStatus ?? "reviewed"]}`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "İngilizce yok";
+}
 export function SiteEditor({
   site,
   sites,
@@ -85,6 +109,8 @@ export function SiteEditor({
   onSave,
   loadPlacement,
   savePlacement,
+  narrateSite,
+  translateSite,
   live,
 }: {
   site: HeritageSite;
@@ -96,6 +122,10 @@ export function SiteEditor({
   loadPlacement: (siteId: string) => Promise<MapPlacement | null>;
   /** Saves the whole placement of the site's model (the `map-placement` command). */
   savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
+  /** Records the voice-overs of the saved story texts (`AkarClient.narrateSite`). */
+  narrateSite: AkarClient["narrateSite"];
+  /** Fills the empty English story texts with a machine draft (`AkarClient.translateSite`). */
+  translateSite: AkarClient["translateSite"];
   live: boolean;
 }) {
   const [draft, setDraft] = useState(() => prepareSite(site));
@@ -109,6 +139,9 @@ export function SiteEditor({
   const [preview, setPreview] = useState(false),
     [closing, setClosing] = useState(false);
   const [baseline, setBaseline] = useState(() => siteKey(draft));
+  // The running voice-over or translation request ("narrate:s1", "translate:all") and its outcome.
+  const [storyJob, setStoryJob] = useState<string | null>(null),
+    [storyNote, setStoryNote] = useState<{ ok: boolean; text: string } | null>(null);
   // The server has the site and its model: what a placement needs (409 otherwise).
   const persisted = Boolean(sites.find((s) => s.id === draft.id)?.model);
   const placement = usePlacementEditor({
@@ -120,6 +153,9 @@ export function SiteEditor({
     onSave: savePlacement,
   });
   const dirty = siteKey(draft) !== baseline || placement.dirty;
+  // Both requests work on the texts the server holds: the site must be saved there, with no edit left on this screen.
+  const storyJobsReady =
+    sites.some((s) => s.id === draft.id) && !dirty && !busy && !storyJob;
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -135,6 +171,31 @@ export function SiteEditor({
       ...p,
       stories: p.stories.map((s) => (s.id === id ? { ...s, ...patch } : s)),
     }));
+  }
+  /** Voice-over or translation of the whole site or one sentence; the editor then shows the site as the server has it. */
+  async function runStoryJob(kind: "translate" | "narrate", storyBlockId?: string) {
+    setStoryJob(`${kind}:${storyBlockId ?? "all"}`);
+    setStoryNote(null);
+    try {
+      const run =
+        kind === "translate"
+          ? await translateSite(draft.id, storyBlockId)
+          : await narrateSite(draft.id, storyBlockId);
+      const fresh = prepareSite(run.site);
+      setDraft(fresh);
+      setBaseline(siteKey(fresh));
+      const text =
+        "translated" in run
+          ? `${run.translated} cümlenin İngilizcesi makine çevirisiyle dolduruldu, ${run.skipped} cümleye dokunulmadı. Çeviriyi gözden geçirip kaydedince "onaylı" olur.`
+          : !live
+            ? "Demo sürümü ses üretmez; oynatıcı cihazın sesiyle okur."
+            : `${run.generated} ses kaydı üretildi${run.stale ? ` (${run.stale} tanesi değişen metnin yenisi)` : ""}, ${run.skipped} güncel kayıt olduğu gibi kaldı.`;
+      setStoryNote({ ok: true, text });
+    } catch (e) {
+      setStoryNote({ ok: false, text: storyJobError(kind, e) });
+    } finally {
+      setStoryJob(null);
+    }
   }
   function sourceField(id: string, patch: Partial<SiteSource>) {
     setDraft((p) => ({
@@ -680,6 +741,48 @@ export function SiteEditor({
                 Her cümleye bir fotoğraf ve kaynak bağla. Sıralama önizlemeye de
                 yansır.
               </p>
+              <div className="story-jobs">
+                <div className="row">
+                  <button
+                    className="btn secondary"
+                    disabled={!storyJobsReady || !draft.stories.length}
+                    onClick={() => void runStoryJob("translate")}
+                  >
+                    {storyJob === "translate:all"
+                      ? "Çevriliyor…"
+                      : "İngilizceye çevir"}
+                  </button>
+                  <button
+                    className="btn secondary"
+                    disabled={!storyJobsReady || !draft.stories.length}
+                    onClick={() => void runStoryJob("narrate")}
+                  >
+                    {storyJob === "narrate:all" ? "Seslendiriliyor…" : "Seslendir"}
+                  </button>
+                </div>
+                <small className="muted">
+                  İşlem sunucudaki kayıtlı metinleri kullanır: eserde
+                  kaydedilmemiş değişiklik varken çalışmaz. Çeviri yalnız boş
+                  İngilizce alanları doldurur; seslendirme yalnız eksik ya da
+                  metni değişmiş kayıtları üretir.
+                </small>
+                {!live && (
+                  <small className="muted">
+                    Demo sürümünde çeviri yer tutucudur ve ses üretilmez.
+                  </small>
+                )}
+                {storyNote &&
+                  (storyNote.ok ? (
+                    <p className="editor-saved" role="status">
+                      <Check size={16} />
+                      {storyNote.text}
+                    </p>
+                  ) : (
+                    <p className="error" role="alert">
+                      {storyNote.text}
+                    </p>
+                  ))}
+              </div>
               {!draft.stories.length && (
                 <Notice>İlk cümleyi ekleyerek anlatımı oluştur.</Notice>
               )}
@@ -742,6 +845,32 @@ export function SiteEditor({
                       }
                     />
                   </label>
+                  <div className="story-job-line">
+                    <small className="muted">
+                      EN: {englishLabel(s)} ·{" "}
+                      {s.narrations?.length
+                        ? `ses hazır (${s.narrations.length})`
+                        : "ses yok"}
+                    </small>
+                    <button
+                      className="btn soft"
+                      disabled={!storyJobsReady}
+                      onClick={() => void runStoryJob("translate", s.id)}
+                    >
+                      {storyJob === `translate:${s.id}`
+                        ? "Çevriliyor…"
+                        : "İngilizceye çevir"}
+                    </button>
+                    <button
+                      className="btn soft"
+                      disabled={!storyJobsReady}
+                      onClick={() => void runStoryJob("narrate", s.id)}
+                    >
+                      {storyJob === `narrate:${s.id}`
+                        ? "Seslendiriliyor…"
+                        : "Seslendir"}
+                    </button>
+                  </div>
                   <div className="cue-photo">
                     {photos.find((p) => p.id === s.photoId) && (
                       <img
@@ -808,6 +937,15 @@ export function SiteEditor({
                         value={s.simple}
                         onChange={(e) =>
                           storyField(s.id, { simple: e.target.value })
+                        }
+                      />
+                    </label>
+                    <label className="field">
+                      Sade anlatım (EN)
+                      <textarea
+                        value={s.simpleEn ?? ""}
+                        onChange={(e) =>
+                          storyField(s.id, { simpleEn: e.target.value })
                         }
                       />
                     </label>

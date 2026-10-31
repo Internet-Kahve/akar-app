@@ -12,6 +12,7 @@ import {
   type UserPreferences,
   type SiteBadge,
   type SiteTask,
+  type StoryBlock,
 } from "@akar/domain";
 import {
   createSeed,
@@ -131,6 +132,26 @@ export interface MemberPage {
   page: number;
   nextPage: number | null;
 }
+/** Result of `AkarClient.narrateSite`: the request's counts and the site as the server has it afterwards. */
+export interface NarrationRun {
+  /** Recordings made now (new and renewed). */
+  generated: number;
+  /** Up-to-date recordings that were left alone. */
+  skipped: number;
+  /** Recordings whose text had changed; renewed now and counted in `generated` too. */
+  stale: number;
+  site: HeritageSite;
+  snapshot: Snapshot;
+}
+/** Result of `AkarClient.translateSite`. */
+export interface TranslationRun {
+  /** Sentences whose empty English was filled with a machine draft. */
+  translated: number;
+  /** Sentences left alone: English already written, or no Turkish to translate. */
+  skipped: number;
+  site: HeritageSite;
+  snapshot: Snapshot;
+}
 export interface AkarClient {
   getSnapshot(): Promise<Snapshot>;
   /**
@@ -159,6 +180,17 @@ export interface AkarClient {
   saveSite(
     site: HeritageSite,
   ): Promise<{ site: HeritageSite; snapshot: Snapshot }>;
+  /**
+   * `POST /v1/admin/sites/:id/narrations`, editor and admin: records the missing and outdated voice-overs of the
+   * saved story texts, the whole site or one sentence. The server answers 503 without a voice service key and 429
+   * past its daily limit. The demo records nothing.
+   */
+  narrateSite(siteId: string, storyBlockId?: string): Promise<NarrationRun>;
+  /**
+   * `POST /v1/admin/sites/:id/translate`, editor and admin: fills the empty English story texts with a machine
+   * draft (`textEnStatus` `machine`), the whole site or one sentence; written English is never touched.
+   */
+  translateSite(siteId: string, storyBlockId?: string): Promise<TranslationRun>;
   reset(): Promise<Snapshot>;
   /** Playable quizzes of a published site, in order; [] when it has none. */
   getQuizzes(siteId: string): Promise<PlayableQuiz[]>;
@@ -223,6 +255,8 @@ interface QuizProgress {
   revealed: boolean;
   wrong: number;
 }
+/** Prefix of a demo "machine translation": the demo has no translator, so the Turkish text is kept and marked. */
+const DEMO_DRAFT_MARK = "[EN draft]";
 /** Points per correct quiz, like the server's `quiz.correct`. */
 const QUIZ_POINTS = 20;
 const quizIdOf = (siteId: string, n: number) => `${siteId}:quiz-${n + 1}`;
@@ -367,6 +401,14 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     }
     throw new Error("Görev bulunamadı.");
   };
+  /** The site a story request names, and (when given) its sentence; the server answers 404 for an unknown one. */
+  const storySite = (siteId: string, storyBlockId?: string) => {
+    const site = state.sites.find((s) => s.id === siteId);
+    if (!site) throw new Error("Eser bulunamadı.");
+    if (storyBlockId !== undefined && !site.stories.some((s) => s.id === storyBlockId))
+      throw new Error("Hikâye cümlesi bulunamadı.");
+    return site;
+  };
   /** Marks a task done (on site once, always on site) and earns its badges; returns the ones earned now. */
   const finishTask = (site: HeritageSite, task: SiteTask, onSite: boolean) => {
     const held = siteProgress.tasks.find((t) => t.taskId === task.id);
@@ -464,6 +506,49 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     async saveSite(site) {
       const snapshot = persist(reduceSnapshot(state, { type: "site", site }));
       return { site: snapshot.sites.find((s) => s.id === site.id)!, snapshot };
+    },
+    async narrateSite(siteId, storyBlockId) {
+      const site = storySite(siteId, storyBlockId);
+      // The demo has no voice service: nothing is recorded, and the player keeps the browser voice.
+      return {
+        generated: 0,
+        skipped: 0,
+        stale: 0,
+        site: structuredClone(site),
+        snapshot: structuredClone(state),
+      };
+    },
+    async translateSite(siteId, storyBlockId) {
+      const before = storySite(siteId, storyBlockId);
+      let translated = 0,
+        skipped = 0;
+      const stories = before.stories.map((s) => {
+        if (storyBlockId !== undefined && s.id !== storyBlockId) return s;
+        const patch: Partial<StoryBlock> = {};
+        if (!s.textEn?.trim() && s.text.trim()) {
+          patch.textEn = `${DEMO_DRAFT_MARK} ${s.text}`;
+          patch.textEnStatus = "machine";
+        }
+        if (!s.simpleEn?.trim() && s.simple.trim()) {
+          patch.simpleEn = `${DEMO_DRAFT_MARK} ${s.simple}`;
+          patch.simpleEnStatus = "machine";
+        }
+        if (Object.keys(patch).length) translated++;
+        else skipped++;
+        return { ...s, ...patch };
+      });
+      const snapshot = persist({
+        ...state,
+        sites: state.sites.map((x) =>
+          x.id === siteId ? { ...x, stories } : x,
+        ),
+      });
+      return {
+        translated,
+        skipped,
+        site: snapshot.sites.find((x) => x.id === siteId)!,
+        snapshot,
+      };
     },
     async reset() {
       return persist(createSeed(), {}, { tasks: [], badges: [] });

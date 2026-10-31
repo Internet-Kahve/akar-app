@@ -325,6 +325,8 @@ export function Admin({
   saveSite,
   loadPlacement,
   savePlacement,
+  narrateSite,
+  translateSite,
   live,
   mapSettings,
   saveMapSettings,
@@ -340,6 +342,8 @@ export function Admin({
   saveSite: (site: HeritageSite) => Promise<HeritageSite>;
   loadPlacement: AkarClient["getMapPlacement"];
   savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
+  narrateSite: AkarClient["narrateSite"];
+  translateSite: AkarClient["translateSite"];
   live: boolean;
   mapSettings: MapSettings;
   saveMapSettings: (settings: MapSettings) => Promise<MapSettings>;
@@ -580,6 +584,8 @@ export function Admin({
             onSave={saveSite}
             loadPlacement={loadPlacement}
             savePlacement={savePlacement}
+            narrateSite={narrateSite}
+            translateSite={translateSite}
             live={live}
           />
         ) : tab === "members" && role === "admin" ? (
