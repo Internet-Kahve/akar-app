@@ -32,7 +32,7 @@ UI yalnızca `AkarClient.getSnapshot()`, `dispatch(command)` ve `reset()` çağ�
 | `POST /v1/visits/verify`                             | `siteId`, koordinat, accuracy, zaman; backend geofence sonucu                 |
 | `GET /v1/quizzes/:id`, `POST /v1/quizzes/:id/submit` | Cevap anahtarı client'a verilmez; sunucu sonuç/açıklama/puan döndürür         |
 | `POST /v1/site-tasks/:id/answer`, `POST /v1/site-tasks/:id/complete` | Eser görevi (§11.44): cevap sunucuda denetlenir, saha görevi yerinde (GPS) ya da evden; misafirde kayıt yok |
-| `POST /v1/admin/sites/:id/narrations`, `POST /v1/admin/sites/:id/translate` | Hikâye seslendirmesi (Deepgram) ve boş İngilizce metinlerin makine çevirisi (§11.56); editör; `SiteDetail.stories[].narrations` (`audioMediaId` alanları kalktı) |
+| `POST /v1/admin/sites/:id/narrations`, `POST /v1/admin/sites/:id/translate` | Hikâye seslendirmesi (Deepgram) ve boş İngilizce metinlerin makine çevirisi (§11.56); editör; `SiteDetail.stories[].narrations` (`audioMediaId` alanları kalktı). İstemci: `AkarClient.narrateSite(siteId, storyBlockId?)` ve `translateSite(siteId, storyBlockId?)` sayıları döner ve eseri yeniden okur; `StoryBlock.narrations[].url` medya listesindeki ses dosyasının adresidir; `saveSite` `simpleEn`'i de gönderir (§11.58) |
 | `GET /v1/me/site-progress`                           | Tamamlanan eser görevleri ve kazanılan eser rozetleri                         |
 | `POST /v1/media/uploads`                             | Tip/boyut doğrulamalı signed upload; kalıcı medya ID                          |
 | `POST /v1/memories`                                  | `{siteId,text,mediaId?}`; zorunlu başlangıç `pending`                         |

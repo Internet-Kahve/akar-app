@@ -384,3 +384,26 @@ test("mock: savePreferences merges the given keys, null clears one, a missing ke
   assert.deepEqual(await c.savePreferences({ voiceGender: null }), { siteLang: "en", voiceLang: "tr", voiceGender: null });
   assert.deepEqual(await c.savePreferences({}), { siteLang: "en", voiceLang: "tr", voiceGender: null });
 });
+test("mock: translate marks empty English as machine draft and leaves written English; narrate records nothing", async () => {
+  const c = createMockClient(storage());
+  const site = (await c.getSnapshot()).sites.find((s) => s.stories.length > 1)!;
+  const [first, second] = site.stories;
+  await c.saveSite({
+    ...site,
+    stories: site.stories.map((s) =>
+      s.id === first!.id ? { ...s, textEn: "Written", simpleEn: "Plain" } : { ...s, textEn: "", simpleEn: "" },
+    ),
+  });
+  const one = await c.translateSite(site.id, second!.id);
+  assert.equal(one.translated, 1);
+  const done = one.site.stories.find((s) => s.id === second!.id)!;
+  assert.equal(done.textEnStatus, "machine");
+  assert.match(done.textEn!, /^\[EN draft\] /);
+  assert.equal(one.site.stories.find((s) => s.id === first!.id)!.textEn, "Written");
+  const all = await c.translateSite(site.id);
+  assert.equal(all.site.stories.find((s) => s.id === second!.id)!.textEn, done.textEn);
+  assert.equal(all.site.stories.find((s) => s.id === first!.id)!.textEnStatus, undefined);
+  const voices = await c.narrateSite(site.id);
+  assert.deepEqual([voices.generated, voices.skipped, voices.stale], [0, 0, 0]);
+  await assert.rejects(c.narrateSite(site.id, "no-such"));
+});
