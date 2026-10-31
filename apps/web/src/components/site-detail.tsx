@@ -217,7 +217,7 @@ export function SiteDetail({
         <button className="ky" onClick={onMemories}>
           <span className="ky-ik">
             {traces.length ? (
-              <span className="ky-yuzler">
+              <span className="ky-yuzler" aria-hidden="true">
                 {traces.slice(0, 3).map((trace) => (
                   <i key={trace.id}>{initial(trace.author)}</i>
                 ))}

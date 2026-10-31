@@ -29,6 +29,7 @@ import {
 } from "@akar/domain";
 import { useCityIdentity, useCityScene } from "./city-scenes";
 import { ModelStage } from "./model-stage";
+import { TrustTag } from "./side-sheet";
 import { Modal, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import {
@@ -878,7 +879,7 @@ function ChapterView({
         <div>{body}</div>
       )}
       <div className="about-chapter-foot">
-        <Tag tone={trust}>{t(`trust.${trust}`)}</Tag>
+        <TrustTag trust={trust} sources={sources.map((title) => ({ title }))} />
         {sources.length > 0 && (
           <button
             className="about-sources-toggle"
@@ -953,7 +954,7 @@ function BlockView({
       )}
       {block.trust !== trust && (
         <div className="about-p-trust">
-          <Tag tone={block.trust}>{t(`trust.${block.trust}`)}</Tag>
+          <TrustTag trust={block.trust} quote={block.kind === "inscription" ? block.original : block.text} />
         </div>
       )}
       {photos.length > 0 && <PhotoGroup photos={photos} onOpen={onPhotos} />}

@@ -3184,3 +3184,4 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 @media (min-width: 900px) {
   .about-page .about-nav { padding-inline: max(48px, calc((100% - 1360px) / 2 + 48px)); }
 }
+.story-photo-card:not(:disabled):active { transform: none; }
