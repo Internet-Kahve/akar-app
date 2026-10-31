@@ -1187,6 +1187,15 @@ export function AkarApp() {
                     />
                   </>
                 )}
+                {view === "story" && storySite && !wide && (
+                  <button
+                    className="round-btn story-stage-close"
+                    aria-label={t("site.closeStory")}
+                    onClick={() => go("detail", site!.id)}
+                  >
+                    <X size={18} />
+                  </button>
+                )}
                 {view === "story" && storySite && (
                   <StoryProgress
                     stories={storySite.stories}

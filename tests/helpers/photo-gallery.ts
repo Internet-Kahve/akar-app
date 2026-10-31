@@ -200,7 +200,7 @@ export function photoGalleryTests() {
       ).toBe(true);
       if (model) {
         await page
-          .getByRole("button", { name: "3B model", exact: true })
+          .getByRole("button", { name: "3D", exact: true })
           .click();
         await expect(page.locator(".model-viewer canvas")).toBeVisible();
         const fits = await page
@@ -249,7 +249,7 @@ export function photoGalleryTests() {
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    await page.getByRole("button", { name: "3B model", exact: true }).click();
+    await page.getByRole("button", { name: "3D", exact: true }).click();
     await expect(page.locator(".model-viewer canvas")).toBeVisible();
   });
 
@@ -264,9 +264,9 @@ export function photoGalleryTests() {
     });
     const shown = page.locator(".story-photo-main");
     await expect(shown).toHaveAttribute("alt", "Yalnız hikâyeye ait fotoğraf");
-    await page.getByRole("button", { name: "Devam et", exact: true }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
     await expect(shown).toHaveAttribute("alt", "Eser fotoğrafı 3");
-    await page.getByRole("button", { name: "Devam et", exact: true }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
     await expect(gallery.locator("figure")).toHaveCount(0);
     await expect(gallery.getByRole("status")).toHaveText(
       "Bu bölümün fotoğrafı bulunamadı.",
@@ -274,7 +274,7 @@ export function photoGalleryTests() {
     await expect(
       page.getByRole("group", { name: "Fotoğraf gezinme" }),
     ).toHaveCount(0);
-    await page.getByRole("button", { name: "3B model", exact: true }).click();
+    await page.getByRole("button", { name: "3D", exact: true }).click();
     await expect(page.locator(".model-viewer canvas")).toBeVisible();
     await page.getByRole("button", { name: "Fotoğraf", exact: true }).click();
     await expect(gallery.getByRole("status")).toHaveText(

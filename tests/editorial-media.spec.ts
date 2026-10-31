@@ -71,7 +71,7 @@ test("part cards and story interiors work without reloading the model between se
   await canvas.evaluate((el) =>
     el.setAttribute("data-story-canvas", "retained"),
   );
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Dışını göster" }),
   ).toHaveAttribute("aria-pressed", "true");

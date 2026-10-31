@@ -105,7 +105,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Oku", exact: true }).click();
   await page.getByLabel("Sade anlatım").check();
   for (let i = 0; i < 8; i++)
-    await page.getByRole("button", { name: "Devam et", exact: true }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
   const finished = page.getByRole("dialog");
   await expect(finished).toContainText("Hikâye tamamlandı");
@@ -385,8 +385,8 @@ test("reading keeps the chosen sentence while the list follows it, and the visit
 }) => {
   await page.goto("/#view=detail&site=ulu-cami");
   await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   const count = page.locator(".story-count");
   await expect(count).toHaveText("3 / 9");
   await page.waitForTimeout(1200);

@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
-  ChevronRight,
   Headphones,
   Pause,
   Play,
@@ -13,7 +12,8 @@ import {
 import type { HeritageSite, StoryBlock } from "@akar/domain";
 import { sentenceSeconds, storySeconds, clock } from "../lib/story-time";
 import { writePreference } from "../lib/preferences";
-import { TrustTag } from "./side-sheet";
+import { useWide } from "./about-reading";
+import { SourceLink, TrustTag } from "./side-sheet";
 import { storyText } from "../lib/story-text";
 import type { MessageKey } from "../lib/messages";
 import { Localized, useI18n } from "./i18n";
@@ -22,20 +22,10 @@ const RATES = [1, 1.25, 1.5];
 /** Scroll events this long after a wheel or a finger still belong to the visitor (momentum). */
 const HAND_SCROLL_MS = 900;
 
-function SourceLine({ site, block }: { site: HeritageSite; block: StoryBlock }) {
-  const { t, lang } = useI18n();
-  const source = site.sources?.find((s) => s.id === block.sourceId);
-  const title = source?.title || site.source;
-  return title ? (
-    <p className="story-source-line">
-      {t("site.sourceLabel")}{" "}
-      <span lang={lang === "en" ? "tr" : undefined}>{title}</span>
-      {source?.page ? ` · ${t("site.pageShort", { page: source.page })}` : ""}
-    </p>
-  ) : null;
-}
-
-/** The numbered sentences with the player under them. Listening moves through the sentences by itself. */
+/**
+ * The numbered sentences with the player under them; listening moves through them by itself. On a phone the
+ * list is a sheet under the scene, and listening shows one sentence on a card over it.
+ */
 export function StoryPanel({
   site,
   index,
@@ -54,7 +44,9 @@ export function StoryPanel({
   lang?: "tr" | "en";
 }) {
   const { t } = useI18n();
+  const wide = useWide();
   const [listen, setListen] = useState(startListening),
+    [listOpen, setListOpen] = useState(!startListening),
     [playing, setPlaying] = useState(startListening),
     [rate, setRate] = useState(1),
     [simple, setSimple] = useState(false),
@@ -140,56 +132,129 @@ export function StoryPanel({
   const elapsed = stories
     .slice(0, index)
     .reduce((sum, s) => sum + sentenceSeconds(s.text), 0);
+  const card = !wide && !listOpen;
+  const chooseMode = (next: boolean) => {
+    setListen(next);
+    setListOpen(!next);
+    if (!next) setPlaying(false);
+    writePreference("akar.mod", next ? "dinle" : "oku");
+  };
+  const sourceOf = (s: StoryBlock) =>
+    (site.sources ?? [])
+      .filter((source) => source.id === s.sourceId)
+      .map((source) => ({
+        title: source.title,
+        ...(source.page && { detail: t("site.pageShort", { page: source.page }) }),
+      }));
+  const current = sourceOf(block)[0];
+  const shownNow = storyText(block, simple, lang);
+  const player = (
+    <div className="story-player">
+      {wide ? (
+        <span className="story-clock">
+          {clock(elapsed / rate)} / {clock(storySeconds(stories) / rate)}
+        </span>
+      ) : (
+        <button className="story-mode-link" onClick={() => chooseMode(!listen)}>
+          {listen ? t("site.read") : t("site.listenMode")}
+        </button>
+      )}
+      <div className="story-transport">
+        <button aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)}>
+          <SkipBack size={18} />
+        </button>
+        <button
+          className="story-play"
+          aria-label={playing ? t("site.stopAudio") : t("site.startAudio")}
+          onClick={() => {
+            if (!listen) setListen(true);
+            setPlaying(!playing);
+          }}
+        >
+          {playing ? <Pause size={22} /> : <Play size={22} />}
+        </button>
+        <button aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)}>
+          <SkipForward size={18} />
+        </button>
+      </div>
+      <button
+        className="story-rate"
+        aria-label={t("site.speechRate", { rate })}
+        onClick={() => setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)}
+      >
+        {rate}x
+      </button>
+    </div>
+  );
+  const problem = error && (
+    <p role="alert" className="error">
+      {t(error)}
+    </p>
+  );
+  const position = (
+    <span className={card ? "sayac story-count" : "sr-only story-count"}>
+      {index + 1} / {stories.length}
+    </span>
+  );
+  if (card)
+    return (
+      <div className="story-panel kart">
+        <button className="story-grip" aria-label={t("site.storyOpenList")} onClick={() => setListOpen(true)}>
+          <i />
+        </button>
+        <div className="story-card-top">
+          {position}
+          <TrustTag trust={block.trust} quote={block.text} sources={sourceOf(block)} />
+        </div>
+        <p className="story-card-text">
+          <Localized tr={shownNow.tr} en={shownNow.en} />
+        </p>
+        {(current || site.source) && (
+          <SourceLink
+            label={
+              <>
+                {t("site.sourceLabel")} {current?.title ?? site.source}
+                {current?.detail ? ` · ${current.detail}` : ""}
+              </>
+            }
+            trust={block.trust}
+            quote={block.text}
+            sources={sourceOf(block)}
+          />
+        )}
+        {problem}
+        {player}
+      </div>
+    );
   return (
     <div className="story-panel">
+      {!wide && (
+        <button className="story-grip" aria-label={t("site.storyCloseList")} onClick={() => setListOpen(false)}>
+          <i />
+        </button>
+      )}
       <div className="story-bar">
-        <button
-          className="round-btn"
-          onClick={onClose}
-          aria-label={t("site.closeStory")}
-        >
+        <button className="round-btn" onClick={onClose} aria-label={t("site.closeStory")}>
           <X size={18} />
         </button>
         <div className="story-mode" role="group" aria-label={t("site.storyMode")}>
-          <button
-            aria-pressed={listen}
-            onClick={() => {
-              setListen(true);
-              writePreference("akar.mod", "dinle");
-            }}
-          >
-            <Headphones size={15} />
+          <button aria-pressed={listen} onClick={() => chooseMode(true)}>
+            <Headphones size={16} />
             {t("site.listenMode")}
           </button>
-          <button
-            aria-pressed={!listen}
-            onClick={() => {
-              setListen(false);
-              setPlaying(false);
-              writePreference("akar.mod", "oku");
-            }}
-          >
-            <BookOpen size={15} />
+          <button aria-pressed={!listen} onClick={() => chooseMode(false)}>
+            <BookOpen size={16} />
             {t("site.read")}
           </button>
         </div>
-        <span className="story-count">
-          {index + 1} / {stories.length}
-        </span>
+        <span className="story-lang">{lang.toUpperCase()}</span>
+        {position}
       </div>
       <label className="switch-label story-simple">
-        <input
-          type="checkbox"
-          checked={simple}
-          onChange={(e) => setSimple(e.target.checked)}
-        />
+        <input type="checkbox" checked={simple} onChange={(e) => setSimple(e.target.checked)} />
         {t("site.simpleMode")}
       </label>
-      {error && (
-        <p role="alert" className="error">
-          {t(error)}
-        </p>
-      )}
+      {problem}
       <ol
         className="story-list"
         ref={list}
@@ -219,85 +284,28 @@ export function StoryPanel({
         {stories.map((s, i) => {
           const shown = storyText(s, simple, lang);
           return (
-          <li key={s.id} className={i === index ? "current" : i < index ? "passed" : ""}>
-            <button
-              aria-current={i === index ? "step" : undefined}
-              aria-label={t("site.storyPartLabel", {
-                n: i + 1,
-                title: s.title || shown.text.slice(0, 40),
-              })}
-              onClick={() => onIndex(i)}
-            >
-              <span>{i + 1}</span>
-              <p className="story-text">
-                <Localized tr={shown.tr} en={shown.en} />
-              </p>
-            </button>
-            {i === index && (
+            <li key={s.id} className={i === index ? "current" : ""}>
+              <button
+                aria-current={i === index ? "step" : undefined}
+                aria-label={t("site.storyPartLabel", {
+                  n: i + 1,
+                  title: s.title || shown.text.slice(0, 40),
+                })}
+                onClick={() => onIndex(i)}
+              >
+                <span>{i + 1}</span>
+                <p className="story-text">
+                  <Localized tr={shown.tr} en={shown.en} />
+                </p>
+              </button>
               <div className="story-sentence-foot">
-                <TrustTag
-                  trust={s.trust}
-                  quote={s.text}
-                  sources={(site.sources ?? [])
-                    .filter((source) => source.id === s.sourceId)
-                    .map((source) => ({
-                      title: source.title,
-                      ...(source.page && { detail: t("site.pageShort", { page: source.page }) }),
-                    }))}
-                />
-                <SourceLine site={site} block={s} />
+                <TrustTag trust={s.trust} quote={s.text} sources={sourceOf(s)} />
               </div>
-            )}
-          </li>
+            </li>
           );
         })}
       </ol>
-      <div className="story-player">
-        <span className="story-clock">
-          {clock(elapsed / rate)} / {clock(storySeconds(stories) / rate)}
-        </span>
-        <div className="story-transport">
-          <button
-            aria-label={t("site.prevPart")}
-            disabled={index === 0}
-            onClick={() => go(index - 1)}
-          >
-            <SkipBack size={20} />
-          </button>
-          {listen ? (
-            <button
-              className="story-play"
-              aria-label={playing ? t("site.stopAudio") : t("site.startAudio")}
-              onClick={() => setPlaying(!playing)}
-            >
-              {playing ? <Pause size={22} /> : <Play size={22} />}
-            </button>
-          ) : (
-            <button
-              className="story-play"
-              aria-label={last ? t("site.finishStory") : t("site.continue")}
-              onClick={() => go(index + 1)}
-            >
-              <ChevronRight size={22} />
-            </button>
-          )}
-          <button
-            aria-label={t("site.nextPart")}
-            onClick={() => go(index + 1)}
-          >
-            <SkipForward size={20} />
-          </button>
-        </div>
-        <button
-          className="story-rate"
-          aria-label={t("site.speechRate", { rate })}
-          onClick={() =>
-            setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)
-          }
-        >
-          {rate}x
-        </button>
-      </div>
+      {player}
     </div>
   );
 }
