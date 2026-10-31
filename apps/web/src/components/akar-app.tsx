@@ -379,6 +379,7 @@ export function AkarApp() {
     },
     [refreshProgress, t],
   );
+  const closeOverlay = useCallback(() => setOverlay(null), []);
   const signInForBadges = () => setSignIn(t("toast.badgesSignIn"));
   /** The tap of pick mode: the part goes to the server; a wrong one keeps the model waiting. */
   async function pickPart(part: string) {
@@ -1284,7 +1285,19 @@ export function AkarApp() {
         />
       )}
       {overlay === "about" && site && (
-        <AboutModal site={site} onClose={() => setOverlay(null)} />
+        <AboutModal
+          site={site}
+          onClose={closeOverlay}
+          onStory={() => {
+            setOverlay(null);
+            openStory(true);
+          }}
+          onHistory={() => go("history", site.id)}
+          onPuzzle={() => {
+            setOverlay(null);
+            setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) });
+          }}
+        />
       )}
       {showExperimental && overlay === "together" && (
         <Modal title={t("site.together")} onClose={() => setOverlay(null)}>

@@ -3800,7 +3800,7 @@ td small {
   margin: 8px 0 12px;
   background: var(--gold);
 }
-.modal .about-meta-top {
+.about-scroll .about-meta-top {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
@@ -3808,7 +3808,7 @@ td small {
   text-transform: uppercase;
   color: #dbe7ec;
 }
-.modal .about-cover-meta {
+.about-scroll .about-cover-meta {
   margin: 14px 0 0;
   font-size: 14px;
   color: #ffffffd9;
@@ -3879,7 +3879,7 @@ td small {
   transform-origin: left;
   transition: transform 0.1s linear;
 }
-.modal .about-lead {
+.about-scroll .about-lead {
   margin: 24px 0 0;
   font-size: 17px;
   line-height: 1.7;
@@ -3977,7 +3977,7 @@ td small {
 .about-summary {
   margin: 0 0 24px;
 }
-.modal .about-summary p {
+.about-scroll .about-summary p {
   margin: 0;
   font-size: 19px;
   line-height: 1.6;
@@ -4028,7 +4028,7 @@ td small {
 .about-quote .about-gold {
   margin: 0 0 10px;
 }
-.modal .about-quote p {
+.about-scroll .about-quote p {
   margin: 0;
   font: 600 28px/1.2 var(--about-serif);
   color: var(--sehir-aksan);
@@ -4137,7 +4137,7 @@ td small {
 .about-deep.open .about-deep-button svg {
   transform: rotate(180deg);
 }
-.modal .about-p {
+.about-scroll .about-p {
   margin: 0 0 1.1em;
   font-size: 17px;
   line-height: 1.75;
@@ -4179,13 +4179,13 @@ td small {
   margin: 0 0 1.1em;
   padding: 0;
 }
-.modal .about-inscription p {
+.about-scroll .about-inscription p {
   margin: 0;
   font-size: 17px;
   font-style: italic;
   line-height: 1.75;
 }
-.modal .about-inscription .about-inscription-meaning {
+.about-scroll .about-inscription .about-inscription-meaning {
   margin-top: 0.5em;
 }
 .about-inscription-meaning span {
@@ -4252,7 +4252,7 @@ td small {
 .about-end {
   padding: 28px 0 8px;
 }
-.modal .about-note {
+.about-scroll .about-note {
   margin: 14px 0 0;
   font-size: 13px;
   line-height: 20px;

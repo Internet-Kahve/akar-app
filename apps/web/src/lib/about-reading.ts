@@ -127,3 +127,14 @@ export const photoRatio = (aspect: number | undefined, natural?: number) =>
     : aspect && aspect > 0
       ? aspect
       : 1.5;
+
+/** «s. 19–23» from a chapter's source titles («Envanter Cilt 1 · s. 20, 34»); empty when none names a page. */
+export function chapterPages(titles: string[]) {
+  const pages = titles.flatMap((title) =>
+    [...(title.match(/\bs\.\s*([\d,\s–-]+)/)?.[1]?.matchAll(/\d+/g) ?? [])].map((m) => Number(m[0])),
+  );
+  if (!pages.length) return "";
+  const low = Math.min(...pages),
+    high = Math.max(...pages);
+  return low === high ? `s. ${low}` : `s. ${low}–${high}`;
+}

@@ -85,7 +85,7 @@ test("chapter reading, book photos and the site gallery remain usable together",
     .click();
   const chapter = reading.locator("#about-chapter-chapter-3");
   await expect(chapter.getByRole("heading")).toBeInViewport();
-  await chapter.getByRole("button", { name: /Derinine in/ }).click();
+  await chapter.getByRole("button", { name: /Tam metni oku/ }).click();
   await expect(chapter.getByText("Bölüm 3 tam kaynak metni.")).toBeVisible();
   await chapter.locator(".about-photo").first().click();
   const photoDialog = page.getByRole("dialog", {
@@ -99,7 +99,7 @@ test("chapter reading, book photos and the site gallery remain usable together",
   await photoDialog.getByRole("button", { name: "Kapat", exact: true }).click();
   await expect(reading).toBeVisible();
   await reading
-    .getByRole("button", { name: "Pencereyi kapat", exact: true })
+    .getByRole("button", { name: /^Geri: / })
     .click();
   await expect(
     page.getByRole("region", { name: "Eser fotoğraf galerisi" }),

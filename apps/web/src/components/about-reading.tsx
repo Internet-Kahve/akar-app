@@ -7,7 +7,20 @@ import {
   useSyncExternalStore,
   type CSSProperties,
 } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Headphones,
+  History,
+  Maximize2,
+  Pause,
+  Play,
+  Puzzle,
+  SkipBack,
+  SkipForward,
+  X,
+} from "lucide-react";
 import {
   type AboutChapter,
   type AboutPhoto,
@@ -21,6 +34,7 @@ import { Localized, useI18n } from "./i18n";
 import {
   STRIP_MAX,
   chapterBlocks,
+  chapterPages,
   dominantTrust,
   photoRatio,
   readingMinutes,
@@ -49,23 +63,57 @@ export function useWide() {
 }
 
 const pad = (n: number) => String(n + 1).padStart(2, "0");
+const RATES = [1, 1.25, 1.5];
+const GLIDE = (): ScrollBehavior => (matchMedia(REDUCED_MOTION).matches ? "auto" : "smooth");
+
+/** Where the page lays its next steps; absent ones are left out. */
+interface AboutActions {
+  onStory?: (() => void) | undefined;
+  onHistory?: (() => void) | undefined;
+  onPuzzle?: (() => void) | undefined;
+}
+
+/** The reading page under the top bar: the whole page on a phone. Escape leaves it. */
+function ReadingPage({
+  site,
+  chapters,
+  onClose,
+  ...actions
+}: { site: HeritageSite; chapters: AboutChapter[]; onClose: () => void } & AboutActions) {
+  const { t } = useI18n();
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    ref.current?.focus({ preventScroll: true });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.querySelector("dialog[open]")) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      previous?.focus?.({ preventScroll: true });
+    };
+  }, [onClose]);
+  return (
+    <div className="about-page" role="dialog" aria-label={t("site.aboutTitle")} tabIndex={-1} ref={ref}>
+      <Reading site={site} chapters={chapters} onClose={onClose} {...actions} />
+    </div>
+  );
+}
 
 /** "Eser hakkında": the reading layout for a site with chapters, the plain paragraphs for one without. */
 export function AboutModal({
   site,
   onClose,
+  ...actions
 }: {
   site: HeritageSite;
   onClose: () => void;
-}) {
+} & AboutActions) {
   const { t, lang } = useI18n();
   const content = lang === "en" ? "tr" : undefined;
   if (site.chapters?.length)
-    return (
-      <Modal title={t("site.aboutTitle")} className="about-reading" onClose={onClose}>
-        <Reading site={site} chapters={site.chapters} />
-      </Modal>
-    );
+    return <ReadingPage site={site} chapters={site.chapters} onClose={onClose} {...actions} />;
   return (
     <Modal title={t("site.aboutTitle")} onClose={onClose}>
       <h3>
@@ -131,10 +179,15 @@ const toShown = (p: AboutPhoto): Shown => ({
 function Reading({
   site,
   chapters,
+  onClose,
+  onStory,
+  onHistory,
+  onPuzzle,
 }: {
   site: HeritageSite;
   chapters: AboutChapter[];
-}) {
+  onClose: () => void;
+} & AboutActions) {
   const i18n = useI18n();
   const { t, lang } = i18n;
   const content = lang === "en" ? "tr" : undefined;
@@ -148,6 +201,22 @@ function Reading({
   const [opened, setOpened] = useState<Set<string>>(() => new Set());
   const [lightbox, setLightbox] = useState<{ photos: Shown[]; index: number } | null>(null);
   const [term, setTerm] = useState<OpenTerm | null>(null);
+  const [pastCover, setPastCover] = useState(false);
+  const [overflow, setOverflow] = useState({ left: false, right: false });
+  /** Reading aloud: the chapter, its paragraph and whether the page follows it. */
+  const [voice, setVoice] = useState<{
+    chapter: number;
+    paragraph: number;
+    playing: boolean;
+    rate: number;
+    follow: boolean;
+    total: number;
+  } | null>(null);
+  const canSpeak = useSyncExternalStore(
+    () => () => {},
+    () => "speechSynthesis" in window,
+    () => false,
+  );
 
   const sections = useMemo(() => site.sections ?? [], [site.sections]);
   const grouped = useMemo(
@@ -277,15 +346,102 @@ function Reading({
         : { bottom: window.innerHeight - rect.top + 8 }),
     });
   };
-  const meta = [site.year, site.patron ?? site.architect, `${site.city} · ${site.district}`]
-    .filter(Boolean)
-    .join(" · ");
+  const meta = [site.year, site.patron ?? site.architect, site.kind].filter(Boolean).join(" · ");
+  const paragraphs = (chapter: number) => [
+    ...(scroller.current?.querySelectorAll<HTMLElement>(
+      `[data-chapter="${chapter}"] :is(.about-p, .about-inscription-meaning)`,
+    ) ?? []),
+  ];
+  const listen = (chapter: number) => {
+    window.speechSynthesis.cancel();
+    setVoice({ chapter, paragraph: 0, playing: true, rate: voice?.rate ?? 1, follow: true, total: 0 });
+  };
+  // One effect owns the speech: any change of place, speed or state restarts it from that paragraph.
+  useEffect(() => {
+    if (!voice) return;
+    const list = paragraphs(voice.chapter);
+    if (voice.paragraph >= list.length) {
+      setVoice(
+        voice.chapter + 1 < grouped.length
+          ? { ...voice, chapter: voice.chapter + 1, paragraph: 0 }
+          : null,
+      );
+      return;
+    }
+    const id = grouped[voice.chapter]!.chapter.id;
+    setOpened((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    if (voice.total !== list.length) setVoice({ ...voice, total: list.length });
+    const el = list[voice.paragraph]!;
+    el.classList.add("about-reading-now");
+    if (voice.follow) el.scrollIntoView({ block: "center", behavior: GLIDE() });
+    let live = true;
+    if (voice.playing) {
+      const title = voice.paragraph === 0 ? `${grouped[voice.chapter]!.chapter.title}. ` : "";
+      const utterance = new SpeechSynthesisUtterance(title + (el.textContent ?? "").trim());
+      utterance.lang = "tr-TR";
+      utterance.rate = voice.rate;
+      utterance.onend = () => {
+        if (live) setVoice((v) => v && { ...v, paragraph: v.paragraph + 1 });
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+    return () => {
+      live = false;
+      el.classList.remove("about-reading-now");
+      window.speechSynthesis.cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voice?.chapter, voice?.paragraph, voice?.playing, voice?.rate]);
+  useEffect(() => {
+    const root = scroller.current;
+    if (!root || !voice?.follow) return;
+    const stop = () => setVoice((v) => v && { ...v, follow: false });
+    root.addEventListener("wheel", stop, { passive: true });
+    root.addEventListener("touchmove", stop, { passive: true });
+    return () => {
+      root.removeEventListener("wheel", stop);
+      root.removeEventListener("touchmove", stop);
+    };
+  }, [voice?.follow]);
+  // The back button joins the tabs once the cover, which has its own, has left the screen.
+  useEffect(() => {
+    const root = scroller.current,
+      cover = root?.querySelector(".about-cover");
+    if (!root || !cover) return;
+    const seen = new IntersectionObserver(([entry]) => setPastCover(!entry!.isIntersecting), { root });
+    seen.observe(cover);
+    return () => seen.disconnect();
+  }, []);
+  // The arrows appear only on the side where the tabs go on.
+  useEffect(() => {
+    const strip = tabs.current;
+    if (!strip) return;
+    const measure = () =>
+      setOverflow({
+        left: strip.scrollLeft > 4,
+        right: strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 4,
+      });
+    measure();
+    strip.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      strip.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  const name = i18n.text(site.name, site.nameEn);
+  const inventory = site.source?.split(" · ")[0];
 
   const nav = (
-    <nav className="about-nav" aria-label={t("site.aboutChapters")}>
+    <nav className={`about-nav${pastCover ? " past-cover" : ""}`} aria-label={t("site.aboutChapters")}>
+      <button className="about-nav-back" aria-label={t("puzzle.back", { name })} onClick={onClose}>
+        <ChevronLeft size={20} />
+        <span>{name}</span>
+      </button>
       <button
         className="about-tab-arrow"
         aria-label={t("site.aboutPrevChapters")}
+        hidden={!overflow.left}
         onClick={() => tabs.current?.scrollBy({ left: -240, behavior: "smooth" })}
       >
         <ChevronLeft size={18} />
@@ -306,6 +462,7 @@ function Reading({
       <button
         className="about-tab-arrow"
         aria-label={t("site.aboutNextChapters")}
+        hidden={!overflow.right}
         onClick={() => tabs.current?.scrollBy({ left: 240, behavior: "smooth" })}
       >
         <ChevronRight size={18} />
@@ -316,7 +473,14 @@ function Reading({
 
   return (
     <div className="about-scroll" ref={scroller}>
+      {!wide && nav}
       <header className="about-cover">
+        {wide && (
+          <button className="about-back" onClick={onClose}>
+            <ChevronLeft size={18} />
+            {name}
+          </button>
+        )}
         {cover && (
           <div className="about-cover-photo">
             <img src={cover.src} alt={cover.alt} />
@@ -331,7 +495,14 @@ function Reading({
           <h3 className="about-title">
             <Localized tr={site.name} en={site.nameEn} />
           </h3>
-          <span className="about-gold" aria-hidden="true" />
+          <span className="about-ornament" aria-hidden="true">
+            <i />
+            <svg width="24" height="12" viewBox="0 0 24 12">
+              <path d="M0 6h7m10 0h7M12 1l4 5-4 5-4-5z" fill="none" stroke="currentColor" />
+              <circle cx="12" cy="6" r="1" fill="currentColor" />
+            </svg>
+            <i />
+          </span>
           <p className="about-meta-top" lang={content}>
             {meta}
           </p>
@@ -340,17 +511,24 @@ function Reading({
               min: readingMinutes(totalWords),
               n: chapters.length,
             })}
+            {inventory && (
+              <>
+                <br />
+                <span lang={content}>{inventory}</span>
+              </>
+            )}
           </p>
+          {canSpeak && (
+            <button className="about-listen" onClick={() => listen(0)}>
+              <Headphones size={18} />
+              {t("site.aboutListen", { min: readingMinutes(totalWords) })}
+            </button>
+          )}
         </div>
       </header>
+      {wide && nav}
       <div className={`about-grid${showModel || (wide && sidePhoto) ? " with-aside" : ""}`}>
         <article className="about-main">
-          {nav}
-          {site.description && (
-            <p className="about-lead">
-              <Localized tr={site.description} en={site.descriptionEn} />
-            </p>
-          )}
           {grouped.map((g, i) => (
             <ChapterView
               key={g.chapter.id}
@@ -366,6 +544,7 @@ function Reading({
               ] as string[]}
               open={opened.has(g.chapter.id)}
               onToggle={() => toggle(g.chapter.id)}
+              onListen={canSpeak ? () => listen(i) : undefined}
               onPhotos={(photos, index) => setLightbox({ photos: photos.map(toShown), index })}
               onTerm={showTerm}
             />
@@ -386,22 +565,113 @@ function Reading({
             </section>
           )}
           <section className="about-end">
-            <h2 className="about-h2">{t("site.sources")}</h2>
+            <h2 className="about-h2">{t("site.aboutDone")}</h2>
+            <div className="about-next">
+              {onStory && site.stories.length > 0 && (
+                <button className="btn" onClick={onStory}>
+                  <Headphones size={18} />
+                  {t("site.aboutStory")}
+                </button>
+              )}
+              {onHistory && (
+                <button className="btn secondary" onClick={onHistory}>
+                  <History size={18} />
+                  {t("site.history")}
+                  {site.historyImages?.length ? ` · ${site.historyImages.length}` : ""}
+                </button>
+              )}
+              {onPuzzle && !!site.tasks?.length && (
+                <button className="btn secondary" onClick={onPuzzle}>
+                  <Puzzle size={18} />
+                  {t("site.aboutPuzzle", { count: site.tasks.length })}
+                </button>
+              )}
+            </div>
+            <h3 className="about-h3">{t("site.sources")}</h3>
             {usedSources.length > 0 && (
               <ul className="about-sources">
-                {usedSources.map((title) => (
+                {usedSources.map((title, i) => (
                   <li key={title} lang={content}>
-                    {title}
+                    [{i + 1}] {title}
                   </li>
                 ))}
               </ul>
             )}
-            <p className="about-note" lang={content}>
-              {site.source}
-            </p>
             <p className="about-note">{t("site.aboutSourceNote")}</p>
             {!site.sources?.length && <Notice>{t("site.noSourcePack")}</Notice>}
           </section>
+          {voice && (
+            <div className="about-player" role="region" aria-label={t("site.aboutVoice")}>
+              <div className="about-player-info">
+                <b lang={content}>
+                  {pad(voice.chapter)} · {grouped[voice.chapter]?.chapter.title}
+                </b>
+                <small>
+                  {t("site.aboutVoiceAt", {
+                    n: Math.min(voice.paragraph + 1, voice.total || 1),
+                    total: voice.total || 1,
+                  })}
+                </small>
+              </div>
+              {!voice.follow && (
+                <button
+                  className="about-player-back"
+                  onClick={() => {
+                    setVoice({ ...voice, follow: true });
+                    scroller.current
+                      ?.querySelector(".about-reading-now")
+                      ?.scrollIntoView({ block: "center", behavior: GLIDE() });
+                  }}
+                >
+                  <ChevronDown size={14} />
+                  {t("site.aboutVoiceReturn")}
+                </button>
+              )}
+              <div className="about-player-buttons">
+                <button
+                  aria-label={t("site.aboutPrevParagraph")}
+                  onClick={() =>
+                    setVoice({ ...voice, follow: true, paragraph: Math.max(0, voice.paragraph - 1) })
+                  }
+                >
+                  <SkipBack size={18} />
+                </button>
+                <button
+                  className="main"
+                  aria-label={voice.playing ? t("site.stopAudio") : t("site.startAudio")}
+                  onClick={() => setVoice({ ...voice, playing: !voice.playing })}
+                >
+                  {voice.playing ? <Pause size={20} /> : <Play size={20} />}
+                </button>
+                <button
+                  aria-label={t("site.aboutNextParagraph")}
+                  onClick={() => setVoice({ ...voice, follow: true, paragraph: voice.paragraph + 1 })}
+                >
+                  <SkipForward size={18} />
+                </button>
+              </div>
+              <div className="about-player-buttons">
+                <button
+                  className="rate"
+                  aria-label={t("site.speechRate", { rate: voice.rate })}
+                  onClick={() =>
+                    setVoice({
+                      ...voice,
+                      rate: RATES[(RATES.indexOf(voice.rate) + 1) % RATES.length]!,
+                    })
+                  }
+                >
+                  {String(voice.rate).replace(".", ",")}×
+                </button>
+                <button aria-label={t("site.aboutVoiceClose")} onClick={() => setVoice(null)}>
+                  <X size={16} />
+                </button>
+              </div>
+              <i className="about-player-line" aria-hidden="true">
+                <i style={{ width: `${(100 * Math.min(voice.paragraph + 1, voice.total || 1)) / (voice.total || 1)}%` }} />
+              </i>
+            </div>
+          )}
         </article>
         {wide && (showModel || sidePhoto) && (
           <aside
@@ -446,7 +716,7 @@ function Reading({
           }}
         >
           <b>{term.term.word}</b>
-          <span>{term.term.definition}</span>
+          <span>{t("site.aboutInBook", { text: term.term.definition })}</span>
         </div>
       )}
       {lightbox && (
@@ -472,6 +742,7 @@ function ChapterView({
   sources,
   open,
   onToggle,
+  onListen,
   onPhotos,
   onTerm,
 }: {
@@ -485,11 +756,13 @@ function ChapterView({
   sources: string[];
   open: boolean;
   onToggle: () => void;
+  onListen?: (() => void) | undefined;
   onPhotos: (photos: AboutPhoto[], index: number) => void;
   onTerm: (term: Term, el: HTMLElement) => void;
 }) {
   const { t, lang } = useI18n();
   const content = lang === "en" ? "tr" : undefined;
+  const pages = chapterPages(sources);
   const [showSources, setShowSources] = useState(false);
   const minutes = readingMinutes(words);
   const hasSummary = chapter.summary.length > 0;
@@ -524,7 +797,18 @@ function ChapterView({
           </h2>
           <small>
             {t(count === 1 ? "site.readMetaOne" : "site.readMeta", { min: minutes, n: count })}
+            {pages && ` · ${t("site.aboutInventoryPages", { pages })}`}
           </small>
+          {onListen && (
+            <button
+              className="about-chapter-listen"
+              aria-label={t("site.aboutListenChapter", { title: chapter.title, min: minutes })}
+              onClick={onListen}
+            >
+              <Play size={14} />
+              {t("site.aboutListen", { min: minutes })}
+            </button>
+          )}
         </div>
         {cover && (
           <BookPhoto

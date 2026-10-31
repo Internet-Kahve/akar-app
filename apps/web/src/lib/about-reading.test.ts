@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { HeritageSite } from "@akar/domain";
-import {
+import { chapterPages,
   chapterBlocks,
   dominantTrust,
   photoRatio,
@@ -34,6 +34,13 @@ const photo = (id: string) => ({
   },
   alt: id,
   aspect: 1.5,
+});
+
+test("a chapter's pages read as one range", () => {
+  assert.equal(chapterPages(["Envanter Cilt 1 · s. 20, 34", "Envanter Cilt 1 · s. 26"]), "s. 20–34");
+  assert.equal(chapterPages(["Envanter Cilt 1 · s. 7"]), "s. 7");
+  assert.equal(chapterPages(["Ürgen s.10"]), "s. 10");
+  assert.equal(chapterPages(["Web kaynağı"]), "");
 });
 
 test("terms split longest first and keep the text between them", () => {
