@@ -5,12 +5,12 @@ Vakıf Katılım kitaplarındaki çizimlerin kopyası değiller. Kitapların ken
 
 | Dosya | Ne | Nerede |
 |---|---|---|
-| `desen-bursa-sekiz-yildiz.svg` | 8 kollu yıldız · 4.8.8 döşeme · kare karo (100×100) | Bursa şehir kimliği (şu an kullanılan) |
-| `desen-konya-on-iki-gulbezek.svg` | 12 kollu gülbezek · 3.12.12 döşeme · karo 100×173,2 | Konya şehir kimliği (şu an kullanılan) |
+| `desen-bursa-sekiz-yildiz.svg` | 8 kollu yıldız · 4.8.8 döşeme · kare karo (100×100) | Eski Bursa deseni (örnek veri `seed.ts` hâlâ kullanıyor) |
+| `desen-konya-on-iki-gulbezek.svg` | 12 kollu gülbezek · 3.12.12 döşeme · karo 100×173,2 | Eski Konya deseni (örnek veri `seed.ts` hâlâ kullanıyor) |
 | `amblem-akar-yildiz.svg` | Tek yıldız amblem | Açılış, 3D yükleniyor animasyonu, rozet |
-| `desen-bursa-yeni.svg` | Muhammed'in çizimi (31 Ekim) · karo 682×605 | Bursa için yeni desen — henüz bağlanmadı |
-| `desen-hatay-yeni.svg` | Muhammed'in çizimi (31 Ekim) · karo 1413×999 (kaynak 2826×1998) | Hatay için — henüz bağlanmadı |
-| `desen-konya-yeni.svg` | Muhammed'in çizimi (31 Ekim) · karo 675×1074 | Konya için yeni desen — henüz bağlanmadı |
+| `desen-bursa-kesik-gecme.svg` | Muhammed'in çizimi (31 Ekim) · karo 682×605 | **Bursa şehir kimliği** |
+| `desen-hatay-yildiz-kafes.svg` | Muhammed'in çizimi (31 Ekim) · karo 1413×999 (kaynak 2826×1998) | **Hatay şehir kimliği** · `desen_olcek: 4.3` |
+| `desen-konya-yildiz-gecme.svg` | Muhammed'in çizimi (31 Ekim) · karo 675×1074 | **Konya şehir kimliği** |
 
 - Renk SVG'de `currentColor`; renk CSS'ten gelir (`tokens.css` → `--sehir-*`). Uygulama deseni **maske** olarak kullanır: yalnız şekil önemlidir, rengi `veri/sehir/<il>.json → kimlik.zemin / desen_renk` belirler.
 - Karolar dikişsiz tekrar eder. Boyut 1–70 KB, mobilde yükü yok.
@@ -26,13 +26,16 @@ Yeniden üretmek: `python3 desen.py` → `svg/` klasörüne yazar.
 
 ```
 pip install potracer pillow numpy
-python3 png-den-svg.py kaynak/desen-konya-yeni.png desen-konya-yeni.svg 0 0 675 1074
+python3 png-den-svg.py kaynak/desen-konya-yildiz-gecme.png desen-konya-yildiz-gecme.svg 0 0 675 1074
 ```
 
 Son dört sayı tekrar karesinin kırpımıdır (x y genişlik yükseklik); görsel tek kareyse yazılmaz. Büyük görseller için
 sona hedef genişlik eklenebilir (Hatay: `0 0 2826 1998 1413`). Betik kenarları dikişsiz izlemek için kareyi sarıp çizer.
 Çıkan SVG'deki `fill="#000"`'ı `currentColor` yap.
 
-**Bağlamadan önce (açık kararlar, 31 Ekim):**
-- Uygulama her şehrin karesini aynı genişlikte çizer (başlık 88 px, kart 72 px, panel altı 56 px). Hatay karesinde 4 sütun yıldız olduğu için 88 px'te çizgiler 0,7 px'e iner ve desen kaybolur (Bursa/Konya yenilerinde 3–3,5 px). Çözüm önerisi: `kimlik.desen_olcek` alanı (Hatay ≈ 4,3) — kod değişikliği, karar bekliyor.
-- Dosya adları geçici (`-yeni`): kalıcı adlar verilince yeniden adlandırılır, `public/desenler/`'e kopyalanır ve `veri/sehir/<il>.json → kimlik.desen` güncellenir.
+**Ölçek (`kimlik.desen_olcek`):** uygulama her karoyu aynı genişlikte çizer (başlık 88 px, kart 72 px, panel altı 56 px,
+açılış 96 px). Karosunda motifin birkaç tekrarı olan desen büyütülür ki çizgileri ötekilerle aynı kalınlıkta kalsın:
+Hatay 4,3 (karoda 4 sütun yıldız). Yoksa 1. Aralık 0,25–8. Yeni desen eklerken: çizgi 88 px'lik karoda ~3 px olmalı;
+`ölçek ≈ 3 × karo genişliği / (88 × çizgi kalınlığı px)`.
+
+Bağlamak: SVG'yi buraya ve `apps/web/public/desenler/`'e koy, `veri/sehir/<il>.json → kimlik.desen` (gerekirse `desen_olcek`).

@@ -13,7 +13,9 @@
   "kimlik": {
     "zemin": "#7A6340",
     "desen_renk": "#DBCDB5",
-    "_not": "29 Ekim 2026: Hatay Vakıf Eserleri envanterinin kapak rengi (veri/kaynak_pdf/hatay-vakif-eserleri.pdf, s. 1–3 ölçümü #8C734C bronz, açık tonu #DBCDB5). Beyaz yazı kontrastı için bir tık koyusu (#7A6340, ~5.7:1). Desen henüz yok."
+    "desen": "desen-hatay-yildiz-kafes.svg",
+    "desen_olcek": 4.3,
+    "_not": "29 Ekim 2026: Hatay Vakıf Eserleri envanterinin kapak rengi (veri/kaynak_pdf/hatay-vakif-eserleri.pdf, s. 1–3 ölçümü #8C734C bronz, açık tonu #DBCDB5). Beyaz yazı kontrastı için bir tık koyusu (#7A6340, ~5.7:1). Desen 31 Ekim 2026: Muhammed'in çizimi (design/desenler/desen-hatay-yildiz-kafes.svg); karo 4 sütun yıldız tuttuğu için desen_olcek 4.3 (çizgi kalınlığı Bursa/Konya ile aynı)."
   },
   "foto_kunye": "Fotoğraf: Hatay İli Vakıf Eserleri",
   "kaynakca": "Hatay İli Vakıf Eserleri (Vakıf Katılım, 2022).",

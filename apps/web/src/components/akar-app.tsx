@@ -1203,12 +1203,6 @@ export function AkarApp() {
                     onCancel={() => setPick(null)}
                   />
                 )}
-                {!live && !isDetail && (
-                  <div className="demo-label">
-                    <span />
-                    {t("app.demoLabel")}
-                  </div>
-                )}
               </div>
             </main>
           )}

@@ -288,11 +288,15 @@ for path, record in city_records:
         raise ValueError(f"{path.name}: kimlik needs zemin, desen and desen_renk together")
     if look['pattern'] and not (root / 'design/desenler' / look['pattern']).is_file():
         raise ValueError(f"{path.name}: pattern file design/desenler/{look['pattern']} is missing")
+    # kimlik.desen_olcek: the tile's size against the standard width (a tile with several repeats is drawn larger).
+    scale = kimlik.get('desen_olcek')
+    if scale is not None and (isinstance(scale, bool) or not isinstance(scale, (int, float)) or not 0.25 <= scale <= 8):
+        raise ValueError(f"{path.name}: desen_olcek must be a number from 0.25 to 8")
     center = record.get('merkez')
     inventory = {k: record.get(v) for k, v in dict(name='envanter_adi', publisher='envanter_yayinci', year='envanter_yili',
         siteCount='envanter_eser_sayisi').items()}
     result['cities'].append(dict(id=record['id'], name=record['ad'], isDefault=bool(record.get('varsayilan')), scene=scene,
-        identity=look if all(look.values()) else None,
+        identity=(dict(look, **({'patternScale': scale} if scale is not None else {}))) if all(look.values()) else None,
         map=dict(center=center, zoom=record['zoom'], zoomDesktop=record.get('zoom_masaustu')) if center else None,
         inventory=inventory if any(v is not None for v in inventory.values()) else None))
 args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')

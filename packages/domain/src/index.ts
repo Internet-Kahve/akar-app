@@ -138,7 +138,14 @@ export interface CityIdentity {
   pattern: string;
   /** Colour of the pattern on a ground in `accent` (`kimlik.desen_renk`, `#RRGGBB`). */
   patternColour: string;
+  /**
+   * Size of the tile against the standard tile width (`kimlik.desen_olcek`); absent = 1. A tile holding several
+   * repeats of its motif (Hatay's) is drawn larger so its lines keep the width of the others.
+   */
+  patternScale?: number;
 }
+/** The range a pattern scale may take. */
+export const CITY_PATTERN_SCALE = { min: 0.25, max: 8 };
 /** A pattern file name: lower-case words joined by hyphens, `.svg`; never a path, so it can sit in a URL or a CSS value. */
 export const CITY_PATTERN_FILE = /^[a-z0-9][a-z0-9-]*\.svg$/;
 /** Throws on an identity the loading screens cannot draw. */
@@ -147,6 +154,12 @@ export function validateCityIdentity(identity: CityIdentity) {
     throw new Error("Şehir renkleri #RRGGBB biçiminde olmalı");
   if (typeof identity.pattern !== "string" || !CITY_PATTERN_FILE.test(identity.pattern))
     throw new Error("Şehir deseni küçük harfli bir .svg dosya adı olmalı");
+  const scale = identity.patternScale;
+  if (
+    scale !== undefined &&
+    (typeof scale !== "number" || !Number.isFinite(scale) || scale < CITY_PATTERN_SCALE.min || scale > CITY_PATTERN_SCALE.max)
+  )
+    throw new Error(`Desen ölçeği ${CITY_PATTERN_SCALE.min} ile ${CITY_PATTERN_SCALE.max} arasında bir sayı olmalı`);
 }
 /** City record `map` (`GET /v1/cities`, §11.45): where the map opens in this city; the globe marker sits at `center`. */
 export interface CityMapView {

@@ -19,6 +19,7 @@ export function identityStyle(identity: CityIdentity | null): CSSProperties {
   return {
     "--city-accent": identity.accent,
     "--city-pattern": `url("${PATTERN_DIR}${identity.pattern}")`,
+    ...(identity.patternScale !== undefined && { "--city-pattern-scale": String(identity.patternScale) }),
   } as CSSProperties;
 }
 
@@ -35,5 +36,6 @@ export function cityIdentityStyle(identity: CityIdentity | null): CSSProperties 
     "--sehir-aksan": identity.accent,
     "--sehir-acik": identity.patternColour,
     "--sehir-desen": `url("${PATTERN_DIR}${identity.pattern}")`,
+    ...(identity.patternScale !== undefined && { "--sehir-desen-olcek": String(identity.patternScale) }),
   } as CSSProperties;
 }

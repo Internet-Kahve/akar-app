@@ -441,6 +441,10 @@ export const CityIdentityDto = z
     accent: z.string().describe("Şehrin rengi (#RRGGBB; veri/sehir kimlik.zemin): açılış ekranında şehir adı, açık zeminde desen"),
     pattern: z.string().describe("Desen karosunun dosya adı (kimlik.desen), web uygulamasının /desenler/ klasöründe; örn. desen-bursa-sekiz-yildiz.svg"),
     patternColour: z.string().describe("Desenin şehir renginin üstündeki rengi (#RRGGBB; kimlik.desen_renk)"),
+    patternScale: z
+      .number()
+      .optional()
+      .describe("Desen karosunun standart genişliğe oranı (kimlik.desen_olcek); yoksa 1"),
   })
   .describe("Açılış ekranının ve 3B yükleme kartının şehirden aldığı görünüm (§11.49)");
 

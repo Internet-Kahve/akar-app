@@ -13,8 +13,8 @@
   "kimlik": {
     "zemin": "#3D8285",
     "desen_renk": "#E8DD7A",
-    "desen": "desen-konya-on-iki-gulbezek.svg",
-    "_not": "tokens.css --sehir-konya-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
+    "desen": "desen-konya-yildiz-gecme.svg",
+    "_not": "tokens.css --sehir-konya-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi. Desen 31 Ekim 2026: Muhammed'in çizimi (design/desenler/desen-konya-yildiz-gecme.svg)."
   },
   "foto_kunye": "Fotoğraf: Konya Vakıf Eserleri",
   "kaynakca": "Konya Vakıf Eserleri, Cilt 1–2 (Vakıf Katılım, 2024).",

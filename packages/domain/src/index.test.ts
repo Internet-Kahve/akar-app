@@ -367,3 +367,10 @@ test("a city identity needs two #RRGGBB colours and a pattern file name that can
   for (const pattern of ["", "desen.png", "../desen.svg", "desenler/desen.svg", "Desen.svg", 'a".svg', "a b.svg", ".svg", "-a.svg"])
     assert.throws(() => validateCityIdentity({ ...identity, pattern }), /\.svg dosya adı/, pattern);
 });
+test("a pattern scale is optional and, when given, a number from 0.25 to 8", () => {
+  const identity = { accent: "#7A6340", pattern: "desen-hatay-yildiz-kafes.svg", patternColour: "#DBCDB5" };
+  validateCityIdentity({ ...identity, patternScale: 4.3 });
+  validateCityIdentity({ ...identity, patternScale: 0.25 });
+  for (const patternScale of [0, 0.2, 9, Number.NaN, Number.POSITIVE_INFINITY, "4" as unknown as number])
+    assert.throws(() => validateCityIdentity({ ...identity, patternScale }), /Desen ölçeği/, String(patternScale));
+});

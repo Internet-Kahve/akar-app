@@ -4673,8 +4673,8 @@ td small {
   /* 6–10 % is the design's rule for a pattern behind a title or a loading screen. */
   opacity: 0.08;
   background: var(--city-accent, var(--primary));
-  -webkit-mask: var(--city-pattern) 0 0 / 96px auto repeat;
-  mask: var(--city-pattern) 0 0 / 96px auto repeat;
+  -webkit-mask: var(--city-pattern) 0 0 / calc(96px * var(--city-pattern-scale, 1)) auto repeat;
+  mask: var(--city-pattern) 0 0 / calc(96px * var(--city-pattern-scale, 1)) auto repeat;
   animation: loading-in 320ms ease-out;
 }
 .opening {

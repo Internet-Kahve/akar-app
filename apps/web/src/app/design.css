@@ -287,11 +287,11 @@ h1,
   background: var(--sehir-aksan);
   opacity: 0.07;
   -webkit-mask:
-    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / 56px auto repeat,
+    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(56px * var(--sehir-desen-olcek, 1)) auto repeat,
     linear-gradient(transparent, #000);
   -webkit-mask-composite: source-in;
   mask:
-    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / 56px auto repeat,
+    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(56px * var(--sehir-desen-olcek, 1)) auto repeat,
     linear-gradient(transparent, #000);
   mask-composite: intersect;
 }
@@ -1151,8 +1151,8 @@ h1,
   inset: 0;
   background: var(--sehir-acik);
   opacity: 0.55;
-  -webkit-mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / 72px auto repeat;
-  mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / 72px auto repeat;
+  -webkit-mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / calc(72px * var(--sehir-desen-olcek, 1)) auto repeat;
+  mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / calc(72px * var(--sehir-desen-olcek, 1)) auto repeat;
 }
 .welcome-photo {
   display: none;
@@ -2293,11 +2293,11 @@ h1,
   background: var(--sehir-acik);
   opacity: 0.1;
   -webkit-mask:
-    var(--sehir-desen) 0 0/88px auto repeat,
+    var(--sehir-desen) 0 0/calc(88px * var(--sehir-desen-olcek, 1)) auto repeat,
     linear-gradient(240deg, #000 20%, transparent 75%);
   -webkit-mask-composite: source-in;
   mask:
-    var(--sehir-desen) 0 0/88px auto repeat,
+    var(--sehir-desen) 0 0/calc(88px * var(--sehir-desen-olcek, 1)) auto repeat,
     linear-gradient(240deg, #000 20%, transparent 75%);
   mask-composite: intersect;
 }
@@ -2526,11 +2526,11 @@ h1,
   background: var(--sehir-acik);
   opacity: 0.14;
   -webkit-mask:
-    var(--sehir-desen) 0 0/72px auto repeat,
+    var(--sehir-desen) 0 0/calc(72px * var(--sehir-desen-olcek, 1)) auto repeat,
     linear-gradient(250deg, #000 15%, transparent 70%);
   -webkit-mask-composite: source-in;
   mask:
-    var(--sehir-desen) 0 0/72px auto repeat,
+    var(--sehir-desen) 0 0/calc(72px * var(--sehir-desen-olcek, 1)) auto repeat,
     linear-gradient(250deg, #000 15%, transparent 70%);
   mask-composite: intersect;
 }

@@ -19,11 +19,11 @@
   "kimlik": {
     "zemin": "#22566E",
     "desen_renk": "#A4D8E0",
-    "desen": "desen-bursa-sekiz-yildiz.svg",
+    "desen": "desen-bursa-kesik-gecme.svg",
     "sahne_ust": "#DDE4E5",
     "sahne_alt": "#A7B4B7",
     "_sahne_not": "3D eser sahnesinin zemini (28 Ekim 2026): yukarıdan aşağı geçiş; Bursa tonuna hafif çalan nötr gri. ISO 3664 nötr çevre ilkesi: doygun zemin model renklerini kaydırır, bu yüzden düşük doygunluk; alt ton koyu ki kaide zeminden ayrılsın.",
-    "_not": "tokens.css --sehir-bursa-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi."
+    "_not": "tokens.css --sehir-bursa-zemin / -desen; desen design/desenler/ (kendi üretimimiz, desen.py). Envanter kitabının kapak rengi. Desen 31 Ekim 2026: Muhammed'in çizimi (design/desenler/desen-bursa-kesik-gecme.svg)."
   },
   "harita_isik": {
     "yon": 221,
