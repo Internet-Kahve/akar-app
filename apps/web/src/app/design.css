@@ -2865,3 +2865,21 @@ h1,
   .detail-panel .detail-ornament { order:3; }
   .detail-panel .detail-summary { order:4; }
 }
+
+/* Mobile map: measured against the frosted prototype at 390 × 844. */
+@media (max-width: 899.98px) {
+  .global-search {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .global-search input::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
+  .explore:has(.explore-city) .explore-heading {
+    margin-top: 12px;
+  }
+  .map-chips {
+    top: calc(70px + env(safe-area-inset-top, 0px));
+  }
+}
