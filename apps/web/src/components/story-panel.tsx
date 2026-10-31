@@ -13,6 +13,7 @@ import type { HeritageSite, StoryBlock } from "@akar/domain";
 import { sentenceSeconds, storySeconds, clock } from "../lib/story-time";
 import { writePreference } from "../lib/preferences";
 import { useWide } from "./about-reading";
+import { PART_VOICE_EVENT } from "./part-card";
 import { SourceLink, TrustTag } from "./side-sheet";
 import { storyText } from "../lib/story-text";
 import type { MessageKey } from "../lib/messages";
@@ -84,6 +85,11 @@ export function StoryPanel({
         : "smooth",
     });
   }, [index, site.id]);
+  useEffect(() => {
+    const quiet = () => setPlaying(false);
+    window.addEventListener(PART_VOICE_EVENT, quiet);
+    return () => window.removeEventListener(PART_VOICE_EVENT, quiet);
+  }, []);
   useEffect(() => {
     if (!playing) return;
     if (!("speechSynthesis" in window)) {
