@@ -99,7 +99,10 @@ import {
 import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
 import { cityCase } from "../lib/place-names";
+import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
+import type { MessageKey } from "../lib/messages";
 import { readPreference, writePreference } from "../lib/preferences";
+import { LangProvider, Localized } from "./i18n";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 type View =
   | "map"
@@ -140,7 +143,7 @@ export function AkarApp() {
     [peekId, setPeekId] = useState<string>(),
     [cityInView, setCityInView] = useState<CityRecord | null>(null),
     [flight, setFlight] = useState<MapFlight>(),
-    [lang, setLang] = useState<"tr" | "en">("tr"),
+    [lang, setLang] = useState<Lang>("tr"),
     [welcome, setWelcome] = useState(false),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
     [waqf, setWaqf] = useState(false),
@@ -181,6 +184,17 @@ export function AkarApp() {
   const pickBusy = useRef<typeof pick>(null);
   const currentPick = useRef(pick);
   currentPick.current = pick;
+  const langRef = useRef(lang);
+  langRef.current = lang;
+  // Stable, so callbacks and effects can speak the current language without depending on it.
+  const t = useCallback(
+    (key: MessageKey, vars?: Record<string, string | number>) =>
+      translate(langRef.current, key, vars),
+    [],
+  );
+  const text = (tr: string, en?: string | null) => localize(lang, tr, en).text;
+  // Content without an English twin stays Turkish and says so.
+  const tr = lang === "en" ? "tr" : undefined;
   const live = !!apiUrl;
   const role: Role = state.role ?? (live ? "user" : "admin");
   const canManage = !live || (!!account && role !== "user");
@@ -209,7 +223,15 @@ export function AkarApp() {
     if (!client.current) return;
     if (!loaded.current) setLoadError("");
     try {
-      setState(await client.current.getSnapshot());
+      const snapshot = await client.current.getSnapshot();
+      setState(snapshot);
+      // Signed in (§11.57): the account's language wins; an account without one takes this device's.
+      const account = snapshot.preferences;
+      if (account?.siteLang) {
+        setLang(account.siteLang);
+        saveDeviceLang(account.siteLang);
+      } else if (account)
+        void client.current.savePreferences({ siteLang: langRef.current }).catch(() => {});
       // Signing in may redeem guest story receipts while loading the snapshot. Read badges again
       // afterwards, so an earlier auth-event read cannot hide the newly transferred story badge.
       setSnapshotRevision((revision) => revision + 1);
@@ -217,11 +239,11 @@ export function AkarApp() {
       setReady(true);
       void loadMapSettings();
     } catch (e) {
-      const message = describeError(e, "Veriler yüklenemedi.");
+      const message = describeError(e, t("error.dataFailed"), langRef.current);
       if (loaded.current) setFault(message);
       else setLoadError(message);
     }
-  }, [loadMapSettings]);
+  }, [loadMapSettings, t]);
   /** Background re-read of the catalog (new, moved or removed models); a failure is not worth a message. */
   const refreshCatalog = useCallback(async () => {
     if (!client.current || !loaded.current) return;
@@ -248,16 +270,16 @@ export function AkarApp() {
             null,
           onUnauthorized: () => {
             void supabase?.auth.signOut({ scope: "local" });
-            setToast("Oturumun sona erdi. Yeniden giriş yapabilirsin.");
+            setToast(t("toast.sessionExpired"));
           },
           getMemoryConsent: () => consent.current,
           onUploadProgress: setUploadProgress,
           locate: () =>
             locateOnce({
-              unsupported: "Bu cihaz konum doğrulamasını desteklemiyor.",
-              denied: "Ziyareti doğrulamak için konum izni vermelisin.",
-              timeout: "Konum alınması zaman aşımına uğradı. Yeniden dene.",
-              failed: "Konum alınamadı. Konum hizmetlerini kontrol et.",
+              unsupported: t("verify.unsupported"),
+              denied: t("verify.denied"),
+              timeout: t("verify.timeout"),
+              failed: t("verify.failed"),
             }),
         })
       : createMockClient(storage);
@@ -305,7 +327,7 @@ export function AkarApp() {
       window.removeEventListener("hashchange", readLocation);
       subscription?.unsubscribe();
     };
-  }, [load]);
+  }, [load, t]);
   useEffect(() => {
     if (!ready) return;
     const timer = setInterval(() => void refreshCatalog(), CATALOG_REFRESH_MS);
@@ -343,16 +365,16 @@ export function AkarApp() {
   /** Runs a command; resolves to the error message, or `null` on success. */
   const run = useCallback(async (command: Command) => {
     try {
-      if (!client.current) return "İşlem şu an yapılamıyor.";
+      if (!client.current) return t("error.unavailable");
       setState(await client.current.dispatch(command));
       return null;
     } catch (e) {
-      const message = describeError(e, "İşlem tamamlanamadı.");
+      const message = describeError(e, t("error.failed"), langRef.current);
       if (needsSignIn(e)) setSignIn(message);
       else setFault(message);
       return message;
     }
-  }, []);
+  }, [t]);
   const commit = useCallback(
     async (command: Command) => (await run(command)) === null,
     [run],
@@ -361,12 +383,14 @@ export function AkarApp() {
   const taskFinished = useCallback(
     (badges: SiteBadge[]) => {
       if (badges.length)
-        setToast(`Yeni rozet: ${badges.map((b) => b.title).join(", ")}`);
+        setToast(
+          t("toast.newBadge", { titles: badges.map((b) => b.title).join(", ") }),
+        );
       void refreshProgress();
     },
-    [refreshProgress],
+    [refreshProgress, t],
   );
-  const signInForBadges = () => setSignIn("Rozetlerin hesabına kaydedilir.");
+  const signInForBadges = () => setSignIn(t("toast.badgesSignIn"));
   /** The tap of pick mode: the part goes to the server; a wrong one keeps the model waiting. */
   async function pickPart(part: string) {
     const current = pick;
@@ -388,11 +412,14 @@ export function AkarApp() {
       } else
         setPick({
           ...current,
-          hint: "Bu başka bir parça. Başka bir yere dokunmayı dene.",
+          hint: t("toast.wrongPart"),
         });
     } catch (e) {
       if (stillCurrent())
-        setPick({ ...current, hint: describeError(e, "Görev tamamlanamadı.") });
+        setPick({
+          ...current,
+          hint: describeError(e, t("error.taskFailed"), langRef.current),
+        });
     } finally {
       if (pickBusy.current === current) pickBusy.current = null;
     }
@@ -458,12 +485,13 @@ export function AkarApp() {
   }, []);
   const signOut = () => {
     void getSupabase()?.auth.signOut();
-    setToast("Çıkış yaptın.");
+    setToast(t("toast.signedOut"));
   };
   const site = state.sites.find(
     (s) => s.id === siteId && s.status === "published",
   );
   const dialogTask = taskDialog?.task;
+  const memoryCount = site ? approvedMemories(state, site.id).length : 0;
   // «Yalnız rotada» sentences lead to the next stop: they are read only on a route.
   const storySite = useMemo(() => {
     if (!site) return undefined;
@@ -556,15 +584,15 @@ export function AkarApp() {
   function chooseNear() {
     const centre = (activeCity ?? defaultCity)?.map?.center;
     void locateOnce({
-      unsupported: "Bu cihazda konum yok · Evden gez açık",
-      denied: `Konum izni yok · Evden gez: ${cityName}`,
-      timeout: `Konum alınamadı · Evden gez: ${cityName}`,
-      failed: `Konum alınamadı · Evden gez: ${cityName}`,
+      unsupported: t("locate.unsupportedHome"),
+      denied: t("locate.deniedHome", { city: cityName }),
+      timeout: t("locate.failedHome", { city: cityName }),
+      failed: t("locate.failedHome", { city: cityName }),
     }).then(
       ({ coordinates: point }) => {
         if (centre && distanceM(centre, point) > NEAR_CITY_MAX_M) {
           setToast(
-            `Konumun ${cityName} dışında · Evden gez ile şehir merkezinden başladık`,
+            t("locate.outside", { city: cityName }),
           );
           chooseHome();
           return;
@@ -575,7 +603,7 @@ export function AkarApp() {
         setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "point", point }));
       },
       (e) => {
-        setToast(describeError(e, "Konum alınamadı."));
+        setToast(describeError(e, t("locate.failedShort"), lang));
         chooseHome(false);
       },
     );
@@ -584,17 +612,22 @@ export function AkarApp() {
     writePreference("akar.karsilama", "1");
     setWelcome(false);
   }
-  function changeLanguage(next: "tr" | "en") {
+  function changeLanguage(next: Lang) {
     setLang(next);
-    writePreference("akar.dil", next);
+    saveDeviceLang(next);
+    if (state.preferences)
+      void client.current?.savePreferences({ siteLang: next }).catch(() => {});
     if (next === "en" && published.some((s) => !s.nameEn))
-      setToast("Çevirisi olmayan metinler Türkçe kalır.");
+      setToast(translate(next, "lang.fallbackNotice"));
   }
   async function toggleRoute(id: string) {
-    const name = published.find((s) => s.id === id)?.name ?? "Eser";
+    const target = published.find((s) => s.id === id);
+    const name = target
+      ? text(target.name, target.nameEn)
+      : t("profile.siteFallback");
     const inRoute = state.routeIds.includes(id);
     if (await commit({ type: "route", siteId: id }))
-      setToast(inRoute ? `${name} Rotam'dan çıkarıldı` : `${name} Rotam'a eklendi`);
+      setToast(t(inRoute ? "toast.routeRemoved" : "toast.routeAdded", { name }));
   }
   function togglePanel() {
     const next = !collapsed;
@@ -607,8 +640,11 @@ export function AkarApp() {
     try {
       setCollapsed(sessionStorage.getItem("akar-panel") === "true");
     } catch {}
-    if (readPreference("akar.dil") === "en") setLang("en");
+    setLang(deviceLang());
   }, []);
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
   // A route's page shows the whole route on the map.
   const routeStops = routeSites.map((s) => s.id).join();
   useEffect(() => {
@@ -673,7 +709,7 @@ export function AkarApp() {
           document.getElementById("main-content")?.focus();
         }}
       >
-        İçeriğe geç
+        {t("header.skip")}
       </a>
       <header className="topbar">
         <button
@@ -683,7 +719,7 @@ export function AkarApp() {
             setQuery("");
             go("map");
           }}
-          aria-label="Akar ana sayfa"
+          aria-label={t("header.home")}
         >
           <img
             className="brand-logo"
@@ -703,8 +739,8 @@ export function AkarApp() {
         <div className="global-search">
           <Search size={18} />
           <input
-            aria-label="Eser, şehir veya rota ara"
-            placeholder="Eser, şehir veya rota ara"
+            aria-label={t("header.search")}
+            placeholder={t("header.search")}
             autoComplete="off"
             value={query}
             onChange={(e) => {
@@ -715,7 +751,7 @@ export function AkarApp() {
           {query && (
             <button
               className="small-icon"
-              aria-label="Aramayı temizle"
+              aria-label={t("header.clearSearch")}
               onClick={() => setQuery("")}
             >
               <X size={15} />
@@ -723,7 +759,7 @@ export function AkarApp() {
           )}
           <button
             className="city-chip"
-            title="Şehirler"
+            title={t("header.cities")}
             onClick={() => {
               if (view !== "map") go("map");
               setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "globe" }));
@@ -733,8 +769,8 @@ export function AkarApp() {
             {cityName}
           </button>
         </div>
-        <div className="lang-switch" role="group" aria-label="Dil / Language">
-          {(["tr", "en"] as const).map((l) => (
+        <div className="lang-switch" role="group" aria-label={t("lang.switch")}>
+          {LANGS.map((l) => (
             <button
               key={l}
               lang={l}
@@ -747,11 +783,11 @@ export function AkarApp() {
         </div>
         <button
           className={`profile-button ${view === "profile" ? "active" : ""}`}
-          aria-label="Mirasım profilini aç"
+          aria-label={t("header.profile")}
           onClick={() => go("profile")}
         >
           <span className="avatar">
-            {(account?.email?.[0] ?? "G").toLocaleUpperCase("tr")}
+            {(account?.email?.[0] ?? "G").toLocaleUpperCase(lang === "en" ? "en" : "tr")}
           </span>
         </button>
       </header>
@@ -763,11 +799,11 @@ export function AkarApp() {
                 {loadError}
               </p>
               <button className="btn" onClick={() => void load()}>
-                Yeniden dene
+                {t("common.retry")}
               </button>
             </>
           ) : (
-            "Keşif hazırlanıyor…"
+            t("app.loading")
           )}
         </main>
       ) : (
@@ -795,27 +831,26 @@ export function AkarApp() {
           )}
           {!!state.pendingRouteCount && (
             <Notice>
-              {state.pendingRouteCount} durak hesabındaki rotaya taşınamadı ve
-              bu cihazda korundu. Rotam en fazla 100 durak alır. Yer açtıktan
-              sonra sayfayı yenileyerek yeniden deneyebilirsin.
+              {t("app.pendingRoute", { count: state.pendingRouteCount })}
             </Notice>
           )}
           {view === "admin" && !canManage && (
             <main id="main-content" tabIndex={-1} className="profile-page">
-              <h1>Yönetim paneli</h1>
+              <h1>{t("admin.title")}</h1>
               <Notice>
                 {account
-                  ? "Bu hesabın yönetim yetkisi bulunmuyor."
-                  : "Yönetim paneline erişmek için yetkili hesabınla giriş yap."}
+                  ? t("admin.noRights")
+                  : t("admin.signInNeeded")}
               </Notice>
               {!account && (
                 <button className="btn" onClick={() => setSignIn("")}>
-                  Giriş yap
+                  {t("common.signIn")}
                 </button>
               )}
             </main>
           )}
           {view === "admin" && canManage && (
+            <LangProvider lang="tr">
             <Admin
               key={`${account?.id ?? "local"}-${role}`}
               state={state}
@@ -833,6 +868,7 @@ export function AkarApp() {
               mapSettings={mapSettings}
               saveMapSettings={saveMapSettings}
             />
+            </LangProvider>
           )}
           {view === "history" && site && (
             <HistoryView
@@ -858,7 +894,7 @@ export function AkarApp() {
               <aside
                 ref={sheet}
                 className={`side-panel${sheetDragging ? " dragging" : ""}`}
-                aria-label="Keşif paneli"
+                aria-label={t("app.panelAria")}
                 hidden={collapsed}
                 onPointerDown={(e) => {
                   const target = (e.target as HTMLElement).closest(
@@ -946,14 +982,14 @@ export function AkarApp() {
                         <span>
                           <ChevronLeft size={18} />
                         </span>
-                        Harita
+                        {t("app.map")}
                       </button>
                       <div className="detail-title">
                         <div className="detail-title-row">
-                          <h1>{site.name}</h1>
+                          <h1><Localized tr={site.name} en={site.nameEn} /></h1>
                           <button
                             className={`round-btn plain ${state.savedIds.includes(site.id) ? "saved" : ""}`}
-                            aria-label="Eseri kaydet"
+                            aria-label={t("app.save")}
                             aria-pressed={state.savedIds.includes(site.id)}
                             onClick={() =>
                               void commit({ type: "save", siteId: site.id })
@@ -965,11 +1001,13 @@ export function AkarApp() {
                         <p>{siteMeta(site)}</p>
                       </div>
                       <Motif />
-                      <p className="description">{site.description}</p>
+                      <p className="description">
+                        <Localized tr={site.description} en={site.descriptionEn} />
+                      </p>
                       {site.stories.length > 0 ? (
                         <>
                           <p className="detail-chapters">
-                            Yapının hikâyesi · {site.stories.length} bölüm
+                            {t(site.stories.length === 1 ? "app.chaptersOne" : "app.chapters", { count: site.stories.length })}
                           </p>
                           <div className="story-actions">
                             <button
@@ -977,23 +1015,23 @@ export function AkarApp() {
                               onClick={() => openStory(true)}
                             >
                               <Headphones size={18} />
-                              Dinle · {site.minutes} dk
+                              {t("site.listen", { minutes: site.minutes })}
                             </button>
                             <button
                               className="btn secondary"
                               onClick={() => openStory()}
                             >
                               <BookOpen size={18} />
-                              Oku
+                              {t("app.read")}
                             </button>
                           </div>
                         </>
                       ) : (
-                        <Notice>Bu eserin anlatımı henüz hazırlanmadı.</Notice>
+                        <Notice>{t("app.noStory")}</Notice>
                       )}
                       {showExperimental && (
                         <p className="muted">
-                          Deneysel arayüzler açık · kapsam kararı bekleniyor
+                          {t("app.experimentalOn")}
                         </p>
                       )}
                       <button
@@ -1001,8 +1039,8 @@ export function AkarApp() {
                         onClick={() => setOverlay("about")}
                       >
                         <span>
-                          <strong>Eser hakkında</strong>
-                          <small>Tarihçe, mimari, kaynaklar</small>
+                          <strong>{t("site.about")}</strong>
+                          <small>{t("site.aboutHint")}</small>
                         </span>
                         <ArrowRight size={17} />
                       </button>
@@ -1012,11 +1050,11 @@ export function AkarApp() {
                       >
                         <History size={18} />
                         <span>
-                          <strong>Geçmişi Gör</strong>
+                          <strong>{t("site.history")}</strong>
                           <small>
                             {site.historyImages?.length
-                              ? `${site.historyImages.length} eski fotoğraf`
-                              : "Eski görüntü henüz yok"}
+                              ? t(site.historyImages.length === 1 ? "site.historyCountOne" : "site.historyCount", { count: site.historyImages.length })
+                              : t("site.historyNone")}
                           </small>
                         </span>
                         <ArrowRight size={17} />
@@ -1026,12 +1064,12 @@ export function AkarApp() {
                           {[
                             {
                               icon: Puzzle,
-                              label: "Bulmaca",
+                              label: t("site.puzzle"),
                               action: () => setOverlay("quiz"),
                             },
                             {
                               icon: Users,
-                              label: "Birlikte Gez",
+                              label: t("site.together"),
                               action: () => setOverlay("together"),
                             },
                           ].map(({ icon: Icon, label, action }) => (
@@ -1053,8 +1091,8 @@ export function AkarApp() {
                       >
                         <MessageSquare size={18} />
                         <span>
-                          <strong>İz Bırak</strong>
-                          <small>Fotoğrafını ya da anını paylaş</small>
+                          <strong>{t("site.leaveTrace")}</strong>
+                          <small>{t("site.leaveTraceHint")}</small>
                         </span>
                         <ArrowRight size={17} />
                       </button>
@@ -1063,10 +1101,9 @@ export function AkarApp() {
                         onClick={() => setOverlay("memories")}
                       >
                         <span>
-                          <strong>Yaşayan hafıza</strong>
+                          <strong>{t("site.memories")}</strong>
                           <small>
-                            {approvedMemories(state, site.id).length} onaylanmış
-                            anı
+                            {t(memoryCount === 1 ? "site.memoriesCountOne" : "site.memoriesCount", { count: memoryCount })}
                           </small>
                         </span>
                         <ArrowRight size={17} />
@@ -1078,8 +1115,8 @@ export function AkarApp() {
                         >
                           <Route size={17} />
                           {state.routeIds.includes(site.id)
-                            ? "Rotamdan çıkar"
-                            : "Rotama ekle"}
+                            ? t("site.removeRoute")
+                            : t("site.addRoute")}
                         </button>
                         <button
                           className="btn"
@@ -1087,17 +1124,17 @@ export function AkarApp() {
                         >
                           <MapPin size={17} />
                           {state.visitedIds.includes(site.id)
-                            ? "Ziyaretim"
-                            : "Yanındayım"}
+                            ? t("site.visited")
+                            : t("site.imHere")}
                         </button>
                       </div>
                     </div>
                   )
                 ) : isDetail && !site ? (
                   <div className="empty-state">
-                    <h2>Eser bulunamadı</h2>
+                    <h2>{t("app.notFound")}</h2>
                     <button className="btn" onClick={() => go("map")}>
-                      Keşfe dön
+                      {t("common.backToExplore")}
                     </button>
                   </div>
                 ) : (
@@ -1118,7 +1155,7 @@ export function AkarApp() {
                               ids.find((id) => !state.visitedIds.includes(id)) ??
                                 ids[0]!,
                             );
-                            setToast("Rotan hazır. Durakları keşfetmeye başla.");
+                            setToast(t("toast.routeReady"));
                           }
                         }}
                       />
@@ -1170,7 +1207,7 @@ export function AkarApp() {
               <div className="main-stage">
                 <button
                   className="panel-toggle"
-                  aria-label={collapsed ? "Paneli aç" : "Paneli kapat"}
+                  aria-label={collapsed ? t("app.panelOpen") : t("app.panelClose")}
                   aria-expanded={!collapsed}
                   onClick={togglePanel}
                 >
@@ -1324,7 +1361,7 @@ export function AkarApp() {
                 {!live && (
                   <div className="demo-label">
                     <span />
-                    İnteraktif demo
+                    {t("app.demoLabel")}
                   </div>
                 )}
               </div>
@@ -1405,17 +1442,17 @@ export function AkarApp() {
         <AboutModal site={site} onClose={() => setOverlay(null)} />
       )}
       {overlay === "memories" && site && (
-        <Modal title="Yaşayan hafıza" onClose={() => setOverlay(null)}>
+        <Modal title={t("site.memories")} onClose={() => setOverlay(null)}>
           {approvedMemories(state, site.id).length ? (
             approvedMemories(state, site.id).map((m) => (
               <article className="card memory-public" key={m.id}>
                 {m.photo && (
-                  <img src={m.photo} alt="Ziyaretçinin eser fotoğrafı" />
+                  <img src={m.photo} alt={t("memories.photoAlt")} />
                 )}
-                <strong>{m.author}</strong>
-                <p>{m.text}</p>
+                <strong lang={tr}>{m.author}</strong>
+                <p lang={tr}>{m.text}</p>
                 <Tag tone="success">
-                  {live ? "Onaylanmış katkı" : "Demo moderasyonunda onaylandı"}
+                  {live ? t("memories.approved") : t("memories.demoApproved")}
                 </Tag>
                 <div className="memory-actions">
                   <MemoryActions
@@ -1431,45 +1468,38 @@ export function AkarApp() {
           ) : (
             <div className="empty-state">
               <MessageSquare size={36} />
-              <h3>İlk iz senin olsun.</h3>
-              <p>Bu eserin yaşayan hafızası, senin hikâyenle başlayabilir.</p>
+              <h3>{t("memories.emptyTitle")}</h3>
+              <p>{t("memories.emptyText")}</p>
             </div>
           )}
           <button className="btn full" onClick={() => setOverlay("memory")}>
-            Bir anı bırak
+            {t("memories.add")}
             <ArrowRight size={17} />
           </button>
         </Modal>
       )}
       {showExperimental && overlay === "together" && (
-        <Modal title="Birlikte Gez" onClose={() => setOverlay(null)}>
+        <Modal title={t("site.together")} onClose={() => setOverlay(null)}>
           <div className="empty-state">
             <Users size={40} />
-            <h3>Hikâyeler birlikte güzelleşir.</h3>
-            <p>
-              Senkron sesli tur ve oda koduyla katılım, backend aşamasında
-              eklenecek. Şimdilik aynı hikâyeyi bu cihazdan birlikte
-              dinleyebilirsiniz.
-            </p>
+            <h3>{t("together.title")}</h3>
+            <p>{t("together.text")}</p>
             <button className="btn" onClick={() => openStory(true)}>
               <Headphones size={18} />
-              Hikâyeyi aç
+              {t("together.open")}
             </button>
           </div>
         </Modal>
       )}
       {overlay === "reset" && (
         <Modal
-          title="Demo verileri sıfırlansın mı?"
+          title={t("reset.title")}
           onClose={() => setOverlay(null)}
         >
-          <p>
-            Bu tarayıcıdaki anılar, rota, keşif ilerlemesi ve eklediğin eserler
-            silinerek başlangıç örneklerine dönülecek.
-          </p>
+          <p>{t("reset.text")}</p>
           <div className="modal-actions">
             <button className="btn secondary" onClick={() => setOverlay(null)}>
-              Vazgeç
+              {t("common.cancel")}
             </button>
             <button
               className="btn"
@@ -1480,13 +1510,13 @@ export function AkarApp() {
                     void refreshProgress();
                   }
                   setOverlay(null);
-                  setToast("Demo başlangıca döndürüldü.");
+                  setToast(t("toast.resetDone"));
                 } catch (e) {
-                  setFault(describeError(e, "Demo sıfırlanamadı."));
+                  setFault(describeError(e, t("error.resetFailed"), lang));
                 }
               }}
             >
-              Demo verilerini sıfırla
+              {t("profile.reset")}
             </button>
           </div>
         </Modal>
@@ -1497,7 +1527,7 @@ export function AkarApp() {
           onClose={() => setSignIn(null)}
           onSignedIn={() => {
             setSignIn(null);
-            setToast("Giriş yaptın.");
+            setToast(t("toast.signedIn"));
           }}
         />
       )}
@@ -1507,7 +1537,7 @@ export function AkarApp() {
           {toast}
           <button
             className="small-icon"
-            aria-label="Bildirimi kapat"
+            aria-label={t("toast.close")}
             onClick={() => setToast("")}
           >
             <X size={16} />
@@ -1519,7 +1549,7 @@ export function AkarApp() {
           {fault}
           <button
             className="small-icon"
-            aria-label="Hatayı kapat"
+            aria-label={t("toast.faultClose")}
             onClick={() => setFault("")}
           >
             <X size={16} />
@@ -1529,11 +1559,12 @@ export function AkarApp() {
     </div>
   );
   return (
+    <LangProvider lang={lang}>
     <Cities.Provider value={cityRecords}>
       <SourceSheetProvider
         fallback={defaultCity?.inventory?.name ?? ""}
         report={() =>
-          setToast("Teşekkürler. Bildirimin içerik ekibine iletilmek üzere not edildi.")
+          setToast(t("toast.reportThanks"))
         }
       >
         {shell}
@@ -1611,5 +1642,6 @@ export function AkarApp() {
         />
       )}
     </Cities.Provider>
+    </LangProvider>
   );
 }

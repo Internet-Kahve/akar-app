@@ -531,3 +531,34 @@ test("an admin finds a newly registered member, grants admin access and revokes 
     await admin.context.close();
   }
 });
+
+test("the site language follows the account: an empty account takes the device's, the account's wins over the device later", async ({
+  browser,
+}) => {
+  const email = `e2e-lang-${randomUUID().slice(0, 8)}@akar.test`;
+  const preferences = async () =>
+    (await (await fetch(`${API}/v1/me`, { headers: { authorization: `Bearer ${tokenFor(email, "user")}` } })).json())
+      .preferences;
+  const { context, page } = await guestPage(browser);
+  try {
+    // 1. A Turkish browser signs in: the account had no language and takes Turkish.
+    await openProfile(page);
+    await page.getByRole("button", { name: "Giriş yap" }).click();
+    await signIn(page, email);
+    await expect.poll(async () => (await preferences()).siteLang).toBe("tr");
+
+    // 2. Switching while signed in saves the account too.
+    await page.goto("/");
+    await expect(page.locator(".opening")).toHaveCount(0);
+    await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: "EN" }).click();
+    await expect.poll(async () => (await preferences()).siteLang).toBe("en");
+
+    // 3. The device says Turkish again (as another device would): the signed-in load brings the account's English.
+    await page.evaluate(() => localStorage.setItem("akar.dil", "tr"));
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.locator(".global-search input")).toHaveAttribute("placeholder", "Search sites, cities or routes");
+  } finally {
+    await context.close();
+  }
+});

@@ -377,3 +377,10 @@ test("mock: finishing the story earns the story badge once; reset clears the bad
   await c.reset();
   assert.deepEqual(await c.getSiteProgress(), { tasks: [], badges: [] });
 });
+test("mock: savePreferences merges the given keys, null clears one, a missing key stays", async () => {
+  const c = createMockClient(storage());
+  assert.deepEqual(await c.savePreferences({ siteLang: "en" }), { siteLang: "en", voiceLang: null, voiceGender: null });
+  assert.deepEqual(await c.savePreferences({ voiceLang: "tr", voiceGender: "male" }), { siteLang: "en", voiceLang: "tr", voiceGender: "male" });
+  assert.deepEqual(await c.savePreferences({ voiceGender: null }), { siteLang: "en", voiceLang: "tr", voiceGender: null });
+  assert.deepEqual(await c.savePreferences({}), { siteLang: "en", voiceLang: "tr", voiceGender: null });
+});

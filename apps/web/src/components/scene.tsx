@@ -18,6 +18,7 @@ import { readPreference, writePreference } from "../lib/preferences";
 import { NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
 import { useWide } from "./about-reading";
 import { useCityIdentity, useCityScene } from "./city-scenes";
+import { Localized, useI18n } from "./i18n";
 import { ModelStage } from "./model-stage";
 import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
 
@@ -26,6 +27,7 @@ const CONTROLS_MS = 3000;
 
 /** A sentence's photograph: fitted over its own blur, or filling the stage; the choice stays on the device. */
 function StoryPhoto({ photo }: { photo: SitePhoto }) {
+  const { t, text } = useI18n();
   const [fill, setFill] = useState(false),
     [quiet, setQuiet] = useState(false);
   useEffect(() => setFill(readPreference("akar.fotoKip") === "fill"), []);
@@ -37,7 +39,7 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
   return (
     <section
       className={`story-photo${quiet ? " quiet" : ""}`}
-      aria-label={photo.title || photo.alt}
+      aria-label={text(photo.title, photo.titleEn) || photo.alt}
       onPointerMove={() => setQuiet(false)}
       onPointerDown={() => setQuiet(false)}
     >
@@ -56,11 +58,13 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
         }}
       >
         {fill ? <Shrink size={16} /> : <Expand size={16} />}
-        {fill ? "Sığdır" : "Ekranı doldur"}
+        {fill ? t("site.fitPhoto") : t("site.fillPhoto")}
       </button>
       {(photo.title || photo.license) && (
         <p className="story-photo-credit">
-          {[photo.title, photo.license].filter(Boolean).join(" · ")}
+          {photo.title && <Localized tr={photo.title} en={photo.titleEn} />}
+          {photo.title && photo.license && " · "}
+          {photo.license}
         </p>
       )}
     </section>
@@ -77,6 +81,7 @@ function PhotoGallery({
   photos: SitePhoto[];
   onModel?: () => void;
 }) {
+  const { t, text, lang } = useI18n();
   const gallery = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   function goTo(index: number) {
@@ -94,24 +99,24 @@ function PhotoGallery({
   return (
     <section
       className="scene photo-scene"
-      aria-label={`${site.name} fotoğrafları`}
+      aria-label={t("site.photosOf", { name: text(site.name, site.nameEn) })}
     >
       <div className="photo-gallery-toolbar">
         {onModel && (
           <div
             className="scene-media-switch"
             role="group"
-            aria-label="Eser görünümü"
+            aria-label={t("site.viewSwitch")}
           >
             <button
               className="btn secondary"
               aria-pressed={false}
               onClick={onModel}
             >
-              3B model
+              {t("site.model3d")}
             </button>
             <button className="btn secondary" aria-pressed={true}>
-              Fotoğraf
+              {t("site.photo")}
             </button>
           </div>
         )}
@@ -119,22 +124,22 @@ function PhotoGallery({
           <div
             className="photo-gallery-navigation"
             role="group"
-            aria-label="Fotoğraf gezinme"
+            aria-label={t("site.photoNav")}
           >
             <button
               className="icon-btn"
-              aria-label="Önceki fotoğraf"
+              aria-label={t("site.prevPhoto")}
               disabled={active === 0}
               onClick={() => goTo(active - 1)}
             >
               <ChevronLeft size={20} />
             </button>
             <span role="status" aria-live="polite">
-              Fotoğraf {active + 1} / {photos.length}
+              {t("site.photoCounter", { n: active + 1, total: photos.length })}
             </span>
             <button
               className="icon-btn"
-              aria-label="Sonraki fotoğraf"
+              aria-label={t("site.nextPhoto")}
               disabled={active === photos.length - 1}
               onClick={() => goTo(active + 1)}
             >
@@ -148,7 +153,7 @@ function PhotoGallery({
         ref={gallery}
         tabIndex={0}
         role="region"
-        aria-label="Eser fotoğraf galerisi"
+        aria-label={t("site.galleryLabel")}
         onScroll={() => {
           const strip = gallery.current;
           if (!strip) return;
@@ -171,7 +176,7 @@ function PhotoGallery({
       >
         {photos.length === 0 && (
           <p className="photo-gallery-empty" role="status">
-            Bu bölümün fotoğrafı bulunamadı.
+            {t("site.noSectionPhoto")}
           </p>
         )}
         {photos.map((photo, index) => {
@@ -191,9 +196,17 @@ function PhotoGallery({
                 loading={index === 0 ? "eager" : "lazy"}
               />
               <figcaption className="scene-photo-credit">
-                <strong>{photo.title || site.name}</strong>
+                <strong>
+                  {photo.title ? (
+                    <Localized tr={photo.title} en={photo.titleEn} />
+                  ) : (
+                    <Localized tr={site.name} en={site.nameEn} />
+                  )}
+                </strong>
                 {photo.license && <span>{photo.license}</span>}
-                {source?.title && <span>{source.title}</span>}
+                {source?.title && (
+                  <span lang={lang === "en" ? "tr" : undefined}>{source.title}</span>
+                )}
               </figcaption>
             </figure>
           );
@@ -272,6 +285,7 @@ export function Scene({
   /** What the 3D loading card tells the visitor to do meanwhile: «Dinle ya da Oku» on the detail, nothing more in the story. */
   context?: "detail" | "story";
 }) {
+  const { t, text } = useI18n();
   const cityScene = useCityScene(site.city);
   const identity = useCityIdentity(site.city);
   const wide = useWide();
@@ -315,16 +329,16 @@ export function Scene({
       <>
         <StoryPhoto key={photo.id} photo={photo} />
         {site.model && (
-          <div className="scene-media-switch" role="group" aria-label="Eser görünümü">
+          <div className="scene-media-switch" role="group" aria-label={t("site.viewSwitch")}>
             <button className="btn secondary" aria-pressed={true}>
-              Fotoğraf
+              {t("site.photo")}
             </button>
             <button
               className="btn secondary"
               aria-pressed={false}
               onClick={() => setMode("model")}
             >
-              3B model
+              {t("site.model3d")}
             </button>
           </div>
         )}
@@ -344,14 +358,14 @@ export function Scene({
         <div
           className="scene-media-switch"
           role="group"
-          aria-label="Eser görünümü"
+          aria-label={t("site.viewSwitch")}
         >
           <button
             className="btn secondary"
             aria-pressed={mode === "model"}
             onClick={() => setMode("model")}
           >
-            3B model
+            {t("site.model3d")}
           </button>
           {(photos.length > 0 || !!photoId) && (
             <button
@@ -359,7 +373,7 @@ export function Scene({
               aria-pressed={mode === "photo"}
               onClick={() => setMode("photo")}
             >
-              Fotoğraf
+              {t("site.photo")}
             </button>
           )}
         </div>
@@ -367,7 +381,7 @@ export function Scene({
           <ModelStage
             key={site.model.src}
             model={site.model}
-            name={site.name}
+            name={text(site.name, site.nameEn)}
             scene={cityScene}
             identity={identity}
             context={context}
@@ -382,11 +396,12 @@ export function Scene({
           />
           <div className="model-label">
             <i />
-            3D model · Temsili
+            {t("site.modelLabel")}
           </div>
           <div className="model-hint">
-            Sürükle: döndür · {wide ? "Tekerlek" : "İki parmak"}: yakınlaştır ·
-            Dokun: parça
+            {t("site.modelHint", {
+              zoom: wide ? t("site.hintWheel") : t("site.hintTwoFingers"),
+            })}
           </div>
           {card && (
             <StoryPhotoCard
@@ -406,17 +421,19 @@ export function Scene({
     return (
       <div className="scene">
         <div className="empty-state">
-          <h2>{site.name}</h2>
-          <p>Bu esere henüz fotoğraf veya 3B model eklenmedi.</p>
+          <h2>
+            <Localized tr={site.name} en={site.nameEn} />
+          </h2>
+          <p>{t("site.noMedia")}</p>
         </div>
       </div>
     );
   return (
     <div className={`scene ${flow ? "flow-scene" : ""}`}>
       <div className="scene-top">
-        <span className="tag">ETKİLEŞİMLİ KEŞİF</span>
+        <span className="tag">{t("site.sceneTag")}</span>
         <span className="tag representative">
-          Temsili görünüm · 3D henüz bağlanmadı
+          {t("site.sceneRepresentative")}
         </span>
       </div>
       {flow ? (
@@ -424,35 +441,35 @@ export function Scene({
           <div className="flow-node">
             <Store size={36} />
             <h3>Bedesten</h3>
-            <span>Akar · gelir sağlayan</span>
+            <span>{t("site.flowAkar")}</span>
           </div>
           <div className="flow-connector">
-            <span>Vakıf geliri</span>
+            <span>{t("site.flowIncome")}</span>
             <ArrowRight size={48} />
           </div>
           <div className="flow-node">
             <Landmark size={36} />
             <h3>Ulucami</h3>
-            <span>Hayrat · hizmet sunan</span>
+            <span>{t("site.flowHayrat")}</span>
           </div>
           <div className="flow-uses">
             <span>
               <Wrench size={18} />
-              Bakım
+              {t("site.useMaintenance")}
             </span>
             <span>
               <Sun size={18} />
-              Aydınlatma
+              {t("site.useLighting")}
             </span>
             <span>
               <Users size={18} />
-              Görevliler
+              {t("site.useStaff")}
             </span>
           </div>
           <p>
-            Bedesten → Ulucami demo anlatımıdır.
+            {t("site.flowDemo")}
             <br />
-            Bu esere ait gelir ilişkileri kaynak doğrulaması bekliyor.
+            {t("site.flowPending")}
           </p>
         </div>
       ) : (
@@ -462,30 +479,32 @@ export function Scene({
             className="hotspot dome-spot"
             onClick={() => onHotspot("kubbe")}
           >
-            <span>1</span>Kubbenin hikâyesi
+            <span>1</span>{t("site.hotspotDome")}
           </button>
           <button
             className="hotspot courtyard-spot"
             onClick={() => onHotspot("avlu")}
           >
-            <span>2</span>Avluya yakından bak
+            <span>2</span>{t("site.hotspotCourtyard")}
           </button>
           <button
             className="hotspot bath-spot"
             onClick={() => onHotspot("akar")}
           >
-            <span>3</span>Vakıf nasıl yaşar?
+            <span>3</span>{t("site.hotspotWaqf")}
           </button>
         </>
       )}
       <div className="scene-bottom">
         <div>
-          <small>BİR YAPI, BİNLERCE HİKÂYE</small>
-          <h2>{site.name}</h2>
+          <small>{t("site.sceneTagline")}</small>
+          <h2>
+            <Localized tr={site.name} en={site.nameEn} />
+          </h2>
         </div>
         <span>
           <Maximize2 size={16} />{" "}
-          {flow ? "Akar → Hayrat" : "Bir noktaya dokun, keşfet"}
+          {flow ? t("site.flowTitle") : t("site.touchExplore")}
         </span>
       </div>
     </div>

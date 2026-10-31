@@ -9,6 +9,7 @@ import {
   type HeritageSite,
   type Memory,
   type Role,
+  type UserPreferences,
   type SiteBadge,
   type SiteTask,
 } from "@akar/domain";
@@ -19,6 +20,7 @@ import {
   demoSiteTaskKeys,
 } from "./seed";
 export { routes, createSeed, demoRegion, demoQuizzes } from "./seed";
+export type { UserPreferences };
 export {
   createHttpClient,
   ApiError,
@@ -140,6 +142,11 @@ export interface AkarClient {
   getMapSettings(): Promise<MapSettings>;
   /** `PUT /v1/admin/map-settings`, admin only: returns the saved values. */
   setMapSettings(settings: MapSettings): Promise<MapSettings>;
+  /**
+   * `PUT /v1/me/preferences`, signed-in only: writes the given keys (`null` clears one, a missing key stays) and
+   * returns the whole saved object. The demo keeps it in memory.
+   */
+  savePreferences(patch: Partial<UserPreferences>): Promise<UserPreferences>;
   /** `GET /v1/cities`: every city with its map view, inventory, scene and identity (§11.42, §11.45, §11.49), alphabetical. */
   getCities(): Promise<CityRecord[]>;
   /**
@@ -387,6 +394,11 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
   };
   // Demo: a change lasts until the page reloads, like the demo member roles.
   let mapSettings: MapSettings = { ...defaultMapSettings };
+  let preferences: UserPreferences = {
+    siteLang: null,
+    voiceLang: null,
+    voiceGender: null,
+  };
   return {
     async getSnapshot() {
       return structuredClone(state);
@@ -400,6 +412,15 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     async setMapSettings(settings) {
       mapSettings = { ...settings };
       return { ...mapSettings };
+    },
+    async savePreferences(patch) {
+      // A missing (undefined) key stays; null clears.
+      preferences = {
+        siteLang: patch.siteLang === undefined ? preferences.siteLang : patch.siteLang,
+        voiceLang: patch.voiceLang === undefined ? preferences.voiceLang : patch.voiceLang,
+        voiceGender: patch.voiceGender === undefined ? preferences.voiceGender : patch.voiceGender,
+      };
+      return { ...preferences };
     },
     async getCities() {
       return demoCities.map((c) => ({

@@ -2,6 +2,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X, ArrowLeft, Check, Info } from "lucide-react";
 import { useUploadProgress } from "../lib/upload-progress";
+import { useI18n } from "./i18n";
 export function Modal({
   title,
   children,
@@ -19,6 +20,7 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const { t } = useI18n();
   useEffect(() => {
     const previous = document.activeElement as HTMLElement;
     const dialog = ref.current;
@@ -45,7 +47,7 @@ export function Modal({
         <h2 id={titleId}>{title}</h2>
         <button
           className="icon-btn"
-          aria-label="Pencereyi kapat"
+          aria-label={t("common.closeWindow")}
           disabled={!dismissible}
           onClick={onClose}
         >
@@ -58,15 +60,16 @@ export function Modal({
 }
 export function Back({
   onClick,
-  children = "Keşfe dön",
+  children,
 }: {
   onClick: () => void;
   children?: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <button className="back" onClick={onClick}>
       <ArrowLeft size={17} />
-      {children}
+      {children ?? t("common.backToExplore")}
     </button>
   );
 }
@@ -94,19 +97,20 @@ export function Notice({ children }: { children: ReactNode }) {
 }
 export function UploadProgress() {
   const fraction = useUploadProgress();
+  const { t } = useI18n();
   if (fraction === null) return null;
   const percent = Math.round(fraction * 100);
   return (
     <div
       className="upload-progress"
       role="progressbar"
-      aria-label="Fotoğraf yükleniyor"
+      aria-label={t("upload.aria")}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={percent}
     >
       <span style={{ width: `${percent}%` }} />
-      <small>Fotoğraf yükleniyor · %{percent}</small>
+      <small>{t("upload.text", { percent })}</small>
     </div>
   );
 }

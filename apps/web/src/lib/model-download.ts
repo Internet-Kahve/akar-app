@@ -1,3 +1,5 @@
+import { translate, type Lang } from "./i18n";
+
 /**
  * What the 3D loading card says about a model download (§11.49). The numbers are the bytes the browser has really
  * read from the response stream; the total is the length the server announced, `null` when it announced none.
@@ -20,9 +22,9 @@ export function toDownloadProgress(event: {
 }
 
 const MB = 1024 * 1024;
-/** `0,4`: one decimal, Turkish comma. */
-export function formatMb(bytes: number): string {
-  return (bytes / MB).toLocaleString("tr-TR", {
+/** `0,4`: one decimal, with the language's decimal separator (Turkish comma, English point). */
+export function formatMb(bytes: number, lang: Lang = "tr"): string {
+  return (bytes / MB).toLocaleString(lang === "en" ? "en-GB" : "tr-TR", {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
@@ -37,14 +39,14 @@ export interface DownloadView {
   sizes: string;
 }
 
-export function describeDownload(progress: DownloadProgress | null): DownloadView {
-  const title = "3D model yükleniyor";
+export function describeDownload(progress: DownloadProgress | null, lang: Lang = "tr"): DownloadView {
+  const title = translate(lang, "model.loading");
   if (!progress || progress.loaded <= 0) return { percent: null, title, sizes: "" };
   if (progress.total === null)
     return {
       percent: null,
       title,
-      sizes: `${formatMb(progress.loaded)} MB indirildi.`,
+      sizes: translate(lang, "model.downloaded", { size: formatMb(progress.loaded, lang) }),
     };
   // A server that compresses on the fly announces the compressed length while the stream carries the full bytes:
   // never show more than 100 % or a total smaller than what has been read.
@@ -52,8 +54,8 @@ export function describeDownload(progress: DownloadProgress | null): DownloadVie
   const percent = Math.min(100, Math.round((progress.loaded / total) * 100));
   return {
     percent,
-    title: `${title} · %${percent}`,
-    sizes: `${formatMb(progress.loaded)} MB / ${formatMb(total)} MB.`,
+    title: translate(lang, "model.loadingPercent", { percent }),
+    sizes: `${formatMb(progress.loaded, lang)} MB / ${formatMb(total, lang)} MB.`,
   };
 }
 

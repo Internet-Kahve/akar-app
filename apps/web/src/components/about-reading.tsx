@@ -9,7 +9,6 @@ import {
 } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import {
-  trustLabels,
   type AboutChapter,
   type AboutPhoto,
   type HeritageSite,
@@ -18,6 +17,7 @@ import {
 import { useCityIdentity, useCityScene } from "./city-scenes";
 import { ModelStage } from "./model-stage";
 import { Modal, Notice, Tag } from "./ui";
+import { Localized, useI18n } from "./i18n";
 import {
   STRIP_MAX,
   chapterBlocks,
@@ -58,49 +58,53 @@ export function AboutModal({
   site: HeritageSite;
   onClose: () => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   if (site.chapters?.length)
     return (
-      <Modal title="Eser hakkında" className="about-reading" onClose={onClose}>
+      <Modal title={t("site.aboutTitle")} className="about-reading" onClose={onClose}>
         <Reading site={site} chapters={site.chapters} />
       </Modal>
     );
   return (
-    <Modal title="Eser hakkında" onClose={onClose}>
-      <h3>{site.name}</h3>
-      <p>{site.description}</p>
+    <Modal title={t("site.aboutTitle")} onClose={onClose}>
+      <h3>
+        <Localized tr={site.name} en={site.nameEn} />
+      </h3>
+      <p>
+        <Localized tr={site.description} en={site.descriptionEn} />
+      </p>
       <dl className="facts">
         {site.year && (
           <div>
-            <dt>Dönem</dt>
-            <dd>{site.year}</dd>
+            <dt>{t("site.aboutPeriod")}</dt>
+            <dd lang={content}>{site.year}</dd>
           </div>
         )}
         <div>
-          <dt>Mimar</dt>
-          <dd>{site.architect}</dd>
+          <dt>{t("site.aboutArchitect")}</dt>
+          <dd lang={content}>{site.architect}</dd>
         </div>
         <div>
-          <dt>Konum</dt>
-          <dd>
+          <dt>{t("site.aboutLocation")}</dt>
+          <dd lang={content}>
             {site.city} · {site.district}
           </dd>
         </div>
       </dl>
       {site.sections?.map((section) => (
         <section key={section.id}>
-          <h3>{section.title}</h3>
-          <p>{section.body}</p>
-          <Tag tone={section.trust}>{trustLabels[section.trust]}</Tag>
-          <p className="muted">
+          <h3 lang={content}>{section.title}</h3>
+          <p lang={content}>{section.body}</p>
+          <Tag tone={section.trust}>{t(`trust.${section.trust}`)}</Tag>
+          <p className="muted" lang={content}>
             {site.sources?.find((source) => source.id === section.sourceId)?.title}
           </p>
         </section>
       ))}
-      <h3>Kaynak ve içerik durumu</h3>
-      <p>{site.source}</p>
-      {!site.sources?.length && (
-        <Notice>Bu kaydın kaynaklı içerik paketi henüz eklenmedi.</Notice>
-      )}
+      <h3>{t("site.aboutSourceStatus")}</h3>
+      <p lang={content}>{site.source}</p>
+      {!site.sources?.length && <Notice>{t("site.noSourcePack")}</Notice>}
     </Modal>
   );
 }
@@ -131,6 +135,9 @@ function Reading({
   site: HeritageSite;
   chapters: AboutChapter[];
 }) {
+  const i18n = useI18n();
+  const { t, lang } = i18n;
+  const content = lang === "en" ? "tr" : undefined;
   const wide = useWide();
   const cityScene = useCityScene(site.city);
   const identity = useCityIdentity(site.city);
@@ -275,10 +282,10 @@ function Reading({
     .join(" · ");
 
   const nav = (
-    <nav className="about-nav" aria-label="Bölümler">
+    <nav className="about-nav" aria-label={t("site.aboutChapters")}>
       <button
         className="about-tab-arrow"
-        aria-label="Önceki bölümler"
+        aria-label={t("site.aboutPrevChapters")}
         onClick={() => tabs.current?.scrollBy({ left: -240, behavior: "smooth" })}
       >
         <ChevronLeft size={18} />
@@ -289,6 +296,7 @@ function Reading({
             key={chapter.id}
             className="about-tab"
             aria-current={i === active}
+            lang={content}
             onClick={() => goTo(i)}
           >
             {chapter.title}
@@ -297,7 +305,7 @@ function Reading({
       </div>
       <button
         className="about-tab-arrow"
-        aria-label="Sonraki bölümler"
+        aria-label={t("site.aboutNextChapters")}
         onClick={() => tabs.current?.scrollBy({ left: 240, behavior: "smooth" })}
       >
         <ChevronRight size={18} />
@@ -315,19 +323,34 @@ function Reading({
           </div>
         )}
         <div className="about-cover-panel">
-          {site.district && <span className="about-district">{site.district}</span>}
-          <h3 className="about-title">{site.name}</h3>
+          {site.district && (
+            <span className="about-district" lang={content}>
+              {site.district}
+            </span>
+          )}
+          <h3 className="about-title">
+            <Localized tr={site.name} en={site.nameEn} />
+          </h3>
           <span className="about-gold" aria-hidden="true" />
-          <p className="about-meta-top">{meta}</p>
+          <p className="about-meta-top" lang={content}>
+            {meta}
+          </p>
           <p className="about-cover-meta">
-            Eser hakkında · {readingMinutes(totalWords)} dk okuma · {chapters.length} bölüm
+            {t(chapters.length === 1 ? "site.aboutCoverMetaOne" : "site.aboutCoverMeta", {
+              min: readingMinutes(totalWords),
+              n: chapters.length,
+            })}
           </p>
         </div>
       </header>
       <div className={`about-grid${showModel || (wide && sidePhoto) ? " with-aside" : ""}`}>
         <article className="about-main">
           {nav}
-          {site.description && <p className="about-lead">{site.description}</p>}
+          {site.description && (
+            <p className="about-lead">
+              <Localized tr={site.description} en={site.descriptionEn} />
+            </p>
+          )}
           {grouped.map((g, i) => (
             <ChapterView
               key={g.chapter.id}
@@ -351,43 +374,46 @@ function Reading({
             <section className="about-chapter">
               {loose.map((section: Section) => (
                 <div key={section.id}>
-                  <h2 className="about-h2">{section.title}</h2>
-                  <p className="about-p">{section.body}</p>
-                  <Tag tone={section.trust}>{trustLabels[section.trust]}</Tag>
+                  <h2 className="about-h2" lang={content}>
+                    {section.title}
+                  </h2>
+                  <p className="about-p" lang={content}>
+                    {section.body}
+                  </p>
+                  <Tag tone={section.trust}>{t(`trust.${section.trust}`)}</Tag>
                 </div>
               ))}
             </section>
           )}
           <section className="about-end">
-            <h2 className="about-h2">Kaynaklar</h2>
+            <h2 className="about-h2">{t("site.sources")}</h2>
             {usedSources.length > 0 && (
               <ul className="about-sources">
                 {usedSources.map((title) => (
-                  <li key={title}>{title}</li>
+                  <li key={title} lang={content}>
+                    {title}
+                  </li>
                 ))}
               </ul>
             )}
-            <p className="about-note">{site.source}</p>
-            <p className="about-note">
-              Metin, kaynağın kendi metnidir; bölüm başlıkları, «Kitaptan» özetleri, rakam kartları ve
-              alıntılar okumayı kolaylaştırmak için metinden seçilmiştir, kelimesi değiştirilmemiştir.
+            <p className="about-note" lang={content}>
+              {site.source}
             </p>
-            {!site.sources?.length && (
-              <Notice>Bu kaydın kaynaklı içerik paketi henüz eklenmedi.</Notice>
-            )}
+            <p className="about-note">{t("site.aboutSourceNote")}</p>
+            {!site.sources?.length && <Notice>{t("site.noSourcePack")}</Notice>}
           </section>
         </article>
         {wide && (showModel || sidePhoto) && (
           <aside
             className="about-aside"
-            aria-label={showModel ? "3B model: okunan bölüm" : "Bölümün fotoğrafı"}
+            aria-label={showModel ? t("site.aboutModelAside") : t("site.aboutPhotoAside")}
           >
             <div className="about-stage">
               {showModel && site.model ? (
                 <ModelStage
                   key={site.model.src}
                   model={site.model}
-                  name={site.name}
+                  name={i18n.text(site.name, site.nameEn)}
                   scene={cityScene}
                   identity={identity}
                   context="reading"
@@ -401,9 +427,9 @@ function Reading({
                 sidePhoto && <img src={sidePhoto.src} alt={sidePhoto.alt} />
               )}
               <span className="about-stage-label" aria-live="polite">
-                {pad(active)} · {current.chapter.title}
+                {pad(active)} · <span lang={content}>{current.chapter.title}</span>
               </span>
-              {showModel && <span className="about-stage-tag">3B model · Temsili</span>}
+              {showModel && <span className="about-stage-tag">{t("site.aboutModelTag")}</span>}
             </div>
           </aside>
         )}
@@ -412,6 +438,7 @@ function Reading({
         <div
           className="about-term-card"
           role="note"
+          lang={content}
           style={{
             left: term.left,
             width: term.width,
@@ -461,6 +488,8 @@ function ChapterView({
   onPhotos: (photos: AboutPhoto[], index: number) => void;
   onTerm: (term: Term, el: HTMLElement) => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   const [showSources, setShowSources] = useState(false);
   const minutes = readingMinutes(words);
   const hasSummary = chapter.summary.length > 0;
@@ -489,12 +518,12 @@ function ChapterView({
     >
       <header className="about-chapter-head about-reveal">
         <div className="about-chapter-title">
-          <h2 className="about-h2" id={headingId}>
+          <h2 className="about-h2" id={headingId} lang={content}>
             <span className="about-no">{pad(index)}</span>
             {chapter.title}
           </h2>
           <small>
-            {minutes} dk okuma · {count} paragraf
+            {t(count === 1 ? "site.readMetaOne" : "site.readMeta", { min: minutes, n: count })}
           </small>
         </div>
         {cover && (
@@ -507,14 +536,18 @@ function ChapterView({
       </header>
       {hasSummary && (
         <div className="about-summary about-reveal">
-          <span className="about-label">Kitaptan</span>
-          <p>{chapter.summary.join(" ")}</p>
+          <span className="about-label">{t("site.aboutFromBook")}</span>
+          <p lang={content}>{chapter.summary.join(" ")}</p>
         </div>
       )}
       {chapter.figures.length > 0 && (
         <div className="about-figures">
           {chapter.figures.map((figure) => (
-            <div className="about-figure about-reveal" key={`${figure.value}-${figure.label}`}>
+            <div
+              className="about-figure about-reveal"
+              key={`${figure.value}-${figure.label}`}
+              lang={content}
+            >
               <b>{figure.value}</b>
               <span>{figure.label}</span>
               <small>«{figure.evidence}»</small>
@@ -523,7 +556,7 @@ function ChapterView({
         </div>
       )}
       {chapter.quotes.map((quote) => (
-        <blockquote className="about-quote about-reveal" key={quote.text}>
+        <blockquote className="about-quote about-reveal" key={quote.text} lang={content}>
           <span className="about-gold" aria-hidden="true" />
           <p>{quote.text}</p>
           {quote.by && <cite>{quote.by}</cite>}
@@ -532,7 +565,7 @@ function ChapterView({
       {chapter.timeline.length > 0 && (
         <ol className="about-timeline">
           {chapter.timeline.map((entry) => (
-            <li className="about-reveal" key={`${entry.year}-${entry.evidence}`}>
+            <li className="about-reveal" key={`${entry.year}-${entry.evidence}`} lang={content}>
               <b>{entry.year}</b>
               <span>«{entry.evidence}»</span>
             </li>
@@ -550,9 +583,9 @@ function ChapterView({
             aria-controls={`about-text-${chapter.id}`}
             onClick={onToggle}
           >
-            <span>{open ? "Metni kısalt" : "Derinine in"}</span>
+            <span>{open ? t("site.aboutShorten") : t("site.aboutDeeper")}</span>
             <small>
-              {count} paragraf · {minutes} dk
+              {t(count === 1 ? "site.deepMetaOne" : "site.deepMeta", { n: count, min: minutes })}
             </small>
             <ChevronDown size={20} aria-hidden="true" />
           </button>
@@ -561,21 +594,23 @@ function ChapterView({
         <div>{body}</div>
       )}
       <div className="about-chapter-foot">
-        <Tag tone={trust}>{trustLabels[trust]}</Tag>
+        <Tag tone={trust}>{t(`trust.${trust}`)}</Tag>
         {sources.length > 0 && (
           <button
             className="about-sources-toggle"
             aria-expanded={showSources}
             onClick={() => setShowSources(!showSources)}
           >
-            Kaynaklar ({sources.length}) {showSources ? "⌄" : "›"}
+            {t("site.sourcesCount", { n: sources.length })} {showSources ? "⌄" : "›"}
           </button>
         )}
       </div>
       {showSources && (
         <ul className="about-sources">
           {sources.map((title) => (
-            <li key={title}>{title}</li>
+            <li key={title} lang={content}>
+              {title}
+            </li>
           ))}
         </ul>
       )}
@@ -598,6 +633,8 @@ function BlockView({
   onPhotos: (photos: AboutPhoto[], index: number) => void;
   onTerm: (term: Term, el: HTMLElement) => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   // The chapter's first photograph already opens the chapter.
   const photos = block.photos.filter((p) => p !== cover);
   return (
@@ -607,12 +644,13 @@ function BlockView({
           <p className="about-inscription-text">{block.original}</p>
           {block.meaning.map((meaning) => (
             <p className="about-inscription-meaning" key={meaning}>
-              <span>Mealen:</span> {meaning}
+              <span>{t("site.aboutMeaning")}</span>{" "}
+              <span lang={content}>{meaning}</span>
             </p>
           ))}
         </blockquote>
       ) : (
-        <p className={`about-p${block.inSummary ? " in-summary" : ""}`}>
+        <p className={`about-p${block.inSummary ? " in-summary" : ""}`} lang={content}>
           {splitTerms(block.text, terms).map((part, i) =>
             part.term ? (
               <button
@@ -631,7 +669,7 @@ function BlockView({
       )}
       {block.trust !== trust && (
         <div className="about-p-trust">
-          <Tag tone={block.trust}>{trustLabels[block.trust]}</Tag>
+          <Tag tone={block.trust}>{t(`trust.${block.trust}`)}</Tag>
         </div>
       )}
       {photos.length > 0 && <PhotoGroup photos={photos} onOpen={onPhotos} />}
@@ -649,18 +687,20 @@ function BookPhoto({
   className?: string;
   onOpen: () => void;
 }) {
+  const { t, lang } = useI18n();
   const [natural, setNatural] = useState<number>();
   const alt = item.alt || item.photo.alt;
   return (
     <button
       className={`about-photo ${className}`.trim()}
       style={{ "--ratio": photoRatio(item.aspect, natural) } as CSSProperties}
-      aria-label={`Fotoğrafı büyüt: ${alt}`}
+      aria-label={t("site.aboutEnlarge", { alt })}
       onClick={onOpen}
     >
       <img
         src={item.photo.src}
         alt={alt}
+        lang={lang === "en" ? "tr" : undefined}
         loading="lazy"
         decoding="async"
         onLoad={(e) =>
@@ -680,6 +720,7 @@ function PhotoGroup({
   photos: AboutPhoto[];
   onOpen: (photos: AboutPhoto[], index: number) => void;
 }) {
+  const { t, lang } = useI18n();
   const licenses = [...new Set(photos.map((p) => p.photo.license).filter(Boolean))];
   return (
     <figure className="about-photos about-reveal">
@@ -689,8 +730,8 @@ function PhotoGroup({
         ))}
       </div>
       <figcaption>
-        {photos.length > 1 ? `${photos.length} fotoğraf · ` : ""}
-        {licenses.join(" · ")}
+        {photos.length > 1 ? `${t("site.aboutPhotoCount", { n: photos.length })} · ` : ""}
+        <span lang={lang === "en" ? "tr" : undefined}>{licenses.join(" · ")}</span>
       </figcaption>
     </figure>
   );
@@ -707,6 +748,7 @@ export function Lightbox({
   onIndex: (index: number) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   const shown = photos[index]!;
   useEffect(() => {
@@ -719,7 +761,7 @@ export function Lightbox({
     <dialog
       ref={ref}
       className="about-lightbox"
-      aria-label="Fotoğraf"
+      aria-label={t("site.photo")}
       onCancel={onClose}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -730,7 +772,7 @@ export function Lightbox({
         if (e.key === "ArrowRight") step(1);
       }}
     >
-      <button className="about-lightbox-close" aria-label="Kapat" onClick={onClose}>
+      <button className="about-lightbox-close" aria-label={t("common.close")} onClick={onClose}>
         <X size={20} />
       </button>
       <img src={shown.src} alt={shown.alt} />
@@ -740,10 +782,10 @@ export function Lightbox({
       </p>
       {photos.length > 1 && (
         <>
-          <button className="about-lightbox-step prev" aria-label="Önceki fotoğraf" onClick={() => step(-1)}>
+          <button className="about-lightbox-step prev" aria-label={t("site.prevPhoto")} onClick={() => step(-1)}>
             <ChevronLeft size={22} />
           </button>
-          <button className="about-lightbox-step next" aria-label="Sonraki fotoğraf" onClick={() => step(1)}>
+          <button className="about-lightbox-step next" aria-label={t("site.nextPhoto")} onClick={() => step(1)}>
             <ChevronRight size={22} />
           </button>
         </>

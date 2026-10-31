@@ -14,18 +14,23 @@ import type { HeritageSite, StoryBlock } from "@akar/domain";
 import { sentenceSeconds, storySeconds, clock } from "../lib/story-time";
 import { writePreference } from "../lib/preferences";
 import { TrustTag } from "./side-sheet";
+import { storyText } from "../lib/story-text";
+import type { MessageKey } from "../lib/messages";
+import { Localized, useI18n } from "./i18n";
 
 const RATES = [1, 1.25, 1.5];
 /** Scroll events this long after a wheel or a finger still belong to the visitor (momentum). */
 const HAND_SCROLL_MS = 900;
 
 function SourceLine({ site, block }: { site: HeritageSite; block: StoryBlock }) {
+  const { t, lang } = useI18n();
   const source = site.sources?.find((s) => s.id === block.sourceId);
   const title = source?.title || site.source;
   return title ? (
     <p className="story-source-line">
-      Kaynak: {title}
-      {source?.page ? ` · s. ${source.page}` : ""}
+      {t("site.sourceLabel")}{" "}
+      <span lang={lang === "en" ? "tr" : undefined}>{title}</span>
+      {source?.page ? ` · ${t("site.pageShort", { page: source.page })}` : ""}
     </p>
   ) : null;
 }
@@ -48,11 +53,12 @@ export function StoryPanel({
   startListening?: boolean;
   lang?: "tr" | "en";
 }) {
+  const { t } = useI18n();
   const [listen, setListen] = useState(startListening),
     [playing, setPlaying] = useState(startListening),
     [rate, setRate] = useState(1),
     [simple, setSimple] = useState(false),
-    [error, setError] = useState(""),
+    [error, setError] = useState<MessageKey | "">(""),
     list = useRef<HTMLOListElement>(null),
     // Only the visitor's own scrolling picks a sentence; a scroll that follows the sentence never does.
     scrolledByHand = useRef(0),
@@ -89,21 +95,18 @@ export function StoryPanel({
   useEffect(() => {
     if (!playing) return;
     if (!("speechSynthesis" in window)) {
-      setError(
-        "Bu tarayıcı sesli okumayı desteklemiyor. Metinden devam edebilirsin.",
-      );
+      setError("site.speechUnsupported");
       setPlaying(false);
       return;
     }
-    const utterance = new SpeechSynthesisUtterance(
-      simple ? block.simple || block.text : block.text,
-    );
-    utterance.lang = lang === "en" ? "en-US" : "tr-TR";
+    const spoken = storyText(block, simple, lang);
+    const utterance = new SpeechSynthesisUtterance(spoken.text);
+    utterance.lang = spoken.lang === "en" ? "en-US" : "tr-TR";
     utterance.rate = rate;
     utterance.onend = () => advance.current(index + 1);
     utterance.onerror = (e) => {
       if (e.error !== "interrupted" && e.error !== "canceled") {
-        setError("Ses başlatılamadı. Okuma modundan devam edebilirsin.");
+        setError("site.speechFailed");
         setPlaying(false);
       }
     };
@@ -143,11 +146,11 @@ export function StoryPanel({
         <button
           className="round-btn"
           onClick={onClose}
-          aria-label="Hikâyeyi kapat"
+          aria-label={t("site.closeStory")}
         >
           <X size={18} />
         </button>
-        <div className="story-mode" role="group" aria-label="Anlatım biçimi">
+        <div className="story-mode" role="group" aria-label={t("site.storyMode")}>
           <button
             aria-pressed={listen}
             onClick={() => {
@@ -156,7 +159,7 @@ export function StoryPanel({
             }}
           >
             <Headphones size={15} />
-            Dinle
+            {t("site.listenMode")}
           </button>
           <button
             aria-pressed={!listen}
@@ -167,7 +170,7 @@ export function StoryPanel({
             }}
           >
             <BookOpen size={15} />
-            Oku
+            {t("site.read")}
           </button>
         </div>
         <span className="story-count">
@@ -180,11 +183,11 @@ export function StoryPanel({
           checked={simple}
           onChange={(e) => setSimple(e.target.checked)}
         />
-        Sade anlatım
+        {t("site.simpleMode")}
       </label>
       {error && (
         <p role="alert" className="error">
-          {error}
+          {t(error)}
         </p>
       )}
       <ol
@@ -213,16 +216,21 @@ export function StoryPanel({
           }
         }}
       >
-        {stories.map((s, i) => (
+        {stories.map((s, i) => {
+          const shown = storyText(s, simple, lang);
+          return (
           <li key={s.id} className={i === index ? "current" : i < index ? "passed" : ""}>
             <button
               aria-current={i === index ? "step" : undefined}
-              aria-label={`${i + 1}. bölüm: ${s.title || s.text.slice(0, 40)}`}
+              aria-label={t("site.storyPartLabel", {
+                n: i + 1,
+                title: s.title || shown.text.slice(0, 40),
+              })}
               onClick={() => onIndex(i)}
             >
               <span>{i + 1}</span>
               <p className="story-text">
-                {simple ? s.simple || s.text : s.text}
+                <Localized tr={shown.tr} en={shown.en} />
               </p>
             </button>
             {i === index && (
@@ -234,14 +242,15 @@ export function StoryPanel({
                     .filter((source) => source.id === s.sourceId)
                     .map((source) => ({
                       title: source.title,
-                      ...(source.page && { detail: `s. ${source.page}` }),
+                      ...(source.page && { detail: t("site.pageShort", { page: source.page }) }),
                     }))}
                 />
                 <SourceLine site={site} block={s} />
               </div>
             )}
           </li>
-        ))}
+          );
+        })}
       </ol>
       <div className="story-player">
         <span className="story-clock">
@@ -249,7 +258,7 @@ export function StoryPanel({
         </span>
         <div className="story-transport">
           <button
-            aria-label="Önceki bölüm"
+            aria-label={t("site.prevPart")}
             disabled={index === 0}
             onClick={() => go(index - 1)}
           >
@@ -258,7 +267,7 @@ export function StoryPanel({
           {listen ? (
             <button
               className="story-play"
-              aria-label={playing ? "Sesi durdur" : "Sesli okumayı başlat"}
+              aria-label={playing ? t("site.stopAudio") : t("site.startAudio")}
               onClick={() => setPlaying(!playing)}
             >
               {playing ? <Pause size={22} /> : <Play size={22} />}
@@ -266,14 +275,14 @@ export function StoryPanel({
           ) : (
             <button
               className="story-play"
-              aria-label={last ? "Hikâyeyi tamamla" : "Devam et"}
+              aria-label={last ? t("site.finishStory") : t("site.continue")}
               onClick={() => go(index + 1)}
             >
               <ChevronRight size={22} />
             </button>
           )}
           <button
-            aria-label="Sonraki bölüm"
+            aria-label={t("site.nextPart")}
             onClick={() => go(index + 1)}
           >
             <SkipForward size={20} />
@@ -281,7 +290,7 @@ export function StoryPanel({
         </div>
         <button
           className="story-rate"
-          aria-label={`Ses hızı ${rate}x`}
+          aria-label={t("site.speechRate", { rate })}
           onClick={() =>
             setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)
           }
@@ -303,13 +312,14 @@ export function StoryProgress({
   index: number;
   onIndex: (n: number) => void;
 }) {
+  const { t } = useI18n();
   return (
-    <div className="story-progress" role="group" aria-label="Hikâye ilerlemesi">
+    <div className="story-progress" role="group" aria-label={t("site.storyProgress")}>
       {stories.map((s, i) => (
         <button
           key={s.id}
           className={i <= index ? "done" : ""}
-          aria-label={`${i + 1}. bölüme git`}
+          aria-label={t("site.goToPart", { n: i + 1 })}
           onClick={() => onIndex(i)}
         />
       ))}

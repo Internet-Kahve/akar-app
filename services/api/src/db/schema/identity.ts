@@ -1,4 +1,5 @@
-import { index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { check, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { timestamps } from "./shared.ts";
 
 // Owned by the identity module. User ids are Supabase Auth `sub` (uuid as text); the auth users
@@ -32,12 +33,29 @@ export const staffInvites = pgTable(
   (t) => [index("staff_invites_email_idx").on(t.email)],
 );
 
-/** Public display name shown on approved memories; nothing else personal is stored here. */
-export const profiles = pgTable("profiles", {
-  userId: text("user_id").primaryKey(),
-  displayName: text("display_name").notNull(),
-  ...timestamps,
-});
+/**
+ * One row per account that stored something about itself: the public display name shown on approved memories and
+ * the site/voice preferences. Either side may be missing, so a row can exist without a name.
+ */
+export const profiles = pgTable(
+  "profiles",
+  {
+    userId: text("user_id").primaryKey(),
+    displayName: text("display_name"),
+    /** Site language: `tr` or `en`; null until chosen. */
+    siteLang: text("site_lang"),
+    /** Narration language: `tr` or `en`; null until chosen. */
+    voiceLang: text("voice_lang"),
+    /** Narration voice: `female` or `male`; null until chosen. */
+    voiceGender: text("voice_gender"),
+    ...timestamps,
+  },
+  (t) => [
+    check("profiles_site_lang_check", sql`${t.siteLang} in ('tr', 'en')`),
+    check("profiles_voice_lang_check", sql`${t.voiceLang} in ('tr', 'en')`),
+    check("profiles_voice_gender_check", sql`${t.voiceGender} in ('female', 'male')`),
+  ],
+);
 
 /**
  * Erased accounts (KVKK, `DELETE /v1/me`): only the id and when. An access token stays valid until it expires

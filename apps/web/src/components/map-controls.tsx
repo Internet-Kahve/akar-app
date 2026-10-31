@@ -2,13 +2,15 @@
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 import type { Map as MapType } from "maplibre-gl";
+import type { MessageKey } from "../lib/messages";
+import { useI18n } from "./i18n";
 
 const TICKS = Array.from({ length: 8 }, (_, i) => (i * Math.PI) / 4);
-const LETTERS = [
-  { label: "K", x: 50, y: 28 },
-  { label: "D", x: 75, y: 54 },
-  { label: "G", x: 50, y: 79 },
-  { label: "B", x: 25, y: 54 },
+const LETTERS: { label: MessageKey; x: number; y: number }[] = [
+  { label: "map.compassN", x: 50, y: 28 },
+  { label: "map.compassE", x: 75, y: 54 },
+  { label: "map.compassS", x: 50, y: 79 },
+  { label: "map.compassW", x: 25, y: 54 },
 ];
 /** A pointer that moved less than this tapped the dial. */
 const DRAG_PX = 4;
@@ -32,6 +34,7 @@ export function MapControls({
   onMove: () => void;
   onLocate: () => void;
 }) {
+  const { t } = useI18n();
   const [tilted, setTilted] = useState(true),
     [bearing, setBearing] = useState(0),
     [turned, setTurned] = useState(false),
@@ -78,7 +81,7 @@ export function MapControls({
     <div className="map-controls">
       <div className="map-zoom">
         <button
-          aria-label="Yakınlaştır"
+          aria-label={t("map.zoomIn")}
           disabled={!ready}
           onClick={() => {
             onMove();
@@ -88,7 +91,7 @@ export function MapControls({
           <Plus size={20} />
         </button>
         <button
-          aria-label="Uzaklaştır"
+          aria-label={t("map.zoomOut")}
           disabled={!ready}
           onClick={() => {
             onMove();
@@ -100,8 +103,8 @@ export function MapControls({
       </div>
       <button
         className="map-round"
-        title="Konumuma git"
-        aria-label="Konumuma git"
+        title={t("map.locate")}
+        aria-label={t("map.locate")}
         onClick={onLocate}
       >
         <LocateFixed size={20} />
@@ -112,10 +115,10 @@ export function MapControls({
         disabled={!ready}
         aria-label={
           facing
-            ? "Kuzeyi yukarı getir"
+            ? t("map.northUp")
             : tilted
-              ? "2D haritaya geç"
-              : "3D haritaya geç"
+              ? t("map.to2d")
+              : t("map.to3d")
         }
         onPointerDown={(e) => {
           if (e.button === 0 && map)
@@ -190,7 +193,7 @@ export function MapControls({
           ))}
           {LETTERS.map(({ label, x, y }) => (
             <text key={label} className="dial-letter" x={x} y={y}>
-              {label}
+              {t(label)}
             </text>
           ))}
           <circle className="dial-disc" cx="50" cy="50" r="15" />

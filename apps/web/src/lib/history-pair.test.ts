@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { HistoryImage, SampleTrace, SitePhoto } from "@akar/domain";
-import { ARCHIVE_PAIR_BY, pairOf } from "./history-pair";
+import { pairOf } from "./history-pair";
 
 const photo = (id: string): SitePhoto => ({
   id,
@@ -35,8 +35,9 @@ const trace = (id: string, historyImageId: string | undefined, addedOn: string, 
 
 test("the archive's own pair wins and keeps its angle word; it is not an example", () => {
   const archive = image("a", { presentPhoto: photo("now"), presentAngleMatch: "near" });
-  const pair = pairOf({ sampleTraces: [trace("iz", "a", "2026-10-28", { angleMatch: "same" })] }, archive);
-  assert.deepEqual(pair, { photo: photo("now"), by: ARCHIVE_PAIR_BY, example: false, angleMatch: "near" });
+  const pair = pairOf({ sampleTraces: [trace("iz", "a", "2026-10-28", { angleMatch: "same" })] }, archive, "tr");
+  assert.deepEqual(pair, { photo: photo("now"), by: "AKAR arşivi", example: false, angleMatch: "near" });
+  assert.equal(pairOf({}, archive, "en")?.by, "AKAR archive");
 });
 
 test("without an archive pair the newest sample of that photograph's view stands in, tagged as an example; a later one wins a tie", () => {
@@ -48,14 +49,14 @@ test("without an archive pair the newest sample of that photograph's view stands
       trace("no-link", undefined, "2027-01-01"),
     ],
   };
-  const pair = pairOf(site, image("a"));
+  const pair = pairOf(site, image("a"), "tr");
   assert.deepEqual([pair?.photo.id, pair?.by, pair?.example, pair?.angleMatch], ["newest", "Yeni", true, "near"]);
-  const tie = pairOf({ sampleTraces: [trace("first", "a", "2026-10-29"), trace("second", "a", "2026-10-29")] }, image("a"));
+  const tie = pairOf({ sampleTraces: [trace("first", "a", "2026-10-29"), trace("second", "a", "2026-10-29")] }, image("a"), "tr");
   assert.equal(tie?.photo.id, "second");
 });
 
 test("nothing else is presented as a pair", () => {
-  assert.equal(pairOf({}, image("a")), null);
-  assert.equal(pairOf({ sampleTraces: [] }, image("a")), null);
-  assert.equal(pairOf({ sampleTraces: [trace("iz", undefined, "2026-10-28"), trace("elsewhere", "b", "2026-10-28")] }, image("a")), null);
+  assert.equal(pairOf({}, image("a"), "tr"), null);
+  assert.equal(pairOf({ sampleTraces: [] }, image("a"), "tr"), null);
+  assert.equal(pairOf({ sampleTraces: [trace("iz", undefined, "2026-10-28"), trace("elsewhere", "b", "2026-10-28")] }, image("a"), "tr"), null);
 });

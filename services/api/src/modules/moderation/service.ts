@@ -301,7 +301,7 @@ export async function createMemory(tx: Tx, user: AuthUser, input: CreateMemoryBo
     id,
     siteId: site.id,
     authorId: userId,
-    authorName: profile?.displayName.trim() || DEFAULT_AUTHOR_NAME,
+    authorName: profile?.displayName?.trim() || DEFAULT_AUTHOR_NAME,
     text: input.text,
     mediaId: input.mediaId ?? null,
     status: "pending",

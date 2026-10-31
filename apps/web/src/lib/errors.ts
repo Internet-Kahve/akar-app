@@ -1,9 +1,10 @@
 import { ApiError } from "@akar/api-client";
+import { translate, type Lang } from "./i18n";
 
-/** Turkish, user-facing text for any error thrown by the client. */
-export function describeError(error: unknown, fallback: string): string {
+/** User-facing text for any error thrown by the client; `lang` is the site language (the panel stays Turkish). */
+export function describeError(error: unknown, fallback: string, lang: Lang = "tr"): string {
   if (error instanceof ApiError && error.status === 0)
-    return "Sunucuya ulaşılamadı. Bağlantını kontrol edip yeniden dene.";
+    return translate(lang, "error.network");
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
@@ -15,10 +16,10 @@ export function needsSignIn(error: unknown): boolean {
 }
 
 /** `describeError`, with the API's per-field messages ("Konum Bursa sınırları dışında.") when it sent any. */
-export function describeFieldError(error: unknown, fallback: string): string {
+export function describeFieldError(error: unknown, fallback: string, lang: Lang = "tr"): string {
   if (error instanceof ApiError) {
     const fields = [...new Set(Object.values(error.fieldErrors).flat())];
     if (fields.length) return fields.join(" ");
   }
-  return describeError(error, fallback);
+  return describeError(error, fallback, lang);
 }

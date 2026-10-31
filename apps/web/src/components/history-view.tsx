@@ -12,9 +12,8 @@ import { HistoryCamera } from "./history-camera";
 import { TrustTag } from "./side-sheet";
 import { Notice, Tag } from "./ui";
 import { ViewpointMap } from "./viewpoint-map";
+import { Localized, useI18n } from "./i18n";
 
-/** Said under the photographs when the present-day one was not taken from exactly the old one's point. */
-const NEAR_ANGLE = "Yakın açı: iki fotoğraf birebir aynı noktadan çekilmedi.";
 const KEY_STEPS: Record<string, number> = {
   ArrowLeft: -5,
   ArrowDown: -5,
@@ -34,6 +33,8 @@ function HistoryCompare({
   image: HistoryImage;
   pair: HistoryPair;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   const box = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(50);
   const place = (clientX: number) => {
@@ -82,21 +83,23 @@ function HistoryCompare({
         draggable={false}
       />
       <span className="history-compare-label old">
-        <span>{image.dateLabel}</span>
+        <span lang={content}>{image.dateLabel}</span>
       </span>
       <span className="history-compare-label today">
-        <span>Bugün · {pair.by}</span>
-        {pair.example && <Tag tone="gold">Örnek</Tag>}
+        <span>
+          {t("site.today")} · {pair.by}
+        </span>
+        {pair.example && <Tag tone="gold">{t("site.example")}</Tag>}
       </span>
       <div
         className="history-compare-handle"
         role="slider"
         tabIndex={0}
-        aria-label="Eski ve bugünkü fotoğrafı karşılaştır"
+        aria-label={t("site.compareSlider")}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={split}
-        aria-valuetext={`Eski %${split}`}
+        aria-valuetext={t("site.oldPercent", { pct: split })}
         onKeyDown={onKey}
       >
         <span aria-hidden="true">‹ ›</span>
@@ -115,12 +118,12 @@ function SampleTraces({
   images: HistoryImage[];
   onShow: (index: number) => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   return (
     <section className="sample-traces" aria-labelledby="sample-traces-title">
-      <h2 id="sample-traces-title">İz Bırak örnekleri</h2>
-      <p className="muted">
-        Ekibin örnek olarak hazırladığı katkılar; ziyaretçi anısı değildir.
-      </p>
+      <h2 id="sample-traces-title">{t("site.sampleTitle")}</h2>
+      <p className="muted">{t("site.sampleNote")}</p>
       <div className="sample-trace-list">
         {traces.map((trace) => {
           const index = images.findIndex((i) => i.id === trace.historyImageId);
@@ -128,17 +131,19 @@ function SampleTraces({
             <article className="card sample-trace" key={trace.id}>
               <img src={trace.photo.src} alt={trace.photo.alt} loading="lazy" />
               <div className="sample-trace-meta">
-                <Tag tone="gold">Örnek</Tag>
+                <Tag tone="gold">{t("site.example")}</Tag>
                 <strong>{trace.author}</strong>
               </div>
-              <p>{trace.text}</p>
-              <p className="sample-trace-credit">{trace.photo.description}</p>
+              <p lang={content}>{trace.text}</p>
+              <p className="sample-trace-credit" lang={content}>
+                {trace.photo.description}
+              </p>
               {index >= 0 && (
                 <button
                   className="btn secondary"
                   onClick={() => onShow(index)}
                 >
-                  Eski fotoğrafı göster
+                  {t("site.showOldPhoto")}
                   <ArrowRight size={16} />
                 </button>
               )}
@@ -164,13 +169,15 @@ export function HistoryView({
   onMemory: () => void;
   onSite: (id: string) => void;
 }) {
+  const { t, lang } = useI18n();
+  const content = lang === "en" ? "tr" : undefined;
   const [selected, setSelected] = useState(0),
     [camera, setCamera] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
   const images = site.historyImages ?? [];
   const image = images[selected] ?? images[0];
   const source = site.sources?.find((s) => s.id === image?.sourceId);
-  const pair = image ? pairOf(site, image) : null;
+  const pair = image ? pairOf(site, image, lang) : null;
   const traces = site.sampleTraces ?? [];
   const farViews = image ? [] : seenFrom(site, sites);
   const samples = traces.length > 0 && (
@@ -186,12 +193,14 @@ export function HistoryView({
   return (
     <main id="main-content" tabIndex={-1} className="history-page">
       <header className="history-head">
-        <button className="round-btn" aria-label="Esere dön" onClick={onBack}>
+        <button className="round-btn" aria-label={t("site.backToSite")} onClick={onBack}>
           <ChevronLeft size={20} />
         </button>
         <div>
-          <h1>Geçmişi Gör</h1>
-          <p className="muted">{site.name}</p>
+          <h1>{t("site.historyTitle")}</h1>
+          <p className="muted">
+            <Localized tr={site.name} en={site.nameEn} />
+          </p>
         </div>
         {image && (
           <>
@@ -216,63 +225,62 @@ export function HistoryView({
                 ) : (
                   <img src={image.photo.src} alt={image.photo.alt} />
                 )}
-                <figcaption>
+                <figcaption lang={content}>
                   {image.dateLabel} · {image.caption}
                 </figcaption>
               </figure>
               {pair?.angleMatch === "near" && (
-                <p className="history-near">{NEAR_ANGLE}</p>
+                <p className="history-near">{t("site.nearAngle")}</p>
               )}
             </div>
             <aside className="card">
               <History size={28} />
-              <h2>{image.caption}</h2>
-              <p>{image.dateLabel}</p>
-              <p className="archive-credit">
+              <h2 lang={content}>{image.caption}</h2>
+              <p lang={content}>{image.dateLabel}</p>
+              <p className="archive-credit" lang={content}>
                 {image.photo.description || source?.title}
               </p>
-              <p className="muted">{image.photo.license}</p>
+              <p className="muted" lang={content}>
+                {image.photo.license}
+              </p>
               {pair && (
                 <p className="archive-credit-today">
-                  <small>Bugünkü fotoğraf</small>{" "}
-                  {pair.photo.description}
+                  <small>{t("site.presentPhoto")}</small>{" "}
+                  <span lang={content}>{pair.photo.description}</span>
                 </p>
               )}
               {source?.url && /^https?:\/\//.test(source.url) && (
                 <a href={source.url} target="_blank" rel="noreferrer">
-                  Arşiv kaydını aç ↗
+                  {t("site.openArchive")}
                 </a>
               )}
               {!pair && (
                 <Notice>
-                  Bu fotoğrafın bugünkü eş görüntüsü henüz eklenmedi.
+                  {t("site.noPresentPair")}
                 </Notice>
               )}
               <h3 className="history-where">
                 <MapPin size={16} />
-                Nereden çekildi?
+                {t("site.whereFrom")}
               </h3>
               {image.viewpoint ? (
                 <ViewpointMap images={images} selected={image} />
               ) : (
-                <p>
-                  Bu fotoğrafın çekim yeri bilinmiyor. Kamerayı açıp eski
-                  fotoğrafı yine de hizalayabilirsin.
-                </p>
+                <p>{t("site.noViewpoint")}</p>
               )}
               <button className="btn full" onClick={() => setCamera(true)}>
                 <Camera size={17} />
-                Kamerayı aç
+                {t("site.openCamera")}
               </button>
               <button className="btn secondary full" onClick={onMemory}>
-                Bu açıdan fotoğrafın var mı?
+                {t("site.haveAnglePhoto")}
                 <ArrowRight size={16} />
               </button>
             </aside>
           </div>
           <div
             className="timeline archive-timeline"
-            aria-label="Arşiv fotoğrafları"
+            aria-label={t("site.archivePhotos")}
           >
             {images.map((item, index) => (
               <button
@@ -283,15 +291,15 @@ export function HistoryView({
               >
                 <img src={item.photo.src} alt="" loading="lazy" />
                 <strong>
-                  {item.dateLabel}
-                  {pairOf(site, item) && (
+                  <span lang={content}>{item.dateLabel}</span>
+                  {pairOf(site, item, lang) && (
                     <>
                       <i className="history-pair-dot" aria-hidden="true" />
-                      <span className="sr-only">, bugünkü eşi var</span>
+                      <span className="sr-only">, {t("site.hasPresentPair")}</span>
                     </>
                   )}
                 </strong>
-                <small>{item.caption}</small>
+                <small lang={content}>{item.caption}</small>
               </button>
             ))}
           </div>
@@ -301,22 +309,25 @@ export function HistoryView({
         <>
           <div className="card">
             <History size={32} />
-            <h2>Bu eserin eski görüntüsü henüz yok</h2>
-            <p>Kaynağı bilinen eski fotoğraflar eklendiğinde burada görünecek.</p>
+            <h2>{t("site.noArchiveTitle")}</h2>
+            <p>{t("site.noArchiveBody")}</p>
             <button className="btn secondary" onClick={onMemory}>
-              + İz Bırak · eski fotoğraf paylaş
+              {t("site.shareOldPhoto")}
             </button>
           </div>
           {farViews.length > 0 && (
             <section className="far-views">
-              <h2>Uzaktan görünüyor</h2>
+              <h2>{t("site.farViewsTitle")}</h2>
               {farViews.map((v) => (
                 <button key={v.image.id} onClick={() => onSite(v.site.id)}>
                   <img src={v.image.photo.src} alt={v.image.photo.alt} loading="lazy" />
                   <span>
-                    <strong>{v.site.name}</strong>
+                    <strong>
+                      <Localized tr={v.site.name} en={v.site.nameEn} />
+                    </strong>
                     <small>
-                      {v.image.dateLabel} · {v.distance} m uzaktan
+                      <span lang={content}>{v.image.dateLabel}</span> ·{" "}
+                      {t("site.distanceAway", { m: v.distance })}
                     </small>
                   </span>
                   <ArrowRight size={16} />

@@ -11,23 +11,15 @@ import {
   type ReactNode,
 } from "react";
 import { ChevronRight, X } from "lucide-react";
-import {
-  categoryHints,
-  trustLabels,
-  type HeritageSite,
-  type Trust,
-} from "@akar/domain";
+import type { HeritageSite, Trust } from "@akar/domain";
+import { Localized, useI18n } from "./i18n";
 
-const trustMeanings: Record<Trust, string> = {
-  verified: "Bilgi en az bir güvenilir kaynakta açıkça yer alıyor.",
-  inferred: "Kaynaklardan yorumlanan bilgi.",
-  representative: "Görsel ya da model yaklaşık.",
-};
 const trustTones: Record<Trust, string> = {
   verified: "success",
   inferred: "warning",
   representative: "representative",
 };
+const TRUSTS = Object.keys(trustTones) as Trust[];
 const QUOTE_MAX = 220;
 
 /** What «Bu bilgi nereden geliyor?» shows. */
@@ -51,17 +43,18 @@ export function TrustTag({
   sources,
 }: SourceDetail) {
   const open = useContext(SheetContext);
+  const { t } = useI18n();
   return (
     <button
       type="button"
       className={`tag trust-tag ${trustTones[trust]}`}
-      aria-label={`${trustLabels[trust]}: kaynağını gör`}
+      aria-label={t("sheet.trustSource", { label: t(`trust.${trust}`) })}
       onClick={(e) => {
         e.stopPropagation();
         open({ trust, ...(quote && { quote }), ...(sources && { sources }) });
       }}
     >
-      {trustLabels[trust]}
+      {t(`trust.${trust}`)}
     </button>
   );
 }
@@ -76,6 +69,7 @@ export function SideSheet({
   onClose: () => void;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null),
     titleId = useId();
   useEffect(() => {
@@ -101,7 +95,7 @@ export function SideSheet({
         <div className="side-sheet-grip" aria-hidden="true" />
         <header>
           <h2 id={titleId}>{title}</h2>
-          <button aria-label="Kapat" className="round-btn" onClick={onClose}>
+          <button aria-label={t("common.close")} className="round-btn" onClick={onClose}>
             <X size={18} />
           </button>
         </header>
@@ -122,44 +116,44 @@ function SourceSheet({
   onReport: () => void;
   onClose: () => void;
 }) {
+  const { lang, t } = useI18n();
+  const tr = lang === "en" ? "tr" : undefined;
   const { trust, quote, sources = [] } = detail;
   return (
-    <SideSheet title="Bu bilgi nereden geliyor?" onClose={onClose}>
+    <SideSheet title={t("sheet.title")} onClose={onClose}>
       {quote && <blockquote className="sheet-quote">“{shorten(quote)}”</blockquote>}
       <div className="sheet-trust">
-        <span className={`tag ${trustTones[trust]}`}>{trustLabels[trust]}</span>
+        <span className={`tag ${trustTones[trust]}`}>{t(`trust.${trust}`)}</span>
         <p>
-          {trustLabels[trust]}:{" "}
-          {trustMeanings[trust].replace(/^./, (c) => c.toLocaleLowerCase("tr"))}
+          {t(`trust.${trust}`)}:{" "}
+          {t(`trustMeaning.${trust}`).replace(/^./, (c) => c.toLocaleLowerCase(lang === "en" ? "en" : "tr"))}
         </p>
       </div>
-      <h3>Kaynaklar</h3>
+      <h3>{t("sheet.sources")}</h3>
       {sources.length ? (
         sources.map((s) => (
-          <div className="sheet-source" key={s.title}>
+          <div className="sheet-source" key={s.title} lang={tr}>
             <b>{s.title}</b>
             {s.detail && <small>{s.detail}</small>}
           </div>
         ))
       ) : (
         <p className="muted">
-          Bu öğenin ayrı kaynak satırı yok.
-          {fallback && ` Genel kaynak: ${fallback}`}
+          {t("sheet.noSource")}
+          {fallback && ` ${t("sheet.generalSource", { source: fallback })}`}
         </p>
       )}
-      <h4>Diğer etiketler</h4>
+      <h4>{t("sheet.otherLabels")}</h4>
       <ul className="sheet-trust-list">
-        {(Object.keys(trustLabels) as Trust[])
-          .filter((t) => t !== trust)
-          .map((t) => (
-            <li key={t}>
-              <span className={`tag ${trustTones[t]}`}>{trustLabels[t]}</span>
-              <span>{trustMeanings[t]}</span>
-            </li>
-          ))}
+        {TRUSTS.filter((other) => other !== trust).map((other) => (
+          <li key={other}>
+            <span className={`tag ${trustTones[other]}`}>{t(`trust.${other}`)}</span>
+            <span>{t(`trustMeaning.${other}`)}</span>
+          </li>
+        ))}
       </ul>
       <button className="text-btn sheet-report" onClick={onReport}>
-        Bir hata mı gördün? Bildir ›
+        {t("sheet.report")}
       </button>
     </SideSheet>
   );
@@ -211,6 +205,8 @@ export function WaqfSheet({
   onSite: (id: string) => void;
   onClose: () => void;
 }) {
+  const { lang, t, text } = useI18n();
+  const tr = lang === "en" ? "tr" : undefined;
   const example = useMemo(() => {
     for (const site of sites)
       if (site.kind === "han" || site.kind === "bedesten" || site.kind === "hamam")
@@ -219,49 +215,46 @@ export function WaqfSheet({
     return null;
   }, [sites]);
   return (
-    <SideSheet title="Vakıf nedir?" onClose={onClose}>
-      <p>
-        Vakıf, bir malın ya da gelirin kalıcı olarak bir hayır işine
-        bağlanmasıdır. Haritadaki eserler bu düzenin iki yüzüdür:
-      </p>
+    <SideSheet title={t("waqf.title")} onClose={onClose}>
+      <p>{t("waqf.intro")}</p>
       <ul className="waqf-roles">
         <li>
           <i className="dot dini" />
           <div>
-            <b>Hayrat · Dinî</b>
-            <small>{categoryHints.dini}</small>
+            <b>{t("waqf.hayrat")}</b>
+            <small>{t("categoryHint.dini")}</small>
           </div>
         </li>
         <li>
           <i className="dot akar" />
           <div>
-            <b>Akar · Ticari</b>
-            <small>{categoryHints.akar}</small>
+            <b>{t("waqf.akar")}</b>
+            <small>{t("categoryHint.akar")}</small>
           </div>
         </li>
       </ul>
-      <h3>Kitap ne diyor?</h3>
-      <blockquote className="sheet-quote">“{WAQF_QUOTE}”</blockquote>
+      <h3>{t("waqf.bookSays")}</h3>
+      <blockquote className="sheet-quote" lang={tr}>“{WAQF_QUOTE}”</blockquote>
       <div className="waqf-credit">
         <TrustTag
           trust="verified"
           quote={WAQF_QUOTE}
           sources={[
-            { title: inventory || "Envanter", detail: "Cilt 1 · Giriş, «Ticari yapılar»" },
+            { title: inventory || t("waqf.inventory"), detail: "Cilt 1 · Giriş, «Ticari yapılar»" },
           ]}
         />
-        <small>{inventory || "Envanter"}, Cilt 1 · Giriş</small>
+        <small>{t("waqf.credit", { inventory: inventory || t("waqf.inventory") })}</small>
       </div>
       {example && (
         <>
-          <h3>Bu şehirde bir örnek</h3>
+          <h3>{t("waqf.example")}</h3>
           <button
             className="waqf-example"
             onClick={() => onSite(example.site.id)}
           >
             <span>
-              <b>{example.site.name}</b>
-              <small>{example.story.text}</small>
+              <b>{text(example.site.name, example.site.nameEn)}</b>
+              <small><Localized tr={example.story.text} en={example.story.textEn} /></small>
             </span>
             <ChevronRight size={18} />
           </button>

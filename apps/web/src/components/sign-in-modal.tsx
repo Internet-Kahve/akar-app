@@ -3,8 +3,7 @@ import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { getSupabase } from "../lib/supabase";
 import { Modal, Notice } from "./ui";
-
-const wait = "Çok fazla deneme yaptın. Biraz bekleyip yeniden dene.";
+import { useI18n } from "./i18n";
 
 export function SignInModal({
   reason,
@@ -16,6 +15,8 @@ export function SignInModal({
   onClose: () => void;
   onSignedIn: () => void;
 }) {
+  const { t } = useI18n();
+  const wait = t("signin.wait");
   const [email, setEmail] = useState(""),
     [code, setCode] = useState(""),
     [sent, setSent] = useState(false),
@@ -35,7 +36,7 @@ export function SignInModal({
       setError(
         failure.status === 429
           ? wait
-          : "Kod gönderilemedi. E-posta adresini kontrol edip yeniden dene.",
+          : t("signin.sendFailed"),
       );
     else setSent(true);
   }
@@ -53,16 +54,15 @@ export function SignInModal({
       setError(
         failure.status === 429
           ? wait
-          : "Kod geçersiz ya da süresi dolmuş. Kodu kontrol et veya yeni kod iste.",
+          : t("signin.codeInvalid"),
       );
     else onSignedIn();
   }
   return (
-    <Modal title="Giriş yap" onClose={onClose}>
+    <Modal title={t("common.signIn")} onClose={onClose}>
       {!supabase ? (
         <Notice>
-          Giriş bu kurulumda yapılandırılmamış (NEXT_PUBLIC_SUPABASE_URL ve
-          NEXT_PUBLIC_SUPABASE_ANON_KEY eksik).
+          {t("signin.notConfigured")}
         </Notice>
       ) : (
         <form
@@ -75,10 +75,10 @@ export function SignInModal({
           {sent ? (
             <>
               <p className="muted">
-                {email.trim()} adresine bir doğrulama kodu gönderdik.
+                {t("signin.sentTo", { email: email.trim() })}
               </p>
               <label className="field">
-                Doğrulama kodu
+                {t("signin.code")}
                 <input
                   className="otp-code"
                   inputMode="numeric"
@@ -95,11 +95,10 @@ export function SignInModal({
           ) : (
             <>
               <p className="muted">
-                E-posta adresine bir doğrulama kodu göndereceğiz. Hesabın yoksa
-                otomatik oluşturulur.
+                {t("signin.intro")}
               </p>
               <label className="field">
-                E-posta
+                {t("signin.email")}
                 <input
                   type="email"
                   autoComplete="email"
@@ -124,15 +123,15 @@ export function SignInModal({
                 disabled={busy}
                 onClick={() => void sendCode()}
               >
-                Kodu yeniden gönder
+                {t("signin.resend")}
               </button>
             ) : (
               <button type="button" className="btn secondary" onClick={onClose}>
-                Vazgeç
+                {t("common.cancel")}
               </button>
             )}
             <button className="btn" disabled={busy}>
-              {sent ? (busy ? "Doğrulanıyor…" : "Giriş yap") : "Kod gönder"}
+              {sent ? (busy ? t("signin.verifying") : t("common.signIn")) : t("signin.sendCode")}
               {sent ? <ArrowRight size={16} /> : <Mail size={16} />}
             </button>
           </div>
@@ -146,7 +145,7 @@ export function SignInModal({
                 setError("");
               }}
             >
-              E-posta adresini değiştir
+              {t("signin.changeEmail")}
             </button>
           )}
         </form>

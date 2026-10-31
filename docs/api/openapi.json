@@ -7365,13 +7365,71 @@
                         "string",
                         "null"
                       ]
+                    },
+                    "preferences": {
+                      "type": "object",
+                      "properties": {
+                        "siteLang": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "tr",
+                                "en"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "Site dili; henüz seçilmediyse null"
+                        },
+                        "voiceLang": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "tr",
+                                "en"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "Sesli anlatım dili; henüz seçilmediyse null"
+                        },
+                        "voiceGender": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "female",
+                                "male"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "Sesli anlatım sesi; henüz seçilmediyse null"
+                        }
+                      },
+                      "required": [
+                        "siteLang",
+                        "voiceLang",
+                        "voiceGender"
+                      ],
+                      "additionalProperties": false,
+                      "description": "Site ve ses tercihleri; seçilmeyenler null"
                     }
                   },
                   "required": [
                     "id",
                     "role",
                     "email",
-                    "displayName"
+                    "displayName",
+                    "preferences"
                   ],
                   "additionalProperties": false
                 }
@@ -7437,6 +7495,133 @@
                   "required": [
                     "id",
                     "displayName"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/preferences": {
+      "put": {
+        "summary": "Site dili ve ses tercihlerini kaydet (verilen alanlar yazılır, null temizler)",
+        "tags": [
+          "me"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "siteLang": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "tr",
+                          "en"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "voiceLang": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "tr",
+                          "en"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "voiceGender": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "female",
+                          "male"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "siteLang": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "tr",
+                            "en"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Site dili; henüz seçilmediyse null"
+                    },
+                    "voiceLang": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "tr",
+                            "en"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Sesli anlatım dili; henüz seçilmediyse null"
+                    },
+                    "voiceGender": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "female",
+                            "male"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Sesli anlatım sesi; henüz seçilmediyse null"
+                    }
+                  },
+                  "required": [
+                    "siteLang",
+                    "voiceLang",
+                    "voiceGender"
                   ],
                   "additionalProperties": false
                 }

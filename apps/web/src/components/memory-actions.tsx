@@ -9,6 +9,7 @@ import {
   type Role,
 } from "@akar/domain";
 import { Modal } from "./ui";
+import { LangProvider, useI18n } from "./i18n";
 type Commit = (command: Command) => Promise<boolean>;
 
 /** Longest reason the API accepts (`DecisionBody` in `services/api/src/modules/moderation/schemas.ts`). */
@@ -54,6 +55,7 @@ function ConfirmDialog({
   onConfirm: () => Promise<boolean>;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   // Rendered in document.body, so the container's styles do not reach the dialog.
   return createPortal(
@@ -61,7 +63,7 @@ function ConfirmDialog({
       {children}
       <div className="modal-actions">
         <button type="button" className="btn secondary" onClick={onClose}>
-          Vazgeç
+          {t("common.cancel")}
         </button>
         <button
           type="button"
@@ -179,6 +181,9 @@ export function MemoryActions({
   commit: Commit;
   variant?: "link" | "button";
 }) {
+  const { lang, t } = useI18n();
+  // Taking down and purging are staff actions: they stay Turkish, like the panel.
+  const staffLang = lang === "en" ? "tr" : undefined;
   const [open, setOpen] = useState<"remove" | "takedown" | "purge">();
   const can = memoryPermissions(role, memory.status, own);
   if (!can.remove && !can.takedown && !can.purge) return null;
@@ -192,6 +197,7 @@ export function MemoryActions({
         <button
           type="button"
           className={look}
+          lang={staffLang}
           onClick={() => setOpen("takedown")}
         >
           Yayından kaldır
@@ -201,6 +207,7 @@ export function MemoryActions({
         <button
           type="button"
           className={`${look} danger`}
+          lang={staffLang}
           onClick={() => setOpen("purge")}
         >
           Kalıcı sil
@@ -212,53 +219,57 @@ export function MemoryActions({
           className={`${look} danger`}
           onClick={() => setOpen("remove")}
         >
-          Sil
+          {t("memory.delete")}
         </button>
       )}
       {open === "takedown" && (
-        <ReasonDialog
-          memory={memory}
-          siteName={siteName}
-          onClose={close}
-          onConfirm={(reason) =>
-            commit({
-              type: "moderate",
-              id: memory.id,
-              status: "rejected",
-              reason,
-            })
-          }
-        />
+        <LangProvider lang="tr">
+          <ReasonDialog
+            memory={memory}
+            siteName={siteName}
+            onClose={close}
+            onConfirm={(reason) =>
+              commit({
+                type: "moderate",
+                id: memory.id,
+                status: "rejected",
+                reason,
+              })
+            }
+          />
+        </LangProvider>
       )}
       {open === "remove" && (
         <ConfirmDialog
-          title="Anı silinsin mi?"
-          confirm="Evet, sil"
+          title={t("memory.deleteTitle")}
+          confirm={t("memory.deleteConfirm")}
           onClose={close}
           onConfirm={() => commit({ type: "delete-memory", id: memory.id })}
         >
-          <p>{subject} kalıcı olarak silinecek. Emin misin?</p>
+          <p>{t(memory.photo ? "memory.deleteTextPhoto" : "memory.deleteText")}</p>
           {published && (
             <p className="muted">
-              Yayındaki anı için kazandığın {MEMORY_POINTS} puan geri alınır.
+              {t("memory.deletePoints", { points: MEMORY_POINTS })}
             </p>
           )}
         </ConfirmDialog>
       )}
       {open === "purge" && (
-        <ConfirmDialog
-          title="Anı kalıcı silinsin mi?"
-          confirm="Evet, kalıcı sil"
-          onClose={close}
-          onConfirm={() =>
-            commit({ type: "admin-delete-memory", id: memory.id })
-          }
-        >
-          <p>{subject} herkes için kalıcı olarak silinecek. Emin misin?</p>
-          {published && (
-            <p className="muted">Yazarın {MEMORY_POINTS} puanı geri alınır.</p>
-          )}
-        </ConfirmDialog>
+        <LangProvider lang="tr">
+          <ConfirmDialog
+            title="Anı kalıcı silinsin mi?"
+            confirm="Evet, kalıcı sil"
+            onClose={close}
+            onConfirm={() =>
+              commit({ type: "admin-delete-memory", id: memory.id })
+            }
+          >
+            <p>{subject} herkes için kalıcı olarak silinecek. Emin misin?</p>
+            {published && (
+              <p className="muted">Yazarın {MEMORY_POINTS} puanı geri alınır.</p>
+            )}
+          </ConfirmDialog>
+        </LangProvider>
       )}
     </>
   );

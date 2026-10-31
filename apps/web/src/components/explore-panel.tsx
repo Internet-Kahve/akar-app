@@ -12,8 +12,6 @@ import {
   Route,
 } from "lucide-react";
 import {
-  categoryHints,
-  categoryLabels,
   kindCategory,
   normalize,
   type HeritageRoute,
@@ -24,6 +22,7 @@ import { cityCase } from "../lib/place-names";
 import { siteMeta } from "../lib/site-meta";
 import { SiteArtwork } from "./site-artwork";
 import { Back, Notice, Tag } from "./ui";
+import { Localized, useI18n } from "./i18n";
 
 export type ExploreTab = "sites" | "routes";
 export type PlaceMode = "home" | "near";
@@ -46,6 +45,7 @@ export function MapChips({
   onToggle: (category: SiteCategory) => void;
   onCities: () => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false),
     box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -87,7 +87,7 @@ export function MapChips({
   );
   return (
     <div className="map-chips" ref={box}>
-      <button className="chip city-only" onClick={onCities} title="Şehirler">
+      <button className="chip city-only" onClick={onCities} title={t("header.cities")}>
         <i className="city-motif" aria-hidden="true" />
         {city}
       </button>
@@ -98,13 +98,13 @@ export function MapChips({
         onClick={() => setOpen(!open)}
       >
         {mode === "near" ? <Navigation size={14} /> : <House size={14} />}
-        {mode === "near" ? "Yakınımda" : "Evden gez"}
+        {mode === "near" ? t("place.nearChip") : t("place.home")}
         <ChevronDown size={14} />
       </button>
       {open && (
         <div className="place-menu" role="menu">
-          {option("near", MapPin, "Konumumu kullan", "Yakınındaki eserler önce gelir")}
-          {option("home", House, "Evden gez", `Konum gerekmez, ${cityCase(city, true)} başlar`)}
+          {option("near", MapPin, t("place.near"), t("place.nearHint"))}
+          {option("home", House, t("place.home"), t("place.homeHint", { city, cityFrom: cityCase(city, true) }))}
         </div>
       )}
       {categories.map((category) => (
@@ -112,11 +112,11 @@ export function MapChips({
           key={category}
           className="chip"
           aria-pressed={active.has(category)}
-          title={categoryHints[category]}
+          title={t(`categoryHint.${category}`)}
           onClick={() => onToggle(category)}
         >
           <i className={`dot ${category}`} />
-          {categoryLabels[category]}
+          {t(`category.${category}`)}
         </button>
       ))}
     </div>
@@ -151,12 +151,13 @@ function SiteRow({
   onPick: () => void;
   onRoute: () => void;
 }) {
+  const { t, text } = useI18n();
   return (
     <li className={`site-row${selected ? " selected" : ""}`}>
       <button className="site-row-main" onClick={onPick}>
         <SiteArtwork site={site} live={live} />
         <span>
-          <strong>{site.name}</strong>
+          <strong><Localized tr={site.name} en={site.nameEn} /></strong>
           <small>
             <i className={`dot ${kindCategory[site.kind]}`} />
             {siteMeta(site)}
@@ -166,7 +167,7 @@ function SiteRow({
       </button>
       <button
         className="site-row-add"
-        aria-label={`${site.name} Rotama ekle`}
+        aria-label={t("explore.addSite", { name: text(site.name, site.nameEn) })}
         onClick={onRoute}
       >
         <Plus size={16} />
@@ -216,11 +217,17 @@ export function ExplorePanel({
   onCities: () => void;
   onClearFilters: () => void;
 }) {
+  const { t } = useI18n();
   const shown = routes.filter((r) =>
     normalize(r.name).includes(normalize(query)),
   );
-  const heading = (noun: string) =>
-    mode === "near" ? `Yakınındaki ${noun}` : `${cityCase(city)}ki ${noun}`;
+  const heading = (noun: "routes" | "sites") =>
+    mode === "near"
+      ? t(noun === "routes" ? "explore.nearRoutes" : "explore.nearSites")
+      : t(noun === "routes" ? "explore.cityRoutes" : "explore.citySites", {
+          city,
+          cityIn: cityCase(city),
+        });
   const someModelMissing = allSites.some((s) => !s.model);
   return (
     <div className="explore">
@@ -230,20 +237,20 @@ export function ExplorePanel({
           aria-selected={tab === "sites"}
           onClick={() => onTab("sites")}
         >
-          Eserler
+          {t("explore.tabSites")}
         </button>
         <button
           role="tab"
           aria-selected={tab === "routes"}
           onClick={() => onTab("routes")}
         >
-          Rotalar
+          {t("explore.tabRoutes")}
         </button>
       </div>
       {tab === "routes" ? (
         <>
           <div className="explore-heading">
-            <h2>{heading("rotalar")}</h2>
+            <h2>{heading("routes")}</h2>
           </div>
           <div className="route-cards">
             {shown.map((r) => {
@@ -261,14 +268,14 @@ export function ExplorePanel({
                     live={live}
                   />
                   <span>
-                    <strong>{r.name}</strong>
+                    <strong><Localized tr={r.name} en={r.nameEn} /></strong>
                     <small>
-                      {r.siteIds.length} durak · ~{r.minutes} dk · {r.distance}
+                      {t("explore.routeLine", { count: r.siteIds.length, minutes: r.minutes, distance: r.distance })}
                     </small>
                     <em className={stops ? "going" : ""}>
                       {stops
-                        ? `Devam et · ${stops} / ${r.siteIds.length}`
-                        : "Başlanmadı"}
+                        ? t("common.continueProgress", { done: stops, total: r.siteIds.length })
+                        : t("explore.notStarted")}
                     </em>
                   </span>
                 </button>
@@ -278,11 +285,11 @@ export function ExplorePanel({
           <button className="custom-route" onClick={onCustomRoute}>
             <Route size={20} />
             <span>
-              <strong>Kendi rotanı oluştur</strong>
+              <strong>{t("explore.custom")}</strong>
               <small>
                 {routeIds.length
-                  ? `${routeIds.length} eser seni bekliyor`
-                  : "Merak ettiğin yerleri bir araya getir"}
+                  ? t(routeIds.length === 1 ? "explore.customWaitingOne" : "explore.customWaiting", { count: routeIds.length })
+                  : t("explore.customEmpty")}
               </small>
             </span>
             <Plus size={18} />
@@ -292,11 +299,14 @@ export function ExplorePanel({
         <>
           <div className="explore-heading">
             <h2 className="wide-only">
-              {heading("eserler")} · {sites.length}
+              {heading("sites")} · {sites.length}
             </h2>
             <button className="narrow-only explore-city" onClick={onCities}>
-              {city} ▾ · {sites.length} eser
-              {mode === "near" ? " yakında" : ""}
+              {t(sites.length === 1 ? "explore.narrowSitesOne" : "explore.narrowSites", {
+                city,
+                count: sites.length,
+                suffix: mode === "near" ? t("explore.nearSuffix") : "",
+              })}
             </button>
           </div>
           {query &&
@@ -308,8 +318,8 @@ export function ExplorePanel({
               >
                 <Route size={18} />
                 <span>
-                  <strong>{r.name}</strong>
-                  <small>Rota · {r.siteIds.length} durak</small>
+                  <strong><Localized tr={r.name} en={r.nameEn} /></strong>
+                  <small>{t("explore.routeResult", { count: r.siteIds.length })}</small>
                 </span>
                 <ArrowRight size={16} />
               </button>
@@ -328,15 +338,15 @@ export function ExplorePanel({
             ))}
             {!sites.length && !(query && shown.length) && (
               <li className="empty-state">
-                <p>Sonuç yok. Yazımı kontrol et ya da filtreleri temizle.</p>
+                <p>{t("explore.empty")}</p>
                 <button className="btn secondary" onClick={onClearFilters}>
-                  Filtreleri temizle
+                  {t("explore.clearFilters")}
                 </button>
               </li>
             )}
           </ul>
           {sites.length < total && (
-            <p className="muted explore-count">Toplam {total} eser</p>
+            <p className="muted explore-count">{t(total === 1 ? "explore.totalOne" : "explore.total", { total })}</p>
           )}
         </>
       )}
@@ -364,21 +374,23 @@ export function RoutePreview({
   onSite: (id: string) => void;
   onStart: () => void;
 }) {
+  const { lang, t } = useI18n();
+  const tr = lang === "en" ? "tr" : undefined;
   const done = sites.filter((s) => visitedIds.includes(s.id)).length;
   return (
     <div className="route-page">
-      <Back onClick={onBack}>Tüm rotalar</Back>
+      <Back onClick={onBack}>{t("route.all")}</Back>
       <div className="route-cover">
         <SiteArtwork site={sites[0]} live={live} />
-        <Tag>{custom ? "SENİN ROTAN" : "KÜRATÖRLÜ KEŞİF"}</Tag>
+        <Tag>{custom ? t("route.tagCustom") : t("route.tagCurated")}</Tag>
       </div>
-      <h1>{custom ? "Kendi hikâyeni çiz" : route?.name}</h1>
+      <h1>{custom ? t("route.customTitle") : route && <Localized tr={route.name} en={route.nameEn} />}</h1>
       <p className="muted">
-        {sites.length} durak {route && `· ~${route.minutes} dk · ${route.distance}`}
+        {t(sites.length === 1 ? "explore.stopCountOne" : "explore.stopCount", { count: sites.length })}{" "}
+        {route && t("route.metaTail", { minutes: route.minutes, distance: route.distance })}
       </p>
       <p>
-        {route?.description ??
-          "Seçtiğin eserleri sırayla keşfet. Her durak yeni bir hikâye."}
+        {route?.description ? <span lang={tr}>{route.description}</span> : t("route.defaultDescription")}
       </p>
       <div className="route-stop-list">
         {sites.map((s, i) => (
@@ -389,9 +401,9 @@ export function RoutePreview({
               {visitedIds.includes(s.id) ? <Check size={15} /> : i + 1}
             </span>
             <span>
-              <strong>{s.name}</strong>
+              <strong><Localized tr={s.name} en={s.nameEn} /></strong>
               <small>
-                {[s.year, `${s.minutes} dk`].filter(Boolean).join(" · ")}
+                {[s.year, t("site.minutes", { minutes: s.minutes })].filter(Boolean).join(" · ")}
               </small>
             </span>
             <ArrowRight size={15} />
@@ -399,19 +411,19 @@ export function RoutePreview({
         ))}
       </div>
       {sites.length === 0 ? (
-        <Notice>Başlamak için bir eser aç ve “Rotama ekle”yi seç.</Notice>
+        <Notice>{t("route.emptyNotice")}</Notice>
       ) : (
         <>
           <Notice>
-            Durakları birleştiren çizgi şematiktir; yürüyüş yol tarifi değildir.
+            {t("route.schematic")}
           </Notice>
           <button className="btn full" onClick={onStart}>
             <Footprints size={18} />
             {done === sites.length
-              ? "Rotayı yeniden keşfet"
+              ? t("route.again")
               : done
-                ? `Devam et · ${done} / ${sites.length}`
-                : "Rotayı başlat"}
+                ? t("common.continueProgress", { done, total: sites.length })
+                : t("route.start")}
           </button>
         </>
       )}

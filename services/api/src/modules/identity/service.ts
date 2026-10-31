@@ -145,6 +145,41 @@ export async function saveDisplayName(tx: Tx, userId: string, displayName: strin
     .onConflictDoUpdate({ target: profiles.userId, set: { displayName, updatedAt: sql`now()` } });
 }
 
+export type UserPreferences = {
+  siteLang: "tr" | "en" | null;
+  voiceLang: "tr" | "en" | null;
+  voiceGender: "female" | "male" | null;
+};
+/** Keys left out (or undefined) stay as they are. */
+export type PreferencesPatch = { [K in keyof UserPreferences]?: UserPreferences[K] | undefined };
+
+export async function preferencesOf(db: Db, userId: string): Promise<UserPreferences> {
+  const [row] = await db
+    .select({ siteLang: profiles.siteLang, voiceLang: profiles.voiceLang, voiceGender: profiles.voiceGender })
+    .from(profiles)
+    .where(eq(profiles.userId, userId));
+  return toPreferences(row);
+}
+
+/** Writes only the keys present in `patch` (null clears); creates the profile row, without a display name, when missing. */
+export async function savePreferences(tx: Tx, userId: string, patch: PreferencesPatch): Promise<UserPreferences> {
+  const [row] = await tx
+    .insert(profiles)
+    .values({ userId, ...patch })
+    .onConflictDoUpdate({ target: profiles.userId, set: { ...patch, updatedAt: sql`now()` } })
+    .returning({ siteLang: profiles.siteLang, voiceLang: profiles.voiceLang, voiceGender: profiles.voiceGender });
+  return toPreferences(row);
+}
+
+function toPreferences(row: { siteLang: string | null; voiceLang: string | null; voiceGender: string | null } | undefined): UserPreferences {
+  // The CHECK constraints guarantee the values; the casts only narrow the column type.
+  return {
+    siteLang: (row?.siteLang ?? null) as UserPreferences["siteLang"],
+    voiceLang: (row?.voiceLang ?? null) as UserPreferences["voiceLang"],
+    voiceGender: (row?.voiceGender ?? null) as UserPreferences["voiceGender"],
+  };
+}
+
 // ── Staff administration ─────────────────────────────────────────────────────────────────────────
 
 export async function listStaff(db: Db): Promise<{ members: StaffMemberDto[]; invites: StaffInviteDto[] }> {

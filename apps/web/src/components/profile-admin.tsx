@@ -24,6 +24,7 @@ import {
 } from "@akar/domain";
 import type { AdminHealth, AkarClient, ModerationPage } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
+import { Localized, useI18n } from "./i18n";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
 import { MemoryActions } from "./memory-actions";
@@ -53,6 +54,8 @@ export function Profile({
   /** Present only when connected to the real API; `email` is `null` for a guest. */
   auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void };
 }) {
+  const { lang, t } = useI18n();
+  const tr = lang === "en" ? "tr" : undefined;
   const [contrast, setContrast] = useState(
       () =>
         typeof document !== "undefined" &&
@@ -65,22 +68,22 @@ export function Profile({
     );
   const firstSite = state.sites.find((s) => s.status === "published");
   const badges = [
-    { name: "İlk hikâye", earned: state.readIds.length > 0 },
-    { name: "İlk adım", earned: state.visitedIds.length > 0 },
-    { name: "Meraklı zihin", earned: state.quizIds.length > 0 },
+    { name: t("badge.firstStory"), earned: state.readIds.length > 0 },
+    { name: t("badge.firstStep"), earned: state.visitedIds.length > 0 },
+    { name: t("badge.curious"), earned: state.quizIds.length > 0 },
     {
-      name: "Hafızaya katkı",
+      name: t("badge.contributor"),
       earned: state.memories.some((m) => m.status === "approved"),
     },
-    { name: "Semt gezgini", earned: state.visitedIds.length >= 3 },
-    { name: "İz koleksiyoncusu", earned: state.readIds.length >= 5 },
+    { name: t("badge.wanderer"), earned: state.visitedIds.length >= 3 },
+    { name: t("badge.collector"), earned: state.readIds.length >= 5 },
   ];
   return (
     <main id="main-content" tabIndex={-1} className="profile-page">
       <div className="page-intro">
-        <small className="eyebrow">SENİN KEŞİF HİKÂYEN</small>
-        <h1>Mirasım</h1>
-        <p>Gördüğün her yapı, hikâyenin bir parçası.</p>
+        <small className="eyebrow">{t("profile.eyebrow")}</small>
+        <h1>{t("profile.title")}</h1>
+        <p>{t("profile.lead")}</p>
       </div>
       <div className="profile-grid">
         <aside>
@@ -92,30 +95,29 @@ export function Profile({
                 <>
                   <p className="muted account-email">{auth.email}</p>
                   <button className="text-btn" onClick={auth.onSignOut}>
-                    Çıkış yap
+                    {t("profile.signOut")}
                   </button>
                 </>
               ) : (
                 <>
                   <p className="muted">
-                    Misafir · Giriş yaparak anı bırakabilir ve ilerlemeni
-                    hesabına bağlayabilirsin
+                    {t("profile.guest")}
                   </p>
                   <button className="btn" onClick={auth.onSignIn}>
-                    Giriş yap
+                    {t("common.signIn")}
                   </button>
                 </>
               )
             ) : (
-              <p className="muted">Demo profili · Bu tarayıcıya özel</p>
+              <p className="muted">{t("profile.demo")}</p>
             )}
           </div>
           <div className="settings card">
-            <h3>Deneyimini özelleştir</h3>
+            <h3>{t("profile.settings")}</h3>
             {!auth && (
               <>
                 <label>
-                  Deneysel arayüzleri göster
+                  {t("profile.experimental")}
                   <input
                     type="checkbox"
                     checked={experimental}
@@ -125,13 +127,12 @@ export function Profile({
                   />
                 </label>
                 <p className="muted">
-                  Rozet, Bulmaca ve Birlikte Gez önizlemeleri. Ürün kapsamı
-                  henüz kesinleşmedi; çok kullanıcılı bağlantı yoktur.
+                  {t("profile.experimentalNote")}
                 </p>
               </>
             )}
             <label>
-              Yüksek kontrast
+              {t("profile.contrast")}
               <input
                 type="checkbox"
                 checked={contrast}
@@ -144,7 +145,7 @@ export function Profile({
               />
             </label>
             <label>
-              Büyük yazı
+              {t("profile.largeText")}
               <input
                 type="checkbox"
                 checked={large}
@@ -159,14 +160,14 @@ export function Profile({
             {canManage && (
               <button className="text-btn" onClick={onAdmin}>
                 <Shield size={16} />
-                {auth ? "Yönetim paneli" : "Demo yönetim paneli"}
+                {auth ? t("profile.admin") : t("profile.demoAdmin")}
                 <ArrowRight size={15} />
               </button>
             )}
             {!auth && (
               <button className="text-btn danger" onClick={onReset}>
                 <RotateCcw size={16} />
-                Demo verilerini sıfırla
+                {t("profile.reset")}
               </button>
             )}
           </div>
@@ -177,17 +178,17 @@ export function Profile({
               {
                 icon: BookOpen,
                 n: state.readIds.length,
-                label: "hikâye keşfedildi",
+                label: t("profile.statStories"),
               },
               {
                 icon: MapPin,
                 n: state.visitedIds.length,
-                label: auth ? "doğrulanmış ziyaret" : "demo ziyareti",
+                label: auth ? t("profile.statVerified") : t("profile.statDemo"),
               },
               {
                 icon: MessageSquare,
                 n: state.memories.length,
-                label: "iz bırakıldı",
+                label: t("profile.statMemories"),
               },
             ].map(({ icon: Icon, n, label }) => (
               <div className="card stat" key={label}>
@@ -200,7 +201,7 @@ export function Profile({
           {experimental && (
             <div className="card">
               <div className="row between">
-                <h3>Keşif rozetlerin</h3>
+                <h3>{t("profile.badges")}</h3>
                 <Tag>
                   {badges.filter((b) => b.earned).length} / {badges.length}
                 </Tag>
@@ -213,28 +214,28 @@ export function Profile({
                       alt=""
                     />
                     <span>{b.name}</span>
-                    <small>{b.earned ? "Kazanıldı" : "Kilitli"}</small>
+                    <small>{b.earned ? t("profile.earned") : t("profile.locked")}</small>
                   </div>
                 ))}
               </div>
             </div>
           )}
           <div className="card">
-            <h3>Keşfettiklerim</h3>
+            <h3>{t("profile.discovered")}</h3>
             {state.readIds.length === 0 ? (
               <div className="empty-inline">
                 <BookOpen size={26} />
                 <p>
                   {firstSite
-                    ? "İlk hikâyen seni bekliyor."
-                    : "Henüz yayında eser yok."}
+                    ? t("profile.firstStory")
+                    : t("profile.noSites")}
                 </p>
                 {firstSite && (
                   <button
                     className="text-btn"
                     onClick={() => onSite(firstSite.id)}
                   >
-                    Keşfe başla <ArrowRight size={15} />
+                    {t("profile.start")} <ArrowRight size={15} />
                   </button>
                 )}
               </div>
@@ -247,14 +248,17 @@ export function Profile({
                 >
                   <span>
                     <strong>
-                      {state.sites.find((s) => s.id === id)?.name}
+                      {(() => {
+                        const s = state.sites.find((x) => x.id === id);
+                        return s && <Localized tr={s.name} en={s.nameEn} />;
+                      })()}
                     </strong>
                     <small>
-                      Hikâye tamamlandı{" "}
+                      {t("profile.storyDone")}{" "}
                       {state.visitedIds.includes(id)
                         ? auth
-                          ? "· Ziyaret doğrulandı"
-                          : "· Demo ziyareti yapıldı"
+                          ? `· ${t("profile.visitVerified")}`
+                          : `· ${t("profile.visitDemo")}`
                         : ""}
                     </small>
                   </span>
@@ -264,25 +268,28 @@ export function Profile({
             )}
           </div>
           <div className="card">
-            <h3>Paylaşımlarım</h3>
+            <h3>{t("profile.shared")}</h3>
             {!state.memories.length ? (
-              <p className="muted">Henüz bir iz bırakmadın.</p>
+              <p className="muted">{t("profile.noneShared")}</p>
             ) : (
               state.memories.map((m) => (
                 <div className="memory-row" key={m.id}>
                   <div>
                     <strong>
-                      {state.sites.find((s) => s.id === m.siteId)?.name}
+                      {(() => {
+                        const s = state.sites.find((x) => x.id === m.siteId);
+                        return s && <Localized tr={s.name} en={s.nameEn} />;
+                      })()}
                     </strong>
-                    <p>{m.text}</p>
-                    {m.reason && <small className="error">{m.reason}</small>}
+                    <p lang={tr}>{m.text}</p>
+                    {m.reason && <small className="error" lang={tr}>{m.reason}</small>}
                     <div className="memory-actions">
                       {/* Paylaşımlarım is the author's own list: only "Sil", whatever the role. */}
                       <MemoryActions
                         memory={m}
                         siteName={
                           state.sites.find((s) => s.id === m.siteId)?.name ??
-                          "Eser"
+                          t("profile.siteFallback")
                         }
                         role="user"
                         own
@@ -292,10 +299,10 @@ export function Profile({
                   </div>
                   <Tag tone={m.status === "approved" ? "success" : "muted"}>
                     {m.status === "pending"
-                      ? "Onay bekliyor"
+                      ? t("memory.pendingTag")
                       : m.status === "approved"
-                        ? "Yayında"
-                        : "Reddedildi"}
+                        ? t("profile.published")
+                        : t("profile.rejected")}
                   </Tag>
                 </div>
               ))

@@ -11,6 +11,7 @@ import type {
   GeoJSONSource,
   Map as MapLibreMap,
 } from "maplibre-gl";
+import { localize, type Lang } from "./i18n";
 
 /**
  * The map's site pins (§11.48): one GeoJSON source with an icon layer and a label layer, so the map itself
@@ -95,7 +96,7 @@ export function pinFeatures(
   sites: HeritageSite[],
   routeIds: string[],
   selectedId?: string,
-  look: { finishedIds?: string[]; accent?: string } = {},
+  look: { finishedIds?: string[]; accent?: string; lang?: Lang } = {},
 ): PinCollection {
   return {
     type: "FeatureCollection",
@@ -110,7 +111,7 @@ export function pinFeatures(
           geometry: { type: "Point", coordinates: site.coordinates },
           properties: {
             id: site.id,
-            name: site.name,
+            name: localize(look.lang ?? "tr", site.name, site.nameEn).text,
             kind: site.kind,
             stop,
             icon: pinImageId(site.kind, stop, finished, look.accent),

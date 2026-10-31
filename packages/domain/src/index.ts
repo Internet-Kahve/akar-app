@@ -215,6 +215,8 @@ export interface StoryBlock {
   simple: string;
   trust: Trust;
   textEn?: string;
+  /** English of `simple`. */
+  simpleEn?: string;
   photoId?: string;
   sourceId?: string;
   showCard?: boolean;
@@ -452,6 +454,12 @@ export interface Memory {
   createdAt: string;
   author: string;
 }
+/** Site language and narration voice of an account; `null` = not chosen yet. Mirrors `GET /v1/me` `preferences`. */
+export interface UserPreferences {
+  siteLang: "tr" | "en" | null;
+  voiceLang: "tr" | "en" | null;
+  voiceGender: "female" | "male" | null;
+}
 export interface Snapshot {
   version: 1;
   sites: HeritageSite[];
@@ -473,6 +481,8 @@ export interface Snapshot {
   catalogRoutes?: HeritageRoute[];
   /** Role of the signed-in user (`user` for a guest); absent in the demo, where the visitor runs the whole panel. */
   role?: Role;
+  /** The signed-in account's preferences; absent for a guest (kept on the device) and in the demo. */
+  preferences?: UserPreferences;
 }
 export type Command =
   | { type: "save"; siteId: string }

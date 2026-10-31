@@ -16,6 +16,8 @@ import {
   InviteIdParams,
   InviteResponse,
   MeResponse,
+  PreferencesBody,
+  PreferencesDto,
   ProfileBody,
   ProfileResponse,
   RoleBody,
@@ -31,7 +33,9 @@ import {
   listStaff,
   removeStaff,
   revokeInvite,
+  preferencesOf,
   saveDisplayName,
+  savePreferences,
   sendSupabaseInvite,
   setStaffRole,
   supabaseAdminFrom,
@@ -78,7 +82,13 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req) => {
       const user = req.user!;
-      return { id: user.id, role: user.role, email: user.email ?? null, displayName: await displayNameOf(app.deps.db, user.id) };
+      return {
+        id: user.id,
+        role: user.role,
+        email: user.email ?? null,
+        displayName: await displayNameOf(app.deps.db, user.id),
+        preferences: await preferencesOf(app.deps.db, user.id),
+      };
     },
   );
 
@@ -100,6 +110,28 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
         await saveDisplayName(tx, userId, displayName);
         return { status: 200, body: { id: userId, displayName } };
       });
+      return result.body;
+    },
+  );
+
+  app.put(
+    "/v1/me/preferences",
+    {
+      preHandler: requireUser,
+      schema: {
+        tags: ["me"],
+        summary: "Site dili ve ses tercihlerini kaydet (verilen alanlar yazılır, null temizler)",
+        body: PreferencesBody,
+        response: { 200: PreferencesDto },
+      },
+    },
+    async (req) => {
+      const userId = req.user!.id;
+      const patch = req.body;
+      const result = await idempotent(app.deps.db, req, userId, async (tx) => ({
+        status: 200,
+        body: await savePreferences(tx, userId, patch),
+      }));
       return result.body;
     },
   );

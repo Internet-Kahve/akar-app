@@ -532,6 +532,36 @@ test("the user cache follows the token: another account never inherits cached sa
   );
 });
 
+test("preferences: the snapshot carries the account's, a guest's has none, savePreferences sends only the patch and refreshes the cache", async () => {
+  let tokenValue: string | null = null;
+  let stored = { siteLang: "tr", voiceLang: null, voiceGender: null };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ A: { saved: [], points: 0 } }),
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ada", preferences: stored }),
+    "PUT /v1/me/preferences": (c) => {
+      stored = { ...stored, ...(c.body as object) };
+      return stored;
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => tokenValue,
+    fetch: api.fetch,
+  });
+  assert.equal("preferences" in (await client.getSnapshot()), false);
+
+  tokenValue = "A";
+  assert.deepEqual((await client.getSnapshot()).preferences, { siteLang: "tr", voiceLang: null, voiceGender: null });
+  const saved = await client.savePreferences({ voiceLang: "en", voiceGender: "female" });
+  assert.deepEqual(saved, { siteLang: "tr", voiceLang: "en", voiceGender: "female" });
+  const write = api.calls.find((c) => c.method === "PUT" && c.path === "/v1/me/preferences");
+  assert.deepEqual(write?.body, { voiceLang: "en", voiceGender: "female" });
+  assert.ok(write?.headers["idempotency-key"]);
+  assert.deepEqual((await client.getSnapshot()).preferences, saved);
+});
+
 test("sign-in moves the device's saves and Rotam into the account once; Rotam then lives in the account", async () => {
   const store = storage();
   let tokenValue: string | null = null;
