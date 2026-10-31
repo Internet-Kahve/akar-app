@@ -2944,3 +2944,14 @@ h1,
 .history-info > a { display: inline-block; margin-top: 6px; font-size: 11px; }
 .archive-timeline button.active { background: none; box-shadow: none; }
 .history-photo-trust .trust-tag { font-size: 11px; padding: 3px 7px; }
+
+/* Route preview: the mobile sheet opens to the prototype's 60% stop. */
+.route-page h1 { font-size: 26px; line-height: 32px; margin: 16px 0 8px; }
+.route-cover { height: 160px; border-radius: 12px; }
+.route-stop-list { margin: 20px 0; }
+.route-stop-list button { min-height: 52px; }
+.route-home { display: block; min-height: 44px; margin: 8px auto 0; }
+@media (max-width: 899.98px) {
+  .route-page .route-cover { display: none; }
+  .route-page h1 { margin-top: 4px; }
+}

@@ -415,9 +415,7 @@ export function RoutePreview({
             </span>
             <span>
               <strong><Localized tr={s.name} en={s.nameEn} /></strong>
-              <small>
-                {[s.year, t("site.minutes", { minutes: s.minutes })].filter(Boolean).join(" · ")}
-              </small>
+              <small>{s.year}</small>
             </span>
             <ArrowRight size={15} />
           </button>
@@ -437,6 +435,9 @@ export function RoutePreview({
               : done
                 ? t("common.continueProgress", { done, total: sites.length })
                 : t("route.start")}
+          </button>
+          <button className="text-btn route-home" onClick={onStart}>
+            {t("route.fromHome")}
           </button>
         </>
       )}

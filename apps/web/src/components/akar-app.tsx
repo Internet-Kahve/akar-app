@@ -690,6 +690,10 @@ export function AkarApp() {
       isDetail ? Math.round(innerHeight * SITE_SHEET) : sheetLowest(),
     );
   }, [ready, isDetail, wide]);
+  useEffect(() => {
+    if (!ready || wide || isDetail) return;
+    setSheetHeight(routeId ? Math.round(innerHeight * 0.6) : sheetLowest());
+  }, [ready, wide, isDetail, routeId, tab]);
   const shell = (
     <div
       className="app-shell"

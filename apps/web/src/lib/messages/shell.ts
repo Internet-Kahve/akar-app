@@ -1,5 +1,6 @@
 /** App frame, map, lists, sign-in, dialogs and profile. */
 export const tr = {
+  "route.fromHome": "Evden gez · konum gerekmez",
   "common.turkishTag": "Türkçe",
   "lang.switch": "Dil / Language",
   "lang.fallbackNotice": "Çevirisi olmayan metinler Türkçe kalır.",
@@ -344,6 +345,7 @@ export const tr = {
 } as const;
 
 export const en = {
+  "route.fromHome": "Explore from home · no location needed",
   "common.turkishTag": "Turkish",
   "lang.switch": "Dil / Language",
   "lang.fallbackNotice": "Texts without a translation stay in Turkish.",
