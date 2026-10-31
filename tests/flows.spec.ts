@@ -308,7 +308,7 @@ test("deferred features are hidden and the empty archive remains keyboard access
   await page.keyboard.press("Escape");
   await openProfile(page);
   await expect(page.getByRole("heading", { name: "Mirasım" })).toBeVisible();
-  await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
+  await expect(page.locator(".profile-badges")).toBeVisible();
 });
 test("responsive layouts do not overflow and Figma assets load locally", async ({
   page,
@@ -504,7 +504,7 @@ test("experimental UI can be inspected without enabling it for the main journey"
 }) => {
   await page.goto("/#view=profile");
   await page.getByLabel("Deneysel arayüzleri göster").check();
-  await expect(page.getByText("Keşif rozetlerin")).toBeVisible();
+  await expect(page.locator(".profile-badges")).toBeVisible();
   await page.getByRole("button", { name: /Keşfe başla/ }).click();
   // The paused «Birlikte Gez» and the old puzzle grid are no longer on the site panel; «Bulmaca» is the task list.
   await page.getByRole("button", { name: /^Bulmaca/ }).click();
@@ -513,7 +513,7 @@ test("experimental UI can be inspected without enabling it for the main journey"
   await expect(page.getByRole("button", { name: "Birlikte Gez", exact: true })).toHaveCount(0);
   await openProfile(page);
   await page.getByLabel("Deneysel arayüzleri göster").uncheck();
-  await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
+  await expect(page.locator(".profile-badges")).toBeVisible();
 });
 
 test("admin imports drafts and persists route stop order", async ({ page }) => {

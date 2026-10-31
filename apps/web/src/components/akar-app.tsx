@@ -810,6 +810,9 @@ export function AkarApp() {
           {view === "profile" && (
             <Profile
               state={state}
+              progress={progress}
+              onBack={() => go("map")}
+              onLanguage={changeLanguage}
               experimental={showExperimental}
               canManage={canManage}
               onExperimentalChange={setExperimental}

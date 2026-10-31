@@ -1,5 +1,10 @@
 /** App frame, map, lists, sign-in, dialogs and profile. */
 export const tr = {
+  "profile.badgeCount": "{count} rozet",
+  "profile.language": "Dil",
+  "profile.saved": "Kayıtlılar",
+  "profile.noneSaved": "Henüz bir eser kaydetmedin. Eser sayfasından kaydederek burada bulabilirsin.",
+  "profile.noBadges": "Rozetler hazırlanıyor.",
   "route.fromHome": "Evden gez · konum gerekmez",
   "common.turkishTag": "Türkçe",
   "lang.switch": "Dil / Language",
@@ -260,7 +265,7 @@ export const tr = {
   "profile.statVerified": "doğrulanmış ziyaret",
   "profile.statDemo": "demo ziyareti",
   "profile.statMemories": "iz bırakıldı",
-  "profile.badges": "Keşif rozetlerin",
+  "profile.badges": "Rozetler",
   "profile.earned": "Kazanıldı",
   "profile.locked": "Kilitli",
   "profile.discovered": "Keşfettiklerim",
@@ -345,6 +350,11 @@ export const tr = {
 } as const;
 
 export const en = {
+  "profile.badgeCount": "{count} badges",
+  "profile.language": "Language",
+  "profile.saved": "Saved places",
+  "profile.noneSaved": "No saved places yet. Save a place from its page to find it here.",
+  "profile.noBadges": "Badges are being prepared.",
   "route.fromHome": "Explore from home · no location needed",
   "common.turkishTag": "Turkish",
   "lang.switch": "Dil / Language",

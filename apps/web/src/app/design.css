@@ -2955,3 +2955,43 @@ h1,
   .route-page .route-cover { display: none; }
   .route-page h1 { margin-top: 4px; }
 }
+
+/* Mirasım: data-driven badges, saved places and language preferences. */
+.profile-heading { display: none; }
+.profile-grid { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 32px; max-width: 1100px; margin: 0 auto; }
+.profile-card { display: grid; grid-template-columns: 56px minmax(0, 1fr); column-gap: 14px; padding: 0; text-align: left; background: none; border: 0; box-shadow: none; }
+.profile-card .avatar { grid-row: 1 / 3; width: 56px; height: 56px; margin: 0; font: 600 24px/1 var(--font-display); }
+.profile-card h2 { align-self: end; margin: 0; font: 600 26px/1.1 var(--font-display); }
+.profile-card > p, .profile-card > button { grid-column: 1 / -1; }
+.profile-card .profile-badge-count { grid-column: 2; margin: 4px 0 0; font-size: 14px; }
+.profile-language { display: flex; gap: 8px; margin-bottom: 14px; }
+.profile-language button { min-height: 44px; padding: 0 16px; border-radius: 24px; }
+.profile-language [aria-pressed="true"] { background: var(--text); color: white; }
+.profile-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.profile-main > .stat-grid { order: -3; }
+.profile-main > .profile-discovered { order: -2; }
+.profile-main > .profile-badges { order: -1; }
+.profile-main .badges { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px 8px; }
+.profile-main .badges > div { min-width: 0; padding: 12px 0; }
+.profile-main .badges b { font: 600 12px/16px var(--font); overflow-wrap: anywhere; }
+.profile-main .badges small { font: 400 11px/14px var(--font); }
+.profile-main .badges img { width: 40px; height: 40px; }
+@media (max-width: 899.98px) {
+  .app-shell:has(.profile-grid) .topbar { display: none; }
+  .profile-page:has(.profile-grid) { padding: 12px 16px 32px; max-height: 100dvh; overflow: auto; }
+  .profile-heading { display: flex; position: relative; align-items: center; height: 44px; margin-bottom: 12px; }
+  .profile-heading h1 { position: absolute; left: 50%; transform: translateX(-50%); margin: 0; font: 600 18px/24px var(--font); }
+  .profile-heading .round-btn { width: 44px; height: 44px; }
+  .profile-grid { display: flex; flex-direction: column; gap: 20px; }
+  .profile-grid > aside { display: contents; }
+  .profile-grid .profile-card { order: 0; }
+  .profile-grid .profile-main { order: 1; }
+  .profile-grid .settings { order: 2; }
+  .profile-main > .card { padding: 14px; }
+  .profile-main .badges { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .profile-saved .list-row { min-height: 44px; }
+}
+@media (min-width: 900px) {
+  .profile-heading { display: flex; align-items: center; gap: 12px; max-width: 1100px; margin: 0 auto 20px; }
+  .profile-heading h1 { margin: 0; }
+}
