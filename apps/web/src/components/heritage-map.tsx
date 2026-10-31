@@ -39,8 +39,10 @@ const PEEK_WIDTH = 360;
 const PEEK_TOP = 80;
 /** A site's pin keeps at least this zoom when it is picked. */
 const SITE_ZOOM = 17;
-/** Angled view the map opens with; the tilt button toggles between this and 0 (top view). */
-const TILT_PITCH = 50;
+/** Angled view the map opens with; the tilt button toggles between this and 0 (top view). Same as the prototype. */
+const TILT_PITCH = 55;
+/** The opening view turns a little west of north, as the prototype opens (models and labels read better). */
+const OPENING_BEARING = -12;
 /** Where the globe flies out to: Türkiye whole on the screen. */
 const COUNTRY = {
   center: [34.5, 39.2] as [number, number],
@@ -173,7 +175,10 @@ export function HeritageMap({
             container: container.current,
             ...openingView(latest.current.cities),
             pitch: TILT_PITCH,
+            bearing: OPENING_BEARING,
             minZoom: 1.2,
+            maxZoom: 19.5,
+            maxPitch: 65,
             attributionControl: { compact: true },
             style: "/harita/akar-style.json",
           });
@@ -221,10 +226,11 @@ export function HeritageMap({
             // Globe view (§11.45): far out the earth is round, near a city MapLibre turns flat by itself.
             m.setProjection({ type: "globe" });
             m.setSky({
-              "sky-color": "#C9DCEB",
-              "horizon-color": "#F3F5F5",
+              // The frosted theme's sky: light blue far out, warm light at the horizon.
+              "sky-color": "#9ACBF0",
+              "horizon-color": "#F4F2EA",
               "sky-horizon-blend": 0.6,
-              "fog-color": "#F3F5F5",
+              "fog-color": "#F4F2EA",
               "horizon-fog-blend": 0.4,
               "fog-ground-blend": 1,
               "atmosphere-blend": [

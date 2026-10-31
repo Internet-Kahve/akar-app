@@ -35,6 +35,91 @@ export function addSceneLights(scene: THREE.Scene, light: SceneLight) {
   scene.add(fill);
 }
 
+/**
+ * The map's light, the prototype's (30 Oct 2026): ACES tone mapping, a warm sky light and one sun that casts real
+ * shadows. The sun stands in front of the site's main façade (`frontDeg`), `acrossDeg` to the left of a visitor
+ * facing it, so every site shows its lit front; high and soft so light façades do not burn out close up. Without a
+ * façade direction the sun comes from the city's `azimuthDeg`.
+ */
+export const MAP_LIGHT = {
+  exposure: 1.05,
+  sky: 0xf4f1ea,
+  ground: 0x8c948f,
+  ambient: 1.15,
+  colour: 0xfff4e0,
+  sun: 1.5,
+  elevationDeg: 62,
+  acrossDeg: 20,
+  shadowMapSize: 1024,
+  /** Opacity of the cast shadow on the map's ground. */
+  shadowOpacity: 0.3,
+};
+/** Where the map's sun comes from, degrees clockwise from north. */
+export const mapSunAzimuth = (
+  frontDeg: number | null | undefined,
+  light: SceneLight,
+) =>
+  frontDeg == null || !Number.isFinite(frontDeg)
+    ? light.azimuthDeg
+    : (((frontDeg + MAP_LIGHT.acrossDeg) % 360) + 360) % 360;
+/** Sky light and a shadow-casting sun in `scene`; aim the sun with `aimMapSun` once the model is placed. */
+export function addMapLights(scene: THREE.Scene) {
+  scene.add(
+    new THREE.HemisphereLight(MAP_LIGHT.sky, MAP_LIGHT.ground, MAP_LIGHT.ambient),
+  );
+  const sun = new THREE.DirectionalLight(MAP_LIGHT.colour, MAP_LIGHT.sun);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(MAP_LIGHT.shadowMapSize, MAP_LIGHT.shadowMapSize);
+  sun.shadow.bias = -0.0004;
+  scene.add(sun, sun.target);
+  return sun;
+}
+/** Puts the sun at `azimuthDeg`, looking at `centre`, its shadow camera covering `radius` metres around it. */
+export function aimMapSun(
+  sun: THREE.DirectionalLight,
+  azimuthDeg: number,
+  centre: THREE.Vector3,
+  radius: number,
+) {
+  const a = THREE.MathUtils.degToRad(azimuthDeg);
+  const e = THREE.MathUtils.degToRad(MAP_LIGHT.elevationDeg);
+  sun.position
+    .set(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e))
+    .multiplyScalar(radius * 2.5)
+    .add(centre);
+  sun.target.position.copy(centre);
+  sun.target.updateMatrixWorld();
+  sun.shadow.normalBias = radius / MAP_LIGHT.shadowMapSize;
+  Object.assign(sun.shadow.camera, {
+    left: -radius,
+    right: radius,
+    top: radius,
+    bottom: -radius,
+    near: radius * 0.5,
+    far: radius * 5,
+  });
+  sun.shadow.camera.updateProjectionMatrix();
+}
+/** A ground plane that shows only the shadows cast on it, `radius` metres around `centre`, just above the map. */
+export function shadowFloor() {
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.ShadowMaterial({
+      opacity: MAP_LIGHT.shadowOpacity,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: 2,
+      polygonOffsetUnits: 8,
+    }),
+  );
+  mesh.name = "akar-shadow-floor";
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.receiveShadow = true;
+  mesh.renderOrder = -1;
+  mesh.raycast = () => {};
+  return mesh;
+}
+
 /** Multiplies every material colour's saturation once (capped at 1); materials are the loaded file's own. */
 export function saturate(root: THREE.Object3D, factor: number) {
   if (factor === 1) return;

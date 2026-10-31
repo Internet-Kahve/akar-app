@@ -28,6 +28,12 @@ export interface MapPlacement {
   lat: number;
   /** Clockwise from north, 0 ≤ x < 360. */
   headingDeg: number;
+  /**
+   * The way the main façade (the entrance) faces, clockwise from north, 0 ≤ x < 360. The map's sun stands in front
+   * of it, a little to the left, so the front is lit (content: `3d/model.json → on_yonu`). Absent or `null`: the
+   * city's light direction.
+   */
+  frontDeg?: number | null;
   /** 1 = one model unit is one metre. */
   scale: number;
   /** Metres added on top of the model resting on the ground. */
@@ -660,6 +666,11 @@ export function validatePlacement(p: MapPlacement) {
     throw new Error("Geçerli enlem ve boylam gir.");
   if (!Number.isFinite(p.headingDeg) || p.headingDeg < 0 || p.headingDeg >= 360)
     throw new Error("Yön 0 ile 360 derece arasında olmalı.");
+  if (
+    p.frontDeg != null &&
+    (!Number.isFinite(p.frontDeg) || p.frontDeg < 0 || p.frontDeg >= 360)
+  )
+    throw new Error("Ön cephe yönü 0 ile 360 derece arasında olmalı.");
   const { scale, altitudeM, anchorNodeLength, points } = placementLimits;
   if (!within(p.scale, scale.min, scale.max))
     throw new Error(`Ölçek ${scale.min} ile ${scale.max} arasında olmalı.`);

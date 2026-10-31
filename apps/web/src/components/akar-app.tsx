@@ -740,7 +740,7 @@ export function AkarApp() {
           <Search size={18} />
           <input
             aria-label={t("header.search")}
-            placeholder={t("header.search")}
+            placeholder={t(wide ? "header.search" : "header.searchShort")}
             autoComplete="off"
             value={query}
             onChange={(e) => {

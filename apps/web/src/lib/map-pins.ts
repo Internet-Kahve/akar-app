@@ -73,6 +73,8 @@ export interface PinProperties {
   /** `symbol-sort-key`: the site's `displayOrder`. */
   order: number;
   selected: boolean;
+  /** Image id of the name drawn in the display serif (`labelImageId`); empty until it is drawn, the glyph text stands in. */
+  label: string;
 }
 export type PinCollection = GeoJSON.FeatureCollection<
   GeoJSON.Point,
@@ -118,6 +120,7 @@ export function pinFeatures(
             finished,
             order: site.displayOrder ?? UNRANKED,
             selected: site.id === selectedId,
+            label: "",
           },
         };
       }),
@@ -140,15 +143,16 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "icon-image": ["get", "icon"],
       "icon-anchor": "bottom",
       "icon-allow-overlap": true,
-      // The Figma size far out, 17.5 % smaller from zoom 18 on (§11.48); the selected pin is a quarter larger.
+      // The prototype's size: its 44 px arch at 0.8 by zoom 16 and 0.66 by zoom 18 (here a 32 px canvas), so
+      // 1.1 and 0.9075; the selected pin is a quarter larger.
       "icon-size": [
         "interpolate",
         ["linear"],
         ["zoom"],
         16,
-        ["case", ["get", "selected"], 1.25, 1],
+        ["case", ["get", "selected"], 1.375, 1.1],
         18,
-        ["case", ["get", "selected"], 1.03, 0.825],
+        ["case", ["get", "selected"], 1.134, 0.9075],
       ],
       "symbol-sort-key": ["get", "order"],
     },
@@ -160,8 +164,20 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
     source: PIN_SOURCE,
     minzoom: CITY_MARKER_MAX_ZOOM,
     layout: {
-      // MapLibre lays text out per whole tile zoom, so the names show from zoom 16 however the step is set.
-      "text-field": ["step", ["zoom"], "", 16, ["get", "name"]],
+      // MapLibre lays text out per whole tile zoom, so the names show from zoom 15 (the prototype's 15.2).
+      // The name is the serif image once it is drawn (`label`), the glyph text until then.
+      "text-field": [
+        "step",
+        ["zoom"],
+        "",
+        15.2,
+        [
+          "case",
+          ["!=", ["get", "label"], ""],
+          ["format", ["image", ["get", "label"]]],
+          ["get", "name"],
+        ],
+      ],
       "text-font": ["Noto Sans Bold"],
       "text-size": 12,
       "text-line-height": 1.333,
@@ -176,6 +192,7 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
         [0, -3.8],
       ],
       "text-justify": "auto",
+      "text-optional": true,
       "symbol-sort-key": ["get", "order"],
     },
     paint: {
@@ -283,6 +300,51 @@ async function pinImage(kind: SiteKind, finished: boolean) {
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
+/**
+ * Site names in the app's display serif (Cormorant Garamond, as the prototype draws them): the glyph server
+ * has no serif, so each name is drawn once on a canvas, ink with a white halo, and shown as an image inside the
+ * label, which keeps the map's own label placement and collision.
+ */
+const LABEL_FONT = '600 34px "Cormorant Garamond"';
+const LABEL_HEIGHT = 46;
+export const labelImageId = (name: string) => `name:${name}`;
+async function labelFontReady(names: string[]) {
+  try {
+    await document.fonts.load(LABEL_FONT, names.join(""));
+    return document.fonts.check(LABEL_FONT);
+  } catch {
+    return false;
+  }
+}
+function labelImage(name: string) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  ctx.font = LABEL_FONT;
+  canvas.width = Math.ceil(ctx.measureText(name).width) + 16;
+  canvas.height = LABEL_HEIGHT;
+  ctx.font = LABEL_FONT;
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 7;
+  ctx.strokeStyle = "rgba(255,255,255,.95)";
+  ctx.strokeText(name, 8, LABEL_HEIGHT / 2 + 1);
+  ctx.fillStyle = colors.text;
+  ctx.fillText(name, 8, LABEL_HEIGHT / 2 + 1);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+/** Draws the names the map does not have yet and points each pin at its image; without the font the text stays. */
+async function addLabelImages(map: MapLibreMap, pins: PinCollection) {
+  const names = [...new Set(pins.features.map((f) => f.properties.name))];
+  if (!names.length || !(await labelFontReady(names))) return;
+  for (const name of names) {
+    const id = labelImageId(name);
+    if (!map.hasImage(id))
+      map.addImage(id, labelImage(name), { pixelRatio: PIXEL_RATIO });
+  }
+  for (const f of pins.features)
+    f.properties.label = labelImageId(f.properties.name);
+}
+
 /** Registers the images the pins need and the map does not have yet. */
 async function addPinImages(
   map: MapLibreMap,
@@ -316,6 +378,7 @@ export async function syncPins(
   accent: string = colors.cityBursa,
 ) {
   await addPinImages(map, pins, accent);
+  if (map.getStyle().glyphs) await addLabelImages(map, pins);
   if (cancelled()) return;
   const source = map.getSource<GeoJSONSource>(PIN_SOURCE);
   if (source) {

@@ -20,7 +20,16 @@ import { modelBase, PRESENTATION_PARTS, type ModelBase } from "./model-anchor";
 import { OsmBuildingLayer } from "./map-buildings";
 import { pinLayersOn } from "./map-pins";
 import { footprintRing, type HideRule, type Ring } from "./osm-buildings";
-import { addSceneLights, groundShadow, saturate, sceneOf } from "./scene-light";
+import {
+  addMapLights,
+  aimMapSun,
+  groundShadow,
+  MAP_LIGHT,
+  mapSunAzimuth,
+  saturate,
+  sceneOf,
+  shadowFloor,
+} from "./scene-light";
 
 /** A site whose model is drawn on the map. */
 export interface MapModelSite {
@@ -42,6 +51,11 @@ interface Entry {
   footprint: Ring;
   /** Soft ground shadow inside `group`; null when the city's light has none. */
   shadow: THREE.Mesh | null;
+  /** The shadow-casting sun and the ground that shows its shadow, both in `scene` (world axes). */
+  sun: THREE.DirectionalLight;
+  floor: THREE.Mesh;
+  /** The sun or the model moved: its shadow map is drawn again on the next frame, otherwise kept. */
+  shadowDirty: boolean;
 }
 
 const LAYER_ID = "akar-models";
@@ -134,6 +148,13 @@ export class MapModelLayer implements CustomLayerInterface {
       return;
     }
     this.renderer.autoClear = false;
+    // The prototype's look (§3 of the integration notes): filmic tone mapping and real shadows. Each model's
+    // shadow map is drawn once, again only when it moves; the light stays put when the map turns.
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = MAP_LIGHT.exposure;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
     // Same decoder files as the story viewer (`public/draco`).
     this.decoder = new DRACOLoader()
       .setDecoderPath("/draco/")
@@ -233,6 +254,8 @@ export class MapModelLayer implements CustomLayerInterface {
       this.camera.projectionMatrixInverse
         .copy(this.camera.projectionMatrix)
         .invert();
+      renderer.shadowMap.needsUpdate = entry.shadowDirty;
+      entry.shadowDirty = false;
       renderer.render(entry.scene, this.camera);
     }
   }
@@ -357,11 +380,15 @@ export class MapModelLayer implements CustomLayerInterface {
       site = this.sites.get(site.id)!;
       stripScenery(gltf.scene);
       saturate(gltf.scene, site.light.saturation);
+      gltf.scene.traverse((node) => {
+        if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = true;
+      });
       const scene = new THREE.Scene();
       const group = new THREE.Group();
       group.add(gltf.scene);
       scene.add(group);
-      addSceneLights(scene, site.light);
+      const floor = shadowFloor();
+      scene.add(floor);
       const entry: Entry = {
         site,
         scene,
@@ -370,6 +397,9 @@ export class MapModelLayer implements CustomLayerInterface {
         matrix: new THREE.Matrix4(),
         footprint: [],
         shadow: null,
+        sun: addMapLights(scene),
+        floor,
+        shadowDirty: true,
       };
       this.applyOpacity(entry.model);
       this.place(entry, site);
@@ -408,6 +438,14 @@ export class MapModelLayer implements CustomLayerInterface {
       .scale(new THREE.Vector3(k, -k, k))
       .multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
     entry.footprint = footprintRing(p, base.footprint);
+    // The sun and its shadow: sized to the placed model (world metres of this scene), aimed at its façade.
+    const box = new THREE.Box3().setFromObject(entry.group);
+    const centre = box.getCenter(new THREE.Vector3());
+    const radius = Math.max(4, box.getSize(new THREE.Vector3()).length() * 0.65);
+    aimMapSun(entry.sun, mapSunAzimuth(p.frontDeg, site.light), centre, radius);
+    entry.floor.scale.set(radius * 2, radius * 2, 1);
+    entry.floor.position.set(centre.x, p.altitudeM + 0.02, centre.z);
+    entry.shadowDirty = true;
     // The soft ground shadow turns and scales with the model, just above the map (§11.42).
     if (entry.shadow) {
       entry.group.remove(entry.shadow);

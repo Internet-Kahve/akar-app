@@ -4,7 +4,8 @@
   "metadata": {
     "maputnik:renderer": "mlgljs",
     "akar:kaynak": "OpenFreeMap Positron temelli. Renkler tokens.css ile uyumlu.",
-    "akar:not": "Buzlu tema (gün): sis zemin, yumuşak yeşil ve mavi; akar-style-ozel-v2.json temel (29 Ekim 2026)."
+    "akar:not": "Buzlu tema (gün): sis zemin, yumuşak yeşil ve mavi; akar-style-ozel-v2.json temel (29 Ekim 2026).",
+    "akar:not2": "30–31 Ekim 2026: prototipin (test-redmi9t-v2) yükleme sonrası ton ayarları stile işlendi: kireç/taş zemin ve binalar, zoom’a göre kara ve su, kabartma, etiket eşikleri."
   },
   "center": [
     28.9818,
@@ -1257,7 +1258,23 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#E6E8E4"
+        "background-color": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          0,
+          "#D9EBC6",
+          5,
+          "#DFEDCD",
+          8,
+          "#F2F1EA",
+          10,
+          "#F9F8F4"
+        ]
       }
     },
     {
@@ -1275,17 +1292,16 @@
             "zoom"
           ],
           0,
-          0.85,
+          0.42,
           6,
-          0.7,
-          8,
-          0.35,
-          10,
+          0.3,
+          9,
           0
         ],
-        "raster-saturation": 0.15,
-        "raster-contrast": 0.05,
-        "raster-fade-duration": 200
+        "raster-saturation": -0.1,
+        "raster-contrast": -0.15,
+        "raster-fade-duration": 200,
+        "raster-brightness-min": 0.25
       }
     },
     {
@@ -1306,7 +1322,7 @@
         false
       ],
       "paint": {
-        "fill-color": "#A6D49A"
+        "fill-color": "#B8D3A4"
       }
     },
     {
@@ -1339,7 +1355,23 @@
       ],
       "paint": {
         "fill-antialias": true,
-        "fill-color": "#7FC4E3"
+        "fill-color": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          0,
+          "#5FAAEC",
+          5,
+          "#6DB3EE",
+          9,
+          "#93C6E8",
+          13,
+          "#A3CFE2"
+        ]
       }
     },
     {
@@ -1372,7 +1404,7 @@
         ]
       ],
       "paint": {
-        "fill-color": "#DFE2DD",
+        "fill-color": "#F6F4EF",
         "fill-opacity": [
           "interpolate",
           [
@@ -1403,7 +1435,7 @@
         "grass"
       ],
       "paint": {
-        "fill-color": "#A6D49A",
+        "fill-color": "#B8D3A4",
         "fill-opacity": 0.9
       }
     },
@@ -1421,7 +1453,7 @@
         "cemetery"
       ],
       "paint": {
-        "fill-color": "#BCD9B0"
+        "fill-color": "#C7D9B8"
       }
     },
     {
@@ -1487,7 +1519,7 @@
         ]
       ],
       "paint": {
-        "fill-color": "#A6D49A"
+        "fill-color": "#B8D3A4"
       }
     },
     {
@@ -1520,7 +1552,7 @@
         ]
       ],
       "paint": {
-        "fill-color": "#A6D49A",
+        "fill-color": "#B8D3A4",
         "fill-opacity": [
           "interpolate",
           [
@@ -1554,7 +1586,7 @@
         false
       ],
       "paint": {
-        "line-color": "#7FC4E3"
+        "line-color": "#A3CFE2"
       }
     },
     {
@@ -1565,8 +1597,8 @@
       "minzoom": 12,
       "paint": {
         "fill-antialias": true,
-        "fill-color": "#D9DCD7",
-        "fill-outline-color": "#C0C5C0",
+        "fill-color": "#E3DCD0",
+        "fill-outline-color": "#D1C7B7",
         "fill-opacity": 0.7
       }
     },
@@ -1581,7 +1613,7 @@
       "minzoom": 15,
       "layout": {},
       "paint": {
-        "fill-extrusion-color": "#D6D9D4",
+        "fill-extrusion-color": "#E1D9CC",
         "fill-extrusion-height": [
           "interpolate",
           [
@@ -1773,7 +1805,7 @@
       ],
       "paint": {
         "fill-antialias": true,
-        "fill-color": "#E6E8E4"
+        "fill-color": "#F9F8F4"
       }
     },
     {
@@ -1813,7 +1845,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#E6E8E4",
+        "line-color": "#F9F8F4",
         "line-width": [
           "interpolate",
           [
@@ -1863,7 +1895,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#F6F8F6",
+        "line-color": "#FFFFFF",
         "line-opacity": 0.9,
         "line-width": [
           "interpolate",
@@ -1921,7 +1953,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#C8CCC7",
+        "line-color": "#DFD9CE",
         "line-opacity": 1,
         "line-width": [
           "interpolate",
@@ -1980,7 +2012,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#F6F8F6",
+        "line-color": "#FFFFFF",
         "line-opacity": 1,
         "line-width": [
           "interpolate",
@@ -2039,7 +2071,7 @@
         "line-join": "miter"
       },
       "paint": {
-        "line-color": "#C8CCC7",
+        "line-color": "#DFD9CE",
         "line-dasharray": [
           12,
           0
@@ -2101,7 +2133,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#F6F8F6",
+        "line-color": "#FFFFFF",
         "line-width": [
           "interpolate",
           [
@@ -2159,7 +2191,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#C8CCC7",
+        "line-color": "#DFD9CE",
         "line-width": 2
       }
     },
@@ -2213,7 +2245,7 @@
         "line-join": "miter"
       },
       "paint": {
-        "line-color": "#C8CCC7",
+        "line-color": "#DFD9CE",
         "line-dasharray": [
           2,
           0
@@ -3596,7 +3628,7 @@
       "type": "symbol",
       "source": "openmaptiles",
       "source-layer": "place",
-      "minzoom": 9,
+      "minzoom": 10,
       "filter": [
         "==",
         [
@@ -3665,7 +3697,7 @@
       "type": "symbol",
       "source": "openmaptiles",
       "source-layer": "place",
-      "minzoom": 6,
+      "minzoom": 8,
       "filter": [
         "==",
         [
@@ -3734,7 +3766,7 @@
       "type": "symbol",
       "source": "openmaptiles",
       "source-layer": "place",
-      "minzoom": 5,
+      "minzoom": 5.5,
       "maxzoom": 8,
       "filter": [
         "==",
@@ -3793,7 +3825,7 @@
       "type": "symbol",
       "source": "openmaptiles",
       "source-layer": "place",
-      "minzoom": 3,
+      "minzoom": 6,
       "filter": [
         "all",
         [
@@ -3879,7 +3911,7 @@
       "type": "symbol",
       "source": "openmaptiles",
       "source-layer": "place",
-      "minzoom": 3,
+      "minzoom": 4.5,
       "filter": [
         "all",
         [
@@ -3965,7 +3997,7 @@
       "type": "symbol",
       "source": "openmaptiles",
       "source-layer": "place",
-      "minzoom": 2,
+      "minzoom": 3,
       "maxzoom": 9,
       "filter": [
         "all",

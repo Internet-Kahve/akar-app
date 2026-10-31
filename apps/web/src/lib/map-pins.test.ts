@@ -105,8 +105,8 @@ test("the icons shrink as the visitor comes closer and are placed by rank, over 
   assert.equal(stops[2], 18);
   // The value of an unselected pin: ["case", selected, selectedSize, size].
   const unselected = (stop: unknown) => (stop as unknown[])[3] as number;
-  assert.equal(unselected(stops[1]), 1);
-  assert.ok(unselected(stops[3]) < 1);
+  assert.equal(unselected(stops[1]), 1.1);
+  assert.ok(unselected(stops[3]) < unselected(stops[1]));
 });
 
 test("a label that finds no room beside its pin moves to the other side, then below, then above", () => {
@@ -119,13 +119,18 @@ test("a label that finds no room beside its pin moves to the other side, then be
   const [left, right] = [offsets[1], offsets[3]] as Array<[number, number]>;
   assert.ok(left[0] * 12 > 20 && right[0] * 12 < -20);
   assert.equal(left[1], right[1]);
-  // Labels appear from zoom 16 and carry the site's name.
+  // Labels appear from zoom 15 and carry the site's name: the serif image once drawn, the text until then.
   assert.deepEqual(layout["text-field"], [
     "step",
     ["zoom"],
     "",
-    16,
-    ["get", "name"],
+    15.2,
+    [
+      "case",
+      ["!=", ["get", "label"], ""],
+      ["format", ["image", ["get", "label"]]],
+      ["get", "name"],
+    ],
   ]);
   assert.equal("icon-image" in layout, false);
 });
