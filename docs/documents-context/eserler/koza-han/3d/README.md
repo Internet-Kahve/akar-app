@@ -77,3 +77,9 @@ Her sürümde açık/manifold olmayan kenar 0, ≥ 0,3 m çakışma 0, 8 yönden
 - İç Koza ekseni han doğu revakındaki bir kemer gözüne hizalandı: kuzey kenar hanın kuzeyinden 3,14 m güneyde (plan ≈ 4,5 ± 3 m; kullanıcı kabulü).
 - `kozahan_arsiv_010` kuzeye göre çekilmemiş (portal fotoğrafın sağ kenarında); karşılaştırma için 90° sola döndürülür, oranlar `kontrol/v03/oran_kontrolu.json` içinde.
 - Mescit merdiveni: 4,94 m sahanlık dahil (ilk denemede sahanlık üstüne eklenmişti), yanlarda yere inen dolu duvar, mescit tarafında kemerli boşluk, iki sıra yuvarlak delikli korkuluk, 4 çift dikme (kaynak: rölöve batı cephesi, üst kat planı, foto 043).
+
+## Gece varyantı (31 Ekim 2026, koza-han_v14'dan)
+
+> **Eski sürümden üretildi:** girdi v14 (main: v18). Yeni sürümlerin gece dosyası yok; `ayar` dosyasındaki `dosya` güncellenip yeniden üretilmelidir. Mobil bütçe henüz ölçülmedi.
+
+`export/night/koza-han_v14_night.glb` (uygulama, 1,15 MB) ve `export/night/koza-han_v14_night_sunum.glb` (1,31 MB). Sahne `blend/koza-han_v14_night.blend`, kontrol `kontrol/night/`. Üretim: `blender -b --python gece_uret.py -- ayar/koza-han.json hepsi` (`_kutuphane/gece/` içinden; ayrıntı `_kutuphane/gece/BENIOKU.md`). Işık köşe rengine pişirilmiş, malzemeler `KHR_materials_unlit`; parça adları ve düğüm konumları gündüzle aynı, `model.json` ayarları geçerli. Üçgen 38 624 → 79 392. Mescit ve revaklar kullanıcı fotoğraflarına göre: alt kemer içi güçlü sıcak ışık, üst duvarda aplik halkası, koyu kubbe; revak gözleri koridor içinden yanar, dükkân cepheleri ve üst kat kapıları yanan yüzeydir. Haritaya bağlanmadı.

@@ -1,0 +1,56 @@
+{
+  "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md.",
+  "eser": "orhan-gazi-turbesi",
+  "dosya": "orhan-gazi-turbesi_v02",
+  "ana_parca": "Govde",
+  "bolunecek": "Govde|Giris_Holu|Pilastr_Silme",
+  "malzeme": {
+    "^(Pencere_Bosluk|Hol_Cam)": {
+      "parla": "#FFD08A",
+      "isik": 2.0
+    },
+    "^Sebeke": {
+      "dokulu": "#FFC98A",
+      "isik": 1.5
+    },
+    "^Kursun": {
+      "carpan": 0.55
+    },
+    "^Mermer": {
+      "carpan": 0.66
+    },
+    "^(Zemin|Kaide|Avlu)": {
+      "carpan": 0.4
+    },
+    "^(Agac|Tarh|Cevre)": {
+      "carpan": 0.5
+    },
+    "^Olcek": {
+      "carpan": 0.75
+    }
+  },
+  "isik": {
+    "duvar_guc": 45,
+    "hedef_yukseklik": 7,
+    "pay": 2.0,
+    "kenar": 2.5,
+    "poz": 0.8,
+    "gok": 0.12,
+    "ornek": 128,
+    "bloklar": [
+      [
+        -8.4,
+        -8.4,
+        8.4,
+        8.4
+      ],
+      [
+        -3.3,
+        -13.2,
+        3.3,
+        -8.4
+      ]
+    ]
+  },
+  "hdr": true
+}

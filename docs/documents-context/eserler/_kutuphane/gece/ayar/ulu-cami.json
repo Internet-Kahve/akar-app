@@ -1,0 +1,239 @@
+{
+  "_aciklama": "Gece varyantı ayarı. malzeme: ad ifadesi → parla (kendi ışığı; hex), oran (yanan pencere oranı), sonuk (sönenin parlaklığı), carpan (gündüz rengini koyulaştırır), renk (gündüz rengi yerine). Sıra önemli: ilk eşleşme geçer. isik: gece ışıkları; kotlar blend koordinatında metre.",
+  "eser": "ulu-cami",
+  "dosya": "ulu-cami_v27",
+  "bolunecek": "Cephe_.*|Govde|Giris_Cikintili_Blok|Kapi_.*|Mermer_Bant|Silme_Ust|Portal_Silmeleri",
+  "malzeme": {
+    "^Minare_Tugla_Derzi": {
+      "doku_renk": "#F0C48C",
+      "doku_karisim": 0.62
+    },
+    "^(Mermer|Minare_Kaide_Mermer|Sad_Mermer)": {
+      "carpan": 0.66
+    },
+    "^Kafes_Beyaz": {
+      "dokulu": "#FFC98A",
+      "isik": 1.5
+    },
+    "^Pencere$": {
+      "parla": "#FFD08A",
+      "oran": 0.65,
+      "sonuk": 0.1,
+      "isik": 2.0
+    },
+    "^Sad_Fanus": {
+      "parla": "#FFC97A",
+      "isik": 8.0
+    },
+    "^Sadirvan_Cam": {
+      "parla": "#E8AE66",
+      "isik": 3.0
+    },
+    "^(Kubbe|Cati|Sad_Kursun|Sad_Dikis|Minare_Kulah|Kubbe_Metal)": {
+      "carpan": 0.55
+    },
+    "^(Zemin|Avlu_Koyu)": {
+      "carpan": 0.4
+    },
+    "^(Agac|Tarh)": {
+      "carpan": 0.45
+    },
+    "^Olcek": {
+      "carpan": 0.75
+    }
+  },
+  "isik": {
+    "duvar_guc": 55,
+    "hedef_yukseklik": 9,
+    "pay": 2.5,
+    "adim": 8.0,
+    "kenar": 4.5,
+    "poz": 0.8,
+    "gok": 0.12,
+    "minare": [
+      {
+        "nesne": "Minare_1",
+        "merkez": [
+          32.5,
+          -22.3
+        ],
+        "renk": [
+          1.0,
+          0.8,
+          0.52
+        ],
+        "kotlar": [
+          [
+            0.6,
+            7.6,
+            230
+          ],
+          [
+            12.6,
+            3.0,
+            430
+          ],
+          [
+            20,
+            6.5,
+            28
+          ],
+          [
+            28.2,
+            3.7,
+            55
+          ],
+          [
+            31.9,
+            4.6,
+            70
+          ],
+          [
+            32.4,
+            2.45,
+            170
+          ],
+          [
+            38.7,
+            2.7,
+            30
+          ]
+        ]
+      },
+      {
+        "nesne": "Minare_2",
+        "merkez": [
+          -30.84,
+          -22.46
+        ],
+        "renk": [
+          1.0,
+          0.8,
+          0.52
+        ],
+        "kotlar": [
+          [
+            0.6,
+            5.6,
+            190
+          ],
+          [
+            7.6,
+            3.0,
+            430
+          ],
+          [
+            20,
+            6.5,
+            28
+          ],
+          [
+            28.2,
+            3.7,
+            55
+          ],
+          [
+            31.9,
+            4.6,
+            70
+          ],
+          [
+            32.4,
+            2.45,
+            170
+          ],
+          [
+            38.7,
+            2.7,
+            30
+          ]
+        ]
+      }
+    ],
+    "nokta": [
+      {
+        "konum": [
+          0,
+          0,
+          11
+        ],
+        "guc": 3000,
+        "r": 2.0
+      },
+      {
+        "konum": [
+          -19,
+          -13,
+          9
+        ],
+        "guc": 1500,
+        "r": 2.0
+      },
+      {
+        "konum": [
+          19,
+          -13,
+          9
+        ],
+        "guc": 1500,
+        "r": 2.0
+      },
+      {
+        "konum": [
+          -19,
+          13,
+          9
+        ],
+        "guc": 1500,
+        "r": 2.0
+      },
+      {
+        "konum": [
+          19,
+          13,
+          9
+        ],
+        "guc": 1500,
+        "r": 2.0
+      }
+    ],
+    "ornek": 128
+  },
+  "ince_bolunecek": "Minare_.*",
+  "yakin": [
+    {
+      "ad": "minare_dogu",
+      "merkez": [
+        32.5,
+        -22.3,
+        24
+      ],
+      "olcek": 58,
+      "yon": 150,
+      "yuk": 14
+    },
+    {
+      "ad": "minare_bati",
+      "merkez": [
+        -30.84,
+        -22.46,
+        24
+      ],
+      "olcek": 58,
+      "yon": 215,
+      "yuk": 14
+    },
+    {
+      "ad": "foto_acisi",
+      "merkez": [
+        0,
+        -14,
+        20
+      ],
+      "olcek": 115,
+      "yon": 205,
+      "yuk": 26
+    }
+  ],
+  "ana_parca": "Govde"
+}

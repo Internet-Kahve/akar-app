@@ -1,0 +1,121 @@
+{
+  "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json. Bant çatısı (+5,0) gövde duvarını dipten kapattığı için üst duvar, bant üstündeki yukarı bakan ışık şeritleriyle (serit) aydınlanır.",
+  "eser": "yildirim-bayezid-bedesteni",
+  "dosya": "bedesten_v06",
+  "bolunecek": "Govde|Dukkanlar|Sacak|Cati",
+  "malzeme": {
+    "^Dukkan_Vitrin": {
+      "parla": "#FFCF8C",
+      "oran": 0.8,
+      "sonuk": 0.12,
+      "isik": 2.5
+    },
+    "^Pencere$": {
+      "parla": "#FFD08A",
+      "oran": 0.7,
+      "sonuk": 0.1,
+      "isik": 2.0
+    },
+    "^(Kubbe|Cati|Bant_Cati)": {
+      "carpan": 0.55
+    },
+    "^(Zemin|Serit|Kaide)": {
+      "carpan": 0.4
+    },
+    "^Olcek": {
+      "carpan": 0.75
+    }
+  },
+  "isik": {
+    "duvar_guc": 55,
+    "hedef_yukseklik": 6,
+    "pay": 2.5,
+    "kenar": 4.5,
+    "poz": 0.8,
+    "gok": 0.12,
+    "ornek": 128,
+    "serit": [
+      {
+        "a": [
+          -29.75,
+          -9,
+          0
+        ],
+        "b": [
+          29.75,
+          -9,
+          0
+        ],
+        "n": [
+          0,
+          -1,
+          0
+        ],
+        "z": 5.3,
+        "hedef_z": 10,
+        "guc": 45
+      },
+      {
+        "a": [
+          -29.75,
+          9,
+          0
+        ],
+        "b": [
+          29.75,
+          9,
+          0
+        ],
+        "n": [
+          0,
+          1,
+          0
+        ],
+        "z": 5.3,
+        "hedef_z": 10,
+        "guc": 45
+      },
+      {
+        "a": [
+          29.75,
+          -9,
+          0
+        ],
+        "b": [
+          29.75,
+          9,
+          0
+        ],
+        "n": [
+          1,
+          0,
+          0
+        ],
+        "z": 5.3,
+        "hedef_z": 10,
+        "guc": 45
+      },
+      {
+        "a": [
+          -29.75,
+          -9,
+          0
+        ],
+        "b": [
+          -29.75,
+          9,
+          0
+        ],
+        "n": [
+          -1,
+          0,
+          0
+        ],
+        "z": 5.3,
+        "hedef_z": 10,
+        "guc": 45
+      }
+    ]
+  },
+  "ana_parca": "Govde"
+}

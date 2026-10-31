@@ -1,0 +1,246 @@
+{
+  "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md. Son cemaat: ayak diplerinde turuncu şerit (sıcak, yakın), tonoz içi parlak sıcak-beyaz; minare sakin.",
+  "eser": "orhan-bey-kulliyesi",
+  "dosya": "orhan-bey-camii_v07",
+  "ana_parca": "Cami_Govde",
+  "bolunecek": "Cami_Govde|Cami_Mihrap|Cami_SonCemaat|Revak_Kemerler",
+  "ince_bolunecek": "Minare_1",
+  "malzeme": {
+    "^Pencere$": {
+      "parla": "#FFD08A",
+      "oran": 0.7,
+      "sonuk": 0.1,
+      "isik": 2.0
+    },
+    "^(Sebeke|Izgara)": {
+      "dokulu": "#FFC98A",
+      "isik": 1.5
+    },
+    "^(Kubbe|Kursun_Dikis)": {
+      "carpan": 0.55
+    },
+    "^Mermer": {
+      "carpan": 0.66
+    },
+    "^(Zemin|Kaide|Avlu|Doseme)": {
+      "carpan": 0.4
+    },
+    "^(Agac|Tarh|Cevre)": {
+      "carpan": 0.5
+    },
+    "^Olcek": {
+      "carpan": 0.75
+    }
+  },
+  "yakin": [
+    {
+      "ad": "revak",
+      "merkez": [
+        0,
+        6,
+        6
+      ],
+      "olcek": 38,
+      "yon": 150,
+      "yuk": 16
+    }
+  ],
+  "isik": {
+    "duvar_guc": 16,
+    "hedef_yukseklik": 8,
+    "pay": 2.5,
+    "kenar": 3.0,
+    "ince_kenar": 1.0,
+    "poz": 0.8,
+    "gok": 0.12,
+    "ornek": 128,
+    "serit": [
+      {
+        "a": [
+          -12.9,
+          9.5,
+          0
+        ],
+        "b": [
+          12.9,
+          9.5,
+          0
+        ],
+        "n": [
+          0,
+          1,
+          0
+        ],
+        "z": 0.25,
+        "hedef_z": 4,
+        "guc": 48,
+        "pay": 0.7,
+        "renk": [
+          1.0,
+          0.5,
+          0.16
+        ]
+      },
+      {
+        "a": [
+          12.9,
+          2.8,
+          0
+        ],
+        "b": [
+          12.9,
+          9.5,
+          0
+        ],
+        "n": [
+          1,
+          0,
+          0
+        ],
+        "z": 0.25,
+        "hedef_z": 4,
+        "guc": 48,
+        "pay": 0.7,
+        "renk": [
+          1.0,
+          0.5,
+          0.16
+        ]
+      },
+      {
+        "a": [
+          -12.9,
+          2.8,
+          0
+        ],
+        "b": [
+          -12.9,
+          9.5,
+          0
+        ],
+        "n": [
+          -1,
+          0,
+          0
+        ],
+        "z": 0.25,
+        "hedef_z": 4,
+        "guc": 48,
+        "pay": 0.7,
+        "renk": [
+          1.0,
+          0.5,
+          0.16
+        ]
+      }
+    ],
+    "minare": [
+      {
+        "nesne": "Minare_1",
+        "merkez": [
+          11.55,
+          1.02
+        ],
+        "kotlar": [
+          [
+            8.4,
+            2.2,
+            55
+          ],
+          [
+            19.2,
+            2.2,
+            14
+          ],
+          [
+            22.8,
+            1.5,
+            22
+          ]
+        ]
+      }
+    ],
+    "nokta": [
+      {
+        "konum": [
+          -10,
+          6.0,
+          5.0
+        ],
+        "guc": 420,
+        "r": 0.8,
+        "renk": [
+          1.0,
+          0.86,
+          0.66
+        ]
+      },
+      {
+        "konum": [
+          -5,
+          6.0,
+          5.0
+        ],
+        "guc": 420,
+        "r": 0.8,
+        "renk": [
+          1.0,
+          0.86,
+          0.66
+        ]
+      },
+      {
+        "konum": [
+          0,
+          6.0,
+          5.0
+        ],
+        "guc": 420,
+        "r": 0.8,
+        "renk": [
+          1.0,
+          0.86,
+          0.66
+        ]
+      },
+      {
+        "konum": [
+          5,
+          6.0,
+          5.0
+        ],
+        "guc": 420,
+        "r": 0.8,
+        "renk": [
+          1.0,
+          0.86,
+          0.66
+        ]
+      },
+      {
+        "konum": [
+          10,
+          6.0,
+          5.0
+        ],
+        "guc": 420,
+        "r": 0.8,
+        "renk": [
+          1.0,
+          0.86,
+          0.66
+        ]
+      },
+      {
+        "konum": [
+          0,
+          17.8,
+          3.2
+        ],
+        "guc": 320,
+        "r": 0.5
+      }
+    ]
+  },
+  "hdr": true
+}

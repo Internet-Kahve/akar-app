@@ -1,0 +1,70 @@
+{
+  "_aciklama": "Gece varyantı ayarı; alanlar için ulu-cami.json ve ../BENIOKU.md. Plan girintili olduğu için her kütle kendi ışık şeridini alır.",
+  "eser": "orhan-bey-hamami",
+  "dosya": "orhan-bey-hamami_v05",
+  "ana_parca": "Hamam_Detay",
+  "bolunecek": "Hamam_.*",
+  "malzeme": {
+    "^Pencere$": {
+      "parla": "#FFD08A",
+      "oran": 0.75,
+      "sonuk": 0.1,
+      "isik": 2.0
+    },
+    "^Sebeke": {
+      "dokulu": "#FFC98A",
+      "isik": 1.5
+    },
+    "^Kubbe": {
+      "carpan": 0.55
+    },
+    "^Mermer": {
+      "carpan": 0.66
+    },
+    "^(Zemin|Kaide|Avlu)": {
+      "carpan": 0.4
+    },
+    "^(Agac|Tarh|Cevre)": {
+      "carpan": 0.5
+    },
+    "^Olcek": {
+      "carpan": 0.75
+    }
+  },
+  "isik": {
+    "duvar_guc": 42,
+    "hedef_yukseklik": 6,
+    "pay": 2.2,
+    "kenar": 3.0,
+    "poz": 0.8,
+    "gok": 0.12,
+    "ornek": 128,
+    "bloklar": [
+      [
+        -17.2,
+        -14.9,
+        7.5,
+        6.1
+      ],
+      [
+        -12.0,
+        6.1,
+        2.6,
+        20.1
+      ],
+      [
+        1.4,
+        1.7,
+        14.2,
+        14.3
+      ],
+      [
+        -7.9,
+        -16.1,
+        -2.2,
+        -10.6
+      ]
+    ]
+  },
+  "hdr": true
+}

@@ -140,3 +140,12 @@ v16–v20'de açık/manifold olmayan kenar, 0,3 m eşikli çakışma ve 8 yönde
 - Batı kapısında kapı kanadı sol alt kenarı çerçeveye göre hafif kaçık.
 - Renk denetimi: kaide yan yüzü, 19 kubbe, minare tuğlası ve avlu taşı V < 0,72 (standart, kullanıcı kararı veya v22 onayı gereği).
 - Stilize model. Kitabe yazıları uydurulmadı.
+
+## Gece varyantı (31 Ekim 2026, v27'den)
+
+> **Eski sürümden üretildi:** girdi v27 (main: v32). Yeni sürümlerin gece dosyası yok; `ayar` dosyasındaki `dosya` güncellenip yeniden üretilmelidir. Mobil bütçe henüz ölçülmedi.
+
+- `export/night/ulu-cami_v27_night.glb` (uygulama, 1,37 MB) ve `export/night/ulu-cami_v27_night_sunum.glb` (1,49 MB). Sahne `blend/ulu-cami_v27_night.blend`, kontrol `kontrol/night/`. Üretim: `blender -b --python eserler/_kutuphane/gece/gece_uret.py -- ayar/ulu-cami.json hepsi` (`_kutuphane/gece/` içinden; ayrıntı `_kutuphane/gece/BENIOKU.md`). Gündüz GLB'lerine dokunulmaz.
+- Işık köşe rengine pişirilmiş, malzemeler `KHR_materials_unlit`: uygulamanın ışıkları görünüşü değiştirmez. Parça adları, düğüm konumları ve `ortu_gruplari` gündüzle aynı; `yaw` ve `kaydirma_m` aynen geçerli. Duvarlar ve minare gövdeleri ışık geçişi için bölündü (92 008 → 126 532 üçgen).
+- Minare ışığı fotoğraf örneğine göre: kaide dibi, gövde tabanı (Minare_1 12,6 m; Minare_2 7,6 m), mukarnas altı, şerefe bandı, şerefe içinden üst gövde, külah altı (`_kutuphane/gece/ayar/ulu-cami.json`). Gövde dokusu gece sürümünde kum tonuna çekildi; desen aynı.
+- Sınır: normal verisi yok, bu dosyalarda ışıklı (MeshStandard) malzeme kullanılmaz. Haritaya bağlanmadı; `model.json` hâlâ gündüz dosyasını gösterir.
