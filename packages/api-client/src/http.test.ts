@@ -1069,6 +1069,7 @@ test("a full editor save goes through the step endpoints in reference order: new
               title: "t",
               text: "x",
               textEn: null,
+              simpleEn: null,
               simple: "y",
               trust: "verified",
               photoId: "p-new",
@@ -1086,6 +1087,7 @@ test("a full editor save goes through the step endpoints in reference order: new
               title: "İki",
               text: "t",
               textEn: null,
+              simpleEn: null,
               simple: "s",
               trust: "inferred",
               photoId: "extra",
@@ -3157,4 +3159,128 @@ test("site progress is read for a signed-in user and is empty without a request 
   token = "tok";
   assert.deepEqual(await client.getSiteProgress(), progress);
   assert.equal(api.calls[0]?.headers.authorization, "Bearer tok");
+});
+
+test("story voice-overs resolve to the playable file of their media entry; the English status travels with the sentence", async () => {
+  const withVoices = () => {
+    const site = siteA();
+    return {
+      ...site,
+      stories: site.stories.map((s) => ({
+        ...s,
+        textEn: "x en",
+        simpleEn: "y en",
+        textEnStatus: "machine",
+        simpleEnStatus: "reviewed",
+        narrations: [
+          { variant: "text", lang: "tr", voice: "female", mediaId: "voice" },
+          { variant: "simple", lang: "en", voice: "male", mediaId: "gone" },
+          { variant: "text", lang: "en", voice: "male", mediaId: "cover" },
+        ],
+      })),
+    };
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/site-details": () => ({ items: [withVoices()], nextCursor: null }),
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    fetch: api.fetch,
+  });
+  const story = (await client.getSnapshot()).sites.find((s) => s.id === "a")!
+    .stories[0]!;
+  assert.deepEqual(story.narrations, [
+    { variant: "text", lang: "tr", voice: "female", url: "https://cdn.test/voice" },
+  ]);
+  assert.equal(story.textEnStatus, "machine");
+  assert.equal(story.simpleEnStatus, "reviewed");
+  assert.equal(story.simpleEn, "y en");
+});
+
+test("an editor save sends the English simple text; narrate and translate post the optional sentence and return the reloaded site", async () => {
+  let simpleEn: string | null = null;
+  let voiced = false;
+  const writes: Call[] = [];
+  const served = () => {
+    const site = siteA();
+    return {
+      ...site,
+      status: "published",
+      openingCamera: null,
+      sourceLinks: [],
+      stories: site.stories.map((s) => ({
+        ...s,
+        simpleEn,
+        simpleEnStatus: simpleEn ? "machine" : null,
+        narrations: voiced
+          ? [{ variant: "text", lang: "tr", voice: "female", mediaId: "voice" }]
+          : [],
+      })),
+    };
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [siteA()], nextCursor: null }),
+    "GET /v1/admin/sites/a": () => served(),
+    "PUT /v1/admin/sites/a/stories": (c) => {
+      writes.push(c);
+      return {};
+    },
+    "POST /v1/admin/sites/a/translate": (c) => {
+      writes.push(c);
+      simpleEn = "y (machine)";
+      return { translated: 1, skipped: 0 };
+    },
+    "POST /v1/admin/sites/a/narrations": (c) => {
+      writes.push(c);
+      voiced = true;
+      return { generated: 4, skipped: 0, stale: 0 };
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const site = (await client.getSnapshot()).sites.find((s) => s.id === "a")!;
+
+  await client.saveSite({
+    ...site,
+    stories: [{ ...site.stories[0]!, simpleEn: "y en" }],
+  });
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path]),
+    [["PUT", "/v1/admin/sites/a/stories"]],
+  );
+  assert.equal(
+    (writes[0]!.body as { blocks: Array<{ simpleEn: unknown }> }).blocks[0]!.simpleEn,
+    "y en",
+  );
+
+  writes.length = 0;
+  const translation = await client.translateSite("a");
+  assert.equal(translation.translated, 1);
+  assert.equal(translation.site.stories[0]!.simpleEn, "y (machine)");
+  assert.equal(translation.site.stories[0]!.simpleEnStatus, "machine");
+  assert.equal(translation.snapshot.sites.find((s) => s.id === "a")!.stories[0]!.simpleEn, "y (machine)");
+
+  const narration = await client.narrateSite("a", "s1");
+  assert.deepEqual(
+    [narration.generated, narration.skipped, narration.stale],
+    [4, 0, 0],
+  );
+  assert.equal(narration.site.stories[0]!.narrations?.[0]?.url, "https://cdn.test/voice");
+
+  assert.deepEqual(
+    writes.map((c) => [c.method, c.path, c.body]),
+    [
+      ["POST", "/v1/admin/sites/a/translate", {}],
+      ["POST", "/v1/admin/sites/a/narrations", { storyBlockId: "s1" }],
+    ],
+  );
+  assert.ok(writes.every((c) => c.headers["idempotency-key"]));
 });

@@ -102,6 +102,7 @@ import { cityCase } from "../lib/place-names";
 import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
 import type { MessageKey } from "../lib/messages";
 import { readPreference, writePreference } from "../lib/preferences";
+import { deviceVoice, saveDeviceVoice, voiceFromAccount, type VoiceChoice, type VoiceGender } from "../lib/story-voice";
 import { LangProvider, Localized } from "./i18n";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 type View =
@@ -144,6 +145,7 @@ export function AkarApp() {
     [cityInView, setCityInView] = useState<CityRecord | null>(null),
     [flight, setFlight] = useState<MapFlight>(),
     [lang, setLang] = useState<Lang>("tr"),
+    [voice, setVoice] = useState<VoiceChoice>({ lang: null, gender: null }),
     [welcome, setWelcome] = useState(false),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
     [waqf, setWaqf] = useState(false),
@@ -232,6 +234,12 @@ export function AkarApp() {
         saveDeviceLang(account.siteLang);
       } else if (account)
         void client.current.savePreferences({ siteLang: langRef.current }).catch(() => {});
+      // The same for the story voice: the account's choice wins, a key it has not chosen keeps this device's.
+      if (account) {
+        const merged = voiceFromAccount(account, deviceVoice());
+        setVoice(merged);
+        saveDeviceVoice(merged);
+      }
       // Signing in may redeem guest story receipts while loading the snapshot. Read badges again
       // afterwards, so an earlier auth-event read cannot hide the newly transferred story badge.
       setSnapshotRevision((revision) => revision + 1);
@@ -451,6 +459,25 @@ export function AkarApp() {
     setState(result.snapshot);
     return result.site;
   }, []);
+  // The new snapshot makes the site list and the editor's site agree; the editor shows the returned site.
+  const narrateSite = useCallback<AkarClient["narrateSite"]>(
+    async (siteId, storyBlockId) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      const run = await client.current.narrateSite(siteId, storyBlockId);
+      setState(run.snapshot);
+      return run;
+    },
+    [],
+  );
+  const translateSite = useCallback<AkarClient["translateSite"]>(
+    async (siteId, storyBlockId) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      const run = await client.current.translateSite(siteId, storyBlockId);
+      setState(run.snapshot);
+      return run;
+    },
+    [],
+  );
   const loadModeration = useCallback<AkarClient["getModerationPage"]>(
     async (status, cursor) => {
       if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
@@ -620,6 +647,19 @@ export function AkarApp() {
     if (next === "en" && published.some((s) => !s.nameEn))
       setToast(translate(next, "lang.fallbackNotice"));
   }
+  /** The visitor's voice for the story player: kept on this device, and on the account when signed in. */
+  function changeVoice(choice: { lang?: Lang; gender?: VoiceGender }) {
+    const next = { ...voice, ...choice };
+    setVoice(next);
+    saveDeviceVoice(next);
+    if (state.preferences)
+      void client.current
+        ?.savePreferences({
+          ...(choice.lang && { voiceLang: choice.lang }),
+          ...(choice.gender && { voiceGender: choice.gender }),
+        })
+        .catch(() => {});
+  }
   async function toggleRoute(id: string) {
     const target = published.find((s) => s.id === id);
     const name = target
@@ -641,6 +681,7 @@ export function AkarApp() {
       setCollapsed(sessionStorage.getItem("akar-panel") === "true");
     } catch {}
     setLang(deviceLang());
+    setVoice(deviceVoice());
   }, []);
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -864,6 +905,8 @@ export function AkarApp() {
               saveSite={saveSite}
               loadPlacement={loadPlacement}
               savePlacement={savePlacement}
+              narrateSite={narrateSite}
+              translateSite={translateSite}
               live={live}
               mapSettings={mapSettings}
               saveMapSettings={saveMapSettings}
@@ -959,6 +1002,9 @@ export function AkarApp() {
                       onIndex={setStoryIndex}
                       startListening={listening}
                       lang={lang}
+                      voiceLang={voice.lang ?? lang}
+                      voiceGender={voice.gender ?? "female"}
+                      onVoice={changeVoice}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {

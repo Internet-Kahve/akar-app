@@ -22,6 +22,7 @@ import {
   type SiteTask,
   type Snapshot,
   type StoryBlock,
+  type StoryNarration,
   type Trust,
   type UserPreferences,
 } from "@akar/domain";
@@ -30,6 +31,8 @@ import type {
   AdminMember,
   MemberPage,
   AkarClient,
+  NarrationRun,
+  TranslationRun,
   SiteProgress,
   SiteTaskAnswerResult,
   SiteTaskCompleteInput,
@@ -187,7 +190,7 @@ interface SiteDetailDto {
     flow?: StoryFlow | null;
     /** Server-side only fields the domain does not carry; kept as they are on a story save. */
     cardId?: string | null;
-    /** English simple text and the status (machine draft or reviewed) of the English texts; absent on older API versions. The save leaves `simpleEn` as stored. */
+    /** English simple text and the status (machine draft or reviewed) of the English texts; absent on older API versions. */
     simpleEn?: string | null;
     textEnStatus?: "machine" | "reviewed" | null;
     simpleEnStatus?: "machine" | "reviewed" | null;
@@ -399,6 +402,18 @@ const toPhoto = (m: MediaDto): SitePhoto => ({
   trust: m.trust,
 });
 
+/** The recordings of a sentence with their playable address; one whose file is missing from the media list is left out. */
+const mapNarrations = (
+  s: SiteDetailDto["stories"][number],
+  media: MediaDto[],
+): StoryNarration[] =>
+  (s.narrations ?? []).flatMap((n) => {
+    const file = media.find((m) => m.id === n.mediaId && m.kind === "audio");
+    return file
+      ? [{ variant: n.variant, lang: n.lang, voice: n.voice, url: file.url }]
+      : [];
+  });
+
 export function mapSite(d: SiteDetailDto): HeritageSite {
   const stories: StoryBlock[] = d.stories.map((s) => ({
     id: s.id,
@@ -413,6 +428,9 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ...(s.flow && { flow: s.flow }),
     ...(present(s.textEn) && { textEn: s.textEn }),
     ...(present(s.simpleEn) && { simpleEn: s.simpleEn }),
+    ...(present(s.textEnStatus) && { textEnStatus: s.textEnStatus }),
+    ...(present(s.simpleEnStatus) && { simpleEnStatus: s.simpleEnStatus }),
+    ...(s.narrations?.length && { narrations: mapNarrations(s, d.media) }),
     ...(present(s.photoId) && { photoId: s.photoId }),
     ...(present(s.sourceId) && { sourceId: s.sourceId }),
     ...(present(s.showCard) && { showCard: s.showCard }),
@@ -1473,6 +1491,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     return id;
   }
 
+  /** Re-reads a site after a voice-over or translation request and returns it with the new snapshot. */
+  async function reloadAdminSite(id: string) {
+    await refreshAdminSite(id);
+    const snapshot = await build(false);
+    const site = snapshot.sites.find((s) => s.id === id);
+    if (!site) throw new Error("Eser yeniden okunamadı.");
+    return { site, snapshot };
+  }
+
   async function updateSite(input: HeritageSite) {
     validateSite(input);
     let site = { ...input, id: createdIds.get(input.id) ?? input.id };
@@ -1672,6 +1699,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               title: s.title,
               text: s.text,
               textEn: s.textEn || null,
+              simpleEn: s.simpleEn || null,
               simple: s.simple,
               trust: s.trust,
               photoId: s.photoId ? mediaId(s.photoId) : null,
@@ -2093,6 +2121,26 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       enqueue(async () => {
         const reload = await run(command);
         return build(reload);
+      }),
+    narrateSite: (siteId, storyBlockId) =>
+      enqueue(async () => {
+        const id = createdIds.get(siteId) ?? siteId;
+        const counts = await call<Omit<NarrationRun, "site" | "snapshot">>(
+          "POST",
+          `/v1/admin/sites/${encodeURIComponent(id)}/narrations`,
+          { body: storyBlockId ? { storyBlockId } : {} },
+        );
+        return { ...counts, ...(await reloadAdminSite(id)) };
+      }),
+    translateSite: (siteId, storyBlockId) =>
+      enqueue(async () => {
+        const id = createdIds.get(siteId) ?? siteId;
+        const counts = await call<Omit<TranslationRun, "site" | "snapshot">>(
+          "POST",
+          `/v1/admin/sites/${encodeURIComponent(id)}/translate`,
+          { body: storyBlockId ? { storyBlockId } : {} },
+        );
+        return { ...counts, ...(await reloadAdminSite(id)) };
       }),
     saveSite: (input) =>
       enqueue(async () => {

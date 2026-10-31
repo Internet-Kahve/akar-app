@@ -2672,6 +2672,28 @@ td small {
   flex: 1;
   min-width: 0;
 }
+.story-jobs {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.story-jobs .row {
+  flex-wrap: wrap;
+}
+.story-job-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.story-job-line small {
+  flex: 1 1 100%;
+}
+.story-job-line .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
 .part-picks {
   display: flex;
   flex-wrap: wrap;
