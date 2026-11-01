@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { Camera, Play, RotateCcw, Trash2 } from "lucide-react";
+import { Camera, Play, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import type { CameraPose, HeritageSite, StoryBlock } from "@akar/domain";
 import { sceneOf } from "../lib/scene-light";
 import { useCityIdentity, useCityScenes } from "./city-scenes";
@@ -59,6 +59,8 @@ export function AdminModelPreview({
   }));
   const [target, setTarget] = useState<string>("");
   const [note, setNote] = useState("");
+  // The value before the last save or delete here: «Geri al» puts it back.
+  const [undo, setUndo] = useState<(() => void) | null>(null);
   const model = site.model;
   if (!model) return null;
   const read = () => {
@@ -69,11 +71,23 @@ export function AdminModelPreview({
     }
     return pose;
   };
-  const save = (apply: (pose: CameraPose) => void, label: string) => {
+  const change = (
+    apply: (pose: CameraPose | null) => void,
+    before: CameraPose | null | undefined,
+    next: CameraPose | null,
+    message: string,
+  ) => {
+    apply(next);
+    setNote(message);
+    setUndo(() => () => {
+      apply(before ?? null);
+      setNote("Geri alındı.");
+      setUndo(null);
+    });
+  };
+  const save = (apply: (pose: CameraPose | null) => void, before: CameraPose | null | undefined, label: string) => {
     const pose = read();
-    if (!pose) return;
-    apply(pose);
-    setNote(`${label}: ${poseSummary(pose)}`);
+    if (pose) change(apply, before, pose, `${label}: ${poseSummary(pose)}`);
   };
   const lookAt = (part: string) => {
     setTarget(part);
@@ -107,7 +121,7 @@ export function AdminModelPreview({
       {story && onStoryCamera ? (
         <>
           <div className="admin-model-actions">
-            <button className="btn" onClick={() => save(onStoryCamera, `Cümle ${storyIndex + 1}`)}>
+            <button className="btn" onClick={() => save(onStoryCamera, story.camera, `Cümle ${storyIndex + 1}`)}>
               <Camera size={16} />
               Açıyı kaydet → Cümle {storyIndex + 1}
             </button>
@@ -125,7 +139,10 @@ export function AdminModelPreview({
               Cümleyi oynat
             </button>
             {own && (
-              <button className="btn secondary" onClick={() => onStoryCamera(null)}>
+              <button
+                className="btn secondary"
+                onClick={() => change(onStoryCamera, own, null, `Cümle ${storyIndex + 1}'in açısı silindi.`)}
+              >
                 <Trash2 size={16} />
                 Açıyı sil
               </button>
@@ -143,7 +160,7 @@ export function AdminModelPreview({
         onOpening && (
           <>
             <div className="admin-model-actions">
-              <button className="btn" onClick={() => save(onOpening, "Açılış açısı")}>
+              <button className="btn" onClick={() => save(onOpening, site.openingCamera, "Açılış açısı")}>
                 <Camera size={16} />
                 Açılış açısı olarak kaydet
               </button>
@@ -153,7 +170,10 @@ export function AdminModelPreview({
                     <RotateCcw size={16} />
                     Açılış açısına git
                   </button>
-                  <button className="btn secondary" onClick={() => onOpening(null)}>
+                  <button
+                    className="btn secondary"
+                    onClick={() => change(onOpening, site.openingCamera, null, "Açılış açısı silindi.")}
+                  >
                     <Trash2 size={16} />
                     Sil
                   </button>
@@ -169,9 +189,15 @@ export function AdminModelPreview({
         )
       )}
       {note && (
-        <small className="admin-model-note" role="status">
-          {note}
-        </small>
+        <div className="admin-model-note" role="status">
+          <small>{note}</small>
+          {undo && (
+            <button className="btn secondary" onClick={undo}>
+              <Undo2 size={14} />
+              Geri al
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

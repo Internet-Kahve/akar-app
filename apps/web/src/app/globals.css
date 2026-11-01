@@ -2584,6 +2584,10 @@ td small {
   font-size: 12px;
 }
 .admin-model-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px 12px;
   border-radius: 10px;
   background: var(--primary-light);

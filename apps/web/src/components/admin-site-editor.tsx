@@ -12,6 +12,7 @@ import {
   MoveUp,
   MoveDown,
   Box,
+  RotateCcw,
 } from "lucide-react";
 import {
   kindLabels,
@@ -102,6 +103,9 @@ export function SiteEditor({
   live: boolean;
 }) {
   const [draft, setDraft] = useState(() => prepareSite(site));
+  // The site as last saved (or opened): «Değişiklikleri geri al» goes back to it.
+  const [savedDraft, setSavedDraft] = useState(draft),
+    [reverting, setReverting] = useState(false);
   const [step, setStep] = useState(0),
     [activeStory, setActiveStory] = useState(0);
   const [busy, setBusy] = useState(false),
@@ -186,6 +190,7 @@ export function SiteEditor({
     try {
       const canonical = await onSave(next);
       setDraft(canonical);
+      setSavedDraft(canonical);
       setBaseline(siteKey(canonical));
       setSaved(
         live
@@ -257,6 +262,12 @@ export function SiteEditor({
           <span className="editor-breadcrumb"> › {steps[step]}</span>
         </div>
         <div className="editor-actions">
+          {dirty && (
+            <button className="btn secondary" onClick={() => setReverting(true)}>
+              <RotateCcw size={16} />
+              Değişiklikleri geri al
+            </button>
+          )}
           <button className="btn secondary" onClick={() => setPreview(true)}>
             Önizle
           </button>
@@ -1103,6 +1114,32 @@ export function SiteEditor({
           </div>
         </Modal>
       )}
+      {reverting && (
+        <Modal title="Değişiklikleri geri al" onClose={() => setReverting(false)}>
+          <p>
+            Son kayıttan bu yana yaptığın bütün değişiklikler (açılar ve harita
+            yerleşimi dahil) silinir; eser son kaydedilen hâline döner.
+          </p>
+          <div className="modal-actions">
+            <button className="btn secondary" onClick={() => setReverting(false)}>
+              Vazgeç
+            </button>
+            <button
+              className="btn"
+              onClick={() => {
+                setDraft(savedDraft);
+                placement.revert();
+                setActiveStory(0);
+                setError("");
+                setSaved("Değişiklikler geri alındı.");
+                setReverting(false);
+              }}
+            >
+              Geri al
+            </button>
+          </div>
+        </Modal>
+      )}
       {closing && (
         <Modal
           title="Kaydedilmemiş değişiklikler"
@@ -1110,6 +1147,9 @@ export function SiteEditor({
         >
           <p>Eseri taslak olarak kaydedebilir veya son kayda dönebilirsin.</p>
           <div className="modal-actions">
+            <button className="btn secondary" onClick={() => setClosing(false)}>
+              Vazgeç, düzenlemeye dön
+            </button>
             <button className="btn secondary" onClick={onClose}>
               Kaydetmeden çık
             </button>
