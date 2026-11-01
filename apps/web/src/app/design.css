@@ -2735,13 +2735,13 @@ h1,
   font-size: 14px;
   line-height: 20px;
 }
-.detail-panel .ik-sag {
+:is(.detail-panel, .site-peek) .ik-sag {
   background: var(--surface);
   box-shadow: inset 0 0 0 1.5px
     color-mix(in srgb, var(--sehir-aksan) 55%, transparent);
   color: var(--sehir-aksan);
 }
-.detail-panel .ikili button {
+:is(.detail-panel, .site-peek) .ikili button {
   backdrop-filter: none;
 }
 .detail-panel .bitti-tik {
@@ -2854,7 +2854,7 @@ h1,
 .detail-panel .ik-sol {
   padding: 0;
 }
-.detail-panel .ik-sag {
+:is(.detail-panel, .site-peek) .ik-sag {
   box-shadow:
     inset 0 0 0 1.5px color-mix(in srgb, var(--sehir-aksan) 55%, transparent),
     0 2px 8px rgba(20, 27, 43, 0.08);
