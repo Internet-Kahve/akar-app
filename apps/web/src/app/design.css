@@ -303,18 +303,20 @@ h1,
   display: block;
   left: 0;
   bottom: -24px;
-  height: 200px;
-  margin: 0 -24px -200px;
+  height: 260px;
+  margin: 0 -24px -260px;
   pointer-events: none;
   background: var(--sehir-aksan);
-  opacity: 0.07;
+  /* The hand-drawn tiles (31 Oct) are finer than the prototype's: drawn twice its 56 px and a little stronger, so
+     the motif reads at the foot of the list as the prototype's did. */
+  opacity: 0.12;
   -webkit-mask:
-    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(56px * var(--sehir-desen-olcek, 1)) auto repeat,
-    linear-gradient(transparent, #000);
+    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(110px * var(--sehir-desen-olcek, 1)) auto repeat,
+    linear-gradient(transparent, #000 70%);
   -webkit-mask-composite: source-in;
   mask:
-    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(56px * var(--sehir-desen-olcek, 1)) auto repeat,
-    linear-gradient(transparent, #000);
+    var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(110px * var(--sehir-desen-olcek, 1)) auto repeat,
+    linear-gradient(transparent, #000 70%);
   mask-composite: intersect;
 }
 /* behind the globe (the canvas is clear outside it): the prototype's frosted scene grey, light in the middle */
@@ -427,12 +429,13 @@ h1,
 .explore-heading h2::before,
 .explore-city::before {
   content: "";
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
   flex: none;
   background: var(--sehir-aksan);
-  -webkit-mask: var(--sehir-desen, linear-gradient(transparent, transparent)) center / contain no-repeat;
-  mask: var(--sehir-desen, linear-gradient(transparent, transparent)) center / contain no-repeat;
+  /* The city's emblem (kimlik.amblem); a city without one shows a piece of its pattern. */
+  -webkit-mask: var(--sehir-amblem, var(--sehir-desen, linear-gradient(transparent, transparent))) center / contain no-repeat;
+  mask: var(--sehir-amblem, var(--sehir-desen, linear-gradient(transparent, transparent))) center / contain no-repeat;
 }
 .explore-city {
   display: inline-flex;

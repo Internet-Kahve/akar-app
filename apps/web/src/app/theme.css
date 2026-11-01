@@ -125,6 +125,14 @@
 [data-theme="night"] .city-marker:not(.city-far .city-marker:not(.ready)) {
   background: var(--glass-solid);
 }
+/* The list heading's emblem and the motif at the foot of the panel: the city's light tint by night. */
+[data-theme="night"] :is(.explore-heading h2, .explore-city)::before {
+  background: var(--sehir-acik);
+}
+[data-theme="night"] .side-panel::after {
+  background: var(--sehir-acik);
+  opacity: 0.08;
+}
 /* The city's emblem in its light tint: the dark accent would vanish on the dark glass. */
 [data-theme="night"] .city-marker i.city-emblem {
   background: var(--sehir-acik);
