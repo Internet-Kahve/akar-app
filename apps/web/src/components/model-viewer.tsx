@@ -476,9 +476,10 @@ export default function ModelViewer({
                 if (!node.visible) shown = false;
                 if (!part && known.has(node.name)) part = node.name;
               }
+              // Faded by the lift, not see-through by nature: glass (the open dome's) still answers a tap.
               const materials = (hit.object as THREE.Mesh).material;
               const faded = (Array.isArray(materials) ? materials : [materials]).every(
-                (m: THREE.Material) => m.transparent && m.opacity < 0.5,
+                (m: THREE.Material) => (m.userData.akarLift ?? 0) > 0.5,
               );
               if (!shown || faded) continue;
               // The nearest visible surface decides; a part that does not answer blocks the ones behind it.
@@ -599,6 +600,8 @@ export default function ModelViewer({
                   }
                   f.material.opacity = f.opacity * (1 - t);
                   f.material.depthWrite = t === 0;
+                  // How far the group has lifted; taps look through a group more than half way gone.
+                  f.material.userData.akarLift = t;
                 }
               });
             const step = (now: number) => {
