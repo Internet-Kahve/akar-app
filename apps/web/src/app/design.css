@@ -303,8 +303,9 @@ h1,
   display: block;
   left: 0;
   bottom: -24px;
-  height: 260px;
-  margin: 0 -24px -260px;
+  /* Up to about two thirds of the panel, fading out on the way up with no edge. */
+  height: 65vh;
+  margin: 0 -24px -65vh;
   pointer-events: none;
   background: var(--sehir-aksan);
   /* The hand-drawn tiles (31 Oct) are finer than the prototype's: drawn twice its 56 px and a little stronger, so
@@ -312,11 +313,11 @@ h1,
   opacity: 0.12;
   -webkit-mask:
     var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(110px * var(--sehir-desen-olcek, 1)) auto repeat,
-    linear-gradient(transparent, #000 70%);
+    linear-gradient(transparent, rgb(0 0 0 / 0.06) 25%, rgb(0 0 0 / 0.22) 50%, rgb(0 0 0 / 0.55) 72%, #000);
   -webkit-mask-composite: source-in;
   mask:
     var(--sehir-desen, linear-gradient(transparent, transparent)) 0 100% / calc(110px * var(--sehir-desen-olcek, 1)) auto repeat,
-    linear-gradient(transparent, #000 70%);
+    linear-gradient(transparent, rgb(0 0 0 / 0.06) 25%, rgb(0 0 0 / 0.22) 50%, rgb(0 0 0 / 0.55) 72%, #000);
   mask-composite: intersect;
 }
 /* behind the globe (the canvas is clear outside it): the prototype's frosted scene grey, light in the middle */
