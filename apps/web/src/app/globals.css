@@ -2648,6 +2648,13 @@ td small {
   margin: 4px 0 0;
   font-size: 12px;
 }
+/* «Kart göster» beside the save button: the sentence's photo as a card over the model, saved at once. */
+.admin-card-toggle {
+  align-self: center;
+  margin: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
 .admin-unsaved {
   margin: 0;
   padding: 8px 12px;

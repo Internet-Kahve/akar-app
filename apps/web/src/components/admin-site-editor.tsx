@@ -1007,7 +1007,7 @@ export function SiteEditor({
               {...(step === 3 && story && {
                 story,
                 storyIndex: activeStory,
-                onStory: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior">) =>
+                onStory: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior" | "showCard">) =>
                   storyField(story.id, patch),
               })}
               {...(step === 0 && {

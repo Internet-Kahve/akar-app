@@ -59,7 +59,7 @@ export function AdminModelPreview({
   storyIndex?: number;
   onOpening?: (pose: CameraPose | null) => void;
   /** Hikâye step: a change to the selected sentence's view (camera, highlights, interior). */
-  onStory?: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior">) => void;
+  onStory?: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior" | "showCard">) => void;
   /** Model step: a gallery photograph's angle (the visitor's ← → arrows in the 3D view); null removes it. */
   onPhotoCamera?: (photoId: string, camera: PhotoCamera | null) => void;
 }) {
@@ -108,7 +108,7 @@ export function AdminModelPreview({
   const model = site.model;
   if (!model) return null;
   /** Applies a change to the sentence with «Geri al» back to what it was. */
-  const changeStory = (patch: Pick<StoryBlock, "camera" | "highlights" | "interior">, message: string) => {
+  const changeStory = (patch: Pick<StoryBlock, "camera" | "highlights" | "interior" | "showCard">, message: string) => {
     if (!story || !onStory) return;
     const before = { camera: story.camera, highlights: story.highlights, interior: story.interior };
     onStory(patch);
@@ -289,6 +289,14 @@ export function AdminModelPreview({
               <Camera size={16} />
               Açıyı ve vurguyu kaydet → {label}
             </button>
+            <label className="check-row admin-card-toggle">
+              <input
+                type="checkbox"
+                checked={story.showCard ?? false}
+                onChange={(e) => onStory({ showCard: e.target.checked })}
+              />
+              Kart göster
+            </label>
             <button
               className="btn secondary"
               onClick={() => {
