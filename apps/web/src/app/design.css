@@ -809,12 +809,6 @@ h1,
   z-index: 4;
   width: 360px;
 }
-/* Set for a moment when the card changes side or site (heritage-map PEEK_GLIDE_MS); following the pin stays immediate. */
-.peek-anchor.peek-glide {
-  transition:
-    left 400ms var(--ease),
-    top 400ms var(--ease);
-}
 /* The thin line from the short card to its pin (heritage-map `placePeek`): under the card, over the map. */
 .peek-leader {
   position: absolute;
@@ -824,10 +818,6 @@ h1,
   height: 100%;
   overflow: visible;
   pointer-events: none;
-  transition: opacity 200ms;
-}
-.peek-leader.gliding {
-  opacity: 0;
 }
 .peek-leader path {
   fill: none;
@@ -1553,8 +1543,7 @@ h1,
   .lang-switch::before,
   .side-panel,
   .map-controls,
-  .site-peek,
-  .peek-anchor.peek-glide {
+  .site-peek {
     transition: none;
   }
 }

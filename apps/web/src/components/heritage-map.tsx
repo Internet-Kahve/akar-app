@@ -51,8 +51,10 @@ const PEEK_WIDTH = 360;
 const PEEK_TOP = 80;
 /** Room kept between a pin and its short card, so the card never covers the site's model (about half a site wide). */
 const PEEK_CLEAR = 120;
-/** How long the short card glides to a new side (`.peek-glide` in design.css). */
+/** How long the short card glides to a new side. */
 const PEEK_GLIDE_MS = 400;
+/** Ease in and out: the glide starts and ends at rest, so it neither jolts off nor clicks into place. */
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 /** The camera's move to a newly picked site; the card follows it gliding, on the pin's right where the move ends. */
 const SITE_EASE_MS = 700;
 /** A site's pin keeps at least this zoom when it is picked. */
@@ -161,8 +163,11 @@ export function HeritageMap({
     leaderRef = useRef<SVGPathElement>(null),
     // The card's last side and site: a change of either glides the card there instead of jumping.
     peekPlace = useRef<{ site: string; onLeft: boolean } | null>(null),
-    glideTimer = useRef<ReturnType<typeof setTimeout>>(undefined),
     siteGlideUntil = useRef(0),
+    // A glide in progress: where the card set out from, when, and for how long; each frame blends that start into
+    // where the card belongs now, so a moving target is reached exactly when the glide ends.
+    glide = useRef<{ left: number; top: number; start: number; ms: number } | null>(null),
+    glideFrame = useRef(0),
     openRef = useRef(onOpen),
     // Set once the visitor moves the map: a late city record must not pull the map back.
     moved = useRef(false),
@@ -189,7 +194,10 @@ export function HeritageMap({
       m = map.current,
       site = latest.current.sites.find((s) => s.id === selectedRef.current);
     // A card that opens again starts where it belongs, it does not glide in from the last one's place.
-    if (!card) peekPlace.current = null;
+    if (!card) {
+      peekPlace.current = null;
+      glide.current = null;
+    }
     if (!card || !m || !site) return;
     const point = m.project(site.coordinates),
       width = container.current?.clientWidth ?? 0,
@@ -206,29 +214,40 @@ export function HeritageMap({
       Math.min(width - PEEK_WIDTH - 20, onLeft ? point.x - PEEK_CLEAR - PEEK_WIDTH : point.x + PEEK_CLEAR),
     );
     const top = Math.max(PEEK_TOP, Math.min(height - cardHeight - 16, point.y - cardHeight / 2));
-    // Following the pin while the map moves stays immediate; only a new side or a new site glides (`.peek-glide`).
-    if (last && (last.site !== site.id || last.onLeft !== onLeft)) {
-      // The line would point to where the card is going: it fades out meanwhile and back in when the card arrives.
-      const leader = leaderRef.current?.ownerSVGElement;
-      card.classList.add("peek-glide");
-      leader?.classList.add("gliding");
-      clearTimeout(glideTimer.current);
-      glideTimer.current = setTimeout(
-        () => {
-          card.classList.remove("peek-glide");
-          leader?.classList.remove("gliding");
-        },
-        easing ? siteGlideUntil.current - now : PEEK_GLIDE_MS,
-      );
+    // Following the pin while the map moves stays immediate; only a new side or a new site glides, frame by frame
+    // until it is done (with or without the map moving). Reduced motion goes straight there.
+    if (last && (last.site !== site.id || last.onLeft !== onLeft) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      glide.current = {
+        left: parseFloat(card.style.left) || left,
+        top: parseFloat(card.style.top) || top,
+        start: now,
+        ms: easing ? siteGlideUntil.current - now : PEEK_GLIDE_MS,
+      };
+      cancelAnimationFrame(glideFrame.current);
+      const frame = () => {
+        placePeek();
+        if (glide.current) glideFrame.current = requestAnimationFrame(frame);
+      };
+      glideFrame.current = requestAnimationFrame(frame);
     }
     peekPlace.current = { site: site.id, onLeft };
-    card.style.left = `${left}px`;
-    card.style.top = `${top}px`;
+    let shownLeft = left,
+      shownTop = top;
+    const g = glide.current;
+    if (g) {
+      const t = Math.min(1, (now - g.start) / g.ms),
+        k = easeInOut(t);
+      shownLeft = g.left + (left - g.left) * k;
+      shownTop = g.top + (top - g.top) * k;
+      if (t === 1) glide.current = null;
+    }
+    card.style.left = `${shownLeft}px`;
+    card.style.top = `${shownTop}px`;
     const line = leaderRef.current;
     if (!line) return;
-    // From the card's near edge, level with the pin as far as the card reaches, to the pin.
-    const fromX = onLeft ? left + PEEK_WIDTH : left,
-      fromY = Math.max(top + 28, Math.min(top + cardHeight - 28, point.y));
+    // From the card's near edge where it is now, level with the pin as far as the card reaches, to the pin.
+    const fromX = onLeft ? shownLeft + PEEK_WIDTH : shownLeft,
+      fromY = Math.max(shownTop + 28, Math.min(shownTop + cardHeight - 28, point.y));
     line.setAttribute("d", `M${fromX} ${fromY}L${point.x} ${point.y}`);
     line.nextElementSibling?.setAttribute("cx", String(point.x));
     line.nextElementSibling?.setAttribute("cy", String(point.y));
