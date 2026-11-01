@@ -11,7 +11,7 @@ export function Modal({
   className = "",
   dismissible = true,
 }: {
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;

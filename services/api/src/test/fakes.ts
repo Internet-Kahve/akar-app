@@ -23,10 +23,7 @@ export function fakeTranslator(): Translator & { calls: TranslateFields[]; fail:
     async translate(fields: TranslateFields) {
       fake.calls.push(fields);
       if (fake.fail) throw fake.fail;
-      const out: TranslateFields = {};
-      if (fields.text !== undefined) out.text = `EN: ${fields.text}`;
-      if (fields.simple !== undefined) out.simple = `EN: ${fields.simple}`;
-      return out;
+      return Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, `EN: ${value}`]));
     },
   };
   return fake;

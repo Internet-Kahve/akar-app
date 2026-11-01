@@ -268,6 +268,8 @@ const PartCardInput = z.object({
   parts: z.array(text(200).min(1)).min(1).max(50).describe("Kartı açan model parça adları (eserin modelinde olmalı); dokununca hepsi birlikte vurgulanır"),
   title: text(200).min(1),
   body: text(4000),
+  titleEn: nullableText(200).optional().describe("İngilizce başlık; kaydedilen İngilizce metin 'reviewed' (gözden geçirilmiş) olur, değişmediyse önceki durumu korur; verilmezse kayıtlı değer ve durumu korunur, null ya da boş metin siler"),
+  bodyEn: nullableText(4000).optional().describe("İngilizce metin; titleEn ile aynı kurallar"),
   photoIds: z.array(Id).max(20).default([]).describe("kind=photo medya, şerit sırasıyla (ilki kapak); eserin medya listesinde olmalı"),
   trust: TrustSchema,
   sourceId: Id.nullable().default(null).describe("Eserin kaynaklarından biri"),

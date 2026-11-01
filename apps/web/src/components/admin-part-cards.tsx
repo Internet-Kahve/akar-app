@@ -2,6 +2,7 @@
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   MoveDown,
   MoveUp,
   Plus,
@@ -14,6 +15,7 @@ import {
   type SiteSource,
   type Trust,
 } from "@akar/domain";
+import { translationLabels } from "../lib/translation-labels";
 import { Notice } from "./ui";
 
 function moved<T>(list: T[], index: number, direction: number): T[] {
@@ -22,6 +24,17 @@ function moved<T>(list: T[], index: number, direction: number): T[] {
   const next = [...list];
   [next[index], next[to]] = [next[to]!, next[index]!];
   return next;
+}
+
+/** EN column of a card in the panel: what is written and where it came from, and the voice-overs. */
+function englishLabel(c: PartCard) {
+  const written = [
+    c.titleEn && `başlık ${translationLabels[c.titleEnStatus ?? "reviewed"]}`,
+    c.bodyEn && `metin ${translationLabels[c.bodyEnStatus ?? "reviewed"]}`,
+  ].filter(Boolean);
+  return `EN: ${written.length ? written.join(" · ") : "İngilizce yok"} · ${
+    c.narrations?.length ? `ses hazır (${c.narrations.length})` : "ses yok"
+  }`;
 }
 
 /**
@@ -35,12 +48,24 @@ export function PartCardsStep({
   photos,
   sources,
   onChange,
+  job,
+  jobsReady,
+  note,
+  onJob,
 }: {
   cards: PartCard[];
   modelParts: string[] | undefined;
   photos: SitePhoto[];
   sources: SiteSource[];
   onChange: (cards: PartCard[]) => void;
+  /** The running voice-over or translation request ("narrate:k1"), if any. */
+  job: string | null;
+  /** The saved cards are what the server holds: no unsaved edit, nothing else running. */
+  jobsReady: boolean;
+  /** Outcome of the last request. */
+  note: { ok: boolean; text: string } | null;
+  /** Translate or voice one card (`AkarClient.translateSite` / `narrateSite` with its id). */
+  onJob: (kind: "translate" | "narrate", cardId: string) => void;
 }) {
   const patch = (id: string, change: Partial<PartCard>) =>
     onChange(cards.map((c) => (c.id === id ? { ...c, ...change } : c)));
@@ -80,6 +105,17 @@ export function PartCardsStep({
         <Notice>Parça kartı için önce Model adımında 3D model ekle.</Notice>
       )}
       {modelParts && !cards.length && <Notice>Henüz parça kartı yok.</Notice>}
+      {note &&
+        (note.ok ? (
+          <p className="editor-saved" role="status">
+            <Check size={16} />
+            {note.text}
+          </p>
+        ) : (
+          <p className="error" role="alert">
+            {note.text}
+          </p>
+        ))}
       {cards.map((card, i) => {
         const strip = card.photos;
         const addable = photos.filter((p) => !strip.some((s) => s.id === p.id));
@@ -128,6 +164,41 @@ export function PartCardsStep({
               <textarea
                 value={card.body}
                 onChange={(e) => patch(card.id, { body: e.target.value })}
+              />
+            </label>
+            <div className="story-job-line">
+              <small className="muted">{englishLabel(card)}</small>
+              <button
+                className="btn soft"
+                disabled={!jobsReady}
+                onClick={() => onJob("translate", card.id)}
+              >
+                {job === `translate:${card.id}`
+                  ? "Çevriliyor…"
+                  : "İngilizceye çevir"}
+              </button>
+              <button
+                className="btn soft"
+                disabled={!jobsReady}
+                onClick={() => onJob("narrate", card.id)}
+              >
+                {job === `narrate:${card.id}`
+                  ? "Seslendiriliyor…"
+                  : "Seslendir"}
+              </button>
+            </div>
+            <label className="field">
+              Başlık (EN)
+              <input
+                value={card.titleEn ?? ""}
+                onChange={(e) => patch(card.id, { titleEn: e.target.value })}
+              />
+            </label>
+            <label className="field">
+              Metin (EN)
+              <textarea
+                value={card.bodyEn ?? ""}
+                onChange={(e) => patch(card.id, { bodyEn: e.target.value })}
               />
             </label>
             <div className="field">

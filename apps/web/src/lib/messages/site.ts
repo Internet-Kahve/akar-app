@@ -74,6 +74,7 @@ export const tr = {
   "site.voiceFemale": "Kadın",
   "site.voiceMale": "Erkek",
   "site.voiceBrowser": "Bu cümlenin kayıtlı sesi yok; cihazın sesi okuyor.",
+  "site.cardVoiceBrowser": "Bu kartın kayıtlı sesi yok; cihazın sesi okuyor.",
   "site.storyProgress": "Hikâye ilerlemesi",
   "site.goToPart": "{n}. bölüme git",
 
@@ -266,6 +267,7 @@ export const en = {
   "site.voiceFemale": "Female",
   "site.voiceMale": "Male",
   "site.voiceBrowser": "This sentence has no recording; your device reads it aloud.",
+  "site.cardVoiceBrowser": "This card has no recording; your device reads it aloud.",
   "site.storyProgress": "Story progress",
   "site.goToPart": "Go to part {n}",
 

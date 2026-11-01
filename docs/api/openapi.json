@@ -990,7 +990,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -1632,6 +1632,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -1652,6 +1696,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -1659,9 +1745,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -2757,7 +2848,7 @@
                                           "text",
                                           "simple"
                                         ],
-                                        "description": "text = hikâye metni, simple = sade anlatım"
+                                        "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                       },
                                       "lang": {
                                         "type": "string",
@@ -3399,6 +3490,50 @@
                                 "body": {
                                   "type": "string"
                                 },
+                                "titleEn": {
+                                  "description": "Başlığın İngilizcesi",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "bodyEn": {
+                                  "description": "Metnin İngilizcesi",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "titleEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                                },
+                                "bodyEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                                },
                                 "photoIds": {
                                   "type": "array",
                                   "items": {
@@ -3419,6 +3554,48 @@
                                     "inferred",
                                     "representative"
                                   ]
+                                },
+                                "narrations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "variant": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "simple"
+                                        ],
+                                        "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                      },
+                                      "lang": {
+                                        "type": "string",
+                                        "enum": [
+                                          "tr",
+                                          "en"
+                                        ]
+                                      },
+                                      "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                          "female",
+                                          "male"
+                                        ]
+                                      },
+                                      "mediaId": {
+                                        "type": "string",
+                                        "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                      }
+                                    },
+                                    "required": [
+                                      "variant",
+                                      "lang",
+                                      "voice",
+                                      "mediaId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                                 }
                               },
                               "required": [
@@ -3426,9 +3603,14 @@
                                 "parts",
                                 "title",
                                 "body",
+                                "titleEn",
+                                "bodyEn",
+                                "titleEnStatus",
+                                "bodyEnStatus",
                                 "photoIds",
                                 "sourceId",
-                                "trust"
+                                "trust",
+                                "narrations"
                               ],
                               "additionalProperties": false
                             },
@@ -6050,7 +6232,7 @@
                                           "text",
                                           "simple"
                                         ],
-                                        "description": "text = hikâye metni, simple = sade anlatım"
+                                        "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                       },
                                       "lang": {
                                         "type": "string",
@@ -6692,6 +6874,50 @@
                                 "body": {
                                   "type": "string"
                                 },
+                                "titleEn": {
+                                  "description": "Başlığın İngilizcesi",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "bodyEn": {
+                                  "description": "Metnin İngilizcesi",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "titleEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                                },
+                                "bodyEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                                },
                                 "photoIds": {
                                   "type": "array",
                                   "items": {
@@ -6712,6 +6938,48 @@
                                     "inferred",
                                     "representative"
                                   ]
+                                },
+                                "narrations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "variant": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "simple"
+                                        ],
+                                        "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                      },
+                                      "lang": {
+                                        "type": "string",
+                                        "enum": [
+                                          "tr",
+                                          "en"
+                                        ]
+                                      },
+                                      "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                          "female",
+                                          "male"
+                                        ]
+                                      },
+                                      "mediaId": {
+                                        "type": "string",
+                                        "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                      }
+                                    },
+                                    "required": [
+                                      "variant",
+                                      "lang",
+                                      "voice",
+                                      "mediaId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                                 }
                               },
                               "required": [
@@ -6719,9 +6987,14 @@
                                 "parts",
                                 "title",
                                 "body",
+                                "titleEn",
+                                "bodyEn",
+                                "titleEnStatus",
+                                "bodyEnStatus",
                                 "photoIds",
                                 "sourceId",
-                                "trust"
+                                "trust",
+                                "narrations"
                               ],
                               "additionalProperties": false
                             },
@@ -11529,7 +11802,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -12171,6 +12444,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -12191,6 +12508,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -12198,9 +12557,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -13534,7 +13898,7 @@
                                           "text",
                                           "simple"
                                         ],
-                                        "description": "text = hikâye metni, simple = sade anlatım"
+                                        "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                       },
                                       "lang": {
                                         "type": "string",
@@ -14176,6 +14540,50 @@
                                 "body": {
                                   "type": "string"
                                 },
+                                "titleEn": {
+                                  "description": "Başlığın İngilizcesi",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "bodyEn": {
+                                  "description": "Metnin İngilizcesi",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "titleEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                                },
+                                "bodyEnStatus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "machine",
+                                        "reviewed"
+                                      ]
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                                },
                                 "photoIds": {
                                   "type": "array",
                                   "items": {
@@ -14196,6 +14604,48 @@
                                     "inferred",
                                     "representative"
                                   ]
+                                },
+                                "narrations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "variant": {
+                                        "type": "string",
+                                        "enum": [
+                                          "text",
+                                          "simple"
+                                        ],
+                                        "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                      },
+                                      "lang": {
+                                        "type": "string",
+                                        "enum": [
+                                          "tr",
+                                          "en"
+                                        ]
+                                      },
+                                      "voice": {
+                                        "type": "string",
+                                        "enum": [
+                                          "female",
+                                          "male"
+                                        ]
+                                      },
+                                      "mediaId": {
+                                        "type": "string",
+                                        "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                      }
+                                    },
+                                    "required": [
+                                      "variant",
+                                      "lang",
+                                      "voice",
+                                      "mediaId"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                                 }
                               },
                               "required": [
@@ -14203,9 +14653,14 @@
                                 "parts",
                                 "title",
                                 "body",
+                                "titleEn",
+                                "bodyEn",
+                                "titleEnStatus",
+                                "bodyEnStatus",
                                 "photoIds",
                                 "sourceId",
-                                "trust"
+                                "trust",
+                                "narrations"
                               ],
                               "additionalProperties": false
                             },
@@ -15503,7 +15958,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -16145,6 +16600,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -16165,6 +16664,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -16172,9 +16713,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -17638,7 +18184,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -18280,6 +18826,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -18300,6 +18890,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -18307,9 +18939,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -19627,7 +20264,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -20269,6 +20906,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -20289,6 +20970,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -20296,9 +21019,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -21661,7 +22389,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -22303,6 +23031,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -22323,6 +23095,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -22330,9 +23144,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -23745,7 +24564,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -24387,6 +25206,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -24407,6 +25270,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -24414,9 +25319,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -25741,7 +26651,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -26383,6 +27293,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -26403,6 +27357,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -26410,9 +27406,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -27788,7 +28789,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -28430,6 +29431,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -28450,6 +29495,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -28457,9 +29544,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -30035,7 +31127,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -30677,6 +31769,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -30697,6 +31833,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -30704,9 +31882,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -32077,7 +33260,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -32719,6 +33902,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -32739,6 +33966,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -32746,9 +34015,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -34199,7 +35473,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -34841,6 +36115,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -34861,6 +36179,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -34868,9 +36228,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -35627,6 +36992,30 @@
                           "type": "string",
                           "maxLength": 4000
                         },
+                        "titleEn": {
+                          "description": "İngilizce başlık; kaydedilen İngilizce metin 'reviewed' (gözden geçirilmiş) olur, değişmediyse önceki durumu korur; verilmezse kayıtlı değer ve durumu korunur, null ya da boş metin siler",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 200
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "bodyEn": {
+                          "description": "İngilizce metin; titleEn ile aynı kurallar",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 4000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "photoIds": {
                           "default": [],
                           "description": "kind=photo medya, şerit sırasıyla (ilki kapak); eserin medya listesinde olmalı",
@@ -36247,7 +37636,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -36889,6 +38278,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -36909,6 +38342,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -36916,9 +38391,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -38202,7 +39682,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -38844,6 +40324,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -38864,6 +40388,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -38871,9 +40437,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -40157,7 +41728,7 @@
                                     "text",
                                     "simple"
                                   ],
-                                  "description": "text = hikâye metni, simple = sade anlatım"
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
                                 },
                                 "lang": {
                                   "type": "string",
@@ -40799,6 +42370,50 @@
                           "body": {
                             "type": "string"
                           },
+                          "titleEn": {
+                            "description": "Başlığın İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bodyEn": {
+                            "description": "Metnin İngilizcesi",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "titleEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"
+                          },
+                          "bodyEnStatus": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "machine",
+                                  "reviewed"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "bodyEn kaynağı (titleEnStatus ile aynı anlam)"
+                          },
                           "photoIds": {
                             "type": "array",
                             "items": {
@@ -40819,6 +42434,48 @@
                               "inferred",
                               "representative"
                             ]
+                          },
+                          "narrations": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "variant": {
+                                  "type": "string",
+                                  "enum": [
+                                    "text",
+                                    "simple"
+                                  ],
+                                  "description": "text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"
+                                },
+                                "lang": {
+                                  "type": "string",
+                                  "enum": [
+                                    "tr",
+                                    "en"
+                                  ]
+                                },
+                                "voice": {
+                                  "type": "string",
+                                  "enum": [
+                                    "female",
+                                    "male"
+                                  ]
+                                },
+                                "mediaId": {
+                                  "type": "string",
+                                  "description": "SiteDetail.media içindeki ses dosyası (kind=audio)"
+                                }
+                              },
+                              "required": [
+                                "variant",
+                                "lang",
+                                "voice",
+                                "mediaId"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"
                           }
                         },
                         "required": [
@@ -40826,9 +42483,14 @@
                           "parts",
                           "title",
                           "body",
+                          "titleEn",
+                          "bodyEn",
+                          "titleEnStatus",
+                          "bodyEnStatus",
                           "photoIds",
                           "sourceId",
-                          "trust"
+                          "trust",
+                          "narrations"
                         ],
                         "additionalProperties": false
                       },
@@ -48889,7 +50551,7 @@
     },
     "/v1/admin/sites/{id}/narrations": {
       "post": {
-        "summary": "Eserin hikâye metinlerini seslendir: Türkçe metin ve sade anlatım, İngilizcesi doluysa İngilizce metin ve sade anlatım; her biri 4 sesle (kadın ve erkek, iki dilde). Eksik ve metni değişmiş (bayat) kayıtlar sırayla üretilir, güncel olanlara dokunulmaz; eski ses dosyası silinir. Rakamlar seslendirmede sözcüğe çevrilir, saklanan metin değişmez. Deepgram anahtarı yoksa 503; son 24 saatte günlük karakter sınırı aşılırsa 429",
+        "summary": "Eserin hikâye metinlerini ve 3B parça kartlarını seslendir: hikâyede Türkçe metin ve sade anlatım, İngilizcesi doluysa İngilizce metin ve sade anlatım; parça kartında kartın metni (Türkçe, İngilizcesi doluysa İngilizce); her biri 4 sesle (kadın ve erkek, iki dilde). storyBlockId ya da partCardId verilirse yalnız o cümle/kart (ikisi birlikte 400), verilmezse tümü. Eksik ve metni değişmiş (bayat) kayıtlar sırayla üretilir, güncel olanlara dokunulmaz; eski ses dosyası silinir. Rakamlar seslendirmede sözcüğe çevrilir, saklanan metin değişmez. Deepgram anahtarı yoksa 503; son 24 saatte günlük karakter sınırı aşılırsa 429",
         "tags": [
           "admin"
         ],
@@ -48903,7 +50565,13 @@
                     "type": "object",
                     "properties": {
                       "storyBlockId": {
-                        "description": "Yalnız bu hikâye cümlesi; verilmezse eserin tüm cümleleri",
+                        "description": "Yalnız bu hikâye cümlesi; partCardId ile birlikte verilemez",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      },
+                      "partCardId": {
+                        "description": "Yalnız bu 3B parça kartı; storyBlockId ile birlikte verilemez. İkisi de verilmezse eserin tüm hikâye cümleleri ve parça kartları",
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 100
@@ -48972,7 +50640,7 @@
     },
     "/v1/admin/sites/{id}/translate": {
       "post": {
-        "summary": "Eserin boş İngilizce hikâye metinlerini (metin ve sade anlatım) Gemini ile Türkçeden çevirip doldur ve 'machine' (makine çevirisi) işaretle; dolu alanlara dokunulmaz. Yazılan çeviri panelden kaydedilince 'reviewed' olur. Gemini anahtarı yoksa 503",
+        "summary": "Eserin boş İngilizce hikâye metinlerini (metin ve sade anlatım) ve parça kartı başlık ile metinlerini Gemini ile Türkçeden çevirip doldur ve 'machine' (makine çevirisi) işaretle; dolu alanlara dokunulmaz. Yazılan çeviri panelden kaydedilince 'reviewed' olur. Gemini anahtarı yoksa 503",
         "tags": [
           "admin"
         ],
@@ -48986,7 +50654,13 @@
                     "type": "object",
                     "properties": {
                       "storyBlockId": {
-                        "description": "Yalnız bu hikâye cümlesi; verilmezse eserin tüm cümleleri",
+                        "description": "Yalnız bu hikâye cümlesi; partCardId ile birlikte verilemez",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      },
+                      "partCardId": {
+                        "description": "Yalnız bu 3B parça kartı; storyBlockId ile birlikte verilemez. İkisi de verilmezse eserin tüm hikâye cümleleri ve parça kartları",
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 100
@@ -49025,13 +50699,13 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
-                      "description": "İngilizcesi boş olduğu için makine çevirisiyle doldurulan hikâye cümlesi sayısı"
+                      "description": "İngilizcesi boş olduğu için makine çevirisiyle doldurulan hikâye cümlesi ve parça kartı sayısı"
                     },
                     "skipped": {
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
-                      "description": "Dokunulmayan cümle sayısı: İngilizcesi dolu ya da Türkçesi boş"
+                      "description": "Dokunulmayan cümle ya da kart sayısı: İngilizcesi dolu ya da Türkçesi boş"
                     }
                   },
                   "required": [

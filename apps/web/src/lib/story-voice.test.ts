@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { StoryNarration } from "@akar/domain";
-import { pickNarration, voiceFromAccount } from "./story-voice";
+import { pickCardNarration, pickNarration, voiceFromAccount } from "./story-voice";
 
 const clip = (variant: StoryNarration["variant"], lang: StoryNarration["lang"], voice: StoryNarration["voice"]): StoryNarration => ({
   variant,
@@ -36,4 +36,12 @@ test("the simple switch reads the plain recording where the simple wording is em
 test("an account's voice wins; a key it has not chosen keeps the device's", () => {
   assert.deepEqual(voiceFromAccount({ voiceLang: "en", voiceGender: null }, { lang: "tr", gender: "male" }), { lang: "en", gender: "male" });
   assert.deepEqual(voiceFromAccount({ voiceLang: null, voiceGender: null }, { lang: null, gender: null }), { lang: null, gender: null });
+});
+
+test("a part card plays the plain recording of the chosen voice only", () => {
+  const card = { narrations: [clip("text", "tr", "female"), clip("text", "en", "male")] };
+  assert.equal(pickCardNarration(card, "en", "male")?.url, "https://cdn.test/text-en-male.mp3");
+  assert.equal(pickCardNarration(card, "tr", "female")?.lang, "tr");
+  assert.equal(pickCardNarration(card, "tr", "male"), undefined);
+  assert.equal(pickCardNarration({}, "tr", "female"), undefined);
 });

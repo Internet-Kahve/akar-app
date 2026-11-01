@@ -1,4 +1,4 @@
-import type { StoryBlock, StoryNarration, UserPreferences } from "@akar/domain";
+import type { PartCard, StoryBlock, StoryNarration, UserPreferences } from "@akar/domain";
 import { isLang, type Lang } from "./i18n";
 import { readPreference, writePreference } from "./preferences";
 
@@ -44,4 +44,13 @@ export function pickNarration(
 ): StoryNarration | undefined {
   const variant = simple && (lang === "en" ? block.simpleEn : block.simple)?.trim() ? "simple" : "text";
   return block.narrations?.find((n) => n.lang === lang && n.voice === gender && n.variant === variant);
+}
+
+/** The recording of a part card's text in the chosen voice, or `undefined` (the browser voice reads it then). Cards have the plain text only. */
+export function pickCardNarration(
+  card: Pick<PartCard, "narrations">,
+  lang: Lang,
+  gender: VoiceGender,
+): StoryNarration | undefined {
+  return card.narrations?.find((n) => n.lang === lang && n.voice === gender && n.variant === "text");
 }

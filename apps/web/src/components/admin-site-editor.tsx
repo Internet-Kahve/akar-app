@@ -24,12 +24,13 @@ import {
   type MapPlacement,
   type Trust,
 } from "@akar/domain";
-import { ApiError, routes, type AkarClient } from "@akar/api-client";
+import { ApiError, routes, type AkarClient, type JobTarget } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
 import { prepareModel } from "../lib/editor-media";
+import { translationLabels } from "../lib/translation-labels";
 const steps = [
   "Model",
   "Bilgiler",
@@ -89,10 +90,6 @@ function storyJobError(kind: "translate" | "narrate", error: unknown) {
     ? error.message
     : "İşlem yapılamadı. Biraz sonra yeniden dene.";
 }
-const translationLabels = {
-  machine: "makine çevirisi",
-  reviewed: "onaylı",
-} as const;
 /** EN column of a sentence in the panel: what is written and where it came from. */
 function englishLabel(s: StoryBlock) {
   const parts = [
@@ -122,9 +119,9 @@ export function SiteEditor({
   loadPlacement: (siteId: string) => Promise<MapPlacement | null>;
   /** Saves the whole placement of the site's model (the `map-placement` command). */
   savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
-  /** Records the voice-overs of the saved story texts (`AkarClient.narrateSite`). */
+  /** Records the voice-overs of the saved story and part card texts (`AkarClient.narrateSite`). */
   narrateSite: AkarClient["narrateSite"];
-  /** Fills the empty English story texts with a machine draft (`AkarClient.translateSite`). */
+  /** Fills the empty English story and part card texts with a machine draft (`AkarClient.translateSite`). */
   translateSite: AkarClient["translateSite"];
   live: boolean;
 }) {
@@ -156,6 +153,7 @@ export function SiteEditor({
   // Both requests work on the texts the server holds: the site must be saved there, with no edit left on this screen.
   const storyJobsReady =
     sites.some((s) => s.id === draft.id) && !dirty && !busy && !storyJob;
+  const hasJobTexts = draft.stories.length > 0 || Boolean(draft.partCards?.length);
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -172,21 +170,23 @@ export function SiteEditor({
       stories: p.stories.map((s) => (s.id === id ? { ...s, ...patch } : s)),
     }));
   }
-  /** Voice-over or translation of the whole site or one sentence; the editor then shows the site as the server has it. */
-  async function runStoryJob(kind: "translate" | "narrate", storyBlockId?: string) {
-    setStoryJob(`${kind}:${storyBlockId ?? "all"}`);
+  /** Voice-over or translation of the whole site or one sentence or card; the editor then shows the site as the server has it. */
+  async function runStoryJob(kind: "translate" | "narrate", target?: JobTarget) {
+    setStoryJob(
+      `${kind}:${!target ? "all" : "storyBlockId" in target ? target.storyBlockId : target.partCardId}`,
+    );
     setStoryNote(null);
     try {
       const run =
         kind === "translate"
-          ? await translateSite(draft.id, storyBlockId)
-          : await narrateSite(draft.id, storyBlockId);
+          ? await translateSite(draft.id, target)
+          : await narrateSite(draft.id, target);
       const fresh = prepareSite(run.site);
       setDraft(fresh);
       setBaseline(siteKey(fresh));
       const text =
         "translated" in run
-          ? `${run.translated} cümlenin İngilizcesi makine çevirisiyle dolduruldu, ${run.skipped} cümleye dokunulmadı. Çeviriyi gözden geçirip kaydedince "onaylı" olur.`
+          ? `${run.translated} metnin İngilizcesi makine çevirisiyle dolduruldu, ${run.skipped} metne dokunulmadı. Çeviriyi gözden geçirip kaydedince "onaylı" olur.`
           : !live
             ? "Demo sürümü ses üretmez; oynatıcı cihazın sesiyle okur."
             : `${run.generated} ses kaydı üretildi${run.stale ? ` (${run.stale} tanesi değişen metnin yenisi)` : ""}, ${run.skipped} güncel kayıt olduğu gibi kaldı.`;
@@ -745,7 +745,7 @@ export function SiteEditor({
                 <div className="row">
                   <button
                     className="btn secondary"
-                    disabled={!storyJobsReady || !draft.stories.length}
+                    disabled={!storyJobsReady || !hasJobTexts}
                     onClick={() => void runStoryJob("translate")}
                   >
                     {storyJob === "translate:all"
@@ -754,17 +754,17 @@ export function SiteEditor({
                   </button>
                   <button
                     className="btn secondary"
-                    disabled={!storyJobsReady || !draft.stories.length}
+                    disabled={!storyJobsReady || !hasJobTexts}
                     onClick={() => void runStoryJob("narrate")}
                   >
                     {storyJob === "narrate:all" ? "Seslendiriliyor…" : "Seslendir"}
                   </button>
                 </div>
                 <small className="muted">
-                  İşlem sunucudaki kayıtlı metinleri kullanır: eserde
-                  kaydedilmemiş değişiklik varken çalışmaz. Çeviri yalnız boş
-                  İngilizce alanları doldurur; seslendirme yalnız eksik ya da
-                  metni değişmiş kayıtları üretir.
+                  İşlem sunucudaki kayıtlı metinleri (hikâye cümleleri ve parça
+                  kartları) kullanır: eserde kaydedilmemiş değişiklik varken
+                  çalışmaz. Çeviri yalnız boş İngilizce alanları doldurur;
+                  seslendirme yalnız eksik ya da metni değişmiş kayıtları üretir.
                 </small>
                 {!live && (
                   <small className="muted">
@@ -855,7 +855,7 @@ export function SiteEditor({
                     <button
                       className="btn soft"
                       disabled={!storyJobsReady}
-                      onClick={() => void runStoryJob("translate", s.id)}
+                      onClick={() => void runStoryJob("translate", { storyBlockId: s.id })}
                     >
                       {storyJob === `translate:${s.id}`
                         ? "Çevriliyor…"
@@ -864,7 +864,7 @@ export function SiteEditor({
                     <button
                       className="btn soft"
                       disabled={!storyJobsReady}
-                      onClick={() => void runStoryJob("narrate", s.id)}
+                      onClick={() => void runStoryJob("narrate", { storyBlockId: s.id })}
                     >
                       {storyJob === `narrate:${s.id}`
                         ? "Seslendiriliyor…"
@@ -1006,6 +1006,10 @@ export function SiteEditor({
               ]}
               sources={sources}
               onChange={(cards) => field("partCards", cards)}
+              job={storyJob}
+              jobsReady={storyJobsReady}
+              note={storyNote}
+              onJob={(kind, partCardId) => void runStoryJob(kind, { partCardId })}
             />
           )}
           {step === 5 && (
@@ -1032,7 +1036,8 @@ export function SiteEditor({
               </div>
               {(!draft.nameEn ||
                 !draft.descriptionEn ||
-                draft.stories.some((s) => !s.textEn)) && (
+                draft.stories.some((s) => !s.textEn) ||
+                draft.partCards?.some((c) => !c.bodyEn)) && (
                 <Notice>
                   EN içeriği eksik. Türkçe yayınlanabilir; İngilizce içerik
                   taslak olarak kalır.
