@@ -713,6 +713,8 @@ export function SiteEditor({
                   className={`cue-editor card ${activeStory === i ? "active" : ""}`}
                   key={s.id}
                   onFocus={() => setActiveStory(i)}
+                  // A click anywhere on the sentence selects it: the 3D preview on the right shows its view.
+                  onClick={() => setActiveStory(i)}
                 >
                   <legend>Cümle {i + 1}</legend>
                   <div className="cue-top">
@@ -801,6 +803,13 @@ export function SiteEditor({
                       ))}
                     </select>
                   </label>
+                  {draft.model && (
+                    <p className="muted cue-angle">
+                      3D: {s.camera ? poseSummary(s.camera) : "açı öncekinde kalır"}
+                      {s.highlights?.length ? ` · vurgu: ${s.highlights.join(", ")}` : " · vurgu yok"}
+                      {s.interior ? " · iç mekân" : ""}
+                    </p>
+                  )}
                   <details className="editor-details">
                     <summary>Dil, güven ve ek alanlar</summary>
                     <label className="field">
@@ -848,45 +857,10 @@ export function SiteEditor({
                           />
                           Kart göster
                         </label>
-                        <label className="check-row">
-                          <input
-                            type="checkbox"
-                            checked={s.interior ?? false}
-                            onChange={(e) =>
-                              storyField(s.id, e.target.checked ? { interior: true } : { interior: undefined })
-                            }
-                          />
-                          İç mekân (3D): bu cümlede «İçini göster» açılır
-                        </label>
-                        <p className="muted cue-angle">
-                          Açı:{" "}
-                          {s.camera
-                            ? poseSummary(s.camera)
-                            : "kayıtlı değil, öncekinde kalır"}{" "}
-                          · sağdaki 3D'de «Açıyı kaydet»
-                        </p>
-                        <label className="field">
-                          Vurgulanacak parçalar
-                          <select
-                            multiple
-                            value={s.highlights ?? []}
-                            onChange={(e) =>
-                              storyField(s.id, {
-                                highlights: Array.from(
-                                  e.target.selectedOptions,
-                                  (o) => o.value,
-                                ),
-                              })
-                            }
-                          >
-                            {draft.model.parts.map((p) => (
-                              <option key={p}>{p}</option>
-                            ))}
-                          </select>
-                        </label>
                         <small className="muted">
-                          Vurgu seçilen cümlede model durur ve parçayı
-                          gösterir; vurgusuz cümlede yapı yavaşça döner.
+                          Açı, vurgu ve iç mekân sağdaki 3D'de ayarlanır:
+                          cümleyi seç, modeli döndür, parçaya dokun,
+                          gerekirse «İçini göster».
                         </small>
                       </>
                     )}
@@ -1033,8 +1007,8 @@ export function SiteEditor({
               {...(step === 3 && story && {
                 story,
                 storyIndex: activeStory,
-                onStoryCamera: (camera) =>
-                  storyField(story.id, camera ? { camera } : { camera: undefined }),
+                onStory: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior">) =>
+                  storyField(story.id, patch),
               })}
               {...(step === 0 && {
                 onOpening: (pose) => field("openingCamera", pose),

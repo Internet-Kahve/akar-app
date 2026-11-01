@@ -2648,6 +2648,27 @@ td small {
   margin: 4px 0 0;
   font-size: 12px;
 }
+.admin-unsaved {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--inferred-bg);
+  color: var(--text);
+  font-size: 13px;
+}
+.admin-sentence-view {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+.admin-sentence-view dt {
+  color: var(--text-muted);
+}
+.admin-sentence-view dd {
+  margin: 0;
+}
 .photo-preview {
   background: var(--bg);
   border: 1px solid var(--border);

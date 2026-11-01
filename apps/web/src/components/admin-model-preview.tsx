@@ -1,6 +1,6 @@
 "use client";
-import { useRef, useState } from "react";
-import { Camera, Play, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Camera, Eraser, Play, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import type { CameraPose, HeritageSite, PhotoCamera, SitePhoto, StoryBlock } from "@akar/domain";
 import { sceneOf } from "../lib/scene-light";
 import { useCityIdentity, useCityScenes } from "./city-scenes";
@@ -22,6 +22,13 @@ export function poseSummary(pose: CameraPose | null | undefined) {
   return `${pose.target ?? "Merkez"} · ${Math.round(pose.azimuthDeg)}° · eğim ${Math.round(pose.elevationDeg)}° · ${distanceWord(pose.distance)}`;
 }
 
+/** Two poses that the panel would list the same: same part, within a degree and a hundredth of the distance. */
+const samePose = (a: CameraPose, b: CameraPose) =>
+  a.target === b.target &&
+  Math.abs(((a.azimuthDeg - b.azimuthDeg + 540) % 360) - 180) < 1 &&
+  Math.abs(a.elevationDeg - b.elevationDeg) < 1 &&
+  Math.abs(a.distance - b.distance) < 0.01;
+
 /** The pose a sentence opens on: its own, else the last earlier sentence's, else the site's opening angle. */
 export function sentencePose(site: HeritageSite, index: number): CameraPose | undefined {
   for (let i = index; i >= 0; i--) {
@@ -33,15 +40,17 @@ export function sentencePose(site: HeritageSite, index: number): CameraPose | un
 
 /**
  * The panel's 3D preview (Figma «3D önizleme · her adımda sağda»): the draft's model in the visitor's viewer. The
- * editor turns it and saves the view as an angle: the opening angle on the Model step, the selected sentence's on the
- * Hikâye step, where «Cümleyi oynat» shows the sentence as the visitor will see it (angle, highlights, interior).
+ * editor turns it and saves the view as an angle: the opening angle and the photographs' angles on the Model step. On
+ * the Hikâye step the preview is the selected sentence's view and whatever the editor does in it belongs to that
+ * sentence: letting go of the model saves the angle, a tap on a part adds it to (or takes it from) the highlights,
+ * «İçini göster» makes it an inside sentence. No separate checkboxes: what is shown is what the visitor will see.
  */
 export function AdminModelPreview({
   site,
   story,
   storyIndex = 0,
   onOpening,
-  onStoryCamera,
+  onStory,
   onPhotoCamera,
 }: {
   site: HeritageSite;
@@ -49,7 +58,8 @@ export function AdminModelPreview({
   story?: StoryBlock | undefined;
   storyIndex?: number;
   onOpening?: (pose: CameraPose | null) => void;
-  onStoryCamera?: (pose: CameraPose | null) => void;
+  /** Hikâye step: a change to the selected sentence's view (camera, highlights, interior). */
+  onStory?: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior">) => void;
   /** Model step: a gallery photograph's angle (the visitor's ← → arrows in the 3D view); null removes it. */
   onPhotoCamera?: (photoId: string, camera: PhotoCamera | null) => void;
 }) {
@@ -60,7 +70,6 @@ export function AdminModelPreview({
   const [shown, setShown] = useState<{ pose?: CameraPose; highlight?: string[]; interior?: boolean }>(() => ({
     ...(site.openingCamera && { pose: { ...site.openingCamera } }),
   }));
-  const [target, setTarget] = useState<string>("");
   const [note, setNote] = useState("");
   // The value before the last save or delete here: «Geri al» puts it back.
   const [undo, setUndo] = useState<(() => void) | null>(null);
@@ -78,8 +87,41 @@ export function AdminModelPreview({
     setUndo(null);
     if (next.camera) setShown({ pose: { ...next.camera }, interior: next.camera.interior ?? false });
   };
+  // Hikâye: what the preview shows for the selected sentence until it is saved (parts tapped, «İçini göster»).
+  const [work, setWork] = useState<{ highlights: string[]; interior: boolean; moved: boolean }>({
+    highlights: [],
+    interior: false,
+    moved: false,
+  });
+  // Another sentence: the preview goes to its saved view (its own angle, else the last earlier one).
+  const storyId = story?.id;
+  useEffect(() => {
+    if (!storyId) return;
+    const pose = sentencePose(site, storyIndex);
+    setShown(pose ? { pose: { ...pose } } : {});
+    setWork({ highlights: story?.highlights ?? [], interior: story?.interior ?? false, moved: false });
+    setNote("");
+    setUndo(null);
+    // Only on a change of sentence: the sentence's own edits must not send the camera back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storyId]);
   const model = site.model;
   if (!model) return null;
+  /** Applies a change to the sentence with «Geri al» back to what it was. */
+  const changeStory = (patch: Pick<StoryBlock, "camera" | "highlights" | "interior">, message: string) => {
+    if (!story || !onStory) return;
+    const before = { camera: story.camera, highlights: story.highlights, interior: story.interior };
+    onStory(patch);
+    setNote(message);
+    setUndo(() => () => {
+      onStory(before);
+      if (before.camera) setShown({ pose: { ...before.camera } });
+      setNote("Geri alındı.");
+      setUndo(null);
+    });
+  };
+  const sentence = story && onStory;
+  const label = `Cümle ${storyIndex + 1}`;
   const read = () => {
     const pose = reader.current?.();
     if (!pose) {
@@ -106,11 +148,6 @@ export function AdminModelPreview({
     const pose = read();
     if (pose) change(apply, before, pose, `${label}: ${poseSummary(pose)}`);
   };
-  const lookAt = (part: string) => {
-    setTarget(part);
-    const pose = read();
-    if (pose) setShown({ pose: { ...pose, target: part || null } });
-  };
   const own = story?.camera;
   const photoMode = !story && onPhotoCamera && tab === "photos";
   return (
@@ -134,24 +171,32 @@ export function AdminModelPreview({
         context="detail"
         poseReader={reader}
         {...(shown.pose && { pose: shown.pose })}
-        {...(shown.highlight && { highlight: shown.highlight })}
-        {...(shown.interior !== undefined && { interior: shown.interior })}
+        {...(sentence
+          ? {
+              highlight: work.highlights,
+              interior: work.interior,
+              onPoseChange: (camera: CameraPose) => {
+                // A tap on a part also ends a gesture: only a camera that really moved counts as a new angle.
+                const was = story.camera ?? sentencePose(site, storyIndex);
+                if (!was || !samePose(was, camera)) setWork((w) => ({ ...w, moved: true }));
+              },
+              onInsideChange: (open: boolean) => setWork((w) => ({ ...w, interior: open })),
+              onPick: (part: string) =>
+                setWork((w) => ({
+                  ...w,
+                  highlights: w.highlights.includes(part) ? w.highlights.filter((p) => p !== part) : [...w.highlights, part],
+                })),
+            }
+          : {
+              ...(shown.highlight && { highlight: shown.highlight }),
+              ...(shown.interior !== undefined && { interior: shown.interior }),
+            })}
       />
       {photoMode && photo && overlay > 0 && (
         // The photograph over the model: turn the model until the two line up, then save.
         <img className="admin-photo-overlay" src={photo.src} alt="" style={{ opacity: overlay / 100 }} />
       )}
       </div>
-      <label className="field">
-        Bakılan yer
-        <select value={target} onChange={(e) => lookAt(e.target.value)}>
-          <option value="">Modelin ortası</option>
-          {model.parts.map((part) => (
-            <option key={part}>{part}</option>
-          ))}
-        </select>
-      </label>
-      <p className="muted admin-model-hint">Sürükle: döndür · tekerlek: yakınlaş. Bakılan yeri seçince kamera o parçanın etrafında döner.</p>
       {photoMode ? (
         <>
           <div className="admin-photo-strip" role="listbox" aria-label="Galeri fotoğrafları">
@@ -226,43 +271,73 @@ export function AdminModelPreview({
             </>
           )}
         </>
-      ) : story && onStoryCamera ? (
+      ) : sentence ? (
         <>
           <div className="admin-model-actions">
-            <button className="btn" onClick={() => save(onStoryCamera, story.camera, `Cümle ${storyIndex + 1}`)}>
+            <button
+              className="btn"
+              onClick={() => {
+                const camera = read();
+                if (!camera) return;
+                changeStory(
+                  { camera, highlights: work.highlights, interior: work.interior || undefined },
+                  `${label} kaydedildi: ${poseSummary(camera)}${work.highlights.length ? ` · vurgu: ${work.highlights.join(", ")}` : ""}${work.interior ? " · iç mekân" : ""}`,
+                );
+                setWork((w) => ({ ...w, moved: false }));
+              }}
+            >
               <Camera size={16} />
-              Açıyı kaydet → Cümle {storyIndex + 1}
+              Açıyı ve vurguyu kaydet → {label}
             </button>
             <button
               className="btn secondary"
-              onClick={() =>
-                setShown({
-                  ...(sentencePose(site, storyIndex) && { pose: { ...sentencePose(site, storyIndex)! } }),
-                  highlight: story.highlights ?? [],
-                  interior: story.interior ?? false,
-                })
-              }
+              onClick={() => {
+                const pose = sentencePose(site, storyIndex);
+                setShown(pose ? { pose: { ...pose } } : {});
+                setWork({ highlights: story.highlights ?? [], interior: story.interior ?? false, moved: false });
+              }}
             >
               <Play size={16} />
               Cümleyi oynat
             </button>
-            {own && (
+            {(story.camera || story.highlights?.length || story.interior) && (
               <button
                 className="btn secondary"
-                onClick={() => change(onStoryCamera, own, null, `Cümle ${storyIndex + 1}'in açısı silindi.`)}
+                onClick={() => {
+                  changeStory({ camera: undefined, highlights: [], interior: undefined }, `${label} sıfırlandı: açı öncekinde kalır, vurgu yok.`);
+                  setWork({ highlights: [], interior: false, moved: false });
+                }}
               >
-                <Trash2 size={16} />
-                Açıyı sil
+                <Eraser size={16} />
+                Sıfırla
               </button>
             )}
           </div>
-          <small className="muted">
-            {own
-              ? `Cümle ${storyIndex + 1}: ${poseSummary(own)}`
-              : `Cümle ${storyIndex + 1}'in kendi açısı yok; ${
-                  sentencePose(site, storyIndex) ? `öncekinde kalır (${poseSummary(sentencePose(site, storyIndex))})` : "model varsayılan açıda açılır"
-                }.`}
-          </small>
+          {(work.moved ||
+            work.interior !== (story.interior ?? false) ||
+            work.highlights.join() !== (story.highlights ?? []).join()) && (
+            <p className="admin-unsaved" role="status">
+              Önizlemede kaydedilmemiş değişiklik var: «Açıyı ve vurguyu kaydet» ile {label}'e yaz.
+            </p>
+          )}
+          <p className="muted admin-model-hint">
+            {label} seçili. Modeli döndür, vurgulanacak parçalara dokun (tekrar dokununca çıkar), gerekiyorsa «İçini
+            göster»; sonra kaydet.
+          </p>
+          <dl className="admin-sentence-view">
+            <dt>Açı</dt>
+            <dd>
+              {story.camera
+                ? poseSummary(story.camera)
+                : sentencePose(site, storyIndex)
+                  ? `kendi açısı yok, öncekinde kalır (${poseSummary(sentencePose(site, storyIndex))})`
+                  : "kendi açısı yok, model varsayılan açıda açılır"}
+            </dd>
+            <dt>Vurgu</dt>
+            <dd>{story.highlights?.length ? story.highlights.join(", ") : "yok (model yavaşça döner)"}</dd>
+            <dt>İç mekân</dt>
+            <dd>{story.interior ? "açık («İçini göster»)" : "kapalı"}</dd>
+          </dl>
         </>
       ) : (
         onOpening && (
@@ -296,6 +371,7 @@ export function AdminModelPreview({
           </>
         )
       )}
+      <p className="muted admin-model-hint">Sürükle: döndür · tekerlek: yakınlaş.</p>
       {note && (
         <div className="admin-model-note" role="status">
           <small>{note}</small>

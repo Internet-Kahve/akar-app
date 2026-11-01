@@ -81,6 +81,8 @@ export default function ModelViewer({
   onSettled,
   poseReader,
   views,
+  onPoseChange,
+  onInsideChange,
 }: {
   model: SiteModel;
   detail?: boolean;
@@ -107,6 +109,10 @@ export default function ModelViewer({
    * each one's view and show the photograph small beside it, to compare; ✕ goes back to where the visitor was.
    */
   views?: Array<{ id: string; src: string; alt: string; title: string; camera: PhotoCamera }>;
+  /** The visitor (the panel's editor) let go of the model after turning or zooming it: the view as a pose. */
+  onPoseChange?: (pose: CameraPose) => void;
+  /** The visitor opened or closed the model with «İçini göster». */
+  onInsideChange?: (open: boolean) => void;
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
@@ -139,6 +145,10 @@ export default function ModelViewer({
   highlightRef.current = highlight;
   const cardsRef = useRef(partCards);
   cardsRef.current = partCards;
+  const poseChangeRef = useRef(onPoseChange);
+  poseChangeRef.current = onPoseChange;
+  const insideChangeRef = useRef(onInsideChange);
+  insideChangeRef.current = onInsideChange;
   const pickRef = useRef(onPick);
   pickRef.current = onPick;
   const progressRef = useRef(onProgress);
@@ -209,6 +219,11 @@ export default function ModelViewer({
         if (!disposed) renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
+      // Only a gesture ends a control: a camera moved by code (a sentence's pose) reports nothing.
+      controls.addEventListener("end", () => {
+        const pose = readPose.current?.();
+        if (pose) poseChangeRef.current?.(pose);
+      });
       // The canvas shows a window of a larger view, so the model's centre lands in the part left free.
       const applyFrame = () => {
         const { width, height } = element.getBoundingClientRect();
@@ -784,6 +799,7 @@ export default function ModelViewer({
       onClick={() => {
         lift.current?.(!inside, true);
         setInside(!inside);
+        insideChangeRef.current?.(!inside);
       }}
     >
       {inside ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
