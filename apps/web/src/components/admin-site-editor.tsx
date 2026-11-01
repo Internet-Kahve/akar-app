@@ -107,7 +107,8 @@ export function SiteEditor({
   const [savedDraft, setSavedDraft] = useState(draft),
     [reverting, setReverting] = useState(false);
   const [step, setStep] = useState(0),
-    [activeStory, setActiveStory] = useState(0);
+    [activeStory, setActiveStory] = useState(0),
+    [activeCard, setActiveCard] = useState(0);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [saved, setSaved] = useState("");
@@ -884,6 +885,8 @@ export function SiteEditor({
               ]}
               sources={sources}
               onChange={(cards) => field("partCards", cards)}
+              active={activeCard}
+              onActive={setActiveCard}
             />
           )}
           {step === 5 && (
@@ -984,7 +987,7 @@ export function SiteEditor({
           </footer>
         </div>
         <aside className="editor-preview">
-          {draft.model && (step === 0 || step === 3) ? (
+          {draft.model && (step === 0 || step === 3 || step === 4) ? (
             <div className="row between editor-preview-head">
               <h3>{aside === "3d" ? "3D önizleme" : "Önizleme"}</h3>
               <div className="segmented" role="group" aria-label="Önizleme">
@@ -999,7 +1002,7 @@ export function SiteEditor({
           ) : (
             <h3>Önizleme</h3>
           )}
-          {draft.model && (step === 0 || step === 3) && aside === "3d" ? (
+          {draft.model && (step === 0 || step === 3 || step === 4) && aside === "3d" ? (
             <AdminModelPreview
               // Each step starts its own preview: the last step's note and view do not carry over.
               key={`${draft.model.src}:${step}`}
@@ -1009,6 +1012,38 @@ export function SiteEditor({
                 storyIndex: activeStory,
                 onStory: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior" | "showCard">) =>
                   storyField(story.id, patch),
+              })}
+              {...(step === 4 && {
+                card: draft.partCards?.[activeCard],
+                cardIndex: activeCard,
+                onCardParts: (parts: string[]) =>
+                  field(
+                    "partCards",
+                    (draft.partCards ?? []).map((c, i) => (i === activeCard ? { ...c, parts } : c)),
+                  ),
+                onNewCard: (parts: string[]) => {
+                  const cards = draft.partCards ?? [];
+                  const id = crypto.randomUUID();
+                  field("partCards", [
+                    ...cards,
+                    {
+                      id,
+                      parts,
+                      title: "",
+                      body: "",
+                      photos: [],
+                      sourceId: sources[0]?.id,
+                      trust: "representative",
+                    },
+                  ]);
+                  setActiveCard(cards.length);
+                  // The new card is at the end of the list: bring it into view, its title first to fill in.
+                  setTimeout(() => {
+                    const card = document.querySelector<HTMLElement>(`[data-card-id="${id}"]`);
+                    card?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    card?.querySelector("input")?.focus({ preventScroll: true });
+                  }, 50);
+                },
               })}
               {...(step === 0 && {
                 onOpening: (pose) => field("openingCamera", pose),

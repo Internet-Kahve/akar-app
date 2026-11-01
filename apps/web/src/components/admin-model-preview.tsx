@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Eraser, Play, RotateCcw, Trash2, Undo2 } from "lucide-react";
-import type { CameraPose, HeritageSite, PhotoCamera, SitePhoto, StoryBlock } from "@akar/domain";
+import { Camera, Eraser, Play, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import type { CameraPose, HeritageSite, PartCard, PhotoCamera, SitePhoto, StoryBlock } from "@akar/domain";
 import { sceneOf } from "../lib/scene-light";
 import { useCityIdentity, useCityScenes } from "./city-scenes";
 import { ModelStage } from "./model-stage";
@@ -52,6 +52,10 @@ export function AdminModelPreview({
   onOpening,
   onStory,
   onPhotoCamera,
+  card,
+  cardIndex = 0,
+  onCardParts,
+  onNewCard,
 }: {
   site: HeritageSite;
   /** The sentence being edited (Hikâye step); absent on the Model step. */
@@ -62,6 +66,12 @@ export function AdminModelPreview({
   onStory?: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior" | "showCard">) => void;
   /** Model step: a gallery photograph's angle (the visitor's ← → arrows in the 3D view); null removes it. */
   onPhotoCamera?: (photoId: string, camera: PhotoCamera | null) => void;
+  /** Parça kartları step: the selected card (absent = none yet), its number and what saving its parts does. */
+  card?: PartCard | undefined;
+  cardIndex?: number;
+  onCardParts?: (parts: string[]) => void;
+  /** Parça kartları step: a new card that opens on the parts picked in the preview. */
+  onNewCard?: (parts: string[]) => void;
 }) {
   const scenes = useCityScenes();
   const identity = useCityIdentity(site.city);
@@ -93,6 +103,16 @@ export function AdminModelPreview({
     interior: false,
     moved: false,
   });
+  // Parça kartları: the parts picked in the preview, one at a time or (multiple) added and taken off by taps.
+  const [picked, setPicked] = useState<string[]>([]);
+  const [multiple, setMultiple] = useState(false);
+  const cardId = card?.id;
+  useEffect(() => {
+    setPicked(card?.parts ?? []);
+    setNote("");
+    setUndo(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardId]);
   // Another sentence: the preview goes to its saved view (its own angle, else the last earlier one).
   const storyId = story?.id;
   useEffect(() => {
@@ -121,6 +141,8 @@ export function AdminModelPreview({
     });
   };
   const sentence = story && onStory;
+  const cardMode = Boolean(onNewCard);
+  const cardLabel = card ? `Kart ${cardIndex + 1}${card.title ? ` · ${card.title}` : ""}` : "";
   const label = `Cümle ${storyIndex + 1}`;
   const read = () => {
     const pose = reader.current?.();
@@ -187,17 +209,93 @@ export function AdminModelPreview({
                   highlights: w.highlights.includes(part) ? w.highlights.filter((p) => p !== part) : [...w.highlights, part],
                 })),
             }
-          : {
-              ...(shown.highlight && { highlight: shown.highlight }),
-              ...(shown.interior !== undefined && { interior: shown.interior }),
-            })}
+          : cardMode
+            ? {
+                highlight: picked,
+                onPick: (part: string) =>
+                  setPicked((now) =>
+                    multiple
+                      ? now.includes(part)
+                        ? now.filter((p) => p !== part)
+                        : [...now, part]
+                      : now.length === 1 && now[0] === part
+                        ? []
+                        : [part],
+                  ),
+              }
+            : {
+                ...(shown.highlight && { highlight: shown.highlight }),
+                ...(shown.interior !== undefined && { interior: shown.interior }),
+              })}
       />
       {photoMode && photo && overlay > 0 && (
         // The photograph over the model: turn the model until the two line up, then save.
         <img className="admin-photo-overlay" src={photo.src} alt="" style={{ opacity: overlay / 100 }} />
       )}
       </div>
-      {photoMode ? (
+      {cardMode ? (
+        <>
+          <div className="admin-model-actions">
+            {card && onCardParts && (
+              <button
+                className="btn"
+                disabled={!picked.length}
+                onClick={() => {
+                  const before = card.parts;
+                  onCardParts(picked);
+                  setNote(`${cardLabel}: ${picked.join(", ")}`);
+                  setUndo(() => () => {
+                    onCardParts(before);
+                    setPicked(before);
+                    setNote("Geri alındı.");
+                    setUndo(null);
+                  });
+                }}
+              >
+                <Camera size={16} />
+                Parçaları kaydet → Kart {cardIndex + 1}
+              </button>
+            )}
+            <button
+              className={card ? "btn secondary" : "btn"}
+              disabled={!picked.length}
+              onClick={() => onNewCard?.(picked)}
+            >
+              <Plus size={16} />
+              Bu parçalarla yeni kart
+            </button>
+            <label className="check-row admin-card-toggle">
+              <input type="checkbox" checked={multiple} onChange={(e) => setMultiple(e.target.checked)} />
+              Çoklu seçim
+            </label>
+            {picked.length > 0 && (
+              <button className="btn secondary" onClick={() => setPicked([])}>
+                <Eraser size={16} />
+                Seçimi temizle
+              </button>
+            )}
+          </div>
+          {card && picked.join() !== card.parts.join() && (
+            <p className="admin-unsaved" role="status">
+              Seçim kaydedilmedi: «Parçaları kaydet» ile Kart {cardIndex + 1}'e yaz ya da yeni kart aç.
+            </p>
+          )}
+          <p className="muted admin-model-hint">
+            Modelde parçaya dokun: {multiple ? "her dokunuş ekler ya da çıkarır" : "dokunduğun parça seçilir («Çoklu seçim» ile birden çok)"}.
+            Sonra soldaki kartta başlık, metin ve fotoğrafları doldur.
+          </p>
+          <dl className="admin-sentence-view">
+            <dt>Seçili</dt>
+            <dd>{picked.length ? picked.join(", ") : "yok"}</dd>
+            {card && (
+              <>
+                <dt>{`Kart ${cardIndex + 1}`}</dt>
+                <dd>{card.parts.length ? card.parts.join(", ") : "parçası yok"}</dd>
+              </>
+            )}
+          </dl>
+        </>
+      ) : photoMode ? (
         <>
           <div className="admin-photo-strip" role="listbox" aria-label="Galeri fotoğrafları">
             {photos.map((p, i) => (

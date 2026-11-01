@@ -2648,6 +2648,58 @@ td small {
   margin: 4px 0 0;
   font-size: 12px;
 }
+/* Part cards: a card's parts as chips (picked in the 3D preview), photos added from a grid of thumbnails. */
+.part-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.part-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-light);
+  font-size: 12px;
+  font-weight: 600;
+}
+.part-chip.missing {
+  background: var(--inferred-bg);
+  color: var(--inferred);
+}
+.part-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.part-photo-add summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.part-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.part-photo-grid button {
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+.part-photo-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 /* «Kart göster» beside the save button: the sentence's photo as a card over the model, saved at once. */
 .admin-card-toggle {
   align-self: center;
