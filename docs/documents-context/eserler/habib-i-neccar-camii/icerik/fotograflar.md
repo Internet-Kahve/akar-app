@@ -1,5 +1,7 @@
 # Habib-i Neccar Camii · fotoğraflar
 
+1 Kasım 2026: `s29-01`, `s31-01`, `s33-01`, `s34-01` sayfa görüntüsünden kesilen kopyalar yerine PDF'e gömülü asıllarıyla (2048, 1696, 1666, 1741 px; önce 1280 px) değiştirildi; eşleme görüntü karşılaştırmasıyla (sayfadaki sıraya göre değil: s.32'de iki fotoğraf ters sıradadır). Öbür kesitlerde PDF'teki asıl kesitten küçük, değiştirilmedi. Hatay'ın fotoğraf arşivi bizde yok.
+
 30 Ekim 2026. Bu eserin fotoğrafları envanter kitabının kendi kaydından (kitaptaki fotoğraf, PDF'ten kesildi; `kitap-fotograflari.md`). Fotoğrafın bu esere ait olduğu kitaptaki yerinden belli; gözle de kontrol edildi. Tanınabilir yüz yok. Güven sütunu **öneridir**.
 
 Galeri sırası: dış kapak → iç / avlu → öne çıkan detay → diğerleri.
