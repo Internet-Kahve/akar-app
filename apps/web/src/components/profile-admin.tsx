@@ -24,7 +24,7 @@ import {
   type Snapshot,
 } from "@akar/domain";
 import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@akar/api-client";
-import { Modal, Notice, Tag } from "./ui";
+import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
@@ -93,6 +93,8 @@ export function Profile({
             <div className="avatar large">{state.name.slice(0, 1).toLocaleUpperCase(lang)}</div>
             <h2>{state.name}</h2>
             <p className="profile-badge-count">{t("profile.badgeCount", { count: badges.filter((b) => b.earned).length })}</p>
+            <p className="profile-progress-summary">{t("profile.progressSummary", { sites: state.readIds.length, tasks: progress.tasks.length })}</p>
+            <div className="profile-motif"><Motif /></div>
             {auth ? (
               auth.email ? (
                 <>
@@ -179,38 +181,13 @@ export function Profile({
           </div>
         </aside>
         <div className="profile-main">
-          <div className="stat-grid">
-            {[
-              {
-                icon: BookOpen,
-                n: state.readIds.length,
-                label: t("profile.statStories"),
-              },
-              {
-                icon: MapPin,
-                n: state.visitedIds.length,
-                label: auth ? t("profile.statVerified") : t("profile.statDemo"),
-              },
-              {
-                icon: MessageSquare,
-                n: state.memories.length,
-                label: t("profile.statMemories"),
-              },
-            ].map(({ icon: Icon, n, label }) => (
-              <div className="card stat" key={label}>
-                <Icon size={21} />
-                <strong>{n}</strong>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
           <section className="card profile-badges">
             <div className="row between"><h3>{t("profile.badges")}</h3><span>{badges.filter((b) => b.earned).length} / {badges.length}</span></div>
             {badges.length ? <div className="badges">
               {badges.map((badge) => <div key={badge.id} className={badge.earned ? "earned" : ""}>
                 <img src={`/figma/${badge.earned ? "718a4" : "b8133"}.svg`} alt="" />
                 <b lang={tr}>{badge.title}</b>
-                <small lang={tr}>{badge.earned ? badge.site.name : badge.text}</small>
+                <small lang={tr}>{badge.earned ? badge.site.name : badge.condition === "story" ? t("profile.badgeStory") : t("profile.badgeTask", { title: badge.site.tasks?.find((task) => task.id === badge.taskId)?.title ?? badge.title })}</small>
               </div>)}
             </div> : <p className="muted">{t("profile.noBadges")}</p>}
           </section>

@@ -696,7 +696,8 @@ export function AkarApp() {
   }, [ready, isDetail, wide]);
   useEffect(() => {
     if (!ready || wide || isDetail) return;
-    setSheetHeight(routeId ? Math.round(innerHeight * 0.6) : sheetLowest());
+    setSheetHeight(routeId ? Math.round(innerHeight * 0.58) : sheetLowest());
+    if (routeId) sheet.current?.scrollTo({ top: 0 });
   }, [ready, wide, isDetail, routeId, tab]);
   const shell = (
     <div
@@ -905,6 +906,11 @@ export function AkarApp() {
               }
               className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""}`}
             >
+              {routeId && showRoutes && !isDetail && (
+                <button className="round-btn route-mobile-back" aria-label={t("route.all")} onClick={() => setRouteId(undefined)}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
               <aside
                 ref={sheet}
                 className={`side-panel${sheetDragging ? " dragging" : ""}`}

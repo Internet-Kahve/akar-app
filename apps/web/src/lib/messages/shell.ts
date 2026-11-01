@@ -1,5 +1,8 @@
 /** App frame, map, lists, sign-in, dialogs and profile. */
 export const tr = {
+  "profile.progressSummary": "{sites} eser keşfedildi · {tasks} görev",
+  "profile.badgeStory": "Hikâyeyi sonuna kadar dinle ya da oku.",
+  "profile.badgeTask": "Görev: {title}",
   "profile.badgeCount": "{count} rozet",
   "profile.language": "Dil",
   "profile.saved": "Kayıtlılar",
@@ -254,7 +257,7 @@ export const tr = {
   "profile.lead": "Gördüğün her yapı, hikâyenin bir parçası.",
   "profile.signOut": "Çıkış yap",
   "profile.guest": "Misafir · Giriş yaparak anı bırakabilir ve ilerlemeni hesabına bağlayabilirsin",
-  "profile.demo": "Demo profili · Bu tarayıcıya özel",
+  "profile.demo": "İlerlemen bu cihazda saklanıyor. Giriş yapınca hesabına taşınır.",
   "profile.settings": "Deneyimini özelleştir",
   "profile.experimental": "Deneysel arayüzleri göster",
   "profile.experimentalNote": "Rozet, Bulmaca ve Birlikte Gez önizlemeleri. Ürün kapsamı henüz kesinleşmedi; çok kullanıcılı bağlantı yoktur.",
@@ -352,6 +355,9 @@ export const tr = {
 } as const;
 
 export const en = {
+  "profile.progressSummary": "{sites} places explored · {tasks} tasks",
+  "profile.badgeStory": "Listen to or read the entire story.",
+  "profile.badgeTask": "Task: {title}",
   "profile.badgeCount": "{count} badges",
   "profile.language": "Language",
   "profile.saved": "Saved places",
@@ -606,7 +612,7 @@ export const en = {
   "profile.lead": "Every building you see is a part of the story.",
   "profile.signOut": "Sign out",
   "profile.guest": "Guest · Sign in to leave memories and link your progress to your account",
-  "profile.demo": "Demo profile · Private to this browser",
+  "profile.demo": "Your progress is stored on this device and moves to your account when you sign in.",
   "profile.settings": "Customise your experience",
   "profile.experimental": "Show experimental interfaces",
   "profile.experimentalNote": "Previews of Badges, Puzzles and Explore Together. The product scope is not final yet; there is no multi-user connection.",

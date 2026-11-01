@@ -34,7 +34,7 @@ const image = (
 });
 
 /** Ulucami with three archive photographs: one with the archive's pair, one with only a sample, one with neither. */
-async function openHistory(page: Page) {
+async function openHistory(page: Page, longArchive = false) {
   const snapshot = createSeed();
   const site = snapshot.sites[0]!;
   site.historyImages = [
@@ -45,6 +45,12 @@ async function openHistory(page: Page) {
     image("b", "Tarih bilinmiyor"),
     image("c", "1930"),
   ];
+  if (longArchive) {
+    site.historyImages.push(...Array.from({ length: 18 }, (_, index) => image(`extra-${index}`, "1930", {
+      presentPhoto: photo(`now-extra-${index}`, PAIR_CREDIT, "Proje için verildi"),
+      presentAngleMatch: "same",
+    })));
+  }
   const sample = (id: string, extra: Partial<SampleTrace> = {}): SampleTrace => ({
     id,
     author: "AKAR ekibi",
@@ -163,4 +169,25 @@ test("the team's samples are listed with the «Örnek» tag, their credit line w
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
   ).toBe(true);
+});
+
+
+test("a long archive scrolls inside its strip without widening the viewport", async ({ page }) => {
+  await openHistory(page, true);
+  await expect(page.locator(".archive-timeline button")).toHaveCount(21);
+  const width = page.viewportSize()!.width;
+  if (width < 900) {
+    const archive = await page.locator(".history-archive").boundingBox();
+    const location = await page.locator(".history-location").boundingBox();
+    expect(archive!.y).toBeLessThan(location!.y);
+    await expect(page.locator(".history-map-toggle")).toHaveAttribute("aria-expanded", "false");
+    await page.locator(".history-map-toggle").click();
+    await expect(page.locator(".history-location-map")).toBeVisible();
+  }
+
+  expect(await page.evaluate(() => innerWidth)).toBe(width);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await page.locator(".archive-timeline button").last().click();
+  await expect(page.locator(".archive-timeline button").last()).toHaveAttribute("aria-pressed", "true");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
 });

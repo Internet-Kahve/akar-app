@@ -222,6 +222,7 @@ export function HistoryView({
               </figure>
               {pair?.angleMatch === "near" && <p className="history-near">{t("site.nearAngle")}</p>}
             </div>
+            <aside className="history-details">
             <section className="history-info">
               <h2 lang={content}>{image.caption}</h2>
               <p className="history-date" lang={content}>{image.dateLabel}</p>
@@ -242,6 +243,18 @@ export function HistoryView({
                 <Camera size={18} />{t(pair ? "site.takeAnother" : "site.takeToday")}
               </button>
             </section>
+            <section className={`history-location ${mapOpen ? "open" : ""}`}>
+              <h3 className="history-where"><MapPin size={18} />{t("site.whereFrom")}</h3>
+              <button className="text-btn history-map-toggle" aria-expanded={mapOpen}
+                onClick={() => setMapOpen(!mapOpen)}>{t(mapOpen ? "site.hideMap" : "site.showMap")}</button>
+              <div className="history-location-map">
+                {image.viewpoint ? <ViewpointMap images={images} selected={image} /> : <p>{t("site.noViewpoint")}</p>}
+              </div>
+              <button className="btn secondary full" onClick={onMemory}>
+                {t("site.haveAnglePhoto")}<ArrowRight size={16} />
+              </button>
+            </section>
+            </aside>
             <section className="history-archive">
               <h3>{t("site.archivePhotos")} <small>{images.length}</small></h3>
               <div className="timeline archive-timeline" aria-label={t("site.archivePhotos")}>
@@ -257,17 +270,7 @@ export function HistoryView({
                 ))}
               </div>
             </section>
-            <section className={`history-location ${mapOpen ? "open" : ""}`}>
-              <h3 className="history-where"><MapPin size={18} />{t("site.whereFrom")}</h3>
-              <button className="text-btn history-map-toggle" aria-expanded={mapOpen}
-                onClick={() => setMapOpen(!mapOpen)}>{t(mapOpen ? "site.hideMap" : "site.showMap")}</button>
-              <div className="history-location-map">
-                {image.viewpoint ? <ViewpointMap images={images} selected={image} /> : <p>{t("site.noViewpoint")}</p>}
-              </div>
-              <button className="btn secondary full" onClick={onMemory}>
-                {t("site.haveAnglePhoto")}<ArrowRight size={16} />
-              </button>
-            </section>
+
           </div>
           {samples}
         </>

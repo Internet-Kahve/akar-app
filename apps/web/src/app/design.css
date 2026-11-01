@@ -2995,3 +2995,148 @@ h1,
   .profile-heading { display: flex; align-items: center; gap: 12px; max-width: 1100px; margin: 0 auto 20px; }
   .profile-heading h1 { margin: 0; }
 }
+
+/* Map attribution remains reachable above the mobile sheet. */
+@media (max-width: 899.98px) {
+  .workspace .map-wrap .maplibregl-ctrl-bottom-right {
+    bottom: calc(var(--sheet-h, 110px) + 8px);
+    right: 68px;
+  }
+  .workspace.peeking .map-wrap .maplibregl-ctrl-bottom-right {
+    bottom: 8px;
+  }
+  .maplibregl-ctrl-attrib { font-size: 10px; line-height: 16px; }
+  .chip, .site-row-add, .trust-tag, .explore-city, .lang-switch button {
+    position: relative;
+  }
+  .chip::after, .site-row-add::after, .trust-tag::after, .explore-city::after, .lang-switch button::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+  .chip:active, .map-round:active, .map-dial:active, .explore-tabs button:active,
+  .site-row-add:active, .trust-tag:active { transform: none; }
+}
+/* Keep the desktop viewpoint beside the main photograph, even with long credits. */
+.history-grid { grid-template-areas: "photo details" "archive details"; }
+.history-details { grid-area: details; min-width: 0; padding: 24px 20px 20px; border-radius: 16px; background: var(--glass); box-shadow: var(--glass-edge), var(--glass-shadow); }
+.history-details .history-today { margin-top: 14px; background: none; box-shadow: none; padding: 0; }
+.history-details .history-location { margin-top: 16px; border-top: 1px solid var(--border); }
+@media (max-width: 899.98px) {
+  .history-details { display: contents; }
+  .history-info { order: 1; }
+  .history-details .history-today { order: 2; padding: 14px; background: var(--glass); box-shadow: var(--glass-edge), var(--glass-shadow); }
+  .history-archive { order: 3; }
+  .history-details .history-location { order: 4; width: 100%; }
+}
+@media (max-width: 899.98px) {
+  .workspace.peeking .map-wrap .maplibregl-ctrl-bottom-right {
+    top: 116px;
+    bottom: auto;
+    right: 16px;
+  }
+  .maplibregl-ctrl-attrib-button::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+  }
+}
+/* Profile measurements: compact identity and separate section headings. */
+.profile-progress-summary { margin: 12px 0 0; font-size: 13px; color: var(--text-muted); }
+.profile-motif { grid-column: 1 / -1; margin: 10px 0; }
+.profile-card > .muted { margin: 0; font-size: 13px; }
+.profile-main > .profile-discovered,
+.profile-main > .profile-badges { padding: 0; border: 0; background: none; box-shadow: none; }
+.profile-main > .profile-discovered > h3,
+.profile-badges > .row { margin: 0 0 8px; }
+.profile-badges h3 { margin: 0; }
+.profile-main .empty-inline,
+.profile-main .badges { padding: 16px 14px; border-radius: 16px; background: var(--glass); box-shadow: var(--glass-edge), var(--glass-shadow); }
+.profile-main .empty-inline { text-align: left; }
+.profile-main .empty-inline > svg { display: none; }
+.profile-main .empty-inline p { margin: 0; }
+.profile-main .empty-inline .text-btn { min-height: 44px; margin-top: 4px; }
+.profile-main .badges > div { border: 0; background: none; box-shadow: none; }
+@media (max-width: 899.98px) {
+  /* The scroll clip also contains the chips' enlarged touch areas. */
+  .map-chips { top: calc(64px + env(safe-area-inset-top, 0px)); padding: 6px 16px 10px; }
+  .profile-button, .peek-close, .round-btn { position: relative; }
+  .profile-button::after, .peek-close::after, .round-btn::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
+  }
+  .settings label { min-height: 44px; }
+}
+/* Screen-reader pair labels stay inside their scrolling thumbnail button. */
+.archive-timeline button { position: relative; }
+@media (max-width: 899.98px) {
+  .history-grid > .history-details { display: contents; }
+}
+
+/* Route preview uses the prototype's floating back control and 58% sheet. */
+.route-mobile-back { display: none; }
+@media (max-width: 899.98px) {
+  .route-mobile-back { display: grid; position: absolute; top: 16px; left: 16px; z-index: 12; width: 44px; height: 44px; }
+  .app-shell:has(.route-page) .topbar,
+  .app-shell:has(.route-page) .map-chips,
+  .app-shell:has(.route-page) .map-controls,
+  .route-page > .back { display: none; }
+}
+
+/* Camera and captured-photo layout measured against the prototype. */
+.camera { display: block; padding: 0; background: #353a42; overflow: hidden; }
+.camera header { position: absolute; left: 16px; right: 16px; top: calc(16px + env(safe-area-inset-top, 0px)); height: 44px; z-index: 4; }
+.camera header .round-btn { width: 44px; height: 44px; background: rgba(20,23,28,.6); color: white; box-shadow: none; }
+.camera-title { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; width: calc(100% - 88px); }
+.camera-title b { display: block; font: 600 16px/22px var(--font); }
+.camera-title small { display: block; font-size: 12px; color: #c9cdd3; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.camera-view { position: absolute; left: 0; right: 0; top: 22%; height: 36%; border-radius: 0; background: #8e8b84; }
+.camera-view video { object-fit: cover; }
+.camera-hint { position: absolute; left: 50%; top: calc(58% + 30px); transform: translateX(-50%); padding: 8px 16px; border-radius: 999px; background: #1f2329; font: 500 13px var(--font); white-space: nowrap; }
+.camera-fade { position: absolute; left: 24px; right: 24px; bottom: calc(174px + env(safe-area-inset-bottom, 0px)); gap: 16px; font: 500 13px var(--font); }
+.camera-fade input { min-width: 0; height: 44px; accent-color: white; }
+.camera-bar { position: absolute; left: 40px; right: 40px; bottom: calc(40px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: space-between; }
+.camera-bar > img { border-radius: 8px; border: 2px solid white; }
+.camera-shutter { width: 84px; height: 84px; background: white; border: 6px solid #9ca3af; }
+.camera-shutter svg { display: none; }
+.camera-bar .round-btn { position: relative; width: 48px; height: 48px; background: #1f2329; color: white; box-shadow: none; }
+.camera-bar .round-btn small { position: absolute; top: 52px; font-size: 12px; }
+.camera-tabs { position: absolute; left: 50%; transform: translateX(-50%); top: calc(80px + env(safe-area-inset-top, 0px)); display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #2b3038; }
+.camera-tabs button { min-height: 44px; padding: 0 20px; white-space: nowrap; font: 600 13px var(--font); }
+.camera-result { position: absolute; left: 16px; right: 16px; top: calc(140px + env(safe-area-inset-top, 0px)); height: 44%; border-radius: 16px; overflow: hidden; background: #2b3038; }
+.camera-result img { object-fit: cover; }
+.camera-result.side { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 4px; }
+.camera-result.side img:last-child { order: -1; }
+.camera > input[type="range"] { position: absolute; left: 24px; width: calc(100% - 48px); top: calc(140px + 44%); height: 44px; accent-color: white; }
+.camera-actions { position: absolute; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); gap: 12px; }
+.camera-actions > div { gap: 12px; }
+.camera-actions small { color: #9ca3af; font-size: 11px; }
+@media (min-width: 900px) {
+  .camera-view { top: 76px; bottom: 200px; height: auto; }
+  .camera-hint { top: auto; bottom: 168px; }
+  .camera-fade { left: 50%; right: auto; width: 520px; transform: translateX(-50%); bottom: 98px; }
+  .camera-bar { left: 50%; right: auto; width: 420px; transform: translateX(-50%); bottom: 20px; }
+  .camera-result { left: 50%; right: auto; width: min(900px,90vw); transform: translateX(-50%); height: calc(100% - 342px); }
+  .camera-result.side { grid-template-rows: 1fr; grid-template-columns: 1fr 1fr; }
+  .camera > input[type="range"] { left: 50%; width: 480px; transform: translateX(-50%); top: auto; bottom: 150px; }
+  .camera-actions { left: 50%; right: auto; width: 480px; transform: translateX(-50%); }
+}
+/* Route stops keep the date on the same row so the start action fits the sheet. */
+.route-page > .muted { margin: 0 0 12px; font-size: 14px; }
+.route-page > h1 { margin-bottom: 2px; }
+.route-page > p:not(.muted) { font-size: 14px; line-height: 20px; margin: 0; }
+.route-stop-list { margin: 16px 0; }
+.route-stop-list button { position: relative; height: 48px; min-height: 48px; padding: 0; border: 0; gap: 16px; }
+.route-stop-list button > span:nth-child(2) { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.route-stop-list strong { font-size: 14px; }
+.route-stop-list small { font-size: 14px; margin: 0; }
+.route-stop-list button > svg { display: none; }
+.route-stop-list button:not(:last-child)::after { content: ""; position: absolute; left: 14px; top: 36px; width: 1px; height: 24px; background: var(--text-muted); opacity: .6; }
+.route-stop-list:not(:empty) + .notice { display: none; }
+.route-page > .btn svg { display: none; }
+.camera-fade { bottom: calc(182px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 900px) { .camera-fade { bottom: 98px; } }
