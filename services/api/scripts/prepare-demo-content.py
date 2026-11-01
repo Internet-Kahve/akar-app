@@ -296,11 +296,18 @@ for path, record in city_records:
     scale = kimlik.get('desen_olcek')
     if scale is not None and (isinstance(scale, bool) or not isinstance(scale, (int, float)) or not 0.25 <= scale <= 8):
         raise ValueError(f"{path.name}: desen_olcek must be a number from 0.25 to 8")
+    # kimlik.amblem (and amblem_kucuk, its cut for 14-32 px): files of design/desenler like the pattern.
+    emblems = {k: kimlik.get(v) for k, v in dict(emblem='amblem', emblemSmall='amblem_kucuk').items() if kimlik.get(v)}
+    if 'emblemSmall' in emblems and 'emblem' not in emblems:
+        raise ValueError(f"{path.name}: amblem_kucuk needs amblem")
+    for file in emblems.values():
+        if not (root / 'design/desenler' / file).is_file():
+            raise ValueError(f"{path.name}: emblem file design/desenler/{file} is missing")
     center = record.get('merkez')
     inventory = {k: record.get(v) for k, v in dict(name='envanter_adi', publisher='envanter_yayinci', year='envanter_yili',
         siteCount='envanter_eser_sayisi').items()}
     result['cities'].append(dict(id=record['id'], name=record['ad'], isDefault=bool(record.get('varsayilan')), scene=scene,
-        identity=(dict(look, **({'patternScale': scale} if scale is not None else {}))) if all(look.values()) else None,
+        identity=(dict(look, **({'patternScale': scale} if scale is not None else {}), **emblems)) if all(look.values()) else None,
         map=dict(center=center, zoom=record['zoom'], zoomDesktop=record.get('zoom_masaustu')) if center else None,
         inventory=inventory if any(v is not None for v in inventory.values()) else None))
 args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')

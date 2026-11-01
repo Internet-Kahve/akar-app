@@ -4111,6 +4111,14 @@
                                   "patternScale": {
                                     "description": "Desen karosunun standart genişliğe oranı (kimlik.desen_olcek); yoksa 1",
                                     "type": "number"
+                                  },
+                                  "emblem": {
+                                    "description": "Şehir ambleminin dosya adı (kimlik.amblem), /desenler/ klasöründe; örn. amblem-bursa.svg. Yoksa desen kullanılır",
+                                    "type": "string"
+                                  },
+                                  "emblemSmall": {
+                                    "description": "Amblemin 14–32 px'lik yerler için kalın çizimi (kimlik.amblem_kucuk); yoksa emblem",
+                                    "type": "string"
                                   }
                                 },
                                 "required": [

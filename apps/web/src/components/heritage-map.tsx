@@ -25,6 +25,7 @@ import {
   syncPins,
   themePinLabels,
 } from "../lib/map-pins";
+import { cityIdentityStyle } from "../lib/city-identity";
 import { nearestCity, type LngLat } from "../lib/nearby";
 import { useCities, useCityScenes } from "./city-scenes";
 import { MapControls } from "./map-controls";
@@ -327,6 +328,12 @@ export function HeritageMap({
               : t("map.cityAriaSoon", { name: city.name }),
           );
           const dot = document.createElement("i");
+          // A city with an emblem shows it in place of the dot, in the city's colours.
+          const look = cityIdentityStyle(city.identity) as Record<string, string>;
+          if ("--sehir-amblem" in look) {
+            for (const [key, value] of Object.entries(look)) el.style.setProperty(key, value);
+            dot.className = "city-emblem";
+          }
           const name = document.createElement("b");
           name.textContent = city.name;
           const count = document.createElement("small");

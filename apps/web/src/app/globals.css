@@ -543,6 +543,17 @@ img {
 .city-far .city-marker:not(.ready) small {
   display: none;
 }
+/* The city's emblem in place of the dot (kimlik.amblem), drawn in the city's colour; the file gives the shape only. */
+.city-marker i.city-emblem {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--sehir-aksan);
+  -webkit-mask: var(--sehir-amblem) center / contain no-repeat;
+  mask: var(--sehir-amblem) center / contain no-repeat;
+}
 .fallback-pin img {
   display: block;
   max-width: none;
@@ -4731,8 +4742,19 @@ td small {
   font: 600 34px/40px "Cormorant Garamond", Georgia, serif;
 }
 .opening-city span {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   animation: loading-in 320ms ease-out;
+}
+/* The city's emblem before its name (kimlik.amblem), in the city's colour. */
+.opening-city-emblem {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  background: var(--city-accent);
+  -webkit-mask: var(--city-emblem) center / contain no-repeat;
+  mask: var(--city-emblem) center / contain no-repeat;
 }
 .opening-note {
   color: var(--text-muted);

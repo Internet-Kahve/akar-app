@@ -143,6 +143,13 @@ export interface CityIdentity {
    * repeats of its motif (Hatay's) is drawn larger so its lines keep the width of the others.
    */
   patternScale?: number;
+  /** The city's emblem (`kimlik.amblem`): an SVG file name in `/desenler/`, one motif drawn whole, e.g. `amblem-bursa.svg`. */
+  emblem?: string;
+  /**
+   * The emblem cut for small places, 14–32 px (`kimlik.amblem_kucuk`), when the emblem's lines are too thin there
+   * (Konya's); absent = the emblem.
+   */
+  emblemSmall?: string;
 }
 /** The range a pattern scale may take. */
 export const CITY_PATTERN_SCALE = { min: 0.25, max: 8 };
@@ -160,6 +167,11 @@ export function validateCityIdentity(identity: CityIdentity) {
     (typeof scale !== "number" || !Number.isFinite(scale) || scale < CITY_PATTERN_SCALE.min || scale > CITY_PATTERN_SCALE.max)
   )
     throw new Error(`Desen ölçeği ${CITY_PATTERN_SCALE.min} ile ${CITY_PATTERN_SCALE.max} arasında bir sayı olmalı`);
+  for (const file of [identity.emblem, identity.emblemSmall])
+    if (file !== undefined && (typeof file !== "string" || !CITY_PATTERN_FILE.test(file)))
+      throw new Error("Şehir amblemi küçük harfli bir .svg dosya adı olmalı");
+  if (identity.emblemSmall !== undefined && identity.emblem === undefined)
+    throw new Error("Küçük amblem, amblemle birlikte verilir");
 }
 /** City record `map` (`GET /v1/cities`, §11.45): where the map opens in this city; the globe marker sits at `center`. */
 export interface CityMapView {

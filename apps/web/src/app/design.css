@@ -201,8 +201,9 @@ h1,
   height: 14px;
   flex: none;
   background: var(--sehir-acik);
-  -webkit-mask: var(--sehir-desen, linear-gradient(transparent, transparent)) center / contain no-repeat;
-  mask: var(--sehir-desen, linear-gradient(transparent, transparent)) center / contain no-repeat;
+  /* The city's emblem; a city without one shows a piece of its pattern. */
+  -webkit-mask: var(--sehir-amblem, var(--sehir-desen, linear-gradient(transparent, transparent))) center / contain no-repeat;
+  mask: var(--sehir-amblem, var(--sehir-desen, linear-gradient(transparent, transparent))) center / contain no-repeat;
 }
 .lang-switch {
   position: relative;

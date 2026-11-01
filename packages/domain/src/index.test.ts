@@ -376,6 +376,14 @@ test("a pattern scale is optional and, when given, a number from 0.25 to 8", () 
   for (const patternScale of [0, 0.2, 9, Number.NaN, Number.POSITIVE_INFINITY, "4" as unknown as number])
     assert.throws(() => validateCityIdentity({ ...identity, patternScale }), /Desen ölçeği/, String(patternScale));
 });
+test("an emblem is optional, an .svg file name like the pattern; its small cut needs the emblem", () => {
+  const identity = { accent: "#3D8285", pattern: "desen-konya-yildiz-gecme.svg", patternColour: "#E8DD7A" };
+  validateCityIdentity({ ...identity, emblem: "amblem-konya.svg", emblemSmall: "amblem-konya-kalin.svg" });
+  validateCityIdentity({ ...identity, emblem: "amblem-bursa.svg" });
+  for (const emblem of ["../amblem.svg", "Amblem.svg", "amblem.png", ""])
+    assert.throws(() => validateCityIdentity({ ...identity, emblem }), /amblemi/, emblem);
+  assert.throws(() => validateCityIdentity({ ...identity, emblemSmall: "amblem-konya-kalin.svg" }), /amblemle birlikte/);
+});
 test("the night theme shows a site's night file when it has one, the day model otherwise", () => {
   const day = { name: "Gündüz", bytes: 1, src: "/gunduz.glb", parts: ["Kubbe"], trust: "representative" as const };
   const night = { name: "Gece", bytes: 1, src: "/gece.glb", parts: ["Kubbe"] };

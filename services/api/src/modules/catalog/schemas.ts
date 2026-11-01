@@ -451,6 +451,14 @@ export const CityIdentityDto = z
       .number()
       .optional()
       .describe("Desen karosunun standart genişliğe oranı (kimlik.desen_olcek); yoksa 1"),
+    emblem: z
+      .string()
+      .optional()
+      .describe("Şehir ambleminin dosya adı (kimlik.amblem), /desenler/ klasöründe; örn. amblem-bursa.svg. Yoksa desen kullanılır"),
+    emblemSmall: z
+      .string()
+      .optional()
+      .describe("Amblemin 14–32 px'lik yerler için kalın çizimi (kimlik.amblem_kucuk); yoksa emblem"),
   })
   .describe("Açılış ekranının ve 3B yükleme kartının şehirden aldığı görünüm (§11.49)");
 

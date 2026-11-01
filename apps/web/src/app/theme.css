@@ -125,6 +125,10 @@
 [data-theme="night"] .city-marker:not(.city-far .city-marker:not(.ready)) {
   background: var(--glass-solid);
 }
+/* The city's emblem in its light tint: the dark accent would vanish on the dark glass. */
+[data-theme="night"] .city-marker i.city-emblem {
+  background: var(--sehir-acik);
+}
 /* The city's name in the soft blue of night's primary, not the near white of the text. */
 [data-theme="night"] .city-marker b {
   color: var(--primary);

@@ -74,7 +74,12 @@ export function OpeningScreen({
         <Emblem />
         <div className="opening-brand">AKAR</div>
         <div className="opening-city">
-          {cityName && <span key={cityName}>{cityName}</span>}
+          {cityName && (
+            <span key={cityName}>
+              {"--city-emblem" in style && <i className="opening-city-emblem" aria-hidden="true" />}
+              {cityName}
+            </span>
+          )}
         </div>
         <div className="opening-note">{t("opening.note")}</div>
       </div>
