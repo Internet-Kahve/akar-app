@@ -12,6 +12,7 @@ import {
   type UserPreferences,
   type SiteBadge,
   type SiteTask,
+  type PartCard,
   type StoryBlock,
 } from "@akar/domain";
 import {
@@ -132,6 +133,8 @@ export interface MemberPage {
   page: number;
   nextPage: number | null;
 }
+/** One story sentence or one part card of a site, the unit a voice-over or translation request can be narrowed to. */
+export type JobTarget = { storyBlockId: string } | { partCardId: string };
 /** Result of `AkarClient.narrateSite`: the request's counts and the site as the server has it afterwards. */
 export interface NarrationRun {
   /** Recordings made now (new and renewed). */
@@ -182,15 +185,15 @@ export interface AkarClient {
   ): Promise<{ site: HeritageSite; snapshot: Snapshot }>;
   /**
    * `POST /v1/admin/sites/:id/narrations`, editor and admin: records the missing and outdated voice-overs of the
-   * saved story texts, the whole site or one sentence. The server answers 503 without a voice service key and 429
-   * past its daily limit. The demo records nothing.
+   * saved story texts and part card texts, the whole site or one `target` (a sentence or a card). The server
+   * answers 503 without a voice service key and 429 past its daily limit. The demo records nothing.
    */
-  narrateSite(siteId: string, storyBlockId?: string): Promise<NarrationRun>;
+  narrateSite(siteId: string, target?: JobTarget): Promise<NarrationRun>;
   /**
-   * `POST /v1/admin/sites/:id/translate`, editor and admin: fills the empty English story texts with a machine
-   * draft (`textEnStatus` `machine`), the whole site or one sentence; written English is never touched.
+   * `POST /v1/admin/sites/:id/translate`, editor and admin: fills the empty English story and part card texts with a
+   * machine draft (status `machine`), the whole site or one `target`; written English is never touched.
    */
-  translateSite(siteId: string, storyBlockId?: string): Promise<TranslationRun>;
+  translateSite(siteId: string, target?: JobTarget): Promise<TranslationRun>;
   reset(): Promise<Snapshot>;
   /** Playable quizzes of a published site, in order; [] when it has none. */
   getQuizzes(siteId: string): Promise<PlayableQuiz[]>;
@@ -401,12 +404,14 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     }
     throw new Error("Görev bulunamadı.");
   };
-  /** The site a story request names, and (when given) its sentence; the server answers 404 for an unknown one. */
-  const storySite = (siteId: string, storyBlockId?: string) => {
+  /** The site a voice-over or translation request names, and (when given) its sentence or card; the server answers 404 for an unknown one. */
+  const storySite = (siteId: string, target?: JobTarget) => {
     const site = state.sites.find((s) => s.id === siteId);
     if (!site) throw new Error("Eser bulunamadı.");
-    if (storyBlockId !== undefined && !site.stories.some((s) => s.id === storyBlockId))
+    if (target && "storyBlockId" in target && !site.stories.some((s) => s.id === target.storyBlockId))
       throw new Error("Hikâye cümlesi bulunamadı.");
+    if (target && "partCardId" in target && !site.partCards?.some((c) => c.id === target.partCardId))
+      throw new Error("Parça kartı bulunamadı.");
     return site;
   };
   /** Marks a task done (on site once, always on site) and earns its badges; returns the ones earned now. */
@@ -507,8 +512,8 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       const snapshot = persist(reduceSnapshot(state, { type: "site", site }));
       return { site: snapshot.sites.find((s) => s.id === site.id)!, snapshot };
     },
-    async narrateSite(siteId, storyBlockId) {
-      const site = storySite(siteId, storyBlockId);
+    async narrateSite(siteId, target) {
+      const site = storySite(siteId, target);
       // The demo has no voice service: nothing is recorded, and the player keeps the browser voice.
       return {
         generated: 0,
@@ -518,12 +523,14 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
         snapshot: structuredClone(state),
       };
     },
-    async translateSite(siteId, storyBlockId) {
-      const before = storySite(siteId, storyBlockId);
+    async translateSite(siteId, target) {
+      const before = storySite(siteId, target);
+      const storyId = target && "storyBlockId" in target ? target.storyBlockId : undefined;
+      const cardId = target && "partCardId" in target ? target.partCardId : undefined;
       let translated = 0,
         skipped = 0;
       const stories = before.stories.map((s) => {
-        if (storyBlockId !== undefined && s.id !== storyBlockId) return s;
+        if (cardId !== undefined || (storyId !== undefined && s.id !== storyId)) return s;
         const patch: Partial<StoryBlock> = {};
         if (!s.textEn?.trim() && s.text.trim()) {
           patch.textEn = `${DEMO_DRAFT_MARK} ${s.text}`;
@@ -537,10 +544,25 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
         else skipped++;
         return { ...s, ...patch };
       });
+      const partCards = before.partCards?.map((c) => {
+        if (storyId !== undefined || (cardId !== undefined && c.id !== cardId)) return c;
+        const patch: Partial<PartCard> = {};
+        if (!c.titleEn?.trim() && c.title.trim()) {
+          patch.titleEn = `${DEMO_DRAFT_MARK} ${c.title}`;
+          patch.titleEnStatus = "machine";
+        }
+        if (!c.bodyEn?.trim() && c.body.trim()) {
+          patch.bodyEn = `${DEMO_DRAFT_MARK} ${c.body}`;
+          patch.bodyEnStatus = "machine";
+        }
+        if (Object.keys(patch).length) translated++;
+        else skipped++;
+        return { ...c, ...patch };
+      });
       const snapshot = persist({
         ...state,
         sites: state.sites.map((x) =>
-          x.id === siteId ? { ...x, stories } : x,
+          x.id === siteId ? { ...x, stories, ...(partCards && { partCards }) } : x,
         ),
       });
       return {

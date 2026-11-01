@@ -3380,6 +3380,13 @@ td small {
 .part-card-source {
   margin-top: 10px;
 }
+.part-card-listen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
 .scene-media-switch {
   position: absolute;
   top: 18px;

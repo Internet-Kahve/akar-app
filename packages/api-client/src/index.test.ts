@@ -394,7 +394,7 @@ test("mock: translate marks empty English as machine draft and leaves written En
       s.id === first!.id ? { ...s, textEn: "Written", simpleEn: "Plain" } : { ...s, textEn: "", simpleEn: "" },
     ),
   });
-  const one = await c.translateSite(site.id, second!.id);
+  const one = await c.translateSite(site.id, { storyBlockId: second!.id });
   assert.equal(one.translated, 1);
   const done = one.site.stories.find((s) => s.id === second!.id)!;
   assert.equal(done.textEnStatus, "machine");
@@ -405,5 +405,6 @@ test("mock: translate marks empty English as machine draft and leaves written En
   assert.equal(all.site.stories.find((s) => s.id === first!.id)!.textEnStatus, undefined);
   const voices = await c.narrateSite(site.id);
   assert.deepEqual([voices.generated, voices.skipped, voices.stale], [0, 0, 0]);
-  await assert.rejects(c.narrateSite(site.id, "no-such"));
+  await assert.rejects(c.narrateSite(site.id, { storyBlockId: "no-such" }));
+  await assert.rejects(c.narrateSite(site.id, { partCardId: "no-such" }));
 });

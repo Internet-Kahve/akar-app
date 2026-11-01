@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
-import { auditLog, cities, media, narrations, sources, storyBlocks } from "../../db/schema/index.ts";
+import { auditLog, cities, media, narrations, sitePartCards, sources, storyBlocks } from "../../db/schema/index.ts";
 import type { ErrorBody } from "../../errors.ts";
 import { DEFAULT_TTS_VOICES, parseVoiceModels } from "../../platform/tts.ts";
 import { authHeader } from "../../test/auth.ts";
@@ -42,6 +42,7 @@ before(async () => {
   await app.deps.db.insert(cities).values({ id: "bursa", name: "Bursa" });
   await app.deps.db.insert(sources).values({ id: "src-1", title: "Kaynak", kind: "book", trust: "verified" });
   await app.deps.db.insert(media).values({ id: "ph-1", kind: "photo", mime: "image/jpeg", url: "https://cdn.test/ph-1.jpg", alt: "Fotoğraf", license: "CC0", sourceId: "src-1", trust: "verified" });
+  await app.deps.db.insert(media).values({ id: "m-1", kind: "model", mime: "model/gltf-binary", url: "https://cdn.test/m-1.glb", license: "CC0", trust: "verified", title: "Model 1", bytes: 2048, parts: ["kubbe", "minare"] });
 });
 after(async () => {
   await stop?.();
@@ -73,6 +74,17 @@ async function newSite(name: string, blocks: object[]): Promise<string> {
   await call("PUT", `/v1/admin/sites/${id}/sources`, editor, { sources: [{ id: "src-1", title: "Kaynak", kind: "book", trust: "verified" }] });
   await call("PUT", `/v1/admin/sites/${id}/media`, editor, { photoIds: ["ph-1"], coverPhotoId: "ph-1" });
   const saved = await call<AdminSiteDetail>("PUT", `/v1/admin/sites/${id}/stories`, editor, { blocks });
+  assert.equal(saved.res.statusCode, 200, saved.res.body);
+  return id;
+}
+
+const card = (id: string, over: Record<string, unknown> = {}) => ({ id, parts: ["kubbe"], title: "Kubbe", body: "Orta kubbe 1491'de yapıldı.", photoIds: [], trust: "verified", ...over });
+
+/** A draft site with a model and the given part cards (and no story). */
+async function newCardSite(name: string, cards: object[]): Promise<string> {
+  const id = await newSite(name, []);
+  assert.equal((await call("PUT", `/v1/admin/sites/${id}/model`, editor, { mediaId: "m-1" })).res.statusCode, 200);
+  const saved = await call<AdminSiteDetail>("PUT", `/v1/admin/sites/${id}/part-cards`, editor, { cards });
   assert.equal(saved.res.statusCode, 200, saved.res.body);
   return id;
 }
@@ -268,4 +280,143 @@ test("removing a sentence removes its recordings and their audio", async () => {
   assert.equal(saved.res.statusCode, 200, saved.res.body);
   assert.equal((await rowsOf(id)).length, 4);
   assert.deepEqual(await app.deps.db.select({ id: media.id }).from(media).where(inArray(media.id, gone)), []);
+});
+
+test("part cards are voiced like sentences: the body in a female and a male voice per language, never the simple variant, current ones only", async () => {
+  const id = await newCardSite("Kartlı Han", [card("pk1-1", { titleEn: "Dome", bodyEn: "The central dome was built in 1491." }), card("pk1-2", { title: "Minare", body: "Tuğla minare.", parts: ["minare"] })]);
+  tts.calls.length = 0;
+
+  const first = await narrate(id);
+  assert.equal(first.res.statusCode, 200, first.res.body);
+  // pk1-1: Turkish and English body, a female and a male voice each (4); pk1-2: Turkish only (2). The title is never read.
+  assert.deepEqual(first.body, { generated: 6, skipped: 0, stale: 0 });
+  assert.equal(tts.calls.length, 6);
+  assert.ok(!tts.calls.some((c) => c.text.includes("Dome") || c.text.includes("Minare")), "titles are not spoken");
+  const rows = await rowsOf(id);
+  assert.ok(rows.every((r) => r.subjectType === "part_card" && r.variant === "text"));
+  assert.equal(rows.find((r) => r.subjectId === "pk1-1" && r.lang === "tr" && r.voice === "female")?.textHash, narrationHash(models["tr.female"]!, spokenText("tr", "Orta kubbe 1491'de yapıldı.")));
+
+  const detail = await detailOf(id);
+  const pk1 = detail.partCards.find((c) => c.id === "pk1-1")!;
+  assert.deepEqual(pk1.narrations.map((n) => [n.lang, n.variant, n.voice]), [
+    ["tr", "text", "female"],
+    ["tr", "text", "male"],
+    ["en", "text", "female"],
+    ["en", "text", "male"],
+  ]);
+  assert.equal(detail.partCards.find((c) => c.id === "pk1-2")?.narrations.length, 2);
+  assert.equal(detail.has.audio, true);
+  const files = new Set(detail.media.filter((m) => m.kind === "audio").map((m) => m.id));
+  assert.ok(pk1.narrations.every((n) => files.has(n.mediaId)), "the audio files are in the media list");
+
+  tts.calls.length = 0;
+  const second = await narrate(id);
+  assert.deepEqual(second.body, { generated: 0, skipped: 6, stale: 0 });
+  assert.equal(tts.calls.length, 0);
+
+  // The Turkish body of pk1-2 changes: its recordings are stale and not listed until regenerated; pk1-1 is untouched.
+  const oldMedia = rows.filter((r) => r.subjectId === "pk1-2").map((r) => r.mediaId);
+  const saved = await call("PUT", `/v1/admin/sites/${id}/part-cards`, editor, { cards: [card("pk1-1", { titleEn: "Dome", bodyEn: "The central dome was built in 1491." }), card("pk1-2", { title: "Minare", body: "Taş minare.", parts: ["minare"] })] });
+  assert.equal(saved.res.statusCode, 200, saved.res.body);
+  const stale = await detailOf(id);
+  assert.equal(stale.partCards.find((c) => c.id === "pk1-2")?.narrations.length, 0, "stale recordings are not listed");
+  assert.equal(stale.partCards.find((c) => c.id === "pk1-1")?.narrations.length, 4);
+  const third = await narrate(id);
+  assert.deepEqual(third.body, { generated: 2, skipped: 4, stale: 2 });
+  assert.deepEqual(await app.deps.db.select({ id: media.id }).from(media).where(inArray(media.id, oldMedia)), [], "the replaced audio is gone");
+  assert.equal((await detailOf(id)).partCards.find((c) => c.id === "pk1-2")?.narrations.length, 2);
+
+  // One card only; the audit row names the card.
+  tts.calls.length = 0;
+  const one = await narrate(id, { partCardId: "pk1-1" });
+  assert.deepEqual(one.body, { generated: 0, skipped: 4, stale: 0 });
+  await app.deps.db.update(sitePartCards).set({ body: "Başka." }).where(eq(sitePartCards.id, "pk1-1"));
+  const again = await narrate(id, { partCardId: "pk1-1" });
+  assert.deepEqual(again.body, { generated: 2, skipped: 2, stale: 2 });
+  assert.deepEqual([...new Set(tts.calls.map((c) => c.text))], ["Başka."]);
+  const audit = await app.deps.db.select().from(auditLog).where(and(eq(auditLog.entityId, id), eq(auditLog.action, NARRATION_ACTION)));
+  assert.ok(audit.every((a) => (a.after as { partCardId?: string }).partCardId !== undefined && (a.after as { storyBlockId?: string }).storyBlockId === undefined));
+});
+
+test("without an id the whole site is voiced and translated: sentences and cards", async () => {
+  const id = await newCardSite("Karma Han", [card("pk2-1")]);
+  assert.equal((await call("PUT", `/v1/admin/sites/${id}/stories`, editor, { blocks: [block("b1")] })).res.statusCode, 200);
+  tts.calls.length = 0;
+  const all = await narrate(id);
+  assert.deepEqual(all.body, { generated: 6, skipped: 0, stale: 0 }, "b1 text + simple in Turkish (4) and the card (2)");
+  const only = await narrate(id, { storyBlockId: "b1" });
+  assert.deepEqual(only.body, { generated: 0, skipped: 4, stale: 0 });
+
+  translator.calls.length = 0;
+  const done = await call<Translated>("POST", `/v1/admin/sites/${id}/translate`);
+  assert.deepEqual(done.body, { translated: 2, skipped: 0 });
+  assert.deepEqual(translator.calls, [{ text: "Han 1491'de yapıldı.", simple: "Han eskidir." }, { title: "Kubbe", body: "Orta kubbe 1491'de yapıldı." }]);
+});
+
+test("translating a card fills only its empty English fields, marks them machine and audits the card", async () => {
+  const id = await newCardSite("Çeviri Kartı Hanı", [card("pk3-1", { titleEn: "Handwritten dome" }), card("pk3-2", { title: "Minare", body: "Tuğla minare.", parts: ["minare"] }), card("pk3-3", { titleEn: "Done", bodyEn: "Done too." })]);
+  translator.calls.length = 0;
+
+  const done = await call<Translated>("POST", `/v1/admin/sites/${id}/translate`);
+  assert.equal(done.res.statusCode, 200, done.res.body);
+  assert.deepEqual(done.body, { translated: 2, skipped: 1 });
+  assert.deepEqual(translator.calls, [{ body: "Orta kubbe 1491'de yapıldı." }, { title: "Minare", body: "Tuğla minare." }], "one request per card, only the empty fields");
+  const rows = await app.deps.db.select().from(sitePartCards).where(eq(sitePartCards.siteId, id));
+  const pick = (cardId: string) => {
+    const r = rows.find((x) => x.id === cardId)!;
+    return [r.titleEn, r.titleEnStatus, r.bodyEn, r.bodyEnStatus];
+  };
+  assert.deepEqual(pick("pk3-1"), ["Handwritten dome", "reviewed", "EN: Orta kubbe 1491'de yapıldı.", "machine"]);
+  assert.deepEqual(pick("pk3-2"), ["EN: Minare", "machine", "EN: Tuğla minare.", "machine"]);
+  assert.deepEqual(pick("pk3-3"), ["Done", "reviewed", "Done too.", "reviewed"]);
+  const audit = await app.deps.db.select().from(auditLog).where(and(eq(auditLog.entityId, id), eq(auditLog.action, "partCard.translate")));
+  assert.deepEqual(audit.map((a) => (a.after as { partCardId: string }).partCardId).sort(), ["pk3-1", "pk3-2"]);
+
+  translator.calls.length = 0;
+  const again = await call<Translated>("POST", `/v1/admin/sites/${id}/translate`, editor, { partCardId: "pk3-2" });
+  assert.deepEqual(again.body, { translated: 0, skipped: 1 });
+  assert.equal(translator.calls.length, 0, "nothing is asked twice");
+  // The detail reports the English texts and their status.
+  const detail = await detailOf(id);
+  const pk2 = detail.partCards.find((c) => c.id === "pk3-2")!;
+  assert.deepEqual([pk2.titleEn, pk2.titleEnStatus, pk2.bodyEnStatus], ["EN: Minare", "machine", "machine"]);
+});
+
+test("storyBlockId and partCardId together are a 400; an unknown card is a 404; each id only reaches its own kind", async () => {
+  const id = await newCardSite("Kimlik Hanı", [card("pk4-1")]);
+  assert.equal((await call("PUT", `/v1/admin/sites/${id}/stories`, editor, { blocks: [block("b1")] })).res.statusCode, 200);
+  tts.calls.length = 0;
+  translator.calls.length = 0;
+  for (const path of ["narrations", "translate"]) {
+    const both = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/${path}`, editor, { storyBlockId: "b1", partCardId: "pk4-1" });
+    assert.equal(both.res.statusCode, 400, path);
+    assert.ok(both.body.error.fieldErrors["partCardId"], path);
+    const unknown = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/${path}`, editor, { partCardId: "yok" });
+    assert.equal(unknown.res.statusCode, 404, path);
+    assert.equal(unknown.body.error.message, "Parça kartı bulunamadı.");
+    const wrongKind = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/${path}`, editor, { partCardId: "b1" });
+    assert.equal(wrongKind.res.statusCode, 404, path);
+    const story = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/${path}`, editor, { storyBlockId: "pk4-1" });
+    assert.equal(story.res.statusCode, 404, path);
+    assert.equal(story.body.error.message, "Hikâye cümlesi bulunamadı.");
+  }
+  assert.equal(tts.calls.length, 0);
+  assert.equal(translator.calls.length, 0);
+  assert.equal((await rowsOf(id)).length, 0);
+});
+
+test("removing a part card removes its recordings and their audio, and keeps the other cards'", async () => {
+  const id = await newCardSite("Silinen Kart Hanı", [card("pk5-1"), card("pk5-2", { title: "Minare", body: "Minare metni.", parts: ["minare"] })]);
+  await narrate(id);
+  const gone = (await rowsOf(id)).filter((r) => r.subjectId === "pk5-2").map((r) => r.mediaId);
+  assert.equal(gone.length, 2);
+  const saved = await call("PUT", `/v1/admin/sites/${id}/part-cards`, editor, { cards: [card("pk5-1")] });
+  assert.equal(saved.res.statusCode, 200, saved.res.body);
+  const left = await rowsOf(id);
+  assert.deepEqual([...new Set(left.map((r) => r.subjectId))], ["pk5-1"]);
+  assert.equal(left.length, 2);
+  assert.deepEqual(await app.deps.db.select({ id: media.id }).from(media).where(inArray(media.id, gone)), []);
+  // Removing every card clears the rest.
+  await call("PUT", `/v1/admin/sites/${id}/part-cards`, editor, { cards: [] });
+  assert.equal((await rowsOf(id)).length, 0);
 });

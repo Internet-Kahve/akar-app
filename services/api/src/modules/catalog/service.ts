@@ -24,7 +24,7 @@ import {
 import { AppError } from "../../errors.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
-import { currentNarrations, loadNarrationRows, narrationsOfBlock } from "../narrations/read.ts";
+import { currentNarrations, loadNarrationRows, narrationsOfSubject } from "../narrations/read.ts";
 import { loadSampleTraces, sampleTraceDto } from "./sample-traces.ts";
 import { badgeDto, loadBadges, loadTasks, taskDto } from "./tasks.ts";
 import type { ChapterDto, ContentFlag, MapPlacementDto, SectionPhotoDto, SiteDetail, SiteSummary } from "./schemas.ts";
@@ -472,7 +472,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const extraById = new Map(extras.map((e) => [e.id, e]));
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
-  const narrationsOf = bySite(currentNarrations(narrationRows, storyRows));
+  const narrationsOf = bySite(currentNarrations(narrationRows, storyRows, partCardRows));
   const [storiesOf, sectionsOf, historyOf, partCardsOf, chaptersOf, sectionPhotosOf, tasksOf, badgesOf, tracesOf, mediaLinksOf, sourceLinksOf] = [
     bySite(storyRows),
     bySite(sectionRows),
@@ -584,7 +584,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         simpleEn: b.simpleEn,
         textEnStatus: b.textEnStatus,
         simpleEnStatus: b.simpleEnStatus,
-        narrations: narrationsOfBlock(narrationList, row.id, b.id),
+        narrations: narrationsOfSubject(narrationList, "story_block", row.id, b.id),
       })),
       sections: sections.map((s) => ({
         id: s.id,
@@ -628,9 +628,14 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         parts: c.parts,
         title: c.title,
         body: c.body,
+        titleEn: c.titleEn,
+        bodyEn: c.bodyEn,
+        titleEnStatus: c.titleEnStatus,
+        bodyEnStatus: c.bodyEnStatus,
         photoIds: c.photoIds,
         sourceId: c.sourceId,
         trust: c.trust,
+        narrations: narrationsOfSubject(narrationList, "part_card", row.id, c.id),
       })),
       tasks: tasks.map(taskDto),
       badges: badges.map(badgeDto),

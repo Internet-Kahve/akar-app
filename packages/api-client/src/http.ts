@@ -258,6 +258,12 @@ interface SiteDetailDto {
     photoIds: string[];
     sourceId: string | null;
     trust: Trust;
+    titleEn?: string | null;
+    bodyEn?: string | null;
+    titleEnStatus?: "machine" | "reviewed" | null;
+    bodyEnStatus?: "machine" | "reviewed" | null;
+    /** AI voice-overs of `body` that match the current text; absent on older API versions. */
+    narrations?: Array<{ variant: "text" | "simple"; lang: "tr" | "en"; voice: "female" | "male"; mediaId: string }>;
   }>;
   /** Absent on older API versions. */
   tasks?: Array<{
@@ -402,9 +408,9 @@ const toPhoto = (m: MediaDto): SitePhoto => ({
   trust: m.trust,
 });
 
-/** The recordings of a sentence with their playable address; one whose file is missing from the media list is left out. */
+/** The recordings of a sentence or card with their playable address; one whose file is missing from the media list is left out. */
 const mapNarrations = (
-  s: SiteDetailDto["stories"][number],
+  s: { narrations?: Array<{ variant: "text" | "simple"; lang: "tr" | "en"; voice: "female" | "male"; mediaId: string }> },
   media: MediaDto[],
 ): StoryNarration[] =>
   (s.narrations ?? []).flatMap((n) => {
@@ -558,13 +564,18 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
       }),
     }),
     ...(d.partCards?.length && {
-      partCards: d.partCards.map(({ photoIds, sourceId, ...card }) => ({
+      partCards: d.partCards.map(({ photoIds, sourceId, titleEn, bodyEn, titleEnStatus, bodyEnStatus, narrations, ...card }) => ({
         ...card,
         photos: photoIds.flatMap((id) => {
           const m = d.media.find((x) => x.id === id && x.kind === "photo");
           return m ? [toPhoto(m)] : [];
         }),
         ...(present(sourceId) && { sourceId }),
+        ...(present(titleEn) && { titleEn }),
+        ...(present(bodyEn) && { bodyEn }),
+        ...(present(titleEnStatus) && { titleEnStatus }),
+        ...(present(bodyEnStatus) && { bodyEnStatus }),
+        ...(narrations?.length && { narrations: mapNarrations({ narrations }, d.media) }),
       })),
     }),
     ...(d.tasks?.length && {
@@ -1729,6 +1740,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
             parts: c.parts,
             title: c.title,
             body: c.body,
+            titleEn: c.titleEn || null,
+            bodyEn: c.bodyEn || null,
             photoIds: c.photos.map((p) => mediaId(p.id)),
             trust: c.trust,
             sourceId: c.sourceId || null,
@@ -2122,23 +2135,23 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         const reload = await run(command);
         return build(reload);
       }),
-    narrateSite: (siteId, storyBlockId) =>
+    narrateSite: (siteId, target) =>
       enqueue(async () => {
         const id = createdIds.get(siteId) ?? siteId;
         const counts = await call<Omit<NarrationRun, "site" | "snapshot">>(
           "POST",
           `/v1/admin/sites/${encodeURIComponent(id)}/narrations`,
-          { body: storyBlockId ? { storyBlockId } : {} },
+          { body: target ?? {} },
         );
         return { ...counts, ...(await reloadAdminSite(id)) };
       }),
-    translateSite: (siteId, storyBlockId) =>
+    translateSite: (siteId, target) =>
       enqueue(async () => {
         const id = createdIds.get(siteId) ?? siteId;
         const counts = await call<Omit<TranslationRun, "site" | "snapshot">>(
           "POST",
           `/v1/admin/sites/${encodeURIComponent(id)}/translate`,
-          { body: storyBlockId ? { storyBlockId } : {} },
+          { body: target ?? {} },
         );
         return { ...counts, ...(await reloadAdminSite(id)) };
       }),

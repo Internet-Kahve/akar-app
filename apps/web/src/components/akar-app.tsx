@@ -104,6 +104,7 @@ import type { MessageKey } from "../lib/messages";
 import { readPreference, writePreference } from "../lib/preferences";
 import { deviceVoice, saveDeviceVoice, voiceFromAccount, type VoiceChoice, type VoiceGender } from "../lib/story-voice";
 import { LangProvider, Localized } from "./i18n";
+import { VoiceProvider } from "./voice";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 type View =
   | "map"
@@ -461,18 +462,18 @@ export function AkarApp() {
   }, []);
   // The new snapshot makes the site list and the editor's site agree; the editor shows the returned site.
   const narrateSite = useCallback<AkarClient["narrateSite"]>(
-    async (siteId, storyBlockId) => {
+    async (siteId, target) => {
       if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
-      const run = await client.current.narrateSite(siteId, storyBlockId);
+      const run = await client.current.narrateSite(siteId, target);
       setState(run.snapshot);
       return run;
     },
     [],
   );
   const translateSite = useCallback<AkarClient["translateSite"]>(
-    async (siteId, storyBlockId) => {
+    async (siteId, target) => {
       if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
-      const run = await client.current.translateSite(siteId, storyBlockId);
+      const run = await client.current.translateSite(siteId, target);
       setState(run.snapshot);
       return run;
     },
@@ -1606,6 +1607,7 @@ export function AkarApp() {
   );
   return (
     <LangProvider lang={lang}>
+    <VoiceProvider value={{ lang: voice.lang ?? lang, gender: voice.gender ?? "female" }}>
     <Cities.Provider value={cityRecords}>
       <SourceSheetProvider
         fallback={defaultCity?.inventory?.name ?? ""}
@@ -1688,6 +1690,7 @@ export function AkarApp() {
         />
       )}
     </Cities.Provider>
+    </VoiceProvider>
     </LangProvider>
   );
 }

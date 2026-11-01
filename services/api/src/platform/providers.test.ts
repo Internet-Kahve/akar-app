@@ -73,6 +73,14 @@ test("Gemini: one request per block with the glossary prompt and a JSON schema f
   assert.deepEqual(body.generationConfig.responseSchema.required, ["text", "simple"]);
 });
 
+test("Gemini: part card fields (title, body) are translated under their own keys, and the plain-language hint is only sent with `simple`", async () => {
+  const card = scripted(gemini(candidate({ title: "Dome", body: "The dome." })));
+  assert.deepEqual(await geminiTranslator("k", "m", card.fetchImpl, async () => {}).translate({ title: "Kubbe", body: "Kubbe." }), { title: "Dome", body: "The dome." });
+  const sent = JSON.parse(String(card.calls[0]?.init.body));
+  assert.deepEqual(sent.generationConfig.responseSchema.required, ["title", "body"]);
+  assert.doesNotMatch(sent.systemInstruction.parts[0].text, /simple/);
+});
+
 test("Gemini: only the asked fields are sent; a persistent 429 ends as 502 after the bounded retries; a reply without the fields is refused", async () => {
   const only = scripted(gemini(candidate({ simple: "Hi" })));
   assert.deepEqual(await geminiTranslator("k", "m", only.fetchImpl, async () => {}).translate({ simple: "Selam" }), { simple: "Hi" });

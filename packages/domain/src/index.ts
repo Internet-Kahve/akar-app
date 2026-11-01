@@ -309,6 +309,16 @@ export interface PartCard {
   parts: string[];
   title: string;
   body: string;
+  /** English of `title`; absent when not written. */
+  titleEn?: string;
+  /** English of `body`. */
+  bodyEn?: string;
+  /** Source of `titleEn`; absent when there is no English title or the API does not track it. */
+  titleEnStatus?: TranslationStatus;
+  /** Source of `bodyEn`. */
+  bodyEnStatus?: TranslationStatus;
+  /** Voice-overs of `body` (text variant) that match the current text; absent or empty = none recorded. */
+  narrations?: StoryNarration[];
   /** Photo strip in order; the first is the cover. May be empty. */
   photos: SitePhoto[];
   sourceId?: string;

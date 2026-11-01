@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
-import { auditLog, catalogRoutes, cities, media, routeStops, siteMedia, sitePartCardPhotos, sites, sources } from "../../db/schema/index.ts";
+import { auditLog, catalogRoutes, cities, media, routeStops, siteMedia, sitePartCardPhotos, sitePartCards, sites, sources } from "../../db/schema/index.ts";
 import { AppError, type ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -708,6 +708,39 @@ test("part cards are replaced whole and in order: parts must be model parts, pho
   const unknownSite = await put("yok", [card()]);
   assert.equal(unknownSite.res.statusCode, 404);
   assert.equal((await auditOf(site.id)).filter((r) => (r.after as Record<string, unknown>)["partCards"] !== undefined).length, 5);
+});
+
+test("part card English texts follow the story rules: omitted keeps, written or changed is reviewed, unchanged keeps the status, empty clears", async () => {
+  const site = await newDraft("Parça İngilizce Hanı");
+  const base = `/v1/admin/sites/${site.id}`;
+  await send("PUT", `${base}/media`, { photoIds: ["ph-1"], coverPhotoId: "ph-1" });
+  await send("PUT", `${base}/model`, { mediaId: "m-1" });
+  const card = (over: Record<string, unknown> = {}) => ({ id: "pk-en", parts: ["kubbe"], title: "Kubbe", body: "Orta kubbe.", photoIds: [], trust: "verified", ...over });
+  const read = async () => {
+    const c = (await call<AdminSiteDetail>("GET", base, editor)).body.partCards[0]!;
+    return [c.titleEn, c.titleEnStatus, c.bodyEn, c.bodyEnStatus];
+  };
+
+  // A card saved without English has none.
+  await send("PUT", `${base}/part-cards`, { cards: [card()] });
+  assert.deepEqual(await read(), [null, null, null, null]);
+
+  // Written English is the editor's own reading.
+  await send("PUT", `${base}/part-cards`, { cards: [card({ titleEn: "Dome", bodyEn: "The central dome." })] });
+  assert.deepEqual(await read(), ["Dome", "reviewed", "The central dome.", "reviewed"]);
+
+  // Machine drafts (as the translate call writes them) stay machine while unchanged, also when the client omits the fields.
+  await app.deps.db.update(sitePartCards).set({ titleEnStatus: "machine", bodyEnStatus: "machine" }).where(eq(sitePartCards.id, "pk-en"));
+  await send("PUT", `${base}/part-cards`, { cards: [card()] });
+  assert.deepEqual(await read(), ["Dome", "machine", "The central dome.", "machine"], "omitted keeps value and status");
+  await send("PUT", `${base}/part-cards`, { cards: [card({ titleEn: "Dome", bodyEn: "The central dome." })] });
+  assert.deepEqual(await read(), ["Dome", "machine", "The central dome.", "machine"], "unchanged keeps the status");
+  await send("PUT", `${base}/part-cards`, { cards: [card({ titleEn: "Dome", bodyEn: "The big central dome." })] });
+  assert.deepEqual(await read(), ["Dome", "machine", "The big central dome.", "reviewed"], "only the changed field becomes reviewed");
+
+  // Null or blank clears value and status.
+  await send("PUT", `${base}/part-cards`, { cards: [card({ titleEn: null, bodyEn: "  " })] });
+  assert.deepEqual(await read(), [null, null, null, null]);
 });
 
 test("the panel list shows drafts with their issues and location source, filters, and pages without repeats or gaps", async () => {

@@ -1,4 +1,4 @@
-import type { StoryBlock } from "@akar/domain";
+import type { PartCard, StoryBlock } from "@akar/domain";
 import { localize, type Lang } from "./i18n";
 
 /**
@@ -14,4 +14,13 @@ export function storyText(
   const en = simple ? block.simpleEn || block.textEn : block.textEn;
   const shown = localize(lang, tr, en);
   return { tr, en, text: shown.text, lang: (lang === "en" && !shown.fallback ? "en" : "tr") as Lang };
+}
+
+/**
+ * A part card's body as the visitor hears it in the voice language: the English when written, else the Turkish
+ * (`lang: "tr"`), and the speech must then use a Turkish voice. Reading text on screen is localized per field (`Localized`).
+ */
+export function cardSpeech(card: Pick<PartCard, "body" | "bodyEn">, lang: Lang) {
+  const shown = localize(lang, card.body, card.bodyEn);
+  return { text: shown.text, lang: (lang === "en" && !shown.fallback ? "en" : "tr") as Lang };
 }

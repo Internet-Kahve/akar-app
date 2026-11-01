@@ -63,7 +63,7 @@ import { loadSampleTraces, sampleTraceDto, type SampleTraceRow } from "../catalo
 import { badgeDto, loadBadges, loadTasks, taskDto, type BadgeRow, type TaskRow } from "../catalog/tasks.ts";
 import { CITIES } from "../ingest/cities.ts";
 import { deleteUnreferencedMedia } from "../media/service.ts";
-import { currentNarrations, loadNarrationRows, narrationsOfBlock, type NarrationRow } from "../narrations/read.ts";
+import { currentNarrations, loadNarrationRows, narrationsOfSubject, type NarrationRow } from "../narrations/read.ts";
 import { APPROXIMATE_SOURCES } from "../ingest/geocode.ts";
 import type {
   AdminCardDto,
@@ -312,7 +312,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const taskRows = await loadTasks(q, ids);
   const badgeRows = await loadBadges(q, ids);
   const traceRows = await loadSampleTraces(q, ids);
-  const narrationList = currentNarrations(await loadNarrationRows(q, ids), storyRows);
+  const narrationList = currentNarrations(await loadNarrationRows(q, ids), storyRows, partCardRows);
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
@@ -577,7 +577,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       simpleEn: b.simpleEn,
       textEnStatus: b.textEnStatus,
       simpleEnStatus: b.simpleEnStatus,
-      narrations: narrationsOfBlock(a.narrations, s.id, b.id),
+      narrations: narrationsOfSubject(a.narrations, "story_block", s.id, b.id),
     })),
     sections: a.sections.map((x) => ({
       id: x.id,
@@ -621,9 +621,14 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       parts: c.parts,
       title: c.title,
       body: c.body,
+      titleEn: c.titleEn,
+      bodyEn: c.bodyEn,
+      titleEnStatus: c.titleEnStatus,
+      bodyEnStatus: c.bodyEnStatus,
       photoIds: c.photoIds,
       sourceId: c.sourceId,
       trust: c.trust,
+      narrations: narrationsOfSubject(a.narrations, "part_card", s.id, c.id),
     })),
     tasks: a.tasks.map(taskDto),
     badges: a.badges.map(badgeDto),
@@ -1262,7 +1267,7 @@ const TRUST_RANK: Record<Trust, number> = { verified: 0, inferred: 1, representa
 type EnglishState = { value: string | null; status: TranslationStatus | null };
 
 /**
- * The English text columns of a saved sentence (§11.56). A text the editor changed or wrote is their own reading
+ * The English text columns of a saved sentence or part card (§11.56, §11.59). A text the editor changed or wrote is their own reading
  * (`reviewed`); an unchanged one keeps the status it had, so a machine draft stays `machine` until someone edits it.
  * `next` undefined keeps the stored value (clients that do not know the field); empty or null clears it.
  */
@@ -1477,7 +1482,8 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
  * 3D part cards, replaced whole and in order (§11.52). Every part must be a part of the linked model, photographs
  * must be photographs the site already lists (gallery, story, earlier cards …) and the source one of the site's.
  * A card keeps its id when given (ids are global: one owned by another site is a 409); cards left out go with
- * their photograph strips. The media rows stay: a photograph no card shows any more is still the library's.
+ * their photograph strips and voice-overs. The English title and body follow the story rules (`englishState`).
+ * The media rows stay: a photograph no card shows any more is still the library's.
  */
 export function setPartCards(tx: Tx, ctx: AuditCtx, id: string, input: PartCardsInput): Promise<AdminSiteDetail> {
   return mutate(
@@ -1487,6 +1493,7 @@ export function setPartCards(tx: Tx, ctx: AuditCtx, id: string, input: PartCards
     (a) => ({ partCards: a.partCards }),
     async (before) => {
       const rows = input.cards.map((c) => ({ ...c, id: c.id ?? newId("pk", c.title) }));
+      const previous = new Map(before.partCards.map((c) => [c.id, c]));
       const errors = new FieldErrors();
       checkUnique(errors, (i) => `cards.${i}.id`, rows.map((r) => r.id), "Aynı kimlik birden fazla kartta kullanılmış.");
 
@@ -1524,10 +1531,29 @@ export function setPartCards(tx: Tx, ctx: AuditCtx, id: string, input: PartCards
 
       // The photograph strips cascade with their card.
       await tx.delete(sitePartCards).where(eq(sitePartCards.siteId, id));
-      for (const [position, { photoIds: strip, ...card }] of rows.entries()) {
-        await tx.insert(sitePartCards).values({ ...card, parts: [...new Set(card.parts)], siteId: id, position });
+      for (const [position, { photoIds: strip, titleEn: nextTitleEn, bodyEn: nextBodyEn, ...card }] of rows.entries()) {
+        const old = previous.get(card.id);
+        const titleEn = englishState(nextTitleEn, old && { value: old.titleEn, status: old.titleEnStatus });
+        const bodyEn = englishState(nextBodyEn, old && { value: old.bodyEn, status: old.bodyEnStatus });
+        await tx.insert(sitePartCards).values({
+          ...card,
+          titleEn: titleEn.value,
+          titleEnStatus: titleEn.status,
+          bodyEn: bodyEn.value,
+          bodyEnStatus: bodyEn.status,
+          parts: [...new Set(card.parts)],
+          siteId: id,
+          position,
+        });
         if (strip.length) await tx.insert(sitePartCardPhotos).values(strip.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
       }
+      // Recordings of cards the editor removed go with them (the table has no foreign key to the card); see setStories.
+      const keptIds = rows.map((r) => r.id);
+      const orphaned = await tx
+        .delete(narrations)
+        .where(and(eq(narrations.siteId, id), eq(narrations.subjectType, "part_card"), keptIds.length ? notInArray(narrations.subjectId, keptIds) : undefined))
+        .returning({ mediaId: narrations.mediaId });
+      await deleteUnreferencedMedia(tx, orphaned.map((n) => n.mediaId));
       return {};
     },
   );
