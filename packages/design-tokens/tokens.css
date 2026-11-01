@@ -85,8 +85,9 @@
   --text: #e8ecf0;
   --text-muted: #a3adba;
   --border: rgba(255, 255, 255, 0.14);
-  --primary: #e6eaee;
-  --primary-dark: #c9d0d7;
+  /* A soft blue rather than white: full buttons (Listen, chips) would glare on the dark ground. */
+  --primary: #b9c7da;
+  --primary-dark: #a1b1c7;
   --primary-light: rgba(255, 255, 255, 0.1);
   --on-primary: #141b24;
   --gold: #e3bc5e;

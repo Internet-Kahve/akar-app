@@ -1564,8 +1564,8 @@
       "minzoom": 12,
       "paint": {
         "fill-antialias": true,
-        "fill-color": "#28313D",
-        "fill-outline-color": "#333E4C",
+        "fill-color": "#2F3947",
+        "fill-outline-color": "#435069",
         "fill-opacity": 0.7
       }
     },
@@ -1580,7 +1580,7 @@
       "minzoom": 15,
       "layout": {},
       "paint": {
-        "fill-extrusion-color": "#303A48",
+        "fill-extrusion-color": "#4A576B",
         "fill-extrusion-height": [
           "interpolate",
           [
@@ -1609,7 +1609,7 @@
           ],
           0
         ],
-        "fill-extrusion-opacity": 0.35,
+        "fill-extrusion-opacity": 0.85,
         "fill-extrusion-vertical-gradient": true
       }
     },
@@ -1723,7 +1723,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#7E6A3A",
+        "line-color": "#4E5C70",
         "line-width": [
           "interpolate",
           [
@@ -2288,7 +2288,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#7E6A3A",
+        "line-color": "#4E5C70",
         "line-width": [
           "interpolate",
           [
@@ -2343,7 +2343,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#7E6A3A",
+        "line-color": "#4E5C70",
         "line-width": [
           "interpolate",
           [
@@ -2797,7 +2797,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#7E6A3A",
+        "line-color": "#4E5C70",
         "line-width": [
           "interpolate",
           [
