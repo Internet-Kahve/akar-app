@@ -528,10 +528,19 @@ export const sitePartCards = pgTable(
     parts: text("parts").array().notNull(),
     title: text("title").notNull(),
     body: text("body").notNull(),
+    /** English title and body (§11.59): null until written or machine translated; `*_status` tracks who wrote it. */
+    titleEn: text("title_en"),
+    titleEnStatus: text("title_en_status").$type<"machine" | "reviewed">(),
+    bodyEn: text("body_en"),
+    bodyEnStatus: text("body_en_status").$type<"machine" | "reviewed">(),
     sourceId: text("source_id").references(() => sources.id),
     trust: trustEnum("trust").notNull(),
   },
-  (t) => [unique("site_part_cards_order_uq").on(t.siteId, t.position)],
+  (t) => [
+    unique("site_part_cards_order_uq").on(t.siteId, t.position),
+    check("site_part_cards_title_en_status_check", sql`${t.titleEnStatus} in ('machine', 'reviewed')`),
+    check("site_part_cards_body_en_status_check", sql`${t.bodyEnStatus} in ('machine', 'reviewed')`),
+  ],
 );
 
 /** A part card's photo strip, in order; the first is the cover. */

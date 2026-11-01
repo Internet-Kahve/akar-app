@@ -1,5 +1,5 @@
 {
-  "id": "a4e329f4-a05d-4928-8967-3175f4f1d949",
+  "id": "13e25793-1ca3-49ed-a798-4f91696336b0",
   "prevId": "ab26fd0f-fec9-4b62-8122-fbb9e1e2fc8b",
   "version": "7",
   "dialect": "postgresql",
@@ -1348,6 +1348,30 @@
           "primaryKey": false,
           "notNull": true
         },
+        "title_en": {
+          "name": "title_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title_en_status": {
+          "name": "title_en_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_en": {
+          "name": "body_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_en_status": {
+          "name": "body_en_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "source_id": {
           "name": "source_id",
           "type": "text",
@@ -1403,7 +1427,16 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "site_part_cards_title_en_status_check": {
+          "name": "site_part_cards_title_en_status_check",
+          "value": "\"site_part_cards\".\"title_en_status\" in ('machine', 'reviewed')"
+        },
+        "site_part_cards_body_en_status_check": {
+          "name": "site_part_cards_body_en_status_check",
+          "value": "\"site_part_cards\".\"body_en_status\" in ('machine', 'reviewed')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.site_sample_traces": {
@@ -2283,12 +2316,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "night_model_media_id": {
-          "name": "night_model_media_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "opening_camera": {
           "name": "opening_camera",
           "type": "jsonb",
@@ -2510,19 +2537,6 @@
           "tableTo": "media",
           "columnsFrom": [
             "about_cover_media_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "sites_night_model_media_id_media_id_fk": {
-          "name": "sites_night_model_media_id_media_id_fk",
-          "tableFrom": "sites",
-          "tableTo": "media",
-          "columnsFrom": [
-            "night_model_media_id"
           ],
           "columnsTo": [
             "id"
@@ -5092,7 +5106,7 @@
       "checkConstraints": {
         "narrations_subject_type_check": {
           "name": "narrations_subject_type_check",
-          "value": "\"narrations\".\"subject_type\" in ('story_block')"
+          "value": "\"narrations\".\"subject_type\" in ('story_block', 'part_card')"
         },
         "narrations_variant_check": {
           "name": "narrations_variant_check",

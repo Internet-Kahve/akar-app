@@ -111,7 +111,7 @@ Bitti (1 Kasım, `feat/harita-prototip`):
 - [x] Geri alma: «Değişiklikleri geri al» (son kayda döner), çıkışta «Vazgeç», açı kaydı/silmesinden sonra «Geri al».
 - [x] Eski «3D oynatıcı sonraki aşamada» notları düzeltildi.
 
-**Canlıya alırken (Tamer):** migration `0029_photo_camera` (`site_media.camera`) uygulanmalı; içe aktarma panelde girilen fotoğraf açılarını korur.
+**Canlıya alırken (Tamer):** migration `0030_photo_camera` (`site_media.camera`) uygulanmalı; içe aktarma panelde girilen fotoğraf açılarını korur.
 
 Kalan:
 - [ ] **Açıları girmek** (Muhammed): 7 eserin açılış açısı, cümle açıları (Ulucami için öneriler `eserler/ulu-cami/icerik/hikaye.md` «Açı önerisi»), galeri fotoğraflarının açıları.

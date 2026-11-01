@@ -16,6 +16,8 @@ import { useWide } from "./about-reading";
 import { PART_VOICE_EVENT } from "./part-card";
 import { SourceLink, TrustTag } from "./side-sheet";
 import { storyText } from "../lib/story-text";
+import { pickNarration, type VoiceGender } from "../lib/story-voice";
+import type { Lang } from "../lib/i18n";
 import type { MessageKey } from "../lib/messages";
 import { Localized, useI18n } from "./i18n";
 
@@ -35,6 +37,9 @@ export function StoryPanel({
   onComplete,
   startListening = false,
   lang = "tr",
+  voiceLang,
+  voiceGender,
+  onVoice,
 }: {
   site: HeritageSite;
   index: number;
@@ -43,6 +48,10 @@ export function StoryPanel({
   onComplete: () => void;
   startListening?: boolean;
   lang?: "tr" | "en";
+  /** The voice the visitor listens to (language and gender of the recordings). */
+  voiceLang: Lang;
+  voiceGender: VoiceGender;
+  onVoice: (choice: { lang?: Lang; gender?: VoiceGender }) => void;
 }) {
   const { t } = useI18n();
   const wide = useWide();
@@ -57,7 +66,9 @@ export function StoryPanel({
     scrolledByHand = useRef(0),
     pickedByScroll = useRef(false),
     // The end of the speech and a tap can both reach the last sentence's end.
-    finished = useRef(false);
+    finished = useRef(false),
+    // One element for every recording: a browser that let the first tap start it lets it play on.
+    recording = useRef<HTMLAudioElement | null>(null);
   const stories = site.stories;
   const block = stories[index] ?? stories[0]!;
   const last = index >= stories.length - 1;
@@ -92,25 +103,52 @@ export function StoryPanel({
   }, []);
   useEffect(() => {
     if (!playing) return;
-    if (!("speechSynthesis" in window)) {
-      setError("site.speechUnsupported");
-      setPlaying(false);
-      return;
-    }
-    const spoken = storyText(block, simple, lang);
-    const utterance = new SpeechSynthesisUtterance(spoken.text);
-    utterance.lang = spoken.lang === "en" ? "en-US" : "tr-TR";
-    utterance.rate = rate;
-    utterance.onend = () => advance.current(index + 1);
-    utterance.onerror = (e) => {
-      if (e.error !== "interrupted" && e.error !== "canceled") {
-        setError("site.speechFailed");
+    let stopped = false;
+    // No recording for this voice, or one that fails: the browser voice reads the sentence, never silence.
+    const speak = () => {
+      if (!("speechSynthesis" in window)) {
+        setError("site.speechUnsupported");
         setPlaying(false);
+        return;
       }
+      const spoken = storyText(block, simple, voiceLang);
+      const utterance = new SpeechSynthesisUtterance(spoken.text);
+      utterance.lang = spoken.lang === "en" ? "en-US" : "tr-TR";
+      utterance.rate = rate;
+      utterance.onend = () => advance.current(index + 1);
+      utterance.onerror = (e) => {
+        if (e.error !== "interrupted" && e.error !== "canceled") {
+          setError("site.speechFailed");
+          setPlaying(false);
+        }
+      };
+      window.speechSynthesis.speak(utterance);
     };
-    window.speechSynthesis.speak(utterance);
-    return () => window.speechSynthesis.cancel();
-  }, [playing, block, rate, index, lang, simple]);
+    const clip = pickNarration(block, voiceLang, voiceGender, simple);
+    const player = clip ? (recording.current ??= new Audio()) : null;
+    if (clip && player) {
+      player.src = clip.url;
+      player.defaultPlaybackRate = rate;
+      player.playbackRate = rate;
+      player.onended = () => advance.current(index + 1);
+      player.onerror = () => {
+        if (!stopped) speak();
+      };
+      player.play().catch((e: unknown) => {
+        if (!stopped && !(e instanceof DOMException && e.name === "AbortError"))
+          speak();
+      });
+    } else speak();
+    return () => {
+      stopped = true;
+      if (player) {
+        player.onended = null;
+        player.onerror = null;
+        player.pause();
+      }
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    };
+  }, [playing, block, rate, index, voiceLang, voiceGender, simple]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -135,6 +173,9 @@ export function StoryPanel({
   const handScroll = () => {
     scrolledByHand.current = performance.now() + HAND_SCROLL_MS;
   };
+  const clip = listen
+    ? pickNarration(block, voiceLang, voiceGender, simple)
+    : undefined;
   const elapsed = stories
     .slice(0, index)
     .reduce((sum, s) => sum + sentenceSeconds(s.text), 0);
@@ -260,6 +301,33 @@ export function StoryPanel({
         <input type="checkbox" checked={simple} onChange={(e) => setSimple(e.target.checked)} />
         {t("site.simpleMode")}
       </label>
+      {listen && (
+        <div className="story-voice">
+          <div role="group" aria-label={t("site.voiceLangLabel")}>
+            {(["tr", "en"] as const).map((l) => (
+              <button
+                key={l}
+                aria-pressed={voiceLang === l}
+                onClick={() => onVoice({ lang: l })}
+              >
+                {t(l === "tr" ? "site.voiceLangTr" : "site.voiceLangEn")}
+              </button>
+            ))}
+          </div>
+          <div role="group" aria-label={t("site.voiceGenderLabel")}>
+            {(["female", "male"] as const).map((g) => (
+              <button
+                key={g}
+                aria-pressed={voiceGender === g}
+                onClick={() => onVoice({ gender: g })}
+              >
+                {t(g === "female" ? "site.voiceFemale" : "site.voiceMale")}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {listen && !clip && <p className="story-voice-note">{t("site.voiceBrowser")}</p>}
       {problem}
       <ol
         className="story-list"

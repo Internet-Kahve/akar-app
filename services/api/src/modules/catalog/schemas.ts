@@ -156,7 +156,7 @@ export type SiteSummary = z.infer<typeof SiteSummary>;
 export const SiteListResponse = pageResponse(SiteSummary);
 
 export const NarrationDto = z.object({
-  variant: z.enum(narrationVariants).describe("text = hikâye metni, simple = sade anlatım"),
+  variant: z.enum(narrationVariants).describe("text = hikâye metni (parça kartında kartın metni), simple = sade anlatım (yalnız hikâye)"),
   lang: z.enum(narrationLangs),
   voice: z.enum(narrationVoices),
   mediaId: z.string().describe("SiteDetail.media içindeki ses dosyası (kind=audio)"),
@@ -323,9 +323,16 @@ export const PartCardDto = z.object({
   parts: z.array(z.string()).describe("Kartı açan model parça adları; dokununca hepsi birlikte vurgulanır"),
   title: z.string(),
   body: z.string(),
+  titleEn: z.string().nullable().describe("Başlığın İngilizcesi"),
+  bodyEn: z.string().nullable().describe("Metnin İngilizcesi"),
+  titleEnStatus: z.enum(translationStatuses).nullable().describe("titleEn kaynağı: machine = yapay zekâ çevirisi, henüz kimse kaydetmedi; reviewed = editör kaydetti; null = EN metin yok"),
+  bodyEnStatus: z.enum(translationStatuses).nullable().describe("bodyEn kaynağı (titleEnStatus ile aynı anlam)"),
   photoIds: z.array(z.string()).describe("Kartın fotoğraf şeridi, sıralı; ilki kapak (SiteDetail.media)"),
   sourceId: z.string().nullable(),
   trust: TrustSchema,
+  narrations: z
+    .array(NarrationDto)
+    .describe("Yapay zekâ seslendirmeleri: kartın metni (Türkçe, İngilizcesi doluysa İngilizce) 4 sesle, variant her zaman text; güncel olanlar (metni değişip eskiyenler listelenmez); ses dosyaları SiteDetail.media içinde (kind=audio)"),
 });
 
 export const SiteTaskDto = z

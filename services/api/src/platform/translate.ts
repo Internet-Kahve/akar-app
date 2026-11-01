@@ -1,12 +1,12 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { AppError } from "../errors.ts";
 
-/** The Turkish texts of one story block; the translator returns the English of the fields it was given. */
-export type TranslateFields = { text?: string; simple?: string };
+/** The Turkish texts of one story block (`text`, `simple`) or part card (`title`, `body`) by field name; the translator returns the English of the fields it was given, under the same keys. */
+export type TranslateFields = Record<string, string>;
 
 /** Turkish → English translation of site texts behind an interface: Gemini in production, a fake in tests. */
 export interface Translator {
-  /** One request for one block: translates the given fields. Throws `AppError` (502) on failure. */
+  /** One request for one block or card: translates the given fields. Throws `AppError` (502) on failure. */
   translate(fields: TranslateFields): Promise<TranslateFields>;
 }
 
@@ -29,15 +29,15 @@ const PLAIN_HINT = 'The value of the key "simple" is written in simple language 
 type Sleep = (ms: number) => Promise<unknown>;
 
 /**
- * Gemini `generateContent`, one request per story block. The free tier is rate limited: a 429 (or 503) is retried a few
+ * Gemini `generateContent`, one request per story block or part card. The free tier is rate limited: a 429 (or 503) is retried a few
  * times with a growing pause, then the call fails with a 502 the panel can show.
  */
 export function geminiTranslator(apiKey: string, model: string, fetchImpl: typeof fetch = fetch, pause: Sleep = sleep): Translator {
   const url = `${GEMINI_URL}/${encodeURIComponent(model)}:generateContent`;
   return {
     async translate(fields) {
-      const keys = (["text", "simple"] as const).filter((k) => fields[k] !== undefined);
-      const input = Object.fromEntries(keys.map((k) => [k, fields[k]]));
+      const keys = Object.keys(fields);
+      const input = fields;
       const body = JSON.stringify({
         systemInstruction: { parts: [{ text: keys.includes("simple") ? `${TRANSLATE_PROMPT}\n${PLAIN_HINT}` : TRANSLATE_PROMPT }] },
         contents: [{ role: "user", parts: [{ text: JSON.stringify(input) }] }],

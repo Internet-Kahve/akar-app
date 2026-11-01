@@ -201,15 +201,22 @@
     {
       "idx": 28,
       "version": "7",
-      "when": 1793483148879,
-      "tag": "0028_night_model",
+      "when": 1793514636155,
+      "tag": "0028_part_card_en",
       "breakpoints": true
     },
     {
       "idx": 29,
       "version": "7",
-      "when": 1793539634756,
-      "tag": "0029_photo_camera",
+      "when": 1793545671193,
+      "tag": "0029_night_model",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793545671751,
+      "tag": "0030_photo_camera",
       "breakpoints": true
     }
   ]

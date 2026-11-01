@@ -1,6 +1,6 @@
 {
-  "id": "c102767c-fce5-4db8-b0ef-5b858adea3a6",
-  "prevId": "a4e329f4-a05d-4928-8967-3175f4f1d949",
+  "id": "cf17a299-1f98-4fa8-a4c8-c66eb1c860a8",
+  "prevId": "13e25793-1ca3-49ed-a798-4f91696336b0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1172,12 +1172,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "camera": {
-          "name": "camera",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -1354,6 +1348,30 @@
           "primaryKey": false,
           "notNull": true
         },
+        "title_en": {
+          "name": "title_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title_en_status": {
+          "name": "title_en_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_en": {
+          "name": "body_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body_en_status": {
+          "name": "body_en_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "source_id": {
           "name": "source_id",
           "type": "text",
@@ -1409,7 +1427,16 @@
         }
       },
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "site_part_cards_title_en_status_check": {
+          "name": "site_part_cards_title_en_status_check",
+          "value": "\"site_part_cards\".\"title_en_status\" in ('machine', 'reviewed')"
+        },
+        "site_part_cards_body_en_status_check": {
+          "name": "site_part_cards_body_en_status_check",
+          "value": "\"site_part_cards\".\"body_en_status\" in ('machine', 'reviewed')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.site_sample_traces": {
@@ -5098,7 +5125,7 @@
       "checkConstraints": {
         "narrations_subject_type_check": {
           "name": "narrations_subject_type_check",
-          "value": "\"narrations\".\"subject_type\" in ('story_block')"
+          "value": "\"narrations\".\"subject_type\" in ('story_block', 'part_card')"
         },
         "narrations_variant_check": {
           "name": "narrations_variant_check",

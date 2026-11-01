@@ -2,14 +2,85 @@
 import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight, Square, Volume2, X } from "lucide-react";
 import type { PartCard, SiteSource } from "@akar/domain";
-import { useI18n } from "./i18n";
+import type { MessageKey } from "../lib/messages";
+import { cardSpeech } from "../lib/story-text";
+import { pickCardNarration } from "../lib/story-voice";
+import { Localized, useI18n } from "./i18n";
 import { TrustTag } from "./side-sheet";
+import { useVoice } from "./voice";
 
 /** A model node name as a visitor reads it ("Tac_Kapi" → "Tac Kapi"). */
 export const partLabel = (part: string) => part.replace(/_/g, " ");
 
 /** Tells the story to stop speaking: two voices never overlap. */
 export const PART_VOICE_EVENT = "akar:part-voice";
+
+/**
+ * Plays the card's text in the visitor's voice: the recording when there is one, else the browser voice (never
+ * silence). Stops when the card closes or the voice changes.
+ */
+function useCardVoice(card: PartCard) {
+  const voice = useVoice();
+  const [playing, setPlaying] = useState(false),
+    [error, setError] = useState<MessageKey | "">(""),
+    recording = useRef<HTMLAudioElement | null>(null);
+  const clip = pickCardNarration(card, voice.lang, voice.gender);
+  useEffect(() => {
+    if (!playing) return;
+    let stopped = false;
+    const speak = () => {
+      if (!("speechSynthesis" in window)) {
+        setError("site.speechUnsupported");
+        setPlaying(false);
+        return;
+      }
+      const spoken = cardSpeech(card, voice.lang);
+      const utterance = new SpeechSynthesisUtterance(spoken.text);
+      utterance.lang = spoken.lang === "en" ? "en-US" : "tr-TR";
+      utterance.onend = () => setPlaying(false);
+      utterance.onerror = (e) => {
+        if (e.error !== "interrupted" && e.error !== "canceled") {
+          setError("site.speechFailed");
+        }
+        setPlaying(false);
+      };
+      window.speechSynthesis.speak(utterance);
+    };
+    const player = clip ? (recording.current ??= new Audio()) : null;
+    if (clip && player) {
+      player.src = clip.url;
+      player.onended = () => setPlaying(false);
+      player.onerror = () => {
+        if (!stopped) speak();
+      };
+      player.play().catch((e: unknown) => {
+        if (!stopped && !(e instanceof DOMException && e.name === "AbortError")) speak();
+      });
+    } else speak();
+    return () => {
+      stopped = true;
+      if (player) {
+        player.onended = null;
+        player.onerror = null;
+        player.pause();
+      }
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    };
+  }, [playing, card, clip, voice.lang]);
+  return {
+    playing,
+    error,
+    recorded: Boolean(clip),
+    toggle: () => {
+      setError("");
+      if (!playing) {
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        window.dispatchEvent(new Event(PART_VOICE_EVENT));
+      }
+      setPlaying((p) => !p);
+    },
+  };
+}
 
 /** 3D part card: photos sliding sideways on top, the text scrolling under them, a voice button. */
 export function PartCardDialog({
@@ -26,8 +97,8 @@ export function PartCardDialog({
   const ref = useRef<HTMLDialogElement>(null),
     strip = useRef<HTMLDivElement>(null),
     titleId = useId();
-  const [shown, setShown] = useState(0),
-    [speaking, setSpeaking] = useState(false);
+  const [shown, setShown] = useState(0);
+  const listen = useCardVoice(card);
   const source = sources.find((s) => s.id === card.sourceId);
   const count = card.photos.length;
   useEffect(() => {
@@ -36,7 +107,6 @@ export function PartCardDialog({
     dialog?.showModal();
     return () => {
       dialog?.close();
-      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       previous?.focus({ preventScroll: true });
     };
   }, []);
@@ -48,20 +118,6 @@ export function PartCardDialog({
       left: next * box.clientWidth,
       behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
-  }
-  function voice() {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    if (speaking) {
-      setSpeaking(false);
-      return;
-    }
-    window.dispatchEvent(new Event(PART_VOICE_EVENT));
-    const utterance = new SpeechSynthesisUtterance(`${card.title}. ${card.body}`);
-    utterance.lang = "tr-TR";
-    utterance.onend = utterance.onerror = () => setSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    setSpeaking(true);
   }
   return (
     <dialog
@@ -137,8 +193,8 @@ export function PartCardDialog({
         </button>
         <div className="pk-bas">
           <div>
-            <h2 id={titleId} lang={content}>
-              {card.title}
+            <h2 id={titleId}>
+              <Localized tr={card.title} en={card.titleEn} />
             </h2>
             <TrustTag
               trust={card.trust}
@@ -146,17 +202,27 @@ export function PartCardDialog({
               sources={source ? [{ title: source.title }] : []}
             />
           </div>
-          <button
-            className="round-btn pk-ses"
-            aria-pressed={speaking}
-            aria-label={speaking ? t("site.stopAudio") : t("site.listenCard")}
-            onClick={voice}
-          >
-            {speaking ? <Square size={18} /> : <Volume2 size={20} />}
-          </button>
+          {card.body.trim() && (
+            <button
+              className="round-btn pk-ses"
+              aria-pressed={listen.playing}
+              aria-label={listen.playing ? t("site.stopAudio") : t("site.listenCard")}
+              onClick={listen.toggle}
+            >
+              {listen.playing ? <Square size={18} /> : <Volume2 size={20} />}
+            </button>
+          )}
         </div>
         <div className="pk-metin">
-          <p lang={content}>{card.body}</p>
+          <p>
+            <Localized tr={card.body} en={card.bodyEn} />
+          </p>
+          {listen.playing && !listen.recorded && <small className="muted">{t("site.cardVoiceBrowser")}</small>}
+          {listen.error && (
+            <p role="alert" className="error">
+              {t(listen.error)}
+            </p>
+          )}
           {source && (
             <div className="pk-kaynak">
               {t("site.sourceLabel")} <span lang={content}>{source.title}</span>

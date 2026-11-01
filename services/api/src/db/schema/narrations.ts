@@ -3,11 +3,12 @@ import { check, index, pgTable, text, timestamp, unique } from "drizzle-orm/pg-c
 import { sites } from "./catalog.ts";
 import { media } from "./media.ts";
 
-export const narrationSubjectTypes = ["story_block"] as const;
+export const narrationSubjectTypes = ["story_block", "part_card"] as const;
+export type NarrationSubjectType = (typeof narrationSubjectTypes)[number];
 export const narrationVariants = ["text", "simple"] as const;
 export const narrationLangs = ["tr", "en"] as const;
 export const narrationVoices = ["female", "male"] as const;
-/** Provenance of an English story text (`story_blocks.*_en_status`). */
+/** Provenance of an English text (`story_blocks.*_en_status`, `site_part_cards.*_en_status`). */
 export const translationStatuses = ["machine", "reviewed"] as const;
 export type TranslationStatus = (typeof translationStatuses)[number];
 export type NarrationVariant = (typeof narrationVariants)[number];
@@ -16,8 +17,9 @@ export type NarrationVoice = (typeof narrationVoices)[number];
 
 /**
  * One AI voice-over recording (decision §11.56): a text of a site (`subject`), read in a language and a
- * voice, stored as `media` of kind audio. The subject has no foreign key because later PRs add other text types
- * (part cards, chapters…); the story save path removes the recordings of sentences it deletes. `text_hash` covers the
+ * voice, stored as `media` of kind audio. The subject has no foreign key because it is one of several text types
+ * (story sentences, part cards §11.59, later chapters…); the story and part card save paths remove the recordings of
+ * the sentences and cards they delete. A part card has `text` recordings only: the voice reads its body. `text_hash` covers the
  * normalized text that was sent to the voice and the voice `model`: when the current text hashes differently the
  * recording is stale, is no longer served and is replaced on the next generation.
  */
@@ -42,7 +44,7 @@ export const narrations = pgTable(
   },
   (t) => [
     unique("narrations_subject_uq").on(t.siteId, t.subjectType, t.subjectId, t.variant, t.lang, t.voice),
-    check("narrations_subject_type_check", sql`${t.subjectType} in ('story_block')`),
+    check("narrations_subject_type_check", sql`${t.subjectType} in ('story_block', 'part_card')`),
     check("narrations_variant_check", sql`${t.variant} in ('text', 'simple')`),
     check("narrations_lang_check", sql`${t.lang} in ('tr', 'en')`),
     check("narrations_voice_check", sql`${t.voice} in ('female', 'male')`),
