@@ -1036,7 +1036,18 @@ export function SiteEditor({
                 onStoryCamera: (camera) =>
                   storyField(story.id, camera ? { camera } : { camera: undefined }),
               })}
-              {...(step === 0 && { onOpening: (pose) => field("openingCamera", pose) })}
+              {...(step === 0 && {
+                onOpening: (pose) => field("openingCamera", pose),
+                onPhotoCamera: (photoId, camera) =>
+                  field(
+                    "photos",
+                    photos.map((p) => {
+                      if (p.id !== photoId) return p;
+                      const { camera: _old, ...rest } = p;
+                      return camera ? { ...rest, camera } : rest;
+                    }),
+                  ),
+              })}
             />
           ) : (
           <>

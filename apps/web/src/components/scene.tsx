@@ -408,6 +408,12 @@ export function Scene({
             // The site page opens on the editor's opening angle; a story sentence keeps its own (or the last one).
             pose={pose ?? (context === "detail" ? (site.openingCamera ?? undefined) : undefined)}
             interior={interior}
+            // The site page: ← → go through the gallery photographs that have an angle on this model.
+            {...(context === "detail" && {
+              views: (site.photos ?? []).flatMap((p) =>
+                p.camera ? [{ id: p.id, src: p.src, alt: p.alt, title: text(p.title, p.titleEn), camera: p.camera }] : [],
+              ),
+            })}
             tour={context === "story" && !onPick && !highlights?.length}
             frame={card && !cardPlace ? storyCardFrame(wide) : NO_FRAME}
             partCards={site.partCards}

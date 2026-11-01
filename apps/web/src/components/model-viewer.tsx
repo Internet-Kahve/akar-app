@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import type {
   CameraPose,
   CityScene,
+  PhotoCamera,
   PartCard,
   SiteModel,
   SiteSource,
 } from "@akar/domain";
-import { ChevronDown, ChevronUp, MousePointerClick } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, MousePointerClick, X } from "lucide-react";
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -79,6 +80,7 @@ export default function ModelViewer({
   onProgress,
   onSettled,
   poseReader,
+  views,
 }: {
   model: SiteModel;
   detail?: boolean;
@@ -100,6 +102,11 @@ export default function ModelViewer({
    * at which the whole model fits. Back to null when the viewer goes.
    */
   poseReader?: { current: (() => CameraPose) | null };
+  /**
+   * Gallery photographs with an angle on this model (the site page): ← → beside «İçini göster» turn the camera to
+   * each one's view and show the photograph small beside it, to compare; ✕ goes back to where the visitor was.
+   */
+  views?: Array<{ id: string; src: string; alt: string; title: string; camera: PhotoCamera }>;
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
@@ -144,6 +151,12 @@ export default function ModelViewer({
   /** Why there is no model, in the visitor's words; empty while it loads (the stage's card shows that) and once it is drawn. */
   /** null = the model has no usable cover groups (no button). */
   const [inside, setInside] = useState<boolean | null>(null);
+  // The photograph whose view is shown (← →); null = the visitor's own view.
+  const [viewIndex, setViewIndex] = useState<number | null>(null);
+  const [viewLarge, setViewLarge] = useState(false);
+  const readPose = useRef<(() => CameraPose) | null>(null);
+  // Where the visitor was before the first arrow: ✕ goes back there.
+  const beforeViews = useRef<{ pose: CameraPose | null; inside: boolean } | null>(null);
   const heading = model.placement?.headingDeg ?? 0;
   const groupsKey = JSON.stringify(model.coverGroups ?? []);
   const lightKey = JSON.stringify(cityScene.light);
@@ -380,8 +393,7 @@ export default function ModelViewer({
             const { width, height } = element.getBoundingClientRect();
             return sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
           };
-          if (poseReader)
-            poseReader.current = () => {
+          readPose.current = () => {
               const offset = camera.position.clone().sub(controls!.target);
               const length = offset.length() || 1;
               const round = (x: number, step: number) => Math.round(x / step) * step;
@@ -392,6 +404,7 @@ export default function ModelViewer({
                 distance: round(length / fitDistance(), 0.01),
               };
             };
+          if (poseReader) poseReader.current = readPose.current;
           aim.current = (next) => {
             aimedTarget = next.target;
             // Distance at which the bounding sphere fits the narrower field of view of the free part.
@@ -712,6 +725,9 @@ export default function ModelViewer({
       disposed = true;
       aim.current = null;
       if (poseReader) poseReader.current = null;
+      readPose.current = null;
+      beforeViews.current = null;
+      setViewIndex(null);
       lift.current = null;
       select.current = null;
       spin.current = null;
@@ -761,6 +777,43 @@ export default function ModelViewer({
     }, 2500);
     return () => clearTimeout(timer);
   }, [picked]);
+  const insideButton = inside !== null && (
+    <button
+      className="btn secondary model-inside"
+      aria-pressed={inside}
+      onClick={() => {
+        lift.current?.(!inside, true);
+        setInside(!inside);
+      }}
+    >
+      {inside ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+      {inside ? t("site.showOutside") : t("site.showInside")}
+    </button>
+  );
+  /** Turns to a photograph's view; the model opens for one taken inside and closes again for one taken outside. */
+  const showView = (index: number) => {
+    const view = views?.[index];
+    if (!view || !aim.current) return;
+    if (viewIndex === null) beforeViews.current = { pose: readPose.current?.() ?? null, inside: inside ?? false };
+    const open = view.camera.interior ?? false;
+    if (inside !== null && open !== inside) {
+      lift.current?.(open, false);
+      setInside(open);
+    }
+    aim.current(view.camera);
+    setViewIndex(index);
+  };
+  const leaveViews = () => {
+    const before = beforeViews.current;
+    if (before && inside !== null && before.inside !== inside) {
+      lift.current?.(before.inside, false);
+      setInside(before.inside);
+    }
+    if (before?.pose) aim.current?.(before.pose);
+    beforeViews.current = null;
+    setViewIndex(null);
+    setViewLarge(false);
+  };
   return (
     <>
       <div className="model-canvas" ref={host} />
@@ -788,18 +841,47 @@ export default function ModelViewer({
           <MousePointerClick size={18} />
         </button>
       )}
-      {inside !== null && (
-        <button
-          className="btn secondary model-inside"
-          aria-pressed={inside}
-          onClick={() => {
-            lift.current?.(!inside, true);
-            setInside(!inside);
-          }}
-        >
-          {inside ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          {inside ? t("site.showOutside") : t("site.showInside")}
-        </button>
+      {views?.length ? (
+        <div className="model-views">
+          {viewIndex !== null && views[viewIndex] && (
+            // The photograph small beside the model it was matched to; a tap shows it larger.
+            <button
+              className={`model-view-photo${viewLarge ? " large" : ""}`}
+              onClick={() => setViewLarge(!viewLarge)}
+              aria-label={views[viewIndex]!.title || views[viewIndex]!.alt}
+            >
+              <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} />
+              <span>
+                {views[viewIndex]!.title}
+                <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>
+              </span>
+            </button>
+          )}
+          {viewIndex !== null && (
+            <button className="btn secondary model-view-btn" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
+              <X size={18} />
+            </button>
+          )}
+          <button
+            className="btn secondary model-view-btn"
+            aria-label={t("site.viewPrev")}
+            title={t("site.viewPrev")}
+            onClick={() => showView(viewIndex === null ? views.length - 1 : (viewIndex - 1 + views.length) % views.length)}
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            className="btn secondary model-view-btn"
+            aria-label={t("site.viewNext")}
+            title={t("site.viewNext")}
+            onClick={() => showView(viewIndex === null ? 0 : (viewIndex + 1) % views.length)}
+          >
+            <ChevronRight size={18} />
+          </button>
+          {insideButton}
+        </div>
+      ) : (
+        insideButton
       )}
       {picked && (
         <p className="model-part-name" role="status">

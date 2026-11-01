@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { Camera, Play, RotateCcw, Trash2, Undo2 } from "lucide-react";
-import type { CameraPose, HeritageSite, StoryBlock } from "@akar/domain";
+import type { CameraPose, HeritageSite, PhotoCamera, SitePhoto, StoryBlock } from "@akar/domain";
 import { sceneOf } from "../lib/scene-light";
 import { useCityIdentity, useCityScenes } from "./city-scenes";
 import { ModelStage } from "./model-stage";
@@ -42,6 +42,7 @@ export function AdminModelPreview({
   storyIndex = 0,
   onOpening,
   onStoryCamera,
+  onPhotoCamera,
 }: {
   site: HeritageSite;
   /** The sentence being edited (Hikâye step); absent on the Model step. */
@@ -49,6 +50,8 @@ export function AdminModelPreview({
   storyIndex?: number;
   onOpening?: (pose: CameraPose | null) => void;
   onStoryCamera?: (pose: CameraPose | null) => void;
+  /** Model step: a gallery photograph's angle (the visitor's ← → arrows in the 3D view); null removes it. */
+  onPhotoCamera?: (photoId: string, camera: PhotoCamera | null) => void;
 }) {
   const scenes = useCityScenes();
   const identity = useCityIdentity(site.city);
@@ -61,6 +64,20 @@ export function AdminModelPreview({
   const [note, setNote] = useState("");
   // The value before the last save or delete here: «Geri al» puts it back.
   const [undo, setUndo] = useState<(() => void) | null>(null);
+  // Model step: the opening angle, or the photographs' angles with the chosen one laid over the model.
+  const [tab, setTab] = useState<"opening" | "photos">("opening");
+  const photos = site.photos ?? [];
+  const [photoId, setPhotoId] = useState(photos[0]?.id ?? "");
+  const [overlay, setOverlay] = useState(50);
+  const [inside, setInside] = useState(false);
+  const photo: SitePhoto | undefined = photos.find((p) => p.id === photoId);
+  const choosePhoto = (next: SitePhoto) => {
+    setPhotoId(next.id);
+    setInside(next.camera?.interior ?? false);
+    setNote("");
+    setUndo(null);
+    if (next.camera) setShown({ pose: { ...next.camera }, interior: next.camera.interior ?? false });
+  };
   const model = site.model;
   if (!model) return null;
   const read = () => {
@@ -95,8 +112,20 @@ export function AdminModelPreview({
     if (pose) setShown({ pose: { ...pose, target: part || null } });
   };
   const own = story?.camera;
+  const photoMode = !story && onPhotoCamera && tab === "photos";
   return (
     <div className="admin-model-preview">
+      {!story && onPhotoCamera && (
+        <div className="segmented" role="group" aria-label="Açı türü">
+          <button className={tab === "opening" ? "active" : ""} aria-pressed={tab === "opening"} onClick={() => setTab("opening")}>
+            Açılış açısı
+          </button>
+          <button className={tab === "photos" ? "active" : ""} aria-pressed={tab === "photos"} onClick={() => setTab("photos")}>
+            Fotoğraf açıları · {photos.filter((p) => p.camera).length}/{photos.length}
+          </button>
+        </div>
+      )}
+      <div className="admin-model-stage">
       <ModelStage
         model={model}
         name={site.name}
@@ -108,6 +137,11 @@ export function AdminModelPreview({
         {...(shown.highlight && { highlight: shown.highlight })}
         {...(shown.interior !== undefined && { interior: shown.interior })}
       />
+      {photoMode && photo && overlay > 0 && (
+        // The photograph over the model: turn the model until the two line up, then save.
+        <img className="admin-photo-overlay" src={photo.src} alt="" style={{ opacity: overlay / 100 }} />
+      )}
+      </div>
       <label className="field">
         Bakılan yer
         <select value={target} onChange={(e) => lookAt(e.target.value)}>
@@ -118,7 +152,81 @@ export function AdminModelPreview({
         </select>
       </label>
       <p className="muted admin-model-hint">Sürükle: döndür · tekerlek: yakınlaş. Bakılan yeri seçince kamera o parçanın etrafında döner.</p>
-      {story && onStoryCamera ? (
+      {photoMode ? (
+        <>
+          <div className="admin-photo-strip" role="listbox" aria-label="Galeri fotoğrafları">
+            {photos.map((p, i) => (
+              <button
+                key={p.id}
+                role="option"
+                aria-selected={p.id === photoId}
+                className={p.id === photoId ? "active" : ""}
+                title={p.title || p.alt}
+                onClick={() => choosePhoto(p)}
+              >
+                <img src={p.src} alt={p.alt} />
+                <span>{p.camera ? "✓" : i + 1}</span>
+              </button>
+            ))}
+          </div>
+          {photo && (
+            <>
+              <label className="field">
+                Fotoğrafın görünürlüğü · %{overlay}
+                <input type="range" min={0} max={100} value={overlay} onChange={(e) => setOverlay(Number(e.target.value))} />
+              </label>
+              <label className="check-row">
+                <input
+                  type="checkbox"
+                  checked={inside}
+                  onChange={(e) => {
+                    setInside(e.target.checked);
+                    setShown((s) => ({ ...s, interior: e.target.checked }));
+                  }}
+                />
+                İçeriden çekilmiş: bu açıda model açılır («İçini göster»)
+              </label>
+              <div className="admin-model-actions">
+                <button
+                  className="btn"
+                  onClick={() => {
+                    const pose = read();
+                    if (!pose) return;
+                    const camera: PhotoCamera = { ...pose, ...(inside && { interior: true }) };
+                    change((c) => onPhotoCamera(photo.id, c as PhotoCamera | null), photo.camera, camera, `${photo.title || "Fotoğraf"}: ${poseSummary(camera)}`);
+                  }}
+                >
+                  <Camera size={16} />
+                  Açıyı kaydet → bu fotoğraf
+                </button>
+                {photo.camera && (
+                  <>
+                    <button
+                      className="btn secondary"
+                      onClick={() => setShown({ pose: { ...photo.camera! }, interior: photo.camera!.interior ?? false })}
+                    >
+                      <RotateCcw size={16} />
+                      Açısına git
+                    </button>
+                    <button
+                      className="btn secondary"
+                      onClick={() => change((c) => onPhotoCamera(photo.id, c as PhotoCamera | null), photo.camera, null, "Fotoğrafın açısı silindi.")}
+                    >
+                      <Trash2 size={16} />
+                      Sil
+                    </button>
+                  </>
+                )}
+              </div>
+              <small className="muted">
+                {photo.camera
+                  ? `Ziyaretçi 3D'de oklarla bu fotoğrafa gelince kamera buraya döner: ${poseSummary(photo.camera)}${photo.camera.interior ? " · içeriden" : ""}`
+                  : "Bu fotoğrafın açısı yok: ziyaretçinin oklarında görünmez."}
+              </small>
+            </>
+          )}
+        </>
+      ) : story && onStoryCamera ? (
         <>
           <div className="admin-model-actions">
             <button className="btn" onClick={() => save(onStoryCamera, story.camera, `Cümle ${storyIndex + 1}`)}>

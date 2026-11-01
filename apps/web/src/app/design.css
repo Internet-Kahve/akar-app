@@ -2896,6 +2896,86 @@ h1,
   height: 5px;
   background: currentColor;
 }
+/* The site page's photo views (model-viewer `views`): [photo] [✕] [←] [→] [İçini göster] in one row, bottom right. */
+.model-views {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.model-views .model-inside,
+.detail-scene .model-views .model-inside {
+  position: static;
+}
+.model-view-btn {
+  width: 40px;
+  height: 40px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid transparent;
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+  color: var(--text);
+}
+.model-view-photo {
+  position: relative;
+  width: 132px;
+  padding: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+  background: var(--surface);
+  transition: width 240ms var(--ease);
+}
+.model-view-photo.large {
+  width: 320px;
+}
+.model-view-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.model-view-photo span {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  font: 600 11px/14px var(--font);
+  color: var(--text);
+  text-align: left;
+}
+.model-view-photo small {
+  flex: none;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+@media (max-width: 899.98px) {
+  .model-views {
+    right: 12px;
+    bottom: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: calc(100% - 24px);
+  }
+  .model-view-photo {
+    width: 104px;
+  }
+  .model-view-photo.large {
+    width: min(260px, 70vw);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .model-view-photo {
+    transition: none;
+  }
+}
 .detail-scene .model-inside {
   right: 24px;
   bottom: 24px;

@@ -114,6 +114,10 @@ export const tr = {
   "site.showParts": "Tıklanabilir parçaları göster",
   "site.showInside": "İçini göster",
   "site.showOutside": "Dışını göster",
+  "site.viewPrev": "Önceki fotoğrafın açısı",
+  "site.viewNext": "Sonraki fotoğrafın açısı",
+  "site.viewsClose": "Fotoğraf açılarından çık",
+  "site.viewCount": "{index} / {total}",
   "site.modelFailedTitle": "3D model açılamadı",
   "site.modelFailedBody":
     "Bağlantı kesildi ya da dosya bozuk. Hikâye görsellerle aynı şekilde devam eder.",
@@ -391,6 +395,10 @@ export const en = {
   "site.showParts": "Show tappable parts",
   "site.showInside": "Show the inside",
   "site.showOutside": "Show the outside",
+  "site.viewPrev": "Previous photo's view",
+  "site.viewNext": "Next photo's view",
+  "site.viewsClose": "Leave the photo views",
+  "site.viewCount": "{index} / {total}",
   "site.modelFailedTitle": "The 3D model could not be opened",
   "site.modelFailedBody":
     "The connection dropped or the file is corrupt. The story carries on with the images.",
