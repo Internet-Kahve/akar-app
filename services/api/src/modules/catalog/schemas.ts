@@ -115,6 +115,10 @@ export const CameraPoseDto = z
   })
   .describe("Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık");
 
+export const PhotoCameraDto = CameraPoseDto.extend({
+  interior: z.boolean().optional().describe("true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf"),
+}).describe("Galeri fotoğrafının bu eserin 3B modelindeki açısı");
+
 export const SiteSummary = z.object({
   id: z.string(),
   name: z.string(),
@@ -415,6 +419,9 @@ export const SiteDetail = SiteSummary.extend({
     "Modelin haritadaki yerleşimi. Eserin modeli varsa ve yerleşim gösterilmek üzere kaydedilmişse dolu; aksi halde null (alan hiçbir zaman eksik olmaz)",
   ),
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
+  photoCameras: z
+    .array(z.object({ photoId: z.string(), camera: PhotoCameraDto }))
+    .describe("Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"),
   media: z
     .array(MediaDto)
     .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"),

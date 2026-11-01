@@ -28,6 +28,7 @@ import {
   timestamps,
   trustEnum,
   type CameraPose,
+  type PhotoCamera,
 } from "./shared.ts";
 
 // ── lookup tables (reference rows live in migration 0003_reference_data) ──────
@@ -243,6 +244,11 @@ export const siteMedia = pgTable(
       .notNull()
       .references(() => media.id),
     position: integer("position").notNull(),
+    /**
+     * Gallery photographs only: the 3D view of this site's model the photograph matches (the 3D view's ← → arrows,
+     * set in the panel). Per site, as one photograph may show two sites from different sides; null = none.
+     */
+    camera: jsonb("camera").$type<PhotoCamera>(),
   },
   (t) => [primaryKey({ columns: [t.siteId, t.mediaId] }), unique("site_media_order_uq").on(t.siteId, t.position)],
 );

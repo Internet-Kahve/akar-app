@@ -525,6 +525,38 @@ test("the model link is replaced, not added, and model and photo links keep vali
   assert.deepEqual(await links(), ["ph-3", "ph-1"]);
 });
 
+test("a gallery photo keeps its 3D angle through a reorder and a new model; null removes it; a foreign photo or part is refused", async () => {
+  const draft = await newDraft("Açı Hanı");
+  const base = `/v1/admin/sites/${draft.id}`;
+  await send("PUT", `${base}/model`, { mediaId: "m-1" });
+  const view = { target: "kubbe", azimuthDeg: 354, elevationDeg: 30, distance: 0.95 };
+  let site = await send("PUT", `${base}/media`, {
+    photoIds: ["ph-1", "ph-2"],
+    coverPhotoId: "ph-1",
+    cameras: { "ph-1": view, "ph-2": { ...view, target: null, interior: true } },
+  });
+  assert.deepEqual(site.photoCameras, [
+    { photoId: "ph-1", camera: view },
+    { photoId: "ph-2", camera: { ...view, target: null, interior: true } },
+  ]);
+  // A reorder without cameras keeps them; so does a new model.
+  site = await send("PUT", `${base}/media`, { photoIds: ["ph-2", "ph-1"], coverPhotoId: "ph-1" });
+  assert.deepEqual(site.photoCameras.map((c: { photoId: string }) => c.photoId), ["ph-2", "ph-1"]);
+  site = await send("PUT", `${base}/model`, { mediaId: "m-2" });
+  assert.equal(site.photoCameras.length, 2);
+  site = await send("PUT", `${base}/media`, { photoIds: ["ph-2", "ph-1"], coverPhotoId: "ph-1", cameras: { "ph-2": null } });
+  assert.deepEqual(site.photoCameras.map((c: { photoId: string }) => c.photoId), ["ph-1"]);
+
+  const refused = [
+    await call<ErrorBody>("PUT", `${base}/media`, editor, { photoIds: ["ph-1"], coverPhotoId: "ph-1", cameras: { "ph-3": view } }),
+    // m-2's parts are «avlu» only.
+    await call<ErrorBody>("PUT", `${base}/media`, editor, { photoIds: ["ph-1"], coverPhotoId: "ph-1", cameras: { "ph-1": view } }),
+  ];
+  assert.deepEqual(refused.map((r) => r.res.statusCode), [400, 400]);
+  assert.ok(refused[0]!.body.error.fieldErrors["cameras.ph-3"]);
+  assert.ok(refused[1]!.body.error.fieldErrors["cameras.ph-1.target"]);
+});
+
 test("a card is shared by reference: editing it changes what every sentence of every site shows", async () => {
   const create = await call<AdminCardDto>("POST", "/v1/admin/cards", editor, { kind: "portrait", title: "Mimar", mediaId: "ph-2", sourceId: "src-vgm", trust: "inferred" });
   assert.equal(create.res.statusCode, 201);

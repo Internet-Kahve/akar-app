@@ -21,6 +21,8 @@ export interface SitePhoto {
   sourceId: string;
   license: string;
   trust: Trust;
+  /** In a site's gallery: the 3D view of the site's model it was taken from; absent = none. */
+  camera?: PhotoCamera;
 }
 /** Where the site's model stands on the map (the API's public `SiteDetail.placement`). */
 export interface MapPlacement {
@@ -276,6 +278,13 @@ export interface CameraPose {
   azimuthDeg: number;
   elevationDeg: number;
   distance: number;
+}
+/**
+ * The 3D view a gallery photograph was taken from, on this site's model (the 3D view's ← → arrows): a camera pose and
+ * whether the model opens («İçini göster») for it, as for a photograph taken inside.
+ */
+export interface PhotoCamera extends CameraPose {
+  interior?: boolean;
 }
 export interface StoryBlock {
   id: string;

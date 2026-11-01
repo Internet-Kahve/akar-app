@@ -6,6 +6,7 @@ import {
   type AngleMatch,
   type SiteBadge,
   type CameraPose,
+  type PhotoCamera,
   type HistoryViewpoint,
   type StoryFlow,
   type Command,
@@ -279,6 +280,8 @@ interface SiteDetailDto {
   placement?: MapPlacement | null;
   /** Where the 3D view opens; `null` = the default view, absent on older API versions. */
   openingCamera?: CameraPose | null;
+  /** Gallery photographs with a 3D angle on the site's model; absent on older API versions. */
+  photoCameras?: Array<{ photoId: string; camera: PhotoCamera }>;
   /** Explicit gallery relationship; absent on older API versions. */
   photoIds?: string[];
   sources: SiteSource[];
@@ -435,13 +438,17 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ].filter(present),
   );
   const gallery = d.photoIds ? new Set(d.photoIds) : null;
+  const cameraOf = new Map((d.photoCameras ?? []).map((c) => [c.photoId, c.camera]));
   const photos = d.media
     .filter(
       (m) =>
         m.kind === "photo" &&
         (gallery ? gallery.has(m.id) : used.has(m.id) || !other.has(m.id)),
     )
-    .map(toPhoto);
+    .map((m) => {
+      const camera = cameraOf.get(m.id);
+      return camera ? { ...toPhoto(m), camera } : toPhoto(m);
+    });
   const aboutCover = d.aboutCoverMediaId
     ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
     : undefined;
@@ -1699,13 +1706,22 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       }
     }
 
-    if (photosChanged)
+    if (photosChanged) {
+      // Only the angles that changed: the server keeps the others with their photographs.
+      const before = new Map((cur.photos ?? []).map((p) => [p.id, p.camera ?? null]));
+      const cameras = Object.fromEntries(
+        photos.flatMap((p) =>
+          same(p.camera ?? null, before.get(p.id) ?? null) ? [] : [[mediaId(p.id), p.camera ?? null]],
+        ),
+      );
       await call("PUT", `${path}/media`, {
         body: {
           photoIds: photos.map((p) => mediaId(p.id)),
           coverPhotoId: site.coverPhotoId ? mediaId(site.coverPhotoId) : null,
+          ...(Object.keys(cameras).length && { cameras }),
         },
       });
+    }
 
     // A replaced photo keeps its domain id in the sentences but has a new media id.
     const remapped = site.stories.some(

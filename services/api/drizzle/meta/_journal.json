@@ -204,6 +204,13 @@
       "when": 1793483148879,
       "tag": "0028_night_model",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793539634756,
+      "tag": "0029_photo_camera",
+      "breakpoints": true
     }
   ]
 }

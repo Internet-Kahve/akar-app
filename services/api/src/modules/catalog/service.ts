@@ -457,7 +457,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
     loadBadges(db, siteIds),
     loadSampleTraces(db, siteIds),
     db
-      .select({ siteId: siteMedia.siteId, id: siteMedia.mediaId })
+      .select({ siteId: siteMedia.siteId, id: siteMedia.mediaId, camera: siteMedia.camera })
       .from(siteMedia)
       .where(inArray(siteMedia.siteId, siteIds))
       .orderBy(asc(siteMedia.siteId), asc(siteMedia.position)),
@@ -644,6 +644,9 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         (mediaLinksOf.get(row.id) ?? []).some((m) => mediaById.get(m.id)?.kind === "model"),
       ),
       photoIds: (mediaLinksOf.get(row.id) ?? []).filter((m) => mediaById.get(m.id)?.kind === "photo").map((m) => m.id),
+      photoCameras: (mediaLinksOf.get(row.id) ?? []).flatMap((m) =>
+        m.camera && mediaById.get(m.id)?.kind === "photo" ? [{ photoId: m.id, camera: m.camera }] : [],
+      ),
       media: siteMediaList.map((m) => ({
         id: m.id,
         kind: m.kind,

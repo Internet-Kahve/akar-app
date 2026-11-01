@@ -2207,6 +2207,37 @@ test("the opening angle is read from the API and saved on the linked model alone
   assert.deepEqual(put.body, { mediaId: "glb", openingCamera: next });
 });
 
+test("a gallery photo carries its 3D angle; a save sends only the angles that changed", async () => {
+  const view = { target: "kubbe", azimuthDeg: 354, elevationDeg: 30, distance: 0.95 };
+  let stored: any = {
+    ...siteA(),
+    status: "published",
+    photoIds: ["cover", "card-img", "old", "extra"],
+    photoCameras: [{ photoId: "cover", camera: view }],
+    sourceLinks: [],
+    openingCamera: null,
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored], nextCursor: null }),
+    "GET /v1/sites/a": () => stored,
+    "GET /v1/admin/sites/a": () => stored,
+    "PUT /v1/admin/sites/a/media": () => stored,
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "T", fetch: api.fetch });
+  const current = (await client.getSnapshot()).sites[0]!;
+  assert.deepEqual(current.photos?.find((p) => p.id === "cover")?.camera, view);
+  assert.equal(current.photos?.find((p) => p.id === "extra")?.camera, undefined);
+  const inside = { ...view, target: null, interior: true };
+  await client.saveSite({
+    ...current,
+    photos: current.photos!.map((p) => (p.id === "extra" ? { ...p, camera: inside } : p)),
+  });
+  const put = api.calls.find((c) => c.path.endsWith("/media"))!;
+  assert.deepEqual((put.body as { cameras: unknown }).cameras, { extra: inside });
+});
+
 test("part cards of a new model are saved only after the server has read the model's part names", async () => {
   const stored = () => ({
     ...siteA(),

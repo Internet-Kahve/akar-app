@@ -1977,6 +1977,61 @@
                       },
                       "description": "Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -2183,6 +2238,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources"
                   ],
@@ -3752,6 +3808,61 @@
                             },
                             "description": "Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"
                           },
+                          "photoCameras": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "photoId": {
+                                  "type": "string"
+                                },
+                                "camera": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "target": {
+                                      "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ]
+                                    },
+                                    "azimuthDeg": {
+                                      "type": "number",
+                                      "description": "0 = kuzeyden bakış, saat yönünde"
+                                    },
+                                    "elevationDeg": {
+                                      "type": "number"
+                                    },
+                                    "distance": {
+                                      "type": "number",
+                                      "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                    },
+                                    "interior": {
+                                      "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "target",
+                                    "azimuthDeg",
+                                    "elevationDeg",
+                                    "distance"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                                }
+                              },
+                              "required": [
+                                "photoId",
+                                "camera"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                          },
                           "media": {
                             "type": "array",
                             "items": {
@@ -3958,6 +4069,7 @@
                           "badges",
                           "placement",
                           "photoIds",
+                          "photoCameras",
                           "media",
                           "sources"
                         ],
@@ -7065,6 +7177,61 @@
                             },
                             "description": "Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"
                           },
+                          "photoCameras": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "photoId": {
+                                  "type": "string"
+                                },
+                                "camera": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "target": {
+                                      "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ]
+                                    },
+                                    "azimuthDeg": {
+                                      "type": "number",
+                                      "description": "0 = kuzeyden bakış, saat yönünde"
+                                    },
+                                    "elevationDeg": {
+                                      "type": "number"
+                                    },
+                                    "distance": {
+                                      "type": "number",
+                                      "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                    },
+                                    "interior": {
+                                      "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "target",
+                                    "azimuthDeg",
+                                    "elevationDeg",
+                                    "distance"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                                }
+                              },
+                              "required": [
+                                "photoId",
+                                "camera"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                          },
                           "media": {
                             "type": "array",
                             "items": {
@@ -7271,6 +7438,7 @@
                           "badges",
                           "placement",
                           "photoIds",
+                          "photoCameras",
                           "media",
                           "sources"
                         ],
@@ -12552,6 +12720,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -12936,6 +13159,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -14565,6 +14789,61 @@
                             },
                             "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                           },
+                          "photoCameras": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "photoId": {
+                                  "type": "string"
+                                },
+                                "camera": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string"
+                                    },
+                                    "target": {
+                                      "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                      "type": [
+                                        "string",
+                                        "null"
+                                      ]
+                                    },
+                                    "azimuthDeg": {
+                                      "type": "number",
+                                      "description": "0 = kuzeyden bakış, saat yönünde"
+                                    },
+                                    "elevationDeg": {
+                                      "type": "number"
+                                    },
+                                    "distance": {
+                                      "type": "number",
+                                      "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                    },
+                                    "interior": {
+                                      "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "target",
+                                    "azimuthDeg",
+                                    "elevationDeg",
+                                    "distance"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                                }
+                              },
+                              "required": [
+                                "photoId",
+                                "camera"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                          },
                           "media": {
                             "type": "array",
                             "items": {
@@ -14949,6 +15228,7 @@
                           "badges",
                           "placement",
                           "photoIds",
+                          "photoCameras",
                           "media",
                           "sources",
                           "status",
@@ -16542,6 +16822,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -16926,6 +17261,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -18685,6 +19021,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -19069,6 +19460,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -20682,6 +21074,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -21066,6 +21513,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -22724,6 +23172,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -23108,6 +23611,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -24716,6 +25220,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -25100,6 +25659,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -26808,6 +27368,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -27192,6 +27807,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -27248,6 +27864,68 @@
                       }
                     ],
                     "description": "photoIds içinden biri; kapak fotoğrafı"
+                  },
+                  "cameras": {
+                    "description": "Fotoğraf başına 3B açı (photoIds içinden); null = açıyı sil. Verilmeyen fotoğrafın açısı korunur",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                    },
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "maxLength": 60
+                            },
+                            "target": {
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "maxLength": 200
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "azimuthDeg": {
+                              "type": "number",
+                              "minimum": -360,
+                              "maximum": 360
+                            },
+                            "elevationDeg": {
+                              "type": "number",
+                              "minimum": -90,
+                              "maximum": 90
+                            },
+                            "distance": {
+                              "type": "number",
+                              "minimum": 0.1,
+                              "maximum": 4
+                            },
+                            "interior": {
+                              "description": "true = bu açıda model açılır, içeriden çekilmiş fotoğraf",
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "azimuthDeg",
+                            "elevationDeg",
+                            "distance"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
                   }
                 },
                 "required": [
@@ -28812,6 +29490,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -29196,6 +29929,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -30867,6 +31601,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -31251,6 +32040,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -33122,6 +33912,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -33506,6 +34351,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -35172,6 +36018,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -35556,6 +36457,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -37302,6 +38204,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -37686,6 +38643,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -39358,6 +40316,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -39742,6 +40755,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -41321,6 +42335,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -41705,6 +42774,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",
@@ -43284,6 +44354,61 @@
                       },
                       "description": "Adım 3: eserin sıralı fotoğrafları (kapak dahil)"
                     },
+                    "photoCameras": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "photoId": {
+                            "type": "string"
+                          },
+                          "camera": {
+                            "type": "object",
+                            "properties": {
+                              "label": {
+                                "type": "string"
+                              },
+                              "target": {
+                                "description": "Kameranın baktığı model parçası; null = modelin ortası",
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "azimuthDeg": {
+                                "type": "number",
+                                "description": "0 = kuzeyden bakış, saat yönünde"
+                              },
+                              "elevationDeg": {
+                                "type": "number"
+                              },
+                              "distance": {
+                                "type": "number",
+                                "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "interior": {
+                                "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "azimuthDeg",
+                              "elevationDeg",
+                              "distance"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Galeri fotoğrafının bu eserin 3B modelindeki açısı"
+                          }
+                        },
+                        "required": [
+                          "photoId",
+                          "camera"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"
+                    },
                     "media": {
                       "type": "array",
                       "items": {
@@ -43668,6 +44793,7 @@
                     "badges",
                     "placement",
                     "photoIds",
+                    "photoCameras",
                     "media",
                     "sources",
                     "status",

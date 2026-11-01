@@ -249,11 +249,18 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         await tx.insert(media).values({ id: p.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
       };
       for (const site of manifest.sites) {
-        // The seed includes every story photo; only editorial gallery entries belong in site_media.
+        // The seed includes every story photo; only editorial gallery entries belong in site_media. A gallery photo's
+        // 3D angle is set in the panel, not in the package: a re-import keeps it.
+        const cameras = new Map(
+          (await tx.select({ mediaId: siteMedia.mediaId, camera: siteMedia.camera }).from(siteMedia).where(eq(siteMedia.siteId, site.id)))
+            .flatMap((l) => (l.camera ? [[l.mediaId, l.camera] as const] : [])),
+        );
         await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
         const gallery = site.photos.filter((p) => p.galleryPosition !== null).sort((a, b) => a.galleryPosition! - b.galleryPosition!);
         const modelIds = site.model ? [`${site.id}-model`] : [];
-        await tx.insert(siteMedia).values([...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({ siteId: site.id, mediaId, position })));
+        await tx.insert(siteMedia).values(
+          [...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({ siteId: site.id, mediaId, position, camera: cameras.get(mediaId) ?? null })),
+        );
         await tx.delete(historyImages).where(eq(historyImages.siteId, site.id));
         for (const [position, h] of site.historyImages.entries()) {
           const file = files.get(h.file)!;
