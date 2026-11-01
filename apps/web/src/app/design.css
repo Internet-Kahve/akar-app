@@ -2481,12 +2481,12 @@ h1,
 .detail-panel .hikaye-blok {
   margin-top: 4px;
 }
-.detail-panel .ikili {
+:is(.detail-panel, .site-peek) .ikili {
   --h: 48px;
   display: flex;
   margin-top: 8px;
 }
-.detail-panel .ikili button {
+:is(.detail-panel, .site-peek) .ikili button {
   position: relative;
   isolation: isolate;
   display: inline-flex;
@@ -2498,15 +2498,15 @@ h1,
   font: 600 15px/1 var(--font);
   transition: transform var(--sure-1);
 }
-.detail-panel .ikili button:active {
+:is(.detail-panel, .site-peek) .ikili button:active {
   transform: scale(0.98);
 }
 /* sol yarım: sağ ucu sağdaki hapın yuvarlağına içbükey oturur (maske ::before'da, ✓ işareti kırpılmasın) */
-.detail-panel .ik-sol {
+:is(.detail-panel, .site-peek) .ik-sol {
   flex: 1;
   color: var(--on-primary, #fff);
 }
-.detail-panel .ik-sol::before {
+:is(.detail-panel, .site-peek) .ik-sol::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -2524,20 +2524,26 @@ h1,
     #000 calc(var(--h) / 2 + 4px)
   );
 }
-.detail-panel .ik-sol:active::before {
+:is(.detail-panel, .site-peek) .ik-sol:active::before {
   background: var(--primary-dark);
 }
-.detail-panel .ik-sol .bitti-tik {
+:is(.detail-panel, .site-peek) .ik-sol .bitti-tik {
   right: auto;
   left: -7px;
 }
-.detail-panel .ik-sag {
+:is(.detail-panel, .site-peek) .ik-sag {
   flex: none;
   margin-left: -16px;
   padding: 0 24px;
   background: var(--yore-tint, var(--primary-light));
   color: var(--yore-yazi, var(--primary));
 }
+/* The short card on the map: «Dinle · 1 dk | Oku» as on the site's page, in the place of the single listen button. */
+.peek-actions .ikili {
+  flex: 1;
+  margin-top: 0;
+}
+
 .detail-panel .kesif-bas {
   margin-top: 22px;
 }

@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import {
   BookmarkPlus,
+  BookOpen,
   BookOpenText,
   ChevronRight,
   Headphones,
@@ -30,6 +31,7 @@ export function SitePeek({
   saved,
   onOpen,
   onListen,
+  onRead,
   onTasks,
   onNext,
   onRoute,
@@ -43,6 +45,8 @@ export function SitePeek({
   saved: boolean;
   onOpen: () => void;
   onListen: () => void;
+  /** «Oku»: the short story to read, as on the site's page. */
+  onRead: () => void;
   onTasks: () => void;
   onNext: (id: string) => void;
   onRoute: () => void;
@@ -110,10 +114,16 @@ export function SitePeek({
       {listenFirst ? (
         <>
           <div className="peek-actions">
-            <button className="btn" onClick={onListen}>
-              <Headphones size={20} />
-              {t("site.listen", { minutes: site.minutes })}
-            </button>
+            <div className="ikili" role="group" aria-label={t("site.shortStory")}>
+              <button className="ik-sol" onClick={onListen}>
+                <Headphones size={20} />
+                {t("site.listen", { minutes: site.minutes })}
+              </button>
+              <button className="ik-sag" onClick={onRead}>
+                <BookOpen size={20} />
+                {t("app.read")}
+              </button>
+            </div>
             {route}
           </div>
           <button className="peek-more" onClick={onOpen}>

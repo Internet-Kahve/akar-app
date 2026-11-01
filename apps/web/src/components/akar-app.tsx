@@ -1195,6 +1195,7 @@ export function AkarApp() {
                             saved={state.routeIds.includes(peekSite.id)}
                             onOpen={() => selectSite(peekSite.id)}
                             onListen={() => openStory(true, 0, peekSite.id)}
+                            onRead={() => openStory(false, 0, peekSite.id)}
                             onTasks={() => selectSite(peekSite.id)}
                             onNext={pickSite}
                             onRoute={() => void toggleRoute(peekSite.id)}
