@@ -66,11 +66,17 @@ function tokenFor(email: string, role: "user" | "editor" | "moderator" | "admin"
   }).trim();
 }
 
-async function openSite(page: Page, name: string) {
+/** Picks the site in the list: the map's short card opens with its route button and «Eseri incele». */
+async function peekSite(page: Page, name: string) {
   // The page under the opening screen takes no input until the map is drawn (§11.49).
   await expect(page.locator(".opening")).toHaveCount(0);
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill(name);
   await page.locator(".site-row-main").filter({ hasText: name }).first().click();
+  await expect(page.locator(".site-peek")).toBeVisible();
+}
+
+async function openSite(page: Page, name: string) {
+  await peekSite(page, name);
   await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 }
@@ -102,7 +108,8 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   const errors: string[] = [];
   visitor.page.on("pageerror", (e) => errors.push(e.message));
   await openSite(visitor.page, MEMORY_SITE.name);
-  await visitor.page.getByRole("button", { name: /^İz Bırak/ }).click();
+  await visitor.page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
+  await visitor.page.getByRole("button", { name: /Bir anı bırak/ }).click();
   const form = visitor.page.getByRole("dialog").filter({ has: visitor.page.getByRole("heading", { name: "İz Bırak" }) });
   await form.getByLabel("Anı fotoğrafı").setInputFiles({ name: "iz.png", mimeType: "image/png", buffer: PNG });
   await expect(form.getByAltText("Paylaşılacak fotoğrafın önizlemesi")).toBeVisible();
@@ -137,8 +144,8 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   // 3. A new guest sees the approved memory with its published photo.
   const reader = await guestPage(browser);
   await openSite(reader.page, MEMORY_SITE.name);
-  await reader.page.getByRole("button", { name: /Yaşayan hafıza/ }).click();
-  const memory = reader.page.locator(".memory-public").filter({ hasText: text });
+  await reader.page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
+  const memory = reader.page.locator(".hm-iz").filter({ hasText: text });
   await expect(memory).toBeVisible();
   const photo = memory.getByRole("img", { name: "Ziyaretçinin eser fotoğrafı" });
   await expect(photo).toHaveAttribute("src", /\/object\/public\/media\//);
@@ -148,8 +155,8 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   // 4. The moderator takes the memory down from the public card (no report needed); only an admin sees "Kalıcı sil".
   await moderator.page.goto("/");
   await openSite(moderator.page, MEMORY_SITE.name);
-  await moderator.page.getByRole("button", { name: /Yaşayan hafıza/ }).click();
-  const published = moderator.page.locator(".memory-public").filter({ hasText: text });
+  await moderator.page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
+  const published = moderator.page.locator(".hm-iz").filter({ hasText: text });
   await expect(published.getByRole("button", { name: "Kalıcı sil" })).toHaveCount(0);
   const photoUrl = await published.getByRole("img", { name: "Ziyaretçinin eser fotoğrafı" }).getAttribute("src");
   await published.getByRole("button", { name: "Yayından kaldır" }).click();
@@ -181,13 +188,15 @@ test("a guest's saved site and Rotam move into the account at sign-in; Rotam the
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
 
-  // 1. As a guest: save the site and add it to Rotam (kept on the device).
-  await openSite(page, MEMORY_SITE.name);
+  // 1. As a guest: add the site to Rotam from the map's short card and save it (both kept on the device).
+  await peekSite(page, MEMORY_SITE.name);
+  const peek = page.locator(".site-peek");
+  await peek.getByRole("button", { name: "Rotama ekle" }).click();
+  await expect(peek.getByRole("button", { name: "Rotamdan çıkar" })).toBeVisible();
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   const save = page.getByRole("button", { name: "Eseri kaydet" });
   await save.click();
   await expect(save).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Rotama ekle" }).click();
-  await expect(page.getByRole("button", { name: "Rotamdan çıkar" })).toBeVisible();
 
   // 2. Sign in: both move into the account.
   await page.goto("/");
@@ -205,10 +214,11 @@ test("a guest's saved site and Rotam move into the account at sign-in; Rotam the
 
   // 3. After a reload the account's lists are shown; removing the stop writes the account's Rotam.
   await page.goto("/");
-  await openSite(page, MEMORY_SITE.name);
+  await peekSite(page, MEMORY_SITE.name);
+  await page.locator(".site-peek").getByRole("button", { name: "Rotamdan çıkar" }).click();
+  await expect(page.locator(".site-peek").getByRole("button", { name: "Rotama ekle" })).toBeVisible();
+  await page.getByRole("button", { name: "Eseri incele" }).click();
   await expect(page.getByRole("button", { name: "Eseri kaydet" })).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Rotamdan çıkar" }).click();
-  await expect(page.getByRole("button", { name: "Rotama ekle" })).toBeVisible();
   await expect.poll(account).toEqual({ route: [], saved: [MEMORY_SITE.id] });
 
   expect(errors).toEqual([]);
@@ -244,8 +254,8 @@ test("an admin deletes another visitor's approved memory permanently from the pu
   await signIn(page, adminEmail);
   await page.goto("/");
   await openSite(page, MEMORY_SITE.name);
-  await page.getByRole("button", { name: /Yaşayan hafıza/ }).click();
-  const card = page.locator(".memory-public").filter({ hasText: text });
+  await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
+  const card = page.locator(".hm-iz").filter({ hasText: text });
   await card.getByRole("button", { name: "Kalıcı sil" }).click();
   await page.getByRole("dialog", { name: "Anı kalıcı silinsin mi?" }).getByRole("button", { name: "Evet, kalıcı sil" }).click();
   await expect(card).toHaveCount(0);
@@ -349,7 +359,7 @@ test("live visits require location and only display success after server verific
   });
   await page.goto("/");
   await openSite(page, MEMORY_SITE.name);
-  await page.getByRole("button", { name: "Yanındayım", exact: true }).click();
+  await page.getByRole("button", { name: /^Yanındayım/ }).click();
   const dialog = page.getByRole("dialog", { name: "Yanındayım", exact: true });
   await expect(dialog.getByText(/Konum izni vererek/)).toBeVisible();
   await expect(dialog.getByText(/Simülasyon/)).toHaveCount(0);
@@ -466,8 +476,10 @@ test("cancelling a field task ignores its delayed completion", async ({ page }) 
   });
   try {
     await page.goto("/#view=detail&site=ulu-cami");
-    await page.getByRole("button", { name: "Geciken görev" }).click();
-    await page.getByRole("button", { name: "Evden yap", exact: true }).click();
+    await page.getByRole("button", { name: /^Bulmaca/ }).click();
+    const task = page.getByRole("dialog", { name: "Saha görevi" });
+    await expect(task).toContainText("Geciken görev");
+    await task.getByRole("button", { name: "3D modelde bul" }).click();
     await expect(page.locator(".model-status")).toHaveCount(0);
     const request = page.waitForRequest(path);
     await page.locator(".model-viewer canvas").click();
@@ -479,7 +491,7 @@ test("cancelling a field task ignores its delayed completion", async ({ page }) 
     await (await response).finished();
     // Let the fetch continuation and React commit run before asserting the dialog stays dismissed.
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    await expect(page.getByRole("dialog", { name: "Geciken görev" })).toHaveCount(0);
+    await expect(page.getByRole("dialog", { name: "Saha görevi" })).toHaveCount(0);
     await expect(page.locator(".task-pick-bar")).toHaveCount(0);
   } finally {
     release();
@@ -557,7 +569,8 @@ test("the site language follows the account: an empty account takes the device's
     await page.evaluate(() => localStorage.setItem("akar.dil", "tr"));
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.locator(".global-search input")).toHaveAttribute("placeholder", "Search sites, cities or routes");
+    // A phone shows a shorter placeholder; the field's name stays whole.
+    await expect(page.locator(".global-search input")).toHaveAttribute("aria-label", "Search sites, cities or routes");
   } finally {
     await context.close();
   }
