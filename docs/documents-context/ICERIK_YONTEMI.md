@@ -14,7 +14,7 @@
 | Orhan Bey Camii | `orhan-bey-kulliyesi/` | rota | 8 cümle | ~175 kelime | 8 + 2 (yalnız hikâye) |
 | Orhan Bey Hamamı | `orhan-bey-hamami/` | rota | 8 cümle | ~190 kelime | 5 |
 | Emir Hanı | `emir-han/` | rota | 8 cümle | ~210 kelime | 6 |
-| Orhan Gazi Türbesi | `orhan-gazi-turbesi/` | diğer (3D v02 var) | yok (görev dosyası: «hikâye yok») | ~95 kelime | 5 |
+| Orhan Gazi Türbesi | `orhan-gazi-turbesi/` | rota (1 Kas: hikâye eklendi) | 8 cümle | ~95 kelime | 5 |
 
 **Yapılmayanlar:**
 - **`ayasofya/`:** Klasördeki notlar Sinan minarelerinden ve İstanbul'daki yapıdan söz ediyor; Bursa vakıf envanterinde değil. İçerik hazırlanmadı. Bu bir İznik Ayasofya çalışmasıysa söylemen yeterli; o zaman envanter Cilt 3 metni gerekir (`veri/metin/` altında yok).
