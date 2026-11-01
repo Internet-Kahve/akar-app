@@ -68,9 +68,16 @@ export const MAP_NIGHT_LIGHT = {
   sun: 0.85,
   shadowOpacity: 0.38,
 };
-/** Sets the lights `addMapLights` put in `scene` and its shadow floor to `theme`'s; the renderer's exposure is apart. */
-export function themeMapLights(scene: THREE.Scene, theme: Theme) {
-  const light = theme === "night" ? MAP_NIGHT_LIGHT : MAP_LIGHT;
+/**
+ * The site viewer's light (detail view): the map's sky with a stronger sun, as the model is seen close up. By night
+ * the map's moonlight, a little brighter, so the presentation disc and light stone stay soft blue, not white.
+ */
+export const DETAIL_LIGHT: Record<Theme, typeof MAP_NIGHT_LIGHT> = {
+  day: { exposure: 1.05, sky: MAP_LIGHT.sky, ground: MAP_LIGHT.ground, ambient: 1.15, colour: MAP_LIGHT.colour, sun: 2.1, shadowOpacity: MAP_LIGHT.shadowOpacity },
+  night: { ...MAP_NIGHT_LIGHT, exposure: 0.85, ambient: 0.9, sun: 1.2 },
+};
+/** Sets the sky light and the shadow-casting sun in `scene` (and a shadow floor, if any) to `light`. */
+export function setSceneLights(scene: THREE.Scene, light: typeof MAP_NIGHT_LIGHT) {
   scene.traverse((node) => {
     if (node instanceof THREE.HemisphereLight) {
       node.color.setHex(light.sky);
@@ -83,6 +90,9 @@ export function themeMapLights(scene: THREE.Scene, theme: Theme) {
       node.material.opacity = light.shadowOpacity;
   });
 }
+/** Sets the lights `addMapLights` put in `scene` and its shadow floor to `theme`'s; the renderer's exposure is apart. */
+export const themeMapLights = (scene: THREE.Scene, theme: Theme) =>
+  setSceneLights(scene, theme === "night" ? MAP_NIGHT_LIGHT : MAP_LIGHT);
 /** Where the map's sun comes from, degrees clockwise from north. */
 export const mapSunAzimuth = (
   frontDeg: number | null | undefined,

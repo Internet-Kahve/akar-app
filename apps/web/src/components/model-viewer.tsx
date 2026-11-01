@@ -16,7 +16,8 @@ import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
 import { liftGroundLayers } from "../lib/ground-layers";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
-import { addSceneLights, groundShadow, saturate } from "../lib/scene-light";
+import { addSceneLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
+import { currentTheme, subscribeTheme } from "../lib/theme";
 import {
   fitHalfAngle,
   NO_FRAME,
@@ -148,6 +149,7 @@ export default function ModelViewer({
     let cancelTween = () => {};
     let cancelLift = () => {};
     let detachPointer = () => {};
+    let unfollowTheme = () => {};
     const disposeObject = (root: THREE.Object3D) =>
       root.traverse((item) => {
         if (!(item instanceof THREE.Mesh)) return;
@@ -166,7 +168,7 @@ export default function ModelViewer({
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       if (detail) {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.05;
+        renderer.toneMappingExposure = DETAIL_LIGHT[currentTheme()].exposure;
         renderer.shadowMap.enabled = true;
         // Three r186 removed PCFSoftShadowMap; its supported replacement is PCF.
         renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -295,8 +297,9 @@ export default function ModelViewer({
           object.position.sub(center);
           if (detail) {
             const R = size.length() / 2 * 1.3;
-            scene.add(new THREE.HemisphereLight(0xf4f1ea, 0x8c948f, 1.15));
-            const sun = new THREE.DirectionalLight(0xfff4e0, 2.1);
+            const lit = DETAIL_LIGHT[currentTheme()];
+            scene.add(new THREE.HemisphereLight(lit.sky, lit.ground, lit.ambient));
+            const sun = new THREE.DirectionalLight(lit.colour, lit.sun);
             const az = THREE.MathUtils.degToRad((model.placement?.frontDeg ?? 180) + 40);
             const el = THREE.MathUtils.degToRad(50);
             const target = new THREE.Vector3(0, size.y * 0.25, 0);
@@ -308,6 +311,12 @@ export default function ModelViewer({
             sun.shadow.normalBias = R / 2048;
             Object.assign(sun.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R*0.5, far:R*5 });
             scene.add(sun, sun.target);
+            // A theme switch relights the open model in place, without reloading it.
+            unfollowTheme = subscribeTheme((theme) => {
+              setSceneLights(scene, DETAIL_LIGHT[theme]);
+              renderer!.toneMappingExposure = DETAIL_LIGHT[theme].exposure;
+              render();
+            });
           }
           scene.add(object);
           if (light.groundShadow > 0) {
@@ -681,6 +690,7 @@ export default function ModelViewer({
       cancelTween();
       cancelLift();
       detachPointer();
+      unfollowTheme();
       observer?.disconnect();
       controls?.dispose();
       decoder?.dispose();
