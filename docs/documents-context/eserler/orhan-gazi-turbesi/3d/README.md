@@ -66,3 +66,9 @@ Her sürümde açık/manifold olmayan kenar 0, ≥ 0,3 m çakışma 0, 8 yönden
 - Ağaç yaprak dokusu bazı düşey yüzlerde çizgi gibi uzuyor (ortak `agac_doku.py` eşlemesi).
 - Kapı kanatlarının alt köşelerinde ince koyu üçgen (B'den kalma, onaylı).
 - `kontrol/v01/kutle_havadan`, `kutle_kuzey` ve `detay_havadan` eski (kuzeybatı/kuzey) kamera çözümüyle alındı; görüntü kare gövdenin simetrisi yüzünden aynı.
+
+## Gece varyantı (31 Ekim 2026, orhan-gazi-turbesi_v06'den)
+
+`export/night/orhan-gazi-turbesi_v06_night.glb` (uygulama, 0,18 MB) ve `export/night/orhan-gazi-turbesi_v06_night_sunum.glb` (0,50 MB). Üretim `_kutuphane/gece/` içinden: `blender -b --python gece_uret.py -- ayar/orhan-gazi-turbesi.json hepsi` (ayrıntı `_kutuphane/gece/BENIOKU.md`). Sahne `blend/orhan-gazi-turbesi_v06_night.blend`, kontrol `kontrol/night/` (repoda değil).
+
+Işık köşe rengine pişirilmiş, malzemeler `KHR_materials_unlit`; parça adları ve düğüm konumları gündüzle aynı, `model.json` ayarları geçerli. Doku WebP (`EXT_texture_webp`), normal yok. Uygulama modeli üçgen 8 342 → 15 474. Haritaya bağlı değil; telefonda ölçülmedi. Model sürümü değişirse `ayar/orhan-gazi-turbesi.json` içindeki `dosya` güncellenip yeniden üretilir.
