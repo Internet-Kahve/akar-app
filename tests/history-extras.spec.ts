@@ -34,7 +34,7 @@ const image = (
 });
 
 /** Ulucami with three archive photographs: one with the archive's pair, one with only a sample, one with neither. */
-async function openHistory(page: Page) {
+async function openHistory(page: Page, longArchive = false) {
   const snapshot = createSeed();
   const site = snapshot.sites[0]!;
   site.historyImages = [
@@ -45,6 +45,12 @@ async function openHistory(page: Page) {
     image("b", "Tarih bilinmiyor"),
     image("c", "1930"),
   ];
+  if (longArchive) {
+    site.historyImages.push(...Array.from({ length: 18 }, (_, index) => image(`extra-${index}`, "1930", {
+      presentPhoto: photo(`now-extra-${index}`, PAIR_CREDIT, "Proje için verildi"),
+      presentAngleMatch: "same",
+    })));
+  }
   const sample = (id: string, extra: Partial<SampleTrace> = {}): SampleTrace => ({
     id,
     author: "AKAR ekibi",
@@ -93,7 +99,7 @@ test("the archive's present-day pair is a slider, both photographs whole, with e
   await expect(page.locator(".history-compare-layer")).toHaveCount(2);
   await fits(page, ".history-compare-layer:not(.history-compare-old)");
   await fits(page, ".history-compare-old");
-  await expect(page.locator("aside .archive-credit")).toHaveText(OLD_CREDIT);
+  await expect(page.locator(".history-info .archive-credit")).toHaveText(OLD_CREDIT);
   await expect(page.locator(".archive-credit-today")).toHaveText(`Bugünkü fotoğraf ${PAIR_CREDIT}`);
   await expect(page.getByText("CC BY-NC-ND 4.0", { exact: true })).toBeVisible();
   await expect(page.locator(".history-near")).toHaveText(
@@ -136,7 +142,7 @@ test("without the archive's pair the newest linked sample stands in, tagged «Ö
   await expect(page.getByRole("slider")).toHaveCount(0);
   await expect(page.locator(".archive-photo > img")).toBeVisible();
   await fits(page, ".archive-photo > img");
-  await expect(page.getByText("Bu fotoğrafın bugünkü eş görüntüsü henüz eklenmedi.")).toBeVisible();
+  await expect(page.getByText("Bu açının bugünkü hali yok")).toBeVisible();
 
   const dots = page.locator(".archive-timeline .history-pair-dot");
   await expect(dots).toHaveCount(2);
@@ -159,8 +165,29 @@ test("the team's samples are listed with the «Örnek» tag, their credit line w
 
   await cards.first().getByRole("button", { name: "Eski fotoğrafı göster" }).click();
   await expect(page.locator(".archive-timeline button").nth(1)).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".archive-photo figcaption")).toContainText("Tarih bilinmiyor");
+  await expect(page.locator(".history-date")).toContainText("Tarih bilinmiyor");
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
   ).toBe(true);
+});
+
+
+test("a long archive scrolls inside its strip without widening the viewport", async ({ page }) => {
+  await openHistory(page, true);
+  await expect(page.locator(".archive-timeline button")).toHaveCount(21);
+  const width = page.viewportSize()!.width;
+  if (width < 900) {
+    const archive = await page.locator(".history-archive").boundingBox();
+    const location = await page.locator(".history-location").boundingBox();
+    expect(archive!.y).toBeLessThan(location!.y);
+    await expect(page.locator(".history-map-toggle")).toHaveAttribute("aria-expanded", "false");
+    await page.locator(".history-map-toggle").click();
+    await expect(page.locator(".history-location-map")).toBeVisible();
+  }
+
+  expect(await page.evaluate(() => innerWidth)).toBe(width);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await page.locator(".archive-timeline button").last().click();
+  await expect(page.locator(".archive-timeline button").last()).toHaveAttribute("aria-pressed", "true");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
 });

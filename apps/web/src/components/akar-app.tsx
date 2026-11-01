@@ -12,18 +12,13 @@ import {
   Search,
   MapPin,
   Route,
-  Bookmark,
   Headphones,
-  BookOpen,
   ChevronLeft,
-  History,
-  MessageSquare,
   X,
   Check,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Puzzle,
   Users,
+  Moon,
+  Sun,
 } from "lucide-react";
 import {
   createHttpClient,
@@ -47,7 +42,6 @@ import {
   type Role,
   type SiteBadge,
   type SiteCategory,
-  type SiteTask,
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap, type MapFlight } from "./heritage-map";
@@ -59,6 +53,7 @@ import {
   type ExploreTab,
   type PlaceMode,
 } from "./explore-panel";
+import { SiteDetail } from "./site-detail";
 import { SitePeek } from "./site-peek";
 import { SourceSheetProvider, WaqfSheet } from "./side-sheet";
 import { WelcomeCard } from "./welcome-card";
@@ -66,28 +61,25 @@ import { Cities } from "./city-scenes";
 import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Scene } from "./scene";
 import { HistoryView } from "./history-view";
+import { LivingMemory } from "./living-memory";
+import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { StoryPanel, StoryProgress } from "./story-panel";
 import { StoryFlowMap } from "./story-flow-map";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
-import { MemoryActions } from "./memory-actions";
 import { SignInModal } from "./sign-in-modal";
-import { Modal, Notice, Motif, Tag } from "./ui";
+import { Modal, Notice } from "./ui";
 import {
-  FieldTaskDialog,
   isFieldTask,
-  isQuizTask,
-  QuizTaskDialog,
-  SiteTasks,
   TaskPickBar,
   useSiteProgress,
   type FieldDone,
   type FieldTask,
 } from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
-import { apiUrl, getSupabase } from "../lib/supabase";
+import { apiUrl, demoContentUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
 import {
@@ -103,6 +95,7 @@ import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } fro
 import type { MessageKey } from "../lib/messages";
 import { readPreference, writePreference } from "../lib/preferences";
 import { deviceVoice, saveDeviceVoice, voiceFromAccount, type VoiceChoice, type VoiceGender } from "../lib/story-voice";
+import { applyTheme, useTheme } from "../lib/theme";
 import { LangProvider, Localized } from "./i18n";
 import { VoiceProvider } from "./voice";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
@@ -114,14 +107,14 @@ type View =
   | "story"
   | "profile"
   | "admin"
-  | "history";
+  | "history"
+  | "memories";
 type Overlay =
   | "memory"
   | "quiz"
   | "together"
   | "visit"
   | "about"
-  | "memories"
   | "reset"
   | null;
 /** Share of a phone's height the panel takes on a site's page; the scene stays above it. */
@@ -143,6 +136,7 @@ export function AkarApp() {
     [place, setPlace] = useState<PlaceMode>("home"),
     [nearPoint, setNearPoint] = useState<[number, number] | null>(null),
     [peekId, setPeekId] = useState<string>(),
+    [hoverId, setHoverId] = useState<string>(),
     [cityInView, setCityInView] = useState<CityRecord | null>(null),
     [flight, setFlight] = useState<MapFlight>(),
     [lang, setLang] = useState<Lang>("tr"),
@@ -152,6 +146,7 @@ export function AkarApp() {
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
     [sheetDragging, setSheetDragging] = useState(false),
+    theme = useTheme(),
     [routeId, setRouteId] = useState<string>(),
     [collapsed, setCollapsed] = useState(false),
     [overlay, setOverlay] = useState<Overlay>(null),
@@ -165,10 +160,7 @@ export function AkarApp() {
     ),
     // `null` = closed; the string says why the dialog opened ("" = user asked).
     [signIn, setSignIn] = useState<string | null>(null);
-  const [taskDialog, setTaskDialog] = useState<{
-    task: SiteTask;
-    result?: FieldDone;
-  } | null>(null);
+  const [puzzle, setPuzzle] = useState<{ start: number; found?: FieldDone } | null>(null);
   const [pick, setPick] = useState<{ task: FieldTask; hint: string } | null>(
     null,
   );
@@ -291,7 +283,7 @@ export function AkarApp() {
               failed: t("verify.failed"),
             }),
         })
-      : createMockClient(storage);
+      : createMockClient(storage, demoContentUrl);
     void load();
     // The opening screen names the default city and draws its pattern: its record is read beside the catalog, not after it.
     void client.current.getCities().then(setCityRecords, () => {});
@@ -308,7 +300,7 @@ export function AkarApp() {
       }
     }).data.subscription;
     const readLocation = () => {
-      setTaskDialog(null);
+      setPuzzle(null);
       setPick(null);
       setPeekId(undefined);
       const p = new URLSearchParams(location.hash.slice(1));
@@ -324,6 +316,7 @@ export function AkarApp() {
           "profile",
           "admin",
           "history",
+          "memories",
         ].includes(v)
       )
         setView(v as View);
@@ -365,7 +358,7 @@ export function AkarApp() {
     if (id) setSiteId(id);
     setPeekId(undefined);
     setOverlay(null);
-    setTaskDialog(null);
+    setPuzzle(null);
     setPick(null);
     const p = new URLSearchParams({ view: next });
     if (id) p.set("site", id);
@@ -399,6 +392,7 @@ export function AkarApp() {
     },
     [refreshProgress, t],
   );
+  const closeOverlay = useCallback(() => setOverlay(null), []);
   const signInForBadges = () => setSignIn(t("toast.badgesSignIn"));
   /** The tap of pick mode: the part goes to the server; a wrong one keeps the model waiting. */
   async function pickPart(part: string) {
@@ -416,7 +410,10 @@ export function AkarApp() {
       if (!stillCurrent()) return;
       if (result.done) {
         setPick(null);
-        setTaskDialog({ task: current.task, result });
+        setPuzzle({
+          start: Math.max(0, (site?.tasks ?? []).findIndex((x) => x.id === current.task.id)),
+          found: result,
+        });
         taskFinished(result.earnedBadges);
       } else
         setPick({
@@ -518,8 +515,17 @@ export function AkarApp() {
   const site = state.sites.find(
     (s) => s.id === siteId && s.status === "published",
   );
-  const dialogTask = taskDialog?.task;
   const memoryCount = site ? approvedMemories(state, site.id).length : 0;
+  // Back from a site's page to the map, by any way (its back button, the browser's, a link): the map shows that site,
+  // wherever the map was before (a site of Hatay opened from the list must not come back to Bursa).
+  const lastView = useRef(view);
+  useEffect(() => {
+    const from = lastView.current;
+    lastView.current = view;
+    if (view !== "map" || !["detail", "history", "memories"].includes(from) || !site) return;
+    setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "site", point: site.coordinates }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
   // «Yalnız rotada» sentences lead to the next stop: they are read only on a route.
   const storySite = useMemo(() => {
     if (!site) return undefined;
@@ -564,7 +570,9 @@ export function AkarApp() {
   }, [filtered, query, cityName, nearPoint]);
   const chipCategories = useMemo(() => categoriesOf(published), [published]);
   const peekSite = published.find((s) => s.id === peekId);
-  const pageCity = view === "detail" || view === "story" ? site?.city : undefined;
+  // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
+  // name, colour and emblem are that city's, whatever city the map was last left in.
+  const pageCity = ["detail", "story", "history", "memories"].includes(view) ? site?.city : undefined;
   const lookCity =
     cityRecords.find((c) => c.name === pageCity) ?? activeCity;
   const cityLook = cityIdentityStyle(lookCity?.identity ?? null);
@@ -578,7 +586,7 @@ export function AkarApp() {
     ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
     : undefined;
   const isDetail = ["detail", "story"].includes(view),
-    showMap = !["profile", "admin", "history"].includes(view),
+    showMap = !["profile", "admin", "history", "memories"].includes(view),
     showRoutes = tab === "routes" && !query;
   // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
   // to wait for, as soon as the page can show something.
@@ -587,7 +595,8 @@ export function AkarApp() {
     openingLate ||
     !!loadError ||
     (ready && !(showMap && !isDetail));
-  const openingCity = cityRecords.find((c) => c.isDefault);
+  // A link straight to a site of another city opens on that city, not on the default one.
+  const openingCity = cityRecords.find((c) => c.name === pageCity) ?? cityRecords.find((c) => c.isDefault);
   /** A pick on the map or in the list: the map goes there and the short card opens. */
   function pickSite(id: string) {
     setPeekId(id);
@@ -737,6 +746,11 @@ export function AkarApp() {
       isDetail ? Math.round(innerHeight * SITE_SHEET) : sheetLowest(),
     );
   }, [ready, isDetail, wide]);
+  useEffect(() => {
+    if (!ready || wide || isDetail) return;
+    setSheetHeight(routeId ? Math.round(innerHeight * 0.58) : sheetLowest());
+    if (routeId) sheet.current?.scrollTo({ top: 0 });
+  }, [ready, wide, isDetail, routeId, tab]);
   const shell = (
     <div
       className="app-shell"
@@ -782,7 +796,7 @@ export function AkarApp() {
           <Search size={18} />
           <input
             aria-label={t("header.search")}
-            placeholder={t("header.search")}
+            placeholder={t(wide ? "header.search" : "header.searchShort")}
             autoComplete="off"
             value={query}
             onChange={(e) => {
@@ -808,21 +822,30 @@ export function AkarApp() {
             }}
           >
             <i className="city-motif" aria-hidden="true" />
-            {cityName}
+            {pageCity ?? cityName}
           </button>
         </div>
-        <div className="lang-switch" role="group" aria-label={t("lang.switch")}>
+        {/* One switch: a press anywhere on it turns to the other language, and the thumb slides there. */}
+        <div className="lang-switch" role="group" aria-label={t("lang.switch")} data-lang={lang}>
           {LANGS.map((l) => (
             <button
               key={l}
               lang={l}
               aria-pressed={lang === l}
-              onClick={() => changeLanguage(l)}
+              onClick={() => changeLanguage(LANGS.find((other) => other !== lang) ?? l)}
             >
               {l.toUpperCase()}
             </button>
           ))}
         </div>
+        <button
+          className="theme-switch"
+          aria-label={t(theme === "night" ? "theme.toDay" : "theme.toNight")}
+          title={t(theme === "night" ? "theme.toDay" : "theme.toNight")}
+          onClick={() => applyTheme(theme === "night" ? "day" : "night")}
+        >
+          {theme === "night" ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
         <button
           className={`profile-button ${view === "profile" ? "active" : ""}`}
           aria-label={t("header.profile")}
@@ -853,6 +876,9 @@ export function AkarApp() {
           {view === "profile" && (
             <Profile
               state={state}
+              progress={progress}
+              onBack={() => go("map")}
+              onLanguage={changeLanguage}
               experimental={showExperimental}
               canManage={canManage}
               onExperimentalChange={setExperimental}
@@ -924,6 +950,19 @@ export function AkarApp() {
               onSite={selectSite}
             />
           )}
+          {view === "memories" && site && (
+            <LivingMemory
+              key={site.id}
+              site={site}
+              state={state}
+              role={role}
+              commit={commit}
+              onBack={() => go("detail", site.id)}
+              onAdd={() => setOverlay("memory")}
+              onHistory={() => go("history", site.id)}
+              onAbout={() => setOverlay("about")}
+            />
+          )}
           {showMap && (
             <main
               id="main-content"
@@ -935,6 +974,11 @@ export function AkarApp() {
               }
               className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""}`}
             >
+              {routeId && showRoutes && !isDetail && (
+                <button className="round-btn route-mobile-back" aria-label={t("route.all")} onClick={() => setRouteId(undefined)}>
+                  <ChevronLeft size={20} />
+                </button>
+              )}
               <aside
                 ref={sheet}
                 className={`side-panel${sheetDragging ? " dragging" : ""}`}
@@ -1022,159 +1066,11 @@ export function AkarApp() {
                     />
                   ) : (
                     <div className="detail-panel">
-                      <button
-                        className="back-to-map"
-                        onClick={() => go("map")}
-                      >
-                        <span>
-                          <ChevronLeft size={18} />
-                        </span>
-                        {t("app.map")}
-                      </button>
-                      <div className="detail-title">
-                        <div className="detail-title-row">
-                          <h1><Localized tr={site.name} en={site.nameEn} /></h1>
-                          <button
-                            className={`round-btn plain ${state.savedIds.includes(site.id) ? "saved" : ""}`}
-                            aria-label={t("app.save")}
-                            aria-pressed={state.savedIds.includes(site.id)}
-                            onClick={() =>
-                              void commit({ type: "save", siteId: site.id })
-                            }
-                          >
-                            <Bookmark size={19} />
-                          </button>
-                        </div>
-                        <p>{siteMeta(site)}</p>
-                      </div>
-                      <Motif />
-                      <p className="description">
-                        <Localized tr={site.description} en={site.descriptionEn} />
-                      </p>
-                      {site.stories.length > 0 ? (
-                        <>
-                          <p className="detail-chapters">
-                            {t(site.stories.length === 1 ? "app.chaptersOne" : "app.chapters", { count: site.stories.length })}
-                          </p>
-                          <div className="story-actions">
-                            <button
-                              className={`btn${state.readIds.includes(site.id) ? " finished" : ""}`}
-                              onClick={() => openStory(true)}
-                            >
-                              <Headphones size={18} />
-                              {t("site.listen", { minutes: site.minutes })}
-                            </button>
-                            <button
-                              className="btn secondary"
-                              onClick={() => openStory()}
-                            >
-                              <BookOpen size={18} />
-                              {t("app.read")}
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <Notice>{t("app.noStory")}</Notice>
-                      )}
-                      {showExperimental && (
-                        <p className="muted">
-                          {t("app.experimentalOn")}
-                        </p>
-                      )}
-                      <button
-                        className="detail-link"
-                        onClick={() => setOverlay("about")}
-                      >
-                        <span>
-                          <strong>{t("site.about")}</strong>
-                          <small>{t("site.aboutHint")}</small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      <button
-                        className="detail-link"
-                        onClick={() => go("history", site.id)}
-                      >
-                        <History size={18} />
-                        <span>
-                          <strong>{t("site.history")}</strong>
-                          <small>
-                            {site.historyImages?.length
-                              ? t(site.historyImages.length === 1 ? "site.historyCountOne" : "site.historyCount", { count: site.historyImages.length })
-                              : t("site.historyNone")}
-                          </small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      {showExperimental && (
-                        <div className="experience-grid">
-                          {[
-                            {
-                              icon: Puzzle,
-                              label: t("site.puzzle"),
-                              action: () => setOverlay("quiz"),
-                            },
-                            {
-                              icon: Users,
-                              label: t("site.together"),
-                              action: () => setOverlay("together"),
-                            },
-                          ].map(({ icon: Icon, label, action }) => (
-                            <button key={label} onClick={action}>
-                              <Icon size={21} />
-                              <span>{label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      <SiteTasks
-                        site={site}
-                        progress={progress}
-                        onOpen={(task) => setTaskDialog({ task })}
-                      />
-                      <button
-                        className="detail-link"
-                        onClick={() => setOverlay("memory")}
-                      >
-                        <MessageSquare size={18} />
-                        <span>
-                          <strong>{t("site.leaveTrace")}</strong>
-                          <small>{t("site.leaveTraceHint")}</small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      <button
-                        className="detail-link"
-                        onClick={() => setOverlay("memories")}
-                      >
-                        <span>
-                          <strong>{t("site.memories")}</strong>
-                          <small>
-                            {t(memoryCount === 1 ? "site.memoriesCountOne" : "site.memoriesCount", { count: memoryCount })}
-                          </small>
-                        </span>
-                        <ArrowRight size={17} />
-                      </button>
-                      <div className="detail-bottom">
-                        <button
-                          className="btn secondary"
-                          onClick={() => void toggleRoute(site.id)}
-                        >
-                          <Route size={17} />
-                          {state.routeIds.includes(site.id)
-                            ? t("site.removeRoute")
-                            : t("site.addRoute")}
-                        </button>
-                        <button
-                          className="btn"
-                          onClick={() => setOverlay("visit")}
-                        >
-                          <MapPin size={17} />
-                          {state.visitedIds.includes(site.id)
-                            ? t("site.visited")
-                            : t("site.imHere")}
-                        </button>
-                      </div>
+                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} visited={state.visitedIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
+                        onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
+                        onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
+                        onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
+                        onVisit={() => setOverlay("visit")} nextStop={nextStop} onNextStop={selectSite} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1225,6 +1121,7 @@ export function AkarApp() {
                         routeIds={state.routeIds}
                         visitedIds={state.visitedIds}
                         selectedId={peekId}
+                        onHover={setHoverId}
                         onPick={pickSite}
                         onRoute={(id) => void toggleRoute(id)}
                         onOpenRoute={(id) => {
@@ -1258,11 +1155,7 @@ export function AkarApp() {
                   aria-expanded={!collapsed}
                   onClick={togglePanel}
                 >
-                  {collapsed ? (
-                    <PanelLeftOpen size={18} />
-                  ) : (
-                    <PanelLeftClose size={18} />
-                  )}
+                  <ChevronLeft size={16} />
                 </button>
                 {isDetail && site ? (
                   <Scene
@@ -1313,11 +1206,13 @@ export function AkarApp() {
                     <HeritageMap
                       sites={routeId && routeSites.length ? routeSites : filtered}
                       selectedId={peekId}
+                      highlightId={hoverId}
                       finishedIds={state.readIds}
                       {...(lookCity?.identity && {
                         routeColour: lookCity.identity.accent,
                       })}
                       onSelect={pickSite}
+                      onOpen={selectSite}
                       onClear={() => setPeekId(undefined)}
                       onFirstDraw={() => setMapDrawn(true)}
                       onCityInView={setCityInView}
@@ -1352,6 +1247,7 @@ export function AkarApp() {
                             saved={state.routeIds.includes(peekSite.id)}
                             onOpen={() => selectSite(peekSite.id)}
                             onListen={() => openStory(true, 0, peekSite.id)}
+                            onRead={() => openStory(false, 0, peekSite.id)}
                             onTasks={() => selectSite(peekSite.id)}
                             onNext={pickSite}
                             onRoute={() => void toggleRoute(peekSite.id)}
@@ -1382,6 +1278,15 @@ export function AkarApp() {
                     />
                   </>
                 )}
+                {view === "story" && storySite && !wide && (
+                  <button
+                    className="round-btn story-stage-close"
+                    aria-label={t("site.closeStory")}
+                    onClick={() => go("detail", site!.id)}
+                  >
+                    <X size={18} />
+                  </button>
+                )}
                 {view === "story" && storySite && (
                   <StoryProgress
                     stories={storySite.stories}
@@ -1405,54 +1310,32 @@ export function AkarApp() {
                     onCancel={() => setPick(null)}
                   />
                 )}
-                {!live && (
-                  <div className="demo-label">
-                    <span />
-                    {t("app.demoLabel")}
-                  </div>
-                )}
               </div>
             </main>
           )}
         </>
       )}
-      {taskDialog &&
-        dialogTask &&
-        site &&
-        client.current &&
-        isQuizTask(dialogTask) && (
-          <QuizTaskDialog
-            key={dialogTask.id}
-            task={dialogTask}
-            client={client.current}
-            guest={guestPlayer}
-            done={progress.tasks.some((t) => t.taskId === dialogTask.id)}
-            onClose={() => setTaskDialog(null)}
-            onDone={taskFinished}
-            onSignIn={signInForBadges}
-          />
-        )}
-      {taskDialog &&
-        dialogTask &&
-        site &&
-        client.current &&
-        isFieldTask(dialogTask) && (
-          <FieldTaskDialog
-            key={dialogTask.id}
-            task={dialogTask}
-            site={site}
-            client={client.current}
-            guest={guestPlayer}
-            {...(taskDialog.result && { initial: taskDialog.result })}
-            onClose={() => setTaskDialog(null)}
-            onPickFromHome={() => {
-              setPick({ task: dialogTask, hint: "" });
-              setTaskDialog(null);
-            }}
-            onDone={taskFinished}
-            onSignIn={signInForBadges}
-          />
-        )}
+      {puzzle && site && client.current && (
+        <SitePuzzle
+          key={`${site.id}-${puzzle.start}-${puzzle.found ? "found" : "open"}`}
+          site={site}
+          client={client.current}
+          progress={progress}
+          guest={guestPlayer}
+          wide={wide}
+          start={puzzle.start}
+          found={puzzle.found}
+          onClose={() => setPuzzle(null)}
+          onDone={taskFinished}
+          onSignIn={signInForBadges}
+          onPick={(task) => {
+            if (isFieldTask(task)) setPick({ task, hint: "" });
+            setPuzzle(null);
+          }}
+          onBadges={() => go("profile")}
+          onToast={setToast}
+        />
+      )}
       {overlay === "memory" && site && (
         <MemoryModal
           site={site}
@@ -1486,44 +1369,19 @@ export function AkarApp() {
         />
       )}
       {overlay === "about" && site && (
-        <AboutModal site={site} onClose={() => setOverlay(null)} />
-      )}
-      {overlay === "memories" && site && (
-        <Modal title={t("site.memories")} onClose={() => setOverlay(null)}>
-          {approvedMemories(state, site.id).length ? (
-            approvedMemories(state, site.id).map((m) => (
-              <article className="card memory-public" key={m.id}>
-                {m.photo && (
-                  <img src={m.photo} alt={t("memories.photoAlt")} />
-                )}
-                <strong lang={tr}>{m.author}</strong>
-                <p lang={tr}>{m.text}</p>
-                <Tag tone="success">
-                  {live ? t("memories.approved") : t("memories.demoApproved")}
-                </Tag>
-                <div className="memory-actions">
-                  <MemoryActions
-                    memory={m}
-                    siteName={site.name}
-                    role={role}
-                    own={state.memories.some((x) => x.id === m.id)}
-                    commit={commit}
-                  />
-                </div>
-              </article>
-            ))
-          ) : (
-            <div className="empty-state">
-              <MessageSquare size={36} />
-              <h3>{t("memories.emptyTitle")}</h3>
-              <p>{t("memories.emptyText")}</p>
-            </div>
-          )}
-          <button className="btn full" onClick={() => setOverlay("memory")}>
-            {t("memories.add")}
-            <ArrowRight size={17} />
-          </button>
-        </Modal>
+        <AboutModal
+          site={site}
+          onClose={closeOverlay}
+          onStory={() => {
+            setOverlay(null);
+            openStory(true);
+          }}
+          onHistory={() => go("history", site.id)}
+          onPuzzle={() => {
+            setOverlay(null);
+            setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) });
+          }}
+        />
       )}
       {showExperimental && overlay === "together" && (
         <Modal title={t("site.together")} onClose={() => setOverlay(null)}>
@@ -1649,10 +1507,7 @@ export function AkarApp() {
             onClose={() => setCompletion(null)}
             onTasks={() => {
               setCompletion(null);
-              const task = (site.tasks ?? []).find(
-                (t) => !progress.tasks.some((p) => p.taskId === t.id),
-              );
-              if (task) setTaskDialog({ task });
+              setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) });
             }}
             onNextStop={(id) => {
               setCompletion(null);

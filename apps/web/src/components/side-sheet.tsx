@@ -55,6 +55,26 @@ export function TrustTag({
       }}
     >
       {t(`trust.${trust}`)}
+      <span className="info" aria-hidden="true">ⓘ</span>
+    </button>
+  );
+}
+
+/** The source written out; opens the same sheet as the trust tag. */
+export function SourceLink({
+  label,
+  trust,
+  quote,
+  sources,
+}: SourceDetail & { label: ReactNode }) {
+  const open = useContext(SheetContext);
+  return (
+    <button
+      type="button"
+      className="kaynak-link"
+      onClick={() => open({ trust, ...(quote && { quote }), ...(sources && { sources }) })}
+    >
+      {label} ›
     </button>
   );
 }

@@ -143,6 +143,7 @@ function SiteRow({
   showModelTag,
   onPick,
   onRoute,
+  onHover,
 }: {
   site: HeritageSite;
   live: boolean;
@@ -150,10 +151,15 @@ function SiteRow({
   showModelTag: boolean;
   onPick: () => void;
   onRoute: () => void;
+  onHover: (id: string | undefined) => void;
 }) {
   const { t, text } = useI18n();
   return (
-    <li className={`site-row${selected ? " selected" : ""}`}>
+    <li
+      className={`site-row${selected ? " selected" : ""}`}
+      onPointerEnter={(e) => e.pointerType === "mouse" && onHover(site.id)}
+      onPointerLeave={() => onHover(undefined)}
+    >
       <button className="site-row-main" onClick={onPick}>
         <SiteArtwork site={site} live={live} />
         <span>
@@ -190,6 +196,7 @@ export function ExplorePanel({
   routeIds,
   visitedIds,
   selectedId,
+  onHover,
   onPick,
   onRoute,
   onOpenRoute,
@@ -210,6 +217,8 @@ export function ExplorePanel({
   routeIds: string[];
   visitedIds: string[];
   selectedId?: string | undefined;
+  /** The row under the mouse, or `undefined` once it leaves: the map marks that site's pin. */
+  onHover: (id: string | undefined) => void;
   onPick: (id: string) => void;
   onRoute: (id: string) => void;
   onOpenRoute: (id: string) => void;
@@ -231,18 +240,19 @@ export function ExplorePanel({
   const someModelMissing = allSites.some((s) => !s.model);
   return (
     <div className="explore">
+      {/* Two tabs as one switch: a press anywhere on it turns to the other tab. */}
       <div className="explore-tabs" role="tablist" data-tab={tab}>
         <button
           role="tab"
           aria-selected={tab === "sites"}
-          onClick={() => onTab("sites")}
+          onClick={() => onTab(tab === "sites" ? "routes" : "sites")}
         >
           {t("explore.tabSites")}
         </button>
         <button
           role="tab"
           aria-selected={tab === "routes"}
-          onClick={() => onTab("routes")}
+          onClick={() => onTab(tab === "sites" ? "routes" : "sites")}
         >
           {t("explore.tabRoutes")}
         </button>
@@ -301,6 +311,9 @@ export function ExplorePanel({
             <h2 className="wide-only">
               {heading("sites")} · {sites.length}
             </h2>
+            <button className="wide-only explore-all" onClick={onCities}>
+              {t("explore.seeAll", { total })}
+            </button>
             <button className="narrow-only explore-city" onClick={onCities}>
               {t(sites.length === 1 ? "explore.narrowSitesOne" : "explore.narrowSites", {
                 city,
@@ -334,6 +347,7 @@ export function ExplorePanel({
                 showModelTag={someModelMissing}
                 onPick={() => onPick(site.id)}
                 onRoute={() => onRoute(site.id)}
+                onHover={onHover}
               />
             ))}
             {!sites.length && !(query && shown.length) && (
@@ -346,7 +360,7 @@ export function ExplorePanel({
             )}
           </ul>
           {sites.length < total && (
-            <p className="muted explore-count">{t(total === 1 ? "explore.totalOne" : "explore.total", { total })}</p>
+            <p className="muted explore-count narrow-only">{t(total === 1 ? "explore.totalOne" : "explore.total", { total })}</p>
           )}
         </>
       )}
@@ -402,9 +416,7 @@ export function RoutePreview({
             </span>
             <span>
               <strong><Localized tr={s.name} en={s.nameEn} /></strong>
-              <small>
-                {[s.year, t("site.minutes", { minutes: s.minutes })].filter(Boolean).join(" · ")}
-              </small>
+              <small>{s.year}</small>
             </span>
             <ArrowRight size={15} />
           </button>
@@ -424,6 +436,9 @@ export function RoutePreview({
               : done
                 ? t("common.continueProgress", { done, total: sites.length })
                 : t("route.start")}
+          </button>
+          <button className="text-btn route-home" onClick={onStart}>
+            {t("route.fromHome")}
           </button>
         </>
       )}

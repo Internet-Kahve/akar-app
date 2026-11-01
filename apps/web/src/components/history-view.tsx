@@ -172,7 +172,8 @@ export function HistoryView({
   const { t, lang } = useI18n();
   const content = lang === "en" ? "tr" : undefined;
   const [selected, setSelected] = useState(0),
-    [camera, setCamera] = useState(false);
+    [camera, setCamera] = useState(false),
+    [mapOpen, setMapOpen] = useState(false);
   const stage = useRef<HTMLDivElement>(null);
   const images = site.historyImages ?? [];
   const image = images[selected] ?? images[0];
@@ -202,18 +203,6 @@ export function HistoryView({
             <Localized tr={site.name} en={site.nameEn} />
           </p>
         </div>
-        {image && (
-          <>
-            <span className="history-count">
-              {selected + 1} / {images.length}
-            </span>
-            <TrustTag
-              trust={image.trust}
-              quote={image.caption}
-              sources={source ? [{ title: source.title }] : []}
-            />
-          </>
-        )}
       </header>
       {image ? (
         <>
@@ -225,83 +214,63 @@ export function HistoryView({
                 ) : (
                   <img src={image.photo.src} alt={image.photo.alt} />
                 )}
-                <figcaption lang={content}>
-                  {image.dateLabel} · {image.caption}
-                </figcaption>
+                <span className="history-count">{selected + 1} / {images.length}</span>
+                <div className="history-photo-trust">
+                  <TrustTag trust={image.trust} quote={image.caption}
+                    sources={source ? [{ title: source.title }] : []} />
+                </div>
               </figure>
-              {pair?.angleMatch === "near" && (
-                <p className="history-near">{t("site.nearAngle")}</p>
-              )}
+              {pair?.angleMatch === "near" && <p className="history-near">{t("site.nearAngle")}</p>}
             </div>
-            <aside className="card">
-              <History size={28} />
+            <aside className="history-details">
+            <section className="history-info">
               <h2 lang={content}>{image.caption}</h2>
-              <p lang={content}>{image.dateLabel}</p>
-              <p className="archive-credit" lang={content}>
-                {image.photo.description || source?.title}
-              </p>
-              <p className="muted" lang={content}>
-                {image.photo.license}
-              </p>
-              {pair && (
-                <p className="archive-credit-today">
-                  <small>{t("site.presentPhoto")}</small>{" "}
-                  <span lang={content}>{pair.photo.description}</span>
-                </p>
-              )}
+              <p className="history-date" lang={content}>{image.dateLabel}</p>
+              <p className="archive-credit" lang={content}>{image.photo.description || source?.title}</p>
+              <p className="archive-license" lang={content}>{image.photo.license}</p>
+              {pair && <p className="archive-credit-today" lang={content}>{t("site.presentPhoto")} {pair.photo.description}</p>}
               {source?.url && /^https?:\/\//.test(source.url) && (
-                <a href={source.url} target="_blank" rel="noreferrer">
-                  {t("site.openArchive")}
-                </a>
+                <a href={source.url} target="_blank" rel="noreferrer">{t("site.openArchive")}</a>
               )}
-              {!pair && (
-                <Notice>
-                  {t("site.noPresentPair")}
-                </Notice>
-              )}
-              <h3 className="history-where">
-                <MapPin size={16} />
-                {t("site.whereFrom")}
-              </h3>
-              {image.viewpoint ? (
-                <ViewpointMap images={images} selected={image} />
-              ) : (
-                <p>{t("site.noViewpoint")}</p>
-              )}
+            </section>
+            <section className={`history-today ${pair ? "paired" : ""}`}>
+              <span className="history-today-icon"><Camera size={18} /></span>
+              <div>
+                <b>{t(pair ? "site.todayExists" : "site.todayMissing")}</b>
+                <small>{t(pair ? "site.todayCompare" : image.viewpoint ? "site.todayLocate" : "site.todayUnknown")}</small>
+              </div>
               <button className="btn full" onClick={() => setCamera(true)}>
-                <Camera size={17} />
-                {t("site.openCamera")}
+                <Camera size={18} />{t(pair ? "site.takeAnother" : "site.takeToday")}
               </button>
+            </section>
+            <section className={`history-location ${mapOpen ? "open" : ""}`}>
+              <h3 className="history-where"><MapPin size={18} />{t("site.whereFrom")}</h3>
+              <button className="text-btn history-map-toggle" aria-expanded={mapOpen}
+                onClick={() => setMapOpen(!mapOpen)}>{t(mapOpen ? "site.hideMap" : "site.showMap")}</button>
+              <div className="history-location-map">
+                {image.viewpoint ? <ViewpointMap images={images} selected={image} /> : <p>{t("site.noViewpoint")}</p>}
+              </div>
               <button className="btn secondary full" onClick={onMemory}>
-                {t("site.haveAnglePhoto")}
-                <ArrowRight size={16} />
+                {t("site.haveAnglePhoto")}<ArrowRight size={16} />
               </button>
+            </section>
             </aside>
-          </div>
-          <div
-            className="timeline archive-timeline"
-            aria-label={t("site.archivePhotos")}
-          >
-            {images.map((item, index) => (
-              <button
-                key={item.id}
-                aria-pressed={selected === index}
-                className={selected === index ? "active" : ""}
-                onClick={() => setSelected(index)}
-              >
-                <img src={item.photo.src} alt="" loading="lazy" />
-                <strong>
-                  <span lang={content}>{item.dateLabel}</span>
-                  {pairOf(site, item, lang) && (
-                    <>
-                      <i className="history-pair-dot" aria-hidden="true" />
-                      <span className="sr-only">, {t("site.hasPresentPair")}</span>
-                    </>
-                  )}
-                </strong>
-                <small lang={content}>{item.caption}</small>
-              </button>
-            ))}
+            <section className="history-archive">
+              <h3>{t("site.archivePhotos")} <small>{images.length}</small></h3>
+              <div className="timeline archive-timeline" aria-label={t("site.archivePhotos")}>
+                {images.map((item, index) => (
+                  <button key={item.id} aria-pressed={selected === index}
+                    className={selected === index ? "active" : ""}
+                    onClick={() => setSelected(index)}>
+                    <img src={item.photo.src} alt="" loading="lazy" />
+                    <strong lang={content}>{item.dateLabel}</strong>
+                    <small lang={content}>{item.caption}</small>
+                    {pairOf(site, item, lang) && <><i className="history-pair-dot" aria-hidden="true" /><span className="sr-only">{t("site.hasPresentPair")}</span></>}
+                  </button>
+                ))}
+              </div>
+            </section>
+
           </div>
           {samples}
         </>

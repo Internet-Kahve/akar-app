@@ -6,6 +6,7 @@ import {
   type MapPlacement,
   type MapSettings,
   type Snapshot,
+  type HeritageRoute,
   type HeritageSite,
   type Memory,
   type Role,
@@ -228,7 +229,18 @@ export interface AkarClient {
 }
 // Keep the previous Istanbul demo untouched in its original storage key.
 export const demoStorageKey = "akar-demo-bursa-v1";
-const key = demoStorageKey;
+/** The real-content demo keeps its visitor state apart from the seed demo's. */
+export const demoContentStorageKey = "akar-demo-icerik-v1";
+/**
+ * The editorial packages as the local demo serves them (`npm run dev:content`, written by
+ * `apps/web/scripts/prepare-demo-content.mjs`): sites, routes and cities in the API's shape, and the task answer keys.
+ */
+export interface DemoContent {
+  sites: HeritageSite[];
+  routes: HeritageRoute[];
+  cities: Array<Omit<CityRecord, "siteCount">>;
+  taskKeys: typeof demoSiteTaskKeys;
+}
 function validSnapshot(s: unknown): s is Snapshot {
   if (!s || typeof s !== "object") return false;
   const v = s as Snapshot;
@@ -298,7 +310,12 @@ function awardBadges(
   }
   return { badges, earned };
 }
-export function createMockClient(storage?: StorageAdapter): AkarClient {
+/** `contentUrl`: a `DemoContent` file read in place of the seed catalog; the visitor's own state is kept. */
+export function createMockClient(
+  storage?: StorageAdapter,
+  contentUrl?: string,
+): AkarClient {
+  const key = contentUrl ? demoContentStorageKey : demoStorageKey;
   const members: AdminMember[] = [
     {
       userId: "demo-admin",
@@ -355,6 +372,26 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
   } catch {
     /* Corrupt storage falls back to the demo seed. */
   }
+  let cities = demoCities;
+  let taskKeys = demoSiteTaskKeys;
+  let fresh = createSeed;
+  const content = contentUrl
+    ? fetch(contentUrl)
+        .then((r) => {
+          if (!r.ok) throw new Error(`Demo içeriği okunamadı (${r.status}).`);
+          return r.json() as Promise<DemoContent>;
+        })
+        .then((c) => {
+          fresh = () => ({
+            ...createSeed(),
+            sites: structuredClone(c.sites),
+            catalogRoutes: structuredClone(c.routes),
+          });
+          state = { ...state, sites: c.sites, catalogRoutes: c.routes };
+          cities = c.cities;
+          taskKeys = c.taskKeys;
+        })
+    : Promise.resolve();
   const persist = (
     next: Snapshot,
     nextProgress = progress,
@@ -448,9 +485,11 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
   };
   return {
     async getSnapshot() {
+      await content;
       return structuredClone(state);
     },
     async refreshCatalog() {
+      await content;
       return structuredClone(state);
     },
     async getMapSettings() {
@@ -470,7 +509,8 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       return { ...preferences };
     },
     async getCities() {
-      return demoCities.map((c) => ({
+      await content;
+      return cities.map((c) => ({
         ...structuredClone(c),
         siteCount: state.sites.filter(
           (s) => s.city === c.name && s.status === "published",
@@ -573,7 +613,7 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
       };
     },
     async reset() {
-      return persist(createSeed(), {}, { tasks: [], badges: [] });
+      return persist(fresh(), {}, { tasks: [], badges: [] });
     },
     async getQuizzes(siteId) {
       if (!state.sites.some((s) => s.id === siteId && s.status === "published"))
@@ -641,7 +681,7 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     },
     async answerSiteTask(taskId, choice) {
       const { site, task } = findTask(taskId);
-      const key = demoSiteTaskKeys[taskId];
+      const key = taskKeys[taskId];
       if (!task.quiz || !key || !("correctIndex" in key))
         throw new Error("Bu görev bir soru değil.");
       if (
@@ -666,7 +706,7 @@ export function createMockClient(storage?: StorageAdapter): AkarClient {
     },
     async completeSiteTask(taskId, input) {
       const { site, task } = findTask(taskId);
-      const key = demoSiteTaskKeys[taskId];
+      const key = taskKeys[taskId];
       if (!task.field || !key || !("doneText" in key))
         throw new Error("Bu görev bir saha görevi değil.");
       if (input.mode === "onSite") {

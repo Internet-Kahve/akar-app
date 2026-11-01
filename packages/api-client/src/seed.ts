@@ -263,7 +263,7 @@ const demoModel = (
   triangles: number,
   placement: Pick<
     NonNullable<SiteModel["placement"]>,
-    "lng" | "lat" | "headingDeg" | "anchorNode"
+    "lng" | "lat" | "headingDeg" | "anchorNode" | "frontDeg"
   >,
 ): SiteModel => ({
   name,
@@ -286,24 +286,28 @@ const demoModels: Record<string, SiteModel> = {
     lat: 40.1839236,
     headingDeg: 174,
     anchorNode: "Govde",
+    frontDeg: 354,
   }),
   bedesten: demoModel("bedesten", 171848, 20088, {
     lng: 29.0621257,
     lat: 40.1851377,
     headingDeg: 4,
     anchorNode: "Govde",
+    frontDeg: 4,
   }),
   "koza-han": demoModel("koza-han", 848548, 38624, {
     lng: 29.0635407,
     lat: 40.1843748,
     headingDeg: 4,
     anchorNode: "Govde_Dis",
+    frontDeg: 4,
   }),
   "orhan-gazi": demoModel("orhan-gazi", 274116, 16014, {
     lng: 29.0640872,
     lat: 40.1839238,
     headingDeg: 13,
     anchorNode: "Cami_Govde",
+    frontDeg: 13,
   }),
 };
 /**

@@ -101,6 +101,26 @@ Figma `akar-yeni` ekranları prototiple tek tek karşılaştırıldı. Düğüm 
 - [ ] Zemin titremesi (z-fighting) düzeltmesi ve model kuralı (zemin katmanları arası ≥ 3 cm)
 - [ ] Stil: `design/harita/akar-style-ozel-v2.json`
 
+### Admin paneli: 3D ayarları (1 Kasım 2026)
+
+Bitti (1 Kasım, `feat/harita-prototip`):
+- [x] Panelde 3D önizleme (Model ve Hikâye adımlarında sağda, 3D | Fotoğraf), «Bakılan yer» seçimi.
+- [x] Açılış açısı («Açılış açısı olarak kaydet»); eser sayfasındaki 3D bu açıyla açılır.
+- [x] Hikâye cümlesinin açısı («Açıyı kaydet → Cümle N», «Cümleyi oynat», «Açıyı sil») ve «İç mekân (3D)» kutusu.
+- [x] Fotoğraf açıları (Model adımı → «Fotoğraf açıları»: fotoğraf modelin üstüne yarı saydam biner, hizalanınca kaydedilir; «İçeriden çekilmiş» kutusu). Ziyaretçi 3D'sinde «İçini göster»in solunda ← → ve ✕, yanda küçük fotoğraf.
+- [x] Geri alma: «Değişiklikleri geri al» (son kayda döner), çıkışta «Vazgeç», açı kaydı/silmesinden sonra «Geri al».
+- [x] Eski «3D oynatıcı sonraki aşamada» notları düzeltildi.
+
+**Canlıya alırken (Tamer):** migration `0030_photo_camera` (`site_media.camera`) uygulanmalı; içe aktarma panelde girilen fotoğraf açılarını korur.
+
+Kalan:
+- [ ] **Açıları girmek** (Muhammed): 7 eserin açılış açısı, cümle açıları (Ulucami için öneriler `eserler/ulu-cami/icerik/hikaye.md` «Açı önerisi»), galeri fotoğraflarının açıları.
+- [ ] **«Model dönsün» anahtarı.** Bugün dönme vurguya bağlı (`scene.tsx`, `tour`). Öneri: cümleye isteğe bağlı `turn` alanı (yoksa bugünkü kural), içe aktarma, API, panelde onay kutusu. — Burak (alan, API), panel Muhammed.
+- [ ] **Model ayarları panelde ve API'de yok:** «İçini göster» grupları (`ortu_gruplari` → `coverGroups`, DB'de `media.cover_groups` var, yazan uç yok), iç mekân parçaları (`ic_parcalar`), ön cephe yönü (`on_yonu` → `frontDeg`, yerleşim gövdesinde yok). Panelden eklenen eserde «İçini göster» bu yüzden çıkmaz. — Burak (uçlar), panel Muhammed.
+- [ ] **Figma'da olup panelde olmayan:** düzenlemede Eser hakkında, Fotoğraflar ve Geçmişi Gör sekmeleri; model sürümleri ve parça farkı uyarısı («Etkilenen cümlelere git»); hafif GLB; cümle başına ses (TR/EN) ve İngilizce metin.
+- [ ] **Eseri silme** panelde ve API'de yok.
+- [ ] **Orhan Gazi Türbesi** panel listesinde «0 hikâye bölümü» gösteriyor; içerik paketi ya da içe aktarma kontrol edilmeli.
+
 ## 4. Jüri ve sunum (ekip işi; Claude yardım edebilir)
 
 Değerlendirme: tasarım ve teknik güçlü; **zayıf yanlar bütünlük/demo ve etki hikâyesi.**

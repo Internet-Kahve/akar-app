@@ -3,19 +3,22 @@ import { useEffect, useRef, useState } from "react";
 import type {
   CameraPose,
   CityScene,
+  PhotoCamera,
   PartCard,
   SiteModel,
   SiteSource,
 } from "@akar/domain";
-import { ChevronDown, ChevronUp, Pointer } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, MousePointerClick, X } from "lucide-react";
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
+import { liftGroundLayers } from "../lib/ground-layers";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
-import { addSceneLights, groundShadow, saturate } from "../lib/scene-light";
+import { addSceneLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
+import { currentTheme, subscribeTheme } from "../lib/theme";
 import {
   fitHalfAngle,
   NO_FRAME,
@@ -45,6 +48,8 @@ const TAP_MS = 600;
 
 /** How long each tappable part lights up when the visitor asks to see them. */
 const PART_PULSE_MS = 700;
+/** How long «show the parts» stays lit after a tap. */
+const PARTS_PRESSED_MS = 650;
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
  * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
@@ -61,6 +66,7 @@ const PART_PULSE_MS = 700;
  */
 export default function ModelViewer({
   model,
+  detail = false,
   name,
   scene: cityScene,
   pose,
@@ -73,8 +79,13 @@ export default function ModelViewer({
   sources = [],
   onProgress,
   onSettled,
+  poseReader,
+  views,
+  onPoseChange,
+  onInsideChange,
 }: {
   model: SiteModel;
+  detail?: boolean;
   name: string;
   scene: CityScene;
   pose?: CameraPose;
@@ -87,11 +98,27 @@ export default function ModelViewer({
   sources?: SiteSource[];
   onProgress?: (progress: DownloadProgress) => void;
   onSettled?: (outcome: "ready" | "failed") => void;
+  /**
+   * Set once the model is drawn to a function that reads the camera as a pose (the panel's «Açıyı kaydet»): the part
+   * last aimed at (null = the model's centre), the azimuth and elevation around it, and the distance against the one
+   * at which the whole model fits. Back to null when the viewer goes.
+   */
+  poseReader?: { current: (() => CameraPose) | null };
+  /**
+   * Gallery photographs with an angle on this model (the site page): ← → beside «İçini göster» turn the camera to
+   * each one's view and show the photograph small beside it, to compare; ✕ goes back to where the visitor was.
+   */
+  views?: Array<{ id: string; src: string; alt: string; title: string; camera: PhotoCamera }>;
+  /** The visitor (the panel's editor) let go of the model after turning or zooming it: the view as a pose. */
+  onPoseChange?: (pose: CameraPose) => void;
+  /** The visitor opened or closed the model with «İçini göster». */
+  onInsideChange?: (open: boolean) => void;
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
   const aim = useRef<((pose: CameraPose) => void) | null>(null);
   const lift = useRef<((open: boolean, raise: boolean) => void) | null>(null);
+  const [showingParts, setShowingParts] = useState(false);
   const select = useRef<((parts: string[]) => void) | null>(null);
   const spin = useRef<((on: boolean) => void) | null>(null);
   const reframe = useRef<(() => void) | null>(null);
@@ -118,6 +145,10 @@ export default function ModelViewer({
   highlightRef.current = highlight;
   const cardsRef = useRef(partCards);
   cardsRef.current = partCards;
+  const poseChangeRef = useRef(onPoseChange);
+  poseChangeRef.current = onPoseChange;
+  const insideChangeRef = useRef(onInsideChange);
+  insideChangeRef.current = onInsideChange;
   const pickRef = useRef(onPick);
   pickRef.current = onPick;
   const progressRef = useRef(onProgress);
@@ -130,6 +161,12 @@ export default function ModelViewer({
   /** Why there is no model, in the visitor's words; empty while it loads (the stage's card shows that) and once it is drawn. */
   /** null = the model has no usable cover groups (no button). */
   const [inside, setInside] = useState<boolean | null>(null);
+  // The photograph whose view is shown (← →); null = the visitor's own view.
+  const [viewIndex, setViewIndex] = useState<number | null>(null);
+  const [viewLarge, setViewLarge] = useState(false);
+  const readPose = useRef<(() => CameraPose) | null>(null);
+  // Where the visitor was before the first arrow: ✕ goes back there.
+  const beforeViews = useRef<{ pose: CameraPose | null; inside: boolean } | null>(null);
   const heading = model.placement?.headingDeg ?? 0;
   const groupsKey = JSON.stringify(model.coverGroups ?? []);
   const lightKey = JSON.stringify(cityScene.light);
@@ -145,6 +182,7 @@ export default function ModelViewer({
     let cancelTween = () => {};
     let cancelLift = () => {};
     let detachPointer = () => {};
+    let unfollowTheme = () => {};
     const disposeObject = (root: THREE.Object3D) =>
       root.traverse((item) => {
         if (!(item instanceof THREE.Mesh)) return;
@@ -161,13 +199,19 @@ export default function ModelViewer({
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      // No tone mapping: the map draws the same light without it.
+      if (detail) {
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = DETAIL_LIGHT[currentTheme()].exposure;
+        renderer.shadowMap.enabled = true;
+        // Three r186 removed PCFSoftShadowMap; its supported replacement is PCF.
+        renderer.shadowMap.type = THREE.PCFShadowMap;
+      }
       renderer.domElement.setAttribute("aria-label", labelRef.current);
       renderer.domElement.setAttribute("role", "img");
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 10000);
-      addSceneLights(scene, JSON.parse(lightKey));
+      const camera = new THREE.PerspectiveCamera(detail ? 38 : 40, 1, 0.01, 10000);
+      if (!detail) addSceneLights(scene, JSON.parse(lightKey));
       controls = new OrbitControls(camera, renderer.domElement);
       controls.enablePan = false;
       controls.maxPolarAngle = Math.PI * 0.49;
@@ -175,6 +219,11 @@ export default function ModelViewer({
         if (!disposed) renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
+      // Only a gesture ends a control: a camera moved by code (a sentence's pose) reports nothing.
+      controls.addEventListener("end", () => {
+        const pose = readPose.current?.();
+        if (pose) poseChangeRef.current?.(pose);
+      });
       // The canvas shows a window of a larger view, so the model's centre lands in the part left free.
       const applyFrame = () => {
         const { width, height } = element.getBoundingClientRect();
@@ -265,10 +314,48 @@ export default function ModelViewer({
           // Turned like on the map, so a pose's azimuth (0 = from the north) means the real north.
           object.rotation.y = -THREE.MathUtils.degToRad(heading);
           object.updateMatrixWorld(true);
-          const box = new THREE.Box3().setFromObject(object);
+          const box = new THREE.Box3();
+          if (detail) {
+            object.traverse(item => {
+              if (!(item instanceof THREE.Mesh)) return;
+              item.castShadow = item.receiveShadow = true;
+              for (let node: THREE.Object3D | null = item; node && node !== object; node = node.parent) {
+                if (/^Yer_Golgesi/.test(node.name)) { item.visible = false; return; }
+                if (PRESENTATION_PARTS.test(node.name)) return;
+              }
+              box.expandByObject(item);
+            });
+          }
+          // Coplanar ground surfaces keep one drawing order from every angle (no flicker on the courtyard).
+          liftGroundLayers(object);
+          if (box.isEmpty()) box.setFromObject(object);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
+          if (detail) center.y = box.min.y + size.y * 0.25;
           object.position.sub(center);
+          if (detail) {
+            const R = size.length() / 2 * 1.3;
+            const lit = DETAIL_LIGHT[currentTheme()];
+            scene.add(new THREE.HemisphereLight(lit.sky, lit.ground, lit.ambient));
+            const sun = new THREE.DirectionalLight(lit.colour, lit.sun);
+            const az = THREE.MathUtils.degToRad((model.placement?.frontDeg ?? 180) + 40);
+            const el = THREE.MathUtils.degToRad(50);
+            const target = new THREE.Vector3(0, size.y * 0.25, 0);
+            sun.position.set(Math.sin(az)*Math.cos(el), Math.sin(el), -Math.cos(az)*Math.cos(el)).multiplyScalar(R*2.5).add(target);
+            sun.target.position.copy(target);
+            sun.castShadow = true;
+            sun.shadow.mapSize.set(2048,2048);
+            sun.shadow.bias = -0.0004;
+            sun.shadow.normalBias = R / 2048;
+            Object.assign(sun.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R*0.5, far:R*5 });
+            scene.add(sun, sun.target);
+            // A theme switch relights the open model in place, without reloading it.
+            unfollowTheme = subscribeTheme((theme) => {
+              setSceneLights(scene, DETAIL_LIGHT[theme]);
+              renderer!.toneMappingExposure = DETAIL_LIGHT[theme].exposure;
+              render();
+            });
+          }
           scene.add(object);
           if (light.groundShadow > 0) {
             // Under the building only: the presentation ground disc and trees do not size it.
@@ -306,19 +393,37 @@ export default function ModelViewer({
           const root = object;
           const radius = Math.max(size.x, size.y, size.z, 1);
           const sphere = size.length() / 2 || 1;
-          camera.near = radius / 1000;
-          camera.far = radius * 20;
+          // As the prototype: a near plane this far out keeps enough depth precision for surfaces millimetres apart.
+          camera.near = sphere / 100;
+          camera.far = sphere * 30;
           camera.position.set(radius * 1.15, radius * 0.9, radius * 1.15);
           camera.updateProjectionMatrix();
           controls!.minDistance = radius * 0.35;
           controls!.maxDistance = radius * 4;
           controls!.target.set(0, 0, 0);
           controls!.update();
-          aim.current = (next) => {
-            // Distance at which the bounding sphere fits the narrower field of view of the free part.
+          // The part the camera last went to: a pose read back keeps it, as the camera turns around it.
+          let aimedTarget: string | null = null;
+          const fitDistance = () => {
             const { width, height } = element.getBoundingClientRect();
-            const fit =
-              sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
+            return sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
+          };
+          readPose.current = () => {
+              const offset = camera.position.clone().sub(controls!.target);
+              const length = offset.length() || 1;
+              const round = (x: number, step: number) => Math.round(x / step) * step;
+              return {
+                target: aimedTarget,
+                azimuthDeg: round((THREE.MathUtils.radToDeg(Math.atan2(offset.x, -offset.z)) + 360) % 360, 1),
+                elevationDeg: round(THREE.MathUtils.radToDeg(Math.asin(offset.y / length)), 1),
+                distance: round(length / fitDistance(), 0.01),
+              };
+            };
+          if (poseReader) poseReader.current = readPose.current;
+          aim.current = (next) => {
+            aimedTarget = next.target;
+            // Distance at which the bounding sphere fits the narrower field of view of the free part.
+            const fit = fitDistance();
             controls!.maxDistance = Math.max(radius * 4, fit * 1.6);
             const part = next.target ? root.getObjectByName(next.target) : undefined;
             const goal = part
@@ -423,9 +528,10 @@ export default function ModelViewer({
                 if (!node.visible) shown = false;
                 if (!part && known.has(node.name)) part = node.name;
               }
+              // Faded by the lift, not see-through by nature: glass (the open dome's) still answers a tap.
               const materials = (hit.object as THREE.Mesh).material;
               const faded = (Array.isArray(materials) ? materials : [materials]).every(
-                (m: THREE.Material) => m.transparent && m.opacity < 0.5,
+                (m: THREE.Material) => (m.userData.akarLift ?? 0) > 0.5,
               );
               if (!shown || faded) continue;
               // The nearest visible surface decides; a part that does not answer blocks the ones behind it.
@@ -546,6 +652,8 @@ export default function ModelViewer({
                   }
                   f.material.opacity = f.opacity * (1 - t);
                   f.material.depthWrite = t === 0;
+                  // How far the group has lifted; taps look through a group more than half way gone.
+                  f.material.userData.akarLift = t;
                 }
               });
             const step = (now: number) => {
@@ -598,6 +706,15 @@ export default function ModelViewer({
           if (highlightRef.current?.length) select.current(highlightRef.current);
           reframe.current?.();
           if (poseRef.current) aim.current(poseRef.current);
+          else if (detail) {
+            const { width, height } = element.getBoundingClientRect();
+            const fit = sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
+            const d = Math.min(sphere * 4, fit * 0.95);
+            const az = THREE.MathUtils.degToRad(30), el = THREE.MathUtils.degToRad(28);
+            camera.position.set(Math.sin(az)*Math.cos(el)*d, Math.sin(el)*d, -Math.cos(az)*Math.cos(el)*d);
+            controls!.target.set(0,0,0);
+            controls!.update();
+          }
           aimedPose.current = poseRef.current;
           spin.current?.(!!tourRef.current);
           tourPose.current = tourRef.current ? JSON.stringify(poseRef.current ?? null) : "";
@@ -622,6 +739,10 @@ export default function ModelViewer({
     return () => {
       disposed = true;
       aim.current = null;
+      if (poseReader) poseReader.current = null;
+      readPose.current = null;
+      beforeViews.current = null;
+      setViewIndex(null);
       lift.current = null;
       select.current = null;
       spin.current = null;
@@ -631,6 +752,7 @@ export default function ModelViewer({
       cancelTween();
       cancelLift();
       detachPointer();
+      unfollowTheme();
       observer?.disconnect();
       controls?.dispose();
       decoder?.dispose();
@@ -639,7 +761,7 @@ export default function ModelViewer({
       renderer?.forceContextLoss();
       renderer?.domElement.remove();
     };
-  }, [model.src, name, heading, groupsKey, partsKey, lightKey]);
+  }, [model.src, name, heading, model.placement?.frontDeg, groupsKey, partsKey, lightKey, detail]);
   // Before the pose: a sentence's camera is worked out for the frame of that sentence.
   useEffect(() => {
     reframe.current?.();
@@ -670,6 +792,44 @@ export default function ModelViewer({
     }, 2500);
     return () => clearTimeout(timer);
   }, [picked]);
+  const insideButton = inside !== null && (
+    <button
+      className="btn secondary model-inside"
+      aria-pressed={inside}
+      onClick={() => {
+        lift.current?.(!inside, true);
+        setInside(!inside);
+        insideChangeRef.current?.(!inside);
+      }}
+    >
+      {inside ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+      {inside ? t("site.showOutside") : t("site.showInside")}
+    </button>
+  );
+  /** Turns to a photograph's view; the model opens for one taken inside and closes again for one taken outside. */
+  const showView = (index: number) => {
+    const view = views?.[index];
+    if (!view || !aim.current) return;
+    if (viewIndex === null) beforeViews.current = { pose: readPose.current?.() ?? null, inside: inside ?? false };
+    const open = view.camera.interior ?? false;
+    if (inside !== null && open !== inside) {
+      lift.current?.(open, false);
+      setInside(open);
+    }
+    aim.current(view.camera);
+    setViewIndex(index);
+  };
+  const leaveViews = () => {
+    const before = beforeViews.current;
+    if (before && inside !== null && before.inside !== inside) {
+      lift.current?.(before.inside, false);
+      setInside(before.inside);
+    }
+    if (before?.pose) aim.current?.(before.pose);
+    beforeViews.current = null;
+    setViewIndex(null);
+    setViewLarge(false);
+  };
   return (
     <>
       <div className="model-canvas" ref={host} />
@@ -678,7 +838,10 @@ export default function ModelViewer({
           className="model-show-parts"
           aria-label={t("site.showParts")}
           title={t("site.showParts")}
+          aria-pressed={showingParts}
           onClick={() => {
+            setShowingParts(true);
+            setTimeout(() => setShowingParts(false), PARTS_PRESSED_MS);
             partCards.forEach((card, i) =>
               setTimeout(
                 () => select.current?.(card.parts),
@@ -691,25 +854,54 @@ export default function ModelViewer({
             );
           }}
         >
-          <Pointer size={18} />
+          <MousePointerClick size={18} />
         </button>
       )}
-      {inside !== null && (
-        <button
-          className="btn secondary model-inside"
-          aria-pressed={inside}
-          onClick={() => {
-            lift.current?.(!inside, true);
-            setInside(!inside);
-          }}
-        >
-          {inside ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          {inside ? t("site.showOutside") : t("site.showInside")}
-        </button>
+      {views?.length ? (
+        <div className="model-views">
+          {viewIndex !== null && views[viewIndex] && (
+            // The photograph small beside the model it was matched to; a tap shows it larger.
+            <button
+              className={`model-view-photo${viewLarge ? " large" : ""}`}
+              onClick={() => setViewLarge(!viewLarge)}
+              aria-label={views[viewIndex]!.title || views[viewIndex]!.alt}
+            >
+              <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} />
+              <span>
+                {views[viewIndex]!.title}
+                <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>
+              </span>
+            </button>
+          )}
+          {viewIndex !== null && (
+            <button className="btn secondary model-view-btn" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
+              <X size={18} />
+            </button>
+          )}
+          <button
+            className="btn secondary model-view-btn"
+            aria-label={t("site.viewPrev")}
+            title={t("site.viewPrev")}
+            onClick={() => showView(viewIndex === null ? views.length - 1 : (viewIndex - 1 + views.length) % views.length)}
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            className="btn secondary model-view-btn"
+            aria-label={t("site.viewNext")}
+            title={t("site.viewNext")}
+            onClick={() => showView(viewIndex === null ? 0 : (viewIndex + 1) % views.length)}
+          >
+            <ChevronRight size={18} />
+          </button>
+          {insideButton}
+        </div>
+      ) : (
+        insideButton
       )}
-      {picked && !picked.card && (
+      {picked && (
         <p className="model-part-name" role="status">
-          {partLabel(picked.part)}
+          {picked.card?.title ?? partLabel(picked.part)}
         </p>
       )}
       {picked?.card && (

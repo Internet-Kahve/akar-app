@@ -71,7 +71,7 @@ test("part cards and story interiors work without reloading the model between se
   await canvas.evaluate((el) =>
     el.setAttribute("data-story-canvas", "retained"),
   );
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Dışını göster" }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -181,7 +181,7 @@ test("model survives its loading state, photo switch and uncropped archive retai
   ).toHaveAttribute("href", "https://archive.example/item");
   await page.locator(".archive-timeline button").nth(1).focus();
   await page.keyboard.press("Enter");
-  await expect(page.locator(".archive-photo figcaption")).toContainText("1930");
+  await expect(page.locator(".history-date")).toContainText("1930");
   const decoder = await request.get("/draco/draco_decoder.wasm");
   expect(decoder.ok()).toBe(true);
   expect((await decoder.body()).subarray(0, 4).toString("hex")).toBe(

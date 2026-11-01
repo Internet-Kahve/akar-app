@@ -14,6 +14,8 @@ import type {
   Marker as MarkerType,
 } from "maplibre-gl";
 import type { MapModels } from "../lib/map-models";
+import { followTheme, MAP_SKY, mapStyle } from "../lib/map-theme";
+import { currentTheme, type Theme } from "../lib/theme";
 import {
   PIN_LABEL_LAYER,
   PIN_LAYER,
@@ -21,7 +23,9 @@ import {
   pinFeatures,
   pinFiles,
   syncPins,
+  themePinLabels,
 } from "../lib/map-pins";
+import { cityIdentityStyle } from "../lib/city-identity";
 import { nearestCity, type LngLat } from "../lib/nearby";
 import { useCities, useCityScenes } from "./city-scenes";
 import { MapControls } from "./map-controls";
@@ -34,13 +38,31 @@ declare global {
   }
 }
 const WIDE = "(min-width: 900px)";
+/** The globe view's sky in `theme` (colours in map-theme.ts); the atmosphere fades out as a city comes near. */
+const sky = (theme: Theme) => ({
+  ...MAP_SKY[theme],
+  "sky-horizon-blend": 0.6,
+  "horizon-fog-blend": 0.4,
+  "fog-ground-blend": 1,
+  "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 8, 0] as ["interpolate", ["linear"], ["zoom"], ...number[]],
+});
 /** Keeps the short card clear of the top of the map and of the right edge. */
 const PEEK_WIDTH = 360;
 const PEEK_TOP = 80;
+/** Room kept between a pin and its short card, so the card never covers the site's model (about half a site wide). */
+const PEEK_CLEAR = 120;
+/** How long the short card glides to a new side. */
+const PEEK_GLIDE_MS = 400;
+/** Ease in and out: the glide starts and ends at rest, so it neither jolts off nor clicks into place. */
+const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+/** The camera's move to a newly picked site; the card follows it gliding, on the pin's right where the move ends. */
+const SITE_EASE_MS = 700;
 /** A site's pin keeps at least this zoom when it is picked. */
 const SITE_ZOOM = 17;
-/** Angled view the map opens with; the tilt button toggles between this and 0 (top view). */
-const TILT_PITCH = 50;
+/** Angled view the map opens with; the tilt button toggles between this and 0 (top view). Same as the prototype. */
+const TILT_PITCH = 55;
+/** The opening view turns a little west of north, as the prototype opens (models and labels read better). */
+const OPENING_BEARING = -12;
 /** Where the globe flies out to: Türkiye whole on the screen. */
 const COUNTRY = {
   center: [34.5, 39.2] as [number, number],
@@ -74,11 +96,15 @@ function comingSoon(city: CityRecord, t: I18n["t"]) {
 export type MapFlight =
   | { key: number; to: "globe" | "home" }
   | { key: number; to: "point"; point: LngLat }
+  /** Back from a site's page: the map stays as it was when the site is in view, and goes there when it is not. */
+  | { key: number; to: "site"; point: LngLat }
   | { key: number; to: "route"; points: LngLat[] };
 export function HeritageMap({
   sites,
   selectedId,
+  highlightId,
   onSelect,
+  onOpen,
   onClear,
   routeIds,
   collapsed,
@@ -95,7 +121,11 @@ export function HeritageMap({
 }: {
   sites: HeritageSite[];
   selectedId?: string | undefined;
+  /** A site the list points at (a row under the pointer): its pin shows as selected, the camera stays. */
+  highlightId?: string | undefined;
   onSelect: (id: string) => void;
+  /** A double click on a site: its page. */
+  onOpen?: (id: string) => void;
   /** A tap on the map itself, away from any site. */
   onClear?: () => void;
   routeIds: string[];
@@ -132,6 +162,15 @@ export function HeritageMap({
     cityRef = useRef(onCityInView),
     selectedRef = useRef(selectedId),
     peekRef = useRef<HTMLDivElement>(null),
+    leaderRef = useRef<SVGPathElement>(null),
+    // The card's last side and site: a change of either glides the card there instead of jumping.
+    peekPlace = useRef<{ site: string; onLeft: boolean } | null>(null),
+    siteGlideUntil = useRef(0),
+    // A glide in progress: where the card set out from, when, and for how long; each frame blends that start into
+    // where the card belongs now, so a moving target is reached exactly when the glide ends.
+    glide = useRef<{ left: number; top: number; start: number; ms: number } | null>(null),
+    glideFrame = useRef(0),
+    openRef = useRef(onOpen),
     // Set once the visitor moves the map: a late city record must not pull the map back.
     moved = useRef(false),
     latest = useRef({ sites, mapSettings, scenes, cities });
@@ -142,20 +181,78 @@ export function HeritageMap({
     >(""),
     [notice, setNotice] = useState("");
   selectRef.current = onSelect;
+  openRef.current = onOpen;
   clearRef.current = onClear;
   cityRef.current = onCityInView;
   selectedRef.current = selectedId;
   latest.current = { sites, mapSettings, scenes, cities };
-  /** Puts the short card beside its pin; on a phone the stylesheet docks it and ignores these. */
+  /**
+   * Puts the short card `PEEK_CLEAR` to the right of its pin, level with it, and draws the thin line from the card to the
+   * pin. Where the right side has no room the card goes as far to the pin's left, so the site stays in view.
+   * On a phone the stylesheet docks the card and hides the line; these values are then ignored.
+   */
   const placePeek = () => {
     const card = peekRef.current,
       m = map.current,
       site = latest.current.sites.find((s) => s.id === selectedRef.current);
+    // A card that opens again starts where it belongs, it does not glide in from the last one's place.
+    if (!card) {
+      peekPlace.current = null;
+      glide.current = null;
+    }
     if (!card || !m || !site) return;
     const point = m.project(site.coordinates),
-      width = container.current?.clientWidth ?? 0;
-    card.style.left = `${Math.min(width - PEEK_WIDTH - 20, Math.max(16, point.x + 28))}px`;
-    card.style.top = `${Math.max(PEEK_TOP, point.y - 120)}px`;
+      width = container.current?.clientWidth ?? 0,
+      height = container.current?.clientHeight ?? 0,
+      cardHeight = card.offsetHeight;
+    const last = peekPlace.current,
+      now = performance.now();
+    if (last && last.site !== site.id) siteGlideUntil.current = now + SITE_EASE_MS;
+    // While the camera moves to a new site the pin crosses the map: the card stays on the right, where the move ends.
+    const easing = now < siteGlideUntil.current,
+      onLeft = !easing && point.x + PEEK_CLEAR + PEEK_WIDTH > width - 20;
+    const left = Math.max(
+      16,
+      Math.min(width - PEEK_WIDTH - 20, onLeft ? point.x - PEEK_CLEAR - PEEK_WIDTH : point.x + PEEK_CLEAR),
+    );
+    const top = Math.max(PEEK_TOP, Math.min(height - cardHeight - 16, point.y - cardHeight / 2));
+    // Following the pin while the map moves stays immediate; only a new side or a new site glides, frame by frame
+    // until it is done (with or without the map moving). Reduced motion goes straight there.
+    if (last && (last.site !== site.id || last.onLeft !== onLeft) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      glide.current = {
+        left: parseFloat(card.style.left) || left,
+        top: parseFloat(card.style.top) || top,
+        start: now,
+        ms: easing ? siteGlideUntil.current - now : PEEK_GLIDE_MS,
+      };
+      cancelAnimationFrame(glideFrame.current);
+      const frame = () => {
+        placePeek();
+        if (glide.current) glideFrame.current = requestAnimationFrame(frame);
+      };
+      glideFrame.current = requestAnimationFrame(frame);
+    }
+    peekPlace.current = { site: site.id, onLeft };
+    let shownLeft = left,
+      shownTop = top;
+    const g = glide.current;
+    if (g) {
+      const t = Math.min(1, (now - g.start) / g.ms),
+        k = easeInOut(t);
+      shownLeft = g.left + (left - g.left) * k;
+      shownTop = g.top + (top - g.top) * k;
+      if (t === 1) glide.current = null;
+    }
+    card.style.left = `${shownLeft}px`;
+    card.style.top = `${shownTop}px`;
+    const line = leaderRef.current;
+    if (!line) return;
+    // From the card's near edge where it is now, level with the pin as far as the card reaches, to the pin.
+    const fromX = onLeft ? shownLeft + PEEK_WIDTH : shownLeft,
+      fromY = Math.max(shownTop + 28, Math.min(shownTop + cardHeight - 28, point.y));
+    line.setAttribute("d", `M${fromX} ${fromY}L${point.x} ${point.y}`);
+    line.nextElementSibling?.setAttribute("cx", String(point.x));
+    line.nextElementSibling?.setAttribute("cy", String(point.y));
   };
   const drawnRef = useRef(onFirstDraw);
   drawnRef.current = onFirstDraw;
@@ -163,7 +260,8 @@ export function HeritageMap({
     if (loaded || failed) drawnRef.current?.();
   }, [loaded, failed]);
   useEffect(() => {
-    let disposed = false;
+    let disposed = false,
+      unfollow: (() => void) | undefined;
     import("maplibre-gl")
       .then((lib) => {
         if (disposed || !container.current) return;
@@ -173,11 +271,19 @@ export function HeritageMap({
             container: container.current,
             ...openingView(latest.current.cities),
             pitch: TILT_PITCH,
+            bearing: OPENING_BEARING,
             minZoom: 1.2,
+            maxZoom: 19.5,
+            maxPitch: 65,
             attributionControl: { compact: true },
-            style: "/harita/akar-style.json",
+            style: mapStyle(),
           });
           map.current = m;
+          unfollow = followTheme(m, (theme) => {
+            m.setSky(sky(theme));
+            themePinLabels(m);
+            models.current?.setTheme(theme);
+          });
           // Only a visitor's gesture carries an original DOM event; jumpTo and flyTo from code do not.
           m.on("movestart", (e) => {
             if (e.originalEvent) moved.current = true;
@@ -189,6 +295,15 @@ export function HeritageMap({
               models.current?.pick(e.point.x, e.point.y);
             if (id) selectRef.current(id);
             else clearRef.current?.();
+          });
+          // A double click on a site opens its page instead of zooming in.
+          m.on("dblclick", (e) => {
+            const id =
+              pinAt(m, e.point.x, e.point.y) ??
+              models.current?.pick(e.point.x, e.point.y);
+            if (!id || !openRef.current) return;
+            e.preventDefault();
+            openRef.current(id);
           });
           m.on("move", placePeek);
           const reportCity = () => {
@@ -220,25 +335,7 @@ export function HeritageMap({
             if (disposed) return;
             // Globe view (§11.45): far out the earth is round, near a city MapLibre turns flat by itself.
             m.setProjection({ type: "globe" });
-            m.setSky({
-              "sky-color": "#C9DCEB",
-              "horizon-color": "#F3F5F5",
-              "sky-horizon-blend": 0.6,
-              "fog-color": "#F3F5F5",
-              "horizon-fog-blend": 0.4,
-              "fog-ground-blend": 1,
-              "atmosphere-blend": [
-                "interpolate",
-                ["linear"],
-                ["zoom"],
-                0,
-                1,
-                5,
-                1,
-                8,
-                0,
-              ],
-            });
+            m.setSky(sky(currentTheme()));
             mode();
             setLoaded(true);
             reportCity();
@@ -270,6 +367,7 @@ export function HeritageMap({
       .catch(() => setFailed(true));
     return () => {
       disposed = true;
+      unfollow?.();
       delete window.akarMap;
       models.current?.dispose();
       models.current = null;
@@ -319,6 +417,12 @@ export function HeritageMap({
               : t("map.cityAriaSoon", { name: city.name }),
           );
           const dot = document.createElement("i");
+          // A city with an emblem shows it in place of the dot, in the city's colours.
+          const look = cityIdentityStyle(city.identity) as Record<string, string>;
+          if ("--sehir-amblem" in look) {
+            for (const [key, value] of Object.entries(look)) el.style.setProperty(key, value);
+            dot.className = "city-emblem";
+          }
           const name = document.createElement("b");
           name.textContent = city.name;
           const count = document.createElement("small");
@@ -387,7 +491,7 @@ export function HeritageMap({
     // The pins draw over the route line; without them the schematic view keeps discovery usable.
     syncPins(
       m,
-      pinFeatures(sites, routeIds, selectedId, {
+      pinFeatures(sites, routeIds, highlightId ?? selectedId, {
         ...(finishedIds && { finishedIds }),
         accent: routeColour,
         lang,
@@ -400,7 +504,7 @@ export function HeritageMap({
     return () => {
       cancelled = true;
     };
-  }, [sites, selectedId, routeIds, loaded, finishedIds, routeColour, lang]);
+  }, [sites, selectedId, highlightId, routeIds, loaded, finishedIds, routeColour, lang]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);
@@ -409,10 +513,14 @@ export function HeritageMap({
     const m = map.current,
       site = latest.current.sites.find((s) => s.id === selectedId);
     if (!site || !loaded || !m) return;
+    // A site of another city (picked from a search) is a jump: a glide at street level across the country only
+    // shows blurred tiles.
+    const here = m.getCenter();
+    const far = Math.hypot(here.lng - site.coordinates[0], here.lat - site.coordinates[1]) > 0.5;
     m.easeTo({
       center: site.coordinates,
       zoom: Math.max(m.getZoom(), SITE_ZOOM),
-      duration: 700,
+      duration: far ? 0 : SITE_EASE_MS,
       padding: matchMedia(WIDE).matches
         ? { right: PEEK_WIDTH + 20, top: 0, bottom: 0, left: 0 }
         : { bottom: 240, top: 0, left: 0, right: 0 },
@@ -438,6 +546,15 @@ export function HeritageMap({
     const flat = { left: 0, right: 0, top: 0, bottom: 0 };
     if (flight.to === "point")
       m.easeTo({ center: flight.point, zoom: 16.5, duration: 900 });
+    else if (flight.to === "site") {
+      if (m.getBounds().contains(flight.point)) return;
+      const here = m.getCenter();
+      // Another city is a jump, not a flight across the country; the city's own street level (or the visitor's).
+      const far = Math.hypot(here.lng - flight.point[0], here.lat - flight.point[1]) > 0.5;
+      const view = { center: flight.point, zoom: Math.max(m.getZoom(), SITE_ZOOM - 1) };
+      if (far) m.jumpTo(view);
+      else m.easeTo({ ...view, duration: 900 });
+    }
     else if (flight.to === "route") {
       const [first, ...rest] = flight.points;
       if (!first) return;
@@ -535,9 +652,16 @@ export function HeritageMap({
         onLocate={() => onLocate?.()}
       />
       {selectedId && peek && (
-        <div ref={peekRef} className="peek-anchor">
-          {peek}
-        </div>
+        <>
+          {/* The thin line from the short card to its pin; placed by `placePeek`. */}
+          <svg className="peek-leader" aria-hidden="true">
+            <path ref={leaderRef} />
+            <circle r="3" />
+          </svg>
+          <div ref={peekRef} className="peek-anchor">
+            {peek}
+          </div>
+        </>
       )}
       {notice && (
         <button className="location-notice" onClick={() => setNotice("")}>

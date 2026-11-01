@@ -99,22 +99,25 @@ test("discovery, story, memory moderation and persistence form one complete flow
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Eseri kaydet", exact: true }).click();
-  await page.getByRole("button", { name: "Rotama ekle", exact: true }).click();
+  // The detail panel has no route button (prototype): routes are added from the list.
+  await expect(page.getByRole("button", { name: "Rotama ekle", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: /^Yanındayım/ }).click();
+  await page.getByRole("button", { name: "Demo ziyaretini tamamla" }).click();
+  await expect(page.getByRole("heading", { name: "Demo ziyareti pasaportunda" })).toBeVisible();
+  await page.getByRole("button", { name: "Pencereyi kapat" }).click();
+  await expect(page.getByRole("button", { name: /^Ziyaretim/ })).toBeVisible();
   await page.getByRole("button", { name: "Oku", exact: true }).click();
   await page.getByLabel("Sade anlatım").check();
   for (let i = 0; i < 8; i++)
-    await page.getByRole("button", { name: "Devam et", exact: true }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
   const finished = page.getByRole("dialog");
   await expect(finished).toContainText("Hikâye tamamlandı");
   await finished.getByRole("button", { name: "Devam et" }).click();
-  await page.getByRole("button", { name: "Yanındayım", exact: true }).click();
-  await page.getByRole("button", { name: "Demo ziyaretini tamamla" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Demo ziyareti pasaportunda" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Pencereyi kapat" }).click();
-  await page.getByRole("button", { name: /^İz Bırak/ }).click();
+  // «İz Bırak» opens from the living memory row's window.
+  await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
+  await expect(page.getByText("İlk iz senin olsun.")).toBeVisible();
+  await page.getByRole("button", { name: /Bir anı bırak/ }).click();
   await page
     .getByLabel("Anın", { exact: true })
     .fill("Avludaki ışığı ve sessizliği hatırlayacağım.");
@@ -122,9 +125,8 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Onaya gönder" }).click();
   await expect(page.getByText("Hikâyeye sen de katıldın.")).toBeVisible();
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
-  await page.getByRole("button", { name: "Yaşayan hafıza" }).click();
-  await expect(page.getByText("İlk iz senin olsun.")).toBeVisible();
-  await page.getByRole("button", { name: "Pencereyi kapat" }).click();
+  // The visitor's own trace leads the living memory page while it waits for moderation.
+  await expect(page.locator(".hm-iz").first()).toContainText("İnceleniyor");
   await openProfile(page);
   await expect(
     page.getByRole("button", { name: /Ulucami Hikâye tamamlandı/ }),
@@ -150,6 +152,13 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(
     page.getByText("Avludaki ışığı ve sessizliği hatırlayacağım."),
   ).toBeVisible();
+  // The living memory page offers the published memory's removal buttons: the demo admin wrote it, so «Sil»
+  // rather than «Kalıcı sil».
+  await page.goto("/#view=detail&site=ulu-cami");
+  await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
+  const trace = page.locator(".hm-iz").filter({ hasText: "Avludaki ışığı ve sessizliği hatırlayacağım." });
+  await expect(trace.getByRole("button", { name: "Yayından kaldır" })).toBeVisible();
+  await expect(trace.getByRole("button", { name: "Sil", exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
 test("admin photo wizard publishes complete content and persists shared images", async ({
@@ -312,16 +321,16 @@ test("deferred features are hidden and the empty archive remains keyboard access
   await page.keyboard.press("Escape");
   await openProfile(page);
   await expect(page.getByRole("heading", { name: "Mirasım" })).toBeVisible();
-  await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
+  await expect(page.locator(".profile-badges")).toBeVisible();
 });
 test("responsive layouts do not overflow and Figma assets load locally", async ({
   page,
 }, info) => {
   await page.goto("/");
   await expect(page.locator(".opening")).toHaveCount(0);
-  // One heading above the list: the city line on a phone, the sentence on a wide screen.
+  // One heading above the list: the city line on a phone, the sentence (and «Tümünü gör») on a wide screen.
   await expect(
-    page.locator(".explore-heading > :visible"),
+    page.locator(".explore-heading > h2:visible, .explore-heading > .explore-city:visible"),
   ).toHaveCount(1);
   await page.getByRole("tab", { name: "Rotalar" }).click();
   await expect(page.locator(".route-card")).toHaveCount(3);
@@ -347,18 +356,19 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
     path: `test-results/${info.project.name}-detail.png`,
     fullPage: true,
   });
-  const assets = await page
-    .locator('img[src^="/figma/"]')
-    .evaluateAll((images) =>
-      images.map((i) => ({
-        loaded:
-          (i as HTMLImageElement).complete &&
-          (i as HTMLImageElement).naturalWidth > 0,
-        width: (i as HTMLImageElement).width,
-      })),
-    );
-  expect(assets.length).toBeGreaterThan(0);
-  expect(assets.every((a) => a.loaded && a.width > 0)).toBe(true);
+  // The detail panel's ornament is drawn inline now (prototype); the content studio still uses a Figma image.
+  await page.goto("/#view=admin");
+  await expect(page.locator('img[src^="/figma/"]').first()).toBeAttached();
+  // Loaded from this site (on a phone the menu button holding it may be folded away, so its size is not asked).
+  await expect
+    .poll(() =>
+      page
+        .locator('img[src^="/figma/"]')
+        .evaluateAll((images) =>
+          images.every((i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth > 0),
+        ),
+    )
+    .toBe(true);
 });
 
 test.describe("first visit", () => {
@@ -386,8 +396,8 @@ test("reading keeps the chosen sentence while the list follows it, and the visit
 }) => {
   await page.goto("/#view=detail&site=ulu-cami");
   await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   const count = page.locator(".story-count");
   await expect(count).toHaveText("3 / 9");
   await page.waitForTimeout(1200);
@@ -451,13 +461,16 @@ test("route search opens a usable route and selection persists", async ({
   await page
     .getByRole("button", { name: "Rotayı başlat", exact: true })
     .click();
-  await expect(
-    page.getByRole("button", { name: "Rotamdan çıkar", exact: true }),
-  ).toBeVisible();
+  // The route opens on its first stop; the panel leads on to the next one.
+  await expect(page.getByRole("button", { name: /^Sonraki durak:/ })).toBeVisible();
+  const routeIds = () =>
+    page.evaluate(
+      () => (JSON.parse(localStorage.getItem("akar-demo-bursa-v1") ?? "{}") as { routeIds?: string[] }).routeIds ?? [],
+    );
+  await expect.poll(routeIds).toHaveLength(2);
   await page.reload();
-  await expect(
-    page.getByRole("button", { name: "Rotamdan çıkar", exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect.poll(routeIds).toHaveLength(2);
 });
 test("map failure keeps the artifact discovery usable", async ({ page }) => {
   // Use a deterministic tile failure without depending on the provider's style.
@@ -504,17 +517,16 @@ test("experimental UI can be inspected without enabling it for the main journey"
 }) => {
   await page.goto("/#view=profile");
   await page.getByLabel("Deneysel arayüzleri göster").check();
-  await expect(page.getByText("Keşif rozetlerin")).toBeVisible();
+  await expect(page.locator(".profile-badges")).toBeVisible();
   await page.getByRole("button", { name: /Keşfe başla/ }).click();
-  await page.getByRole("button", { name: "Bulmaca", exact: true }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  // The paused «Birlikte Gez» and the old puzzle grid are no longer on the site panel; «Bulmaca» opens the puzzle screen.
+  await page.getByRole("button", { name: /^Bulmaca/ }).click();
+  await expect(page.getByRole("dialog", { name: "Bulmaca" })).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Birlikte Gez", exact: true }).click();
-  await expect(page.getByRole("dialog")).toContainText("Senkron sesli tur");
-  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Birlikte Gez", exact: true })).toHaveCount(0);
   await openProfile(page);
   await page.getByLabel("Deneysel arayüzleri göster").uncheck();
-  await expect(page.getByText("Keşif rozetlerin")).toHaveCount(0);
+  await expect(page.locator(".profile-badges")).toBeVisible();
 });
 
 test("admin imports drafts and persists route stop order", async ({ page }) => {

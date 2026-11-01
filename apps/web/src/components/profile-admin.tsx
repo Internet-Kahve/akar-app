@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import {
+  ChevronLeft,
   BookOpen,
   MapPin,
   MessageSquare,
@@ -22,8 +23,8 @@ import {
   type Role,
   type Snapshot,
 } from "@akar/domain";
-import type { AdminHealth, AkarClient, ModerationPage } from "@akar/api-client";
-import { Modal, Notice, Tag } from "./ui";
+import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@akar/api-client";
+import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
@@ -34,6 +35,9 @@ import { AdminMapSettings } from "./admin-map-settings";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
+  progress,
+  onBack,
+  onLanguage,
   onSite,
   onAdmin,
   canManage,
@@ -44,6 +48,9 @@ export function Profile({
   commit,
 }: {
   state: Snapshot;
+  progress: SiteProgress;
+  onBack: () => void;
+  onLanguage: (lang: "tr" | "en") => void;
   onSite: (id: string) => void;
   onAdmin: () => void;
   canManage: boolean;
@@ -67,29 +74,27 @@ export function Profile({
         document.documentElement.dataset.textSize === "large",
     );
   const firstSite = state.sites.find((s) => s.status === "published");
-  const badges = [
-    { name: t("badge.firstStory"), earned: state.readIds.length > 0 },
-    { name: t("badge.firstStep"), earned: state.visitedIds.length > 0 },
-    { name: t("badge.curious"), earned: state.quizIds.length > 0 },
-    {
-      name: t("badge.contributor"),
-      earned: state.memories.some((m) => m.status === "approved"),
-    },
-    { name: t("badge.wanderer"), earned: state.visitedIds.length >= 3 },
-    { name: t("badge.collector"), earned: state.readIds.length >= 5 },
-  ];
+  const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
+    (site.badges ?? []).map((badge) => ({
+      ...badge,
+      site,
+      earned: progress.badges.some((owned) => owned.badgeId === badge.id),
+    })),
+  );
   return (
     <main id="main-content" tabIndex={-1} className="profile-page">
-      <div className="page-intro">
-        <small className="eyebrow">{t("profile.eyebrow")}</small>
+      <header className="profile-heading">
+        <button className="round-btn" onClick={onBack} aria-label={t("common.backToExplore")}><ChevronLeft size={20} /></button>
         <h1>{t("profile.title")}</h1>
-        <p>{t("profile.lead")}</p>
-      </div>
+      </header>
       <div className="profile-grid">
         <aside>
           <div className="profile-card">
-            <div className="avatar large">G</div>
+            <div className="avatar large">{state.name.slice(0, 1).toLocaleUpperCase(lang)}</div>
             <h2>{state.name}</h2>
+            <p className="profile-badge-count">{t("profile.badgeCount", { count: badges.filter((b) => b.earned).length })}</p>
+            <p className="profile-progress-summary">{t("profile.progressSummary", { sites: state.readIds.length, tasks: progress.tasks.length })}</p>
+            <div className="profile-motif"><Motif /></div>
             {auth ? (
               auth.email ? (
                 <>
@@ -114,6 +119,9 @@ export function Profile({
           </div>
           <div className="settings card">
             <h3>{t("profile.settings")}</h3>
+            <div className="profile-language" role="group" aria-label={t("profile.language")}>
+              {(["tr", "en"] as const).map((language) => <button key={language} aria-pressed={lang === language} onClick={() => onLanguage(language)}>{language === "tr" ? "Türkçe" : "English"}</button>)}
+            </div>
             {!auth && (
               <>
                 <label>
@@ -173,54 +181,23 @@ export function Profile({
           </div>
         </aside>
         <div className="profile-main">
-          <div className="stat-grid">
-            {[
-              {
-                icon: BookOpen,
-                n: state.readIds.length,
-                label: t("profile.statStories"),
-              },
-              {
-                icon: MapPin,
-                n: state.visitedIds.length,
-                label: auth ? t("profile.statVerified") : t("profile.statDemo"),
-              },
-              {
-                icon: MessageSquare,
-                n: state.memories.length,
-                label: t("profile.statMemories"),
-              },
-            ].map(({ icon: Icon, n, label }) => (
-              <div className="card stat" key={label}>
-                <Icon size={21} />
-                <strong>{n}</strong>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-          {experimental && (
-            <div className="card">
-              <div className="row between">
-                <h3>{t("profile.badges")}</h3>
-                <Tag>
-                  {badges.filter((b) => b.earned).length} / {badges.length}
-                </Tag>
-              </div>
-              <div className="badges">
-                {badges.map((b) => (
-                  <div key={b.name} className={b.earned ? "earned" : ""}>
-                    <img
-                      src={`/figma/${b.earned ? "718a4" : "b8133"}.svg`}
-                      alt=""
-                    />
-                    <span>{b.name}</span>
-                    <small>{b.earned ? t("profile.earned") : t("profile.locked")}</small>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="card">
+          <section className="card profile-badges">
+            <div className="row between"><h3>{t("profile.badges")}</h3><span>{badges.filter((b) => b.earned).length} / {badges.length}</span></div>
+            {badges.length ? <div className="badges">
+              {badges.map((badge) => <div key={badge.id} className={badge.earned ? "earned" : ""}>
+                <img src={`/figma/${badge.earned ? "718a4" : "b8133"}.svg`} alt="" />
+                <b lang={tr}>{badge.title}</b>
+                <small lang={tr}>{badge.earned ? badge.site.name : badge.condition === "story" ? t("profile.badgeStory") : t("profile.badgeTask", { title: badge.site.tasks?.find((task) => task.id === badge.taskId)?.title ?? badge.title })}</small>
+              </div>)}
+            </div> : <p className="muted">{t("profile.noBadges")}</p>}
+          </section>
+          <section className="card profile-saved">
+            <h3>{t("profile.saved")}</h3>
+            {state.savedIds.length ? state.sites.filter((site) => state.savedIds.includes(site.id)).map((site) =>
+              <button className="list-row" key={site.id} onClick={() => onSite(site.id)}><Localized tr={site.name} en={site.nameEn} /><ArrowRight size={17} /></button>
+            ) : <p className="muted">{t("profile.noneSaved")}</p>}
+          </section>
+          <div className="card profile-discovered">
             <h3>{t("profile.discovered")}</h3>
             {state.readIds.length === 0 ? (
               <div className="empty-inline">

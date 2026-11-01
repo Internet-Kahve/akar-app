@@ -13,6 +13,12 @@ Her eser kendi klasöründe tutulur. Önce `eser.md`, ardından varsa eserin not
 
 Esere özel referanslar tek `ref/` klasöründe toplanır: `ref/foto/` (fotoğraflar), `ref/plan/` (rölöve, plan, kesit, cephe çizimleri), `ref/metin/` (PDF metin çıkarımları), `ref/maket/` (maket ve başka 3D model görüntüleri; ölçü için kullanılmaz) ve her türev dosyanın kaynak PDF/sayfa kaydı `ref/kaynak_dizini.json`. 19 Ekim 2026 itibarıyla Ulu Cami, Koza Han, Yıldırım Bayezid Bedesteni, Orhan Bey Camii (`orhan-bey-kulliyesi/`), Orhan Bey Hamamı ve Emir Hanı bu düzende; Ulu Cami'nin güncel sürümü v26 (22 Ekim 2026; planı silindi); Bedesten, Koza Han, Emir Hanı ve Yarhisar çeşmesinde eski tur talimatı `SONNET_REVIZYON_PLANI.md` duruyor (tarihsel). Güncel model sürümleri her eserin `3d/README.md` dosyasında. 30 aday eser `aday-eserler/` altında. Ortak sahne kuralları: [Genel sahne standardı](_GENEL_SAHNE_STANDARDI.md). Üretim klasörlerindeki `build/`, `blend/`, `export/` ve `kontrol/` birbirini tamamlar; tek başına GLB dosyasını taşımak üretim kaynağını taşımaz. Ortak kaynak belgeleri `../veri/bursa/` altındadır.
 
+## Gece modeli (1 Kasım 2026)
+
+Uygulamanın gece temasında eser, isteğe bağlı bir gece modeliyle görünür (Yandex Haritalar'daki gibi gece için ayrı hazırlanmış modelleme). Blender gündüzdeki gibi iki dosya üretir: `export/night/<ad>_night.glb` (harita) ve `export/night/<ad>_night_sunum.glb` (sunum; uygulama bunu kullanır). Üretici `_kutuphane/gece/gece_uret.py` (Talha, 31 Ekim; ayrıntı `_kutuphane/gece/BENIOKU.md`). `3d/model.json`'a `"glb_gece": "night/<ad>_night"` eklenir (`glb` gibi `export/`'a göre yol, uzantısız ve `_sunum`suz). Yoksa gece de gündüz modeli gösterilir. 1 Kasım: yedi Bursa eserinin gece modeli bağlı; hepsi gündüzle aynı sürümden ve aynı parça adlarıyla.
+
+Kural: gece modeli gündüz modelinin **bütün parça adlarını** taşır. Hikâye vurguları, parça kartları, görevler ve «İçini göster» grupları gündüzün adlarıyla bir kez yazılır; gece dosyasında eksik bir ad olursa içe aktarma durur (fener, ışıklı pencere gibi fazladan parça serbest). Yerleşim (`yaw`, `kaydirma_m`, `ana_parca`) de ortaktır: iki dosyada model aynı yerde, aynı ölçekte durmalı. Panelden yükleme: Adım 1 → «Gece modeli»; parça adı farkı orada uyarı olarak görünür.
+
 ## Yalnız fotoğraflı eserler (30 Ekim 2026; 3D yok)
 
 `eser.json` + `icerik/` (hikâye, envanter metni, fotoğraflar, görev); `3d/` klasörü ve `model.json` yok, uygulama Fotoğraf görünümüyle açar.

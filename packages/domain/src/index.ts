@@ -21,6 +21,8 @@ export interface SitePhoto {
   sourceId: string;
   license: string;
   trust: Trust;
+  /** In a site's gallery: the 3D view of the site's model it was taken from; absent = none. */
+  camera?: PhotoCamera;
 }
 /** Where the site's model stands on the map (the API's public `SiteDetail.placement`). */
 export interface MapPlacement {
@@ -28,6 +30,12 @@ export interface MapPlacement {
   lat: number;
   /** Clockwise from north, 0 ≤ x < 360. */
   headingDeg: number;
+  /**
+   * The way the main façade (the entrance) faces, clockwise from north, 0 ≤ x < 360. The map's sun stands in front
+   * of it, a little to the left, so the front is lit (content: `3d/model.json → on_yonu`). Absent or `null`: the
+   * city's light direction.
+   */
+  frontDeg?: number | null;
   /** 1 = one model unit is one metre. */
   scale: number;
   /** Metres added on top of the model resting on the ground. */
@@ -132,7 +140,21 @@ export interface CityIdentity {
   pattern: string;
   /** Colour of the pattern on a ground in `accent` (`kimlik.desen_renk`, `#RRGGBB`). */
   patternColour: string;
+  /**
+   * Size of the tile against the standard tile width (`kimlik.desen_olcek`); absent = 1. A tile holding several
+   * repeats of its motif (Hatay's) is drawn larger so its lines keep the width of the others.
+   */
+  patternScale?: number;
+  /** The city's emblem (`kimlik.amblem`): an SVG file name in `/desenler/`, one motif drawn whole, e.g. `amblem-bursa.svg`. */
+  emblem?: string;
+  /**
+   * The emblem cut for small places, 14–32 px (`kimlik.amblem_kucuk`), when the emblem's lines are too thin there
+   * (Konya's); absent = the emblem.
+   */
+  emblemSmall?: string;
 }
+/** The range a pattern scale may take. */
+export const CITY_PATTERN_SCALE = { min: 0.25, max: 8 };
 /** A pattern file name: lower-case words joined by hyphens, `.svg`; never a path, so it can sit in a URL or a CSS value. */
 export const CITY_PATTERN_FILE = /^[a-z0-9][a-z0-9-]*\.svg$/;
 /** Throws on an identity the loading screens cannot draw. */
@@ -141,6 +163,17 @@ export function validateCityIdentity(identity: CityIdentity) {
     throw new Error("Şehir renkleri #RRGGBB biçiminde olmalı");
   if (typeof identity.pattern !== "string" || !CITY_PATTERN_FILE.test(identity.pattern))
     throw new Error("Şehir deseni küçük harfli bir .svg dosya adı olmalı");
+  const scale = identity.patternScale;
+  if (
+    scale !== undefined &&
+    (typeof scale !== "number" || !Number.isFinite(scale) || scale < CITY_PATTERN_SCALE.min || scale > CITY_PATTERN_SCALE.max)
+  )
+    throw new Error(`Desen ölçeği ${CITY_PATTERN_SCALE.min} ile ${CITY_PATTERN_SCALE.max} arasında bir sayı olmalı`);
+  for (const file of [identity.emblem, identity.emblemSmall])
+    if (file !== undefined && (typeof file !== "string" || !CITY_PATTERN_FILE.test(file)))
+      throw new Error("Şehir amblemi küçük harfli bir .svg dosya adı olmalı");
+  if (identity.emblemSmall !== undefined && identity.emblem === undefined)
+    throw new Error("Küçük amblem, amblemle birlikte verilir");
 }
 /** City record `map` (`GET /v1/cities`, §11.45): where the map opens in this city; the globe marker sits at `center`. */
 export interface CityMapView {
@@ -184,6 +217,34 @@ export function validateCityMap(map: CityMapView) {
     if (!Number.isFinite(z) || z < CITY_MARKER_MAX_ZOOM || z > 22)
       throw new Error(`Şehir açılış yakınlığı ${CITY_MARKER_MAX_ZOOM}–22 arasında olmalı`);
 }
+/** One GLB file of a site's model. */
+export interface SiteModelFile {
+  name: string;
+  bytes: number;
+  src: string;
+  parts: string[];
+  triangles?: number | null;
+}
+/** The file a theme shows: the night file by night when the site has one, the day model otherwise. */
+export const modelFileFor = (model: SiteModel, theme: "day" | "night"): SiteModelFile =>
+  theme === "night" && model.night ? model.night : model;
+/**
+ * Part names the site's content uses that its night file lacks: story highlights and cameras, "Eser hakkında"
+ * chapters, part cards, tasks and cover groups. They would not show by night. Only names in use are compared: a
+ * file's part list may also carry mesh names, read differently by the server and by the editor.
+ */
+export function nightPartsMissing(site: HeritageSite): string[] {
+  const night = site.model?.night;
+  if (!night?.parts.length) return [];
+  const used = new Set([
+    ...site.stories.flatMap((s) => [...(s.highlights ?? []), ...(s.camera?.target ? [s.camera.target] : [])]),
+    ...(site.chapters ?? []).flatMap((c) => [...c.focusParts, ...(c.camera?.target ? [c.camera.target] : [])]),
+    ...(site.partCards ?? []).flatMap((c) => c.parts),
+    ...(site.tasks ?? []).flatMap((t) => [...(t.part ? [t.part] : []), ...(t.field?.fromHome ? [t.field.fromHome.part] : [])]),
+    ...(site.model?.coverGroups ?? []).flat(),
+  ]);
+  return [...used].filter((part) => !night.parts.includes(part));
+}
 export interface SiteModel {
   name: string;
   bytes: number;
@@ -194,6 +255,16 @@ export interface SiteModel {
   triangles?: number | null;
   /** "İçini göster": part-name groups lifted top to bottom (first group first); absent or empty = no button. */
   coverGroups?: string[][];
+  /**
+   * Interior parts of the presentation file (`3d/model.json → ic_parcalar`): the map leaves them out, as the
+   * prototype's map file has none. Absent or empty = the map draws every part but the scenery.
+   */
+  interiorParts?: string[];
+  /**
+   * The night theme's file of the same model (`SiteDetail.nightModelId`, `3d/model.json → glb_gece`); absent = the day
+   * file at night too. It carries the day file's part names, so placement, highlights, cards and cover groups hold.
+   */
+  night?: SiteModelFile;
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
 }
@@ -207,6 +278,13 @@ export interface CameraPose {
   azimuthDeg: number;
   elevationDeg: number;
   distance: number;
+}
+/**
+ * The 3D view a gallery photograph was taken from, on this site's model (the 3D view's ← → arrows): a camera pose and
+ * whether the model opens («İçini göster») for it, as for a photograph taken inside.
+ */
+export interface PhotoCamera extends CameraPose {
+  interior?: boolean;
 }
 /** Where an English story text came from: a machine draft nobody has saved yet, or one an editor saved. */
 export type TranslationStatus = "machine" | "reviewed";
@@ -429,6 +507,8 @@ export interface HeritageSite {
   sources?: SiteSource[];
   coverPhotoId?: string;
   model?: SiteModel;
+  /** Where the 3D view opens on the site's page (`GET /v1/sites/:id` `openingCamera`); absent or null = the default view. */
+  openingCamera?: CameraPose | null;
   historyImages?: HistoryImage[];
   /** İz Bırak samples in order; absent or empty = none. */
   sampleTraces?: SampleTrace[];
@@ -686,6 +766,11 @@ export function validatePlacement(p: MapPlacement) {
     throw new Error("Geçerli enlem ve boylam gir.");
   if (!Number.isFinite(p.headingDeg) || p.headingDeg < 0 || p.headingDeg >= 360)
     throw new Error("Yön 0 ile 360 derece arasında olmalı.");
+  if (
+    p.frontDeg != null &&
+    (!Number.isFinite(p.frontDeg) || p.frontDeg < 0 || p.frontDeg >= 360)
+  )
+    throw new Error("Ön cephe yönü 0 ile 360 derece arasında olmalı.");
   const { scale, altitudeM, anchorNodeLength, points } = placementLimits;
   if (!within(p.scale, scale.min, scale.max))
     throw new Error(`Ölçek ${scale.min} ile ${scale.max} arasında olmalı.`);

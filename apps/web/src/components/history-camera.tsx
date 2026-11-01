@@ -120,7 +120,7 @@ export function HistoryCamera({
         <button className="round-btn" aria-label={t("site.cameraClose")} onClick={onClose}>
           <X size={18} />
         </button>
-        <span>{title}</span>
+        <div className="camera-title"><b>{title}</b><small>{image.caption}</small></div>
       </header>
       {shot ? (
         <>
@@ -232,7 +232,7 @@ export function HistoryCamera({
               aria-label={t("site.cameraPickFile")}
               onClick={() => pickFile.current?.click()}
             >
-              <ImageIcon size={20} />
+              <ImageIcon size={20} /><small>{t("site.cameraGallery")}</small>
             </button>
           </div>
         </>

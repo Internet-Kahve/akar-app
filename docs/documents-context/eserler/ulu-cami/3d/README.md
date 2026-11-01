@@ -140,3 +140,9 @@ v16–v20'de açık/manifold olmayan kenar, 0,3 m eşikli çakışma ve 8 yönde
 - Batı kapısında kapı kanadı sol alt kenarı çerçeveye göre hafif kaçık.
 - Renk denetimi: kaide yan yüzü, 19 kubbe, minare tuğlası ve avlu taşı V < 0,72 (standart, kullanıcı kararı veya v22 onayı gereği).
 - Stilize model. Kitabe yazıları uydurulmadı.
+
+## Gece varyantı (31 Ekim 2026, ulu-cami_v32'den)
+
+`export/night/ulu-cami_v32_night.glb` (uygulama, 1,45 MB) ve `export/night/ulu-cami_v32_night_sunum.glb` (2,41 MB). Üretim `_kutuphane/gece/` içinden: `blender -b --python gece_uret.py -- ayar/ulu-cami.json hepsi` (ayrıntı `_kutuphane/gece/BENIOKU.md`). Sahne `blend/ulu-cami_v32_night.blend`, kontrol `kontrol/night/` (repoda değil).
+
+Işık köşe rengine pişirilmiş, malzemeler `KHR_materials_unlit`; parça adları ve düğüm konumları gündüzle aynı, `model.json` ayarları geçerli. Doku WebP (`EXT_texture_webp`), normal yok. Uygulama modeli üçgen 90 254 → 102 074. Haritaya bağlı değil; telefonda ölçülmedi. Model sürümü değişirse `ayar/ulu-cami.json` içindeki `dosya` güncellenip yeniden üretilir.

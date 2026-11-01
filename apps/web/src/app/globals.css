@@ -543,6 +543,17 @@ img {
 .city-far .city-marker:not(.ready) small {
   display: none;
 }
+/* The city's emblem in place of the dot (kimlik.amblem), drawn in the city's colour; the file gives the shape only. */
+.city-marker i.city-emblem {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--sehir-aksan);
+  -webkit-mask: var(--sehir-amblem) center / contain no-repeat;
+  mask: var(--sehir-amblem) center / contain no-repeat;
+}
 .fallback-pin img {
   display: block;
   max-width: none;
@@ -2546,6 +2557,177 @@ td small {
   top: 24px;
   min-width: 0;
 }
+/* The panel's 3D preview (admin-model-preview.tsx): the visitor's viewer in a fixed frame, the angle tools under it. */
+.editor-preview-head {
+  margin-bottom: 12px;
+}
+.editor-preview-head h3 {
+  margin: 0;
+}
+.admin-model-preview {
+  display: grid;
+  gap: 12px;
+}
+.admin-model-stage {
+  position: relative;
+  height: 380px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.admin-model-preview .model-viewer {
+  position: absolute;
+  inset: 0;
+}
+/* A gallery photograph over the model while its angle is set: turn the model until the two line up. */
+.admin-photo-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.admin-photo-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.admin-photo-strip button {
+  position: relative;
+  flex: none;
+  width: 72px;
+  height: 54px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.admin-photo-strip button.active {
+  border-color: var(--primary);
+}
+.admin-photo-strip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.admin-photo-strip span {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  min-width: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+.admin-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-model-hint {
+  margin: 0;
+  font-size: 12px;
+}
+.admin-model-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  color: var(--text);
+}
+.cue-angle {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+/* Part cards: a card's parts as chips (picked in the 3D preview), photos added from a grid of thumbnails. */
+.part-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.part-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-light);
+  font-size: 12px;
+  font-weight: 600;
+}
+.part-chip.missing {
+  background: var(--inferred-bg);
+  color: var(--inferred);
+}
+.part-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+.part-photo-add summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.part-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.part-photo-grid button {
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+.part-photo-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* «Kart göster» beside the save button: the sentence's photo as a card over the model, saved at once. */
+.admin-card-toggle {
+  align-self: center;
+  margin: 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-unsaved {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--inferred-bg);
+  color: var(--text);
+  font-size: 13px;
+}
+.admin-sentence-view {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+.admin-sentence-view dt {
+  color: var(--text-muted);
+}
+.admin-sentence-view dd {
+  margin: 0;
+}
 .photo-preview {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -2735,6 +2917,21 @@ td small {
   padding-left: 20px;
   max-height: 220px;
   overflow: auto;
+}
+/* Adım 1: the night model, under the day model's parts. */
+.editor-night-model {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding: 14px 0 0;
+  margin: 0 0 16px;
+}
+.editor-night-model h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.editor-night-model p {
+  margin: 0;
 }
 .photo-pool {
   display: grid;
@@ -3829,7 +4026,7 @@ td small {
   margin: 8px 0 12px;
   background: var(--gold);
 }
-.modal .about-meta-top {
+.about-scroll .about-meta-top {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
@@ -3837,7 +4034,7 @@ td small {
   text-transform: uppercase;
   color: #dbe7ec;
 }
-.modal .about-cover-meta {
+.about-scroll .about-cover-meta {
   margin: 14px 0 0;
   font-size: 14px;
   color: #ffffffd9;
@@ -3908,7 +4105,7 @@ td small {
   transform-origin: left;
   transition: transform 0.1s linear;
 }
-.modal .about-lead {
+.about-scroll .about-lead {
   margin: 24px 0 0;
   font-size: 17px;
   line-height: 1.7;
@@ -4006,7 +4203,7 @@ td small {
 .about-summary {
   margin: 0 0 24px;
 }
-.modal .about-summary p {
+.about-scroll .about-summary p {
   margin: 0;
   font-size: 19px;
   line-height: 1.6;
@@ -4057,7 +4254,7 @@ td small {
 .about-quote .about-gold {
   margin: 0 0 10px;
 }
-.modal .about-quote p {
+.about-scroll .about-quote p {
   margin: 0;
   font: 600 28px/1.2 var(--about-serif);
   color: var(--sehir-aksan);
@@ -4166,7 +4363,7 @@ td small {
 .about-deep.open .about-deep-button svg {
   transform: rotate(180deg);
 }
-.modal .about-p {
+.about-scroll .about-p {
   margin: 0 0 1.1em;
   font-size: 17px;
   line-height: 1.75;
@@ -4208,13 +4405,13 @@ td small {
   margin: 0 0 1.1em;
   padding: 0;
 }
-.modal .about-inscription p {
+.about-scroll .about-inscription p {
   margin: 0;
   font-size: 17px;
   font-style: italic;
   line-height: 1.75;
 }
-.modal .about-inscription .about-inscription-meaning {
+.about-scroll .about-inscription .about-inscription-meaning {
   margin-top: 0.5em;
 }
 .about-inscription-meaning span {
@@ -4281,7 +4478,7 @@ td small {
 .about-end {
   padding: 28px 0 8px;
 }
-.modal .about-note {
+.about-scroll .about-note {
   margin: 14px 0 0;
   font-size: 13px;
   line-height: 20px;
@@ -4648,7 +4845,8 @@ td small {
   color: var(--text);
   font-weight: 600;
 }
-.task-pick-bar .btn {
+.task-pick-bar .btn,
+.task-pick-bar .round-btn {
   flex-shrink: 0;
   pointer-events: auto;
 }
@@ -4702,8 +4900,8 @@ td small {
   /* 6–10 % is the design's rule for a pattern behind a title or a loading screen. */
   opacity: 0.08;
   background: var(--city-accent, var(--primary));
-  -webkit-mask: var(--city-pattern) 0 0 / 96px auto repeat;
-  mask: var(--city-pattern) 0 0 / 96px auto repeat;
+  -webkit-mask: var(--city-pattern) 0 0 / calc(96px * var(--city-pattern-scale, 1)) auto repeat;
+  mask: var(--city-pattern) 0 0 / calc(96px * var(--city-pattern-scale, 1)) auto repeat;
   animation: loading-in 320ms ease-out;
 }
 .opening {
@@ -4745,8 +4943,19 @@ td small {
   font: 600 34px/40px "Cormorant Garamond", Georgia, serif;
 }
 .opening-city span {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   animation: loading-in 320ms ease-out;
+}
+/* The city's emblem before its name (kimlik.amblem), in the city's colour. */
+.opening-city-emblem {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  background: var(--city-accent);
+  -webkit-mask: var(--city-emblem) center / contain no-repeat;
+  mask: var(--city-emblem) center / contain no-repeat;
 }
 .opening-note {
   color: var(--text-muted);

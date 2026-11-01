@@ -429,6 +429,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         editorVersion: sites.editorVersion,
         coverMediaId: sites.coverMediaId,
         aboutCoverMediaId: sites.aboutCoverMediaId,
+        nightModelMediaId: sites.nightModelMediaId,
         openingCamera: sites.openingCamera,
         updatedAt: sites.updatedAt,
       })
@@ -456,7 +457,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
     loadBadges(db, siteIds),
     loadSampleTraces(db, siteIds),
     db
-      .select({ siteId: siteMedia.siteId, id: siteMedia.mediaId })
+      .select({ siteId: siteMedia.siteId, id: siteMedia.mediaId, camera: siteMedia.camera })
       .from(siteMedia)
       .where(inArray(siteMedia.siteId, siteIds))
       .orderBy(asc(siteMedia.siteId), asc(siteMedia.position)),
@@ -518,6 +519,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...sectionPhotos.map((p) => p.mediaId),
       ...tasks.map((t) => t.mediaId),
       ...traces.map((t) => t.mediaId),
+      // After the linked media: the day model stays the first model of the list.
+      extra.nightModelMediaId,
     ]);
     const contentSourceIds = distinct([
       ...(sourceLinksOf.get(id) ?? []).map((s) => s.id),
@@ -563,6 +566,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       editorVersion: extra.editorVersion === 2 ? 2 : null,
       coverMediaId: extra.coverMediaId,
       aboutCoverMediaId: extra.aboutCoverMediaId,
+      nightModelId: extra.nightModelMediaId,
       openingCamera: extra.openingCamera,
       updatedAt: extra.updatedAt.toISOString(),
       stories: stories.map((b) => ({
@@ -645,6 +649,9 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         (mediaLinksOf.get(row.id) ?? []).some((m) => mediaById.get(m.id)?.kind === "model"),
       ),
       photoIds: (mediaLinksOf.get(row.id) ?? []).filter((m) => mediaById.get(m.id)?.kind === "photo").map((m) => m.id),
+      photoCameras: (mediaLinksOf.get(row.id) ?? []).flatMap((m) =>
+        m.camera && mediaById.get(m.id)?.kind === "photo" ? [{ photoId: m.id, camera: m.camera }] : [],
+      ),
       media: siteMediaList.map((m) => ({
         id: m.id,
         kind: m.kind,

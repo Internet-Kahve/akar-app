@@ -16,6 +16,7 @@ import {
   setLocation,
   setMapPlacement,
   setModel,
+  setNightModel,
   setPartCards,
   setPhotos,
   setSections,
@@ -40,6 +41,7 @@ import {
   LocationBody,
   MapPlacementBody,
   ModelBody,
+  NightModelBody,
   PartCardsBody,
   SectionsBody,
   SiteInfoBody,
@@ -180,6 +182,21 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => write(req, 200, (tx, ctx) => setModel(tx, ctx, req.params.id, req.body)),
+  );
+
+  app.put(
+    "/v1/admin/sites/:id/night-model",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary: "Adım 1 · Gece modeli: gece temasında gösterilen 3B modeli bağla ya da kaldır",
+        params: IdParams,
+        body: NightModelBody,
+        response: { 200: AdminSiteDetail },
+      },
+    },
+    async (req) => write(req, 200, (tx, ctx) => setNightModel(tx, ctx, req.params.id, req.body)),
   );
 
   app.put(

@@ -42,4 +42,12 @@ test("the shell takes the city's colour and motif, and stays neutral without the
   assert.equal(style["--sehir-aksan"], "#22566E");
   assert.equal(style["--sehir-acik"], "#A4D8E0");
   assert.equal(style["--sehir-desen"], 'url("/desenler/desen-bursa-sekiz-yildiz.svg")');
+  assert.equal(style["--sehir-desen-olcek"], undefined);
+});
+
+test("a city's pattern scale reaches both the loading screens and the shell; an impossible one leaves the city neutral", () => {
+  const hatay: CityIdentity = { accent: "#7A6340", pattern: "desen-hatay-yildiz-kafes.svg", patternColour: "#DBCDB5", patternScale: 4.3 };
+  assert.equal((identityStyle(hatay) as Record<string, string>)["--city-pattern-scale"], "4.3");
+  assert.equal((cityIdentityStyle(hatay) as Record<string, string>)["--sehir-desen-olcek"], "4.3");
+  assert.deepEqual(cityIdentityStyle({ ...hatay, patternScale: 40 }), {});
 });

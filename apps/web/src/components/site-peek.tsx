@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import {
   BookmarkPlus,
+  BookOpen,
   BookOpenText,
   ChevronRight,
   Headphones,
@@ -30,6 +31,7 @@ export function SitePeek({
   saved,
   onOpen,
   onListen,
+  onRead,
   onTasks,
   onNext,
   onRoute,
@@ -43,6 +45,8 @@ export function SitePeek({
   saved: boolean;
   onOpen: () => void;
   onListen: () => void;
+  /** «Oku»: the short story to read, as on the site's page. */
+  onRead: () => void;
   onTasks: () => void;
   onNext: (id: string) => void;
   onRoute: () => void;
@@ -91,13 +95,16 @@ export function SitePeek({
       <button className="peek-close" aria-label={t("common.close")} onClick={onClose}>
         <X size={18} />
       </button>
-      <div className="peek-head">
-        <button className="peek-photo" aria-label={t("peek.openPage", { name: text(site.name, site.nameEn) })} onClick={onOpen}>
+      {/* As the prototype's card top: photo, name and line are one area that opens the site; the name is its button. */}
+      <div className="peek-head" onClick={onOpen}>
+        <div className="peek-photo">
           <SiteArtwork site={site} live={live} />
-        </button>
+        </div>
         <div>
           <h3>
-            <button onClick={onOpen}><Localized tr={site.name} en={site.nameEn} /></button>
+            <button aria-label={t("peek.openPage", { name: text(site.name, site.nameEn) })}>
+              <Localized tr={site.name} en={site.nameEn} />
+            </button>
           </h3>
           <p className="peek-meta">{siteMeta(site)}</p>
           <TrustTag trust={site.sources?.length ? "verified" : "representative"} quote={text(site.description, site.descriptionEn)} />
@@ -107,10 +114,16 @@ export function SitePeek({
       {listenFirst ? (
         <>
           <div className="peek-actions">
-            <button className="btn" onClick={onListen}>
-              <Headphones size={18} />
-              {t("site.listen", { minutes: site.minutes })}
-            </button>
+            <div className="ikili" role="group" aria-label={t("site.shortStory")}>
+              <button className="ik-sol" onClick={onListen}>
+                <Headphones size={20} />
+                {t("site.listen", { minutes: site.minutes })}
+              </button>
+              <button className="ik-sag" onClick={onRead}>
+                <BookOpen size={20} />
+                {t("app.read")}
+              </button>
+            </div>
             {route}
           </div>
           <button className="peek-more" onClick={onOpen}>
@@ -122,7 +135,7 @@ export function SitePeek({
         <>
           <div className="peek-actions">
             <button className="btn" onClick={onOpen}>
-              <BookOpenText size={18} />
+              <BookOpenText size={20} />
               {t("peek.explore")}
             </button>
             {route}

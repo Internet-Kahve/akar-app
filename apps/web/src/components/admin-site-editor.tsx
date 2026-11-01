@@ -12,12 +12,15 @@ import {
   MoveUp,
   MoveDown,
   Box,
+  RotateCcw,
 } from "lucide-react";
 import {
   kindLabels,
   trustLabels,
+  nightPartsMissing,
   publicationIssues,
   type HeritageSite,
+  type SiteModel,
   type SitePhoto,
   type SiteSource,
   type StoryBlock,
@@ -29,6 +32,7 @@ import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
+import { AdminModelPreview, poseSummary } from "./admin-model-preview";
 import { prepareModel } from "../lib/editor-media";
 import { translationLabels } from "../lib/translation-labels";
 const steps = [
@@ -126,8 +130,12 @@ export function SiteEditor({
   live: boolean;
 }) {
   const [draft, setDraft] = useState(() => prepareSite(site));
+  // The site as last saved (or opened): «Değişiklikleri geri al» goes back to it.
+  const [savedDraft, setSavedDraft] = useState(draft),
+    [reverting, setReverting] = useState(false);
   const [step, setStep] = useState(0),
-    [activeStory, setActiveStory] = useState(0);
+    [activeStory, setActiveStory] = useState(0),
+    [activeCard, setActiveCard] = useState(0);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [saved, setSaved] = useState("");
@@ -135,6 +143,8 @@ export function SiteEditor({
     [photoEdit, setPhotoEdit] = useState<SitePhoto>();
   const [preview, setPreview] = useState(false),
     [closing, setClosing] = useState(false);
+  // The right column: the 3D model (Model and Hikâye steps of a site with one) or the photo preview.
+  const [aside, setAside] = useState<"3d" | "photo">("3d");
   const [baseline, setBaseline] = useState(() => siteKey(draft));
   // The running voice-over or translation request ("narrate:s1", "translate:all") and its outcome.
   const [storyJob, setStoryJob] = useState<string | null>(null),
@@ -242,6 +252,7 @@ export function SiteEditor({
     try {
       const canonical = await onSave(next);
       setDraft(canonical);
+      setSavedDraft(canonical);
       setBaseline(siteKey(canonical));
       setSaved(
         live
@@ -313,6 +324,12 @@ export function SiteEditor({
           <span className="editor-breadcrumb"> › {steps[step]}</span>
         </div>
         <div className="editor-actions">
+          {dirty && (
+            <button className="btn secondary" onClick={() => setReverting(true)}>
+              <RotateCcw size={16} />
+              Değişiklikleri geri al
+            </button>
+          )}
           <button className="btn secondary" onClick={() => setPreview(true)}>
             Önizle
           </button>
@@ -439,6 +456,15 @@ export function SiteEditor({
                       ))}
                     </ul>
                   </details>
+                  <NightModel
+                    site={{ ...draft, model: draft.model }}
+                    busy={busy}
+                    onUpload={(file) => void uploadNightModel(file)}
+                    onRemove={() => {
+                      const { night: _night, ...day } = draft.model!;
+                      field("model", day);
+                    }}
+                  />
                   <PlacementSection
                     editor={placement}
                     siteId={draft.id}
@@ -450,9 +476,9 @@ export function SiteEditor({
                 </>
               )}
               <Notice>
-                Model dosyası ve parça adları taslakta saklanır. Etkileşimli 3D,
-                kamera açıları ve ses dosyası bağlama sonraki geliştirme
-                aşamasında; önizleme şu an fotoğrafla çalışır.
+                Sağdaki 3D önizlemede modeli döndür, «Açılış açısı olarak
+                kaydet» ile eser sayfasındaki 3D'nin hangi açıyla açılacağını
+                belirle. Ses dosyası bağlama sonraki aşamada.
               </Notice>
               <button className="btn secondary" onClick={() => setStep(1)}>
                 <ImagePlus size={17} />
@@ -791,6 +817,8 @@ export function SiteEditor({
                   className={`cue-editor card ${activeStory === i ? "active" : ""}`}
                   key={s.id}
                   onFocus={() => setActiveStory(i)}
+                  // A click anywhere on the sentence selects it: the 3D preview on the right shows its view.
+                  onClick={() => setActiveStory(i)}
                 >
                   <legend>Cümle {i + 1}</legend>
                   <div className="cue-top">
@@ -905,6 +933,13 @@ export function SiteEditor({
                       ))}
                     </select>
                   </label>
+                  {draft.model && (
+                    <p className="muted cue-angle">
+                      3D: {s.camera ? poseSummary(s.camera) : "açı öncekinde kalır"}
+                      {s.highlights?.length ? ` · vurgu: ${s.highlights.join(", ")}` : " · vurgu yok"}
+                      {s.interior ? " · iç mekân" : ""}
+                    </p>
+                  )}
                   <details className="editor-details">
                     <summary>Dil, güven ve ek alanlar</summary>
                     <label className="field">
@@ -961,28 +996,10 @@ export function SiteEditor({
                           />
                           Kart göster
                         </label>
-                        <label className="field">
-                          Vurgulanacak parçalar
-                          <select
-                            multiple
-                            value={s.highlights ?? []}
-                            onChange={(e) =>
-                              storyField(s.id, {
-                                highlights: Array.from(
-                                  e.target.selectedOptions,
-                                  (o) => o.value,
-                                ),
-                              })
-                            }
-                          >
-                            {draft.model.parts.map((p) => (
-                              <option key={p}>{p}</option>
-                            ))}
-                          </select>
-                        </label>
                         <small className="muted">
-                          Kart ve vurgu seçimleri saklanır; 3D oynatıcı
-                          bağlantısı sonraki aşamada.
+                          Açı, vurgu ve iç mekân sağdaki 3D'de ayarlanır:
+                          cümleyi seç, modeli döndür, parçaya dokun,
+                          gerekirse «İçini göster».
                         </small>
                       </>
                     )}
@@ -1006,6 +1023,8 @@ export function SiteEditor({
               ]}
               sources={sources}
               onChange={(cards) => field("partCards", cards)}
+              active={activeCard}
+              onActive={setActiveCard}
               job={storyJob}
               jobsReady={storyJobsReady}
               note={storyNote}
@@ -1111,7 +1130,79 @@ export function SiteEditor({
           </footer>
         </div>
         <aside className="editor-preview">
-          <h3>Önizleme</h3>
+          {draft.model && (step === 0 || step === 3 || step === 4) ? (
+            <div className="row between editor-preview-head">
+              <h3>{aside === "3d" ? "3D önizleme" : "Önizleme"}</h3>
+              <div className="segmented" role="group" aria-label="Önizleme">
+                <button className={aside === "3d" ? "active" : ""} aria-pressed={aside === "3d"} onClick={() => setAside("3d")}>
+                  3D
+                </button>
+                <button className={aside === "photo" ? "active" : ""} aria-pressed={aside === "photo"} onClick={() => setAside("photo")}>
+                  Fotoğraf
+                </button>
+              </div>
+            </div>
+          ) : (
+            <h3>Önizleme</h3>
+          )}
+          {draft.model && (step === 0 || step === 3 || step === 4) && aside === "3d" ? (
+            <AdminModelPreview
+              // Each step starts its own preview: the last step's note and view do not carry over.
+              key={`${draft.model.src}:${step}`}
+              site={draft}
+              {...(step === 3 && story && {
+                story,
+                storyIndex: activeStory,
+                onStory: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior" | "showCard">) =>
+                  storyField(story.id, patch),
+              })}
+              {...(step === 4 && {
+                card: draft.partCards?.[activeCard],
+                cardIndex: activeCard,
+                onCardParts: (parts: string[]) =>
+                  field(
+                    "partCards",
+                    (draft.partCards ?? []).map((c, i) => (i === activeCard ? { ...c, parts } : c)),
+                  ),
+                onNewCard: (parts: string[]) => {
+                  const cards = draft.partCards ?? [];
+                  const id = crypto.randomUUID();
+                  field("partCards", [
+                    ...cards,
+                    {
+                      id,
+                      parts,
+                      title: "",
+                      body: "",
+                      photos: [],
+                      sourceId: sources[0]?.id,
+                      trust: "representative",
+                    },
+                  ]);
+                  setActiveCard(cards.length);
+                  // The new card is at the end of the list: bring it into view, its title first to fill in.
+                  setTimeout(() => {
+                    const card = document.querySelector<HTMLElement>(`[data-card-id="${id}"]`);
+                    card?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    card?.querySelector("input")?.focus({ preventScroll: true });
+                  }, 50);
+                },
+              })}
+              {...(step === 0 && {
+                onOpening: (pose) => field("openingCamera", pose),
+                onPhotoCamera: (photoId, camera) =>
+                  field(
+                    "photos",
+                    photos.map((p) => {
+                      if (p.id !== photoId) return p;
+                      const { camera: _old, ...rest } = p;
+                      return camera ? { ...rest, camera } : rest;
+                    }),
+                  ),
+              })}
+            />
+          ) : (
+          <>
           <PhotoPreview
             photo={step >= 3 ? selectedPhoto : cover}
             name={draft.name}
@@ -1137,6 +1228,8 @@ export function SiteEditor({
                 Sonraki
               </button>
             </div>
+          )}
+          </>
           )}
           <small className="muted">
             Değişiklikleri kaydetmeden inceleyebilirsin.
@@ -1184,6 +1277,32 @@ export function SiteEditor({
           </div>
         </Modal>
       )}
+      {reverting && (
+        <Modal title="Değişiklikleri geri al" onClose={() => setReverting(false)}>
+          <p>
+            Son kayıttan bu yana yaptığın bütün değişiklikler (açılar ve harita
+            yerleşimi dahil) silinir; eser son kaydedilen hâline döner.
+          </p>
+          <div className="modal-actions">
+            <button className="btn secondary" onClick={() => setReverting(false)}>
+              Vazgeç
+            </button>
+            <button
+              className="btn"
+              onClick={() => {
+                setDraft(savedDraft);
+                placement.revert();
+                setActiveStory(0);
+                setError("");
+                setSaved("Değişiklikler geri alındı.");
+                setReverting(false);
+              }}
+            >
+              Geri al
+            </button>
+          </div>
+        </Modal>
+      )}
       {closing && (
         <Modal
           title="Kaydedilmemiş değişiklikler"
@@ -1191,6 +1310,9 @@ export function SiteEditor({
         >
           <p>Eseri taslak olarak kaydedebilir veya son kayda dönebilirsin.</p>
           <div className="modal-actions">
+            <button className="btn secondary" onClick={() => setClosing(false)}>
+              Vazgeç, düzenlemeye dön
+            </button>
             <button className="btn secondary" onClick={onClose}>
               Kaydetmeden çık
             </button>
@@ -1234,13 +1356,90 @@ export function SiteEditor({
     setBusy(true);
     setError("");
     try {
-      field("model", await prepareModel(file));
+      const model = await prepareModel(file);
+      // A new day file keeps the night one: the part names are compared below the upload.
+      field("model", draft.model?.night ? { ...model, night: draft.model.night } : model);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Model okunamadı.");
     } finally {
       setBusy(false);
     }
   }
+  async function uploadNightModel(file?: File) {
+    if (!file || !draft.model) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { name, bytes, src, parts, triangles } = await prepareModel(file);
+      field("model", {
+        ...draft.model,
+        night: { name, bytes, src, parts, ...(triangles !== undefined && { triangles }) },
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gece modeli okunamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+}
+/**
+ * Adım 1, gece modeli: the night theme's file of the same model. Optional; without it the night shows the day model.
+ * Its part names should be the day model's, as highlights, part cards and tasks name them.
+ */
+function NightModel({
+  site,
+  busy,
+  onUpload,
+  onRemove,
+}: {
+  site: HeritageSite & { model: SiteModel };
+  busy: boolean;
+  onUpload: (file?: File) => void;
+  onRemove: () => void;
+}) {
+  const { model } = site;
+  const missing = nightPartsMissing(site);
+  return (
+    <section className="editor-night-model">
+      <h3>Gece modeli</h3>
+      <p className="muted">
+        İsteğe bağlı. Gece temasında bu dosya gösterilir; yoksa gece de gündüz
+        modeli görünür. Parça adları gündüz modeliyle aynı olmalı: hikâye
+        vurguları, parça kartları ve görevler bu adlarla çalışır.
+      </p>
+      {model.night && (
+        <div className="row between">
+          <Tag>
+            {model.night.name}
+            {model.night.bytes > 0 &&
+              ` · ${(model.night.bytes / 1024 / 1024).toFixed(2)} MB`}{" "}
+            · {model.night.parts.length} parça
+          </Tag>
+          <button className="btn secondary" onClick={onRemove}>
+            Gece modelini kaldır
+          </button>
+        </div>
+      )}
+      <label className="field">
+        {model.night ? "Gece modelini değiştir" : "Gece modeli dosyası"}
+        <input
+          type="file"
+          accept=".glb"
+          disabled={busy}
+          onChange={(e) => {
+            onUpload(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+      </label>
+      {missing.length > 0 && (
+        <Notice>
+          Gece modelinde içeriğin kullandığı şu parçalar yok: {missing.join(", ")}.
+          Bu parçalardaki vurgu, kart ve görevler gece temasında görünmez.
+        </Notice>
+      )}
+    </section>
+  );
 }
 function PhotoPreview({
   photo,

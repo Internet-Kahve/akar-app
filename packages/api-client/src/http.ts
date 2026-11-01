@@ -6,6 +6,7 @@ import {
   type AngleMatch,
   type SiteBadge,
   type CameraPose,
+  type PhotoCamera,
   type HistoryViewpoint,
   type StoryFlow,
   type Command,
@@ -211,6 +212,8 @@ interface SiteDetailDto {
   }>;
   /** Absent on older API versions. */
   aboutCoverMediaId?: string | null;
+  /** The night theme's model in `media`; null or absent (older API versions) = none. */
+  nightModelId?: string | null;
   /** Absent on older API versions. */
   chapters?: Array<{
     id: string;
@@ -284,6 +287,10 @@ interface SiteDetailDto {
   media: MediaDto[];
   /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
   placement?: MapPlacement | null;
+  /** Where the 3D view opens; `null` = the default view, absent on older API versions. */
+  openingCamera?: CameraPose | null;
+  /** Gallery photographs with a 3D angle on the site's model; absent on older API versions. */
+  photoCameras?: Array<{ photoId: string; camera: PhotoCamera }>;
   /** Explicit gallery relationship; absent on older API versions. */
   photoIds?: string[];
   sources: SiteSource[];
@@ -455,17 +462,25 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ].filter(present),
   );
   const gallery = d.photoIds ? new Set(d.photoIds) : null;
+  const cameraOf = new Map((d.photoCameras ?? []).map((c) => [c.photoId, c.camera]));
   const photos = d.media
     .filter(
       (m) =>
         m.kind === "photo" &&
         (gallery ? gallery.has(m.id) : used.has(m.id) || !other.has(m.id)),
     )
-    .map(toPhoto);
+    .map((m) => {
+      const camera = cameraOf.get(m.id);
+      return camera ? { ...toPhoto(m), camera } : toPhoto(m);
+    });
   const aboutCover = d.aboutCoverMediaId
     ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
     : undefined;
-  const model = d.media.find((m) => m.kind === "model");
+  // The day model is the first model that is not the night one (the server lists it first).
+  const model = d.media.find((m) => m.kind === "model" && m.id !== d.nightModelId);
+  const night = d.nightModelId
+    ? d.media.find((m) => m.id === d.nightModelId && m.kind === "model")
+    : undefined;
   return {
     id: d.id,
     name: d.name,
@@ -604,6 +619,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ...(present(d.relatedSiteId) && { relatedSiteId: d.relatedSiteId }),
     ...(typeof d.displayOrder === "number" && { displayOrder: d.displayOrder }),
     ...(present(d.coverMediaId) && { coverPhotoId: d.coverMediaId }),
+    ...(present(d.openingCamera) && { openingCamera: d.openingCamera }),
     ...(model && {
       model: {
         name: model.title || model.id,
@@ -614,6 +630,15 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         trust: model.trust,
         triangles: model.triangles ?? null,
         ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
+        ...(night && {
+          night: {
+            name: night.title || night.id,
+            bytes: 0,
+            src: night.url,
+            parts: night.parts,
+            triangles: night.triangles ?? null,
+          },
+        }),
         placement: d.placement ?? null,
       },
     }),
@@ -1607,6 +1632,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       site.model && { ...site.model, placement: undefined },
       cur.model && { ...cur.model, placement: undefined },
     );
+    const nightChanged = !same(site.model?.night, cur.model?.night);
+    const openingChanged = !same(site.openingCamera ?? null, cur.openingCamera ?? null);
     const photosChanged =
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
@@ -1614,6 +1641,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     if (
       !sourcesChanged &&
       !modelChanged &&
+      !nightChanged &&
+      !openingChanged &&
       !photosChanged &&
       !storiesChanged &&
       !partCardsChanged
@@ -1664,13 +1693,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       if (!model) {
         await call("PUT", `${path}/model`, { body: { mediaId: null } });
       } else if (model.src.startsWith("data:")) {
-        // The opening camera belongs to the old model; a new one starts without it.
+        // The opening camera belongs to the model: a new one keeps the angle only when the editor set one for it.
         const id = await editorUpload(`${site.id}:model`, "model", model.src, {
           title: model.name,
           license: CONTRIBUTOR_LICENSE,
           trust: model.trust,
         });
-        await call("PUT", `${path}/model`, { body: { mediaId: id } });
+        await call("PUT", `${path}/model`, {
+          body: { mediaId: id, ...(openingChanged && { openingCamera: site.openingCamera ?? null }) },
+        });
         if (
           site.stories.some((s) => s.highlights?.length) ||
           (partCardsChanged && site.partCards?.length)
@@ -1687,13 +1718,48 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       }
     }
 
-    if (photosChanged)
+    // The opening angle of the linked model (Adım 1 «Açılış açısı olarak kaydet»); a new file sent it above.
+    const uploadedModel = modelChanged && Boolean(site.model?.src.startsWith("data:"));
+    if (openingChanged && site.model && !uploadedModel) {
+      const linked = before.media.find((m) => m.kind === "model");
+      if (linked)
+        await call("PUT", `${path}/model`, {
+          body: { mediaId: linked.id, openingCamera: site.openingCamera ?? null },
+        });
+    }
+
+    // After the day model: the night one needs it. Removing the day model removed the night one too (server).
+    if (nightChanged && site.model) {
+      const night = site.model.night;
+      if (!night)
+        await call("PUT", `${path}/night-model`, { body: { mediaId: null } });
+      else if (night.src.startsWith("data:")) {
+        const id = await editorUpload(
+          `${site.id}:model-night`,
+          "model",
+          night.src,
+          { title: night.name, license: CONTRIBUTOR_LICENSE, trust: site.model.trust },
+        );
+        await call("PUT", `${path}/night-model`, { body: { mediaId: id } });
+      }
+    }
+
+    if (photosChanged) {
+      // Only the angles that changed: the server keeps the others with their photographs.
+      const before = new Map((cur.photos ?? []).map((p) => [p.id, p.camera ?? null]));
+      const cameras = Object.fromEntries(
+        photos.flatMap((p) =>
+          same(p.camera ?? null, before.get(p.id) ?? null) ? [] : [[mediaId(p.id), p.camera ?? null]],
+        ),
+      );
       await call("PUT", `${path}/media`, {
         body: {
           photoIds: photos.map((p) => mediaId(p.id)),
           coverPhotoId: site.coverPhotoId ? mediaId(site.coverPhotoId) : null,
+          ...(Object.keys(cameras).length && { cameras }),
         },
       });
+    }
 
     // A replaced photo keeps its domain id in the sentences but has a new media id.
     const remapped = site.stories.some(

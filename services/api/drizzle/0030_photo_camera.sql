@@ -1,0 +1,1 @@
+ALTER TABLE "site_media" ADD COLUMN "camera" jsonb;

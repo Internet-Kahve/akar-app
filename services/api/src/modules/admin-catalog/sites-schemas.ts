@@ -171,9 +171,23 @@ export const ModelBody = z.object({
 });
 export type ModelInput = z.infer<typeof ModelBody>;
 
+export const NightModelBody = z.object({
+  mediaId: Id.nullable().describe("kind=model medya, gündüz modeliyle aynı parça adlarıyla; null = gece de gündüz modeli"),
+});
+export type NightModelInput = z.infer<typeof NightModelBody>;
+
+export const PhotoCameraInput = CameraPoseInput.extend({
+  interior: z.boolean().optional().describe("true = bu açıda model açılır, içeriden çekilmiş fotoğraf"),
+});
+export type PhotoCameraInput = z.infer<typeof PhotoCameraInput>;
+
 export const SiteMediaBody = z.object({
   photoIds: z.array(Id).max(60).describe("kind=photo medya, gösterim sırasıyla"),
   coverPhotoId: Id.nullable().describe("photoIds içinden biri; kapak fotoğrafı"),
+  cameras: z
+    .record(Id, PhotoCameraInput.nullable())
+    .optional()
+    .describe("Fotoğraf başına 3B açı (photoIds içinden); null = açıyı sil. Verilmeyen fotoğrafın açısı korunur"),
 });
 export type SiteMediaInput = z.infer<typeof SiteMediaBody>;
 

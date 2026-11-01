@@ -2,6 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  ImageIcon,
+  Box,
+  Move,
+  Info,
   Landmark,
   Store,
   Wrench,
@@ -15,6 +19,7 @@ import {
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
 import { readPreference, writePreference } from "../lib/preferences";
+import { TrustTag } from "./side-sheet";
 import { NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
 import { useWide } from "./about-reading";
 import { useCityIdentity, useCityScene } from "./city-scenes";
@@ -52,21 +57,24 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
       <button
         className="story-photo-fill"
         aria-pressed={fill}
+        aria-label={fill ? t("site.fitPhoto") : t("site.fillPhoto")}
         onClick={() => {
           writePreference("akar.fotoKip", fill ? "fit" : "fill");
           setFill(!fill);
         }}
       >
-        {fill ? <Shrink size={16} /> : <Expand size={16} />}
-        {fill ? t("site.fitPhoto") : t("site.fillPhoto")}
+        {fill ? <Shrink size={18} /> : <Expand size={18} />}
       </button>
-      {(photo.title || photo.license) && (
-        <p className="story-photo-credit">
-          {photo.title && <Localized tr={photo.title} en={photo.titleEn} />}
-          {photo.title && photo.license && " · "}
-          {photo.license}
-        </p>
-      )}
+      <div className="story-photo-foot">
+        <TrustTag trust={photo.trust} quote={text(photo.title, photo.titleEn) || photo.alt} />
+        {(photo.title || photo.license) && (
+          <p className="story-photo-credit">
+            {photo.title && <Localized tr={photo.title} en={photo.titleEn} />}
+            {photo.title && photo.license && " · "}
+            {photo.license}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
@@ -113,7 +121,7 @@ function PhotoGallery({
               aria-pressed={false}
               onClick={onModel}
             >
-              {t("site.model3d")}
+              {t("site.model3dShort")}
             </button>
             <button className="btn secondary" aria-pressed={true}>
               {t("site.photo")}
@@ -205,7 +213,9 @@ function PhotoGallery({
                 </strong>
                 {photo.license && <span>{photo.license}</span>}
                 {source?.title && (
-                  <span lang={lang === "en" ? "tr" : undefined}>{source.title}</span>
+                  <span lang={lang === "en" ? "tr" : undefined}>
+                    {source.title}
+                  </span>
                 )}
               </figcaption>
             </figure>
@@ -329,8 +339,13 @@ export function Scene({
       <>
         <StoryPhoto key={photo.id} photo={photo} />
         {site.model && (
-          <div className="scene-media-switch" role="group" aria-label={t("site.viewSwitch")}>
+          <div
+            className="scene-media-switch on-photo"
+            role="group"
+            aria-label={t("site.viewSwitch")}
+          >
             <button className="btn secondary" aria-pressed={true}>
+              <ImageIcon size={18} />
               {t("site.photo")}
             </button>
             <button
@@ -338,7 +353,8 @@ export function Scene({
               aria-pressed={false}
               onClick={() => setMode("model")}
             >
-              {t("site.model3d")}
+              <Box size={18} />
+              {t("site.model3dShort")}
             </button>
           </div>
         )}
@@ -354,28 +370,32 @@ export function Scene({
   if (site.model && !flow) {
     const card = photoCard && !onPick && mode === "model" ? photo : undefined;
     return (
-      <div className="scene media-scene">
+      <div
+        className={`scene media-scene${context === "detail" ? " detail-scene" : ""}`}
+      >
         <div
           className="scene-media-switch"
           role="group"
           aria-label={t("site.viewSwitch")}
         >
-          <button
-            className="btn secondary"
-            aria-pressed={mode === "model"}
-            onClick={() => setMode("model")}
-          >
-            {t("site.model3d")}
-          </button>
           {(photos.length > 0 || !!photoId) && (
             <button
               className="btn secondary"
               aria-pressed={mode === "photo"}
               onClick={() => setMode("photo")}
             >
+              <ImageIcon size={18} />
               {t("site.photo")}
             </button>
           )}
+          <button
+            className="btn secondary"
+            aria-pressed={mode === "model"}
+            onClick={() => setMode("model")}
+          >
+            <Box size={18} />
+            {t("site.model3dShort")}
+          </button>
         </div>
         <>
           <ModelStage
@@ -385,8 +405,15 @@ export function Scene({
             scene={cityScene}
             identity={identity}
             context={context}
-            pose={pose}
+            // The site page opens on the editor's opening angle; a story sentence keeps its own (or the last one).
+            pose={pose ?? (context === "detail" ? (site.openingCamera ?? undefined) : undefined)}
             interior={interior}
+            // The site page: ← → go through the gallery photographs that have an angle on this model.
+            {...(context === "detail" && {
+              views: (site.photos ?? []).flatMap((p) =>
+                p.camera ? [{ id: p.id, src: p.src, alt: p.alt, title: text(p.title, p.titleEn), camera: p.camera }] : [],
+              ),
+            })}
             tour={context === "story" && !onPick && !highlights?.length}
             frame={card && !cardPlace ? storyCardFrame(wide) : NO_FRAME}
             partCards={site.partCards}
@@ -397,8 +424,10 @@ export function Scene({
           <div className="model-label">
             <i />
             {t("site.modelLabel")}
+            <Info size={13} />
           </div>
           <div className="model-hint">
+            <Move size={14} />
             {t("site.modelHint", {
               zoom: wide ? t("site.hintWheel") : t("site.hintTwoFingers"),
             })}
@@ -479,19 +508,22 @@ export function Scene({
             className="hotspot dome-spot"
             onClick={() => onHotspot("kubbe")}
           >
-            <span>1</span>{t("site.hotspotDome")}
+            <span>1</span>
+            {t("site.hotspotDome")}
           </button>
           <button
             className="hotspot courtyard-spot"
             onClick={() => onHotspot("avlu")}
           >
-            <span>2</span>{t("site.hotspotCourtyard")}
+            <span>2</span>
+            {t("site.hotspotCourtyard")}
           </button>
           <button
             className="hotspot bath-spot"
             onClick={() => onHotspot("akar")}
           >
-            <span>3</span>{t("site.hotspotWaqf")}
+            <span>3</span>
+            {t("site.hotspotWaqf")}
           </button>
         </>
       )}

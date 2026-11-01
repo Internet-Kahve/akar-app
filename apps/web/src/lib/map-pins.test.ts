@@ -30,6 +30,8 @@ test("a pin's image is its kind, ticked once finished; a route stop is the numbe
   assert.equal(pinImageId("han"), "pin-han");
   assert.equal(pinImageId("han", 0, true), "pin-han-done");
   assert.equal(pinImageId("han", 3, true, "#3D8285"), "stop-3-#3D8285");
+  assert.equal(pinImageId("han", 0, true, "#3D8285", true), "pin-han-selected");
+  assert.equal(pinImageId("han", 2, false, "#3D8285", true), "stop-2-#3D8285");
 });
 
 test("the star has eight points inside its box", () => {
@@ -92,8 +94,10 @@ test("the icons shrink as the visitor comes closer and are placed by rank, over 
     assert.equal(layer.source, PIN_SOURCE);
     // Pins give way to the city markers of the globe view.
     assert.equal(layer.minzoom, CITY_MARKER_MAX_ZOOM);
-    assert.deepEqual(layer.layout["symbol-sort-key"], ["get", "order"]);
   }
+  assert.deepEqual(names!.layout["symbol-sort-key"], ["get", "order"]);
+  // The selected pin is drawn last, over the others.
+  assert.deepEqual(icons!.layout["symbol-sort-key"], ["case", ["get", "selected"], 1000, ["get", "order"]]);
   const { layout } = icons!;
   assert.equal(layout["icon-allow-overlap"], true);
   assert.deepEqual(layout["icon-image"], ["get", "icon"]);
@@ -105,8 +109,8 @@ test("the icons shrink as the visitor comes closer and are placed by rank, over 
   assert.equal(stops[2], 18);
   // The value of an unselected pin: ["case", selected, selectedSize, size].
   const unselected = (stop: unknown) => (stop as unknown[])[3] as number;
-  assert.equal(unselected(stops[1]), 1);
-  assert.ok(unselected(stops[3]) < 1);
+  assert.equal(unselected(stops[1]), 1.1);
+  assert.ok(unselected(stops[3]) < unselected(stops[1]));
 });
 
 test("a label that finds no room beside its pin moves to the other side, then below, then above", () => {
@@ -119,13 +123,18 @@ test("a label that finds no room beside its pin moves to the other side, then be
   const [left, right] = [offsets[1], offsets[3]] as Array<[number, number]>;
   assert.ok(left[0] * 12 > 20 && right[0] * 12 < -20);
   assert.equal(left[1], right[1]);
-  // Labels appear from zoom 16 and carry the site's name.
+  // Labels appear from zoom 15 and carry the site's name: the serif image once drawn, the text until then.
   assert.deepEqual(layout["text-field"], [
     "step",
     ["zoom"],
     "",
-    16,
-    ["get", "name"],
+    15.2,
+    [
+      "case",
+      ["!=", ["get", "label"], ""],
+      ["format", ["image", ["get", "label"]]],
+      ["get", "name"],
+    ],
   ]);
   assert.equal("icon-image" in layout, false);
 });

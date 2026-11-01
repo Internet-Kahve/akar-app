@@ -35,6 +35,7 @@ import {
   narrations,
   storyBlocks,
   type CameraPose,
+  type PhotoCamera,
   type TranslationStatus,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
@@ -78,6 +79,7 @@ import type {
   LocationInput,
   MapPlacementInput,
   ModelInput,
+  NightModelInput,
   PartCardsInput,
   SectionsInput,
   SiteInfoInput,
@@ -192,6 +194,7 @@ const siteSelection = {
   editorVersion: sites.editorVersion,
   coverMediaId: sites.coverMediaId,
   aboutCoverMediaId: sites.aboutCoverMediaId,
+  nightModelMediaId: sites.nightModelMediaId,
   openingCamera: sites.openingCamera,
   lng: sql<number | null>`ST_X(${sites.location})`,
   lat: sql<number | null>`ST_Y(${sites.location})`,
@@ -240,6 +243,7 @@ export type SiteRow = Pick<
   | "editorVersion"
   | "coverMediaId"
   | "aboutCoverMediaId"
+  | "nightModelMediaId"
   | "openingCamera"
   | "locationSource"
   | "dedupeKey"
@@ -271,6 +275,8 @@ export type SiteAggregate = {
   sampleTraces: SampleTraceRow[];
   /** `site_media` in display order. */
   mediaIds: string[];
+  /** `site_media.camera` of the gallery photographs that have one, by media id. */
+  photoCameras: ReadonlyMap<string, PhotoCamera>;
   /** `site_sources` in display order. */
   sourceLinks: { sourceId: string; locator: string | null }[];
   cards: ReadonlyMap<string, CardRow>;
@@ -319,6 +325,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...mediaLinks.map((l) => l.mediaId),
     ...siteRows.map((s) => s.coverMediaId),
     ...siteRows.map((s) => s.aboutCoverMediaId),
+    ...siteRows.map((s) => s.nightModelMediaId),
     ...storyRows.map((b) => b.photoId),
     ...narrationList.map((n) => n.mediaId),
     ...cardRows.map((c) => c.mediaId),
@@ -373,6 +380,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
         badges: badgesOf.get(site.id) ?? [],
         sampleTraces: tracesOf.get(site.id) ?? [],
         mediaIds: (mediaOf.get(site.id) ?? []).map((l) => l.mediaId),
+        photoCameras: new Map((mediaOf.get(site.id) ?? []).flatMap((l) => (l.camera ? [[l.mediaId, l.camera] as const] : []))),
         sourceLinks: (sourcesOf.get(site.id) ?? []).map((l) => ({ sourceId: l.sourceId, locator: l.locator })),
         cards: cardById,
         media: mediaById,
@@ -410,6 +418,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
       sourceId: m.sourceId ?? "",
       license: m.license,
       trust: m.trust,
+      ...(a.photoCameras.get(m.id) && { camera: a.photoCameras.get(m.id)! }),
     }));
   const siteSourceList: SiteSource[] = present(a.sourceLinks.map((l) => a.sources.get(l.sourceId))).map((r) => ({
     id: r.id,
@@ -488,6 +497,8 @@ function referencesOf(a: SiteAggregate): { mediaList: MediaRow[]; cardList: Card
       ...a.mediaIds,
       s.coverMediaId,
       s.aboutCoverMediaId,
+      // After the linked media, so the day model stays the first model of the list (SiteDetail.nightModelId).
+      s.nightModelMediaId,
       ...a.stories.map((b) => b.photoId),
       ...a.narrations.map((n) => n.mediaId),
       ...distinct(a.stories.map((b) => b.cardId)).flatMap((cardId) => a.cards.get(cardId)?.mediaId ?? []),
@@ -556,6 +567,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     editorVersion: s.editorVersion === 2 ? 2 : null,
     coverMediaId: s.coverMediaId,
     aboutCoverMediaId: s.aboutCoverMediaId,
+    nightModelId: s.nightModelMediaId,
     openingCamera: s.openingCamera,
     updatedAt: s.updatedAt.toISOString(),
     stories: a.stories.map((b) => ({
@@ -666,6 +678,10 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     modelMediaId: modelOf(a)?.id ?? null,
     mapPlacement: a.placement ? { ...resolvePlacement(a.placement, s), visible: a.placement.visible, updatedAt: a.placement.updatedAt.toISOString() } : null,
     photoIds: linked.filter((m) => m.kind === "photo").map((m) => m.id),
+    photoCameras: linked.flatMap((m) => {
+      const camera = m.kind === "photo" ? a.photoCameras.get(m.id) : undefined;
+      return camera ? [{ photoId: m.id, camera }] : [];
+    }),
     sourceLinks: a.sourceLinks,
     issues: publishIssues(a),
   };
@@ -1107,14 +1123,28 @@ export function setLocation(tx: Tx, ctx: AuditCtx, id: string, input: LocationIn
  * Rewrites the site's `site_media` links: the model, then the photos, then anything else already
  * linked, each in order (the table's positions are unique per site, so the list is replaced whole).
  */
-async function rewriteSiteMedia(tx: Tx, siteId: string, before: SiteAggregate, change: { model?: string | null; photos?: string[] }): Promise<void> {
+/**
+ * Rewrites the site's media links in order. A photograph's 3D angle stays with it (a reorder or a new model keeps
+ * the angles); `cameras` sets (or with null removes) the angles of the photographs it names.
+ */
+async function rewriteSiteMedia(
+  tx: Tx,
+  siteId: string,
+  before: SiteAggregate,
+  change: { model?: string | null; photos?: string[]; cameras?: Record<string, PhotoCamera | null> },
+): Promise<void> {
   const linked = linkedMedia(before);
   const model = change.model !== undefined ? change.model : (linked.find((m) => m.kind === "model")?.id ?? null);
   const photos = change.photos ?? linked.filter((m) => m.kind === "photo").map((m) => m.id);
   const others = linked.filter((m) => m.kind !== "model" && m.kind !== "photo").map((m) => m.id);
   const ordered = distinct([model, ...photos, ...others]);
+  const cameraOf = (mediaId: string) =>
+    change.cameras && mediaId in change.cameras ? change.cameras[mediaId] : (before.photoCameras.get(mediaId) ?? null);
   await tx.delete(siteMedia).where(eq(siteMedia.siteId, siteId));
-  if (ordered.length) await tx.insert(siteMedia).values(ordered.map((mediaId, position) => ({ siteId, mediaId, position })));
+  if (ordered.length)
+    await tx
+      .insert(siteMedia)
+      .values(ordered.map((mediaId, position) => ({ siteId, mediaId, position, camera: photos.includes(mediaId) ? cameraOf(mediaId) : null })));
 }
 
 /** Adım 1 (Model): replaces the linked 3D model; the opening camera belongs to the model. */
@@ -1131,7 +1161,35 @@ export function setModel(tx: Tx, ctx: AuditCtx, id: string, input: ModelInput): 
       errors.throwIfAny();
 
       await rewriteSiteMedia(tx, id, before, { model: input.mediaId });
-      return { openingCamera: input.mediaId !== null && input.openingCamera ? toPose(input.openingCamera) : null };
+      return {
+        openingCamera: input.mediaId !== null && input.openingCamera ? toPose(input.openingCamera) : null,
+        // The night model is a variant of the day one: it goes with it.
+        ...(input.mediaId === null && { nightModelMediaId: null }),
+      };
+    },
+  );
+}
+
+/**
+ * Night model: the site's 3D model as the night theme shows it, or none (the day model then). It needs a day model
+ * and should carry the same part names (placement, highlights, part cards and cover groups are the day model's);
+ * the editor compares the names once both are extracted, as extraction runs after the upload.
+ */
+export function setNightModel(tx: Tx, ctx: AuditCtx, id: string, input: NightModelInput): Promise<AdminSiteDetail> {
+  return mutate(
+    tx,
+    ctx,
+    id,
+    (a) => ({ nightModelMediaId: a.site.nightModelMediaId }),
+    async (before) => {
+      const errors = new FieldErrors();
+      if (input.mediaId !== null) {
+        if (!modelOf(before)) errors.add("mediaId", "Gece modeli için önce gündüz modelini bağla.");
+        else if (input.mediaId === modelOf(before)?.id) errors.add("mediaId", "Gece modeli gündüz modelinden ayrı bir dosya olmalı.");
+        checkMedia(errors, "mediaId", input.mediaId, await mediaKindsOf(tx, [input.mediaId]), "model");
+      }
+      errors.throwIfAny();
+      return { nightModelMediaId: input.mediaId };
     },
   );
 }
@@ -1219,9 +1277,24 @@ export function setPhotos(tx: Tx, ctx: AuditCtx, id: string, input: SiteMediaInp
       if (input.coverPhotoId !== null && !input.photoIds.includes(input.coverPhotoId)) {
         errors.add("coverPhotoId", "Kapak fotoğrafı fotoğraf listesinden biri olmalı.");
       }
+      const parts = new Set(modelOf(before)?.parts);
+      for (const [photoId, camera] of Object.entries(input.cameras ?? {})) {
+        if (!input.photoIds.includes(photoId)) errors.add(`cameras.${photoId}`, "Açı yalnız eserin galerisindeki bir fotoğrafa verilir.");
+        else if (camera && !modelOf(before)) errors.add(`cameras.${photoId}`, "Modeli olmayan eserde fotoğraf açısı verilemez.");
+        else if (camera?.target && !parts.has(camera.target))
+          errors.add(`cameras.${photoId}.target`, `Modelde olmayan parça: ${camera.target}.`);
+      }
       errors.throwIfAny();
 
-      await rewriteSiteMedia(tx, id, before, { photos: input.photoIds });
+      const cameras = input.cameras
+        ? Object.fromEntries(
+            Object.entries(input.cameras).map(([photoId, camera]) => [
+              photoId,
+              camera ? { ...toPose(camera), ...(camera.interior && { interior: true }) } : null,
+            ]),
+          )
+        : undefined;
+      await rewriteSiteMedia(tx, id, before, { photos: input.photoIds, ...(cameras && { cameras }) });
       return { coverMediaId: input.coverPhotoId };
     },
   );

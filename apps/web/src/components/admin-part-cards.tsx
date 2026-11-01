@@ -7,6 +7,7 @@ import {
   MoveUp,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   trustLabels,
@@ -48,6 +49,8 @@ export function PartCardsStep({
   photos,
   sources,
   onChange,
+  active = 0,
+  onActive,
   job,
   jobsReady,
   note,
@@ -58,6 +61,9 @@ export function PartCardsStep({
   photos: SitePhoto[];
   sources: SiteSource[];
   onChange: (cards: PartCard[]) => void;
+  /** The card being edited: the 3D preview on the right shows its parts and picks new ones for it. */
+  active?: number;
+  onActive?: (index: number) => void;
   /** The running voice-over or translation request ("narrate:k1"), if any. */
   job: string | null;
   /** The saved cards are what the server holds: no unsaved edit, nothing else running. */
@@ -77,7 +83,7 @@ export function PartCardsStep({
         <button
           className="btn secondary"
           disabled={!modelParts}
-          onClick={() =>
+          onClick={() => {
             onChange([
               ...cards,
               {
@@ -89,8 +95,9 @@ export function PartCardsStep({
                 sourceId: sources[0]?.id,
                 trust: "representative",
               },
-            ])
-          }
+            ]);
+            onActive?.(cards.length);
+          }}
         >
           <Plus size={16} />
           Kart ekle
@@ -99,7 +106,8 @@ export function PartCardsStep({
       <p className="muted">
         Ziyaretçi 3D modelde bir parçaya dokununca o parçanın kartı açılır. Kart
         varsa yalnız kartı olan parçalar tıklanır; kart yoksa her parça adıyla
-        açılır.
+        açılır. Kartı seç, parçalarını sağdaki 3D'de dokunarak belirle, sonra
+        başlık, metin ve fotoğrafları doldur.
       </p>
       {!modelParts && (
         <Notice>Parça kartı için önce Model adımında 3D model ekle.</Notice>
@@ -119,9 +127,15 @@ export function PartCardsStep({
       {cards.map((card, i) => {
         const strip = card.photos;
         const addable = photos.filter((p) => !strip.some((s) => s.id === p.id));
-        const partNames = [...new Set([...(modelParts ?? []), ...card.parts])];
         return (
-          <fieldset className="cue-editor card" key={card.id}>
+          <fieldset
+            className={`cue-editor card ${active === i ? "active" : ""}`}
+            key={card.id}
+            data-card-id={card.id}
+            onFocus={() => onActive?.(i)}
+            // A click anywhere on the card selects it: the 3D preview shows its parts.
+            onClick={() => onActive?.(i)}
+          >
             <legend>Kart {i + 1}</legend>
             <div className="cue-top">
               <label className="field">
@@ -203,30 +217,25 @@ export function PartCardsStep({
             </label>
             <div className="field">
               Kartı açan parçalar
-              <div className="part-picks">
-                {partNames.map((name) => {
-                  const on = card.parts.includes(name);
-                  return (
-                    <label className="part-pick" key={name}>
-                      <input
-                        type="checkbox"
-                        checked={on}
-                        onChange={() =>
-                          patch(card.id, {
-                            parts: on
-                              ? card.parts.filter((p) => p !== name)
-                              : [...card.parts, name],
-                          })
-                        }
-                      />
+              {card.parts.length ? (
+                <div className="part-chips">
+                  {card.parts.map((name) => (
+                    <span className={`part-chip${modelParts?.includes(name) ? "" : " missing"}`} key={name}>
                       {name}
                       {!modelParts?.includes(name) && " (modelde yok)"}
-                    </label>
-                  );
-                })}
-              </div>
-              {!card.parts.length && (
-                <small className="muted">En az bir parça seç.</small>
+                      <button
+                        aria-label={`${name} parçasını karttan çıkar`}
+                        onClick={() => patch(card.id, { parts: card.parts.filter((p) => p !== name) })}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <small className="muted">
+                  Henüz parça yok: bu kartı seçip sağdaki 3D'de parçalara dokun, «Parçaları kaydet».
+                </small>
               )}
             </div>
             <div className="field">
@@ -276,21 +285,25 @@ export function PartCardsStep({
                 })}
               </div>
               {addable.length > 0 && (
-                <select
-                  aria-label="Karta fotoğraf ekle"
-                  value=""
-                  onChange={(e) => {
-                    const photo = addable.find((p) => p.id === e.target.value);
-                    if (photo) patch(card.id, { photos: [...strip, photo] });
-                  }}
-                >
-                  <option value="">Fotoğraf ekle</option>
-                  {addable.map((p) => (
-                    <option value={p.id} key={p.id}>
-                      {p.alt || p.id}
-                    </option>
-                  ))}
-                </select>
+                <details className="part-photo-add">
+                  <summary>
+                    <Plus size={14} />
+                    Fotoğraf ekle
+                  </summary>
+                  <div className="part-photo-grid" role="list">
+                    {addable.map((p) => (
+                      <button
+                        key={p.id}
+                        role="listitem"
+                        title={p.title || p.alt}
+                        aria-label={`${p.title || p.alt || "Fotoğraf"} karta ekle`}
+                        onClick={() => patch(card.id, { photos: [...strip, p] })}
+                      >
+                        <img src={p.src} alt="" />
+                      </button>
+                    ))}
+                  </div>
+                </details>
               )}
             </div>
             <div className="form-grid">

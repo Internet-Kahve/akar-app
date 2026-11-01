@@ -12,6 +12,7 @@ import type {
   Map as MapLibreMap,
 } from "maplibre-gl";
 import { localize, type Lang } from "./i18n";
+import { currentTheme, type Theme } from "./theme";
 
 /**
  * The map's site pins (§11.48): one GeoJSON source with an icon layer and a label layer, so the map itself
@@ -73,24 +74,32 @@ export interface PinProperties {
   /** `symbol-sort-key`: the site's `displayOrder`. */
   order: number;
   selected: boolean;
+  /** Image id of the name drawn in the display serif (`labelImageId`); empty until it is drawn, the glyph text stands in. */
+  label: string;
 }
 export type PinCollection = GeoJSON.FeatureCollection<
   GeoJSON.Point,
   PinProperties
 >;
 
-/** Image id: a route stop is the numbered star in the route's colour; any other pin is its kind, ticked once finished. */
+/**
+ * Image id: a route stop is the numbered star in the route's colour; any other pin is its kind, ticked once finished,
+ * ringed in gold while selected.
+ */
 export const pinImageId = (
   kind: SiteKind,
   stop = 0,
   finished = false,
   accent: string = colors.cityBursa,
+  selected = false,
 ) =>
   stop
     ? `stop-${stop}-${accent}`
-    : finished
-      ? `pin-${kind}-done`
-      : `pin-${kind}`;
+    : selected
+      ? `pin-${kind}-selected`
+      : finished
+        ? `pin-${kind}-done`
+        : `pin-${kind}`;
 
 export function pinFeatures(
   sites: HeritageSite[],
@@ -106,6 +115,7 @@ export function pinFeatures(
       .map((site) => {
         const stop = routeIds.indexOf(site.id) + 1;
         const finished = look.finishedIds?.includes(site.id) ?? false;
+        const selected = site.id === selectedId;
         return {
           type: "Feature",
           geometry: { type: "Point", coordinates: site.coordinates },
@@ -114,10 +124,11 @@ export function pinFeatures(
             name: localize(look.lang ?? "tr", site.name, site.nameEn).text,
             kind: site.kind,
             stop,
-            icon: pinImageId(site.kind, stop, finished, look.accent),
+            icon: pinImageId(site.kind, stop, finished, look.accent, selected),
             finished,
             order: site.displayOrder ?? UNRANKED,
-            selected: site.id === selectedId,
+            selected,
+            label: "",
           },
         };
       }),
@@ -140,17 +151,29 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "icon-image": ["get", "icon"],
       "icon-anchor": "bottom",
       "icon-allow-overlap": true,
-      // The Figma size far out, 17.5 % smaller from zoom 18 on (§11.48); the selected pin is a quarter larger.
+      // The prototype's size: its 44 px arch at 0.8 by zoom 16 and 0.66 by zoom 18 (here a 32 px canvas), so
+      // 1.1 and 0.9075; the selected pin keeps the arch's full 44 px at every zoom, 2 px lower, drawn above the rest.
       "icon-size": [
         "interpolate",
         ["linear"],
         ["zoom"],
         16,
-        ["case", ["get", "selected"], 1.25, 1],
+        ["case", ["get", "selected"], 1.375, 1.1],
         18,
-        ["case", ["get", "selected"], 1.03, 0.825],
+        ["case", ["get", "selected"], 1.375, 0.9075],
       ],
-      "symbol-sort-key": ["get", "order"],
+      "icon-offset": [
+        "case",
+        ["get", "selected"],
+        ["literal", [0, 2 / 1.375]],
+        ["literal", [0, 0]],
+      ],
+      "symbol-sort-key": [
+        "case",
+        ["get", "selected"],
+        UNRANKED + 1,
+        ["get", "order"],
+      ],
     },
   };
   if (!labels) return [icons];
@@ -160,8 +183,20 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
     source: PIN_SOURCE,
     minzoom: CITY_MARKER_MAX_ZOOM,
     layout: {
-      // MapLibre lays text out per whole tile zoom, so the names show from zoom 16 however the step is set.
-      "text-field": ["step", ["zoom"], "", 16, ["get", "name"]],
+      // MapLibre lays text out per whole tile zoom, so the names show from zoom 15 (the prototype's 15.2).
+      // The name is the serif image once it is drawn (`label`), the glyph text until then.
+      "text-field": [
+        "step",
+        ["zoom"],
+        "",
+        15.2,
+        [
+          "case",
+          ["!=", ["get", "label"], ""],
+          ["format", ["image", ["get", "label"]]],
+          ["get", "name"],
+        ],
+      ],
       "text-font": ["Noto Sans Bold"],
       "text-size": 12,
       "text-line-height": 1.333,
@@ -176,11 +211,12 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
         [0, -3.8],
       ],
       "text-justify": "auto",
+      "text-optional": true,
       "symbol-sort-key": ["get", "order"],
     },
     paint: {
-      "text-color": colors.primary,
-      "text-halo-color": colors.surface,
+      "text-color": LABEL_INK[currentTheme()].glyphInk,
+      "text-halo-color": LABEL_INK[currentTheme()].glyphHalo,
       "text-halo-width": 2,
     },
   };
@@ -212,11 +248,17 @@ function loadSymbol(icon: string): Promise<HTMLImageElement> {
 const ARCH_PATH = "M20 1.5C26 5 33 11 33.5 20V33C33.5 34.6667 32.8333 36 31.5 37L22 45.5C20.6667 46.6333 19.3333 46.6333 18 45.5L8.5 37C7.16667 36 6.5 34.6667 6.5 33V20C7 11 14 5 20 1.5Z";
 const ARCH_SCALE = PIN_WIDTH / 44;
 
-function drawArch(ctx: CanvasRenderingContext2D, colour: string) {
+function drawArch(ctx: CanvasRenderingContext2D, colour: string, selected = false) {
   ctx.save();
   ctx.scale(ARCH_SCALE, ARCH_SCALE);
   ctx.translate(2, 2);
   const arch = new Path2D(ARCH_PATH);
+  if (selected) {
+    // The prototype's selected pin: a gold ring around the white edge.
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = colors.gold;
+    ctx.stroke(arch);
+  }
   ctx.fillStyle = colour;
   ctx.fill(arch);
   ctx.lineWidth = 2;
@@ -270,17 +312,78 @@ function stopImage(stop: number, accent: string) {
   return ctx.getImageData(0, 0, size, size);
 }
 
-async function pinImage(kind: SiteKind, finished: boolean) {
+async function pinImage(kind: SiteKind, finished: boolean, selected = false) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.ceil(PIN_WIDTH * PIXEL_RATIO);
   canvas.height = Math.ceil(PIN_HEIGHT * PIXEL_RATIO);
   // The pixels are read back at once, so the canvas stays on the CPU.
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
-  drawArch(ctx, ROLE_COLOURS[kindCategory[kind]]);
+  drawArch(ctx, ROLE_COLOURS[kindCategory[kind]], selected);
   ctx.drawImage(await loadSymbol(kindIcons[kind]), 8.7, 10.9, 14.5, 14.5);
   if (finished) drawTick(ctx);
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+/**
+ * Site names in the app's display serif (Cormorant Garamond, as the prototype draws them): the glyph server
+ * has no serif, so each name is drawn once on a canvas, ink with a white halo, and shown as an image inside the
+ * label, which keeps the map's own label placement and collision.
+ */
+const LABEL_FONT = '600 34px "Cormorant Garamond"';
+const LABEL_HEIGHT = 46;
+const LABEL_PREFIX = "name:";
+export const labelImageId = (name: string) => `${LABEL_PREFIX}${name}`;
+async function labelFontReady(names: string[]) {
+  try {
+    await document.fonts.load(LABEL_FONT, names.join(""));
+    return document.fonts.check(LABEL_FONT);
+  } catch {
+    return false;
+  }
+}
+function labelImage(name: string) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  ctx.font = LABEL_FONT;
+  canvas.width = Math.ceil(ctx.measureText(name).width) + 16;
+  canvas.height = LABEL_HEIGHT;
+  ctx.font = LABEL_FONT;
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 7;
+  ctx.strokeStyle = LABEL_INK[currentTheme()].halo;
+  ctx.strokeText(name, 8, LABEL_HEIGHT / 2 + 1);
+  ctx.fillStyle = LABEL_INK[currentTheme()].ink;
+  ctx.fillText(name, 8, LABEL_HEIGHT / 2 + 1);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+/** Ink and halo of the site names: dark on a white halo by day, light on a dark halo by night. */
+const LABEL_INK: Record<Theme, { ink: string; halo: string; glyphInk: string; glyphHalo: string }> = {
+  day: { ink: colors.text, halo: "rgba(255,255,255,.95)", glyphInk: colors.primary, glyphHalo: colors.surface },
+  night: { ink: "#EEF1F4", halo: "rgba(22,29,39,.92)", glyphInk: "#EEF1F4", glyphHalo: "#161D27" },
+};
+/** Redraws the site names already on `m` in the page theme (same image ids), and the glyph text that stands in. */
+export function themePinLabels(m: MapLibreMap) {
+  const theme = currentTheme();
+  if (m.getLayer(PIN_LABEL_LAYER)) {
+    m.setPaintProperty(PIN_LABEL_LAYER, "text-color", LABEL_INK[theme].glyphInk);
+    m.setPaintProperty(PIN_LABEL_LAYER, "text-halo-color", LABEL_INK[theme].glyphHalo);
+  }
+  for (const id of m.listImages())
+    if (id.startsWith(LABEL_PREFIX)) m.updateImage(id, labelImage(id.slice(LABEL_PREFIX.length)));
+}
+/** Draws the names the map does not have yet and points each pin at its image; without the font the text stays. */
+async function addLabelImages(map: MapLibreMap, pins: PinCollection) {
+  const names = [...new Set(pins.features.map((f) => f.properties.name))];
+  if (!names.length || !(await labelFontReady(names))) return;
+  for (const name of names) {
+    const id = labelImageId(name);
+    if (!map.hasImage(id))
+      map.addImage(id, labelImage(name), { pixelRatio: PIXEL_RATIO });
+  }
+  for (const f of pins.features)
+    f.properties.label = labelImageId(f.properties.name);
 }
 
 /** Registers the images the pins need and the map does not have yet. */
@@ -297,7 +400,9 @@ async function addPinImages(
       async ([id, p]) =>
         [
           id,
-          p.stop ? stopImage(p.stop, accent) : await pinImage(p.kind, p.finished),
+          p.stop
+            ? stopImage(p.stop, accent)
+            : await pinImage(p.kind, p.finished, p.selected),
         ] as const,
     ),
   );
@@ -316,6 +421,7 @@ export async function syncPins(
   accent: string = colors.cityBursa,
 ) {
   await addPinImages(map, pins, accent);
+  if (map.getStyle().glyphs) await addLabelImages(map, pins);
   if (cancelled()) return;
   const source = map.getSource<GeoJSONSource>(PIN_SOURCE);
   if (source) {

@@ -115,6 +115,10 @@ export const CameraPoseDto = z
   })
   .describe("Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık");
 
+export const PhotoCameraDto = CameraPoseDto.extend({
+  interior: z.boolean().optional().describe("true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf"),
+}).describe("Galeri fotoğrafının bu eserin 3B modelindeki açısı");
+
 export const SiteSummary = z.object({
   id: z.string(),
   name: z.string(),
@@ -399,6 +403,12 @@ export const SiteDetail = SiteSummary.extend({
   editorVersion: z.literal(2).nullable(),
   coverMediaId: z.string().nullable(),
   aboutCoverMediaId: z.string().nullable().describe("«Eser hakkında» sayfasının kapak fotoğrafı (SiteDetail.media); null = galerinin kapağı"),
+  nightModelId: z
+    .string()
+    .nullable()
+    .describe(
+      "Gece temasında gösterilen 3B modelin medya kimliği (SiteDetail.media, kind=model); null = gece de gündüz modeli. Gündüz modeli listedeki ilk kind=model kaydıdır; gece modeli parça adlarını, yerleşimi ve «İçini göster» gruplarını gündüz modeliyle paylaşır",
+    ),
   openingCamera: CameraPoseDto.nullable().describe("3B hikâyenin açılış açısı"),
   updatedAt: z.iso.datetime(),
   stories: z.array(StoryBlockDto),
@@ -416,6 +426,9 @@ export const SiteDetail = SiteSummary.extend({
     "Modelin haritadaki yerleşimi. Eserin modeli varsa ve yerleşim gösterilmek üzere kaydedilmişse dolu; aksi halde null (alan hiçbir zaman eksik olmaz)",
   ),
   photoIds: z.array(z.string()).describe("Eser galerisinin sıralı fotoğraf kimlikleri; kart ve geçmiş ilişkilerinden bağımsız"),
+  photoCameras: z
+    .array(z.object({ photoId: z.string(), camera: PhotoCameraDto }))
+    .describe("Açısı kaydedilmiş galeri fotoğrafları, galeri sırasıyla (3B görünümün ← → okları); açısız fotoğraf listede yok"),
   media: z
     .array(MediaDto)
     .describe("Eserin medya listesi, ardından kapak, hakkında kapağı, hikâye, kart, parça kartı, görev, paragraf fotoğrafı, geçmiş görseli (ve bugünkü eşi) ve örnek izlerin başvurduğu diğer medya; tekrarsız"),
@@ -448,6 +461,18 @@ export const CityIdentityDto = z
     accent: z.string().describe("Şehrin rengi (#RRGGBB; veri/sehir kimlik.zemin): açılış ekranında şehir adı, açık zeminde desen"),
     pattern: z.string().describe("Desen karosunun dosya adı (kimlik.desen), web uygulamasının /desenler/ klasöründe; örn. desen-bursa-sekiz-yildiz.svg"),
     patternColour: z.string().describe("Desenin şehir renginin üstündeki rengi (#RRGGBB; kimlik.desen_renk)"),
+    patternScale: z
+      .number()
+      .optional()
+      .describe("Desen karosunun standart genişliğe oranı (kimlik.desen_olcek); yoksa 1"),
+    emblem: z
+      .string()
+      .optional()
+      .describe("Şehir ambleminin dosya adı (kimlik.amblem), /desenler/ klasöründe; örn. amblem-bursa.svg. Yoksa desen kullanılır"),
+    emblemSmall: z
+      .string()
+      .optional()
+      .describe("Amblemin 14–32 px'lik yerler için kalın çizimi (kimlik.amblem_kucuk); yoksa emblem"),
   })
   .describe("Açılış ekranının ve 3B yükleme kartının şehirden aldığı görünüm (§11.49)");
 

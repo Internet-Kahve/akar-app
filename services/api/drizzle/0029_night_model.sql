@@ -1,0 +1,2 @@
+ALTER TABLE "sites" ADD COLUMN "night_model_media_id" text;--> statement-breakpoint
+ALTER TABLE "sites" ADD CONSTRAINT "sites_night_model_media_id_media_id_fk" FOREIGN KEY ("night_model_media_id") REFERENCES "public"."media"("id") ON DELETE no action ON UPDATE no action;

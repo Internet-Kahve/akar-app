@@ -250,12 +250,16 @@ for entry in editorial.eserleri_bul():
     coords = [entry['lon'] + east/(111320*math.cos(math.radians(entry['lat']))), entry['lat'] + north/110540]
     model = dict(name=entry['ad']+' · temsili 3B model', file=f'eserler/{folder}/3d/export/{model_info["glb"]}_sunum.glb',
                  src='', bytes=0, parts=[], trust='representative', coverGroups=model_info.get('ortu_gruplari') or []) if model_info else None
+    # Night theme model (1 Nov 2026): `glb_gece` names its export like `glb`; the presentation file is the one used.
+    if model and model_info.get('glb_gece'):
+        model['nightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece"]}_sunum.glb'
+
     # eser.json `sira` (§11.48): map draw priority, a whole number from 1 up; absent = unranked (None).
     display_order = entry.get('sira')
     if display_order is not None and (isinstance(display_order, bool) or not isinstance(display_order, int) or display_order < 1):
         raise ValueError(f'sira must be an integer of at least 1: {folder} {display_order!r}')
     gallery = sorted((p for p in photos if p['galleryPosition'] is not None), key=lambda p:p['galleryPosition'])
-    result['sites'].append(dict(id=sid, name=entry.get('uzun_ad') or entry['ad'], city=entry['il'],
+    result['sites'].append(dict(id=sid, name=entry['ad'], city=entry['il'],
         district=DISTRICTS.get(folder, entry['ilce']), year=entry['yil'], architect='—',
         patron=entry['yaptiran'], kind=KINDS[entry['tur']], coordinates=coords, minutes=max(1,round(sum(len(s['text'].split()) for s in stories)/130)) if stories else 0,
         displayOrder=display_order,
@@ -288,11 +292,22 @@ for path, record in city_records:
         raise ValueError(f"{path.name}: kimlik needs zemin, desen and desen_renk together")
     if look['pattern'] and not (root / 'design/desenler' / look['pattern']).is_file():
         raise ValueError(f"{path.name}: pattern file design/desenler/{look['pattern']} is missing")
+    # kimlik.desen_olcek: the tile's size against the standard width (a tile with several repeats is drawn larger).
+    scale = kimlik.get('desen_olcek')
+    if scale is not None and (isinstance(scale, bool) or not isinstance(scale, (int, float)) or not 0.25 <= scale <= 8):
+        raise ValueError(f"{path.name}: desen_olcek must be a number from 0.25 to 8")
+    # kimlik.amblem (and amblem_kucuk, its cut for 14-32 px): files of design/desenler like the pattern.
+    emblems = {k: kimlik.get(v) for k, v in dict(emblem='amblem', emblemSmall='amblem_kucuk').items() if kimlik.get(v)}
+    if 'emblemSmall' in emblems and 'emblem' not in emblems:
+        raise ValueError(f"{path.name}: amblem_kucuk needs amblem")
+    for file in emblems.values():
+        if not (root / 'design/desenler' / file).is_file():
+            raise ValueError(f"{path.name}: emblem file design/desenler/{file} is missing")
     center = record.get('merkez')
     inventory = {k: record.get(v) for k, v in dict(name='envanter_adi', publisher='envanter_yayinci', year='envanter_yili',
         siteCount='envanter_eser_sayisi').items()}
     result['cities'].append(dict(id=record['id'], name=record['ad'], isDefault=bool(record.get('varsayilan')), scene=scene,
-        identity=look if all(look.values()) else None,
+        identity=(dict(look, **({'patternScale': scale} if scale is not None else {}), **emblems)) if all(look.values()) else None,
         map=dict(center=center, zoom=record['zoom'], zoomDesktop=record.get('zoom_masaustu')) if center else None,
         inventory=inventory if any(v is not None for v in inventory.values()) else None))
 args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
