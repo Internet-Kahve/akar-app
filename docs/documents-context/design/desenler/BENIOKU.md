@@ -8,8 +8,9 @@ Vakıf Katılım kitaplarındaki çizimlerin kopyası değiller. Kitapların ken
 | `desen-bursa-sekiz-yildiz.svg` | 8 kollu yıldız · 4.8.8 döşeme · kare karo (100×100) | Eski Bursa deseni (örnek veri `seed.ts` hâlâ kullanıyor) |
 | `desen-konya-on-iki-gulbezek.svg` | 12 kollu gülbezek · 3.12.12 döşeme · karo 100×173,2 | Eski Konya deseni (örnek veri `seed.ts` hâlâ kullanıyor) |
 | `amblem-akar-yildiz.svg` | Tek yıldız amblem | Açılış, 3D yükleniyor animasyonu, rozet |
-| `amblem-bursa.svg` | Bursa logosu, Muhammed'in çizimi (1 Kasım) · kare 1476×1476, şeffaf zemin | Bursa amblemi, 48 px ve üstü — henüz bağlanmadı |
-| `amblem-bursa-kalin.svg` | Aynı logo, çizgiler ~2,5 kat kalın | 14–32 px küçük yerler (şehir çipi) — henüz bağlanmadı |
+| `amblem-bursa.svg` | Bursa logosu, Muhammed'in çizimi (1 Kasım) · 24 dilimli kubbe/çark, kare 1146×1146 | Bursa amblemi; çizgileri kalın, 14 px'te de okunur — henüz bağlanmadı |
+| `amblem-konya.svg` | Konya logosu, Muhammed'in çizimi (1 Kasım) · geçme yıldız, kare 1476×1476 | Konya amblemi, 48 px ve üstü — henüz bağlanmadı |
+| `amblem-konya-kalin.svg` | Konya logosu, çizgiler ~2,5 kat kalın | 14–32 px küçük yerler (şehir çipi) — henüz bağlanmadı |
 | `amblem-hatay.svg` | Hatay logosu, Muhammed'in çizimi (1 Kasım) · 8 kollu geçme yıldız, kare 1101×1101 | Hatay amblemi; çizgileri kalın, 14 px'te de okunur — henüz bağlanmadı |
 | `desen-bursa-kesik-gecme.svg` | Muhammed'in çizimi (31 Ekim) · karo 682×605 | **Bursa şehir kimliği** |
 | `desen-hatay-yildiz-kafes.svg` | Muhammed'in çizimi (31 Ekim) · karo 1413×999 (kaynak 2826×1998) | **Hatay şehir kimliği** · `desen_olcek: 4.3` |
