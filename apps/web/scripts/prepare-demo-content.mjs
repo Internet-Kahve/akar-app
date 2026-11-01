@@ -1,5 +1,6 @@
+import { editorialRoutes } from "./editorial-routes.mjs";
 import { execFileSync } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -99,5 +100,9 @@ const sites = manifest.sites.map((s) => {
     ...(model && { model }),
   };
 });
-writeFileSync(join(target, "demo-content.json"), JSON.stringify({ sites, routes: manifest.routes, cities: manifest.cities, taskKeys }));
+const routeDirectory = join(content, "veri/rota");
+const routes = existsSync(routeDirectory)
+  ? editorialRoutes(readdirSync(routeDirectory).filter((file) => file.endsWith(".json")).sort().map((file) => JSON.parse(readFileSync(join(routeDirectory, file), "utf8"))), manifest)
+  : manifest.routes;
+writeFileSync(join(target, "demo-content.json"), JSON.stringify({ sites, routes, cities: manifest.cities, taskKeys }));
 console.log(`demo content: ${sites.length} sites, ${sites.filter((s) => s.model).length} models → ${relative(repo, target)}`);
