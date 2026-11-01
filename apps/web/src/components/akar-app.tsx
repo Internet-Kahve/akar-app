@@ -773,13 +773,14 @@ export function AkarApp() {
             {cityName}
           </button>
         </div>
-        <div className="lang-switch" role="group" aria-label={t("lang.switch")}>
+        {/* One switch: a press anywhere on it turns to the other language, and the thumb slides there. */}
+        <div className="lang-switch" role="group" aria-label={t("lang.switch")} data-lang={lang}>
           {LANGS.map((l) => (
             <button
               key={l}
               lang={l}
               aria-pressed={lang === l}
-              onClick={() => changeLanguage(l)}
+              onClick={() => changeLanguage(LANGS.find((other) => other !== lang) ?? l)}
             >
               {l.toUpperCase()}
             </button>

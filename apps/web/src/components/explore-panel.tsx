@@ -240,18 +240,19 @@ export function ExplorePanel({
   const someModelMissing = allSites.some((s) => !s.model);
   return (
     <div className="explore">
+      {/* Two tabs as one switch: a press anywhere on it turns to the other tab. */}
       <div className="explore-tabs" role="tablist" data-tab={tab}>
         <button
           role="tab"
           aria-selected={tab === "sites"}
-          onClick={() => onTab("sites")}
+          onClick={() => onTab(tab === "sites" ? "routes" : "sites")}
         >
           {t("explore.tabSites")}
         </button>
         <button
           role="tab"
           aria-selected={tab === "routes"}
-          onClick={() => onTab("routes")}
+          onClick={() => onTab(tab === "sites" ? "routes" : "sites")}
         >
           {t("explore.tabRoutes")}
         </button>

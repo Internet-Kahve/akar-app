@@ -205,12 +205,31 @@ h1,
   mask: var(--sehir-desen, linear-gradient(transparent, transparent)) center / contain no-repeat;
 }
 .lang-switch {
-  display: inline-flex;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
   flex: none;
   margin-left: auto;
   padding: 2px;
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
+}
+/* The thumb under the chosen language; it slides as the Sites | Routes tabs do. */
+.lang-switch::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  transition: transform 280ms var(--ease);
+}
+.lang-switch[data-lang="en"]::before {
+  transform: translateX(100%);
 }
 .lang-switch button {
   min-width: 32px;
@@ -222,8 +241,10 @@ h1,
   letter-spacing: 0.04em;
   color: var(--text-muted);
 }
+.lang-switch button {
+  transition: color 280ms var(--ease);
+}
 .lang-switch [aria-pressed="true"] {
-  background: var(--primary);
   color: var(--on-primary);
 }
 .lang-fallback {
@@ -1486,6 +1507,7 @@ h1,
 }
 @media (prefers-reduced-motion: reduce) {
   .explore-tabs::before,
+  .lang-switch::before,
   .side-panel,
   .map-controls,
   .site-peek {
