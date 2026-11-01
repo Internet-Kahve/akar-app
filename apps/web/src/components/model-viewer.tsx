@@ -47,6 +47,8 @@ const TAP_MS = 600;
 
 /** How long each tappable part lights up when the visitor asks to see them. */
 const PART_PULSE_MS = 700;
+/** How long «show the parts» stays lit after a tap. */
+const PARTS_PRESSED_MS = 650;
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
  * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
@@ -96,6 +98,7 @@ export default function ModelViewer({
   const host = useRef<HTMLDivElement>(null);
   const aim = useRef<((pose: CameraPose) => void) | null>(null);
   const lift = useRef<((open: boolean, raise: boolean) => void) | null>(null);
+  const [showingParts, setShowingParts] = useState(false);
   const select = useRef<((parts: string[]) => void) | null>(null);
   const spin = useRef<((on: boolean) => void) | null>(null);
   const reframe = useRef<(() => void) | null>(null);
@@ -738,7 +741,10 @@ export default function ModelViewer({
           className="model-show-parts"
           aria-label={t("site.showParts")}
           title={t("site.showParts")}
+          aria-pressed={showingParts}
           onClick={() => {
+            setShowingParts(true);
+            setTimeout(() => setShowingParts(false), PARTS_PRESSED_MS);
             partCards.forEach((card, i) =>
               setTimeout(
                 () => select.current?.(card.parts),
@@ -767,9 +773,9 @@ export default function ModelViewer({
           {inside ? t("site.showOutside") : t("site.showInside")}
         </button>
       )}
-      {picked && !picked.card && (
+      {picked && (
         <p className="model-part-name" role="status">
-          {partLabel(picked.part)}
+          {picked.card?.title ?? partLabel(picked.part)}
         </p>
       )}
       {picked?.card && (

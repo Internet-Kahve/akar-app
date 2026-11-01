@@ -105,7 +105,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Oku", exact: true }).click();
   await page.getByLabel("Sade anlatım").check();
   for (let i = 0; i < 8; i++)
-    await page.getByRole("button", { name: "Devam et", exact: true }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
   const finished = page.getByRole("dialog");
   await expect(finished).toContainText("Hikâye tamamlandı");
@@ -121,6 +121,8 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Onaya gönder" }).click();
   await expect(page.getByText("Hikâyeye sen de katıldın.")).toBeVisible();
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
+  // The visitor's own trace leads the living memory page while it waits for moderation.
+  await expect(page.locator(".hm-iz").first()).toContainText("İnceleniyor");
   await openProfile(page);
   await expect(
     page.getByRole("button", { name: /Ulucami Hikâye tamamlandı/ }),
@@ -383,8 +385,8 @@ test("reading keeps the chosen sentence while the list follows it, and the visit
 }) => {
   await page.goto("/#view=detail&site=ulu-cami");
   await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
-  await page.getByRole("button", { name: "Devam et", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   const count = page.locator(".story-count");
   await expect(count).toHaveText("3 / 9");
   await page.waitForTimeout(1200);
@@ -506,7 +508,7 @@ test("experimental UI can be inspected without enabling it for the main journey"
   await page.getByLabel("Deneysel arayüzleri göster").check();
   await expect(page.locator(".profile-badges")).toBeVisible();
   await page.getByRole("button", { name: /Keşfe başla/ }).click();
-  // The paused «Birlikte Gez» and the old puzzle grid are no longer on the site panel; «Bulmaca» is the task list.
+  // The paused «Birlikte Gez» and the old puzzle grid are no longer on the site panel; «Bulmaca» opens the puzzle screen.
   await page.getByRole("button", { name: /^Bulmaca/ }).click();
   await expect(page.getByRole("dialog", { name: "Bulmaca" })).toBeVisible();
   await page.keyboard.press("Escape");

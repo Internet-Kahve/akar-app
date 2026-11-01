@@ -94,7 +94,7 @@ async function openStory(page: Page, modelServed?: Promise<void>) {
 }
 
 const next = (page: Page) =>
-  page.getByRole("button", { name: "Devam et", exact: true }).click();
+  page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
 const tour = (page: Page) => page.locator(".model-canvas");
 
 test("a sentence about the whole building turns the model, a highlighted one holds it, a touch stops it", async ({

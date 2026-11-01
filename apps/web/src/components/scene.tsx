@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
 import { readPreference, writePreference } from "../lib/preferences";
+import { TrustTag } from "./side-sheet";
 import { NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
 import { useWide } from "./about-reading";
 import { useCityIdentity, useCityScene } from "./city-scenes";
@@ -56,21 +57,24 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
       <button
         className="story-photo-fill"
         aria-pressed={fill}
+        aria-label={fill ? t("site.fitPhoto") : t("site.fillPhoto")}
         onClick={() => {
           writePreference("akar.fotoKip", fill ? "fit" : "fill");
           setFill(!fill);
         }}
       >
-        {fill ? <Shrink size={16} /> : <Expand size={16} />}
-        {fill ? t("site.fitPhoto") : t("site.fillPhoto")}
+        {fill ? <Shrink size={18} /> : <Expand size={18} />}
       </button>
-      {(photo.title || photo.license) && (
-        <p className="story-photo-credit">
-          {photo.title && <Localized tr={photo.title} en={photo.titleEn} />}
-          {photo.title && photo.license && " · "}
-          {photo.license}
-        </p>
-      )}
+      <div className="story-photo-foot">
+        <TrustTag trust={photo.trust} quote={text(photo.title, photo.titleEn) || photo.alt} />
+        {(photo.title || photo.license) && (
+          <p className="story-photo-credit">
+            {photo.title && <Localized tr={photo.title} en={photo.titleEn} />}
+            {photo.title && photo.license && " · "}
+            {photo.license}
+          </p>
+        )}
+      </div>
     </section>
   );
 }
@@ -117,7 +121,7 @@ function PhotoGallery({
               aria-pressed={false}
               onClick={onModel}
             >
-              {t("site.model3d")}
+              {t("site.model3dShort")}
             </button>
             <button className="btn secondary" aria-pressed={true}>
               {t("site.photo")}
@@ -336,11 +340,12 @@ export function Scene({
         <StoryPhoto key={photo.id} photo={photo} />
         {site.model && (
           <div
-            className="scene-media-switch"
+            className="scene-media-switch on-photo"
             role="group"
             aria-label={t("site.viewSwitch")}
           >
             <button className="btn secondary" aria-pressed={true}>
+              <ImageIcon size={18} />
               {t("site.photo")}
             </button>
             <button
@@ -348,7 +353,8 @@ export function Scene({
               aria-pressed={false}
               onClick={() => setMode("model")}
             >
-              {t("site.model3d")}
+              <Box size={18} />
+              {t("site.model3dShort")}
             </button>
           </div>
         )}
@@ -372,14 +378,6 @@ export function Scene({
           role="group"
           aria-label={t("site.viewSwitch")}
         >
-          <button
-            className="btn secondary"
-            aria-pressed={mode === "model"}
-            onClick={() => setMode("model")}
-          >
-            <Box size={18} />
-            {context === "detail" ? t("site.model3dShort") : t("site.model3d")}
-          </button>
           {(photos.length > 0 || !!photoId) && (
             <button
               className="btn secondary"
@@ -390,6 +388,14 @@ export function Scene({
               {t("site.photo")}
             </button>
           )}
+          <button
+            className="btn secondary"
+            aria-pressed={mode === "model"}
+            onClick={() => setMode("model")}
+          >
+            <Box size={18} />
+            {t("site.model3dShort")}
+          </button>
         </div>
         <>
           <ModelStage
