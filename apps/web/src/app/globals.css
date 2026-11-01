@@ -2557,6 +2557,42 @@ td small {
   top: 24px;
   min-width: 0;
 }
+/* The panel's 3D preview (admin-model-preview.tsx): the visitor's viewer in a fixed frame, the angle tools under it. */
+.editor-preview-head {
+  margin-bottom: 12px;
+}
+.editor-preview-head h3 {
+  margin: 0;
+}
+.admin-model-preview {
+  display: grid;
+  gap: 12px;
+}
+.admin-model-preview .model-viewer {
+  position: relative;
+  height: 380px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.admin-model-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-model-hint {
+  margin: 0;
+  font-size: 12px;
+}
+.admin-model-note {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--primary-light);
+  color: var(--text);
+}
+.cue-angle {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
 .photo-preview {
   background: var(--bg);
   border: 1px solid var(--border);

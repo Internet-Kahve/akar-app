@@ -31,6 +31,7 @@ import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
+import { AdminModelPreview, poseSummary } from "./admin-model-preview";
 import { prepareModel } from "../lib/editor-media";
 const steps = [
   "Model",
@@ -110,6 +111,8 @@ export function SiteEditor({
     [photoEdit, setPhotoEdit] = useState<SitePhoto>();
   const [preview, setPreview] = useState(false),
     [closing, setClosing] = useState(false);
+  // The right column: the 3D model (Model and Hikâye steps of a site with one) or the photo preview.
+  const [aside, setAside] = useState<"3d" | "photo">("3d");
   const [baseline, setBaseline] = useState(() => siteKey(draft));
   // The server has the site and its model: what a placement needs (409 otherwise).
   const persisted = Boolean(sites.find((s) => s.id === draft.id)?.model);
@@ -400,9 +403,9 @@ export function SiteEditor({
                 </>
               )}
               <Notice>
-                Model dosyası ve parça adları taslakta saklanır. Etkileşimli 3D,
-                kamera açıları ve ses dosyası bağlama sonraki geliştirme
-                aşamasında; önizleme şu an fotoğrafla çalışır.
+                Sağdaki 3D önizlemede modeli döndür, «Açılış açısı olarak
+                kaydet» ile eser sayfasındaki 3D'nin hangi açıyla açılacağını
+                belirle. Ses dosyası bağlama sonraki aşamada.
               </Notice>
               <button className="btn secondary" onClick={() => setStep(1)}>
                 <ImagePlus size={17} />
@@ -834,6 +837,23 @@ export function SiteEditor({
                           />
                           Kart göster
                         </label>
+                        <label className="check-row">
+                          <input
+                            type="checkbox"
+                            checked={s.interior ?? false}
+                            onChange={(e) =>
+                              storyField(s.id, e.target.checked ? { interior: true } : { interior: undefined })
+                            }
+                          />
+                          İç mekân (3D): bu cümlede «İçini göster» açılır
+                        </label>
+                        <p className="muted cue-angle">
+                          Açı:{" "}
+                          {s.camera
+                            ? poseSummary(s.camera)
+                            : "kayıtlı değil, öncekinde kalır"}{" "}
+                          · sağdaki 3D'de «Açıyı kaydet»
+                        </p>
                         <label className="field">
                           Vurgulanacak parçalar
                           <select
@@ -854,8 +874,8 @@ export function SiteEditor({
                           </select>
                         </label>
                         <small className="muted">
-                          Kart ve vurgu seçimleri saklanır; 3D oynatıcı
-                          bağlantısı sonraki aşamada.
+                          Vurgu seçilen cümlede model durur ve parçayı
+                          gösterir; vurgusuz cümlede yapı yavaşça döner.
                         </small>
                       </>
                     )}
@@ -979,7 +999,36 @@ export function SiteEditor({
           </footer>
         </div>
         <aside className="editor-preview">
-          <h3>Önizleme</h3>
+          {draft.model && (step === 0 || step === 3) ? (
+            <div className="row between editor-preview-head">
+              <h3>{aside === "3d" ? "3D önizleme" : "Önizleme"}</h3>
+              <div className="segmented" role="group" aria-label="Önizleme">
+                <button className={aside === "3d" ? "active" : ""} aria-pressed={aside === "3d"} onClick={() => setAside("3d")}>
+                  3D
+                </button>
+                <button className={aside === "photo" ? "active" : ""} aria-pressed={aside === "photo"} onClick={() => setAside("photo")}>
+                  Fotoğraf
+                </button>
+              </div>
+            </div>
+          ) : (
+            <h3>Önizleme</h3>
+          )}
+          {draft.model && (step === 0 || step === 3) && aside === "3d" ? (
+            <AdminModelPreview
+              // Each step starts its own preview: the last step's note and view do not carry over.
+              key={`${draft.model.src}:${step}`}
+              site={draft}
+              {...(step === 3 && story && {
+                story,
+                storyIndex: activeStory,
+                onStoryCamera: (camera) =>
+                  storyField(story.id, camera ? { camera } : { camera: undefined }),
+              })}
+              {...(step === 0 && { onOpening: (pose) => field("openingCamera", pose) })}
+            />
+          ) : (
+          <>
           <PhotoPreview
             photo={step >= 3 ? selectedPhoto : cover}
             name={draft.name}
@@ -1005,6 +1054,8 @@ export function SiteEditor({
                 Sonraki
               </button>
             </div>
+          )}
+          </>
           )}
           <small className="muted">
             Değişiklikleri kaydetmeden inceleyebilirsin.

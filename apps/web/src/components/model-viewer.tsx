@@ -78,6 +78,7 @@ export default function ModelViewer({
   sources = [],
   onProgress,
   onSettled,
+  poseReader,
 }: {
   model: SiteModel;
   detail?: boolean;
@@ -93,6 +94,12 @@ export default function ModelViewer({
   sources?: SiteSource[];
   onProgress?: (progress: DownloadProgress) => void;
   onSettled?: (outcome: "ready" | "failed") => void;
+  /**
+   * Set once the model is drawn to a function that reads the camera as a pose (the panel's «Açıyı kaydet»): the part
+   * last aimed at (null = the model's centre), the azimuth and elevation around it, and the distance against the one
+   * at which the whole model fits. Back to null when the viewer goes.
+   */
+  poseReader?: { current: (() => CameraPose) | null };
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
@@ -367,11 +374,28 @@ export default function ModelViewer({
           controls!.maxDistance = radius * 4;
           controls!.target.set(0, 0, 0);
           controls!.update();
-          aim.current = (next) => {
-            // Distance at which the bounding sphere fits the narrower field of view of the free part.
+          // The part the camera last went to: a pose read back keeps it, as the camera turns around it.
+          let aimedTarget: string | null = null;
+          const fitDistance = () => {
             const { width, height } = element.getBoundingClientRect();
-            const fit =
-              sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
+            return sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
+          };
+          if (poseReader)
+            poseReader.current = () => {
+              const offset = camera.position.clone().sub(controls!.target);
+              const length = offset.length() || 1;
+              const round = (x: number, step: number) => Math.round(x / step) * step;
+              return {
+                target: aimedTarget,
+                azimuthDeg: round((THREE.MathUtils.radToDeg(Math.atan2(offset.x, -offset.z)) + 360) % 360, 1),
+                elevationDeg: round(THREE.MathUtils.radToDeg(Math.asin(offset.y / length)), 1),
+                distance: round(length / fitDistance(), 0.01),
+              };
+            };
+          aim.current = (next) => {
+            aimedTarget = next.target;
+            // Distance at which the bounding sphere fits the narrower field of view of the free part.
+            const fit = fitDistance();
             controls!.maxDistance = Math.max(radius * 4, fit * 1.6);
             const part = next.target ? root.getObjectByName(next.target) : undefined;
             const goal = part
@@ -687,6 +711,7 @@ export default function ModelViewer({
     return () => {
       disposed = true;
       aim.current = null;
+      if (poseReader) poseReader.current = null;
       lift.current = null;
       select.current = null;
       spin.current = null;

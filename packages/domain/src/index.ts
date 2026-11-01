@@ -472,6 +472,8 @@ export interface HeritageSite {
   sources?: SiteSource[];
   coverPhotoId?: string;
   model?: SiteModel;
+  /** Where the 3D view opens on the site's page (`GET /v1/sites/:id` `openingCamera`); absent or null = the default view. */
+  openingCamera?: CameraPose | null;
   historyImages?: HistoryImage[];
   /** İz Bırak samples in order; absent or empty = none. */
   sampleTraces?: SampleTrace[];

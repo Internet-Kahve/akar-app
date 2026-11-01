@@ -277,6 +277,8 @@ interface SiteDetailDto {
   media: MediaDto[];
   /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
   placement?: MapPlacement | null;
+  /** Where the 3D view opens; `null` = the default view, absent on older API versions. */
+  openingCamera?: CameraPose | null;
   /** Explicit gallery relationship; absent on older API versions. */
   photoIds?: string[];
   sources: SiteSource[];
@@ -581,6 +583,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     ...(present(d.relatedSiteId) && { relatedSiteId: d.relatedSiteId }),
     ...(typeof d.displayOrder === "number" && { displayOrder: d.displayOrder }),
     ...(present(d.coverMediaId) && { coverPhotoId: d.coverMediaId }),
+    ...(present(d.openingCamera) && { openingCamera: d.openingCamera }),
     ...(model && {
       model: {
         name: model.title || model.id,
@@ -1585,6 +1588,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       cur.model && { ...cur.model, placement: undefined },
     );
     const nightChanged = !same(site.model?.night, cur.model?.night);
+    const openingChanged = !same(site.openingCamera ?? null, cur.openingCamera ?? null);
     const photosChanged =
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
@@ -1593,6 +1597,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       !sourcesChanged &&
       !modelChanged &&
       !nightChanged &&
+      !openingChanged &&
       !photosChanged &&
       !storiesChanged &&
       !partCardsChanged
@@ -1643,13 +1648,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       if (!model) {
         await call("PUT", `${path}/model`, { body: { mediaId: null } });
       } else if (model.src.startsWith("data:")) {
-        // The opening camera belongs to the old model; a new one starts without it.
+        // The opening camera belongs to the model: a new one keeps the angle only when the editor set one for it.
         const id = await editorUpload(`${site.id}:model`, "model", model.src, {
           title: model.name,
           license: CONTRIBUTOR_LICENSE,
           trust: model.trust,
         });
-        await call("PUT", `${path}/model`, { body: { mediaId: id } });
+        await call("PUT", `${path}/model`, {
+          body: { mediaId: id, ...(openingChanged && { openingCamera: site.openingCamera ?? null }) },
+        });
         if (
           site.stories.some((s) => s.highlights?.length) ||
           (partCardsChanged && site.partCards?.length)
@@ -1664,6 +1671,16 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           },
         );
       }
+    }
+
+    // The opening angle of the linked model (Adım 1 «Açılış açısı olarak kaydet»); a new file sent it above.
+    const uploadedModel = modelChanged && Boolean(site.model?.src.startsWith("data:"));
+    if (openingChanged && site.model && !uploadedModel) {
+      const linked = before.media.find((m) => m.kind === "model");
+      if (linked)
+        await call("PUT", `${path}/model`, {
+          body: { mediaId: linked.id, openingCamera: site.openingCamera ?? null },
+        });
     }
 
     // After the day model: the night one needs it. Removing the day model removed the night one too (server).

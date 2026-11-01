@@ -405,7 +405,8 @@ export function Scene({
             scene={cityScene}
             identity={identity}
             context={context}
-            pose={pose}
+            // The site page opens on the editor's opening angle; a story sentence keeps its own (or the last one).
+            pose={pose ?? (context === "detail" ? (site.openingCamera ?? undefined) : undefined)}
             interior={interior}
             tour={context === "story" && !onPick && !highlights?.length}
             frame={card && !cardPlace ? storyCardFrame(wide) : NO_FRAME}
