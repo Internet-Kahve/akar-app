@@ -488,6 +488,16 @@ export function AkarApp() {
     (s) => s.id === siteId && s.status === "published",
   );
   const memoryCount = site ? approvedMemories(state, site.id).length : 0;
+  // Back from a site's page to the map, by any way (its back button, the browser's, a link): the map shows that site,
+  // wherever the map was before (a site of Hatay opened from the list must not come back to Bursa).
+  const lastView = useRef(view);
+  useEffect(() => {
+    const from = lastView.current;
+    lastView.current = view;
+    if (view !== "map" || !["detail", "history", "memories"].includes(from) || !site) return;
+    setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "site", point: site.coordinates }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
   // «Yalnız rotada» sentences lead to the next stop: they are read only on a route.
   const storySite = useMemo(() => {
     if (!site) return undefined;

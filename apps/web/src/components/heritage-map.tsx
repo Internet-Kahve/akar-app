@@ -96,6 +96,8 @@ function comingSoon(city: CityRecord, t: I18n["t"]) {
 export type MapFlight =
   | { key: number; to: "globe" | "home" }
   | { key: number; to: "point"; point: LngLat }
+  /** Back from a site's page: the map stays as it was when the site is in view, and goes there when it is not. */
+  | { key: number; to: "site"; point: LngLat }
   | { key: number; to: "route"; points: LngLat[] };
 export function HeritageMap({
   sites,
@@ -540,6 +542,15 @@ export function HeritageMap({
     const flat = { left: 0, right: 0, top: 0, bottom: 0 };
     if (flight.to === "point")
       m.easeTo({ center: flight.point, zoom: 16.5, duration: 900 });
+    else if (flight.to === "site") {
+      if (m.getBounds().contains(flight.point)) return;
+      const here = m.getCenter();
+      // Another city is a jump, not a flight across the country; the city's own street level (or the visitor's).
+      const far = Math.hypot(here.lng - flight.point[0], here.lat - flight.point[1]) > 0.5;
+      const view = { center: flight.point, zoom: Math.max(m.getZoom(), SITE_ZOOM - 1) };
+      if (far) m.jumpTo(view);
+      else m.easeTo({ ...view, duration: 900 });
+    }
     else if (flight.to === "route") {
       const [first, ...rest] = flight.points;
       if (!first) return;
