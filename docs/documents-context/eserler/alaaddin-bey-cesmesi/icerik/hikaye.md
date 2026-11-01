@@ -6,11 +6,11 @@
 
 | # | Cümle (TR) | Fotoğraf | Kart | Vurgu (3D) | Kaynak | Güven (öneri) |
 |---|---|---|---|---|---|---|
-| 1 | Bu çeşme, Bursa'daki en eski çeşme olarak kabul edilir. | kitap/s62-02.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
-| 2 | Alaaddin Bey Camii'nin avlu duvarına bitişik, caddeye bakan yüzünde yapılmıştır. | kitap/s62-01.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
-| 3 | Gövdesi bir sıra kesme küfeki taşı ve iki sıra tuğlayla örülmüş, sıraların arasına düşey tuğlalar yerleştirilmiştir. | kitap/s62-02.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
-| 4 | Cephenin neredeyse tamamını kaplayan geniş sivri kemer, erken dönem Bursa çeşmelerinde sık görülür. | kitap/s62-02.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
-| 5 | Kemerin üstünde iki sıra kirpi saçakla taçlanan, alaturka kiremitle örtülü bir saçak vardır. | kitap/s62-02.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
+| 1 | Bu çeşme, Bursa'daki en eski çeşme olarak kabul edilir. | 01_cesme.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
+| 2 | Alaaddin Bey Camii'nin avlu duvarına bitişik, caddeye bakan yüzünde yapılmıştır. | 02_cami-havadan.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
+| 3 | Gövdesi bir sıra kesme küfeki taşı ve iki sıra tuğlayla örülmüş, sıraların arasına düşey tuğlalar yerleştirilmiştir. | 01_cesme.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
+| 4 | Cephenin neredeyse tamamını kaplayan geniş sivri kemer, erken dönem Bursa çeşmelerinde sık görülür. | 01_cesme.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
+| 5 | Kemerin üstünde iki sıra kirpi saçakla taçlanan, alaturka kiremitle örtülü bir saçak vardır. | 01_cesme.jpg | hayır | — | E cilt-2 PDF s.62 | Doğrulanmış |
 
 ## Notlar
 
