@@ -1150,6 +1150,7 @@ export function AkarApp() {
                         routeColour: lookCity.identity.accent,
                       })}
                       onSelect={pickSite}
+                      onOpen={selectSite}
                       onClear={() => setPeekId(undefined)}
                       onFirstDraw={() => setMapDrawn(true)}
                       onCityInView={setCityInView}

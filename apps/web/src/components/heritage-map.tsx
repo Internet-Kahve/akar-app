@@ -49,6 +49,12 @@ const sky = (theme: Theme) => ({
 /** Keeps the short card clear of the top of the map and of the right edge. */
 const PEEK_WIDTH = 360;
 const PEEK_TOP = 80;
+/** Room kept between a pin and its short card, so the card never covers the site's model (about half a site wide). */
+const PEEK_CLEAR = 120;
+/** How long the short card glides to a new side (`.peek-glide` in design.css). */
+const PEEK_GLIDE_MS = 400;
+/** The camera's move to a newly picked site; the card follows it gliding, on the pin's right where the move ends. */
+const SITE_EASE_MS = 700;
 /** A site's pin keeps at least this zoom when it is picked. */
 const SITE_ZOOM = 17;
 /** Angled view the map opens with; the tilt button toggles between this and 0 (top view). Same as the prototype. */
@@ -94,6 +100,7 @@ export function HeritageMap({
   selectedId,
   highlightId,
   onSelect,
+  onOpen,
   onClear,
   routeIds,
   collapsed,
@@ -113,6 +120,8 @@ export function HeritageMap({
   /** A site the list points at (a row under the pointer): its pin shows as selected, the camera stays. */
   highlightId?: string | undefined;
   onSelect: (id: string) => void;
+  /** A double click on a site: its page. */
+  onOpen?: (id: string) => void;
   /** A tap on the map itself, away from any site. */
   onClear?: () => void;
   routeIds: string[];
@@ -149,6 +158,12 @@ export function HeritageMap({
     cityRef = useRef(onCityInView),
     selectedRef = useRef(selectedId),
     peekRef = useRef<HTMLDivElement>(null),
+    leaderRef = useRef<SVGPathElement>(null),
+    // The card's last side and site: a change of either glides the card there instead of jumping.
+    peekPlace = useRef<{ site: string; onLeft: boolean } | null>(null),
+    glideTimer = useRef<ReturnType<typeof setTimeout>>(undefined),
+    siteGlideUntil = useRef(0),
+    openRef = useRef(onOpen),
     // Set once the visitor moves the map: a late city record must not pull the map back.
     moved = useRef(false),
     latest = useRef({ sites, mapSettings, scenes, cities });
@@ -159,20 +174,64 @@ export function HeritageMap({
     >(""),
     [notice, setNotice] = useState("");
   selectRef.current = onSelect;
+  openRef.current = onOpen;
   clearRef.current = onClear;
   cityRef.current = onCityInView;
   selectedRef.current = selectedId;
   latest.current = { sites, mapSettings, scenes, cities };
-  /** Puts the short card beside its pin; on a phone the stylesheet docks it and ignores these. */
+  /**
+   * Puts the short card `PEEK_CLEAR` to the right of its pin, level with it, and draws the thin line from the card to the
+   * pin. Where the right side has no room the card goes as far to the pin's left, so the site stays in view.
+   * On a phone the stylesheet docks the card and hides the line; these values are then ignored.
+   */
   const placePeek = () => {
     const card = peekRef.current,
       m = map.current,
       site = latest.current.sites.find((s) => s.id === selectedRef.current);
+    // A card that opens again starts where it belongs, it does not glide in from the last one's place.
+    if (!card) peekPlace.current = null;
     if (!card || !m || !site) return;
     const point = m.project(site.coordinates),
-      width = container.current?.clientWidth ?? 0;
-    card.style.left = `${Math.min(width - PEEK_WIDTH - 20, Math.max(16, point.x + 28))}px`;
-    card.style.top = `${Math.max(PEEK_TOP, point.y - 120)}px`;
+      width = container.current?.clientWidth ?? 0,
+      height = container.current?.clientHeight ?? 0,
+      cardHeight = card.offsetHeight;
+    const last = peekPlace.current,
+      now = performance.now();
+    if (last && last.site !== site.id) siteGlideUntil.current = now + SITE_EASE_MS;
+    // While the camera moves to a new site the pin crosses the map: the card stays on the right, where the move ends.
+    const easing = now < siteGlideUntil.current,
+      onLeft = !easing && point.x + PEEK_CLEAR + PEEK_WIDTH > width - 20;
+    const left = Math.max(
+      16,
+      Math.min(width - PEEK_WIDTH - 20, onLeft ? point.x - PEEK_CLEAR - PEEK_WIDTH : point.x + PEEK_CLEAR),
+    );
+    const top = Math.max(PEEK_TOP, Math.min(height - cardHeight - 16, point.y - cardHeight / 2));
+    // Following the pin while the map moves stays immediate; only a new side or a new site glides (`.peek-glide`).
+    if (last && (last.site !== site.id || last.onLeft !== onLeft)) {
+      // The line would point to where the card is going: it fades out meanwhile and back in when the card arrives.
+      const leader = leaderRef.current?.ownerSVGElement;
+      card.classList.add("peek-glide");
+      leader?.classList.add("gliding");
+      clearTimeout(glideTimer.current);
+      glideTimer.current = setTimeout(
+        () => {
+          card.classList.remove("peek-glide");
+          leader?.classList.remove("gliding");
+        },
+        easing ? siteGlideUntil.current - now : PEEK_GLIDE_MS,
+      );
+    }
+    peekPlace.current = { site: site.id, onLeft };
+    card.style.left = `${left}px`;
+    card.style.top = `${top}px`;
+    const line = leaderRef.current;
+    if (!line) return;
+    // From the card's near edge, level with the pin as far as the card reaches, to the pin.
+    const fromX = onLeft ? left + PEEK_WIDTH : left,
+      fromY = Math.max(top + 28, Math.min(top + cardHeight - 28, point.y));
+    line.setAttribute("d", `M${fromX} ${fromY}L${point.x} ${point.y}`);
+    line.nextElementSibling?.setAttribute("cx", String(point.x));
+    line.nextElementSibling?.setAttribute("cy", String(point.y));
   };
   const drawnRef = useRef(onFirstDraw);
   drawnRef.current = onFirstDraw;
@@ -215,6 +274,15 @@ export function HeritageMap({
               models.current?.pick(e.point.x, e.point.y);
             if (id) selectRef.current(id);
             else clearRef.current?.();
+          });
+          // A double click on a site opens its page instead of zooming in.
+          m.on("dblclick", (e) => {
+            const id =
+              pinAt(m, e.point.x, e.point.y) ??
+              models.current?.pick(e.point.x, e.point.y);
+            if (!id || !openRef.current) return;
+            e.preventDefault();
+            openRef.current(id);
           });
           m.on("move", placePeek);
           const reportCity = () => {
@@ -427,7 +495,7 @@ export function HeritageMap({
     m.easeTo({
       center: site.coordinates,
       zoom: Math.max(m.getZoom(), SITE_ZOOM),
-      duration: 700,
+      duration: SITE_EASE_MS,
       padding: matchMedia(WIDE).matches
         ? { right: PEEK_WIDTH + 20, top: 0, bottom: 0, left: 0 }
         : { bottom: 240, top: 0, left: 0, right: 0 },
@@ -550,9 +618,16 @@ export function HeritageMap({
         onLocate={() => onLocate?.()}
       />
       {selectedId && peek && (
-        <div ref={peekRef} className="peek-anchor">
-          {peek}
-        </div>
+        <>
+          {/* The thin line from the short card to its pin; placed by `placePeek`. */}
+          <svg className="peek-leader" aria-hidden="true">
+            <path ref={leaderRef} />
+            <circle r="3" />
+          </svg>
+          <div ref={peekRef} className="peek-anchor">
+            {peek}
+          </div>
+        </>
       )}
       {notice && (
         <button className="location-notice" onClick={() => setNotice("")}>
