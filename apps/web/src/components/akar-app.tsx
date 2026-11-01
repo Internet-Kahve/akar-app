@@ -542,7 +542,9 @@ export function AkarApp() {
   }, [filtered, query, cityName, nearPoint]);
   const chipCategories = useMemo(() => categoriesOf(published), [published]);
   const peekSite = published.find((s) => s.id === peekId);
-  const pageCity = view === "detail" || view === "story" ? site?.city : undefined;
+  // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
+  // name, colour and emblem are that city's, whatever city the map was last left in.
+  const pageCity = ["detail", "story", "history", "memories"].includes(view) ? site?.city : undefined;
   const lookCity =
     cityRecords.find((c) => c.name === pageCity) ?? activeCity;
   const cityLook = cityIdentityStyle(lookCity?.identity ?? null);
@@ -565,7 +567,8 @@ export function AkarApp() {
     openingLate ||
     !!loadError ||
     (ready && !(showMap && !isDetail));
-  const openingCity = cityRecords.find((c) => c.isDefault);
+  // A link straight to a site of another city opens on that city, not on the default one.
+  const openingCity = cityRecords.find((c) => c.name === pageCity) ?? cityRecords.find((c) => c.isDefault);
   /** A pick on the map or in the list: the map goes there and the short card opens. */
   function pickSite(id: string) {
     setPeekId(id);
@@ -777,7 +780,7 @@ export function AkarApp() {
             }}
           >
             <i className="city-motif" aria-hidden="true" />
-            {cityName}
+            {pageCity ?? cityName}
           </button>
         </div>
         {/* One switch: a press anywhere on it turns to the other language, and the thumb slides there. */}

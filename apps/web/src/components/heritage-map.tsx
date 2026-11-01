@@ -513,10 +513,14 @@ export function HeritageMap({
     const m = map.current,
       site = latest.current.sites.find((s) => s.id === selectedId);
     if (!site || !loaded || !m) return;
+    // A site of another city (picked from a search) is a jump: a glide at street level across the country only
+    // shows blurred tiles.
+    const here = m.getCenter();
+    const far = Math.hypot(here.lng - site.coordinates[0], here.lat - site.coordinates[1]) > 0.5;
     m.easeTo({
       center: site.coordinates,
       zoom: Math.max(m.getZoom(), SITE_ZOOM),
-      duration: SITE_EASE_MS,
+      duration: far ? 0 : SITE_EASE_MS,
       padding: matchMedia(WIDE).matches
         ? { right: PEEK_WIDTH + 20, top: 0, bottom: 0, left: 0 }
         : { bottom: 240, top: 0, left: 0, right: 0 },
