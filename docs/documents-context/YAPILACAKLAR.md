@@ -101,6 +101,14 @@ Figma `akar-yeni` ekranları prototiple tek tek karşılaştırıldı. Düğüm 
 - [ ] Zemin titremesi (z-fighting) düzeltmesi ve model kuralı (zemin katmanları arası ≥ 3 cm)
 - [ ] Stil: `design/harita/akar-style-ozel-v2.json`
 
+### Admin paneli: hikâye cümlesinin 3D ayarları (1 Kasım 2026)
+
+Bugün panelde (eser düzenleme → Hikâye adımı) cümle başına yalnız «Kart göster» ve «Vurgulanacak parçalar» var. Şu ikisi panelden ayarlanamıyor; içerik dosyasından ya da hiç gelmiyor:
+
+- [ ] **Kamera açısı.** Cümlenin modele hangi açıdan bakacağı (`StoryBlock.camera`: hedef parça, azimut, eğim, uzaklık; `@akar/domain` `CameraPose`). Tasarım hazır: panelde model döndürülür, «Açıyı kaydet» o anki kamerayı cümleye yazar (`FRONTEND_BACKEND_NOTLARI.md` §4). Kaydedilmeyen cümle bir öncekinin açısında kalır. Ulucami'nin 12 cümlesi için önerilen açılar `eserler/ulu-cami/icerik/hikaye.md` → «Açı önerisi» tablosunda. Panelde bugün «kamera açıları … sonraki geliştirme aşamasında» notu duruyor. — Burak (API: cümle kaydında `camera`), panel arayüzü Tamer ya da Muhammed.
+- [ ] **«Model dönsün» anahtarı.** Bugün dönme vurguya bağlı: vurgusu olmayan cümlede model döner, vurgusu olan cümlede durur (`apps/web/src/components/scene.tsx`, `tour`). Bir parçayı vurgulayıp yine de döndürmek ya da vurgusuz bir cümlede durdurmak mümkün değil. Öneri: cümleye isteğe bağlı `turn` alanı (yoksa bugünkü kural), `hikaye.md` tablosunda «Dönme» sütunu, içe aktarma, API ve panelde bir onay kutusu. Kullanım: dönmeyi yalnız hikâyenin başında ya da sonunda istemek. — Burak (alan, içe aktarma, API), panel kutusu Tamer ya da Muhammed.
+- [ ] **Eski not.** Vurgu seçiminin altındaki «Kart ve vurgu seçimleri saklanır; 3D oynatıcı bağlantısı sonraki aşamada.» yazısı eskidi: vurgular oynatıcıda çalışıyor (parçayı parlatır, dönmeyi durdurur). Kaldırılmalı ya da «Vurgu seçilen cümlede model durur ve parçayı gösterir» diye değişmeli (`admin-site-editor.tsx`).
+
 ## 4. Jüri ve sunum (ekip işi; Claude yardım edebilir)
 
 Değerlendirme: tasarım ve teknik güçlü; **zayıf yanlar bütünlük/demo ve etki hikâyesi.**
