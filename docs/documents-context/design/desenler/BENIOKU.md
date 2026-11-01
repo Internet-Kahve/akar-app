@@ -10,6 +10,7 @@ Vakıf Katılım kitaplarındaki çizimlerin kopyası değiller. Kitapların ken
 | `amblem-akar-yildiz.svg` | Tek yıldız amblem | Açılış, 3D yükleniyor animasyonu, rozet |
 | `amblem-bursa.svg` | Bursa logosu, Muhammed'in çizimi (1 Kasım) · kare 1476×1476, şeffaf zemin | Bursa amblemi, 48 px ve üstü — henüz bağlanmadı |
 | `amblem-bursa-kalin.svg` | Aynı logo, çizgiler ~2,5 kat kalın | 14–32 px küçük yerler (şehir çipi) — henüz bağlanmadı |
+| `amblem-hatay.svg` | Hatay logosu, Muhammed'in çizimi (1 Kasım) · 8 kollu geçme yıldız, kare 1101×1101 | Hatay amblemi; çizgileri kalın, 14 px'te de okunur — henüz bağlanmadı |
 | `desen-bursa-kesik-gecme.svg` | Muhammed'in çizimi (31 Ekim) · karo 682×605 | **Bursa şehir kimliği** |
 | `desen-hatay-yildiz-kafes.svg` | Muhammed'in çizimi (31 Ekim) · karo 1413×999 (kaynak 2826×1998) | **Hatay şehir kimliği** · `desen_olcek: 4.3` |
 | `desen-konya-yildiz-gecme.svg` | Muhammed'in çizimi (31 Ekim) · karo 675×1074 | **Konya şehir kimliği** |
