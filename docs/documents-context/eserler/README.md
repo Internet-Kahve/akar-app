@@ -15,7 +15,7 @@ Esere özel referanslar tek `ref/` klasöründe toplanır: `ref/foto/` (fotoğra
 
 ## Gece modeli (1 Kasım 2026)
 
-Uygulamanın gece temasında eser, isteğe bağlı bir gece modeliyle görünür (Yandex Haritalar'daki gibi gece için ayrı hazırlanmış modelleme). Blender gündüzdeki gibi iki dosya üretir: `export/<ad>_gece.glb` (harita) ve `export/<ad>_gece_sunum.glb` (sunum; uygulama bunu kullanır). `3d/model.json`'a `"glb_gece": "<ad>_gece"` eklenir (`glb` gibi, uzantısız ve `_sunum`suz). Yoksa gece de gündüz modeli gösterilir.
+Uygulamanın gece temasında eser, isteğe bağlı bir gece modeliyle görünür (Yandex Haritalar'daki gibi gece için ayrı hazırlanmış modelleme). Blender gündüzdeki gibi iki dosya üretir: `export/night/<ad>_night.glb` (harita) ve `export/night/<ad>_night_sunum.glb` (sunum; uygulama bunu kullanır). Üretici `_kutuphane/gece/gece_uret.py` (Talha, 31 Ekim; ayrıntı `_kutuphane/gece/BENIOKU.md`). `3d/model.json`'a `"glb_gece": "night/<ad>_night"` eklenir (`glb` gibi `export/`'a göre yol, uzantısız ve `_sunum`suz). Yoksa gece de gündüz modeli gösterilir. 1 Kasım: yedi Bursa eserinin gece modeli bağlı; hepsi gündüzle aynı sürümden ve aynı parça adlarıyla.
 
 Kural: gece modeli gündüz modelinin **bütün parça adlarını** taşır. Hikâye vurguları, parça kartları, görevler ve «İçini göster» grupları gündüzün adlarıyla bir kez yazılır; gece dosyasında eksik bir ad olursa içe aktarma durur (fener, ışıklı pencere gibi fazladan parça serbest). Yerleşim (`yaw`, `kaydirma_m`, `ana_parca`) de ortaktır: iki dosyada model aynı yerde, aynı ölçekte durmalı. Panelden yükleme: Adım 1 → «Gece modeli»; parça adı farkı orada uyarı olarak görünür.
 
