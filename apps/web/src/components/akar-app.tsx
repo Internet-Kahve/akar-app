@@ -955,6 +955,8 @@ export function AkarApp() {
               key={site.id}
               site={site}
               state={state}
+              role={role}
+              commit={commit}
               onBack={() => go("detail", site.id)}
               onAdd={() => setOverlay("memory")}
               onHistory={() => go("history", site.id)}
@@ -1064,11 +1066,11 @@ export function AkarApp() {
                     />
                   ) : (
                     <div className="detail-panel">
-                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
+                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} visited={state.visitedIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
-                        nextStop={nextStop} onNextStop={selectSite} />
+                        onVisit={() => setOverlay("visit")} nextStop={nextStop} onNextStop={selectSite} />
                     </div>
                   )
                 ) : isDetail && !site ? (

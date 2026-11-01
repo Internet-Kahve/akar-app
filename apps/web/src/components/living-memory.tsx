@@ -1,10 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { approvedMemories, type HeritageSite, type Snapshot } from "@akar/domain";
+import { approvedMemories, type Command, type HeritageSite, type Role, type Snapshot } from "@akar/domain";
 import { memoryTraces, relativeDay, traceInitial, type MemoryFilter, type Trace } from "../lib/memory-traces";
 import type { MessageKey } from "../lib/messages";
 import { Localized, useI18n } from "./i18n";
+import { MemoryActions } from "./memory-actions";
 
 const FILTERS: Array<{ id: MemoryFilter; label: MessageKey }> = [
   { id: "all", label: "memoryPage.newest" },
@@ -13,7 +14,17 @@ const FILTERS: Array<{ id: MemoryFilter; label: MessageKey }> = [
   { id: "mine", label: "memoryPage.mine" },
 ];
 
-function TraceCard({ trace, site }: { trace: Trace; site: HeritageSite }) {
+function TraceCard({
+  trace,
+  site,
+  role,
+  commit,
+}: {
+  trace: Trace;
+  site: HeritageSite;
+  role: Role;
+  commit: (command: Command) => Promise<boolean>;
+}) {
   const { t, lang } = useI18n();
   const content = lang === "en" ? "tr" : undefined;
   const angle = trace.historyImageId
@@ -63,6 +74,11 @@ function TraceCard({ trace, site }: { trace: Trace; site: HeritageSite }) {
             {trace.credit}
           </small>
         )}
+        {trace.memory && (
+          <div className="memory-actions">
+            <MemoryActions memory={trace.memory} siteName={site.name} role={role} own={trace.own} commit={commit} />
+          </div>
+        )}
       </div>
     </article>
   );
@@ -72,6 +88,8 @@ function TraceCard({ trace, site }: { trace: Trace; site: HeritageSite }) {
 export function LivingMemory({
   site,
   state,
+  role,
+  commit,
   onBack,
   onAdd,
   onHistory,
@@ -79,6 +97,8 @@ export function LivingMemory({
 }: {
   site: HeritageSite;
   state: Snapshot;
+  role: Role;
+  commit: (command: Command) => Promise<boolean>;
   onBack: () => void;
   onAdd: () => void;
   onHistory: () => void;
@@ -134,7 +154,7 @@ export function LivingMemory({
               ))}
             </div>
             {shown.length ? (
-              shown.map((trace) => <TraceCard key={trace.id} trace={trace} site={site} />)
+              shown.map((trace) => <TraceCard key={trace.id} trace={trace} site={site} role={role} commit={commit} />)
             ) : (
               <div className="hm-bos">
                 <h2>{t(filter === "all" ? "memories.emptyTitle" : "memoryPage.noMatch")}</h2>

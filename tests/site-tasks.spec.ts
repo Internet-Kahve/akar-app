@@ -110,6 +110,17 @@ test("on site the position decides: too far gets a friendly message, near the si
   expect(errors).toEqual([]);
 });
 
+test("a part search in the 3D view can be cancelled from its bar", async ({ page }) => {
+  const errors = await openUlucami(page);
+  await puzzleRow(page).click();
+  await page.getByRole("dialog", { name: "Bulmaca" }).getByRole("button", { name: "Bu soruyu atla" }).click();
+  await page.getByRole("dialog", { name: "Saha görevi" }).getByRole("button", { name: "3D modelde bul" }).click();
+  const bar = page.locator(".task-pick-bar");
+  await bar.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(bar).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test("Escape closes the puzzle back to the site", async ({
   page,
 }) => {

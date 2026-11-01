@@ -15,6 +15,8 @@ export interface Trace {
   alt?: string | undefined;
   credit?: string | undefined;
   historyImageId?: string | undefined;
+  /** The visitor memory behind the row (absent for the team's samples): its removal buttons act on it. */
+  memory?: Memory | undefined;
 }
 
 const newest = (a: Trace, b: Trace) => b.date.localeCompare(a.date);
@@ -37,6 +39,7 @@ export function memoryTraces({
     own: mine,
     state: m.status === "pending" ? "pending" : "approved",
     photo: m.photo,
+    memory: m,
   });
   const mine = own.filter((m) => m.status !== "rejected").map((m) => row(m, true));
   const ownIds = new Set(mine.map((m) => m.id));

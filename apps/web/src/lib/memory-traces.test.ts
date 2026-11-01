@@ -33,6 +33,8 @@ test("the visitor's own traces come first, then the rest from newest to oldest",
   assert.equal(rows[0]?.state, "pending");
   assert.equal(rows[3]?.state, "sample");
   assert.equal(rows[3]?.historyImageId, "h1");
+  assert.equal(rows[2]?.memory?.id, "baska");
+  assert.equal(rows[3]?.memory, undefined);
 });
 
 test("a refused trace of the visitor is not listed", () => {

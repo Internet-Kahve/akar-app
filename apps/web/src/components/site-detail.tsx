@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Headphones,
   History,
+  MapPin,
   MessageCircle,
   Puzzle,
 } from "lucide-react";
@@ -37,6 +38,7 @@ export function SiteDetail({
   site,
   saved,
   read,
+  visited,
   progress,
   memoryCount,
   onBack,
@@ -46,12 +48,14 @@ export function SiteDetail({
   onHistory,
   onMemories,
   onPuzzle,
+  onVisit,
   nextStop,
   onNextStop,
 }: {
   site: HeritageSite;
   saved: boolean;
   read: boolean;
+  visited: boolean;
   progress: SiteProgress;
   memoryCount: number;
   onBack: () => void;
@@ -61,6 +65,8 @@ export function SiteDetail({
   onHistory: () => void;
   onMemories: () => void;
   onPuzzle: () => void;
+  /** «Yanındayım»: the server checks the visitor's location before the visit counts. */
+  onVisit: () => void;
   /** On a route: the stop after this one (the prototype's «Sonraki durak»). */
   nextStop?: HeritageSite;
   onNextStop?: (id: string) => void;
@@ -267,6 +273,18 @@ export function SiteDetail({
                   ? t("site.puzzleRowAll", { count: tasks.length })
                   : t("site.puzzleRow", { count: tasks.length, done })}
             </small>
+          </span>
+          <ChevronRight className="ky-ok" size={18} />
+        </button>
+        <button className="ky" onClick={onVisit}>
+          <span className="ky-ik">
+            <span className="ky-daire">
+              {visited ? <Check size={22} /> : <MapPin size={22} />}
+            </span>
+          </span>
+          <span className="ky-yazi">
+            <b>{visited ? t("site.visited") : t("site.imHere")}</b>
+            <small>{visited ? t("site.visitRowDone") : t("site.visitRow")}</small>
           </span>
           <ChevronRight className="ky-ok" size={18} />
         </button>

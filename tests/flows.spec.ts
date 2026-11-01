@@ -99,9 +99,13 @@ test("discovery, story, memory moderation and persistence form one complete flow
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Eseri kaydet", exact: true }).click();
-  // The detail panel has no route or «Yanındayım» buttons (prototype): routes are added from the list.
+  // The detail panel has no route button (prototype): routes are added from the list.
   await expect(page.getByRole("button", { name: "Rotama ekle", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Yanındayım", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: /^Yanındayım/ }).click();
+  await page.getByRole("button", { name: "Demo ziyaretini tamamla" }).click();
+  await expect(page.getByRole("heading", { name: "Demo ziyareti pasaportunda" })).toBeVisible();
+  await page.getByRole("button", { name: "Pencereyi kapat" }).click();
+  await expect(page.getByRole("button", { name: /^Ziyaretim/ })).toBeVisible();
   await page.getByRole("button", { name: "Oku", exact: true }).click();
   await page.getByLabel("Sade anlatım").check();
   for (let i = 0; i < 8; i++)
@@ -148,6 +152,13 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(
     page.getByText("Avludaki ışığı ve sessizliği hatırlayacağım."),
   ).toBeVisible();
+  // The living memory page offers the published memory's removal buttons: the demo admin wrote it, so «Sil»
+  // rather than «Kalıcı sil».
+  await page.goto("/#view=detail&site=ulu-cami");
+  await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
+  const trace = page.locator(".hm-iz").filter({ hasText: "Avludaki ışığı ve sessizliği hatırlayacağım." });
+  await expect(trace.getByRole("button", { name: "Yayından kaldır" })).toBeVisible();
+  await expect(trace.getByRole("button", { name: "Sil", exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
 test("admin photo wizard publishes complete content and persists shared images", async ({

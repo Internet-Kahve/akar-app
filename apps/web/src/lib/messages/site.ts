@@ -35,6 +35,8 @@ export const tr = {
   "site.puzzleRow": "{count} görev · {done} tamam",
   "site.puzzleRowAll": "{count} görevin hepsi tamam",
   "site.puzzleRowNone": "Görev henüz yok",
+  "site.visitRow": "Eserin yanındaysan konumunla doğrula",
+  "site.visitRowDone": "Ziyaretin kaydedildi",
   "site.sampleTrace": "Örnek katkı",
   // Puzzle screen
   "puzzle.right": "Doğru! {option}.",
@@ -325,6 +327,8 @@ export const en = {
   "site.puzzleRow": "{count} tasks · {done} completed",
   "site.puzzleRowAll": "All {count} tasks completed",
   "site.puzzleRowNone": "No tasks yet",
+  "site.visitRow": "At the site? Confirm it with your location",
+  "site.visitRowDone": "Your visit is recorded",
   "site.sampleTrace": "Sample contribution",
   // Puzzle screen
   "puzzle.right": "Correct! {option}.",
