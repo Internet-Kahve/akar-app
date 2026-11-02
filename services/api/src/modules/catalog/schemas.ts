@@ -267,6 +267,7 @@ export const ChapterDto = z
       .nullable()
       .describe("summary, figures, quotes, timeline ve terms alanlarının İngilizcesi (aynı sıra, evidence İngilizce paragraf metninden); yoksa null"),
     enStatus: z.enum(translationStatuses).nullable().describe("İngilizce metnin kaynağı: machine = çeviri, henüz editör kaydetmedi; reviewed = editör kaydetti; null = yok"),
+    narrations: z.array(NarrationDto).describe("Bölüm başlığının yapay zekâ seslendirmeleri (variant=text; güncel olanlar); ses dosyaları SiteDetail.media içinde"),
   })
   .describe("«Eser hakkında» okuma bölümü; metni SiteDetail.sections içinde chapterId ile ona bağlıdır");
 export type ChapterDto = z.infer<typeof ChapterDto>;
@@ -283,6 +284,9 @@ export const SectionDto = z.object({
   sourceId: z.string().nullable(),
   chapterId: z.string().nullable().describe("Paragrafın ait olduğu okuma bölümü (SiteDetail.chapters); null = hiçbir bölüme bağlı değil"),
   photos: z.array(SectionPhotoDto).describe("Paragrafın arkasında gösterilen kitap fotoğrafları, sıralı; galeriye girmez"),
+  narrations: z
+    .array(NarrationDto)
+    .describe("Paragrafın yapay zekâ seslendirmeleri (variant=text; güncel olanlar). Kitabe paragrafında yalnız anlamı (Mealen:/Meaning: sonrası) okunur; anlamı olmayan kitabenin kaydı olmaz"),
 });
 
 export const CardDto = z.object({

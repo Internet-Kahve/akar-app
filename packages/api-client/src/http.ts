@@ -219,6 +219,8 @@ interface SiteDetailDto {
     chapterId?: string | null;
     /** Book photographs after the paragraph; `mediaId` resolves in `media`. Absent on older API versions. */
     photos?: Array<{ mediaId: string; aspect: number | null; alt: string }>;
+    /** AI voice-overs of the paragraph; absent on older API versions. */
+    narrations?: Array<{ variant: "text" | "simple"; lang: "tr" | "en"; voice: "female" | "male"; mediaId: string }>;
   }>;
   /** Absent on older API versions. */
   aboutCoverMediaId?: string | null;
@@ -232,6 +234,8 @@ interface SiteDetailDto {
     titleEn?: string | null;
     readingEn?: Omit<AboutReadingEn, "quotes"> & { quotes: Array<{ text: string; by: string | null }> } | null;
     enStatus?: "machine" | "reviewed" | null;
+    /** AI voice-overs of the title; absent on older API versions. */
+    narrations?: Array<{ variant: "text" | "simple"; lang: "tr" | "en"; voice: "female" | "male"; mediaId: string }>;
     kind: "history" | "architecture" | "waqf";
     summary: string[];
     figures: AboutChapter["figures"];
@@ -541,7 +545,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     photos,
     sources: d.sources,
     sections: (d.sections ?? []).map(
-      ({ chapterId, photos: aboutPhotos, titleEn, bodyEn, enStatus: _status, ...section }) => {
+      ({ chapterId, photos: aboutPhotos, titleEn, bodyEn, enStatus: _status, narrations, ...section }) => {
         const placed = (aboutPhotos ?? []).flatMap((p) => {
           const m = d.media.find((x) => x.id === p.mediaId && x.kind === "photo");
           return m
@@ -559,13 +563,14 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           sourceId: section.sourceId ?? "",
           ...(present(chapterId) && { chapterId }),
           ...(present(titleEn) && { titleEn }),
+          ...(narrations?.length && { narrations: mapNarrations({ narrations }, d.media) }),
           ...(present(bodyEn) && { bodyEn }),
           ...(placed.length && { photos: placed }),
         };
       },
     ),
     ...(d.chapters?.length && {
-      chapters: d.chapters.map(({ camera, quotes, titleEn, readingEn, enStatus: _status, ...chapter }) => ({
+      chapters: d.chapters.map(({ camera, quotes, titleEn, readingEn, enStatus: _status, narrations, ...chapter }) => ({
         ...chapter,
         quotes: quotes.map(({ text, by }) => ({
           text,
@@ -573,6 +578,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         })),
         ...(present(camera) && { camera }),
         ...(present(titleEn) && { titleEn }),
+        ...(narrations?.length && { narrations: mapNarrations({ narrations }, d.media) }),
         ...(present(readingEn) && {
           readingEn: {
             ...readingEn,

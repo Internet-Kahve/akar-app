@@ -318,7 +318,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const taskRows = await loadTasks(q, ids);
   const badgeRows = await loadBadges(q, ids);
   const traceRows = await loadSampleTraces(q, ids);
-  const narrationList = currentNarrations(await loadNarrationRows(q, ids), storyRows, partCardRows);
+  const narrationList = currentNarrations(await loadNarrationRows(q, ids), { stories: storyRows, partCards: partCardRows, chapters: chapterRows, sections: sectionRows });
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
@@ -603,8 +603,9 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       sourceId: x.sourceId,
       chapterId: x.chapterId,
       photos: photosOf.get(x.id) ?? [],
+      narrations: narrationsOfSubject(a.narrations, "about_section", s.id, x.id),
     })),
-    chapters: a.chapters.map(chapterDto),
+    chapters: a.chapters.map((c) => chapterDto(c, narrationsOfSubject(a.narrations, "about_chapter", s.id, c.id))),
     cards: cardList.map((c) => ({
       id: c.id,
       kind: c.kind,
@@ -1493,6 +1494,13 @@ export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsIn
         const restored = photos.filter((p) => kept.has(p.sectionId));
         if (restored.length) await tx.insert(siteSectionPhotos).values(restored);
       }
+      // Recordings of paragraphs left out go with them, as in `setStories`.
+      const keptIds = rows.map((r) => r.id);
+      const orphaned = await tx
+        .delete(narrations)
+        .where(and(eq(narrations.siteId, id), eq(narrations.subjectType, "about_section"), keptIds.length ? notInArray(narrations.subjectId, keptIds) : undefined))
+        .returning({ mediaId: narrations.mediaId });
+      await deleteUnreferencedMedia(tx, orphaned.map((n) => n.mediaId));
       return {};
     },
   );

@@ -486,6 +486,8 @@ export interface AboutChapter {
   focusParts: string[];
   /** The English of the reading texts, item for item; absent = none written (the Turkish ones are shown). */
   readingEn?: AboutReadingEn;
+  /** AI voice-overs of the title (variant `text`); absent or empty = none (the reader falls back to the browser voice). */
+  narrations?: StoryNarration[];
 }
 export type AboutReadingEn = Pick<AboutChapter, "summary" | "figures" | "quotes" | "timeline" | "terms">;
 export interface HeritageSite {
@@ -549,6 +551,8 @@ export interface HeritageSite {
     chapterId?: string;
     /** Book photographs shown after this paragraph, in order. */
     photos?: AboutPhoto[];
+    /** AI voice-overs of what the reader reads aloud (variant `text`); absent or empty = none. */
+    narrations?: StoryNarration[];
   }>;
 }
 export interface HeritageRoute {
