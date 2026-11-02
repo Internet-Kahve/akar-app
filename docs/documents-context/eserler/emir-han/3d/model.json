@@ -9,5 +9,42 @@
   "kaydirma_m": {
     "dogu": 0,
     "kuzey": 0
-  }
+  },
+  "_foto_acilari_not": "2 Kasım 2026: eser sayfasındaki ‹ İçini göster › oklarının açıları. foto: galeri fotoğrafının numarası (fotograflar.md); hedef/azimut/egim/uzaklik hikâye cümlesinin «Açı» sözcükleriyle aynı; ic: model açılır. tahmini: yön fotoğraftan kesin çıkmadı, panelden düzeltilecek (Muhammed). Panelde girilen açı bunun önüne geçer.",
+  "foto_acilari": [
+    {
+      "foto": "01",
+      "azimut": 97,
+      "egim": 45,
+      "uzaklik": "bütün yapı",
+      "tahmini": true,
+      "not": "havadan, arkada Ulucami: doğudan sayıldı"
+    },
+    {
+      "foto": "04",
+      "hedef": "Han_Avlu",
+      "azimut": 7,
+      "egim": 50,
+      "uzaklik": "orta",
+      "not": "ağaçlı avlu"
+    },
+    {
+      "foto": "02",
+      "hedef": "Sadirvan",
+      "azimut": 187,
+      "egim": 25,
+      "uzaklik": "yakın",
+      "tahmini": true,
+      "not": "avlu şadırvanı; yön tahmini"
+    },
+    {
+      "foto": "03",
+      "hedef": "Avlu_Revaklari",
+      "azimut": 97,
+      "egim": 18,
+      "uzaklik": "yakın",
+      "tahmini": true,
+      "not": "tonozlu revak; yön tahmini"
+    }
+  ]
 }

@@ -253,6 +253,17 @@ for entry in editorial.eserleri_bul():
     # Night theme model (1 Nov 2026): `glb_gece` names its export like `glb`; the presentation file is the one used.
     if model and model_info.get('glb_gece'):
         model['nightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece"]}_sunum.glb'
+    # Gallery photographs' 3D views (model.json `foto_acilari`, 2 Nov 2026): the site page's ‹ › arrows beside
+    # «İçini göster» go through them. Each names a gallery photograph by its number and gives the "Açı" words of a
+    # story sentence (hedef, azimut, egim, uzaklik); `ic` opens the model for it. A view set in the panel wins.
+    if model:
+        by_id = {p['id']: p for p in photos}
+        for view in model_info.get('foto_acilari') or []:
+            p = by_id.get(f'{sid}-photo-{view["foto"]}')
+            if not p or p['galleryPosition'] is None:
+                raise ValueError(f'foto_acilari names no gallery photograph: {folder} {view["foto"]}')
+            p['camera'] = dict(camera(dict(hedef=view.get('hedef'), azimut=view['azimut'], egim=view.get('egim'),
+                                           uzaklik=view.get('uzaklik'))), **({'interior': True} if view.get('ic') else {}))
 
     # eser.json `sira` (§11.48): map draw priority, a whole number from 1 up; absent = unranked (None).
     display_order = entry.get('sira')
