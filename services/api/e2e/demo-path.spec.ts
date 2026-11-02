@@ -89,7 +89,7 @@ async function openProfile(page: Page) {
 async function guestPage(browser: Browser, options?: BrowserContextOptions) {
   const context = await browser.newContext(options);
   const page = await context.newPage();
-  await page.goto("/");
+  await page.goto("/#view=map");
   return { context, page };
 }
 
@@ -153,7 +153,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
 
   // 4. The moderator takes the memory down from the public card (no report needed); only an admin sees "Kalıcı sil".
-  await moderator.page.goto("/");
+  await moderator.page.goto("/#view=map");
   await openSite(moderator.page, MEMORY_SITE.name);
   await moderator.page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
   const published = moderator.page.locator(".hz-iz, .hzd-iz").filter({ hasText: text });
@@ -170,7 +170,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   expect((await fetch(photoUrl!)).ok).toBe(false);
 
   // 5. The author sees the reason in Paylaşımlarım and deletes the memory for good.
-  await visitor.page.goto("/");
+  await visitor.page.goto("/#view=map");
   await openProfile(visitor.page);
   const own = visitor.page.locator(".memory-row").filter({ hasText: text });
   await expect(own).toContainText("Uygunsuz içerik");
@@ -202,7 +202,7 @@ test("a guest's saved site and Rotam move into the account at sign-in; Rotam the
   await expect(save).toHaveAttribute("aria-pressed", "true");
 
   // 2. Sign in: both move into the account.
-  await page.goto("/");
+  await page.goto("/#view=map");
   await openProfile(page);
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await signIn(page, email);
@@ -216,7 +216,9 @@ test("a guest's saved site and Rotam move into the account at sign-in; Rotam the
   await expect.poll(account).toEqual({ route: [MEMORY_SITE.id], saved: [MEMORY_SITE.id] });
 
   // 3. After a reload the account's lists are shown; removing the stop writes the account's Rotam.
-  await page.goto("/");
+  // (The bare address is the introduction now: a full load of the map, not a jump within the page.)
+  await page.goto("about:blank");
+  await page.goto("/#view=map");
   await peekSite(page, MEMORY_SITE.name);
   await page.locator(".site-peek").getByRole("button", { name: "Rotamdan çıkar" }).click();
   await expect(page.locator(".site-peek").getByRole("button", { name: "Rotama ekle" })).toBeVisible();
@@ -255,7 +257,7 @@ test("an admin deletes another visitor's approved memory permanently from the pu
   await openProfile(page);
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await signIn(page, adminEmail);
-  await page.goto("/");
+  await page.goto("/#view=map");
   await openSite(page, MEMORY_SITE.name);
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
   const card = page.locator(".hz-iz, .hzd-iz").filter({ hasText: text });
@@ -360,7 +362,7 @@ test("live visits require location and only display success after server verific
       getCurrentPosition: (_success: unknown, failure: (error: { code: number }) => void) => failure({ code: 1 }),
     } });
   });
-  await page.goto("/");
+  await page.goto("/#view=map");
   await openSite(page, MEMORY_SITE.name);
   await page.getByRole("button", { name: /^Yanındayım/ }).click();
   const dialog = page.getByRole("dialog", { name: "Yanındayım", exact: true });
@@ -563,7 +565,7 @@ test("the site language follows the account: an empty account takes the device's
     await expect.poll(async () => (await preferences()).siteLang).toBe("tr");
 
     // 2. Switching while signed in saves the account too.
-    await page.goto("/");
+    await page.goto("/#view=map");
     await expect(page.locator(".opening")).toHaveCount(0);
     await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: "EN" }).click();
     await expect.poll(async () => (await preferences()).siteLang).toBe("en");

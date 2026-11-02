@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 /** Rotam is built in the side panel (on a phone, in its sheet), not in a bar over the map (Muhammed, 2 Nov 2026). */
 test("Rotam opens in the panel with the site as its first stop, and closes back to the list", async ({ page }) => {
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
-  await page.goto("/");
+  await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill("Ulucami");
   await page.locator(".site-row-main").filter({ hasText: "Ulucami" }).click();

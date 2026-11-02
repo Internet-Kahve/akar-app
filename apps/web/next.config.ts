@@ -8,8 +8,9 @@ const config: NextConfig = {
   // `npm run dev:api` runs a second dev server next to the demo one; each needs its own build folder.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   devIndicators: false,
+  // The introduction is the site's main page (the bare address goes there, layout INTRO_BOOT).
   async rewrites() {
-    return [{ source: "/tanitim", destination: "/tanitim/index.html" }];
+    return [{ source: "/tanitim", destination: "/tanitim/yeni/index.html" }];
   },
 };
 export default config;

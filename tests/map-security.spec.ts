@@ -39,7 +39,7 @@ test("map attribution preserves its source credit and removes adjacent event att
   const worker = page.waitForResponse((response) =>
     response.url().endsWith("/maplibre/maplibre-gl-worker.mjs"),
   );
-  await page.goto("/");
+  await page.goto("/#view=map");
   expect((await worker).ok()).toBe(true);
   const attribution = page.locator(".maplibregl-ctrl-attrib-inner");
   await expect(attribution).toContainText("Fixture credit");
