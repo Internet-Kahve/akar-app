@@ -1,13 +1,10 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+
 import {
   ArrowRight,
   Check,
   ChevronDown,
   Footprints,
-  House,
-  MapPin,
-  Navigation,
   Plus,
   Route,
 } from "lucide-react";
@@ -27,98 +24,16 @@ import { Localized, useI18n } from "./i18n";
 export type ExploreTab = "sites" | "routes";
 export type PlaceMode = "home" | "near";
 
-/** Dropdown of the place mode and the role filters over the map. */
-export function MapChips({
-  mode,
-  city,
-  categories,
-  active,
-  onMode,
-  onToggle,
-  onCities,
-}: {
-  mode: PlaceMode;
-  city: string;
-  categories: SiteCategory[];
-  active: Set<SiteCategory>;
-  onMode: (mode: PlaceMode) => void;
-  onToggle: (category: SiteCategory) => void;
-  onCities: () => void;
-}) {
+/** Over the map: the city, a button that opens the list of cities (3 Nov 2026: role chips and «Evden gez» gone). */
+export function MapChips({ city, onCities }: { city: string; onCities: () => void }) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false),
-    box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const away = (e: PointerEvent) => {
-      if (!box.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const escape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", away);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", away);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [open]);
-  const option = (
-    value: PlaceMode,
-    Icon: typeof House,
-    title: string,
-    text: string,
-  ) => (
-    <button
-      role="menuitemradio"
-      aria-checked={mode === value}
-      onClick={() => {
-        setOpen(false);
-        onMode(value);
-      }}
-    >
-      <Icon size={18} />
-      <span>
-        <b>{title}</b>
-        <small>{text}</small>
-      </span>
-      {mode === value && <Check size={16} />}
-    </button>
-  );
   return (
-    <div className="map-chips" ref={box}>
-      <button className="chip city-only" onClick={onCities} title={t("header.cities")}>
+    <div className="map-chips">
+      <button className="chip city-only city-pick" onClick={onCities} title={t("header.cities")} aria-haspopup="dialog">
         <i className="city-motif" aria-hidden="true" />
         {city}
+        <ChevronDown size={15} aria-hidden="true" />
       </button>
-      <button
-        className="chip dark"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-      >
-        {mode === "near" ? <Navigation size={14} /> : <House size={14} />}
-        {mode === "near" ? t("place.nearChip") : t("place.home")}
-        <ChevronDown size={14} />
-      </button>
-      {open && (
-        <div className="place-menu" role="menu">
-          {option("near", MapPin, t("place.near"), t("place.nearHint"))}
-          {option("home", House, t("place.home"), t("place.homeHint", { city, cityFrom: cityCase(city, true) }))}
-        </div>
-      )}
-      {categories.map((category) => (
-        <button
-          key={category}
-          className="chip"
-          aria-pressed={active.has(category)}
-          title={t(`categoryHint.${category}`)}
-          onClick={() => onToggle(category)}
-        >
-          <i className={`dot ${category}`} />
-          {t(`category.${category}`)}
-        </button>
-      ))}
     </div>
   );
 }

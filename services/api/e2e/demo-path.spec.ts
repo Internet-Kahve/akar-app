@@ -358,7 +358,8 @@ for (const role of ["editor", "moderator", "admin"] as const) {
   });
 }
 
-test("live visits require location and only display success after server verification", async ({ page, context }) => {
+// «Yanındayım» was taken out of the app (Muhammed, 3 Nov 2026); the API's visit check stays, without a button to try it.
+test.skip("live visits require location and only display success after server verification", async ({ page, context }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: {
       getCurrentPosition: (_success: unknown, failure: (error: { code: number }) => void) => failure({ code: 1 }),

@@ -101,11 +101,8 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Eseri kaydet", exact: true }).click();
   // The detail panel has no route button (prototype): routes are added from the list.
   await expect(page.getByRole("button", { name: "Rotama ekle", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: /^Yanındayım/ }).click();
-  await page.getByRole("button", { name: "Demo ziyaretini tamamla" }).click();
-  await expect(page.getByRole("heading", { name: "Demo ziyareti pasaportunda" })).toBeVisible();
-  await page.getByRole("button", { name: "Pencereyi kapat" }).click();
-  await expect(page.getByRole("button", { name: /^Ziyaretim/ })).toBeVisible();
+  // «Yanındayım» is gone from the site's page (Muhammed, 3 Nov 2026).
+  await expect(page.getByRole("button", { name: /^Yanındayım/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Oku", exact: true }).click();
   for (let i = 0; i < 8; i++)
     await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
@@ -718,27 +715,10 @@ test("naming a city takes the map there, and a later refresh leaves it there", a
   expect(await center()).toEqual(arrived);
 });
 
-test("the role chips leave out what the city has no site of, and the income category is «Ticari (akar)»", async ({
-  page,
-}) => {
+test("over the map only the city stays, plainly a button that opens the cities", async ({ page }) => {
   await page.goto("/#view=map");
-  const chips = page.locator(".map-chips .chip[aria-pressed]");
-  await expect(chips).toHaveText(["Dinî", "Su", "Eğitim", "Ticari (akar)"]);
-  // Without the fountain and the school the city has no water or education category.
-  const snapshot = createSeed();
-  for (const site of snapshot.sites)
-    if (site.kind === "cesme" || site.kind === "egitim") site.status = "draft";
-  await page.evaluate(
-    (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
-    snapshot,
-  );
-  await page.reload();
-  await expect(chips).toHaveText(["Dinî", "Ticari (akar)"]);
-  await expect(chips.last()).toHaveAttribute("title", /gelir getiren/);
-  // The first tap keeps one role, the next adds another, taking all away brings them back.
-  await chips.first().click();
-  await expect(chips.first()).toHaveAttribute("aria-pressed", "true");
-  await expect(chips.last()).toHaveAttribute("aria-pressed", "false");
-  await chips.first().click();
-  await expect(chips.last()).toHaveAttribute("aria-pressed", "true");
+  // No role chips and no «Evden gez» any more (Muhammed, 3 Nov 2026).
+  await expect(page.locator(".map-chips .chip")).toHaveCount(1);
+  await expect(page.locator(".map-chips .city-pick")).toContainText("Bursa");
+  await expect(page.getByRole("button", { name: /Evden gez/ })).toHaveCount(0);
 });

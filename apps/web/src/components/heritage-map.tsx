@@ -73,9 +73,15 @@ const OPENING_BEARING = -12;
 /** Where the globe flies out to: Türkiye whole on the screen. */
 const COUNTRY = {
   center: [34.5, 39.2] as [number, number],
-  zoom: 3.6,
-  zoomWide: 4.6,
+  zoom: 4.4,
+  zoomWide: 6,
 };
+/**
+ * Only Türkiye (Muhammed, 3 Nov 2026: «tüm dünya gözüküyor, gerek yok»): the map does not leave the country and its
+ * neighbours' edges, and does not zoom out past the whole country. Fewer far-away tiles, nothing to get lost in.
+ */
+const TURKEY_BOUNDS: [[number, number], [number, number]] = [[20, 32], [50, 46]];
+const MIN_ZOOM = 4;
 /** The city's opening view (desktop zoom on a wide screen). */
 function cityView(city: CityRecord) {
   const map = city.map!;
@@ -291,7 +297,9 @@ export function HeritageMap({
             ...openingView(latest.current.cities),
             pitch: TILT_PITCH,
             bearing: OPENING_BEARING,
-            minZoom: 1.2,
+            minZoom: MIN_ZOOM,
+            maxBounds: TURKEY_BOUNDS,
+            renderWorldCopies: false,
             maxZoom: 19.5,
             maxPitch: 65,
             // Phones report up to 3.5 pixels per CSS pixel; the map with its buildings and models draws at most 2

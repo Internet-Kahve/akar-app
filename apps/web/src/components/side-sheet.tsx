@@ -44,6 +44,9 @@ export function TrustTag({
 }: SourceDetail) {
   const open = useContext(SheetContext);
   const { t } = useI18n();
+  // «Doğrulanmış» is what a visitor expects of everything here: said on every sentence it was only noise
+  // (Muhammed, 3 Nov 2026). Only what calls for care keeps its tag: an inference, a representative model.
+  if (trust === "verified") return null;
   return (
     <button
       type="button"

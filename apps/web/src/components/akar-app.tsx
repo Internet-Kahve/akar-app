@@ -73,7 +73,7 @@ import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
 import type { FlowCompanion } from "../lib/flow-companion";
-import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
+import { MemoryModal, QuizModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { SignInModal } from "./sign-in-modal";
 import { Modal, Notice } from "./ui";
@@ -1363,11 +1363,11 @@ export function AkarApp() {
                     />
                   ) : (
                     <div className="detail-panel">
-                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} visited={state.visitedIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
+                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
-                        onVisit={() => setOverlay("visit")} nextStop={nextStop} onNextStop={selectSite} />
+                        nextStop={nextStop} onNextStop={selectSite} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1583,18 +1583,7 @@ export function AkarApp() {
                       }
                     />
                     <MapChips
-                      mode={place}
                       city={cityName}
-                      categories={chipCategories}
-                      active={roles}
-                      onMode={(mode) =>
-                        mode === "near" ? chooseNear() : chooseHome()
-                      }
-                      onToggle={(category) =>
-                        setRoles((current) =>
-                          toggleCategory(current, category, siteCategories),
-                        )
-                      }
                       onCities={() =>
                         setFlight((f) => ({
                           key: (f?.key ?? 0) + 1,
@@ -1679,15 +1668,6 @@ export function AkarApp() {
           client={client.current}
           onClose={() => setOverlay(null)}
           onSnapshot={setState}
-        />
-      )}
-      {overlay === "visit" && site && (
-        <VisitModal
-          live={live}
-          site={site}
-          visited={state.visitedIds.includes(site.id)}
-          onClose={() => setOverlay(null)}
-          onVisit={() => commit({ type: "visit", siteId: site.id })}
         />
       )}
       {overlay === "about" && site && (

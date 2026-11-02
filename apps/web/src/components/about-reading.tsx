@@ -159,7 +159,7 @@ export function AboutModal({
         <section key={section.id}>
           <h3 lang={content}>{section.title}</h3>
           <p lang={content}>{section.body}</p>
-          <Tag tone={section.trust}>{t(`trust.${section.trust}`)}</Tag>
+          {section.trust !== "verified" && <Tag tone={section.trust}>{t(`trust.${section.trust}`)}</Tag>}
           <p className="muted" lang={content}>
             {site.sources?.find((source) => source.id === section.sourceId)?.title}
           </p>
@@ -629,7 +629,7 @@ function Reading({
                   <p className="about-p" lang={content}>
                     {section.body}
                   </p>
-                  <Tag tone={section.trust}>{t(`trust.${section.trust}`)}</Tag>
+                  {section.trust !== "verified" && <Tag tone={section.trust}>{t(`trust.${section.trust}`)}</Tag>}
                 </div>
               ))}
             </section>

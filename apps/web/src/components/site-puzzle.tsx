@@ -325,7 +325,7 @@ export function SitePuzzle({
             </h2>
             <p lang={outcome.english ? undefined : tr}>{outcome.text}</p>
             <div className="gv-cipler">
-              <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>
+              {task.trust !== "verified" && <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>}
               {task.source && (
                 <span className="gv-kaynak">
                   {t("site.sourceLabel")} <span lang={content}>{task.source}</span>
