@@ -309,7 +309,10 @@ h1,
   bottom: -24px;
   /* Up to about two thirds of the panel, fading out on the way up with no edge. */
   height: 65vh;
-  margin: 0 -24px -65vh;
+  /* Pulled up so the band ends at the panel's padding edge rather than starting there: a band hanging below the
+     content (the old `margin-bottom: -65vh`) still counted as scrollable overflow and left ~65vh of empty scroll
+     after the last list row. */
+  margin: calc(24px - 65vh) -24px -24px;
   pointer-events: none;
   background: var(--sehir-aksan);
   /* The hand-drawn tiles (31 Oct) are finer than the prototype's: drawn twice its 56 px and a little stronger, so
