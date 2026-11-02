@@ -114,6 +114,7 @@ export function HeritageMap({
   mapSettings,
   focusCity,
   onFirstDraw,
+  onSettled,
   onCityInView,
   onLocate,
   flight,
@@ -141,6 +142,8 @@ export function HeritageMap({
   focusCity?: string;
   /** Called once the map has been drawn for the first time, or has given up (then the schematic view takes over). */
   onFirstDraw?: () => void;
+  /** Called once the first view has fully come in (tiles, buildings and paint settled): a return to the map waits for it. */
+  onSettled?: () => void;
   /** The city nearest to the map's centre whenever the map comes to rest. */
   onCityInView?: (city: CityRecord) => void;
   /** The position button; the page decides what «near me» means. */
@@ -265,6 +268,8 @@ export function HeritageMap({
   };
   const drawnRef = useRef(onFirstDraw);
   drawnRef.current = onFirstDraw;
+  const settledRef = useRef(onSettled);
+  settledRef.current = onSettled;
   useEffect(() => {
     if (loaded || failed) drawnRef.current?.();
   }, [loaded, failed]);
@@ -352,6 +357,16 @@ export function HeritageMap({
             m.setSky(sky(currentTheme()));
             mode();
             setLoaded(true);
+            // The models' layer repaints all the time, so the map is never «idle»: settled is when its tiles
+            // (buildings among them) have all come in, twice in a row a moment apart.
+            let calm = 0;
+            const watch = setInterval(() => {
+              if (disposed) return clearInterval(watch);
+              calm = m.areTilesLoaded() ? calm + 1 : 0;
+              if (calm < 2) return;
+              clearInterval(watch);
+              settledRef.current?.();
+            }, 200);
             reportCity();
             // A load event can follow a tile error; keep discovery available
             // through the schematic view for the lifetime of this map.
