@@ -636,6 +636,23 @@ export function AkarApp() {
   const isDetail = ["detail", "story"].includes(view),
     showMap = !["profile", "admin", "history", "memories"].includes(view),
     showRoutes = tab === "routes" && !query;
+  // Back to the map from a site (or the profile, the panel…): the map is built anew, and until its first view has
+  // come in its buildings and models stand flat or missing. The opening screen covers that, as at the start.
+  const onMapView = showMap && !isDetail;
+  const [mapReturn, setMapReturn] = useState(false),
+    [mapSettled, setMapSettled] = useState(false),
+    [returnLate, setReturnLate] = useState(false);
+  const wasOnMap = useRef(onMapView);
+  useEffect(() => {
+    const back = onMapView && !wasOnMap.current && !opening;
+    wasOnMap.current = onMapView;
+    if (!back) return;
+    setMapReturn(true);
+    setMapSettled(false);
+    setReturnLate(false);
+    const timer = setTimeout(() => setReturnLate(true), OPENING_MAX_MS);
+    return () => clearTimeout(timer);
+  }, [onMapView, opening]);
   // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
   // to wait for, as soon as the page can show something.
   const openingDone =
@@ -1521,6 +1538,7 @@ export function AkarApp() {
                       onOpen={selectSite}
                       onClear={() => changePeek(undefined)}
                       onFirstDraw={() => setMapDrawn(true)}
+                      onSettled={() => setMapSettled(true)}
                       onCityInView={setCityInView}
                       onLocate={chooseNear}
                       flight={flight}
@@ -1839,6 +1857,14 @@ export function AkarApp() {
           />
         )}
       </SourceSheetProvider>
+      {mapReturn && !opening && (
+        <OpeningScreen
+          cityName={openingCity?.name}
+          identity={openingCity?.identity ?? null}
+          done={mapSettled || returnLate || !onMapView}
+          onGone={() => setMapReturn(false)}
+        />
+      )}
       {opening && (
         <OpeningScreen
           cityName={openingCity?.name}
