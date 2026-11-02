@@ -4,6 +4,7 @@ import { Award, Check, ChevronRight, Puzzle, X } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { HeritageSite, SiteBadge } from "@akar/domain";
 import { useI18n } from "./i18n";
+import { badgeInLang } from "../lib/task-text";
 
 /** After the last sentence: the badge just earned, the site's other badges and what comes next. */
 export function CompletionCard({
@@ -47,8 +48,9 @@ export function CompletionCard({
     dialog?.showModal();
     return () => dialog?.close();
   }, []);
-  const badges = site.badges ?? [];
-  const headline = earned[0];
+  const badges = (site.badges ?? []).map((b) => ({ original: b, ...badgeInLang(b, lang) }));
+  const first = earned[0];
+  const headline = first && badgeInLang(first, lang);
   const holds = (b: SiteBadge) => owned.includes(b.id);
   return (
     <dialog
@@ -78,24 +80,24 @@ export function CompletionCard({
           </span>
           <h2 id={titleId}>
             {headline
-              ? t("completion.badgeEarned", { title: headline.title })
+              ? t("completion.badgeEarned", { title: headline.badge.title })
               : t("completion.finished", { name: siteName })}
           </h2>
-          {headline && <p lang={tr}>{headline.text}</p>}
+          {headline && <p lang={headline.english ? undefined : tr}>{headline.badge.text}</p>}
           {badges.length > 0 && (
             <>
               <h3>
-                {t("completion.badges", { name: siteName, held: badges.filter(holds).length, total: badges.length })}
+                {t("completion.badges", { name: siteName, held: badges.filter((b) => holds(b.badge)).length, total: badges.length })}
               </h3>
               <ul className="completion-badges">
-                {badges.map((b) => (
-                  <li key={b.id} className={earned.includes(b) ? "new" : holds(b) ? "held" : ""}>
+                {badges.map(({ original, badge: b, english }) => (
+                  <li key={b.id} className={earned.includes(original) ? "new" : holds(b) ? "held" : ""}>
                     <Award size={18} />
-                    <b lang={tr}>{b.title}</b>
-                    {earned.includes(b) ? (
+                    <b lang={english ? undefined : tr}>{b.title}</b>
+                    {earned.includes(original) ? (
                       <small>{t("completion.justEarned")}</small>
                     ) : (
-                      !holds(b) && <small lang={tr}>{b.text}</small>
+                      !holds(b) && <small lang={english ? undefined : tr}>{b.text}</small>
                     )}
                   </li>
                 ))}

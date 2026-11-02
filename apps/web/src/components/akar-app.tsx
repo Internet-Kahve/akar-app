@@ -83,6 +83,7 @@ import {
   type FieldTask,
 } from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
+import { badgeInLang } from "../lib/task-text";
 import { apiUrl, demoContentUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
@@ -407,7 +408,7 @@ export function AkarApp() {
     (badges: SiteBadge[]) => {
       if (badges.length)
         setToast(
-          t("toast.newBadge", { titles: badges.map((b) => b.title).join(", ") }),
+          t("toast.newBadge", { titles: badges.map((b) => badgeInLang(b, langRef.current).badge.title).join(", ") }),
         );
       void refreshProgress();
     },

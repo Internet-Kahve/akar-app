@@ -360,6 +360,7 @@ export interface HistoryImage {
   /** Set with `presentPhoto`; `near` makes the screen say the two were not taken from exactly the same point. */
   presentAngleMatch?: AngleMatch;
   caption: string;
+  captionEn?: string;
   dateLabel: string;
   sourceId: string;
   trust: Trust;
@@ -410,8 +411,10 @@ export interface SiteTask {
   id: string;
   kind: "quiz" | "field";
   title: string;
+  titleEn?: string;
   /** Quiz: the question; field: the task text. */
   prompt: string;
+  promptEn?: string;
   /** One of the site's photographs. */
   photo?: SitePhoto;
   /** Model part the task is about. */
@@ -421,18 +424,22 @@ export interface SiteTask {
   trust: Trust;
   quiz?: {
     options: string[];
+    /** English options in the same order; absent = none written. */
+    optionsEn?: string[];
     /** Revealed one by one, on demand. */
     hints: string[];
+    hintsEn?: string[];
     /** Shown after a wrong answer (the player may try again). */
     wrongText: string;
+    wrongTextEn?: string;
     /** Whether the question can be answered without being at the site. */
     fromHome: boolean;
   };
   field?: {
     /** Done at the site: the visitor's position must be within `radiusM` of the site. */
-    onSite: { text: string; radiusM: number };
+    onSite: { text: string; textEn?: string; radiusM: number };
     /** Done from home: tapping `part` on the 3D model. `null` = on site only. */
-    fromHome: { text: string; part: string } | null;
+    fromHome: { text: string; textEn?: string; part: string } | null;
   };
 }
 /** Badge of a site: earned by finishing the story or by one of the site's tasks. */
@@ -440,6 +447,8 @@ export interface SiteBadge {
   id: string;
   title: string;
   text: string;
+  titleEn?: string;
+  textEn?: string;
   condition: "story" | "task";
   /** The task that earns it; `null` for a story badge. */
   taskId: string | null;
@@ -459,6 +468,7 @@ export interface AboutPhoto {
 export interface AboutChapter {
   id: string;
   title: string;
+  titleEn?: string;
   kind: "history" | "architecture" | "waqf";
   /** Sentences picked from the text, shown before it. */
   summary: string[];
@@ -474,7 +484,10 @@ export interface AboutChapter {
   interior: boolean;
   /** Model parts lit while this chapter is read; empty = the whole building. */
   focusParts: string[];
+  /** The English of the reading texts, item for item; absent = none written (the Turkish ones are shown). */
+  readingEn?: AboutReadingEn;
 }
+export type AboutReadingEn = Pick<AboutChapter, "summary" | "figures" | "quotes" | "timeline" | "terms">;
 export interface HeritageSite {
   id: string;
   name: string;
@@ -527,7 +540,9 @@ export interface HeritageSite {
     id: string;
     kind: "history" | "architecture" | "waqf";
     title: string;
+    titleEn?: string;
     body: string;
+    bodyEn?: string;
     trust: Trust;
     sourceId: string;
     /** `AboutChapter.id`, absent when the paragraph belongs to no chapter. */

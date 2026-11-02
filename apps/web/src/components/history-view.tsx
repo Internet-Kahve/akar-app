@@ -10,7 +10,7 @@ import { useWide } from "./about-reading";
 import { HistoryCamera } from "./history-camera";
 import { TrustTag } from "./side-sheet";
 import { ViewpointMap } from "./viewpoint-map";
-import { useI18n } from "./i18n";
+import { Localized, useI18n } from "./i18n";
 
 const KEY_STEPS: Record<string, number> = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5 };
 /** Width over height of each photograph once seen: the phone's box keeps it while the next one loads. */
@@ -49,7 +49,7 @@ function PhotoBox({
   small: boolean;
   onStep: (step: number) => void;
 }) {
-  const { t, lang } = useI18n();
+  const { t, lang, text } = useI18n();
   const content = lang === "en" ? "tr" : undefined;
   // `pos`: the handle's place across the photograph itself, 0 = its left edge, 100 = its right edge.
   const [pos, setPos] = useState(50),
@@ -186,7 +186,7 @@ function PhotoBox({
         {index + 1} / {count}
       </span>
       <span className="gg-guven">
-        <TrustTag trust={image.trust} quote={image.caption} sources={sourceTitle ? [{ title: sourceTitle }] : []} />
+        <TrustTag trust={image.trust} quote={text(image.caption, image.captionEn)} sources={sourceTitle ? [{ title: sourceTitle }] : []} />
       </span>
       {wide && (
         <>
@@ -306,7 +306,7 @@ export function HistoryView({
           >
             <img src={v.image.photo.src} alt="" />
             <div>
-              <b lang={content}>{v.image.caption}</b>
+              <b><Localized tr={v.image.caption} en={v.image.captionEn} /></b>
               <small>{t("gg.farRow", { date: v.image.dateLabel, m: v.distance })}</small>
             </div>
           </button>
@@ -359,8 +359,8 @@ export function HistoryView({
   const near = pair?.angleMatch === "near" && <p className="gg-yakin">{t("site.nearAngle")}</p>;
   const info = (
     <div id="gg-bilgi">
-      <h2 className="gg-ad" lang={content}>
-        {image.caption}
+      <h2 className="gg-ad">
+        <Localized tr={image.caption} en={image.captionEn} />
       </h2>
       <div className="gg-meta" lang={content}>
         {image.dateLabel} · {by ?? t("gg.photographerUnknown")}

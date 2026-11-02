@@ -222,7 +222,7 @@ export function HistoryCamera({
           <b>
             {siteName} · {image.dateLabel}
           </b>
-          <small>{interior ? t("gg.typeInterior") : image.caption}</small>
+          <small>{interior ? t("gg.typeInterior") : text(image.caption, image.captionEn)}</small>
         </div>
       </div>
       <div

@@ -14,6 +14,7 @@ import {
   type SiteTask,
 } from "@akar/domain";
 import { useI18n } from "./i18n";
+import { badgeInLang, taskInLang } from "../lib/task-text";
 import { Tag } from "./ui";
 
 export type QuizTask = SiteTask & { quiz: NonNullable<SiteTask["quiz"]> };
@@ -26,6 +27,7 @@ export const isFieldTask = (task: SiteTask): task is FieldTask =>
 /** What a finished field task shows (the server's answer). */
 export interface FieldDone {
   doneText: string;
+  doneTextEn?: string | null;
   onSite: boolean;
   earnedBadges: SiteBadge[];
 }
@@ -100,9 +102,9 @@ export function SiteTasks({
   onOpen: (task: SiteTask) => void;
 }) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
-  const tasks = site.tasks ?? [],
-    badges = site.badges ?? [];
+  const tr = lang === "en" ? "tr" : undefined;
+  const tasks = (site.tasks ?? []).map((task) => taskInLang(task, lang)),
+    badges = (site.badges ?? []).map((badge) => badgeInLang(badge, lang));
   if (!tasks.length && !badges.length) return null;
   return (
     <section className="site-tasks" aria-labelledby="site-tasks-title">
@@ -111,11 +113,12 @@ export function SiteTasks({
       </div>
       {tasks.length > 0 && (
         <ul className="task-list">
-          {tasks.map((task) => {
+          {tasks.map(({ task, english }) => {
             const done = progress.tasks.some((t) => t.taskId === task.id);
+            const content = english ? undefined : tr;
             return (
               <li key={task.id}>
-                <button className="task-card" onClick={() => onOpen(task)}>
+                <button className="task-card" onClick={() => onOpen(site.tasks!.find((x) => x.id === task.id)!)}>
                   {task.kind === "quiz" ? (
                     <Puzzle size={20} />
                   ) : (
@@ -136,15 +139,15 @@ export function SiteTasks({
       )}
       {badges.length > 0 && (
         <ul className="badge-strip" aria-label={t("site.badges")}>
-          {badges.map((badge) => {
+          {badges.map(({ badge, english }) => {
+            const content = english ? undefined : tr;
             const held = progress.badges.find((b) => b.badgeId === badge.id);
+            const earning = tasks.find((x) => x.task.id === badge.taskId);
             const needs =
               badge.condition === "story"
                 ? t("site.badgeNeedsStory")
                 : t("site.badgeNeedsTask", {
-                    title:
-                      tasks.find((x) => x.id === badge.taskId)?.title ??
-                      t("site.taskFallback"),
+                    title: earning?.task.title ?? t("site.taskFallback"),
                   });
             return (
               <li
@@ -182,13 +185,14 @@ export function TaskPickBar({
   onCancel: () => void;
 }) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const { task: shown, english } = taskInLang(task, lang);
+  const content = english || lang === "tr" ? undefined : "tr";
   return (
     <div className="task-pick-bar" role="status">
       <Pointer size={18} />
       <span className="grow">
         <b>{t("puzzle.pickLabel")}</b>{" "}
-        <span lang={content}>{task.field.fromHome?.text}</span>
+        <span lang={content}>{shown.field?.fromHome?.text}</span>
         {hint && <small className="task-pick-hint">{hint}</small>}
       </span>
       <button className="round-btn" aria-label={t("common.cancel")} onClick={onCancel}>

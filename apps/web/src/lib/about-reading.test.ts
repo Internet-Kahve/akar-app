@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { HeritageSite } from "@akar/domain";
-import { chapterPages,
+import { aboutInLang,
+  chapterPages,
   chapterBlocks,
   dominantTrust,
   photoRatio,
@@ -93,6 +94,45 @@ test("a Mealen line after a card whose photos are placed starts its own paragrap
     [],
   );
   assert.equal(blocks.length, 2);
+});
+
+test("the English page shows only when every paragraph has its English, and its inscriptions take the Meaning lines", () => {
+  const chapter = {
+    id: "c1",
+    title: "Tarihçe",
+    titleEn: "History",
+    kind: "history" as const,
+    summary: ["Önce bir cümle."],
+    readingEn: { summary: ["First a sentence."], figures: [], quotes: [], timeline: [], terms: [] },
+    figures: [],
+    quotes: [],
+    timeline: [],
+    terms: [],
+    interior: false,
+    focusParts: [],
+  };
+  const site = {
+    chapters: [chapter],
+    sections: [
+      section("a", "Önce bir cümle.", { chapterId: "c1", bodyEn: "First a sentence." }),
+      section("b", "“Ayet”", { chapterId: "c1", bodyEn: "“Ayet”", titleEn: "History" }),
+      section("c", "Mealen: anlam", { chapterId: "c1", bodyEn: "Meaning: the sense" }),
+    ],
+  } as unknown as HeritageSite;
+
+  assert.equal(aboutInLang(site, "tr").english, false);
+  const en = aboutInLang(site, "en");
+  assert.equal(en.english, true);
+  assert.equal(en.site.chapters![0]!.title, "History");
+  assert.deepEqual(en.site.chapters![0]!.summary, ["First a sentence."]);
+  const blocks = chapterBlocks(en.site.sections!, en.site.chapters![0]!.summary);
+  assert.ok(blocks[0]!.kind === "text" && blocks[0]!.inSummary);
+  assert.ok(blocks[1]!.kind === "inscription" && blocks[1]!.meaning[0] === "the sense");
+
+  const half = { ...site, sections: [...site.sections!, section("d", "Çevrilmemiş.", { chapterId: "c1" })] };
+  const tr = aboutInLang(half, "en");
+  assert.equal(tr.english, false);
+  assert.equal(tr.site.chapters![0]!.title, "Tarihçe");
 });
 
 test("dominant trust, reading time and photo box ratio", () => {
