@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { mapPixelRatio } from "../lib/device";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
@@ -289,6 +290,9 @@ export function HeritageMap({
             minZoom: 1.2,
             maxZoom: 19.5,
             maxPitch: 65,
+            // Phones report up to 3.5 pixels per CSS pixel; the map with its buildings and models draws at most 2
+            // (1.5 on a modest phone): the difference is hard to see and the GPU's work drops by half or more.
+            pixelRatio: mapPixelRatio(),
             attributionControl: { compact: true },
             style: mapStyle(),
           });

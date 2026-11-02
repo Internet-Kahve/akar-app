@@ -8,6 +8,7 @@ import {
   type MapSettings,
   type SceneLight,
 } from "@akar/domain";
+import { modestDevice } from "./device";
 import type {
   CustomLayerInterface,
   CustomRenderMethodInput,
@@ -165,8 +166,9 @@ export class MapModelLayer implements CustomLayerInterface {
     // shadow map is drawn once, again only when it moves; the light stays put when the map turns.
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = (this.theme === "night" ? MAP_NIGHT_LIGHT : MAP_LIGHT).exposure;
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // A modest phone draws the map's models without real-time shadows (their baked ground shade stays).
+    this.renderer.shadowMap.enabled = !modestDevice();
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     // Same decoder files as the story viewer (`public/draco`).
     this.decoder = new DRACOLoader()
@@ -429,10 +431,11 @@ export class MapModelLayer implements CustomLayerInterface {
       // Pose and building overrides can change while the same file is in flight. Reconcile keeps
       // that download, so place its result from the current catalog rather than the request's copy.
       site = this.sites.get(site.id)!;
+      const modest = modestDevice();
       stripScenery(gltf.scene, site.interiorParts);
       saturate(gltf.scene, site.light.saturation);
       gltf.scene.traverse((node) => {
-        if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = true;
+        if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = !modest;
       });
       const scene = new THREE.Scene();
       const group = new THREE.Group();

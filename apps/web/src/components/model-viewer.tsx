@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { modelPixelRatio, modestDevice } from "../lib/device";
+import { sized } from "../lib/image-size";
 import type {
   CameraPose,
   CityScene,
@@ -390,13 +392,15 @@ export default function ModelViewer({
     let detachPointer = () => {};
     let unfollowTheme = () => {};
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      // A modest phone: fewer pixels, no antialiasing and no real-time shadows (the ground shade stays).
+      const modest = modestDevice();
+      renderer = new THREE.WebGLRenderer({ antialias: !modest, alpha: true, powerPreference: "high-performance" });
+      renderer.setPixelRatio(modelPixelRatio());
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = DETAIL_LIGHT[currentTheme()].exposure;
-        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.enabled = !modest;
         // Three r186 removed PCFSoftShadowMap; its supported replacement is PCF.
         renderer.shadowMap.type = THREE.PCFShadowMap;
       }
@@ -411,8 +415,11 @@ export default function ModelViewer({
       controls.enableDamping = true;
       controls.dampingFactor = 0.09;
       controls.maxPolarAngle = Math.PI * 0.49;
+      // Until the model's shaders are compiled in the background (below), nothing draws: a draw would compile them
+      // on the spot, which held the page for 1.7–3.3 s on a slow phone.
+      let compiling = false;
       const render = () => {
-        if (!disposed) renderer!.render(scene, camera);
+        if (!disposed && !compiling) renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
       // Damped turning goes on after the hand lets go: the controls are stepped each frame until they come to rest.
@@ -965,8 +972,18 @@ export default function ModelViewer({
           aimedPose.current = poseRef.current;
           spin.current?.(!!tourRef.current);
           tourPose.current = tourRef.current ? JSON.stringify(poseRef.current ?? null) : "";
-          render();
-          settledRef.current?.("ready");
+          // The shaders compile in parallel (KHR_parallel_shader_compile where the browser has it); the loading card
+          // stays until they are ready, then the first frame is drawn.
+          compiling = true;
+          renderer!
+            .compileAsync(scene, camera)
+            .catch(() => {})
+            .finally(() => {
+              compiling = false;
+              if (disposed) return;
+              render();
+              settledRef.current?.("ready");
+            });
         },
         // The bytes the browser has read of the response, for the stage's loading card (§11.49).
         (event) => {
@@ -1154,7 +1171,7 @@ export default function ModelViewer({
           }}
           onPointerCancel={() => (photoDrag.current = null)}
         >
-          <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} draggable={false} />
+          <img src={sized(views[viewIndex]!.src, 440)} alt={views[viewIndex]!.alt} draggable={false} decoding="async" />
           <figcaption>
             {views[viewIndex]!.title}
             <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>
