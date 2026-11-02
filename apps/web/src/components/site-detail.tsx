@@ -143,6 +143,8 @@ export function SiteDetail({
           </div>
         </div>
       </header>
+      {/* Phone: the year and patron come after Keşfet, above the ornament and the summary (prototype `.ea-detay .meta`). */}
+      <div className="detail-meta-end">{siteMeta(site)}</div>
       <div className="detail-ornament" aria-hidden="true">
         <span />
         <svg width="24" height="12" viewBox="0 0 24 12">
