@@ -14,7 +14,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import "./design.css";
 import "./theme.css";
-import { THEME_BOOT } from "../lib/theme-boot";
+import { INTRO_BOOT, THEME_BOOT } from "../lib/theme-boot";
 export const metadata: Metadata = {
   title: "AKAR · Şehrin hikâyesine karış",
   description:
@@ -37,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: INTRO_BOOT }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body>{children}</body>
