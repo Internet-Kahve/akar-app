@@ -130,6 +130,8 @@ type Overlay =
   | null;
 /** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
 const CONTROLS_ROOM = 110 + 194 + 32;
+/** Pulled this far below its closed height, the site's card goes back to the map. */
+const CARD_CLOSE_PULL = 70;
 /** How far a scroll on the closed site card raises it: enough for its content to scroll. */
 const CARD_SCROLL_RISE = 150;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
@@ -1296,9 +1298,14 @@ export function AkarApp() {
                     e.currentTarget.setPointerCapture(e.pointerId);
                     setSheetDragging(true);
                   }
-                  setSheetHeight(
-                    clampSheet(drag.height + drag.y - e.clientY, sheetStops()),
-                  );
+                  const wanted = drag.height + drag.y - e.clientY;
+                  const stops = sheetStops();
+                  setSheetHeight(clampSheet(wanted, stops));
+                  // A site's card pulled below its closed height follows the finger down: let go far enough, back to
+                  // the map (as a story closes).
+                  if (siteCard)
+                    e.currentTarget.style.transform =
+                      wanted < stops.lowest ? `translateY(${Math.round((stops.lowest - wanted) * 0.8)}px)` : "";
                 }}
                 onPointerUp={(e) => {
                   const drag = sheetDrag.current;
@@ -1306,6 +1313,11 @@ export function AkarApp() {
                   if (!drag) return;
                   setSheetDragging(false);
                   const stops = sheetStops();
+                  e.currentTarget.style.transform = "";
+                  if (siteCard && drag.moved && drag.height + drag.y - e.clientY < stops.lowest - CARD_CLOSE_PULL) {
+                    go("map");
+                    return;
+                  }
                   if (drag.moved)
                     setSheetHeight(
                       settleSheet(drag.height + drag.y - e.clientY, stops),
@@ -1313,9 +1325,10 @@ export function AkarApp() {
                   else if (drag.handle)
                     setSheetHeight(toggleSheet(drag.height, stops));
                 }}
-                onPointerCancel={() => {
+                onPointerCancel={(e) => {
                   sheetDrag.current = null;
                   setSheetDragging(false);
+                  e.currentTarget.style.transform = "";
                 }}
               >
                 {siteCard ? (
@@ -1382,9 +1395,10 @@ export function AkarApp() {
                   <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />
                 ) : (
                   <div className="discovery-panel">
-                    {showRoutes && !routeId && personalRoutes.length > 0 && <section className="personal-route-list" aria-label={t("route.mine")}>
+                    {/* The visitor's own routes; an empty one (no stops yet) says nothing worth a line. */}
+                    {showRoutes && !routeId && personalRoutes.some((p) => p.siteIds.length) && <section className="personal-route-list" aria-label={t("route.mine")}>
                       <h3>{t("route.mine")}</h3>
-                      {personalRoutes.map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
+                      {personalRoutes.filter((p) => p.siteIds.length).map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
                         setRouteDraft({ ...personal, siteIds: [...personal.siteIds] }); setRouteSite(undefined); setTab("sites"); setRouteId(undefined);
                       }}>{personal.name} · {personal.siteIds.length}</button>)}
                     </section>}

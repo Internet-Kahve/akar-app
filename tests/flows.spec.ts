@@ -78,6 +78,13 @@ async function openProfile(page: Page) {
   await profile.click();
 }
 
+/** Routes: the tab on a wide screen, «Rotalar ›» beside the count on a phone (no tabs there, 3 Nov 2026). */
+async function openRoutes(page: import("@playwright/test").Page) {
+  const tab = page.getByRole("tab", { name: "Rotalar" });
+  if (await tab.isVisible()) await tab.click();
+  else await page.locator(".explore-routes").click();
+}
+
 /** A phone's story opens on the one-sentence card (3 Nov 2026); the numbered list is behind its ☰ button. */
 async function openSentenceList(page: import("@playwright/test").Page) {
   const button = page.getByRole("button", { name: "Cümle listesini aç" });
@@ -336,7 +343,7 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
   await expect(
     page.locator(".explore-heading > h2:visible, .explore-heading > .explore-city:visible"),
   ).toHaveCount(1);
-  await page.getByRole("tab", { name: "Rotalar" }).click();
+  await openRoutes(page);
   await expect(page.locator(".route-card")).toHaveCount(3);
   expect(
     await page.evaluate(
@@ -413,7 +420,7 @@ test("a link to a site closes the short card and shows the site's panel", async 
 }) => {
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
-  await page.locator(".explore-tabs").waitFor();
+  await page.locator(".site-row-main").first().waitFor();
   await page.locator(".site-row-main").first().evaluate((el) => (el as HTMLElement).click());
   await expect(page.locator(".site-peek")).toBeVisible();
   await page.evaluate(() => {
@@ -428,7 +435,7 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await expect.poll(() => pinIds(page)).toHaveLength(6);
-  await page.getByRole("tab", { name: "Rotalar" }).click();
+  await openRoutes(page);
   await page.locator(".route-card").first().click();
   await expect.poll(async () => (await pinIds(page)).length).toBe(3);
   const icons = await page.evaluate(async () => {
@@ -437,7 +444,9 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   });
   expect(icons.every((icon) => icon.startsWith("stop-"))).toBe(true);
 });
-test("a trust tag tells where the statement comes from", async ({ page }) => {
+test("a trust tag tells where the statement comes from", async ({ page, isMobile }) => {
+  // A phone's short card only says which site it is (3 Nov 2026); the tag stays on the wide screen's card.
+  test.skip(isMobile, "the phone's short card has no trust tag");
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page.locator(".site-row-main").first().click();

@@ -5,6 +5,7 @@ import {
   BookOpen,
   BookOpenText,
   ChevronRight,
+  ChevronUp,
   Headphones,
   Puzzle,
   X,
@@ -13,10 +14,12 @@ import type { HeritageSite } from "@akar/domain";
 import { SiteArtwork } from "./site-artwork";
 import { TrustTag } from "./side-sheet";
 import { siteMeta } from "../lib/site-meta";
+import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
 import { Localized, useI18n } from "./i18n";
 
-/** A downward swipe of this length closes the card on a phone. */
+/** A downward swipe of this length closes the card on a phone; an upward one opens the site's page. */
 const CLOSE_SWIPE_PX = 60;
+const OPEN_SWIPE_PX = 40;
 
 /**
  * The short card of a picked site: a preview before the site page. It offers what comes next for this visitor:
@@ -68,6 +71,7 @@ export function SitePeek({
       root.removeProperty("--peek-h");
     };
   }, []);
+  const phone = useMedia(PHONE_LAYOUT);
   const listenFirst = !finished && site.stories.length > 0;
   const route = (
     <button
@@ -79,6 +83,58 @@ export function SitePeek({
       <BookmarkPlus size={20} />
     </button>
   );
+  // A phone (Muhammed, 3 Nov 2026): the card only says which site it is, a small photograph and the name; pulled up
+  // or tapped it opens the site's page, as a story opens. Listening and reading are on that page.
+  if (phone)
+    return (
+      <article
+        ref={card}
+        className="site-peek compact"
+        style={offset ? { transform: `translateY(${offset}px)`, transition: "none" } : undefined}
+        onPointerDown={(e) => {
+          if (!(e.target as HTMLElement).closest("button")) start.current = e.clientY;
+        }}
+        onPointerMove={(e) => {
+          if (start.current === null) return;
+          const raw = e.clientY - start.current;
+          if (Math.abs(raw) > 6 && !e.currentTarget.hasPointerCapture(e.pointerId))
+            e.currentTarget.setPointerCapture(e.pointerId);
+          setOffset(raw > 0 ? raw : Math.max(-80, raw * 0.6));
+        }}
+        onPointerUp={(e) => {
+          if (start.current === null) return;
+          const moved = e.clientY - start.current;
+          start.current = null;
+          setOffset(0);
+          if (moved > CLOSE_SWIPE_PX) onClose();
+          else if (moved < -OPEN_SWIPE_PX || Math.abs(moved) < 6) onOpen();
+        }}
+        onPointerCancel={() => {
+          start.current = null;
+          setOffset(0);
+        }}
+      >
+        <span className="peek-up" aria-hidden="true">
+          <ChevronUp size={16} />
+        </span>
+        <div className="peek-photo">
+          <SiteArtwork site={site} live={live} />
+        </div>
+        <div className="peek-name">
+          <h3>
+            <Localized tr={site.name} en={site.nameEn} />
+          </h3>
+          <p className="peek-meta">{siteMeta(site)}</p>
+        </div>
+        {route}
+        <button className="peek-go" aria-label={t("peek.explore")} onClick={onOpen}>
+          <ChevronRight size={20} />
+        </button>
+        <button className="peek-close" aria-label={t("common.close")} onClick={onClose}>
+          <X size={16} />
+        </button>
+      </article>
+    );
   return (
     <article
       ref={card}
@@ -89,8 +145,10 @@ export function SitePeek({
       }}
       onPointerMove={(e) => {
         if (start.current === null) return;
-        const moved = Math.max(0, e.clientY - start.current);
-        if (moved > 6 && !e.currentTarget.hasPointerCapture(e.pointerId))
+        // Down closes; on a phone up opens the site's page (it follows the finger a little, as a hint).
+        const raw = e.clientY - start.current;
+        const moved = raw > 0 ? raw : phone ? Math.max(-80, raw * 0.6) : 0;
+        if (Math.abs(raw) > 6 && !e.currentTarget.hasPointerCapture(e.pointerId))
           e.currentTarget.setPointerCapture(e.pointerId);
         setOffset(moved);
       }}
@@ -99,7 +157,8 @@ export function SitePeek({
         const moved = e.clientY - start.current;
         start.current = null;
         setOffset(0);
-        if (moved > CLOSE_SWIPE_PX && matchMedia("(max-width: 899.98px)").matches) onClose();
+        if (moved > CLOSE_SWIPE_PX && phone) onClose();
+        else if (moved < -OPEN_SWIPE_PX && phone) onOpen();
       }}
       onPointerCancel={() => {
         start.current = null;

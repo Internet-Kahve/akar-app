@@ -4,6 +4,8 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Footprints,
   Plus,
   Route,
@@ -178,6 +180,11 @@ export function ExplorePanel({
       {tab === "routes" ? (
         <>
           <div className="explore-heading">
+            {/* A phone has no tabs (3 Nov 2026): back to the sites from here. */}
+            <button className="narrow-only explore-back" onClick={() => onTab("sites")}>
+              <ChevronLeft size={16} />
+              {t("explore.tabSites")}
+            </button>
             <h2>{heading("routes")}</h2>
           </div>
           <div className="route-cards">
@@ -191,21 +198,22 @@ export function ExplorePanel({
                   key={r.id}
                   onClick={() => onOpenRoute(r.id)}
                 >
-                  <SiteArtwork
-                    site={allSites.find((s) => r.siteIds.includes(s.id))}
-                    live={live}
-                  />
-                  <span>
+                  <span className="route-card-text">
                     <strong><Localized tr={r.name} en={r.nameEn} /></strong>
                     <small>
                       {t("explore.routeLine", { count: r.siteIds.length, minutes: r.minutes, distance: r.distance })}
                     </small>
-                    <em className={stops ? "going" : ""}>
-                      {stops
-                        ? t("common.continueProgress", { done: stops, total: r.siteIds.length })
-                        : t("explore.notStarted")}
-                    </em>
+                    {stops > 0 && (
+                      <em className="going">{t("common.continueProgress", { done: stops, total: r.siteIds.length })}</em>
+                    )}
                   </span>
+                  {/* Its stops, a few small photographs side by side: what the walk passes by. */}
+                  <span className="route-card-stops" aria-hidden="true">
+                    {r.siteIds.slice(0, 4).map((id) => (
+                      <SiteArtwork key={id} site={allSites.find((s) => s.id === id)} live={live} />
+                    ))}
+                  </span>
+                  <ChevronRight size={18} className="route-card-go" />
                 </button>
               );
             })}
@@ -239,6 +247,14 @@ export function ExplorePanel({
                 suffix: mode === "near" ? t("explore.nearSuffix") : "",
               })}
             </button>
+            {/* A phone has no tabs (3 Nov 2026): the city's routes are one tap away. */}
+            {routes.length > 0 && (
+              <button className="narrow-only explore-routes" onClick={() => onTab("routes")}>
+                <Route size={15} />
+                {t("explore.tabRoutes")}
+                <ChevronRight size={15} />
+              </button>
+            )}
           </div>
           {query &&
             shown.map((r) => (

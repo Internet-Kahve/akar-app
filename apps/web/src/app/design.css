@@ -3923,3 +3923,91 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   }
   .story-panel.kart.folded .story-card-foot { margin-top: 0; }
 }
+
+/* ---------------- The phone's short card (3 Nov 2026): which site it is, nothing more. A small photograph, the name,
+   one line; pulled up or tapped it opens the site's page (as a story opens), pulled down it closes. */
+@media (max-width: 899.98px) {
+  .site-peek.compact {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 14px 14px;
+    cursor: pointer;
+  }
+  .site-peek.compact .peek-up {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-muted);
+    animation: peek-up 1.6s ease-in-out 0.6s 3;
+  }
+  @keyframes peek-up { 50% { transform: translate(-50%, -3px); } }
+  .site-peek.compact .peek-photo { width: 64px; height: 64px; border-radius: 14px; overflow: hidden; }
+  .site-peek.compact .peek-photo :is(img, svg) { width: 100%; height: 100%; object-fit: cover; }
+  .site-peek.compact .peek-name { min-width: 0; }
+  .site-peek.compact h3 { margin: 0; font: 600 21px/25px var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .site-peek.compact .peek-meta { margin: 3px 0 0; color: var(--text-muted); font-size: 13px; }
+  .site-peek.compact .peek-go {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+  }
+  .site-peek.compact .peek-close { top: 6px; right: 6px; width: 28px; height: 28px; }
+}
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
+  .site-peek.compact .peek-up { animation: none; }
+}
+
+/* ---------------- Routes, plainer (3 Nov 2026): the walk's name and length, and its stops as a row of small
+   photographs; «Başlanmadı» is gone, a started walk shows how far it got. */
+.route-cards .route-card {
+  grid-template-columns: minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  border-radius: 18px;
+}
+.route-card-text { min-width: 0; }
+.route-card strong { font-size: 17px; line-height: 22px; }
+.route-card small { margin-top: 2px; font-size: 13px; }
+.route-card-stops { display: flex; }
+.route-card-stops > * {
+  width: 34px !important;
+  height: 34px !important;
+  margin-left: -10px;
+  border: 2px solid var(--surface);
+  border-radius: 50% !important;
+  object-fit: cover;
+  overflow: hidden;
+}
+.route-card-stops > *:first-child { margin-left: 0; }
+.route-card-go { color: var(--text-muted); }
+/* A phone: no Eserler | Rotalar switch; «Rotalar ›» beside the count, «‹ Eserler» back. */
+@media (max-width: 899.98px) {
+  .explore-tabs { display: none; }
+  .explore-heading:has(.explore-routes, .explore-back) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .explore-routes,
+  .explore-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 34px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font: 600 13px var(--font);
+    white-space: nowrap;
+  }
+  .explore-back { padding-left: 8px; order: -1; }
+  .explore-heading:has(.explore-back) h2 { flex: 1; margin: 0; font-size: 16px; }
+}
