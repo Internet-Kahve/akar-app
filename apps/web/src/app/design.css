@@ -4038,3 +4038,21 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 @media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
   .workspace.on-site .side-panel.rising { transition: none; }
 }
+
+/* ---------------- Phones draw no frosted glass (Muhammed, 3 Nov 2026: «cam kısmı sadece masaüstünde kalır»).
+   A blur behind every glass surface is worked out again on every frame the map or the model moves under it, the
+   heaviest thing a phone's GPU did here. On a phone the same surfaces are the theme's nearly opaque «solid glass»;
+   wide screens keep the frost. */
+@media (max-width: 899.98px) {
+  :root,
+  :root[data-theme="night"] {
+    --glass: var(--glass-solid);
+    --glass-blur: none;
+  }
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
