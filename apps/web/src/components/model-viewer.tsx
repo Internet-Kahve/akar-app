@@ -38,8 +38,11 @@ const LIFT_MS = 700;
 const LIFT_GAP = 0.35;
 /** "İçini göster" raises a low camera to this elevation so the inside is visible. */
 const INSIDE_ELEVATION = 58;
-/** Part glow: hover (mouse) and the open card's parts. */
-const GLOW = new THREE.Color(0xf2c230);
+/**
+ * Part glow: hover (mouse) and the open card's parts. Gold by day; blue by night, where the night files' lit windows
+ * and minarets are already gold and a gold glow did not stand out (Muhammed, 2 Nov 2026).
+ */
+const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) };
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
@@ -493,19 +496,27 @@ export default function ModelViewer({
             });
             meshesOf.set(part, meshes);
           }
-          const baseEmissive = new WeakMap<THREE.Material, THREE.Color>();
+          /** Each material's own emissive (lit) or colour (unlit), before any glow. */
+          const baseColour = new WeakMap<THREE.Material, THREE.Color>();
           let hovered: string[] = [];
           let selected: string[] = [];
           let pulses = new Map<string, number>();
           // Applied to the meshes' current materials: "İçini göster" swaps in its own copies later.
+          // The night files are unlit (KHR_materials_unlit → MeshBasicMaterial): no emissive, so their colour takes
+          // the glow, or nothing lit up by night.
           const glow = () => {
+            const night = currentTheme() === "night";
+            // By night the glow is stronger: the unlit night colours are dark and a light blue at day strength is faint.
+            const tint = GLOW[night ? "night" : "day"];
             for (const [part, meshes] of meshesOf) {
               const level = Math.max(pulses.get(part) ?? 0, selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0);
               for (const mesh of meshes)
                 for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-                  if (!(m instanceof THREE.MeshStandardMaterial)) continue;
-                  if (!baseEmissive.has(m)) baseEmissive.set(m, m.emissive.clone());
-                  m.emissive.copy(baseEmissive.get(m)!).lerp(GLOW, level);
+                  const colour =
+                    m instanceof THREE.MeshStandardMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
+                  if (!colour) continue;
+                  if (!baseColour.has(m)) baseColour.set(m, colour.clone());
+                  colour.copy(baseColour.get(m)!).lerp(tint, night ? Math.min(0.85, level * 1.5) : level);
                 }
             }
             render();
