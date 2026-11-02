@@ -54,6 +54,10 @@ export const mapStyle = () => MAP_STYLES[currentTheme()];
 /**
  * Keeps `m` in the page's theme: repaints on every change, once its style has loaded. `onChange` runs after each
  * repaint (the main map resets its sky there). Returns the unsubscribe; call it before `m.remove()`.
+ *
+ * `isStyleLoaded()` is also false while tiles are still coming in, and `load` fires only once: a switch made while
+ * the map was loading tiles waited for a `load` that had already passed, so the map kept the day paint and the day
+ * models. `idle` comes after `load` and again whenever the map settles, so the repaint always happens.
  */
 export function followTheme(m: MapLibreMap, onChange?: (theme: Theme) => void) {
   return subscribeTheme((theme) => {
@@ -62,6 +66,6 @@ export function followTheme(m: MapLibreMap, onChange?: (theme: Theme) => void) {
         .then(() => onChange?.(theme))
         .catch(() => {});
     if (m.isStyleLoaded()) repaint();
-    else m.once("load", repaint);
+    else m.once("idle", repaint);
   });
 }
