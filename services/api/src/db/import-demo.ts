@@ -220,6 +220,8 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     if (outside.length) throw new Error(`Chapter parts are not model parts: ${site.id} ${[...new Set(outside)].join(", ")}`);
     const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !parts.includes(part));
     if (unknown.length) throw new Error(`Part card parts are not model parts: ${site.id} ${unknown.join(", ")}`);
+    const aimless = site.photos.flatMap((p) => (p.camera?.target && !parts.includes(p.camera.target) ? [`${p.id} ${p.camera.target}`] : []));
+    if (aimless.length) throw new Error(`Photo camera targets are not model parts: ${site.id} ${aimless.join(", ")}`);
     validateTasks(site, ids);
     validateHistoryExtras(site);
   }
