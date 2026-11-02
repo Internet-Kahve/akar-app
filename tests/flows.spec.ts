@@ -373,33 +373,19 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
 
 test.describe("first visit", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
-  test("the bare address shows the introduction, whose «Haritayı aç» opens the map with its welcome card", async ({ page }) => {
+  test("the bare address shows the introduction, whose «Haritayı aç» opens the map straight away", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
     await page.getByRole("link", { name: /Haritayı aç/ }).first().click();
     await expect(page).toHaveURL(/\/#view=map$/);
-    await expect(page.getByRole("dialog", { name: "Şehrin hikâyesine karış." })).toBeVisible({ timeout: 12000 });
+    // No welcome card any more (Muhammed, 3 Nov 2026): the map, its list and «Evden gez» mode at once.
+    await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.locator(".side-panel .site-row").first()).toBeVisible();
     await page.goBack();
     await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
-  });
-  test("the welcome card opens once and Evden gez asks for no position", async ({
-    page,
-  }) => {
-    await page.goto("/#view=map");
-    const card = page.getByRole("dialog", {
-      name: "Şehrin hikâyesine karış.",
-    });
-    await expect(card).toBeVisible({ timeout: 12000 });
-    await card.getByRole("button", { name: "Vakıf nedir? ›" }).click();
-    await expect(page.getByRole("dialog", { name: "Vakıf nedir?" })).toBeVisible();
-    await page.keyboard.press("Escape");
-    await card.getByRole("button", { name: "Evden gez" }).click();
-    await expect(card).toHaveCount(0);
-    await page.reload();
-    await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
-    await expect(page.locator(".welcome")).toHaveCount(0);
   });
 });
 test("reading keeps the chosen sentence while the list follows it, and the visitor's scrolling leads", async ({

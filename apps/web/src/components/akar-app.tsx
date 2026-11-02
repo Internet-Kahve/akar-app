@@ -61,7 +61,6 @@ import {
 import { SiteDetail } from "./site-detail";
 import { SitePeek } from "./site-peek";
 import { SourceSheetProvider, WaqfSheet } from "./side-sheet";
-import { WelcomeCard } from "./welcome-card";
 import { Cities } from "./city-scenes";
 import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Scene } from "./scene";
@@ -155,7 +154,6 @@ export function AkarApp() {
     [flight, setFlight] = useState<MapFlight>(),
     [lang, setLang] = useState<Lang>("tr"),
     [voice, setVoice] = useState<VoiceChoice>({ lang: null, gender: null }),
-    [welcome, setWelcome] = useState(false),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
@@ -354,9 +352,15 @@ export function AkarApp() {
       if (p.get("site")) setSiteId(p.get("site")!);
     };
     readLocation();
-    window.addEventListener("hashchange", readLocation);
+    // Back to the bare address (the browser's back from the map to the introduction): the introduction is another
+    // page, so load it (layout INTRO_BOOT), as the introduction reloads into the app on a link to a view.
+    const followHash = () => {
+      if (location.pathname === "/" && !/(^|[#&])view=/.test(location.hash)) location.reload();
+      else readLocation();
+    };
+    window.addEventListener("hashchange", followHash);
     return () => {
-      window.removeEventListener("hashchange", readLocation);
+      window.removeEventListener("hashchange", followHash);
       subscription?.unsubscribe();
     };
   }, [load, t]);
@@ -727,10 +731,6 @@ export function AkarApp() {
       },
     );
   }
-  function closeWelcome() {
-    writePreference("akar.karsilama", "1");
-    setWelcome(false);
-  }
   function changeLanguage(next: Lang) {
     setLang(next);
     saveDeviceLang(next);
@@ -838,19 +838,6 @@ export function AkarApp() {
     if (view === "routes" || view === "sites")
       setTab(view === "routes" ? "routes" : "sites");
   }, [view]);
-  // First visit on the map only: someone arriving by a shared link is not stopped.
-  useEffect(() => {
-    if (
-      !opening &&
-      ready &&
-      showMap &&
-      !isDetail &&
-      // The bare map: «Haritayı aç» on the introduction comes here as #view=map.
-      ["", "view=map"].includes(window.location.hash.slice(1)) &&
-      !readPreference("akar.karsilama")
-    )
-      setWelcome(true);
-  }, [opening, ready, showMap, isDetail]);
   // The sheet's lowest stop shows the handle, the tabs and the heading line.
   const sheet = useRef<HTMLElement>(null),
     sheetDrag = useRef<{
@@ -1809,22 +1796,6 @@ export function AkarApp() {
         }
       >
         {shell}
-        {welcome && (
-          <WelcomeCard
-            site={byDisplayOrder(published)[0]}
-            style={cityLook}
-            onHome={() => {
-              closeWelcome();
-              chooseHome(false);
-            }}
-            onNear={() => {
-              closeWelcome();
-              chooseNear();
-            }}
-            onWaqf={() => setWaqf(true)}
-            onDismiss={closeWelcome}
-          />
-        )}
         {completion && site && (
           <CompletionCard
             site={site}
@@ -1864,7 +1835,6 @@ export function AkarApp() {
             inventory={defaultCity?.inventory?.name ?? ""}
             onSite={(id) => {
               setWaqf(false);
-              closeWelcome();
               selectSite(id);
             }}
             onClose={() => setWaqf(false)}

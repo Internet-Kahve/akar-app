@@ -43,8 +43,7 @@
 /* ---------------- night: what a token does not reach */
 /* The logo is drawn black and dimmed (design.css); by night the same mark in white. */
 [data-theme="night"] .brand-logo,
-[data-theme="night"] .brand-mark,
-[data-theme="night"] .welcome-logo {
+[data-theme="night"] .brand-mark {
   filter: brightness(0) invert(1) opacity(0.9);
 }
 /* The city's dark accent stays the colour of city surfaces (headers, covers); as ink on the dark ground it turns
