@@ -9,6 +9,7 @@ import {
   type SceneLight,
 } from "@akar/domain";
 import { modestDevice } from "./device";
+import { mergeByMaterial } from "./model-merge";
 import type {
   CustomLayerInterface,
   CustomRenderMethodInput,
@@ -56,6 +57,8 @@ interface Entry {
   /** Model units (metres) → mercator coordinates. */
   matrix: THREE.Matrix4;
   footprint: Ring;
+  /** The base point measured before the meshes were merged (they lose their part names), by anchor part. */
+  bases: Map<string | null, ModelBase>;
   /** Soft ground shadow inside `group`; null when the city's light has none. */
   shadow: THREE.Mesh | null;
   /** The shadow-casting sun and the ground that shows its shadow, both in `scene` (world axes). */
@@ -336,6 +339,11 @@ export class MapModelLayer implements CustomLayerInterface {
     return best?.id ?? null;
   }
 
+  /** At most `maxVisibleModels` at once; a modest phone draws 4 at most, the nearest the centre. */
+  private visibleLimit() {
+    return modestDevice() ? Math.min(4, this.settings.maxVisibleModels) : this.settings.maxVisibleModels;
+  }
+
   /** The models that should be on screen now: in view, nearest the centre, at most `maxVisibleModels`. */
   private select(map: MapLibreMap): Map<string, MapModelSite> {
     if (map.getZoom() < this.settings.modelMinZoom) return new Map();
@@ -343,7 +351,7 @@ export class MapModelLayer implements CustomLayerInterface {
     if (this.everywhere)
       return new Map(
         [...this.sites.values()]
-          .slice(0, Math.max(0, this.settings.maxVisibleModels))
+          .slice(0, Math.max(0, this.visibleLimit()))
           .map((site) => [site.id, site]),
       );
     const view = map.getBounds();
@@ -368,7 +376,7 @@ export class MapModelLayer implements CustomLayerInterface {
           ),
         }))
         .sort((a, b) => a.distance - b.distance)
-        .slice(0, Math.max(0, this.settings.maxVisibleModels))
+        .slice(0, Math.max(0, this.visibleLimit()))
         .map(({ site }) => [site.id, site]),
     );
   }
@@ -437,6 +445,14 @@ export class MapModelLayer implements CustomLayerInterface {
       gltf.scene.traverse((node) => {
         if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = !modest;
       });
+      // On the visitor's map, one draw call per material instead of one per mesh (lib/model-merge). The base point
+      // needs the parts, so it is measured first; the panel's preview, where the anchor part is edited, keeps them.
+      const bases = new Map<string | null, ModelBase>();
+      if (!this.everywhere) {
+        gltf.scene.updateMatrixWorld(true);
+        bases.set(site.placement.anchorNode ?? null, modelBase(gltf.scene, site.placement.anchorNode));
+        mergeByMaterial(gltf.scene);
+      }
       const scene = new THREE.Scene();
       const group = new THREE.Group();
       group.add(gltf.scene);
@@ -450,6 +466,7 @@ export class MapModelLayer implements CustomLayerInterface {
         model: gltf.scene,
         matrix: new THREE.Matrix4(),
         footprint: [],
+        bases,
         shadow: null,
         sun: addMapLights(scene),
         floor,
@@ -480,7 +497,7 @@ export class MapModelLayer implements CustomLayerInterface {
     entry.group.scale.setScalar(1);
     entry.model.position.set(0, 0, 0);
     entry.group.updateMatrixWorld(true);
-    const base: ModelBase = modelBase(entry.model, p.anchorNode);
+    const base: ModelBase = entry.bases.get(p.anchorNode ?? null) ?? modelBase(entry.model, p.anchorNode);
     entry.model.position.copy(base.offset);
     entry.group.rotation.y = -THREE.MathUtils.degToRad(p.headingDeg);
     entry.group.scale.setScalar(p.scale);

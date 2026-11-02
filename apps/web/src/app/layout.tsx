@@ -39,6 +39,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: INTRO_BOOT }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+        {/* The map's tiles, fonts and sprite come from OpenFreeMap: the connection is opened while the app loads,
+            not after the map's code has arrived (half a second on a phone's 4G). */}
+        <link rel="preconnect" href="https://tiles.openfreemap.org" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://tiles.openfreemap.org" />
       </head>
       <body>{children}</body>
     </html>

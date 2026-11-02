@@ -15,6 +15,10 @@ import type {
   Marker as MarkerType,
 } from "maplibre-gl";
 import type { MapModels } from "../lib/map-models";
+
+// The map's library (~800 KB) starts downloading as soon as this module is read, alongside the rest of the app,
+// instead of when the map first mounts.
+if (typeof window !== "undefined") void import("maplibre-gl");
 import { followTheme, MAP_SKY, mapStyle } from "../lib/map-theme";
 import { currentTheme, type Theme } from "../lib/theme";
 import {
@@ -370,13 +374,19 @@ export function HeritageMap({
               if (calm < 2) return;
               clearInterval(watch);
               settledRef.current?.();
+              addModels();
             }, 200);
+            // The models (several MB) wait for the base map: it shows first, then they come. At most 4 s.
+            setTimeout(() => addModels(), 4000);
             reportCity();
             // A load event can follow a tile error; keep discovery available
             // through the schematic view for the lifetime of this map.
             // Models and the OSM building layer are an addition: whatever
             // goes wrong there leaves the pins and the base map as they are.
-            if (!latest.current.mapSettings) return;
+            let modelsAdded = false;
+            function addModels() {
+              if (modelsAdded || disposed || !latest.current.mapSettings) return;
+              modelsAdded = true;
             import("../lib/map-models")
               .then(({ createMapModels }) => {
                 if (disposed) return;
@@ -389,6 +399,7 @@ export function HeritageMap({
                   );
               })
               .catch(() => {});
+            }
           });
           m.on("error", () => {
             if (!disposed) setFailed(true);
