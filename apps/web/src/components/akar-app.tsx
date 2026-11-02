@@ -899,11 +899,14 @@ export function AkarApp() {
   const [cardClosed, setCardClosed] = useState(0);
   const cardClosedRef = useRef(0);
   cardClosedRef.current = cardClosed;
-  // Fully open, the card shows its end and fades no more.
-  const sheetStopsHighest =
-    siteCard && typeof innerHeight === "number" && sheet.current
-      ? siteCardStops(cardClosed, cardContent(), innerHeight).highest
-      : Infinity;
+  // Fully open, the card shows its end and fades no more. Measured when the card's height changes, not on every
+  // render: reading layout while rendering forced the browser to lay the page out again each time.
+  const [cardFull, setCardFull] = useState(false);
+  useEffect(() => {
+    if (!siteCard || !sheet.current) return setCardFull(false);
+    setCardFull(sheetHeight >= siteCardStops(cardClosed, cardContent(), innerHeight).highest - 8);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteCard, sheetHeight, cardClosed]);
   useEffect(() => {
     if (!ready || wide) return;
     if (!siteCard) {
@@ -1256,7 +1259,7 @@ export function AkarApp() {
               )}
               <aside
                 ref={sheet}
-                className={`side-panel${sheetDragging ? " dragging" : ""}${cardRising ? " rising" : ""}${siteCard && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
+                className={`side-panel${sheetDragging ? " dragging" : ""}${cardRising ? " rising" : ""}${cardFull ? " full" : ""}`}
                 onScroll={siteCard ? fadeCard : undefined}
                 onWheel={siteCard ? (e) => { if (e.deltaY > 4) openCardForScroll(); } : undefined}
                 onTouchStart={

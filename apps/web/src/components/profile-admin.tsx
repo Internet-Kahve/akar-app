@@ -27,12 +27,18 @@ import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@aka
 import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import { badgeInLang, taskInLang } from "../lib/task-text";
-import { SiteEditor } from "./admin-site-editor";
-import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
 import { MemoryActions } from "./memory-actions";
-import { AdminMembers } from "./admin-members";
-import { AdminHealthAlert } from "./admin-health";
-import { AdminMapSettings } from "./admin-map-settings";
+import dynamic from "next/dynamic";
+
+// The content studio is for the team only: its screens come in their own chunks when an admin opens them, not with
+// every visitor's first download (3 Nov 2026; ~186 KB of source the map never used).
+const SiteEditor = dynamic(() => import("./admin-site-editor").then((m) => m.SiteEditor), { ssr: false });
+const RouteAdmin = dynamic(() => import("./admin-collections").then((m) => m.RouteAdmin), { ssr: false });
+const PhotoAdmin = dynamic(() => import("./admin-collections").then((m) => m.PhotoAdmin), { ssr: false });
+const ImportAdmin = dynamic(() => import("./admin-collections").then((m) => m.ImportAdmin), { ssr: false });
+const AdminMembers = dynamic(() => import("./admin-members").then((m) => m.AdminMembers), { ssr: false });
+const AdminHealthAlert = dynamic(() => import("./admin-health").then((m) => m.AdminHealthAlert), { ssr: false });
+const AdminMapSettings = dynamic(() => import("./admin-map-settings").then((m) => m.AdminMapSettings), { ssr: false });
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
