@@ -59,7 +59,6 @@ export function StoryPanel({
     [listOpen, setListOpen] = useState(!startListening),
     [playing, setPlaying] = useState(startListening),
     [rate, setRate] = useState(1),
-    [simple, setSimple] = useState(false),
     [error, setError] = useState<MessageKey | "">(""),
     list = useRef<HTMLOListElement>(null),
     // Only the visitor's own scrolling picks a sentence; a scroll that follows the sentence never does.
@@ -111,7 +110,7 @@ export function StoryPanel({
         setPlaying(false);
         return;
       }
-      const spoken = storyText(block, simple, voiceLang);
+      const spoken = storyText(block, false, voiceLang);
       const utterance = new SpeechSynthesisUtterance(spoken.text);
       utterance.lang = spoken.lang === "en" ? "en-US" : "tr-TR";
       utterance.rate = rate;
@@ -124,7 +123,7 @@ export function StoryPanel({
       };
       window.speechSynthesis.speak(utterance);
     };
-    const clip = pickNarration(block, voiceLang, voiceGender, simple);
+    const clip = pickNarration(block, voiceLang, voiceGender, false);
     const player = clip ? (recording.current ??= new Audio()) : null;
     if (clip && player) {
       player.src = clip.url;
@@ -148,7 +147,7 @@ export function StoryPanel({
       }
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     };
-  }, [playing, block, rate, index, voiceLang, voiceGender, simple]);
+  }, [playing, block, rate, index, voiceLang, voiceGender]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -174,10 +173,10 @@ export function StoryPanel({
     scrolledByHand.current = performance.now() + HAND_SCROLL_MS;
   };
   const clip = listen
-    ? pickNarration(block, voiceLang, voiceGender, simple)
+    ? pickNarration(block, voiceLang, voiceGender, false)
     : undefined;
   const nextVoiceLang = voiceLang === "tr" ? "en" : "tr";
-  const languageAvailable = stories.some((story) => pickNarration(story, nextVoiceLang, voiceGender, simple));
+  const languageAvailable = stories.some((story) => pickNarration(story, nextVoiceLang, voiceGender, false));
   const voiceLabel = t(voiceGender === "female" ? "site.voiceFemale" : "site.voiceMale");
   const voiceControls = (
     <div className="story-voice-compact" role="group" aria-label={t("site.voiceLangLabel")}>
@@ -213,7 +212,7 @@ export function StoryPanel({
         ...(source.page && { detail: t("site.pageShort", { page: source.page }) }),
       }));
   const current = sourceOf(block)[0];
-  const shownNow = storyText(block, simple, lang);
+  const shownNow = storyText(block, false, lang);
   const player = (
     <div className="story-player">
       {wide ? (
@@ -317,10 +316,6 @@ export function StoryPanel({
         {voiceControls}
         {position}
       </div>
-      <label className="switch-label story-simple">
-        <input type="checkbox" checked={simple} onChange={(e) => setSimple(e.target.checked)} />
-        {t("site.simpleMode")}
-      </label>
       {listen && !clip && <p className="story-voice-note">{t("site.voiceBrowser")}</p>}
       {problem}
       <ol
@@ -350,7 +345,7 @@ export function StoryPanel({
         }}
       >
         {stories.map((s, i) => {
-          const shown = storyText(s, simple, lang);
+          const shown = storyText(s, false, lang);
           return (
             <li key={s.id} className={i === index ? "current" : ""}>
               <button

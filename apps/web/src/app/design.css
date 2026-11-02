@@ -1864,45 +1864,6 @@ h1,
   min-height: 0;
   background: linear-gradient(180deg, var(--scene-top, #e6e8e5), var(--scene-bottom, #b4bbba));
 }
-.story-flow {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
-.story-flow-map {
-  position: absolute;
-  inset: 0;
-}
-.story-flow-card {
-  position: absolute;
-  left: 24px;
-  top: 64px;
-  max-width: 320px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--glass-solid);
-  box-shadow: var(--glass-shadow);
-}
-.story-flow-card small {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: var(--gold-text);
-}
-.story-flow-card h3 {
-  margin: 6px 0 2px;
-  font-family: var(--font-display);
-  font-size: 24px;
-  line-height: 28px;
-}
-.story-flow-card p {
-  margin: 0 0 8px;
-  color: var(--text-muted);
-}
-
 /* completion */
 .completion {
   width: min(440px, calc(100vw - 32px));
@@ -3154,8 +3115,6 @@ dialog.gv-perde::backdrop { background: transparent; }
 .story-mode { flex: 0 0 200px; }
 .story-mode button { height: 40px; }
 .story-lang { display: inline-flex; align-items: center; height: 32px; padding: 0 10px; border-radius: 999px; background: var(--primary-light); color: var(--primary); font: 600 13px/1 var(--font); }
-.story-simple { padding: 8px 16px 0; }
-.story-simple:has(input:not(:checked)) { color: var(--text-muted); }
 .story-list { padding: 0 0 40vh; overscroll-behavior: contain; }
 .story-list li { display: block; padding: 14px 16px; border-radius: 0; border-left: 3px solid transparent; }
 .story-list li.current { background: var(--primary-light); border-left-color: var(--primary); box-shadow: none; }
@@ -3715,9 +3674,21 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 }
 
 /* Compact voice controls share the story heading on both screen sizes. */
-.story-voice-compact { display: inline-flex; align-items: center; gap: 2px; flex: none; margin-left: auto; }
-.story-voice-compact button { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 36px; padding: 0 5px; border-radius: 999px; color: var(--text-muted); background: transparent; font: 600 12px var(--font); }
-.story-voice-compact button:disabled { opacity: .5; cursor: default; }
+/* Voice language and voice: two small, plain circles (Muhammed, 2 Nov 2026; before they were bare text and hard to
+   find). Filled in the primary tint with a thin ring, so they read as buttons by day and by night. */
+.story-voice-compact { display: inline-flex; align-items: center; gap: 6px; flex: none; margin-left: auto; }
+.story-voice-compact button {
+  display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 50%;
+  color: var(--primary); background: var(--primary-light); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 22%, transparent);
+  font: 700 12px/1 var(--font); letter-spacing: .02em;
+  transition: transform var(--dur-fast, .15s) ease, box-shadow var(--dur-fast, .15s) ease;
+}
+.story-voice-compact button span { font-size: 17px; line-height: 1; }
+.story-voice-compact button:hover:not(:disabled) { box-shadow: inset 0 0 0 1.5px var(--primary); }
+.story-voice-compact button:active:not(:disabled) { transform: scale(.94); }
+.story-voice-compact button:focus-visible { outline: 2px solid var(--gold, #e3bc5e); outline-offset: 2px; }
+.story-voice-compact button:disabled { opacity: .65; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .story-voice-compact button { transition: none; } }
 .about-stage .model-inside { right: 24px; bottom: 24px; }
 @media (min-width: 900px) {
   .side-panel:has(.detail-panel)::after { display: none; }
