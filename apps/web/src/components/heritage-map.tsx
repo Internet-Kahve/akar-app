@@ -548,6 +548,7 @@ export function HeritageMap({
         accent: routeColour,
         buildingRoute,
         lang,
+        photos: true,
       }),
       () => cancelled,
       routeColour,
