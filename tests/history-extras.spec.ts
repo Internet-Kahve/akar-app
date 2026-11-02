@@ -34,7 +34,9 @@ const image = (
 });
 
 /** Ulucami with three archive photographs: one with the archive's pair, one with only a sample, one with neither. */
-async function openHistory(page: Page, longArchive = false) {
+async function openHistory(page: Page, longArchive = false, motion = false) {
+  // The handle's opening sway would move it under the assertions; it has a test of its own.
+  if (!motion) await page.emulateMedia({ reducedMotion: "reduce" });
   const snapshot = createSeed();
   const site = snapshot.sites[0]!;
   site.historyImages = [
@@ -84,28 +86,31 @@ async function openHistory(page: Page, longArchive = false) {
 const fits = (page: Page, selector: string) =>
   expect(page.locator(selector).first()).toHaveCSS("object-fit", "contain");
 
-test("the archive's present-day pair is a slider, both photographs whole, with each credit line word for word and the near-angle note", async ({
+/** The selected photograph's place in its box (it is fitted whole, so it may leave blurred bands beside it). */
+const photoBox = (page: Page) =>
+  page.locator(".gg-foto").evaluate((box) => {
+    const img = box.querySelector<HTMLImageElement>(".ana")!,
+      r = box.getBoundingClientRect(),
+      w = Math.min(r.width, (r.height * img.naturalWidth) / img.naturalHeight);
+    return { left: r.x, right: r.right, photoLeft: r.x + (r.width - w) / 2, width: w, y: r.y + r.height / 2 };
+  });
+
+test("the archive's present-day pair is a slider, both photographs whole, with each credit line and the near-angle note", async ({
   page,
 }) => {
   const errors = await openHistory(page);
-  const slider = page.getByRole("slider", {
-    name: "Eski ve bugünkü fotoğrafı karşılaştır",
-  });
+  const slider = page.getByRole("slider", { name: "Eski ve bugünkü fotoğrafı karşılaştır" });
   await expect(slider).toHaveAttribute("aria-valuenow", "50");
   await expect(slider).toHaveAttribute("aria-valuetext", "Eski %50");
-  await expect(page.locator(".history-compare-label.old")).toHaveText("1875–84");
-  await expect(page.locator(".history-compare-label.today")).toHaveText("Bugün · AKAR arşivi");
-  await expect(page.locator(".history-compare .tag")).toHaveCount(0);
-  await expect(page.locator(".history-compare-layer")).toHaveCount(2);
-  await fits(page, ".history-compare-layer:not(.history-compare-old)");
-  await fits(page, ".history-compare-old");
-  await expect(page.locator(".history-info .archive-credit")).toHaveText(OLD_CREDIT);
-  await expect(page.locator(".archive-credit-today")).toHaveText(`Bugünkü fotoğraf ${PAIR_CREDIT}`);
-  await expect(page.getByText("CC BY-NC-ND 4.0", { exact: true })).toBeVisible();
-  await expect(page.locator(".history-near")).toHaveText(
-    "Yakın açı: iki fotoğraf birebir aynı noktadan çekilmedi.",
+  await expect(page.locator(".gg-k-etiket").first()).toHaveText("1875–84");
+  await expect(page.locator(".gg-k-etiket.sag")).toHaveText("Bugün · AKAR arşivi");
+  await fits(page, ".gg-foto .b-ana");
+  await fits(page, ".gg-foto .ana");
+  await expect(page.locator(".gg-meta")).toHaveText("1875–84 · Sébah&Joaillier");
+  await expect(page.locator(".gg-kaynak")).toHaveText(
+    "Getty Research Institute Digital Collections (96.R.14(A28)) · Foto Atlas aracılığıyla · CC BY-NC-ND · Bugünkü fotoğraf: Bursa Vakıf Eserleri Envanteri",
   );
-  await expect(page.getByText("henüz eklenmedi")).toHaveCount(0);
+  await expect(page.locator(".gg-yakin")).toHaveText("Yakın açı: iki fotoğraf birebir aynı noktadan çekilmedi.");
 
   await slider.focus();
   await page.keyboard.press("ArrowLeft");
@@ -117,10 +122,10 @@ test("the archive's present-day pair is a slider, both photographs whole, with e
   await page.keyboard.press("Home");
   await expect(slider).toHaveAttribute("aria-valuenow", "0");
 
-  const box = (await page.locator(".history-compare").boundingBox())!;
-  await page.mouse.move(box.x + box.width * 0.25, box.y + box.height / 2);
+  const photo = await photoBox(page);
+  await page.mouse.move(photo.photoLeft + photo.width * 0.25, photo.y);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width * 0.75, box.y + box.height / 2, { steps: 4 });
+  await page.mouse.move(photo.photoLeft + photo.width * 0.75, photo.y, { steps: 4 });
   await page.mouse.up();
   const value = Number(await slider.getAttribute("aria-valuenow"));
   expect(value).toBeGreaterThanOrEqual(74);
@@ -128,66 +133,88 @@ test("the archive's present-day pair is a slider, both photographs whole, with e
   expect(errors).toEqual([]);
 });
 
-test("without the archive's pair the newest linked sample stands in, tagged «Örnek»; a photograph with neither has no comparison", async ({
+test("the handle moves over the photograph only, never over the blurred bands beside it", async ({ page }) => {
+  await openHistory(page);
+  const slider = page.getByRole("slider");
+  const photo = await photoBox(page);
+  const handleX = async () => (await page.locator(".gg-k-tutamak").boundingBox())!.x + 1;
+  await page.mouse.move(photo.photoLeft + 20, photo.y);
+  await page.mouse.down();
+  // Past the photograph's edge (into the blurred band, or out of the box where the photograph fills it).
+  await page.mouse.move(Math.max(1, photo.left - 10), photo.y, { steps: 4 });
+  await page.mouse.up();
+  await expect(slider).toHaveAttribute("aria-valuenow", "0");
+  expect(Math.abs((await handleX()) - photo.photoLeft)).toBeLessThanOrEqual(1);
+  await page.mouse.move(photo.photoLeft + 20, photo.y);
+  await page.mouse.down();
+  await page.mouse.move(Math.min(page.viewportSize()!.width - 1, photo.right + 10), photo.y, { steps: 4 });
+  await page.mouse.up();
+  await expect(slider).toHaveAttribute("aria-valuenow", "100");
+  expect(Math.abs((await handleX()) - (photo.photoLeft + photo.width))).toBeLessThanOrEqual(1);
+});
+
+test("the handle sways once when a paired photograph opens, and not when the visitor asks for less motion", async ({ page }) => {
+  await openHistory(page, false, true);
+  const slider = page.getByRole("slider");
+  const seen = new Set<string>();
+  for (let i = 0; i < 20; i++) {
+    seen.add((await slider.getAttribute("aria-valuenow"))!);
+    await page.waitForTimeout(100);
+  }
+  expect(seen.size).toBeGreaterThan(2);
+  await expect(slider).toHaveAttribute("aria-valuenow", "50");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(slider).toHaveAttribute("aria-valuenow", "50");
+  await page.waitForTimeout(1200);
+  await expect(slider).toHaveAttribute("aria-valuenow", "50");
+});
+
+test("without the archive's pair the newest linked sample stands in as «Örnek katkı»; a photograph with neither has no comparison", async ({
   page,
 }) => {
   await openHistory(page);
-  await page.locator(".archive-timeline button").nth(1).click();
-  await expect(page.locator(".history-compare-label.today")).toContainText("Bugün · AKAR ekibi");
-  await expect(page.locator(".history-compare-label.today .tag")).toHaveText("Örnek");
-  await expect(page.locator(".archive-credit-today")).toHaveText(`Bugünkü fotoğraf ${TRACE_CREDIT}`);
-  await expect(page.locator(".history-near")).toHaveCount(0);
+  await page.locator(".gg-serit button").nth(1).click();
+  await expect(page.locator(".gg-k-etiket.sag")).toHaveText("Bugün · AKAR ekibi · Örnek katkı");
+  await expect(page.locator(".gg-kaynak")).toContainText(`Bugünkü fotoğraf: ${TRACE_CREDIT.replace("Fotoğraf: ", "")}`);
+  await expect(page.locator(".gg-yakin")).toHaveCount(0);
 
-  await page.locator(".archive-timeline button").nth(2).click();
+  await page.locator(".gg-serit button").nth(2).click();
   await expect(page.getByRole("slider")).toHaveCount(0);
-  await expect(page.locator(".archive-photo > img")).toBeVisible();
-  await fits(page, ".archive-photo > img");
-  await expect(page.getByText("Bu açının bugünkü hali yok")).toBeVisible();
+  await fits(page, ".gg-foto .ana");
+  if (page.viewportSize()!.width < 900) await expect(page.getByText("Bu açının bugünkü hali yok")).toBeVisible();
 
-  const dots = page.locator(".archive-timeline .history-pair-dot");
-  await expect(dots).toHaveCount(2);
-  await expect(page.locator(".archive-timeline button").first()).toContainText("bugünkü eşi var");
+  await expect(page.locator(".gg-serit .gg-bugunu-var")).toHaveCount(2);
+  await expect(page.locator(".gg-serit button").first()).toContainText("bugünkü eşi var");
+  await expect(page.locator(".gg-serit .gg-cek-isaret")).toHaveCount(1);
+  await expect(page.locator(".gg-cagri")).toHaveText("1 tanesinin bugünkü hali yok; ilkini sen çek.");
 });
 
-test("the team's samples are listed with the «Örnek» tag, their credit line word for word and uncropped photographs; the linked one shows its archive photograph", async ({
-  page,
-}) => {
+test("the arrow keys move through the photographs and Escape goes back to the site", async ({ page }) => {
   await openHistory(page);
-  const cards = page.locator(".sample-trace");
-  await expect(page.getByRole("heading", { name: "İz Bırak örnekleri" })).toBeVisible();
-  await expect(cards).toHaveCount(2);
-  await expect(cards.locator(".tag")).toHaveText(["Örnek", "Örnek"]);
-  await expect(cards.locator(".sample-trace-credit")).toHaveText([TRACE_CREDIT, TRACE_CREDIT]);
-  await expect(cards.first()).toContainText("AKAR ekibi");
-  await expect(cards.first()).toContainText("Örnek katkı 1");
-  await fits(page, ".sample-trace img");
-  await expect(cards.nth(1).getByRole("button")).toHaveCount(0);
-
-  await cards.first().getByRole("button", { name: "Eski fotoğrafı göster" }).click();
-  await expect(page.locator(".archive-timeline button").nth(1)).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".history-date")).toContainText("Tarih bilinmiyor");
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-  ).toBe(true);
+  await expect(page.locator(".gg-sayac")).toHaveCount(1);
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(".gg-sayac")).toHaveText("3 / 3");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(".gg-serit button").first()).toHaveAttribute("aria-current", "true");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "Geçmişi Gör", level: 1 })).toHaveCount(0);
 });
-
 
 test("a long archive scrolls inside its strip without widening the viewport", async ({ page }) => {
   await openHistory(page, true);
-  await expect(page.locator(".archive-timeline button")).toHaveCount(21);
+  await expect(page.locator(".gg-serit button")).toHaveCount(21);
   const width = page.viewportSize()!.width;
   if (width < 900) {
-    const archive = await page.locator(".history-archive").boundingBox();
-    const location = await page.locator(".history-location").boundingBox();
-    expect(archive!.y).toBeLessThan(location!.y);
-    await expect(page.locator(".history-map-toggle")).toHaveAttribute("aria-expanded", "false");
-    await page.locator(".history-map-toggle").click();
-    await expect(page.locator(".history-location-map")).toBeVisible();
+    const strip = await page.locator(".gg-serit").boundingBox();
+    const place = await page.locator(".gg-yer").boundingBox();
+    expect(strip!.y).toBeLessThan(place!.y);
   }
-
   expect(await page.evaluate(() => innerWidth)).toBe(width);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-  await page.locator(".archive-timeline button").last().click();
-  await expect(page.locator(".archive-timeline button").last()).toHaveAttribute("aria-pressed", "true");
+  await page.locator(".gg-serit button").last().click();
+  await expect(page.locator(".gg-serit button").last()).toHaveAttribute("aria-current", "true");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
 });

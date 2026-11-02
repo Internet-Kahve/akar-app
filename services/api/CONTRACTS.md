@@ -244,3 +244,17 @@ Ayrıntı ve gerekçe: [docs/MAP-MODELS-PLAN.md](../../docs/MAP-MODELS-PLAN.md),
 - **Çeviri:** `POST /v1/admin/sites/:id/translate` (aynı yetki ve gövde). Yanıt `{ translated, skipped }`. Yalnız boş `text_en` / `simple_en` doldurulur ve `machine` işaretlenir; doluya dokunulmaz. Audit `story.translate`. Anahtar yoksa 503.
 - **Sağlayıcılar** `platform/tts.ts` (`TtsProvider`) ve `platform/translate.ts` (`Translator`) arayüzleridir; `AppDeps.tts` / `AppDeps.translator` anahtar yoksa `null`. Testte `src/test/fakes.ts` (`fakeTts`, `fakeTranslator`) verilir; ağ çağrısı yapılmaz.
 - **Parça kartları (§11.59, migration `0028_part_card_en`):** `site_part_cards` tablosuna `title_en`, `body_en`, `title_en_status`, `body_en_status` (`machine` | `reviewed`) eklendi. `PartCardDto` (herkese açık ve panel detayı) `titleEn`, `bodyEn`, `titleEnStatus`, `bodyEnStatus` ve `narrations` döner; kart kaydı yalnız `variant=text` ve kartın metnini (`body` / `body_en`) 4 sesle okur, başlık okunmaz; bayat kayıt listelenmez. `PUT /v1/admin/sites/:id/part-cards` kart gövdesinde isteğe bağlı `titleEn` / `bodyEn`: hikâyedeki `textEn` kuralı (verilmezse saklanan değer ve durum kalır, yeni ya da değişmiş `reviewed`, değişmemiş eski durum, boş `null`). Kartı kayıttan çıkarılırsa kayıtları ve ses dosyaları silinir. `narrations` ve `translate` gövdesinde `partCardId`; çeviri kart başına tek Gemini isteğiyle boş `title_en` / `body_en` alanlarını doldurur (`machine`, audit `partCard.translate`); `TranslateFields` alan adıyla anahtarlı kayıttır (hikâye `text`/`simple`, kart `title`/`body`).
+
+### Adlı kişisel rotalar (0031)
+
+- `GET /v1/me/routes` → `{ items: PersonalRoute[] }`; yalnız oturum sahibinin rotaları.
+- `POST /v1/me/routes` `{ name }` → oluşturulan rota (200).
+- `PATCH /v1/me/routes/:id` `{ name }` → adı değişen rota.
+- `PUT /v1/me/routes/:id/stops` `{ siteIds }` → sıralı durakların tamamını değiştirir.
+- `DELETE /v1/me/routes/:id` → `{ deleted: true }`.
+
+`PersonalRoute`: `id`, `name`, `isDefault`, `siteIds`, `createdAt`, `updatedAt`. Ad kırpılır ve 1–80 karakter olmalıdır; duraklar benzersiz, en fazla 100 ve yayındaki eserlerden oluşur. Başkasının rotası 404; tüm yazmalar mevcut idempotency ve kullanıcı başına işlem kilidini kullanır. Yayından kaldırılan duraklar yanıtta gizlenir, kayıtları korunur.
+
+Eski `GET/PUT /v1/me/route` aynı `{ siteIds }` sözleşmesiyle varsayılan rotayı okur/yazar. Varsayılan rotanın silinmesi boş bir varsayılan oluşturur; diğer rotalara dokunmaz. `DELETE /v1/me` rota üst kayıtlarını ve cascade ile tüm duraklarını siler.
+
+Migration `0031_personal_routes`, eski `user_route_stops` satırlarını `default:<user_id>` rotasına konumlarını koruyarak kopyalar. Eski tablo korunur ve varsayılan rota yazmalarında eşzamanlı güncellenir. Misafir HTTP istemcisi ve demo istemcisi adlı rotaları cihazda saklar. Mevcut oturum açma aktarımı varsayılan rotayı taşır; cihazdaki diğer adlı rotalar cihazda korunur.

@@ -566,7 +566,16 @@ export interface UserPreferences {
   voiceLang: "tr" | "en" | null;
   voiceGender: "female" | "male" | null;
 }
+export interface PersonalRoute {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  siteIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
 export interface Snapshot {
+  personalRoutes?: PersonalRoute[];
   version: 1;
   sites: HeritageSite[];
   /** The current user's own memories (every status). */

@@ -1,7 +1,9 @@
+import { localRoutes } from "./personal-routes";
 import {
   reduceSnapshot,
   defaultMapSettings,
   type CityRecord,
+  type PersonalRoute,
   type Command,
   type MapPlacement,
   type MapSettings,
@@ -157,6 +159,11 @@ export interface TranslationRun {
   snapshot: Snapshot;
 }
 export interface AkarClient {
+  getPersonalRoutes(): Promise<PersonalRoute[]>;
+  createPersonalRoute(name: string): Promise<PersonalRoute>;
+  renamePersonalRoute(id: string, name: string): Promise<PersonalRoute>;
+  deletePersonalRoute(id: string): Promise<void>;
+  setPersonalRouteStops(id: string, siteIds: string[]): Promise<PersonalRoute>;
   getSnapshot(): Promise<Snapshot>;
   /**
    * Re-reads the published catalog (sites, models and their placements, routes, feed) and returns the
@@ -483,7 +490,14 @@ export function createMockClient(
     voiceLang: null,
     voiceGender: null,
   };
+  const personal = localRoutes(
+    () => state.personalRoutes ?? [],
+    () => state.routeIds,
+    (routes, ids) => { persist({ ...state, personalRoutes: routes, routeIds: ids }); },
+    () => state.sites.filter((site) => site.status !== "draft").map((site) => site.id),
+  );
   return {
+    ...personal,
     async getSnapshot() {
       await content;
       return structuredClone(state);

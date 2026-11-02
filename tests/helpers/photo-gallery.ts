@@ -73,7 +73,8 @@ export function photoGalleryTests() {
       const gallery = page.getByRole("region", {
         name: "Eser fotoğraf galerisi",
       });
-      const figures = gallery.locator("figure");
+      // The site's photographs; the last tile, «Fotoğrafını ekle», is not one of them.
+      const figures = gallery.locator("figure:not(.ekle)");
       await expect(figures).toHaveCount(3);
       await expect(figures.first().locator("img")).toHaveAttribute(
         "alt",
@@ -82,142 +83,38 @@ export function photoGalleryTests() {
       await expect(
         gallery.getByAltText("Yalnız hikâyeye ait fotoğraf"),
       ).toHaveCount(0);
-      await expect(figures.first().locator("img")).toHaveCSS(
-        "object-fit",
-        "contain",
-      );
-      const boxes = await figures.first().evaluate((figure) => ({
-        imageBottom: figure.querySelector("img")!.getBoundingClientRect()
-          .bottom,
-        creditTop: figure.querySelector("figcaption")!.getBoundingClientRect()
-          .top,
-      }));
-      expect(boxes.creditTop).toBeGreaterThanOrEqual(boxes.imageBottom);
+      await expect(figures.first().locator("img")).toHaveCSS("object-fit", "cover");
+      await expect(gallery).toHaveCSS("grid-template-rows", /.+ .+/);
+      if (!model) await expect(page.getByRole("group", { name: "Görünüm" })).toHaveCount(0);
       if (isMobile && browserName === "chromium") {
         const touch = await page.context().newCDPSession(page);
-        const box = (await figures.first().locator("img").boundingBox())!;
-        const y = box.y + box.height / 2;
-        await touch.send("Input.dispatchTouchEvent", {
-          type: "touchStart",
-          touchPoints: [{ x: box.x + box.width - 20, y }],
-        });
-        for (let step = 1; step <= 8; step++) {
-          await touch.send("Input.dispatchTouchEvent", {
-            type: "touchMove",
-            touchPoints: [
-              { x: box.x + (box.width - 40) * (1 - step / 8) + 20, y },
-            ],
-          });
-        }
-        await touch.send("Input.dispatchTouchEvent", {
-          type: "touchEnd",
-          touchPoints: [],
-        });
-        // Native touch momentum must settle before another navigation action.
-        let previousOffset = -1;
-        await expect
-          .poll(
-            async () => {
-              const offset = await gallery.evaluate((el) => el.scrollLeft);
-              const settled = offset > 0 && offset === previousOffset;
-              previousOffset = offset;
-              return settled;
-            },
-            { intervals: [100] },
-          )
-          .toBe(true);
-        // Native momentum may advance more than one photo. Verify the actual snapped slide and
-        // matching counter, then return to the first photo for deterministic button navigation.
-        const index = await gallery.evaluate((el) =>
-          Math.round(el.scrollLeft / el.clientWidth),
-        );
-        expect(index).toBeGreaterThan(0);
-        expect(index).toBeLessThan(3);
-        await expect(figures.nth(index).locator("img")).toBeInViewport({
-          ratio: 0.9,
-        });
-        await expect(
-          page
-            .getByRole("status")
-            .filter({ hasText: `Fotoğraf ${index + 1} / 3` }),
-        ).toBeVisible();
-        for (let current = index; current > 0; current--) {
-          await page.getByRole("button", { name: "Önceki fotoğraf" }).click();
-          await expect(
-            page
-              .getByRole("status")
-              .filter({ hasText: `Fotoğraf ${current} / 3` }),
-          ).toBeVisible();
-        }
-        await expect(
-          page.getByRole("status").filter({ hasText: "Fotoğraf 1 / 3" }),
-        ).toBeVisible();
+        const box = (await gallery.boundingBox())!;
+        const y = box.y + Math.min(box.height / 2, 100);
+        await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: box.x + box.width - 25, y }] });
+        for (let step = 1; step <= 8; step++) await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: box.x + box.width - 25 - step * 30, y }] });
+        await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+        await expect.poll(() => gallery.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
         await touch.detach();
       }
-      const next = page.getByRole("button", { name: "Sonraki fotoğraf" });
-      await next.focus();
+      await figures.last().getByRole("button").click();
+      const lightbox = page.getByRole("dialog", { name: "Fotoğraf", exact: true });
+      await expect(lightbox).toContainText("Eser envanteri kaynak kaydı");
+      await expect(lightbox).toContainText("Fotoğraf 3 kullanım izni");
+      await expect(lightbox.getByRole("img", { name: /^Eser fotoğrafı/ })).toHaveAttribute("alt", "Eser fotoğrafı 3");
+      await lightbox.getByRole("button", { name: "Sonraki fotoğraf" }).focus();
       await page.keyboard.press("Enter");
-      await expect(
-        page.getByRole("status").filter({ hasText: "Fotoğraf 2 / 3" }),
-      ).toBeVisible();
-      await expect(figures.nth(1).locator("img")).toBeInViewport({
-        ratio: 0.3,
-      });
-      await next.click();
-      await expect(
-        page.getByRole("status").filter({ hasText: "Fotoğraf 3 / 3" }),
-      ).toBeVisible();
-      await expect(next).toBeDisabled();
-      await expect(figures.last().locator("figcaption")).toContainText(
-        "Eser envanteri kaynak kaydı",
-      );
-      if (isMobile) {
-        expect(await gallery.evaluate((el) => el.scrollLeft)).toBeGreaterThan(
-          0,
-        );
-        // The caption can grow naturally; the page, not a clipped fixed-height stage, holds it.
-        await figures.last().locator("figcaption").scrollIntoViewIfNeeded();
-        await expect(figures.last().locator("figcaption")).toBeInViewport();
-        await page
-          .getByRole("heading", { name: "Ulucami", exact: true })
-          .scrollIntoViewIfNeeded();
-        await expect(
-          page.getByRole("heading", { name: "Ulucami", exact: true }),
-        ).toBeInViewport();
-      } else {
-        await gallery.hover();
-        await page.mouse.wheel(0, -2500);
-        await expect.poll(() => gallery.evaluate((el) => el.scrollTop)).toBe(0);
-        await page.mouse.wheel(0, 650);
-        await expect
-          .poll(() => gallery.evaluate((el) => el.scrollTop))
-          .toBeGreaterThan(0);
-      }
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth,
-        ),
-      ).toBe(true);
+      await expect(lightbox.getByRole("img", { name: /^Eser fotoğrafı/ })).toHaveAttribute("alt", "Eser fotoğrafı 2");
+      await page.keyboard.press("ArrowLeft");
+      await expect(lightbox.getByRole("img", { name: /^Eser fotoğrafı/ })).toHaveAttribute("alt", "Eser fotoğrafı 3");
+      await page.keyboard.press("Escape");
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       if (model) {
-        await page
-          .getByRole("button", { name: "3D", exact: true })
-          .click();
+        // Both halves, including the selected half, toggle the whole switch.
+        await page.getByRole("button", { name: "Fotoğraf", exact: true }).click();
         await expect(page.locator(".model-viewer canvas")).toBeVisible();
-        const fits = await page
-          .locator(".media-scene")
-          .evaluate(
-            (el) =>
-              el.getBoundingClientRect().height <=
-              el.parentElement!.getBoundingClientRect().height + 1,
-          );
-        expect(fits).toBe(true);
-        await page
-          .getByRole("button", { name: "Fotoğraf", exact: true })
-          .click();
+        await page.getByRole("button", { name: "3D", exact: true }).click();
         await expect(figures).toHaveCount(3);
-        await expect(
-          page.getByRole("button", { name: "Fotoğraf", exact: true }),
-        ).toHaveCSS("background-color", "rgb(31, 43, 49)");
+        await expect(page.getByRole("button", { name: "Fotoğraf", exact: true })).toHaveAttribute("aria-pressed", "true");
       }
       await page.screenshot({
         path: `test-results/${info.project.name}-${browserName}-gallery-${model}.png`,
@@ -239,11 +136,13 @@ export function photoGalleryTests() {
     const gallery = page.getByRole("region", {
       name: "Eser fotoğraf galerisi",
     });
-    await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
-    await page.getByRole("button", { name: "Sonraki fotoğraf" }).click();
-    const credit = gallery.locator("figcaption").last();
+    await gallery.locator("figure:not(.ekle)").last().getByRole("button").click();
+    const lightbox = page.getByRole("dialog", { name: "Fotoğraf", exact: true });
+    const credit = lightbox.locator("p");
+    await expect(credit).toContainText("Uzun kaynak ve lisans açıklaması");
     await credit.scrollIntoViewIfNeeded();
-    await expect(credit).toBeInViewport({ ratio: 0.9 });
+    await expect(credit).toBeInViewport();
+    await page.keyboard.press("Escape");
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -258,7 +157,7 @@ export function photoGalleryTests() {
   }) => {
     await openGallery(page, true);
     await page.getByRole("button", { name: "Oku", exact: true }).click();
-    await page.getByRole("button", { name: "Fotoğraf", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Fotoğraf", exact: true })).toHaveAttribute("aria-pressed", "true");
     const gallery = page.getByRole("region", {
       name: "Eser fotoğraf galerisi",
     });

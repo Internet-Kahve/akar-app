@@ -94,7 +94,8 @@ function Stage({
         key={attempt}
         {...viewer}
         scene={scene}
-        detail={context === "detail"}
+        // The reading page's model is the site page's (prototype: both from `s3dKur`): its light, floor and framing.
+        detail={context === "detail" || context === "reading"}
         onProgress={onProgress}
         onSettled={setPhase}
       />

@@ -158,7 +158,7 @@ export function AboutModal({
   );
 }
 
-interface Shown {
+export interface Shown {
   src: string;
   alt: string;
   caption: string;
@@ -347,7 +347,8 @@ function Reading({
         : { bottom: window.innerHeight - rect.top + 8 }),
     });
   };
-  const meta = [site.year, site.patron ?? site.architect, site.kind].filter(Boolean).join(" · ");
+  // An unknown architect is stored as «—»; the line leaves out what is not known, as the prototype's does.
+  const meta = [site.year, site.patron ?? site.architect, site.kind].filter((x) => x && x !== "—").join(" · ");
   const paragraphs = (chapter: number) => [
     ...(scroller.current?.querySelectorAll<HTMLElement>(
       `[data-chapter="${chapter}"] :is(.about-p, .about-inscription-meaning)`,
@@ -487,7 +488,7 @@ function Reading({
             <img src={cover.src} alt={cover.alt} />
           </div>
         )}
-        <div className="about-cover-panel">
+        <div className={identity?.pattern ? "about-cover-panel desenli" : "about-cover-panel"}>
           {site.district && (
             <span className="about-district" lang={content}>
               {site.district}
@@ -498,9 +499,9 @@ function Reading({
           </h3>
           <span className="about-ornament" aria-hidden="true">
             <i />
-            <svg width="24" height="12" viewBox="0 0 24 12">
-              <path d="M0 6h7m10 0h7M12 1l4 5-4 5-4-5z" fill="none" stroke="currentColor" />
-              <circle cx="12" cy="6" r="1" fill="currentColor" />
+            <svg viewBox="0 0 28 12">
+              <path d="M14 1 18 6 14 11 10 6Z M2 6h7 M19 6h7" fill="none" stroke="currentColor" strokeWidth="1.4" />
+              <circle cx="14" cy="6" r="1.4" fill="currentColor" />
             </svg>
             <i />
           </span>

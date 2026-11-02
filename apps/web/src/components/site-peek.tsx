@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BookmarkPlus,
   BookOpen,
@@ -54,7 +54,20 @@ export function SitePeek({
 }) {
   const { t, text } = useI18n();
   const start = useRef<number | null>(null),
+    card = useRef<HTMLElement>(null),
     [offset, setOffset] = useState(0);
+  // The map's controls stand just above the card on a phone (prototype `--kart-h`): its height is measured.
+  useEffect(() => {
+    const el = card.current;
+    if (!el) return;
+    const root = document.documentElement.style;
+    const observer = new ResizeObserver(() => root.setProperty("--peek-h", `${el.offsetHeight}px`));
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.removeProperty("--peek-h");
+    };
+  }, []);
   const listenFirst = !finished && site.stories.length > 0;
   const route = (
     <button
@@ -68,6 +81,7 @@ export function SitePeek({
   );
   return (
     <article
+      ref={card}
       className="site-peek"
       style={offset ? { transform: `translateY(${offset}px)`, transition: "none" } : undefined}
       onPointerDown={(e) => {

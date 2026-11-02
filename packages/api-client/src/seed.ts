@@ -47,8 +47,9 @@ export const demoCities: Array<Omit<CityRecord, "siteCount">> = [
     },
     identity: {
       accent: "#22566E",
-      pattern: "desen-bursa-sekiz-yildiz.svg",
+      pattern: "desen-bursa-kesik-gecme.svg",
       patternColour: "#A4D8E0",
+      emblem: "amblem-bursa.svg",
     },
   },
   {
@@ -60,8 +61,10 @@ export const demoCities: Array<Omit<CityRecord, "siteCount">> = [
     scene: null,
     identity: {
       accent: "#3D8285",
-      pattern: "desen-konya-on-iki-gulbezek.svg",
+      pattern: "desen-konya-yildiz-gecme.svg",
       patternColour: "#E8DD7A",
+      emblem: "amblem-konya.svg",
+      emblemSmall: "amblem-konya-kalin.svg",
     },
   },
 ];

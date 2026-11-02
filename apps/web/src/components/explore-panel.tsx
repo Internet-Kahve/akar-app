@@ -137,6 +137,7 @@ export function toggleCategory(
 }
 
 function SiteRow({
+  routeIndex,
   site,
   live,
   selected,
@@ -145,6 +146,7 @@ function SiteRow({
   onRoute,
   onHover,
 }: {
+  routeIndex: number;
   site: HeritageSite;
   live: boolean;
   selected: boolean;
@@ -173,10 +175,11 @@ function SiteRow({
       </button>
       <button
         className="site-row-add"
+        aria-pressed={routeIndex > 0}
         aria-label={t("explore.addSite", { name: text(site.name, site.nameEn) })}
         onClick={onRoute}
       >
-        <Plus size={16} />
+        {routeIndex > 0 ? <span>★{routeIndex}</span> : <Plus size={16} />}
       </button>
     </li>
   );
@@ -340,6 +343,7 @@ export function ExplorePanel({
           <ul className="site-rows">
             {sites.map((site) => (
               <SiteRow
+                routeIndex={routeIds.indexOf(site.id) + 1}
                 key={site.id}
                 site={site}
                 live={live}

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ImageIcon,
@@ -16,13 +16,15 @@ import {
   ChevronRight,
   Expand,
   Shrink,
+  ImagePlus,
+  User,
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
 import { readPreference, writePreference } from "../lib/preferences";
 import { TrustTag } from "./side-sheet";
 import { NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
-import { useWide } from "./about-reading";
-import { useCityIdentity, useCityScene } from "./city-scenes";
+import { Lightbox, useWide, type Shown } from "./about-reading";
+import { Cities, useCityIdentity, useCityScene } from "./city-scenes";
 import { Localized, useI18n } from "./i18n";
 import { ModelStage } from "./model-stage";
 import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
@@ -79,149 +81,210 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
   );
 }
 
-/** Desktop scrolls down the gallery; mobile swipes across it without trapping page scrolling. */
+/** Where the switch's selected pill stood last: a switch drawn anew (photo ↔ model) slides it from there. */
+let lastMediaIndex = 0;
+
+/**
+ * «Fotoğraf | 3D» (prototype `.secici`), always in this order. The selected pill slides to the other side: the
+ * switch is drawn again for the other view, so it starts where the last one left it and moves on.
+ */
+function MediaSwitch({
+  value,
+  onPhoto,
+  onModel,
+  dark = false,
+}: {
+  value: "photo" | "model";
+  /** Absent when the site has no photograph: the switch then shows 3D alone. */
+  onPhoto?: () => void;
+  onModel: () => void;
+  dark?: boolean;
+}) {
+  const { t } = useI18n();
+  const box = useRef<HTMLDivElement>(null);
+  const index = value === "photo" || !onPhoto ? 0 : 1;
+  const [shown, setShown] = useState(lastMediaIndex);
+  const [pill, setPill] = useState<{ x: number; w: number } | null>(null);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setShown(index));
+    lastMediaIndex = index;
+    return () => cancelAnimationFrame(frame);
+  }, [index]);
+  useEffect(() => {
+    const button = box.current?.children[Math.min(shown, (box.current?.children.length ?? 1) - 1)] as HTMLElement | undefined;
+    if (button) setPill({ x: button.offsetLeft, w: button.offsetWidth });
+  }, [shown]);
+  const buttons = [
+    ...(onPhoto ? [{ key: "photo" as const, icon: <ImageIcon size={16} />, label: t("site.photo"), go: onPhoto }] : []),
+    { key: "model" as const, icon: <Box size={16} />, label: t("site.model3dShort"), go: onModel },
+  ];
+  return (
+    <div
+      ref={box}
+      className={`scene-media-switch kayan${dark ? " on-photo" : ""}`}
+      role="group"
+      onClick={() => value === "photo" ? onModel() : onPhoto?.()}
+      aria-label={t("site.viewSwitch")}
+      style={pill ? ({ "--pill-x": `${pill.x}px`, "--pill-w": `${pill.w}px` } as React.CSSProperties) : undefined}
+    >
+      {buttons.map((b) => (
+        <button
+          key={b.key}
+          className="btn secondary"
+          aria-pressed={value === b.key}
+        >
+          {b.icon}
+          {b.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The site's photographs (prototype `galeriHTML`): two rows across, every third photograph twice as tall; a tap
+ * opens it large. On a wide screen a tool row beside the switch counts them, names the inventory and pages across.
+ */
+/** A visitor's photograph in the site's gallery: its credit and, while it waits, «İnceleniyor». */
+export interface VisitorPhoto {
+  id: string;
+  src: string;
+  alt: string;
+  author: string;
+  /** `pending`: only its sender sees it, under review; `sample`: the team's example. */
+  state: "pending" | "approved" | "sample";
+}
+
 function PhotoGallery({
   site,
   photos,
+  visitors = [],
+  onAddPhoto,
   onModel,
 }: {
   site: HeritageSite;
   photos: SitePhoto[];
+  visitors?: VisitorPhoto[];
+  onAddPhoto?: () => void;
   onModel?: () => void;
 }) {
-  const { t, text, lang } = useI18n();
+  const { t, text } = useI18n();
+  const wide = useWide();
+  const inventory = useContext(Cities).find((c) => c.name === site.city)?.inventory?.name ?? "";
   const gallery = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
-  function goTo(index: number) {
-    const strip = gallery.current;
-    const item = strip?.children[index] as HTMLElement | undefined;
-    if (!strip || !item) return;
-    strip.scrollTo({
-      left: item.offsetLeft,
-      top: item.offsetTop,
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
+  const [edges, setEdges] = useState({ start: true, end: true });
+  const [open, setOpen] = useState<number | null>(null);
+  const measure = () => {
+    const g = gallery.current;
+    if (g) setEdges({ start: g.scrollLeft < 4, end: g.scrollLeft + g.clientWidth > g.scrollWidth - 4 });
+  };
+  useEffect(measure, [photos, wide]);
+  const page = (direction: number) =>
+    gallery.current?.scrollBy({
+      left: direction * gallery.current.clientWidth * 0.8,
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
-  }
+  const shown: Shown[] = [
+    ...photos.map((p) => ({
+      src: p.src,
+      alt: p.alt,
+      caption: [p.title ? text(p.title, p.titleEn) : "", site.sources?.find((s) => s.id === p.sourceId)?.title ?? "", p.description, p.license]
+        .filter(Boolean)
+        .join(" · "),
+    })),
+    ...visitors.map((v) => ({ src: v.src, alt: v.alt, caption: [t("memoryPage.visitorPhoto"), v.author].join(" · ") })),
+  ];
+  const stateTag = (v: VisitorPhoto) =>
+    v.state === "pending" ? t("memoryPage.reviewing") : v.state === "sample" ? t("site.example") : "";
   return (
-    <section
-      className="scene photo-scene"
-      aria-label={t("site.photosOf", { name: text(site.name, site.nameEn) })}
-    >
-      <div className="photo-gallery-toolbar">
-        {onModel && (
-          <div
-            className="scene-media-switch"
-            role="group"
-            aria-label={t("site.viewSwitch")}
-          >
-            <button
-              className="btn secondary"
-              aria-pressed={false}
-              onClick={onModel}
-            >
-              {t("site.model3dShort")}
-            </button>
-            <button className="btn secondary" aria-pressed={true}>
-              {t("site.photo")}
-            </button>
-          </div>
-        )}
-        {photos.length > 0 && (
-          <div
-            className="photo-gallery-navigation"
-            role="group"
-            aria-label={t("site.photoNav")}
-          >
-            <button
-              className="icon-btn"
-              aria-label={t("site.prevPhoto")}
-              disabled={active === 0}
-              onClick={() => goTo(active - 1)}
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <span role="status" aria-live="polite">
-              {t("site.photoCounter", { n: active + 1, total: photos.length })}
-            </span>
-            <button
-              className="icon-btn"
-              aria-label={t("site.nextPhoto")}
-              disabled={active === photos.length - 1}
-              onClick={() => goTo(active + 1)}
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
+    <section className="scene photo-scene galeri-sahne" aria-label={t("site.photosOf", { name: text(site.name, site.nameEn) })}>
+      <div className="galeri-arac">
+        {onModel && <MediaSwitch value="photo" onPhoto={() => {}} onModel={onModel} />}
+        {wide && photos.length > 0 && (
+          <>
+            <div className="arac-bilgi" aria-live="polite">
+              <b>{t("gal.count", { n: photos.length + visitors.length })}</b>
+              {visitors.length > 0 && <span>· {t("gal.fromVisitors", { n: visitors.length })}</span>}
+              {inventory && <span>· {inventory}</span>}
+            </div>
+            <div className="arac-oklar">
+              <button className="yuvarlak" aria-label={t("gal.prevPage")} disabled={edges.start} onClick={() => page(-1)}>
+                <ChevronLeft size={18} />
+              </button>
+              <button className="yuvarlak" aria-label={t("gal.nextPage")} disabled={edges.end} onClick={() => page(1)}>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </>
         )}
       </div>
       <div
-        className="photo-gallery"
+        className="galeri"
         ref={gallery}
         tabIndex={0}
         role="region"
         aria-label={t("site.galleryLabel")}
-        onScroll={() => {
-          const strip = gallery.current;
-          if (!strip) return;
-          const horizontal = strip.scrollWidth > strip.clientWidth + 1;
-          const position = horizontal ? strip.scrollLeft : strip.scrollTop;
-          let closest = 0;
-          let distance = Infinity;
-          Array.from(strip.children).forEach((child, index) => {
-            const item = child as HTMLElement;
-            const delta = Math.abs(
-              (horizontal ? item.offsetLeft : item.offsetTop) - position,
-            );
-            if (delta < distance) {
-              distance = delta;
-              closest = index;
-            }
-          });
-          setActive(closest);
-        }}
+        onScroll={measure}
       >
         {photos.length === 0 && (
           <p className="photo-gallery-empty" role="status">
             {t("site.noSectionPhoto")}
           </p>
         )}
-        {photos.map((photo, index) => {
-          const source = site.sources?.find(
-            (entry) => entry.id === photo.sourceId,
-          );
-          return (
-            <figure
-              key={photo.id}
-              className="photo-gallery-item"
-              aria-label={`${index + 1} / ${photos.length}`}
-            >
+        {photos.map((photo, index) => (
+          <figure key={photo.id} className={index % 3 === 0 ? "buyuk" : "kucuk"}>
+            <button className="galeri-f" aria-label={t("gal.enlarge", { alt: photo.alt })} onClick={() => setOpen(index)}>
               <img
                 className="scene-photo"
                 src={photo.src}
                 alt={photo.alt}
-                loading={index === 0 ? "eager" : "lazy"}
+                loading={index < 3 ? "eager" : "lazy"}
+                decoding="async"
+                onLoad={measure}
               />
-              <figcaption className="scene-photo-credit">
-                <strong>
-                  {photo.title ? (
-                    <Localized tr={photo.title} en={photo.titleEn} />
-                  ) : (
-                    <Localized tr={site.name} en={site.nameEn} />
-                  )}
-                </strong>
-                {photo.license && <span>{photo.license}</span>}
-                {source?.title && (
-                  <span lang={lang === "en" ? "tr" : undefined}>
-                    {source.title}
-                  </span>
-                )}
-              </figcaption>
-            </figure>
-          );
-        })}
+              <span className="buyut-ic" aria-hidden="true">
+                <Expand size={15} />
+              </span>
+            </button>
+            {index === 0 && (
+              <span className="galeri-guven">
+                <TrustTag
+                  trust={photo.trust}
+                  quote={photo.title || text(site.name, site.nameEn)}
+                  sources={shown[0]!.caption ? [{ title: shown[0]!.caption }] : []}
+                />
+              </span>
+            )}
+          </figure>
+        ))}
+        {visitors.map((v, k) => (
+          <figure key={v.id} className={`${(photos.length + k) % 3 === 0 ? "buyuk" : "kucuk"} ziyaretci`}>
+            <button className="galeri-f" aria-label={t("gal.enlarge", { alt: v.alt })} onClick={() => setOpen(photos.length + k)}>
+              <img src={v.src} alt={v.alt} loading="lazy" decoding="async" />
+              <span className="buyut-ic" aria-hidden="true">
+                <Expand size={15} />
+              </span>
+            </button>
+            <figcaption className="zf-kim">
+              <User size={13} />
+              <b>{v.author}</b>
+              {stateTag(v) && <span>{stateTag(v)}</span>}
+            </figcaption>
+          </figure>
+        ))}
+        {onAddPhoto && photos.length > 0 && (
+          <figure className="kucuk ekle">
+            <button className="galeri-ekle" onClick={onAddPhoto}>
+              <ImagePlus size={24} />
+              {t("gal.addPhoto")}
+              <small>{t("gal.addPhotoNote")}</small>
+            </button>
+          </figure>
+        )}
       </div>
+      {open !== null && (
+        <Lightbox photos={shown} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
+      )}
     </section>
   );
 }
@@ -273,11 +336,18 @@ export function Scene({
   interior,
   photoCard,
   highlights,
+  turn = true,
+  visitors = [],
+  onAddPhoto,
   onHotspot,
   onPick,
   context = "detail",
 }: {
   site: HeritageSite;
+  /** Visitors' photographs of the site (Yaşayan hafıza): the gallery shows them after the site's own. */
+  visitors?: VisitorPhoto[];
+  /** «Fotoğrafını ekle», the gallery's last tile: İz Bırak. */
+  onAddPhoto?: () => void;
   flow?: boolean;
   live?: boolean;
   photoId?: string;
@@ -289,6 +359,8 @@ export function Scene({
   photoCard?: boolean;
   /** Story sentence's highlighted parts; a sentence with none is about the whole building and the model turns. */
   highlights?: string[];
+  /** The slow turn of the whole building is for the story's first and last sentences only (Muhammed, 2 Nov). */
+  turn?: boolean;
   onHotspot: (id: string) => void;
   /** A site task waits for a tap on a model part (pick mode); the model is shown for it. */
   onPick?: (part: string) => void;
@@ -338,32 +410,15 @@ export function Scene({
     return context === "story" && photo ? (
       <>
         <StoryPhoto key={photo.id} photo={photo} />
-        {site.model && (
-          <div
-            className="scene-media-switch on-photo"
-            role="group"
-            aria-label={t("site.viewSwitch")}
-          >
-            <button className="btn secondary" aria-pressed={true}>
-              <ImageIcon size={18} />
-              {t("site.photo")}
-            </button>
-            <button
-              className="btn secondary"
-              aria-pressed={false}
-              onClick={() => setMode("model")}
-            >
-              <Box size={18} />
-              {t("site.model3dShort")}
-            </button>
-          </div>
-        )}
+        {site.model && <MediaSwitch value="photo" onPhoto={() => {}} onModel={() => setMode("model")} dark />}
       </>
     ) : (
       <PhotoGallery
         key={photoId || site.id}
         site={site}
         photos={photos}
+        visitors={visitors}
+        onAddPhoto={onAddPhoto}
         onModel={site.model ? () => setMode("model") : undefined}
       />
     );
@@ -373,30 +428,11 @@ export function Scene({
       <div
         className={`scene media-scene${context === "detail" ? " detail-scene" : ""}`}
       >
-        <div
-          className="scene-media-switch"
-          role="group"
-          aria-label={t("site.viewSwitch")}
-        >
-          {(photos.length > 0 || !!photoId) && (
-            <button
-              className="btn secondary"
-              aria-pressed={mode === "photo"}
-              onClick={() => setMode("photo")}
-            >
-              <ImageIcon size={18} />
-              {t("site.photo")}
-            </button>
-          )}
-          <button
-            className="btn secondary"
-            aria-pressed={mode === "model"}
-            onClick={() => setMode("model")}
-          >
-            <Box size={18} />
-            {t("site.model3dShort")}
-          </button>
-        </div>
+        <MediaSwitch
+          value={mode}
+          onPhoto={photos.length > 0 || !!photoId ? () => setMode("photo") : undefined}
+          onModel={() => setMode("model")}
+        />
         <>
           <ModelStage
             key={site.model.src}
@@ -414,7 +450,7 @@ export function Scene({
                 p.camera ? [{ id: p.id, src: p.src, alt: p.alt, title: text(p.title, p.titleEn), camera: p.camera }] : [],
               ),
             })}
-            tour={context === "story" && !onPick && !highlights?.length}
+            tour={context === "story" && !onPick && !highlights?.length && turn}
             frame={card && !cardPlace ? storyCardFrame(wide) : NO_FRAME}
             partCards={site.partCards}
             onPick={onPick}

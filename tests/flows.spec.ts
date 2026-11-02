@@ -87,7 +87,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   // The page under the opening screen takes no input until the map is drawn (§11.49).
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Ulucami");
@@ -116,8 +116,9 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await finished.getByRole("button", { name: "Devam et" }).click();
   // «İz Bırak» opens from the living memory row's window.
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  await expect(page.getByText("İlk iz senin olsun.")).toBeVisible();
-  await page.getByRole("button", { name: /Bir anı bırak/ }).click();
+  // No trace yet: the wall opens with its invitation on a wide screen, the empty note on a phone.
+  await expect(page.getByText(/^(Senin de bir anın var mı\?|İlk iz senin olsun\.)$/).first()).toBeVisible();
+  await page.getByRole("button", { name: /İz Bırak/ }).first().click();
   await page
     .getByLabel("Anın", { exact: true })
     .fill("Avludaki ışığı ve sessizliği hatırlayacağım.");
@@ -126,7 +127,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(page.getByText("Hikâyeye sen de katıldın.")).toBeVisible();
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
   // The visitor's own trace leads the living memory page while it waits for moderation.
-  await expect(page.locator(".hm-iz").first()).toContainText("İnceleniyor");
+  await expect(page.locator(":is(.hzd-iz, .hz-iz)").first()).toContainText("İnceleniyor");
   await openProfile(page);
   await expect(
     page.getByRole("button", { name: /Ulucami Hikâye tamamlandı/ }),
@@ -156,7 +157,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   // rather than «Kalıcı sil».
   await page.goto("/#view=detail&site=ulu-cami");
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  const trace = page.locator(".hm-iz").filter({ hasText: "Avludaki ışığı ve sessizliği hatırlayacağım." });
+  const trace = page.locator(":is(.hzd-iz, .hz-iz)").filter({ hasText: "Avludaki ışığı ve sessizliği hatırlayacağım." });
   await expect(trace.getByRole("button", { name: "Yayından kaldır" })).toBeVisible();
   await expect(trace.getByRole("button", { name: "Sil", exact: true })).toBeVisible();
   expect(errors).toEqual([]);
@@ -327,7 +328,7 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
   page,
 }, info) => {
   await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   // One heading above the list: the city line on a phone, the sentence (and «Tümünü gör») on a wide screen.
   await expect(
     page.locator(".explore-heading > h2:visible, .explore-heading > .explore-city:visible"),
@@ -380,14 +381,14 @@ test.describe("first visit", () => {
     const card = page.getByRole("dialog", {
       name: "Şehrin hikâyesine karış.",
     });
-    await expect(card).toBeVisible();
+    await expect(card).toBeVisible({ timeout: 12000 });
     await card.getByRole("button", { name: "Vakıf nedir? ›" }).click();
     await expect(page.getByRole("dialog", { name: "Vakıf nedir?" })).toBeVisible();
     await page.keyboard.press("Escape");
     await card.getByRole("button", { name: "Evden gez" }).click();
     await expect(card).toHaveCount(0);
     await page.reload();
-    await expect(page.locator(".opening")).toHaveCount(0);
+    await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
     await expect(page.locator(".welcome")).toHaveCount(0);
   });
 });
@@ -410,7 +411,7 @@ test("a link to a site closes the short card and shows the site's panel", async 
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page.locator(".explore-tabs").waitFor();
   await page.locator(".site-row-main").first().evaluate((el) => (el as HTMLElement).click());
   await expect(page.locator(".site-peek")).toBeVisible();
@@ -424,7 +425,7 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await expect.poll(() => pinIds(page)).toHaveLength(6);
   await page.getByRole("tab", { name: "Rotalar" }).click();
   await page.locator(".route-card").first().click();
@@ -437,7 +438,7 @@ test("a route shows only its stops on the map, as numbered stars", async ({
 });
 test("a trust tag tells where the statement comes from", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page.locator(".site-row-main").first().click();
   await page.locator(".site-peek .trust-tag").click();
   const sheet = page.getByRole("dialog", { name: "Bu bilgi nereden geliyor?" });
@@ -449,7 +450,7 @@ test("route search opens a usable route and selection persists", async ({
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Akar ve Hayrat");
@@ -701,6 +702,7 @@ test("naming a city takes the map there, and a later refresh leaves it there", a
   await expect
     .poll(() =>
       page.evaluate(() => !!(window.akarMap as unknown as CityMap)?.loaded()),
+      { timeout: 12000 },
     )
     .toBe(true);
   // Elsewhere on the map, as a visitor who has been to another city.

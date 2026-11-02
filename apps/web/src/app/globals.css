@@ -1594,8 +1594,7 @@ input[type="checkbox"] {
 .card > h3:last-child {
   margin-bottom: 0;
 }
-.profile-page,
-.history-page {
+.profile-page {
   padding: 40px 48px;
   max-width: 1500px;
   margin: auto;
@@ -1865,56 +1864,6 @@ td small {
 .memory-public strong {
   font-size: 12px;
 }
-.history-page > .row {
-  margin: 15px 0 20px;
-}
-.history-page h1 {
-  margin: 10px 0;
-}
-.history-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 2.5fr) minmax(240px, 1fr);
-  gap: 24px;
-}
-.history-grid > aside {
-  display: flex;
-  flex-direction: column;
-}
-.history-grid > aside > svg {
-  color: var(--primary);
-  margin-bottom: 20px;
-}
-.history-grid > aside p {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.history-grid > aside > .btn {
-  margin-top: auto;
-}
-.timeline {
-  display: flex;
-  gap: 12px;
-  margin-top: 22px;
-}
-.timeline button {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 9px;
-  padding: 17px 22px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text-muted);
-}
-.timeline button.active {
-  border: 2px solid var(--primary);
-  background: var(--primary-light);
-  color: var(--primary);
-}
-.timeline small {
-  font-size: 9px;
-}
 [data-text-size="large"] .description,
 [data-text-size="large"] .story-text,
 [data-text-size="large"] .modal p {
@@ -1976,8 +1925,7 @@ td small {
   .courtyard-spot {
     left: 10%;
   }
-  .profile-page,
-  .history-page {
+  .profile-page {
     padding: 32px;
   }
   .profile-grid {
@@ -1993,12 +1941,6 @@ td small {
   }
   .moderation-card {
     flex-wrap: wrap;
-  }
-  .history-grid {
-    grid-template-columns: 1fr;
-  }
-  .history-grid > aside {
-    display: block;
   }
 }
 @media (max-width: 850px) {
@@ -2071,7 +2013,6 @@ td small {
     flex-direction: column;
   }
   .profile-page,
-  .history-page,
   .admin-page {
     padding-bottom: 90px;
   }
@@ -2266,8 +2207,7 @@ td small {
   .quiz-option {
     font-size: 12px;
   }
-  .profile-page,
-  .history-page {
+  .profile-page {
     padding: 28px 20px 90px;
   }
   .profile-grid > aside {
@@ -2326,23 +2266,6 @@ td small {
   }
   .form-grid {
     grid-template-columns: 1fr;
-  }
-  .history-page > .row {
-    align-items: flex-start;
-  }
-  .history-page > .row > .tag {
-    font-size: 8px;
-    margin-top: 25px;
-  }
-  .timeline {
-    gap: 7px;
-  }
-  .timeline button {
-    padding: 12px 8px;
-    flex: 1;
-  }
-  .timeline small {
-    font-size: 7px;
   }
   .flow {
     gap: 8px;
@@ -3596,195 +3519,7 @@ td small {
   background: var(--green, #2e573e);
   color: white;
 }
-.archive-photo {
-  margin: 0;
-  background: #e8e5de;
-  border-radius: 16px;
-  overflow: hidden;
-}
-.archive-photo img {
-  width: 100%;
-  height: min(65vh, 620px);
-  object-fit: contain;
-  display: block;
-}
-.archive-photo figcaption {
-  padding: 12px 16px;
-}
-.archive-credit {
-  overflow-wrap: anywhere;
-}
-.archive-timeline {
-  overflow-x: auto;
-  padding-bottom: 12px;
-}
-.archive-timeline button {
-  flex: 0 0 150px;
-  min-width: 150px;
-}
-.archive-timeline img {
-  width: 120px;
-  height: 80px;
-  object-fit: contain;
-}
-.archive-timeline small {
-  white-space: normal;
-}
-.history-stage {
-  min-width: 0;
-}
 /* Old and present-day photograph on top of each other; both fitted whole (never cropped), the old one cut at the handle. */
-.history-compare {
-  position: relative;
-  height: min(65vh, 620px);
-  overflow: hidden;
-  cursor: ew-resize;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.archive-photo .history-compare-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-  -webkit-user-drag: none;
-}
-.archive-photo .history-compare-old {
-  clip-path: inset(0 calc(100% - var(--split, 50%)) 0 0);
-  background: #e8e5de;
-}
-.history-compare-label {
-  position: absolute;
-  top: 12px;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: calc(50% - 24px);
-  padding: 5px 10px;
-  border-radius: var(--radius-pill);
-  background: rgba(20, 27, 43, 0.62);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-  pointer-events: none;
-}
-.history-compare-label > span:first-child {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.history-compare-label.old {
-  left: 12px;
-}
-.history-compare-label.today {
-  right: 12px;
-}
-.history-compare-handle {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--split, 50%);
-  z-index: 2;
-  width: 2px;
-  margin-left: -1px;
-  background: #fff;
-  outline: none;
-}
-.history-compare-handle span {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: var(--shadow);
-  transform: translate(-50%, -50%);
-}
-.history-compare-handle:focus-visible span {
-  outline: 3px solid var(--primary);
-  outline-offset: 2px;
-}
-.history-near {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--text-muted);
-}
-.history-pair-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-left: 6px;
-  border-radius: 50%;
-  background: var(--gold);
-  vertical-align: middle;
-}
-.archive-credit-today {
-  display: grid;
-  gap: 2px;
-  margin: 0 0 12px;
-  overflow-wrap: anywhere;
-}
-.archive-credit-today small {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-}
-.sample-traces {
-  margin-top: 32px;
-}
-.sample-traces > p {
-  margin-bottom: 16px;
-  font-size: 12px;
-}
-.sample-trace-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-.sample-trace {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-}
-.sample-trace img {
-  width: 100%;
-  max-height: 260px;
-  object-fit: contain;
-  border-radius: 12px;
-  background: #e8e5de;
-}
-.sample-trace-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.sample-trace p {
-  margin: 0;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-.sample-trace-credit {
-  overflow-wrap: anywhere;
-}
-.sample-trace > .btn {
-  align-self: flex-start;
-  margin-top: auto;
-}
 
 .model-canvas {
   position: absolute;

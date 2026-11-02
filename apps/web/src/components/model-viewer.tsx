@@ -17,7 +17,7 @@ import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
 import { liftGroundLayers } from "../lib/ground-layers";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
-import { addSceneLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
+import { addModelLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
 import { currentTheme, subscribeTheme } from "../lib/theme";
 import {
   fitHalfAngle,
@@ -47,9 +47,9 @@ const TAP_SLOP = 6;
 const TAP_MS = 600;
 
 /** How long each tappable part lights up when the visitor asks to see them. */
-const PART_PULSE_MS = 700;
-/** How long «show the parts» stays lit after a tap. */
-const PARTS_PRESSED_MS = 650;
+const PART_PULSE_MS = 900;
+/** Overlap keeps a full pass under 3.5 seconds, even on models with many cards. */
+const PART_STAGGER_MS = 250;
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
  * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
@@ -120,6 +120,9 @@ export default function ModelViewer({
   const lift = useRef<((open: boolean, raise: boolean) => void) | null>(null);
   const [showingParts, setShowingParts] = useState(false);
   const select = useRef<((parts: string[]) => void) | null>(null);
+  const pulse = useRef<((levels: Map<string, number>) => void) | null>(null);
+  const pulseFrame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(pulseFrame.current), [model.src]);
   const spin = useRef<((on: boolean) => void) | null>(null);
   const reframe = useRef<(() => void) | null>(null);
   /** The pose the running tour started from; empty once it stopped. */
@@ -199,7 +202,7 @@ export default function ModelViewer({
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      if (detail) {
+      {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = DETAIL_LIGHT[currentTheme()].exposure;
         renderer.shadowMap.enabled = true;
@@ -211,14 +214,30 @@ export default function ModelViewer({
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(detail ? 38 : 40, 1, 0.01, 10000);
-      if (!detail) addSceneLights(scene, JSON.parse(lightKey));
       controls = new OrbitControls(camera, renderer.domElement);
-      controls.enablePan = false;
+      // As the prototype's viewer: left drag turns, right drag (two fingers) moves, the wheel (pinch) zooms; turning
+      // eases out after the hand lets go.
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.09;
       controls.maxPolarAngle = Math.PI * 0.49;
       const render = () => {
         if (!disposed) renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
+      // Damped turning goes on after the hand lets go: the controls are stepped each frame until they come to rest.
+      // At most two seconds: by then 0.91¹²⁰ of the motion is left, far below a pixel, though the controls still
+      // report a change on a large model.
+      let dampFrame = 0,
+        dampLeft = 0;
+      const damp = () => {
+        dampFrame = !disposed && dampLeft-- > 0 && controls!.update() ? requestAnimationFrame(damp) : 0;
+      };
+      controls.addEventListener("start", () => cancelAnimationFrame(dampFrame));
+      controls.addEventListener("end", () => {
+        cancelAnimationFrame(dampFrame);
+        dampLeft = 120;
+        dampFrame = requestAnimationFrame(damp);
+      });
       // Only a gesture ends a control: a camera moved by code (a sentence's pose) reports nothing.
       controls.addEventListener("end", () => {
         const pose = readPose.current?.();
@@ -315,7 +334,7 @@ export default function ModelViewer({
           object.rotation.y = -THREE.MathUtils.degToRad(heading);
           object.updateMatrixWorld(true);
           const box = new THREE.Box3();
-          if (detail) {
+          {
             object.traverse(item => {
               if (!(item instanceof THREE.Mesh)) return;
               item.castShadow = item.receiveShadow = true;
@@ -333,22 +352,9 @@ export default function ModelViewer({
           const size = box.getSize(new THREE.Vector3());
           if (detail) center.y = box.min.y + size.y * 0.25;
           object.position.sub(center);
-          if (detail) {
+          {
             const R = size.length() / 2 * 1.3;
-            const lit = DETAIL_LIGHT[currentTheme()];
-            scene.add(new THREE.HemisphereLight(lit.sky, lit.ground, lit.ambient));
-            const sun = new THREE.DirectionalLight(lit.colour, lit.sun);
-            const az = THREE.MathUtils.degToRad((model.placement?.frontDeg ?? 180) + 40);
-            const el = THREE.MathUtils.degToRad(50);
-            const target = new THREE.Vector3(0, size.y * 0.25, 0);
-            sun.position.set(Math.sin(az)*Math.cos(el), Math.sin(el), -Math.cos(az)*Math.cos(el)).multiplyScalar(R*2.5).add(target);
-            sun.target.position.copy(target);
-            sun.castShadow = true;
-            sun.shadow.mapSize.set(2048,2048);
-            sun.shadow.bias = -0.0004;
-            sun.shadow.normalBias = R / 2048;
-            Object.assign(sun.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R*0.5, far:R*5 });
-            scene.add(sun, sun.target);
+            addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
             // A theme switch relights the open model in place, without reloading it.
             unfollowTheme = subscribeTheme((theme) => {
               setSceneLights(scene, DETAIL_LIGHT[theme]);
@@ -490,10 +496,11 @@ export default function ModelViewer({
           const baseEmissive = new WeakMap<THREE.Material, THREE.Color>();
           let hovered: string[] = [];
           let selected: string[] = [];
+          let pulses = new Map<string, number>();
           // Applied to the meshes' current materials: "İçini göster" swaps in its own copies later.
           const glow = () => {
             for (const [part, meshes] of meshesOf) {
-              const level = selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0;
+              const level = Math.max(pulses.get(part) ?? 0, selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0);
               for (const mesh of meshes)
                 for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
                   if (!(m instanceof THREE.MeshStandardMaterial)) continue;
@@ -597,6 +604,7 @@ export default function ModelViewer({
             canvas.removeEventListener("pointermove", onMove);
             canvas.removeEventListener("pointerleave", onLeave);
           };
+          pulse.current = (levels) => { pulses = levels; glow(); };
           select.current = (parts) => {
             selected = parts;
             glow();
@@ -745,6 +753,8 @@ export default function ModelViewer({
       setViewIndex(null);
       lift.current = null;
       select.current = null;
+      pulse.current = null;
+      cancelAnimationFrame(pulseFrame.current);
       spin.current = null;
       reframe.current = null;
       setInside(null);
@@ -840,18 +850,25 @@ export default function ModelViewer({
           title={t("site.showParts")}
           aria-pressed={showingParts}
           onClick={() => {
+            cancelAnimationFrame(pulseFrame.current);
             setShowingParts(true);
-            setTimeout(() => setShowingParts(false), PARTS_PRESSED_MS);
-            partCards.forEach((card, i) =>
-              setTimeout(
-                () => select.current?.(card.parts),
-                i * PART_PULSE_MS,
-              ),
-            );
-            setTimeout(
-              () => select.current?.(highlightRef.current ?? []),
-              partCards.length * PART_PULSE_MS,
-            );
+            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const stagger = Math.min(PART_STAGGER_MS, 2600 / Math.max(1, partCards.length - 1));
+            const duration = reduced ? 1000 : PART_PULSE_MS + (partCards.length - 1) * stagger;
+            const start = performance.now();
+            const animate = (now: number) => {
+              const elapsed = now - start;
+              const levels = new Map<string, number>();
+              partCards.forEach((card, index) => {
+                const progress = (elapsed - index * stagger) / PART_PULSE_MS;
+                const level = reduced ? PICK_GLOW : progress > 0 && progress < 1 ? PICK_GLOW * Math.sin(Math.PI * progress) : 0;
+                for (const part of card.parts) levels.set(part, Math.max(levels.get(part) ?? 0, level));
+              });
+              pulse.current?.(elapsed < duration ? levels : new Map());
+              if (elapsed < duration) pulseFrame.current = requestAnimationFrame(animate);
+              else setShowingParts(false);
+            };
+            pulseFrame.current = requestAnimationFrame(animate);
           }}
         >
           <MousePointerClick size={18} />

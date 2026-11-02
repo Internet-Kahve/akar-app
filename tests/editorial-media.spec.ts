@@ -169,19 +169,13 @@ test("model survives its loading state, photo switch and uncropped archive retai
   ).toBeVisible();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: /^Geçmişi Gör/ }).click();
-  await expect(page.locator(".archive-photo img")).toBeVisible();
-  await expect(page.locator(".archive-photo img")).toHaveCSS(
-    "object-fit",
-    "contain",
-  );
-  await expect(page.locator(".archive-credit")).toHaveText(photo.description);
-  await expect(page.getByText("CC BY-NC-ND", { exact: true })).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Arşiv kaydını aç" }),
-  ).toHaveAttribute("href", "https://archive.example/item");
-  await page.locator(".archive-timeline button").nth(1).focus();
+  await expect(page.locator(".gg-foto .ana")).toBeVisible();
+  await expect(page.locator(".gg-foto .ana")).toHaveCSS("object-fit", "contain");
+  // As the prototype's card: the credit line word for word, then the licence in a word or two.
+  await expect(page.locator(".gg-kaynak")).toHaveText(`${photo.description} · CC BY-NC-ND`);
+  await page.locator(".gg-serit button").nth(1).focus();
   await page.keyboard.press("Enter");
-  await expect(page.locator(".history-date")).toContainText("1930");
+  await expect(page.locator(".gg-meta")).toContainText("1930");
   const decoder = await request.get("/draco/draco_decoder.wasm");
   expect(decoder.ok()).toBe(true);
   expect((await decoder.body()).subarray(0, 4).toString("hex")).toBe(

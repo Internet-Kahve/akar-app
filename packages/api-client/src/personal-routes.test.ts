@@ -1,0 +1,30 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import type { PersonalRoute } from "@akar/domain";
+import { localRoutes } from "./personal-routes";
+
+test("named device routes preserve legacy order and survive recreation without sharing arrays", async () => {
+  let stored: PersonalRoute[] = [], ids = ["a", "b"];
+  const make = () => localRoutes(() => stored, () => ids, (routes, legacy) => { stored = routes; ids = legacy; }, () => ["a", "b", "c"]);
+  const client = make();
+  const first = await client.getPersonalRoutes();
+  assert.deepEqual(first[0]!.siteIds, ["a", "b"]);
+  const other = await client.createPersonalRoute("  Weekend  ");
+  await client.setPersonalRouteStops(other.id, ["c", "a"]);
+  await client.renamePersonalRoute(other.id, "Walk");
+  assert.deepEqual(ids, ["a", "b"]);
+  assert.equal((await make().getPersonalRoutes())[1]!.name, "Walk");
+  first[0]!.siteIds.push("c");
+  assert.deepEqual(ids, ["a", "b"]);
+  await client.setPersonalRouteStops("default", ["b", "a"]);
+  assert.deepEqual(ids, ["b", "a"]);
+  ids = ["c"];
+  assert.deepEqual((await client.getPersonalRoutes())[0]!.siteIds, ["c"]);
+  await assert.rejects(client.setPersonalRouteStops(other.id, ["a", "a"]));
+  await assert.rejects(client.setPersonalRouteStops(other.id, ["hidden"]));
+  await assert.rejects(client.renamePersonalRoute(other.id, " "));
+  await assert.rejects(client.setPersonalRouteStops("missing", []));
+  await client.deletePersonalRoute("default");
+  assert.deepEqual(ids, []);
+  assert.deepEqual((await client.getPersonalRoutes())[1]!.siteIds, ["c", "a"]);
+});

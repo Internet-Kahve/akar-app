@@ -1,3 +1,5 @@
+import { RouteNameBody, PersonalRoute, PersonalRoutes, DeletedRoute } from "./schemas.ts";
+import { personalRoutes, createPersonalRoute, updatePersonalRoute } from "./service.ts";
 import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { requireUser } from "../../platform/auth.ts";
@@ -137,6 +139,22 @@ export const engagementRoutes: FastifyPluginAsyncZod = async (app) => {
       return mutate(req, userId, (tx) => setMyRoute(tx, userId, req.body.siteIds));
     },
   );
+
+  app.get("/v1/me/routes", {
+    preHandler: requireUser, schema: { tags: ["me"], response: { 200: PersonalRoutes } },
+  }, async (req) => personalRoutes(app.deps.db, req.user!.id));
+  app.post("/v1/me/routes", {
+    preHandler: requireUser, schema: { tags: ["me"], body: RouteNameBody, response: { 200: PersonalRoute } },
+  }, async (req) => mutate(req, req.user!.id, (tx) => createPersonalRoute(tx, req.user!.id, req.body.name)));
+  app.patch("/v1/me/routes/:id", {
+    preHandler: requireUser, schema: { tags: ["me"], params: IdParams, body: RouteNameBody, response: { 200: PersonalRoute } },
+  }, async (req) => mutate(req, req.user!.id, (tx) => updatePersonalRoute(tx, req.user!.id, req.params.id, req.body)));
+  app.put("/v1/me/routes/:id/stops", {
+    preHandler: requireUser, schema: { tags: ["me"], params: IdParams, body: MyRouteBody, response: { 200: PersonalRoute } },
+  }, async (req) => mutate(req, req.user!.id, (tx) => updatePersonalRoute(tx, req.user!.id, req.params.id, req.body)));
+  app.delete("/v1/me/routes/:id", {
+    preHandler: requireUser, schema: { tags: ["me"], params: IdParams, response: { 200: DeletedRoute } },
+  }, async (req) => mutate(req, req.user!.id, (tx) => updatePersonalRoute(tx, req.user!.id, req.params.id, { remove: true })));
 
   // ── story progress ─────────────────────────────────────────────────────────
 

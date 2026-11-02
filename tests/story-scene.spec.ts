@@ -70,6 +70,8 @@ async function openStory(page: Page, modelServed?: Promise<void>) {
     }),
     sentence(3, { showCard: true }),
     sentence(4, { highlights: ["Roof"] }),
+    // The last sentence, about the whole building: the story ends turning the model, as it began.
+    sentence(5, {}),
   ];
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -97,18 +99,20 @@ const next = (page: Page) =>
   page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
 const tour = (page: Page) => page.locator(".model-canvas");
 
-test("a sentence about the whole building turns the model, a highlighted one holds it, a touch stops it", async ({
+test("the model turns on the story's first and last sentences about the whole building, holds in between, and a touch stops it", async ({
   page,
 }) => {
   const errors = await openStory(page);
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
+  // A sentence in the middle holds the model, highlighted or not (Muhammed, 2 Nov).
   await next(page);
   await expect(page.locator(".current .story-text")).toContainText("Cümle 1");
-  await expect(tour(page)).toHaveAttribute("data-tour", "on");
+  await expect(tour(page)).toHaveAttribute("data-tour", "off");
   await next(page);
   await expect(page.locator(".current .story-text")).toContainText("Cümle 2");
   await expect(tour(page)).toHaveAttribute("data-tour", "off");
-  await next(page);
+  for (let i = 0; i < 3; i++) await next(page);
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 5");
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
   // Pressing the model stops the turn where the visitor took over.
   const canvas = page.locator(".model-canvas canvas");
