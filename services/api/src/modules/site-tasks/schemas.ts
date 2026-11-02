@@ -11,6 +11,8 @@ export const AnswerResponse = z.object({
   correct: z.boolean(),
   correctText: z.string().nullable().describe("Doğru cevap metni; yalnız doğru cevapta, yoksa null"),
   wrongText: z.string().nullable().describe("Yanlış cevap metni; yalnız yanlış cevapta, yoksa null. Yanlış cevabın cezası yoktur, tekrar denenebilir"),
+  correctTextEn: z.string().nullable().describe("correctText'in İngilizcesi; aynı koşulla, İngilizcesi yoksa null"),
+  wrongTextEn: z.string().nullable().describe("wrongText'in İngilizcesi; aynı koşulla, İngilizcesi yoksa null"),
   earnedBadges: z.array(SiteBadgeDto).describe("Bu istekle yeni kazanılan rozetler; misafirde ve tekrarda boş"),
 });
 
@@ -26,6 +28,7 @@ export const CompleteBody = z.discriminatedUnion("mode", [
 
 export const CompleteResponse = z.object({
   doneText: z.string().describe("Görev tamamlanınca gösterilen metin"),
+  doneTextEn: z.string().nullable().describe("doneText'in İngilizcesi; yoksa null"),
   onSite: z.boolean().describe("Yerinde (GPS ile) mi tamamlandı"),
   earnedBadges: z.array(SiteBadgeDto).describe("Bu istekle yeni kazanılan rozetler; misafirde ve tekrarda boş"),
 });

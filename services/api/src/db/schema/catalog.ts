@@ -18,6 +18,7 @@ import {
   unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import type { TranslationStatus } from "./narrations.ts";
 import { media } from "./media.ts";
 import {
   point4326,
@@ -330,6 +331,8 @@ export type AboutReading = {
   /** Model parts lit while the chapter is read; empty = the whole building. */
   focusParts: string[];
 };
+/** The English texts of a chapter's `reading` (§11.64); camera, interior and parts stay in `reading`. */
+export type AboutReadingEn = Pick<AboutReading, "summary" | "figures" | "quotes" | "timeline" | "terms">;
 
 /** "Eser hakkında" chapter: one heading of the inventory text; its paragraphs are `site_sections` with this `chapter_id`. */
 export const siteAboutChapters = pgTable(
@@ -343,8 +346,12 @@ export const siteAboutChapters = pgTable(
     title: text("title").notNull(),
     kind: sectionKindEnum("kind").notNull(),
     reading: jsonb("reading").$type<AboutReading>().notNull(),
+    /** English title and reading texts (§11.64): null until written; `en_status` tracks who wrote them, as on part cards. */
+    titleEn: text("title_en"),
+    readingEn: jsonb("reading_en").$type<AboutReadingEn>(),
+    enStatus: text("en_status").$type<TranslationStatus>(),
   },
-  (t) => [unique("site_about_chapters_order_uq").on(t.siteId, t.position)],
+  (t) => [unique("site_about_chapters_order_uq").on(t.siteId, t.position), check("site_about_chapters_en_status_check", sql`${t.enStatus} in ('machine', 'reviewed')`)],
 ).enableRLS();
 
 /** "Eser hakkında" paragraphs: Tarihçe / Mimari / Vakıf ve akar, each with trust + source. */
@@ -362,10 +369,17 @@ export const siteSections = pgTable(
     title: text("title").notNull(),
     body: text("body").notNull(),
     bodyEn: text("body_en"),
+    titleEn: text("title_en"),
+    /** Who wrote `title_en` / `body_en` (§11.64): `machine` = translation, not yet saved by an editor; null = no English. */
+    enStatus: text("en_status").$type<TranslationStatus>(),
     trust: trustEnum("trust").notNull(),
     sourceId: text("source_id").references(() => sources.id),
   },
-  (t) => [primaryKey({ columns: [t.siteId, t.id] }), unique("site_sections_order_uq").on(t.siteId, t.position)],
+  (t) => [
+    primaryKey({ columns: [t.siteId, t.id] }),
+    unique("site_sections_order_uq").on(t.siteId, t.position),
+    check("site_sections_en_status_check", sql`${t.enStatus} in ('machine', 'reviewed')`),
+  ],
 );
 
 /** Book photographs shown after a paragraph, in order. They are not gallery photos (`site_media`). */
@@ -470,6 +484,7 @@ export const historyImages = pgTable(
     presentMediaId: text("present_media_id").references(() => media.id),
     caption: text("caption").notNull().default(""),
     captionEn: text("caption_en"),
+    enStatus: text("en_status").$type<TranslationStatus>(),
     /** Free-text date as given by the source, e.g. "1890'lar". */
     dateLabel: text("date_label").notNull().default(""),
     sourceId: text("source_id").references(() => sources.id),
@@ -485,6 +500,7 @@ export const historyImages = pgTable(
     unique("history_images_order_uq").on(t.siteId, t.position),
     check("history_images_present_angle_check", sql`${t.presentAngleMatch} in ('same', 'near')`),
     check("history_images_present_match_needs_photo", sql`${t.presentAngleMatch} is null or ${t.presentMediaId} is not null`),
+    check("history_images_en_status_check", sql`${t.enStatus} in ('machine', 'reviewed')`),
   ],
 );
 
@@ -572,6 +588,10 @@ export type FieldTaskDetails = {
   fromHome: { text: string; part: string } | null;
   doneText: string;
 };
+/** The English texts of a quiz task's `details` (§11.64). */
+export type QuizTaskTextsEn = Pick<QuizTaskDetails, "options" | "hints" | "correctText" | "wrongText">;
+/** The English texts of a field task's `details` (§11.64). */
+export type FieldTaskTextsEn = { onSite: { text: string }; fromHome: { text: string } | null; doneText: string };
 
 /**
  * Site task: a question or a field task shown on the site page. No points, no timer, no penalty. Texts the player
@@ -596,11 +616,17 @@ export const siteTasks = pgTable(
     source: text("source"),
     trust: trustEnum("trust").notNull(),
     details: jsonb("details").$type<QuizTaskDetails | FieldTaskDetails>().notNull(),
+    /** English texts (§11.64); `details_en` holds only the texts of `details`, in the same shape. */
+    titleEn: text("title_en"),
+    promptEn: text("prompt_en"),
+    detailsEn: jsonb("details_en").$type<QuizTaskTextsEn | FieldTaskTextsEn>(),
+    enStatus: text("en_status").$type<TranslationStatus>(),
   },
   (t) => [
     unique("site_tasks_order_uq").on(t.siteId, t.position),
     check("site_tasks_kind_check", sql`${t.kind} in ('quiz', 'field')`),
     index("site_tasks_media_idx").on(t.mediaId),
+    check("site_tasks_en_status_check", sql`${t.enStatus} in ('machine', 'reviewed')`),
   ],
 ).enableRLS();
 
@@ -633,11 +659,15 @@ export const siteBadges = pgTable(
     taskId: text("task_id").references(() => siteTasks.id, { onDelete: "cascade" }),
     /** The badge carries the "Yerinde" tag when earned the GPS way. */
     onSiteLabel: boolean("on_site_label").notNull().default(false),
+    titleEn: text("title_en"),
+    textEn: text("text_en"),
+    enStatus: text("en_status").$type<TranslationStatus>(),
   },
   (t) => [
     unique("site_badges_order_uq").on(t.siteId, t.position),
     check("site_badges_condition_check", sql`${t.condition} in ('story', 'task')`),
     check("site_badges_task_check", sql`(${t.condition} = 'task') = (${t.taskId} is not null)`),
     index("site_badges_task_idx").on(t.taskId),
+    check("site_badges_en_status_check", sql`${t.enStatus} in ('machine', 'reviewed')`),
   ],
 ).enableRLS();

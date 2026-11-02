@@ -595,8 +595,10 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       id: x.id,
       kind: x.kind,
       title: x.title,
+      titleEn: x.titleEn,
       body: x.body,
       bodyEn: x.bodyEn,
+      enStatus: x.enStatus,
       trust: x.trust,
       sourceId: x.sourceId,
       chapterId: x.chapterId,
@@ -620,6 +622,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       presentMediaId: h.presentMediaId,
       caption: h.caption,
       captionEn: h.captionEn,
+      enStatus: h.enStatus,
       dateLabel: h.dateLabel,
       sourceId: h.sourceId,
       trust: h.trust,
@@ -1459,23 +1462,32 @@ export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsIn
       const chapterOfTitle = new Map<string, string>();
       for (const c of chapters) if (!chapterOfTitle.has(c.title)) chapterOfTitle.set(c.title, c.id);
       const chapterOfSection = new Map(before.sections.map((x) => [x.id, x.chapterId]));
+      const oldSection = new Map(before.sections.map((x) => [x.id, x]));
       const photos = await tx.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, id));
 
       await tx.delete(siteSections).where(eq(siteSections.siteId, id));
       if (rows.length) {
         await tx.insert(siteSections).values(
-          rows.map((r, position) => ({
-            siteId: id,
-            id: r.id,
-            position,
-            chapterId: chapterOfSection.has(r.id) ? chapterOfSection.get(r.id)! : (chapterOfTitle.get(r.title) ?? null),
-            kind: r.kind,
-            title: r.title,
-            body: r.body,
-            bodyEn: r.bodyEn || null,
-            trust: r.trust,
-            sourceId: r.sourceId,
-          })),
+          rows.map((r, position) => {
+            // The panel edits only the body's English; the title's stays. One status for both (§11.64).
+            const old = oldSection.get(r.id);
+            const bodyEn = englishState(r.bodyEn || null, old && { value: old.bodyEn, status: old.enStatus });
+            const titleEn = old?.titleEn ?? null;
+            return {
+              siteId: id,
+              id: r.id,
+              position,
+              chapterId: chapterOfSection.has(r.id) ? chapterOfSection.get(r.id)! : (chapterOfTitle.get(r.title) ?? null),
+              kind: r.kind,
+              title: r.title,
+              body: r.body,
+              bodyEn: bodyEn.value,
+              titleEn,
+              enStatus: bodyEn.value || titleEn ? (bodyEn.status ?? old?.enStatus ?? null) : null,
+              trust: r.trust,
+              sourceId: r.sourceId,
+            };
+          }),
         );
         const kept = new Set(rows.map((r) => r.id));
         const restored = photos.filter((p) => kept.has(p.sectionId));
@@ -1512,6 +1524,7 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
       errors.throwIfAny();
 
       const mine = new Set(before.history.map((h) => h.id));
+      const oldCaption = new Map(before.history.map((h) => [h.id, { value: h.captionEn, status: h.enStatus }]));
       const foreign = rows.length
         ? await tx
             .select({ id: historyImages.id })
@@ -1535,12 +1548,14 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
         .set({ position: sql`-(${historyImages.position} + 1)` })
         .where(eq(historyImages.siteId, id));
       for (const [position, r] of rows.entries()) {
+        const captionEn = englishState(r.captionEn || null, oldCaption.get(r.id));
         const values = {
           mediaId: r.mediaId,
           presentMediaId: r.presentMediaId,
           presentAngleMatch: r.presentMediaId ? r.presentAngleMatch : null,
           caption: r.caption,
-          captionEn: r.captionEn || null,
+          captionEn: captionEn.value,
+          enStatus: captionEn.status,
           dateLabel: r.dateLabel,
           sourceId: r.sourceId,
           trust: r.trust,

@@ -1,6 +1,6 @@
 import { asc, inArray } from "drizzle-orm";
 import type { Db } from "../../db/client.ts";
-import { siteBadges, siteTasks, type FieldTaskDetails, type QuizTaskDetails } from "../../db/schema/index.ts";
+import { siteBadges, siteTasks, type FieldTaskDetails, type FieldTaskTextsEn, type QuizTaskDetails, type QuizTaskTextsEn } from "../../db/schema/index.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import type { SiteBadgeDto, SiteTaskDto } from "./schemas.ts";
 
@@ -25,15 +25,23 @@ export function loadBadges(q: Db | Tx, siteIds: string[]): Promise<BadgeRow[]> {
  * gets after answering (`correctText`, `doneText`) can leak through it.
  */
 export function taskDto(t: TaskRow): SiteTaskDto {
-  const base = { id: t.id, kind: t.kind, title: t.title, prompt: t.prompt, photoId: t.mediaId, part: t.part, source: t.source, trust: t.trust };
+  const base = { id: t.id, kind: t.kind, title: t.title, prompt: t.prompt, titleEn: t.titleEn, promptEn: t.promptEn, photoId: t.mediaId, part: t.part, source: t.source, trust: t.trust, enStatus: t.enStatus };
   if (t.kind === "quiz") {
     const d = t.details as QuizTaskDetails;
-    return { ...base, quiz: { options: d.options, hints: d.hints, wrongText: d.wrongText, fromHome: d.fromHome } };
+    const en = t.detailsEn as QuizTaskTextsEn | null;
+    return { ...base, quiz: { options: d.options, optionsEn: en?.options ?? null, hints: d.hints, hintsEn: en?.hints ?? null, wrongText: d.wrongText, wrongTextEn: en?.wrongText ?? null, fromHome: d.fromHome } };
   }
   const d = t.details as FieldTaskDetails;
-  return { ...base, field: { onSite: { text: d.onSite.text, radiusM: d.onSite.radiusM }, fromHome: d.fromHome ? { text: d.fromHome.text, part: d.fromHome.part } : null } };
+  const en = t.detailsEn as FieldTaskTextsEn | null;
+  return {
+    ...base,
+    field: {
+      onSite: { text: d.onSite.text, textEn: en?.onSite.text ?? null, radiusM: d.onSite.radiusM },
+      fromHome: d.fromHome ? { text: d.fromHome.text, textEn: en?.fromHome?.text ?? null, part: d.fromHome.part } : null,
+    },
+  };
 }
 
 export function badgeDto(b: BadgeRow): SiteBadgeDto {
-  return { id: b.id, title: b.title, text: b.text, condition: b.condition, taskId: b.taskId, onSiteLabel: b.onSiteLabel };
+  return { id: b.id, title: b.title, text: b.text, titleEn: b.titleEn, textEn: b.textEn, enStatus: b.enStatus, condition: b.condition, taskId: b.taskId, onSiteLabel: b.onSiteLabel };
 }

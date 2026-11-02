@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startTestApp, TEST_RECEIPT_SECRET } from "../test/harness.ts";
 import { deleteUnreferencedMedia } from "../modules/media/service.ts";
-import { siteBadges, siteMapPlacements, sitePartCards, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
+import { historyImages, siteAboutChapters, siteBadges, siteMapPlacements, sitePartCards, sites as sitesTable, siteSections, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
 import { importDemoContent } from "./import-demo.ts";
 
 let ctx: Awaited<ReturnType<typeof startTestApp>>;
@@ -141,10 +141,30 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual(quiet.media.find((m: { kind: string }) => m.kind === "model").interiorParts, []);
   assert.deepEqual(detail.partCards.map((c: { parts: string[]; photoIds: string[] }) => [c.parts, c.photoIds]), [[["kubbe_1"], ["detail-0", "photo-0"]]]);
   assert.ok(detail.media.some((m: { id: string }) => m.id === "detail-0"), "a card's off-gallery photo resolves from the detail's media");
+  // English written since (translation, panel) is not in the package; a re-import keeps it per id (§11.64).
+  const db = ctx.app.deps.db;
+  const readingEn = { summary: ["Sourced sentence."], figures: [{ value: "1399", label: "opening year", evidence: "in 1399" }], quotes: [{ text: "Quote", by: null }], timeline: [{ year: "1399", evidence: "in 1399" }], terms: [{ word: "dome", definition: "Half-sphere roof" }] };
+  await db.update(siteAboutChapters).set({ titleEn: "History", readingEn, enStatus: "machine" }).where(eq(siteAboutChapters.id, "chapter-0"));
+  await db.update(siteSections).set({ titleEn: "History", bodyEn: "The mosque opened in 1399.", enStatus: "machine" }).where(eq(siteSections.id, "sec-0-1"));
+  await db.update(historyImages).set({ captionEn: "Old building", enStatus: "reviewed" }).where(eq(historyImages.id, "archive-0"));
+  await db.update(siteTasks).set({ titleEn: "Question", promptEn: "Which one?", detailsEn: { options: ["A", "B", "C"], hints: ["Hint 1", "Hint 2"], correctText: "B is right", wrongText: "Try again" }, enStatus: "machine" }).where(eq(siteTasks.id, "task-q-0"));
+  await db.update(siteBadges).set({ titleEn: "Gate", textEn: "Found it", enStatus: "machine" }).where(eq(siteBadges.id, "badge-f-0"));
+  await db.update(sitesTable).set({ nameEn: "Work 0", descriptionEn: "Sourced content" }).where(eq(sitesTable.id, "test-0"));
+  await importDemoContent(path, root, true, env);
+  const en = (await ctx.app.inject({ url: "/v1/sites/test-0" })).json();
+  assert.deepEqual([en.nameEn, en.descriptionEn], ["Work 0", "Sourced content"]);
+  assert.deepEqual([en.chapters[0].titleEn, en.chapters[0].readingEn, en.chapters[0].enStatus], ["History", readingEn, "machine"]);
+  assert.deepEqual([en.chapters[0].summary, en.chapters[0].camera?.target], [["Kaynaklı cümle."], "kubbe_1"], "the Turkish reading still comes from the package");
+  assert.deepEqual(en.sections.map((s: Record<string, unknown>) => [s.id, s.titleEn, s.bodyEn, s.enStatus]), [["sec-0-1", "History", "The mosque opened in 1399.", "machine"], ["sec-0-2", null, null, null]]);
+  assert.deepEqual([en.historyImages[0].captionEn, en.historyImages[0].enStatus], ["Old building", "reviewed"]);
+  const quizEn = en.tasks.find((t: { id: string }) => t.id === "task-q-0");
+  assert.deepEqual([quizEn.titleEn, quizEn.promptEn, quizEn.quiz.optionsEn, quizEn.quiz.hintsEn, quizEn.quiz.wrongTextEn], ["Question", "Which one?", ["A", "B", "C"], ["Hint 1", "Hint 2"], "Try again"]);
+  assert.ok(!JSON.stringify(en).includes("B is right"), "the English right-answer text stays behind the answer endpoint too");
+  assert.deepEqual(en.badges.filter((b: { titleEn: string | null }) => b.titleEn).map((b: Record<string, unknown>) => [b.id, b.titleEn, b.textEn]), [["badge-f-0", "Gate", "Found it"]]);
   // The reading layer comes back whole: chapters in order, paragraphs tied to them, book photographs in order (a gallery photo and a book-only one).
   assert.deepEqual(detail.chapters, [{ id: "chapter-0", title: "Tarihçe", kind: "history", summary: ["Kaynaklı cümle."], figures: [{ value: "1399", label: "açılış yılı", evidence: "1399 yılında" }],
     quotes: [{ text: "Alıntı", by: null }], timeline: [{ year: "1399", evidence: "1399 yılında" }], terms: [{ word: "kubbe", definition: "Yarım küre örtü" }],
-    camera: { target: "kubbe_1", azimuthDeg: 30, elevationDeg: 40, distance: 0.6 }, interior: true, focusParts: ["kubbe_1"] }]);
+    camera: { target: "kubbe_1", azimuthDeg: 30, elevationDeg: 40, distance: 0.6 }, interior: true, focusParts: ["kubbe_1"], titleEn: null, readingEn: null, enStatus: null }]);
   assert.deepEqual(detail.sections.map((x: { id: string; chapterId: string | null; photos: unknown[] }) => [x.id, x.chapterId, x.photos]), [
     ["sec-0-1", "chapter-0", [{ mediaId: "photo-0", aspect: 1.5, alt: "Dış görünüş" }, { mediaId: "book-0", aspect: null, alt: "Kitap sayfası" }]],
     ["sec-0-2", null, []],
@@ -155,10 +175,10 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.equal(detail.media.find((m: { id: string }) => m.id === "book-0").description, "Kitaptan kesildi");
   // Tasks and badges come back in order; the public task carries no answer key and none of the after-the-answer texts.
   assert.deepEqual(detail.tasks, [
-    { id: "task-q-0", kind: "quiz", title: "Soru", prompt: "Hangisi?", photoId: "detail-0", part: "kubbe_1", source: "E cilt-1 PDF s.27", trust: "verified",
-      quiz: { options: ["A", "B", "C"], hints: ["İpucu 1", "İpucu 2"], wrongText: "Tekrar dene", fromHome: true } },
-    { id: "task-f-0", kind: "field", title: "Saha", prompt: "Kapıyı bul", photoId: null, part: null, source: null, trust: "verified",
-      field: { onSite: { text: "Önüne gel", radiusM: 80 }, fromHome: { text: "Kubbeye dokun", part: "kubbe_1" } } },
+    { id: "task-q-0", kind: "quiz", title: "Soru", prompt: "Hangisi?", titleEn: null, promptEn: null, photoId: "detail-0", part: "kubbe_1", source: "E cilt-1 PDF s.27", trust: "verified", enStatus: null,
+      quiz: { options: ["A", "B", "C"], optionsEn: null, hints: ["İpucu 1", "İpucu 2"], hintsEn: null, wrongText: "Tekrar dene", wrongTextEn: null, fromHome: true } },
+    { id: "task-f-0", kind: "field", title: "Saha", prompt: "Kapıyı bul", titleEn: null, promptEn: null, photoId: null, part: null, source: null, trust: "verified", enStatus: null,
+      field: { onSite: { text: "Önüne gel", textEn: null, radiusM: 80 }, fromHome: { text: "Kubbeye dokun", textEn: null, part: "kubbe_1" } } },
   ]);
   assert.deepEqual(detail.badges.map((b: { id: string; condition: string; taskId: string | null; onSiteLabel: boolean }) => [b.id, b.condition, b.taskId, b.onSiteLabel]),
     [["badge-s-0", "story", null, false], ["badge-f-0", "task", "task-f-0", true]]);
@@ -169,7 +189,6 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   const swept = await ctx.app.deps.db.transaction((tx) => deleteUnreferencedMedia(tx, ["book-0"]));
   assert.deepEqual(swept, [], "a photograph only a paragraph shows is in use");
   // A reimport keeps a player's progress for every task and badge that is still in the manifest, reorders freely, and drops only what vanished.
-  const db = ctx.app.deps.db;
   await db.insert(userSiteTasks).values([{ userId: "u1", taskId: "task-q-0", onSite: false }, { userId: "u1", taskId: "task-f-0", onSite: true }]);
   await db.insert(userSiteBadges).values([{ userId: "u1", badgeId: "badge-s-0" }, { userId: "u1", badgeId: "badge-f-0", onSite: true }]);
   sites[0]!.tasks.reverse();

@@ -126,7 +126,14 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
         searchText: siteSearchText(site),
         sortName: siteSortName(site.name),
       };
-      await tx.insert(sites).values({ id: site.id, ...row }).onConflictDoUpdate({ target: sites.id, set: row });
+      // A name or description written in English since (panel, translation; §11.64) wins over the package's.
+      await tx
+        .insert(sites)
+        .values({ id: site.id, ...row })
+        .onConflictDoUpdate({
+          target: sites.id,
+          set: { ...row, nameEn: sql`coalesce(nullif(btrim(${sites.nameEn}), ''), excluded.name_en)`, descriptionEn: sql`coalesce(nullif(btrim(${sites.descriptionEn}), ''), excluded.description_en)` },
+        });
 
       await tx.delete(siteSources).where(eq(siteSources.siteId, site.id));
       await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));

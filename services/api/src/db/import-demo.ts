@@ -264,6 +264,12 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         await tx.insert(siteMedia).values(
           [...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({ siteId: site.id, mediaId, position, camera: cameras.get(mediaId) ?? null })),
         );
+        // English texts are written in the panel or by a translation, not in the content package (§11.64): an import
+        // keeps them per id, like the story sentences' English (§11.62).
+        const captionsEn = new Map(
+          (await tx.select({ id: historyImages.id, captionEn: historyImages.captionEn, enStatus: historyImages.enStatus }).from(historyImages).where(eq(historyImages.siteId, site.id)))
+            .map(({ id, ...en }) => [id, en]),
+        );
         await tx.delete(historyImages).where(eq(historyImages.siteId, site.id));
         for (const [position, h] of site.historyImages.entries()) {
           const file = files.get(h.file)!;
@@ -273,7 +279,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           await tx.insert(media).values({ id: h.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
           if (h.present) await upsertPhoto(h.present, "verified");
           await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, presentMediaId: h.present?.id ?? null, presentAngleMatch: h.present?.angleMatch ?? null, viewpoint: h.viewpoint ?? null,
-            caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust });
+            caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust, ...captionsEn.get(h.id) });
         }
         // Samples replace the site's whole set; the archive photograph they point at was inserted just above.
         await tx.delete(siteSampleTraces).where(eq(siteSampleTraces.siteId, site.id));
@@ -287,12 +293,20 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             description: b.description, license: b.license, sourceId: b.sourceId, trust: b.trust, bytes: file.body.length };
           await tx.insert(media).values({ id: b.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
         }
-        // Paragraph photographs cascade with their paragraph, paragraphs with their chapter.
+        // Paragraph photographs cascade with their paragraph, paragraphs with their chapter. Their English stays (§11.64).
+        const sectionsEn = new Map(
+          (await tx.select({ id: siteSections.id, titleEn: siteSections.titleEn, bodyEn: siteSections.bodyEn, enStatus: siteSections.enStatus }).from(siteSections).where(eq(siteSections.siteId, site.id)))
+            .map(({ id, ...en }) => [id, en]),
+        );
+        const chaptersEn = new Map(
+          (await tx.select({ id: siteAboutChapters.id, titleEn: siteAboutChapters.titleEn, readingEn: siteAboutChapters.readingEn, enStatus: siteAboutChapters.enStatus }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, site.id)))
+            .map(({ id, ...en }) => [id, en]),
+        );
         await tx.delete(siteSections).where(eq(siteSections.siteId, site.id));
         await tx.delete(siteAboutChapters).where(eq(siteAboutChapters.siteId, site.id));
-        if (site.chapters.length) await tx.insert(siteAboutChapters).values(site.chapters.map((chapter, position) => ({ ...chapter, siteId: site.id, position })));
+        if (site.chapters.length) await tx.insert(siteAboutChapters).values(site.chapters.map((chapter, position) => ({ ...chapter, siteId: site.id, position, ...chaptersEn.get(chapter.id) })));
         if (site.sections.length) {
-          await tx.insert(siteSections).values(site.sections.map(({ photos: _photos, ...section }, position) => ({ ...section, siteId: site.id, position })));
+          await tx.insert(siteSections).values(site.sections.map(({ photos: _photos, ...section }, position) => ({ ...section, siteId: site.id, position, ...sectionsEn.get(section.id) })));
           const placed = site.sections.flatMap((section) => section.photos.map((p, position) => ({ siteId: site.id, sectionId: section.id, position, mediaId: p.id, aspect: p.aspect, alt: p.alt })));
           if (placed.length) await tx.insert(siteSectionPhotos).values(placed);
         }
