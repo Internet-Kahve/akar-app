@@ -596,3 +596,9 @@ Karar: `narrations.subject_type` `about_chapter` (bölüm başlığı) ve `about
 Neden: Tarayıcı sesi cihaza göre değişiyor ve Türkçe telaffuzu zayıf; hikâye ve parça kartları zaten kayıtlı sesle okunuyor. İngilizce metinler toplu çeviriyle yazılır (§11.64), otomatik çeviri işi istenmiyor.
 Karar veren / tarih: Burak, 2 Kas (bu değişiklik #88'den önce gelsin; ilk kayıt Ulucami için, günlük sınırın altında).
 Nasıl değiştirilir: konu türleri `services/api/src/db/schema/narrations.ts`; okunan metin `narrations/read.ts` `spokenForChapter` / `spokenForSection`; üretim `narrations/service.ts`; silme `admin-catalog/sites.ts` `setSections`; oynatma `apps/web/src/components/about-reading.tsx` `ReadingPage`.
+
+**11.66 Tanıtım sayfası çıplak adreste görünür.**
+Karar: Adres çubuğuna yalnız alan adı yazan (`/`, görünüm yok) tanıtımı görür ve adres `/` olarak kalır. Sayfa sunucuda `/tanitim`'den gelir; açılınca adresi `/` yapar. Uygulama aynı adreste görünümleriyle (`/#view=map`, `/#view=detail&site=…`) açılır; tanıtımdaki bağlantılar yalnız parçayı değiştirdiği için sayfa bu durumda yeniden yüklenir. Tanıtımın kendi bağlantıları (`/#akar`) görünüm taşımaz, yenilenince tanıtıma döner. Bağlantı önizlemesi ve arama motoru için kalıcı adres `/tanitim` (canonical) kalır.
+Neden: Ana sayfa tanıtım (#88); `/tanitim` adresinin görünmesi istenmiyor. Uygulama adresleri (paylaşılan `/#view=…` bağlantıları) değişmesin diye uygulama başka yola taşınmadı.
+Karar veren / tarih: Burak, 2 Kas.
+Nasıl değiştirilir: yönlendirme `apps/web/src/lib/theme-boot.ts` `INTRO_BOOT`; adresin `/` yapılması ve yeniden yükleme `apps/web/public/tanitim/yeni/index.html` başındaki betik; sunucu yolu `apps/web/next.config.ts` `rewrites`.

@@ -373,12 +373,16 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
 
 test.describe("first visit", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
-  test("the address opens the introduction, whose «Haritayı aç» opens the map with its welcome card", async ({ page }) => {
+  test("the bare address shows the introduction, whose «Haritayı aç» opens the map with its welcome card", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/tanitim$/);
+    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
     await page.getByRole("link", { name: /Haritayı aç/ }).first().click();
-    await expect(page).toHaveURL(/#view=map$/);
+    await expect(page).toHaveURL(/\/#view=map$/);
     await expect(page.getByRole("dialog", { name: "Şehrin hikâyesine karış." })).toBeVisible({ timeout: 12000 });
+    await page.goBack();
+    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
   });
   test("the welcome card opens once and Evden gez asks for no position", async ({
     page,
