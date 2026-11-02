@@ -236,5 +236,19 @@
       "yuk": 26
     }
   ],
+  "mahya": {
+    "yazi": "VAKIF YAŞATIR",
+    "renk": "#FFE2A8",
+    "minareler": ["Minare_2", "Minare_1"],
+    "kot": 31.1,
+    "sarkma": 1.15,
+    "genislik": 53,
+    "yukseklik": 6.6,
+    "harf_araligi": 1,
+    "kelime_araligi": 4,
+    "tel_rengi": "#826E58",
+    "tel_yaricapi": 0.046,
+    "tel_parcalari": 10
+  },
   "ana_parca": "Govde"
 }
