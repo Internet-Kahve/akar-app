@@ -110,6 +110,20 @@ export function StoryFlowMap({
               "circle-stroke-width": 1.5,
             },
           });
+          // As the prototype: only the two buildings stay marked, and the road's label stands at its middle.
+          const mark = (at: [number, number], name: string, className: string) => {
+            const el = document.createElement("div");
+            el.className = className;
+            el.innerHTML = "<i></i><b></b>";
+            el.querySelector("b")!.textContent = name;
+            new lib.Marker({ element: el, anchor: "bottom" }).setLngLat(at).addTo(m);
+          };
+          mark(from, fromName, "flow-end from");
+          if (flow.toSiteId) mark(end, flow.toName, "flow-end to");
+          const middle = document.createElement("div");
+          middle.className = "flow-label";
+          middle.textContent = flow.label;
+          new lib.Marker({ element: middle }).setLngLat(arc[Math.floor(arc.length / 2)]!).addTo(m);
           if (calm) return;
           const started = performance.now();
           const tick = (now: number) => {

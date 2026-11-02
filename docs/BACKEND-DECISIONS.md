@@ -564,3 +564,9 @@ Karar: Galeri fotoğrafının modeldeki açısı `site_media.camera` (jsonb, `Ca
 Neden: Bir fotoğraf ortak havuzdadır ve iki eserde farklı yönden görünebilir; açı fotoğrafın değil, o eserdeki kullanımının özelliğidir. Açılar içerik paketinde değil panelde girilir, bu yüzden içe aktarma onları silmemeli. Hikâye kamerası ve açılış açısı API'de 21 Ekim'den beri vardı ama panelde yoktu; ziyaretçi uygulaması açılış açısını hiç okumuyordu.
 Karar veren / tarih: Muhammed, 1 Kas (açı fotoğrafa göre ve okların yeri); esere özgü saklama ve içe aktarmada koruma backend önerisi.
 Nasıl değiştirilir: panel `apps/web/src/components/admin-model-preview.tsx`; oklar `model-viewer.tsx` (`views`); sunucu `admin-catalog/sites.ts` `setPhotos`, `rewriteSiteMedia`.
+
+### Adlı kişisel rotalar — 1 Kasım 2026
+
+`0031_personal_routes` ile `user_routes` ve `user_route_items` eklendi. Katalog rotaları kişisel rotalardan ayrı kalır. Kullanıcı sahipliği her okumada/yazmada denetlenir; başkasının kimliği 404 verir. Rota adı 1–80 karakter, liste en fazla 100 benzersiz yayındaki eserdir. Duraklar tam liste olarak atomik değiştirilir; eski ve yeni yazma uçları aynı kullanıcı kilidini kullanır.
+
+Eski `user_route_stops` verisi varsayılan bir “Rotam” kaydına sırası korunarak kopyalanır; tablo silinmez. Eski uçların sözleşmesi değişmez ve varsayılan rota her iki tabloda birlikte yazılır. Varsayılan rota silinirse boş varsayılan yeniden oluşturulur. Hesap silme yeni rotaları ve cascade ile duraklarını da siler. OpenAPI ve `CONTRACTS.md` yeni beş ucu tanımlar. Cihazdaki varsayılan dışındaki rotalar giriş sırasında hesaba otomatik taşınmaz; cihazda tutulur.

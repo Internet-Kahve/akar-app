@@ -1,4 +1,7 @@
 "use client";
+import { RouteBuilder, type RouteDraft } from "./route-builder";
+import type { PersonalRoute } from "@akar/domain";
+import { flushSync } from "react-dom";
 import {
   useCallback,
   useEffect,
@@ -44,7 +47,7 @@ import {
   type SiteCategory,
   type Snapshot,
 } from "@akar/domain";
-import { HeritageMap, type MapFlight } from "./heritage-map";
+import { HeritageMap, PEEK_INSET, type MapFlight } from "./heritage-map";
 import {
   ExplorePanel,
   MapChips,
@@ -60,7 +63,8 @@ import { WelcomeCard } from "./welcome-card";
 import { Cities } from "./city-scenes";
 import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Scene } from "./scene";
-import { HistoryView } from "./history-view";
+import { HistoryView, type MemoryDraft } from "./history-view";
+import { memoryTraces } from "../lib/memory-traces";
 import { LivingMemory } from "./living-memory";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { StoryPanel, StoryProgress } from "./story-panel";
@@ -119,6 +123,8 @@ type Overlay =
   | null;
 /** Share of a phone's height the panel takes on a site's page; the scene stays above it. */
 const SITE_SHEET = 0.46;
+/** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
+const CONTROLS_ROOM = 110 + 194 + 32;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
 const CATALOG_REFRESH_MS = 5 * 60_000;
 export function AkarApp() {
@@ -150,6 +156,10 @@ export function AkarApp() {
     [routeId, setRouteId] = useState<string>(),
     [collapsed, setCollapsed] = useState(false),
     [overlay, setOverlay] = useState<Overlay>(null),
+    // See the Past opened from another site's «Uzaktan görünüyor» row starts at that photograph.
+    [historyStart, setHistoryStart] = useState(0),
+    // İz Bırak opened from the camera starts with the shot and its «same angle» label.
+    [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null),
     [storyIndex, setStoryIndex] = useState(0),
     [listening, setListening] = useState(false),
     [toast, setToast] = useState(""),
@@ -160,6 +170,16 @@ export function AkarApp() {
     ),
     // `null` = closed; the string says why the dialog opened ("" = user asked).
     [signIn, setSignIn] = useState<string | null>(null);
+  const [routeDraft, setRouteDraft] = useState<RouteDraft | null>(null);
+  const [personalRoutes, setPersonalRoutes] = useState<PersonalRoute[]>([]);
+  const [routeBusy, setRouteBusy] = useState(false);
+  const [routeSite, setRouteSite] = useState<string>();
+  useEffect(() => {
+    if (!ready || tab !== "routes") return;
+    let active = true;
+    void client.current?.getPersonalRoutes().then((routes) => { if (active) setPersonalRoutes(routes); }).catch(() => {});
+    return () => { active = false; };
+  }, [ready, tab, account]);
   const [puzzle, setPuzzle] = useState<{ start: number; found?: FieldDone } | null>(null);
   const [pick, setPick] = useState<{ task: FieldTask; hint: string } | null>(
     null,
@@ -354,6 +374,7 @@ export function AkarApp() {
   }, []);
   const go = useCallback((next: View, id?: string) => {
     setView(next);
+    setHistoryStart(0);
     setCollapsed(false);
     if (id) setSiteId(id);
     setPeekId(undefined);
@@ -516,6 +537,18 @@ export function AkarApp() {
     (s) => s.id === siteId && s.status === "published",
   );
   const memoryCount = site ? approvedMemories(state, site.id).length : 0;
+  // The site's gallery ends with its visitors' photographs (Yaşayan hafıza), as the prototype's.
+  const visitorPhotos = site
+    ? memoryTraces({
+        sample: site.sampleTraces ?? [],
+        own: state.memories.filter((m) => m.siteId === site.id),
+        approved: approvedMemories(state, site.id),
+      }).flatMap((trace) =>
+        trace.photo
+          ? [{ id: trace.id, src: trace.photo, alt: trace.alt || t("memories.photoAlt"), author: trace.author, state: trace.state }]
+          : [],
+      )
+    : [];
   // Back from a site's page to the map, by any way (its back button, the browser's, a link): the map shows that site,
   // wherever the map was before (a site of Hatay opened from the list must not come back to Bursa).
   const lastView = useRef(view);
@@ -597,9 +630,24 @@ export function AkarApp() {
     (ready && !(showMap && !isDetail));
   // A link straight to a site of another city opens on that city, not on the default one.
   const openingCity = cityRecords.find((c) => c.name === pageCity) ?? cityRecords.find((c) => c.isDefault);
+  /**
+   * On a phone the sheet and the short card are one surface (prototype `yuzeyGecis`): when one gives way to the other
+   * it turns into it. A card that stays open for another site changes in place.
+   */
+  function changePeek(id: string | undefined) {
+    const update = () => setPeekId(id);
+    if (wide || !peekId === !id || matchMedia("(prefers-reduced-motion: reduce)").matches || !document.startViewTransition)
+      return update();
+    const root = document.documentElement;
+    root.classList.add("vt-yuzey");
+    const turn = document.startViewTransition(() => flushSync(update));
+    turn.ready.catch(() => {});
+    turn.updateCallbackDone.catch(() => {});
+    void turn.finished.catch(() => {}).finally(() => root.classList.remove("vt-yuzey"));
+  }
   /** A pick on the map or in the list: the map goes there and the short card opens. */
   function pickSite(id: string) {
-    setPeekId(id);
+    changePeek(id);
   }
   function selectSite(id: string) {
     setStoryIndex(0);
@@ -670,7 +718,53 @@ export function AkarApp() {
         })
         .catch(() => {});
   }
+  async function openRouteBuilder(siteId?: string) {
+    try {
+      const routes = await client.current!.getPersonalRoutes();
+      setPersonalRoutes(routes);
+      setRouteSite(siteId);
+      const target = siteId ? routes.find((route) => route.isDefault) : undefined;
+      setRouteDraft({ id: target?.id ?? "", name: target?.name ?? t("route.new"), siteIds: target ? [...new Set([...target.siteIds, siteId!])] : siteId ? [siteId] : [] });
+      setRouteId(undefined);
+      setTab("sites");
+      changePeek(undefined);
+    } catch { setToast(t("route.failed")); }
+  }
+  async function saveRouteDraft() {
+    if (!routeDraft || routeBusy) return;
+    setRouteBusy(true);
+    try {
+      const api = client.current!;
+      let route = routeDraft.id ? personalRoutes.find((route) => route.id === routeDraft.id)! : await api.createPersonalRoute(routeDraft.name);
+      setRouteDraft({ ...routeDraft, id: route.id });
+      setPersonalRoutes((routes) => [...routes.filter((item) => item.id !== route.id), route]);
+      if (route.name !== routeDraft.name.trim()) route = await api.renamePersonalRoute(route.id, routeDraft.name);
+      if (route.isDefault) {
+        if (!await commit({ type: "set-route", siteIds: routeDraft.siteIds })) return;
+      } else await api.setPersonalRouteStops(route.id, routeDraft.siteIds);
+      setPersonalRoutes(await api.getPersonalRoutes());
+      setState(await api.getSnapshot());
+      setRouteDraft(null);
+      setToast(t("route.saved"));
+    } catch { setToast(t("route.failed")); }
+    finally { setRouteBusy(false); }
+  }
+  async function deleteRouteDraft() {
+    if (!routeDraft?.id || routeBusy) return;
+    setRouteBusy(true);
+    try {
+      await client.current!.deletePersonalRoute(routeDraft.id);
+      setPersonalRoutes(await client.current!.getPersonalRoutes());
+      setState(await client.current!.getSnapshot());
+      setRouteDraft(null);
+    } catch { setToast(t("route.failed")); }
+    finally { setRouteBusy(false); }
+  }
   async function toggleRoute(id: string) {
+    if (routeDraft) {
+      if (!routeBusy) setRouteDraft({ ...routeDraft, siteIds: routeDraft.siteIds.includes(id) ? routeDraft.siteIds.filter((item) => item !== id) : [...routeDraft.siteIds, id].slice(0, 100) });
+      return;
+    }
     const target = published.find((s) => s.id === id);
     const name = target
       ? text(target.name, target.nameEn)
@@ -746,11 +840,37 @@ export function AkarApp() {
       isDetail ? Math.round(innerHeight * SITE_SHEET) : sheetLowest(),
     );
   }, [ready, isDetail, wide]);
+  // A route opens the sheet at 58 % and gives the earlier height back when it closes; a tab keeps the height
+  // (the prototype's `altH`): Eserler | Rotalar must not drop the sheet the visitor pulled up.
+  const heightBeforeRoute = useRef<number | null>(null);
   useEffect(() => {
     if (!ready || wide || isDetail) return;
-    setSheetHeight(routeId ? Math.round(innerHeight * 0.58) : sheetLowest());
-    if (routeId) sheet.current?.scrollTo({ top: 0 });
-  }, [ready, wide, isDetail, routeId, tab]);
+    if (routeId) {
+      heightBeforeRoute.current ??= sheetHeight;
+      setSheetHeight(Math.round(innerHeight * 0.58));
+      sheet.current?.scrollTo({ top: 0 });
+    } else if (heightBeforeRoute.current !== null) {
+      setSheetHeight(heightBeforeRoute.current);
+      heightBeforeRoute.current = null;
+    }
+    // Only a route opening or closing moves the sheet; its own height is read, not followed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, wide, isDetail, routeId]);
+  // At its lowest stop the sheet keeps showing the new tab's heading line, whose height may differ.
+  const lowestShown = useRef(0);
+  useEffect(() => {
+    if (!ready || wide || isDetail || routeId) return;
+    const frame = requestAnimationFrame(() => {
+      const lowest = sheetLowest();
+      setSheetHeight((h) => (h <= Math.max(lowestShown.current, lowest) + 4 ? lowest : h));
+      lowestShown.current = lowest;
+    });
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+  // On a phone a sheet pulled high leaves the map's controls no room under the chips: they fade out until it is lower.
+  const crowded =
+    !wide && !isDetail && !peekSite && typeof innerHeight === "number" && sheetHeight + CONTROLS_ROOM > innerHeight;
   const shell = (
     <div
       className="app-shell"
@@ -945,22 +1065,31 @@ export function AkarApp() {
               key={site.id}
               site={site}
               sites={published}
+              start={historyStart}
               onBack={() => go("detail", site.id)}
-              onMemory={() => setOverlay("memory")}
-              onSite={selectSite}
+              onMemory={(draft) => {
+                setMemoryDraft(draft ?? null);
+                setOverlay("memory");
+              }}
+              onSite={(id, index) => {
+                go("history", id);
+                setHistoryStart(index);
+              }}
             />
           )}
           {view === "memories" && site && (
             <LivingMemory
               key={site.id}
               site={site}
+              sites={published}
               state={state}
               role={role}
               commit={commit}
               onBack={() => go("detail", site.id)}
               onAdd={() => setOverlay("memory")}
               onHistory={() => go("history", site.id)}
-              onAbout={() => setOverlay("about")}
+              onListen={() => openStory(true, 0, site.id)}
+              onSite={(id, memory) => go(memory ? "memories" : "detail", id)}
             />
           )}
           {showMap && (
@@ -972,7 +1101,7 @@ export function AkarApp() {
                   ? ({ "--sheet-h": `${sheetHeight}px` } as CSSProperties)
                   : undefined
               }
-              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""}`}
+              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""} ${crowded ? "controls-crowded" : ""}`}
             >
               {routeId && showRoutes && !isDetail && (
                 <button className="round-btn route-mobile-back" aria-label={t("route.all")} onClick={() => setRouteId(undefined)}>
@@ -1082,6 +1211,12 @@ export function AkarApp() {
                   </div>
                 ) : (
                   <div className="discovery-panel">
+                    {showRoutes && !routeId && personalRoutes.length > 0 && <section className="personal-route-list" aria-label={t("route.mine")}>
+                      <h3>{t("route.mine")}</h3>
+                      {personalRoutes.map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
+                        setRouteDraft({ ...personal, siteIds: [...personal.siteIds] }); setRouteSite(undefined); setTab("sites"); setRouteId(undefined);
+                      }}>{personal.name} · {personal.siteIds.length}</button>)}
+                    </section>}
                     {routeId && showRoutes ? (
                       <RoutePreview
                         route={route}
@@ -1118,7 +1253,7 @@ export function AkarApp() {
                         allSites={published}
                         live={live}
                         query={query}
-                        routeIds={state.routeIds}
+                        routeIds={routeDraft?.siteIds ?? state.routeIds}
                         visitedIds={state.visitedIds}
                         selectedId={peekId}
                         onHover={setHoverId}
@@ -1129,10 +1264,7 @@ export function AkarApp() {
                           setTab("routes");
                           setRouteId(id);
                         }}
-                        onCustomRoute={() => {
-                          setTab("routes");
-                          setRouteId("custom");
-                        }}
+                        onCustomRoute={() => void openRouteBuilder()}
                         onCities={() =>
                           setFlight((f) => ({
                             key: (f?.key ?? 0) + 1,
@@ -1149,6 +1281,16 @@ export function AkarApp() {
                 )}
               </aside>
               <div className="main-stage">
+              {view === "detail" && site && (
+                // The phone's way back over the photographs or the model (prototype `.gorus-ust .geri`); the wide
+                // screen has the panel's own «‹ Harita».
+                <button className="detail-mobile-back" onClick={() => go("map")}>
+                  <ChevronLeft size={16} />
+                  {t("app.map")}
+                </button>
+              )}
+
+                {routeDraft && view === "map" && <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />}
                 <button
                   className="panel-toggle"
                   aria-label={collapsed ? t("app.panelOpen") : t("app.panelClose")}
@@ -1199,6 +1341,13 @@ export function AkarApp() {
                       if (index >= 0) openStory(false, index);
                       else setOverlay("about");
                     }}
+                    turn={
+                      view !== "story" ||
+                      storyIndex === 0 ||
+                      storyIndex === (storySite?.stories.length ?? 1) - 1
+                    }
+                    visitors={view === "detail" ? visitorPhotos : []}
+                    onAddPhoto={() => setOverlay("memory")}
                     onPick={pick ? pickPart : undefined}
                   />
                 ) : (
@@ -1211,16 +1360,18 @@ export function AkarApp() {
                       {...(lookCity?.identity && {
                         routeColour: lookCity.identity.accent,
                       })}
-                      onSelect={pickSite}
+                      onSelect={routeDraft ? (id) => void toggleRoute(id) : pickSite}
+                      buildingRoute={!!routeDraft}
                       onOpen={selectSite}
-                      onClear={() => setPeekId(undefined)}
+                      onClear={() => changePeek(undefined)}
                       onFirstDraw={() => setMapDrawn(true)}
                       onCityInView={setCityInView}
                       onLocate={chooseNear}
                       flight={flight}
-                      bottomInset={peekSite ? 0 : sheetHeight}
+                      bottomInset={peekSite ? PEEK_INSET : sheetHeight}
+                      insetDragging={sheetDragging}
                       routeIds={
-                        routeId ? routeSites.map((s) => s.id) : state.routeIds
+                        routeDraft?.siteIds ?? (routeId ? routeSites.map((s) => s.id) : state.routeIds)
                       }
                       collapsed={collapsed}
                       mapSettings={mapSettings}
@@ -1250,8 +1401,8 @@ export function AkarApp() {
                             onRead={() => openStory(false, 0, peekSite.id)}
                             onTasks={() => selectSite(peekSite.id)}
                             onNext={pickSite}
-                            onRoute={() => void toggleRoute(peekSite.id)}
-                            onClose={() => setPeekId(undefined)}
+                            onRoute={() => void openRouteBuilder(peekSite.id)}
+                            onClose={() => changePeek(undefined)}
                           />
                         )
                       }
@@ -1340,7 +1491,12 @@ export function AkarApp() {
         <MemoryModal
           site={site}
           live={live}
-          onClose={() => setOverlay(null)}
+          initialPhoto={memoryDraft?.photo}
+          sameAngle={memoryDraft?.sameAngle}
+          onClose={() => {
+            setOverlay(null);
+            setMemoryDraft(null);
+          }}
           onSubmit={async (memory, accepted) => {
             consent.current = accepted;
             try {

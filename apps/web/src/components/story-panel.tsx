@@ -176,6 +176,25 @@ export function StoryPanel({
   const clip = listen
     ? pickNarration(block, voiceLang, voiceGender, simple)
     : undefined;
+  const nextVoiceLang = voiceLang === "tr" ? "en" : "tr";
+  const languageAvailable = stories.some((story) => pickNarration(story, nextVoiceLang, voiceGender, simple));
+  const voiceLabel = t(voiceGender === "female" ? "site.voiceFemale" : "site.voiceMale");
+  const voiceControls = (
+    <div className="story-voice-compact" role="group" aria-label={t("site.voiceLangLabel")}>
+      <button
+        className="story-lang"
+        aria-label={t("site.voiceLanguage", { lang: voiceLang.toUpperCase() })}
+        title={languageAvailable ? t("site.voiceLanguage", { lang: voiceLang.toUpperCase() }) : t("site.voiceUnavailable")}
+        disabled={!languageAvailable}
+        onClick={() => onVoice({ lang: nextVoiceLang })}
+      >{voiceLang.toUpperCase()}</button>
+      <button
+        aria-label={t("site.voiceSelected", { voice: voiceLabel })}
+        title={t("site.voiceSelected", { voice: voiceLabel })}
+        onClick={() => onVoice({ gender: voiceGender === "female" ? "male" : "female" })}
+      ><span aria-hidden="true">{voiceGender === "female" ? "♀" : "♂"}</span></button>
+    </div>
+  );
   const elapsed = stories
     .slice(0, index)
     .reduce((sum, s) => sum + sentenceSeconds(s.text), 0);
@@ -251,6 +270,7 @@ export function StoryPanel({
         </button>
         <div className="story-card-top">
           {position}
+          {voiceControls}
           <TrustTag trust={block.trust} quote={block.text} sources={sourceOf(block)} />
         </div>
         <p className="story-card-text">
@@ -294,39 +314,13 @@ export function StoryPanel({
             {t("site.read")}
           </button>
         </div>
-        <span className="story-lang">{lang.toUpperCase()}</span>
+        {voiceControls}
         {position}
       </div>
       <label className="switch-label story-simple">
         <input type="checkbox" checked={simple} onChange={(e) => setSimple(e.target.checked)} />
         {t("site.simpleMode")}
       </label>
-      {listen && (
-        <div className="story-voice">
-          <div role="group" aria-label={t("site.voiceLangLabel")}>
-            {(["tr", "en"] as const).map((l) => (
-              <button
-                key={l}
-                aria-pressed={voiceLang === l}
-                onClick={() => onVoice({ lang: l })}
-              >
-                {t(l === "tr" ? "site.voiceLangTr" : "site.voiceLangEn")}
-              </button>
-            ))}
-          </div>
-          <div role="group" aria-label={t("site.voiceGenderLabel")}>
-            {(["female", "male"] as const).map((g) => (
-              <button
-                key={g}
-                aria-pressed={voiceGender === g}
-                onClick={() => onVoice({ gender: g })}
-              >
-                {t(g === "female" ? "site.voiceFemale" : "site.voiceMale")}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
       {listen && !clip && <p className="story-voice-note">{t("site.voiceBrowser")}</p>}
       {problem}
       <ol

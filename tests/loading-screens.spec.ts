@@ -5,7 +5,7 @@ import { createSeed } from "../packages/api-client/src/seed";
 import { triangleGlb } from "./support/triangle-glb";
 
 /** The demo's own city record: the screens must say what it says, not what the code remembers. */
-const BURSA = { name: "Bursa", pattern: "/desenler/desen-bursa-sekiz-yildiz.svg", accent: "rgb(34, 86, 110)" };
+const BURSA = { name: "Bursa", pattern: "/desenler/desen-bursa-kesik-gecme.svg", accent: "rgb(34, 86, 110)" };
 
 /** A map style that is only a background: the map draws at once, offline. Held back until `release` when a test needs the opening screen. */
 async function holdMap(page: Page) {

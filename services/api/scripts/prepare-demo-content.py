@@ -31,8 +31,6 @@ if hasattr(editorial, 'configure'):
 IDS = {'yildirim-bayezid-bedesteni': 'bedesten', 'orhan-bey-kulliyesi': 'orhan-gazi'}
 KINDS = {'Cami': 'cami', 'Bedesten': 'bedesten', 'Han': 'han', 'Hamam': 'hamam', 'Türbe': 'turbe', 'Çeşme': 'cesme', 'Medrese': 'egitim'}
 TRUST = {'Doğrulanmış': 'verified', 'Tarihsel çıkarım': 'inferred', 'Temsili içerik': 'representative'}
-# The district these sites were published with; a later site takes its eser.json `ilce`.
-DISTRICTS = {'orhan-gazi-turbesi': 'Hisar', **dict.fromkeys(['ulu-cami', 'emir-han', 'koza-han', 'orhan-bey-hamami', 'orhan-bey-kulliyesi', 'yildirim-bayezid-bedesteni'], 'Hanlar Bölgesi')}
 result = {'version': 1, 'sites': [], 'routes': [], 'retireSiteIds': ['bursa-cesme-demo', 'bursa-mektep-demo']}
 city_records = [(path, json.loads(path.read_text())) for path in sorted((root / 'veri/sehir').glob('*.json'))]
 inventories = {record['ad']: record.get('envanter_adi') for _, record in city_records}
@@ -113,31 +111,29 @@ for entry in editorial.eserleri_bul():
                             sourceId=source(item['kaynak']), showCard=item['kart'], highlights=item['vurgu'],
                             interior=item['ic'], routeOnly=bool(item.get('rota')), flow=flow(item.get('akis')),
                             **({'camera': camera(item['aci'])} if item['aci'] else {})))
-    # "Eser hakkında": one chapter per heading of eser-hakkinda.md, its paragraphs, the reading layer of
+    # "Eser hakkında": one chapter per heading of eser-hakkinda.md and its paragraphs, as in the prototype (a site
+    # without eser-hakkinda-okuma.md still gets the reading page, with its plain text); the reading layer of
     # eser-hakkinda-okuma.md (verbatim-checked by okuma_oku, which warns and drops what the book text lacks) and the
     # book photographs of kitap-fotograflari.md.
     headings = editorial.hakkinda_oku(folder)
     terms = editorial.okuma_oku(folder, headings)
-    has_reading = (root / 'eserler' / folder / 'icerik/eser-hakkinda-okuma.md').is_file()
     sections, chapters, pages = [], [], []
     for section in headings:
         name = section['baslik']
         kind = 'waqf' if any(w in name.lower() for w in ['vakıf', 'akar']) else 'architecture' if 'mimari' in name.lower() else 'history'
-        chapter_id = None
-        if has_reading:
-            chapter_id = f'{sid}-chapter-{len(chapters)+1}'
-            reading = section.get('okuma') or dict(ozet=[], rakam=[], alinti=[], zaman=[], ucd=None)
-            view = reading['ucd']
-            parts = [x for x in view['parcalar'] if x != 'Merkez'] if view else []
-            text = ' '.join(p['metin'] for p in section['paragraflar'])
-            chapters.append(dict(id=chapter_id, title=name, kind=kind, reading=dict(
-                summary=reading['ozet'],
-                figures=[dict(value=r['deger'], label=r['etiket'], evidence=r['kanit']) for r in reading['rakam']],
-                quotes=[dict(text=q['metin'], by=q['kim'] or None) for q in reading['alinti']],
-                timeline=[dict(year=t['yil'], evidence=t['kanit']) for t in reading['zaman']],
-                terms=[dict(word=t['kelime'], definition=t['tanim']) for t in terms if t['kelime'] in text],
-                camera=camera(dict(hedef=view['parcalar'][0], azimut=view['azimut'], egim=view['egim'], uzaklik=view['uzaklik'])) if view else None,
-                interior=bool(view and view['ici']), focusParts=parts)))
+        chapter_id = f'{sid}-chapter-{len(chapters)+1}'
+        reading = section.get('okuma') or dict(ozet=[], rakam=[], alinti=[], zaman=[], ucd=None)
+        view = reading['ucd']
+        parts = [x for x in view['parcalar'] if x != 'Merkez'] if view else []
+        text = ' '.join(p['metin'] for p in section['paragraflar'])
+        chapters.append(dict(id=chapter_id, title=name, kind=kind, reading=dict(
+            summary=reading['ozet'],
+            figures=[dict(value=r['deger'], label=r['etiket'], evidence=r['kanit']) for r in reading['rakam']],
+            quotes=[dict(text=q['metin'], by=q['kim'] or None) for q in reading['alinti']],
+            timeline=[dict(year=t['yil'], evidence=t['kanit']) for t in reading['zaman']],
+            terms=[dict(word=t['kelime'], definition=t['tanim']) for t in terms if t['kelime'] in text],
+            camera=camera(dict(hedef=view['parcalar'][0], azimut=view['azimut'], egim=view['egim'], uzaklik=view['uzaklik'])) if view else None,
+            interior=bool(view and view['ici']), focusParts=parts)))
         for p in section['paragraflar']:
             sections.append(dict(id=f'{sid}-section-{len(sections)+1}', kind=kind, title=name, chapterId=chapter_id,
                                  body=p['metin'], trust=trust(p['guven']), sourceId=source(p['kaynak']), photos=[]))
@@ -260,7 +256,7 @@ for entry in editorial.eserleri_bul():
         raise ValueError(f'sira must be an integer of at least 1: {folder} {display_order!r}')
     gallery = sorted((p for p in photos if p['galleryPosition'] is not None), key=lambda p:p['galleryPosition'])
     result['sites'].append(dict(id=sid, name=entry['ad'], city=entry['il'],
-        district=DISTRICTS.get(folder, entry['ilce']), year=entry['yil'], architect='—',
+        district=entry['ilce'], year=entry['yil'], architect='—',
         patron=entry['yaptiran'], kind=KINDS[entry['tur']], coordinates=coords, minutes=max(1,round(sum(len(s['text'].split()) for s in stories)/130)) if stories else 0,
         displayOrder=display_order,
         description=entry['kisa'], status='published', tier='Hero' if sid=='ulu-cami' else 'Tier 2',

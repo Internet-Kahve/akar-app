@@ -38,6 +38,8 @@ export function MapControls({
   const [tilted, setTilted] = useState(true),
     [bearing, setBearing] = useState(0),
     [turned, setTurned] = useState(false),
+    // Held under a finger the phone's small dial grows, with its letters, so it is easy to turn (design.css).
+    [held, setHeld] = useState(false),
     dial = useRef<HTMLButtonElement>(null),
     drag = useRef<{
       x: number;
@@ -111,7 +113,7 @@ export function MapControls({
       </button>
       <button
         ref={dial}
-        className={`map-dial${tilted ? " tilted" : ""}`}
+        className={`map-dial${tilted ? " tilted" : ""}${held ? " held" : ""}`}
         disabled={!ready}
         aria-label={
           facing
@@ -121,6 +123,7 @@ export function MapControls({
               : t("map.to3d")
         }
         onPointerDown={(e) => {
+          if (e.button === 0 && map) setHeld(true);
           if (e.button === 0 && map)
             drag.current = {
               x: e.clientX,
@@ -146,6 +149,7 @@ export function MapControls({
         onPointerUp={() => {
           const d = drag.current;
           drag.current = null;
+          setHeld(false);
           if (!d || d.moved || !map) return;
           onMove();
           if (facing) {
@@ -162,6 +166,7 @@ export function MapControls({
         }}
         onPointerCancel={() => {
           drag.current = null;
+          setHeld(false);
         }}
         onKeyDown={(e) => {
           if ((e.key !== "Enter" && e.key !== " ") || !map) return;

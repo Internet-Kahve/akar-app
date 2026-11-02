@@ -1,3 +1,4 @@
+import { localRoutes } from "./personal-routes";
 import {
   defaultMapSettings,
   validatePlacement,
@@ -12,6 +13,7 @@ import {
   type Command,
   type HeritageRoute,
   type CityRecord,
+  type PersonalRoute,
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
@@ -117,6 +119,7 @@ interface StoredReceipt {
   subjectId: string;
 }
 interface LocalState {
+  personalRoutes?: PersonalRoute[];
   deviceId: string;
   receipts: StoredReceipt[];
   saved: string[];
@@ -890,6 +893,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           receipts: Array.isArray(v.receipts) ? v.receipts : [],
           saved: Array.isArray(v.saved) ? v.saved : [],
           route: Array.isArray(v.route) ? v.route : [],
+          personalRoutes: Array.isArray(v.personalRoutes) ? v.personalRoutes : [],
         };
     } catch {
       /* Corrupt storage starts a fresh local state. */
@@ -2126,7 +2130,36 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   };
   const quizPath = (quizId: string) =>
     `/v1/quizzes/${encodeURIComponent(quizId)}`;
+  const guestRoutes = localRoutes(
+    () => local.personalRoutes ?? [], () => local.route,
+    (routes, ids) => { writeLocal({ ...local, personalRoutes: routes, route: ids }); if (user && !user.signedIn) user.routeIds = ids; },
+  );
+  const routePath = (id: string) => `/v1/me/routes/${encodeURIComponent(id)}`;
   return {
+    getPersonalRoutes: () => enqueue(async () => {
+      await build(false);
+      return user?.signedIn ? (await call<{ items: PersonalRoute[] }>("GET", "/v1/me/routes")).items : guestRoutes.getPersonalRoutes();
+    }),
+    createPersonalRoute: (name) => enqueue(async () => {
+      await build(false);
+      return user?.signedIn ? call<PersonalRoute>("POST", "/v1/me/routes", { body: { name } }) : guestRoutes.createPersonalRoute(name);
+    }),
+    renamePersonalRoute: (id, name) => enqueue(async () => {
+      await build(false);
+      return user?.signedIn ? call<PersonalRoute>("PATCH", routePath(id), { body: { name } }) : guestRoutes.renamePersonalRoute(id, name);
+    }),
+    deletePersonalRoute: (id) => enqueue(async () => {
+      await build(false);
+      if (user?.signedIn) { await call("DELETE", routePath(id)); user = undefined; }
+      else await guestRoutes.deletePersonalRoute(id);
+    }),
+    setPersonalRouteStops: (id, siteIds) => enqueue(async () => {
+      await build(false);
+      if (!user?.signedIn) return guestRoutes.setPersonalRouteStops(id, siteIds);
+      const route = await call<PersonalRoute>("PUT", `${routePath(id)}/stops`, { body: { siteIds } });
+      if (route.isDefault) user.routeIds = route.siteIds;
+      return route;
+    }),
     getSnapshot: () => enqueue(() => build(true)),
     refreshCatalog: () =>
       (refreshing ??= enqueue(async () => {
