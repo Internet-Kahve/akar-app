@@ -940,6 +940,11 @@ export function SiteEditor({
                       {s.interior ? " · iç mekân" : ""}
                     </p>
                   )}
+                  {(s.routeOnly || s.flow) && (
+                    <p className="muted cue-angle">
+                      {[s.routeOnly && "Yalnız rotada", s.flow && "Akar akışı var"].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
                   <details className="editor-details">
                     <summary>Dil, güven ve ek alanlar</summary>
                     <label className="field">
@@ -984,6 +989,20 @@ export function SiteEditor({
                         }
                       />
                     </label>
+                    <label className="check-row">
+                      <input
+                        type="checkbox"
+                        checked={s.routeOnly ?? false}
+                        onChange={(e) =>
+                          storyField(s.id, { routeOnly: e.target.checked || undefined })
+                        }
+                      />
+                      Yalnız rotada
+                    </label>
+                    <small className="muted">
+                      Eser bir rotadan açıldığında okunur (sonraki durağa
+                      bağlayan cümle); haritadan açılınca atlanır.
+                    </small>
                     {draft.model && (
                       <>
                         <label className="check-row">
