@@ -2722,69 +2722,94 @@ h1,
 .detail-scene .model-views .model-inside {
   position: static;
 }
+/* The arrows wear «İçini göster»'s glass pill; faint until an angle is on, then in full (Muhammed, 2 Nov 2026). */
 .model-view-btn {
   width: 40px;
   height: 40px;
   min-height: 0;
   padding: 0;
-  border-radius: 50%;
+  border-radius: 999px;
   background: var(--glass);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid transparent;
   box-shadow: var(--glass-edge), var(--glass-shadow);
   color: var(--text);
+  font: 600 13px var(--font);
+  transition: opacity 200ms var(--ease);
 }
+.model-view-btn.idle { opacity: 0.55; }
+.model-view-btn.idle:is(:hover, :focus-visible) { opacity: 0.85; }
+/* The angle's photograph: above the buttons, larger; dragged anywhere; a tap enlarges it, its ✕ leaves the angles. */
 .model-view-photo {
-  position: relative;
-  width: 132px;
-  padding: 0;
-  border-radius: 14px;
+  position: absolute;
+  z-index: 6;
+  right: 24px;
+  bottom: calc(24px + 40px + 12px);
+  width: 260px;
+  margin: 0;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--glass-edge), var(--glass-shadow);
   background: var(--surface);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
   transition: width 240ms var(--ease);
 }
-.model-view-photo.large {
-  width: 320px;
-}
+.model-view-photo:active { cursor: grabbing; }
+.model-view-photo.large { width: 440px; }
 .model-view-photo img {
   display: block;
   width: 100%;
   aspect-ratio: 3 / 2;
   object-fit: cover;
+  pointer-events: none;
 }
-.model-view-photo span {
+.model-view-photo figcaption {
   display: flex;
   justify-content: space-between;
-  gap: 6px;
-  padding: 6px 8px;
-  font: 600 11px/14px var(--font);
+  gap: 8px;
+  padding: 8px 10px;
+  font: 600 12px/16px var(--font);
   color: var(--text);
-  text-align: left;
 }
-.model-view-photo small {
-  flex: none;
-  color: var(--text-muted);
-  font-weight: 500;
+.model-view-photo small { flex: none; color: var(--text-muted); font-weight: 500; }
+.mvp-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(20, 27, 43, 0.55);
+  color: #fff;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+/* While an angle is on, the model moves a little left, out from under its photograph (wide screens). */
+.model-canvas { transition: transform 480ms var(--ease); }
+@media (min-width: 900px) {
+  .model-canvas.viewing { transform: translateX(-9%); }
 }
 @media (max-width: 899.98px) {
-  .model-views {
-    right: 12px;
-    bottom: 12px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    max-width: calc(100% - 24px);
-  }
-  .model-view-photo {
-    width: 104px;
-  }
-  .model-view-photo.large {
-    width: min(260px, 70vw);
+  .model-views { right: 12px; bottom: 12px; }
+  /* Phone: above the site card, on the left, clear of the button row. */
+  .model-view-photo { right: auto; left: 16px; bottom: calc(12px + 40px + 12px); width: 168px; }
+  .model-view-photo.large { width: min(300px, 80vw); }
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo {
+    bottom: calc(var(--sheet-h, 194px) + 12px + 16px + 40px + 12px + env(safe-area-inset-bottom, 0px));
+    transition: width 240ms var(--ease), bottom 280ms var(--ease);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .model-view-photo {
+  .model-view-photo,
+  .model-canvas,
+  .model-view-btn {
     transition: none;
   }
 }
@@ -3988,4 +4013,8 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 .about-scroll.voicing :is(.about-p, .about-inscription-meaning) { cursor: pointer; border-radius: 8px; transition: background-color 150ms; }
 @media (hover: hover) {
   .about-scroll.voicing :is(.about-p, .about-inscription-meaning):not(.about-reading-now):hover { background: color-mix(in srgb, var(--primary-light) 70%, transparent); }
+}
+@media (max-width: 899.98px) {
+  /* With an angle on, ‹ ✕ › İçini göster fill the row: the «Temsili» tag steps aside (the photograph says what it is). */
+  .detail-scene:has(.model-view-photo) .model-label { opacity: 0; pointer-events: none; }
 }

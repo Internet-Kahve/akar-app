@@ -360,6 +360,9 @@ export default function ModelViewer({
   // The photograph whose view is shown (← →); null = the visitor's own view.
   const [viewIndex, setViewIndex] = useState<number | null>(null);
   const [viewLarge, setViewLarge] = useState(false);
+  /** Where the visitor dragged the angle's photograph, from its own place. */
+  const [photoShift, setPhotoShift] = useState({ x: 0, y: 0 });
+  const photoDrag = useRef<{ x: number; y: number; from: { x: number; y: number }; moved: boolean } | null>(null);
   const readPose = useRef<(() => CameraPose) | null>(null);
   // Where the visitor was before the first arrow: ✕ goes back there.
   const beforeViews = useRef<{ pose: CameraPose | null; inside: boolean } | null>(null);
@@ -1070,10 +1073,11 @@ export default function ModelViewer({
     beforeViews.current = null;
     setViewIndex(null);
     setViewLarge(false);
+    setPhotoShift({ x: 0, y: 0 });
   };
   return (
     <>
-      <div className="model-canvas" ref={host} />
+      <div className={`model-canvas${viewIndex !== null ? " viewing" : ""}`} ref={host} />
       {!!partCards?.length && !onPick && (
         <button
           className="model-show-parts"
@@ -1108,37 +1112,62 @@ export default function ModelViewer({
           <MousePointerClick size={18} />
         </button>
       )}
+      {views?.length && viewIndex !== null && views[viewIndex] ? (
+        // The photograph of the angle (Muhammed, 2 Nov 2026): above the buttons on a wide screen, above the card on a
+        // phone; dragged where the visitor likes, larger at a tap, and its ✕ leaves the angles altogether.
+        <figure
+          className={`model-view-photo${viewLarge ? " large" : ""}`}
+          style={photoShift.x || photoShift.y ? { transform: `translate(${photoShift.x}px, ${photoShift.y}px)` } : undefined}
+          onPointerDown={(e) => {
+            if ((e.target as HTMLElement).closest(".mvp-close")) return;
+            photoDrag.current = { x: e.clientX, y: e.clientY, from: photoShift, moved: false };
+          }}
+          onPointerMove={(e) => {
+            const drag = photoDrag.current;
+            if (!drag) return;
+            const dx = e.clientX - drag.x,
+              dy = e.clientY - drag.y;
+            if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+            if (!drag.moved) {
+              drag.moved = true;
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }
+            setPhotoShift({ x: drag.from.x + dx, y: drag.from.y + dy });
+          }}
+          onPointerUp={(e) => {
+            const drag = photoDrag.current;
+            photoDrag.current = null;
+            if (drag && !drag.moved && !(e.target as HTMLElement).closest(".mvp-close")) setViewLarge(!viewLarge);
+          }}
+          onPointerCancel={() => (photoDrag.current = null)}
+        >
+          <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} draggable={false} />
+          <figcaption>
+            {views[viewIndex]!.title}
+            <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>
+          </figcaption>
+          <button className="mvp-close" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
+            <X size={16} />
+          </button>
+        </figure>
+      ) : null}
       {views?.length ? (
         <div className="model-views">
-          {viewIndex !== null && views[viewIndex] && (
-            // The photograph small beside the model it was matched to; a tap shows it larger.
-            <button
-              className={`model-view-photo${viewLarge ? " large" : ""}`}
-              onClick={() => setViewLarge(!viewLarge)}
-              aria-label={views[viewIndex]!.title || views[viewIndex]!.alt}
-            >
-              <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} />
-              <span>
-                {views[viewIndex]!.title}
-                <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>
-              </span>
-            </button>
-          )}
-          {viewIndex !== null && (
-            <button className="btn secondary model-view-btn" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
-              <X size={18} />
-            </button>
-          )}
           <button
-            className="btn secondary model-view-btn"
+            className={`btn secondary model-view-btn${viewIndex === null ? " idle" : ""}`}
             aria-label={t("site.viewPrev")}
             title={t("site.viewPrev")}
             onClick={() => showView(viewIndex === null ? views.length - 1 : (viewIndex - 1 + views.length) % views.length)}
           >
             <ChevronLeft size={18} />
           </button>
+          {viewIndex !== null && (
+            <button className="btn secondary model-view-btn" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
+              <X size={18} />
+            </button>
+          )}
           <button
-            className="btn secondary model-view-btn"
+            className={`btn secondary model-view-btn${viewIndex === null ? " idle" : ""}`}
             aria-label={t("site.viewNext")}
             title={t("site.viewNext")}
             onClick={() => showView(viewIndex === null ? 0 : (viewIndex + 1) % views.length)}
