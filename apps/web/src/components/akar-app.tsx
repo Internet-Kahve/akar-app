@@ -17,6 +17,7 @@ import {
   Route,
   Headphones,
   ChevronLeft,
+  ChevronUp,
   X,
   Check,
   Users,
@@ -88,9 +89,13 @@ import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
 import {
   clampSheet,
+  mapSheetStops,
   settleSheet,
   SHEET_TAP_PX,
+  SITE_CARD_PEEK,
+  siteCardStops,
   toggleSheet,
+  type SheetStops,
 } from "../lib/bottom-sheet";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
@@ -121,8 +126,6 @@ type Overlay =
   | "about"
   | "reset"
   | null;
-/** Share of a phone's height the panel takes on a site's page; the scene stays above it. */
-const SITE_SHEET = 0.46;
 /** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
 const CONTROLS_ROOM = 110 + 194 + 32;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
@@ -824,12 +827,72 @@ export function AkarApp() {
         )
       : 128;
   };
+  /**
+   * A site's card on a phone (prototype `#eser-alt`, the `mobile/` screenshots): a floating card. Closed, it shows
+   * the name, «Kısa hikâye» and Dinle | Oku, and 44 px of what follows, fading out; it opens to all its content, at
+   * most 75 % of the screen. The same drag as the map's sheet moves it.
+   */
+  const siteCard = view === "detail";
+  const cardLowest = () => {
+    const panel = sheet.current;
+    // Dinle | Oku closes the top part; a site without a story ends it with its notice.
+    const top =
+      panel?.querySelector<HTMLElement>(".detail-panel .ikili") ??
+      panel?.querySelector<HTMLElement>(".detail-panel .hikaye-blok > :first-child");
+    if (!panel || !top) return 194;
+    const bottomPad = parseFloat(getComputedStyle(panel).paddingBottom) || 0;
+    return Math.round(top.getBoundingClientRect().bottom - panel.getBoundingClientRect().top + panel.scrollTop + bottomPad + SITE_CARD_PEEK);
+  };
+  const cardContent = () => {
+    const panel = sheet.current;
+    const body = panel?.querySelector<HTMLElement>(".detail-panel");
+    if (!panel || !body) return 0;
+    return body.offsetTop + body.scrollHeight + (parseFloat(getComputedStyle(panel).paddingBottom) || 0);
+  };
+  const sheetStops = (): SheetStops =>
+    siteCard
+      ? siteCardStops(cardLowest(), cardContent(), innerHeight)
+      : mapSheetStops(sheetLowest(), innerHeight);
+  // The card's top part, measured once laid out: the model is framed above it, and it is where the card closes.
+  const [cardClosed, setCardClosed] = useState(0);
+  // Fully open, the card shows its end and fades no more.
+  const sheetStopsHighest =
+    siteCard && typeof innerHeight === "number" && sheet.current
+      ? siteCardStops(cardClosed, cardContent(), innerHeight).highest
+      : Infinity;
   useEffect(() => {
     if (!ready || wide) return;
-    setSheetHeight(
-      isDetail ? Math.round(innerHeight * SITE_SHEET) : sheetLowest(),
-    );
-  }, [ready, isDetail, wide]);
+    if (!siteCard) {
+      if (!isDetail) setSheetHeight(sheetLowest());
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      const lowest = cardLowest();
+      setCardClosed(lowest);
+      setSheetHeight(lowest);
+      sheet.current?.scrollTo({ top: 0 });
+    });
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, isDetail, siteCard, wide, siteId]);
+  // The card's lower edge: its content fades out there (prototype `eaSis`, `--g`), not under a white cover.
+  const fadeCard = useCallback(() => {
+    const panel = sheet.current;
+    const body = panel?.querySelector<HTMLElement>(".detail-panel");
+    if (!panel || !body) return;
+    const visible = panel.clientHeight + panel.scrollTop - body.offsetTop - (parseFloat(getComputedStyle(panel).paddingBottom) || 0);
+    body.style.setProperty("--g", `${Math.round(visible)}px`);
+  }, []);
+  useEffect(() => {
+    if (!siteCard || wide) return;
+    // The height moves over 280 ms: follow it.
+    const start = performance.now();
+    let frame = requestAnimationFrame(function step() {
+      fadeCard();
+      if (performance.now() - start < 340) frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [sheetHeight, siteCard, wide, fadeCard]);
   // A route opens the sheet at 58 % and gives the earlier height back when it closes; a tab keeps the height
   // (the prototype's `altH`): Eserler | Rotalar must not drop the sheet the visitor pulled up.
   const heightBeforeRoute = useRef<number | null>(null);
@@ -1088,7 +1151,10 @@ export function AkarApp() {
               tabIndex={-1}
               style={
                 sheetHeight
-                  ? ({ "--sheet-h": `${sheetHeight}px` } as CSSProperties)
+                  ? ({
+                      "--sheet-h": `${sheetHeight}px`,
+                      ...(cardClosed && { "--card-closed": `${cardClosed}px` }),
+                    } as CSSProperties)
                   : undefined
               }
               className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""} ${crowded ? "controls-crowded" : ""}`}
@@ -1100,22 +1166,27 @@ export function AkarApp() {
               )}
               <aside
                 ref={sheet}
-                className={`side-panel${sheetDragging ? " dragging" : ""}`}
+                className={`side-panel${sheetDragging ? " dragging" : ""}${siteCard && !wide && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
+                onScroll={siteCard && !wide ? fadeCard : undefined}
                 aria-label={t("app.panelAria")}
                 hidden={collapsed}
                 onPointerDown={(e) => {
                   const target = (e.target as HTMLElement).closest(
                     isDetail
-                      ? ".sheet-grip"
+                      ? ".sheet-grip, .detail-panel .panel-baslik"
                       : ".sheet-grip, .explore-tabs, .explore-heading",
                   );
                   if (!target) return;
+                  const handle = target.classList.contains("sheet-grip");
                   sheetDrag.current = {
                     y: e.clientY,
                     height: sheetHeight,
-                    handle: target.classList.contains("sheet-grip"),
+                    handle,
                     moved: false,
                   };
+                  // The handle is the sheet's top edge: the first move upward already leaves the sheet, so it holds
+                  // the pointer at once (it has no buttons inside whose clicks this would take).
+                  if (handle) e.currentTarget.setPointerCapture(e.pointerId);
                 }}
                 onPointerMove={(e) => {
                   const drag = sheetDrag.current;
@@ -1127,11 +1198,7 @@ export function AkarApp() {
                     setSheetDragging(true);
                   }
                   setSheetHeight(
-                    clampSheet(
-                      drag.height + drag.y - e.clientY,
-                      sheetLowest(),
-                      innerHeight,
-                    ),
+                    clampSheet(drag.height + drag.y - e.clientY, sheetStops()),
                   );
                 }}
                 onPointerUp={(e) => {
@@ -1139,24 +1206,36 @@ export function AkarApp() {
                   sheetDrag.current = null;
                   if (!drag) return;
                   setSheetDragging(false);
-                  const lowest = sheetLowest();
+                  const stops = sheetStops();
                   if (drag.moved)
                     setSheetHeight(
-                      settleSheet(
-                        drag.height + drag.y - e.clientY,
-                        lowest,
-                        innerHeight,
-                      ),
+                      settleSheet(drag.height + drag.y - e.clientY, stops),
                     );
                   else if (drag.handle)
-                    setSheetHeight(toggleSheet(drag.height, lowest, innerHeight));
+                    setSheetHeight(toggleSheet(drag.height, stops));
                 }}
                 onPointerCancel={() => {
                   sheetDrag.current = null;
                   setSheetDragging(false);
                 }}
               >
-                <div className="sheet-grip" aria-hidden="true" />
+                {siteCard ? (
+                  // The card's handle: a tap, Enter or Space opens it all the way or closes it; the arrow says which.
+                  <button
+                    type="button"
+                    className="sheet-grip card-grip"
+                    aria-expanded={sheetHeight > cardClosed + 8}
+                    aria-label={t(sheetHeight > cardClosed + 8 ? "site.cardClose" : "site.cardOpen")}
+                    onClick={(e) => {
+                      // A pointer's tap is handled on pointer up (with the drag); only the keyboard's click is left here.
+                      if (e.detail === 0) setSheetHeight((h) => toggleSheet(h, sheetStops()));
+                    }}
+                  >
+                    <ChevronUp size={14} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <div className="sheet-grip" aria-hidden="true" />
+                )}
                 {isDetail && site ? (
                   view === "story" && storySite ? (
                     <StoryPanel
@@ -1293,6 +1372,8 @@ export function AkarApp() {
                   <Scene
                     key={`${site.id}-${view}`}
                     context={view === "story" ? "story" : "detail"}
+                    // Phone: the scene fills the screen behind the floating card; the model stays above it closed.
+                    frameBottom={!wide && siteCard && cardClosed ? cardClosed + 12 : 0}
                     site={site}
                     live={live}
                     photoId={

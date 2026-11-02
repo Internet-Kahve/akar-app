@@ -132,6 +132,8 @@ export const tr = {
   "site.modelCanvas":
     "{name} 3B modeli. Döndürmek için sürükle, yakınlaştırmak için iki parmağını kullan.",
   "site.showParts": "Tıklanabilir parçaları göster",
+  "site.cardOpen": "Eser bilgisini aç",
+  "site.cardClose": "Eser bilgisini kapat",
   "site.showInside": "İçini göster",
   "site.showOutside": "Dışını göster",
   "site.viewPrev": "Önceki fotoğrafın açısı",
@@ -526,6 +528,8 @@ export const en = {
   "site.viewpointMap": "Viewpoint map",
   "site.modelCanvas": "3D model of {name}. Drag to rotate, use two fingers to zoom.",
   "site.showParts": "Show tappable parts",
+  "site.cardOpen": "Open the site's details",
+  "site.cardClose": "Close the site's details",
   "site.showInside": "Show the inside",
   "site.showOutside": "Show the outside",
   "site.viewPrev": "Previous photo's view",

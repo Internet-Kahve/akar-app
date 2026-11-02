@@ -2044,12 +2044,6 @@ h1,
   .story-progress {
     top: 8px;
   }
-  .story-flow-card {
-    left: 12px;
-    right: 12px;
-    top: 40px;
-    max-width: none;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .completion-rays,
@@ -3887,3 +3881,107 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 .galeri-ekle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 100%; box-sizing: border-box; padding: 12px; border: 1.5px dashed var(--border); border-radius: inherit; color: var(--sehir-aksan); font: 600 14px/20px var(--font); text-align: center; }
 .galeri-ekle small { font-weight: 400; color: var(--text-muted); font-size: 12px; line-height: 16px; }
 [data-theme="night"] .galeri-ekle { color: var(--sehir-acik); }
+
+/* ---------------- The phone's site card (prototype `#eser-alt`, commit e4f114c; Muhammed's `mobile/` screenshots,
+   1 Nov 2026). A floating glass card 12 px inside the screen's edges. Closed it shows the name, «Kısa hikâye» and
+   Dinle | Oku, and the first 44 px of what follows fading out; dragged or tapped, it rises to all its content (at most
+   75 %). «3D model · Temsili» and «İçini göster» ride on its top edge. The scene fills the screen behind it; the model
+   is framed above the closed card. Same drag as the map's sheet (akar-app, lib/bottom-sheet). */
+.detail-meta-end { display: none; }
+@media (max-width: 899.98px) {
+  .workspace.on-site:has(.detail-panel) .main-stage { bottom: 0; }
+  .workspace.on-site:has(.detail-panel) .side-panel {
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    height: var(--sheet-h, 194px);
+    padding: 0 16px 14px;
+    border-radius: 24px;
+    overflow: hidden;
+    scrollbar-width: none;
+  }
+  .workspace.on-site:has(.detail-panel) .side-panel::-webkit-scrollbar { display: none; }
+  .workspace.on-site .side-panel:has(.card-grip[aria-expanded="true"]) { overflow-y: auto; }
+  /* The content fades out at the card's lower edge (`--g`: where that edge falls inside it); open all the way, not. */
+  .workspace.on-site .side-panel:not(.full) .detail-panel {
+    -webkit-mask-image: linear-gradient(180deg, #000 0, #000 calc(var(--g, 44px) - 72px), rgba(0, 0, 0, 0.14) var(--g, 44px));
+    mask-image: linear-gradient(180deg, #000 0, #000 calc(var(--g, 44px) - 72px), rgba(0, 0, 0, 0.14) var(--g, 44px));
+  }
+  /* The handle: the bar and, below it, a small arrow that turns when the card is open. */
+  .card-grip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    width: calc(100% + 32px);
+    height: 30px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+  }
+  .card-grip::after { order: -1; }
+  .card-grip svg { opacity: 0.8; transition: transform 200ms var(--ease); }
+  .card-grip[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .card-grip:focus-visible { outline: 2px solid var(--primary); outline-offset: -4px; border-radius: 12px; }
+  /* Top part: the name alone (the year comes after Keşfet), as in the screenshots. */
+  .workspace.on-site .detail-panel { display: flex; flex-direction: column; }
+  .detail-panel .eb-bas .panel-meta { display: none; }
+  /* Measured against the prototype's card (`.eser-alt`): content 16 px from the card's edges, the name 26/30 under
+     the handle, Dinle | Oku 44 px, the full-text card 10 × 14 inside. */
+  .workspace.on-site .side-panel .detail-panel { padding: 0; }
+  .workspace.on-site .detail-panel .eb-bas .panel-baslik { font-size: 26px; line-height: 30px; touch-action: none; }
+  .workspace.on-site .detail-panel .eb-govde { padding-right: 44px; }
+  .workspace.on-site .detail-panel .detail-save { top: -2px; width: 36px; height: 36px; }
+  .workspace.on-site .detail-panel .hikaye-blok { order: 1; margin-top: 4px; }
+  .workspace.on-site .detail-panel .hb-bas { margin-bottom: 12px; }
+  .workspace.on-site .detail-panel .ikili { --h: 44px; margin-top: 0; }
+  .workspace.on-site .detail-panel .tam-kart { margin-top: 14px; padding: 10px 14px; }
+  .workspace.on-site .detail-panel .tk-yazi b { font-size: 20px; line-height: 24px; }
+  .workspace.on-site .detail-panel .tk-ok { width: 38px; height: 38px; }
+  .detail-panel .detail-next-stop { order: 2; }
+  .detail-panel .kesif-bas { order: 3; }
+  .detail-panel .kesif-yollari { order: 4; }
+  .detail-panel .detail-meta-end { order: 5; display: block; margin-top: 14px; color: var(--text-muted); font: 500 14px/20px var(--font); }
+  .detail-panel .detail-ornament { order: 6; margin: 8px 0; }
+  .detail-panel .detail-summary { order: 7; margin: 0 0 4px; }
+  /* «3D model · Temsili» 10 px and «İçini göster» 4 px above the card, moving with it (prototype `temsiliKonum`). */
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-label {
+    bottom: calc(var(--sheet-h, 194px) + 22px + env(safe-area-inset-bottom, 0px));
+    transition: bottom 280ms var(--ease);
+  }
+  .workspace.on-site:has(.detail-panel) .detail-scene > .model-viewer > .model-inside,
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-views {
+    bottom: calc(var(--sheet-h, 194px) + 16px + env(safe-area-inset-bottom, 0px));
+    transition: bottom 280ms var(--ease);
+  }
+  .workspace:has(.side-panel.dragging) .detail-scene :is(.model-label, .model-inside, .model-views) { transition: none; }
+  /* The gallery takes the height the closed card leaves. */
+  .workspace.on-site:has(.detail-panel) .galeri {
+    height: max(240px, calc(100dvh - var(--card-closed, 194px) - 12px - 100px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)));
+  }
+  /* «Sürükle: döndür · İki parmak: yakınlaştır · Dokun: parça» under the top row, as in the screenshots. */
+  .workspace.on-site .detail-scene .model-hint {
+    display: inline-flex;
+    position: absolute;
+    top: calc(70px + env(safe-area-inset-top, 0px));
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-edge), var(--glass-shadow);
+    color: var(--text);
+    font: 500 12px/18px var(--font);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+}
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
+  .workspace.on-site:has(.detail-panel) .detail-scene :is(.model-label, .model-inside, .model-views),
+  .card-grip svg { transition: none; }
+}

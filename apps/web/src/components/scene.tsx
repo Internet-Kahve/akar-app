@@ -342,8 +342,11 @@ export function Scene({
   onHotspot,
   onPick,
   context = "detail",
+  frameBottom = 0,
 }: {
   site: HeritageSite;
+  /** Height kept free at the bottom (the phone's site card, closed): the model is framed above it. */
+  frameBottom?: number;
   /** Visitors' photographs of the site (Yaşayan hafıza): the gallery shows them after the site's own. */
   visitors?: VisitorPhoto[];
   /** «Fotoğrafını ekle», the gallery's last tile: İz Bırak. */
@@ -451,7 +454,7 @@ export function Scene({
               ),
             })}
             tour={context === "story" && !onPick && !highlights?.length && turn}
-            frame={card && !cardPlace ? storyCardFrame(wide) : NO_FRAME}
+            frame={card && !cardPlace ? storyCardFrame(wide) : frameBottom ? { left: 0, bottom: frameBottom } : NO_FRAME}
             partCards={site.partCards}
             onPick={onPick}
             sources={site.sources}
