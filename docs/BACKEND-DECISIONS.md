@@ -570,3 +570,11 @@ Nasıl değiştirilir: panel `apps/web/src/components/admin-model-preview.tsx`; 
 `0031_personal_routes` ile `user_routes` ve `user_route_items` eklendi. Katalog rotaları kişisel rotalardan ayrı kalır. Kullanıcı sahipliği her okumada/yazmada denetlenir; başkasının kimliği 404 verir. Rota adı 1–80 karakter, liste en fazla 100 benzersiz yayındaki eserdir. Duraklar tam liste olarak atomik değiştirilir; eski ve yeni yazma uçları aynı kullanıcı kilidini kullanır.
 
 Eski `user_route_stops` verisi varsayılan bir “Rotam” kaydına sırası korunarak kopyalanır; tablo silinmez. Eski uçların sözleşmesi değişmez ve varsayılan rota her iki tabloda birlikte yazılır. Varsayılan rota silinirse boş varsayılan yeniden oluşturulur. Hesap silme yeni rotaları ve cascade ile duraklarını da siler. OpenAPI ve `CONTRACTS.md` yeni beş ucu tanımlar. Cihazdaki varsayılan dışındaki rotalar giriş sırasında hesaba otomatik taşınmaz; cihazda tutulur.
+
+Ek (2 Kas): iki tablo da RLS ile açılır (0010'dan beri tüm tablolarda olduğu gibi; erişim yalnız API üzerinden), kullanıcı başına tek varsayılan rota benzersiz kısmi indeksle (`user_routes_one_default`) veritabanında da güvenceye alınır. Haritadaki kısa kartta «Rotama ekle» rota oluşturucuyu açar; eser zaten Rotam'daysa «Rotamdan çıkar» onu doğrudan çıkarır (oluşturucu açılıp eseri yeniden eklemez).
+
+**11.62 İçe aktarma hikâye cümlelerinin İngilizcesini korur; İngilizce seslendirmeler de böylece kaybolmaz.**
+Karar: `loadCatalog` (içe aktarma ve tohumlama) hikâye cümlelerini silip yeniden yazarken, veritabanında İngilizce metni olan cümlenin `text_en`, `simple_en` ve durumlarını korur; paketteki `textEn` yalnız boş olanı doldurur. Seslendirmeler (`narrations`) zaten içe aktarmada silinmiyordu ama yalnız metni değişmemiş cümlede çalınır; İngilizce silinince İngilizce kayıtlar fiilen kayboluyordu.
+Neden: İngilizce metinler panelde ve çeviriyle yazılır, içerik paketinde yoktur; Deepgram kayıtları ücretli ve günlük kotalıdır. Türkçe metni değişen cümlenin Türkçe kaydı yine eskir (doğru davranış); İngilizcesi korunur, gerekirse panelde yeniden çevrilir.
+Karar veren / tarih: Burak, 2 Kas ("Deepgram seslendirmeleri kaybolmamalı, EN/TR çeviriler ideal olarak korunmalı").
+Nasıl değiştirilir: `services/api/src/db/seed.ts` `keptEnglish`.

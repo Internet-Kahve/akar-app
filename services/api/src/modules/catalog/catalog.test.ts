@@ -533,12 +533,21 @@ test("detail pages hold every published site once, each equal to its own detail 
   assert.ok(!paged.some((s) => s.id === "taslak"));
 });
 
-test("loading the same catalog twice creates no duplicates", async () => {
+test("loading the same catalog twice creates no duplicates and keeps the English written since, with its voice-over", async () => {
+  const english = { textEn: "Text", textEnStatus: "reviewed" as const, simpleEn: "Simple text", simpleEnStatus: "machine" as const };
+  await app.deps.db.update(storyBlocks).set(english).where(eq(storyBlocks.siteId, "carsi-hamami"));
+  await narrate(app.deps.db, "carsi-hamami", "carsi-hamami-s1", "text", "en", "m-audio-en");
   await loadCatalog(app.deps.db, { sites, routes: [route("sirali", ["iznik-han", "carsi-hamami", "han-a", "taslak"])] });
   const list = await get<Page>("/v1/sites?limit=100");
   assert.equal(list.body.items.length, 7);
   const detail = await get<SiteDetail>("/v1/sites/carsi-hamami");
   assert.equal(detail.body.stories.length, 1);
+  const [story] = detail.body.stories;
+  assert.deepEqual(
+    { textEn: story!.textEn, textEnStatus: story!.textEnStatus, simpleEn: story!.simpleEn, simpleEnStatus: story!.simpleEnStatus },
+    english,
+  );
+  assert.deepEqual(story!.narrations?.map((n) => n.lang), ["en"]);
   const r = await get<RouteDto>("/v1/routes/sirali");
   assert.equal(r.body.stops.length, 3);
 });
