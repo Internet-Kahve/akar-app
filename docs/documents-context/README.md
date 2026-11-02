@@ -1,6 +1,6 @@
 # AKAR · Proje bağlamı ve üretim dosyaları
 
-> 23 Ekim temizliği: kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği: yedi 3D modelli eser (Bursa) ve 30 Ekim 2026'dan beri yalnız fotoğraflı dört eser (Bursa'da İnebey Medresesi ve Alaaddin Bey Çeşmesi, Konya'da Karatay Medresesi, Hatay'da Habib-i Neccar Camii).
+> 23 Ekim ve 2 Kasım temizlikleri (ayrıntı: [Klasör yapısı](KLASOR_YAPISI.md)): kaldırılan çalışma dosyalarına ait bağlantılar Git geçmişindeki doğrulanmış sürüme gider. Güncel demo içeriği: yedi 3D modelli eser (Bursa) ve 30 Ekim 2026'dan beri yalnız fotoğraflı dört eser (Bursa'da İnebey Medresesi ve Alaaddin Bey Çeşmesi, Konya'da Karatay Medresesi, Hatay'da Habib-i Neccar Camii).
 
 Ürün belgeleri, tasarım referansları, kaynak verisi ve eserlerin 3D üretimi burada tutulur. Güncel ürün odağı Bursa'dır. Uygulama kodu aynı reponun `apps/` ve `packages/` klasörlerindedir.
 
@@ -9,7 +9,8 @@
 1. [Tam bağlam](AKAR_Tam_Baglam.md): ürün kararları; güncel bölümlerden başlayın.
 2. [Frontend/backend notları](FRONTEND_BACKEND_NOTLARI.md): kapsam, şema ve ekran kuralları.
 3. [İçerik yöntemi](ICERIK_YONTEMI.md): eser hikâyeleri, fotoğraf seçimi ve kaynak kuralları.
-4. [Hackathon rehberi · Git arşivi](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/hackathon/README.md): başvuru ve yarışma kaynakları.
+4. [Prototip aktarımı](PROTOTIP_AKTARIM.md): güncel çalışma notu ve sıradaki işler; ekip düzeyindeki açık işler [Yapılacaklar](YAPILACAKLAR.md).
+5. [Hackathon rehberi · Git arşivi](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/hackathon/README.md): başvuru ve yarışma kaynakları.
 
 ## Hangi dosya nerede?
 

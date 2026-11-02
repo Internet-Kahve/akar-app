@@ -1,6 +1,6 @@
 # AKAR · Klasör yapısı
 
-17 Ekim 2026, güncelleme 22 Ekim 2026. Giriş: [README](README.md).
+17 Ekim 2026, güncelleme 22 Ekim ve 2 Kasım 2026. Giriş: [README](README.md).
 
 ```text
 documents-context/
@@ -9,6 +9,10 @@ documents-context/
 ├── AKAR_Tam_Baglam.md
 ├── FRONTEND_BACKEND_NOTLARI.md
 ├── ICERIK_YONTEMI.md         Eser içeriği (hikâye, fotoğraf, kaynak) kuralları
+├── ICERIK_INGILIZCE.md        İngilizce içerik dosyalarının biçimi
+├── ENTEGRASYON_29EKIM.md     Prototipten ürüne veri/şema kararları (BACKEND-DECISIONS bunlara atıf yapar)
+├── PROTOTIP_AKTARIM.md       Güncel çalışma notu ve sıradaki işler
+├── YAPILACAKLAR.md           Ekip düzeyinde açık işler
 ├── PROTOTIP_DERSLERI.md
 ├── hackathon/                Yarışma PDF'leri ve rehber
 ├── design/
@@ -17,9 +21,7 @@ documents-context/
 │   ├── desenler/
 │   ├── harita/
 │   ├── ekranlar-15ekim/
-│   ├── karsilastirma/
-│   └── PROTOTIP_KAYDI.md     Kaldırılan prototipin tarihli notları
-├── promptlar/                3D ve içerik ajanlarına verilen iş emirleri
+│   └── karsilastirma/
 ├── eserler/
 │   ├── README.md
 │   ├── _kutuphane/           Ortak Blender yardımcıları ve yöntem
@@ -79,5 +81,8 @@ Yalnız fotoğraflı dört eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Ka
 | `parcalar.md` | 3D parça kartları | evet |
 | `gorevler.json` | Bulmaca, saha görevi, rozetler | evet |
 | `eser-hakkinda-ozet.md` | Önceki özet metin ve kaynak notları | hayır |
-| `_eski/` | Yerini yeni dosyaya bırakan taslaklar (ör. `parcalar_taslak.md`) | hayır |
 | `en/` | İngilizce karşılıklar (`ICERIK_INGILIZCE.md`) | evet (varsa) |
+
+## 2 Kasım 2026 temizliği
+
+Biten iş emirleri (`promptlar/`), eski 3D revizyon planları (`eserler/*/SONNET_REVIZYON_PLANI.md`), `icerik/_eski/` taslakları, `eserler/ulu-cami/3d/kart_onerisi_v30.md`, prototipin tarihli kaydı (`design/PROTOTIP_KAYDI.md`), `PROTOTIP_URUN_FARKI.md` (yerine `PROTOTIP_AKTARIM.md` §2) ve çalışma günlüğü `yaptiklarim-2.md` çalışma ağacından kaldırıldı; hepsi Git geçmişinde (commit `f7df24c` ve öncesi). Eski belgelerdeki bu dosyalara bağlantılar tarihsel kayıttır.
