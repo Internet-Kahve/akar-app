@@ -22,7 +22,7 @@ import {
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
 import { readPreference, writePreference } from "../lib/preferences";
 import { TrustTag } from "./side-sheet";
-import { NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
+import { clampCardScale, NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
 import { Lightbox, useWide, type Shown } from "./about-reading";
 import { Cities, useCityIdentity, useCityScene } from "./city-scenes";
 import { Localized, useI18n } from "./i18n";
@@ -327,6 +327,9 @@ export function Architecture({ kind = "cami" }: { kind?: string }) {
     </div>
   );
 }
+/** The story photo card's place and size on this device. */
+const CARD_KEY = "akar.hikaye-kart";
+
 export function Scene({
   site,
   flow = false,
@@ -374,8 +377,26 @@ export function Scene({
   const cityScene = useCityScene(site.city);
   const identity = useCityIdentity(site.city);
   const wide = useWide();
-  // Where the visitor dragged the photo card; it stays there through the sentences.
+  // Where the visitor dragged the photo card and how large they made it: kept through the sentences and, on this
+  // device, for the next story (`akar.hikaye-kart`).
   const [cardPlace, setCardPlace] = useState<CardPlace | null>(null);
+  const [cardScale, setCardScale] = useState(1);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(readPreference(CARD_KEY) ?? "null") as { place?: CardPlace | null; scale?: number } | null;
+      if (typeof saved?.scale === "number") setCardScale(clampCardScale(saved.scale));
+      if (saved?.place && Number.isFinite(saved.place.left) && Number.isFinite(saved.place.top)) setCardPlace(saved.place);
+    } catch {}
+  }, []);
+  // Written only after a change: the first run holds the defaults, before what was saved is read back.
+  const cardWritten = useRef(false);
+  useEffect(() => {
+    if (!cardWritten.current) {
+      cardWritten.current = true;
+      return;
+    }
+    writePreference(CARD_KEY, JSON.stringify({ place: cardPlace, scale: cardScale }));
+  }, [cardPlace, cardScale]);
   // A model site opens on the model, also in the story (its camera follows the sentences).
   const [mode, setModeState] = useState<"photo" | "model">(
     photoId && !site.model ? "photo" : "model",
@@ -454,7 +475,7 @@ export function Scene({
               ),
             })}
             tour={context === "story" && !onPick && !highlights?.length && turn}
-            frame={card && !cardPlace ? storyCardFrame(wide) : frameBottom ? { left: 0, bottom: frameBottom } : NO_FRAME}
+            frame={card && !cardPlace ? storyCardFrame(wide, cardScale) : frameBottom ? { left: 0, bottom: frameBottom } : NO_FRAME}
             partCards={site.partCards}
             onPick={onPick}
             sources={site.sources}
@@ -479,6 +500,12 @@ export function Scene({
               sources={site.sources ?? []}
               place={cardPlace}
               onPlace={setCardPlace}
+              scale={cardScale}
+              onScale={setCardScale}
+              onReset={() => {
+                setCardPlace(null);
+                setCardScale(1);
+              }}
             />
           )}
         </>

@@ -10,10 +10,26 @@ const CARD_STRIP_HEIGHT = 96;
 const CARD_EDGE = 20;
 const CARD_GAP = 12;
 
-export function storyCardFrame(wide: boolean): SceneFrame {
+/** The visitor sizes the photo card between these (Muhammed, 2 Nov 2026); 1 is the designed size. */
+export const CARD_SCALE_MIN = 0.75;
+export const CARD_SCALE_MAX = 1.6;
+export const clampCardScale = (scale: number) =>
+  Math.round(Math.min(CARD_SCALE_MAX, Math.max(CARD_SCALE_MIN, scale)) * 100) / 100;
+
+/** What the card at its own place by default covers: the model is framed in the rest, at any size of the card. */
+export function storyCardFrame(wide: boolean, scale = 1): SceneFrame {
   return wide
-    ? { left: CARD_EDGE + CARD_WIDTH + CARD_GAP, bottom: 0 }
-    : { left: 0, bottom: CARD_GAP + CARD_STRIP_HEIGHT + CARD_GAP };
+    ? { left: CARD_EDGE + Math.round(CARD_WIDTH * scale) + CARD_GAP, bottom: 0 }
+    : { left: 0, bottom: CARD_GAP + Math.round(CARD_STRIP_HEIGHT * scale) + CARD_GAP };
+}
+
+/**
+ * The card's new size after its corner was dragged by (dx, dy): on a wide screen its width follows the pointer; on a
+ * phone, where the card is a strip, its height does: upward while it sits at the bottom, downward once moved.
+ */
+export function resizedCardScale(scale: number, wide: boolean, dx: number, dy: number, anchoredBottom: boolean) {
+  const grow = wide ? dx / CARD_WIDTH : (anchoredBottom ? -dy : dy) / CARD_STRIP_HEIGHT;
+  return clampCardScale(scale + grow);
 }
 
 /**

@@ -5,6 +5,8 @@ import {
   fitHalfAngle,
   NO_FRAME,
   storyCardFrame,
+  clampCardScale,
+  resizedCardScale,
   storyPartCard,
   tourCarriesOn,
 } from "./story-scene";
@@ -53,4 +55,16 @@ test("the photo card opens the part card of what the sentence highlights", () =>
   assert.equal(storyPartCard(cards, ["Mihrap"])?.id, "b");
   assert.equal(storyPartCard(cards, ["Minare"]), undefined);
   assert.equal(storyPartCard(cards, []), undefined);
+});
+
+test("the photo card's size stays between its bounds, and the model's frame grows with it", () => {
+  assert.equal(clampCardScale(3), 1.6);
+  assert.equal(clampCardScale(0.2), 0.75);
+  assert.equal(storyCardFrame(true, 1.5).left, 20 + 480 + 12);
+  assert.equal(storyCardFrame(false, 1.5).bottom, 12 + 144 + 12);
+  // Wide: the corner's horizontal move sets the width; 160 px more is half again.
+  assert.equal(resizedCardScale(1, true, 160, 999, false), 1.5);
+  // Phone strip at the bottom: dragging its corner up enlarges it; once moved, dragging down does.
+  assert.equal(resizedCardScale(1, false, 0, -48, true), 1.5);
+  assert.equal(resizedCardScale(1, false, 0, 48, false), 1.5);
 });
