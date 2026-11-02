@@ -526,7 +526,22 @@ function Reading({
   );
 
   return (
-    <div className="about-scroll" ref={scroller}>
+    <div
+      className={`about-scroll${voice ? " voicing" : ""}`}
+      ref={scroller}
+      // While reading aloud, a tap on a paragraph goes on from there: the voice and the highlight stay on what the
+      // visitor is looking at (Muhammed, 2 Nov 2026). A term or a link in it keeps its own tap.
+      onClick={(e) => {
+        if (!voice) return;
+        const target = e.target as HTMLElement;
+        if (target.closest("button, a")) return;
+        const paragraph = target.closest<HTMLElement>(".about-p, .about-inscription-meaning");
+        const chapter = Number(paragraph?.closest<HTMLElement>("[data-chapter]")?.dataset.chapter);
+        if (!paragraph || !Number.isInteger(chapter)) return;
+        const at = paragraphs(chapter).indexOf(paragraph);
+        if (at >= 0) setVoice({ ...voice, chapter, paragraph: at, playing: true, follow: true });
+      }}
+    >
       {!wide && nav}
       <header className="about-cover">
         {wide && (
@@ -684,8 +699,14 @@ function Reading({
               <div className="about-player-buttons">
                 <button
                   aria-label={t("site.aboutPrevParagraph")}
+                  disabled={voice.chapter === 0 && voice.paragraph === 0}
                   onClick={() =>
-                    setVoice({ ...voice, follow: true, paragraph: Math.max(0, voice.paragraph - 1) })
+                    // At a chapter's start, back goes to the last paragraph of the chapter before (as forward goes on).
+                    setVoice(
+                      voice.paragraph > 0
+                        ? { ...voice, follow: true, paragraph: voice.paragraph - 1 }
+                        : { ...voice, follow: true, chapter: voice.chapter - 1, paragraph: Math.max(0, paragraphs(voice.chapter - 1).length - 1) },
+                    )
                   }
                 >
                   <SkipBack size={18} />
