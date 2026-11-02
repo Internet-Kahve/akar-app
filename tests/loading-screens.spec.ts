@@ -22,7 +22,7 @@ async function holdMap(page: Page) {
 
 test("the opening screen names the default city and draws its pattern from the city record, and leaves when the map is drawn", async ({ page }) => {
   const release = await holdMap(page);
-  await page.goto("/");
+  await page.goto("/#view=map");
   const opening = page.locator(".opening");
   await expect(opening).toBeVisible();
   await expect(opening).toHaveAttribute("role", "status");
@@ -53,7 +53,7 @@ test("the opening screen names the default city and draws its pattern from the c
 
 test("the emblem is drawn stroke by stroke, and stands drawn when the visitor asks for less motion", async ({ page }) => {
   const release = await holdMap(page);
-  await page.goto("/");
+  await page.goto("/#view=map");
   const stroke = page.locator(".opening .emblem path");
   await expect(stroke).toHaveAttribute("pathLength", "1");
   await expect(stroke).toHaveCSS("animation-name", "emblem-draw");
@@ -64,7 +64,9 @@ test("the emblem is drawn stroke by stroke, and stands drawn when the visitor as
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   const still = await holdMap(page);
-  await page.goto("/");
+  // The same address with only its #view: a full load, not a jump within the page.
+  await page.goto("about:blank");
+  await page.goto("/#view=map");
   const drawn = page.locator(".opening .emblem path");
   await expect(drawn).toHaveCSS("animation-name", "none");
   await expect(drawn).toHaveCSS("stroke-dashoffset", "0px");

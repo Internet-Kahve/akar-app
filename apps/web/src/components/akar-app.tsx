@@ -845,7 +845,8 @@ export function AkarApp() {
       ready &&
       showMap &&
       !isDetail &&
-      !window.location.hash.slice(1) &&
+      // The bare map: «Haritayı aç» on the introduction comes here as #view=map.
+      ["", "view=map"].includes(window.location.hash.slice(1)) &&
       !readPreference("akar.karsilama")
     )
       setWelcome(true);

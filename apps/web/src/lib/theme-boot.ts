@@ -6,12 +6,10 @@ export const THEME_KEY = "akar.tema";
  */
 export const THEME_BOOT = `try{if(localStorage.getItem("${THEME_KEY}")==="night")document.documentElement.dataset.theme="night"}catch(e){}`;
 
-/** Device key set by the introduction page (`/tanitim/yeni/`) once it has been shown. */
-export const INTRO_KEY = "akar.tanitim";
-/** Where a first visit begins (Muhammed, 2 Nov 2026): the scrolled introduction, whose «Haritayı aç» opens the map. */
-export const INTRO_PAGE = "/tanitim/yeni/index.html";
+/** The site's main page (Muhammed, 2 Nov 2026): the scrolled introduction; its buttons lead into the app. */
+export const INTRO_PAGE = "/tanitim";
 /**
- * Runs in <head> before the page paints: a first visit to the bare address goes to the introduction. A visitor who has
- * seen it (or the map's welcome card) and every link into the app (`/#view=…`) opens the app itself.
+ * Runs in <head> before the page paints: the bare address is the introduction. The app lives behind its views
+ * (`/#view=map`, `/#view=detail&site=…`), which every button and link into it carries.
  */
-export const INTRO_BOOT = `try{if(location.pathname==="/"&&!location.hash&&!localStorage.getItem("${INTRO_KEY}")&&!localStorage.getItem("akar.karsilama"))location.replace("${INTRO_PAGE}")}catch(e){}`;
+export const INTRO_BOOT = `try{if(location.pathname==="/"&&!location.hash)location.replace("${INTRO_PAGE}")}catch(e){}`;
