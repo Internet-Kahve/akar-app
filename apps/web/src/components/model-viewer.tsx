@@ -18,6 +18,7 @@ import { PartCardDialog, partLabel } from "./part-card";
 import { liftGroundLayers } from "../lib/ground-layers";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addModelLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
+import { spreadOrder, type PartPoint } from "../lib/part-order";
 import { currentTheme, subscribeTheme } from "../lib/theme";
 import {
   fitHalfAngle,
@@ -124,6 +125,8 @@ export default function ModelViewer({
   const [showingParts, setShowingParts] = useState(false);
   const select = useRef<((parts: string[]) => void) | null>(null);
   const pulse = useRef<((levels: Map<string, number>) => void) | null>(null);
+  /** Centre of the given parts in the model's space (null when none is in the file): spreads the show-parts order. */
+  const centreOf = useRef<((parts: string[]) => PartPoint) | null>(null);
   const pulseFrame = useRef(0);
   useEffect(() => () => cancelAnimationFrame(pulseFrame.current), [model.src]);
   const spin = useRef<((on: boolean) => void) | null>(null);
@@ -616,6 +619,17 @@ export default function ModelViewer({
             canvas.removeEventListener("pointerleave", onLeave);
           };
           pulse.current = (levels) => { pulses = levels; glow(); };
+          const centres = new Map<string, THREE.Vector3>();
+          for (const part of meshesOf.keys()) {
+            const node = root.getObjectByName(part);
+            if (node) centres.set(part, new THREE.Box3().setFromObject(node).getCenter(new THREE.Vector3()));
+          }
+          centreOf.current = (parts) => {
+            const found = parts.flatMap((part) => centres.get(part) ?? []);
+            if (!found.length) return null;
+            const sum = found.reduce((a, b) => a.clone().add(b), new THREE.Vector3()).divideScalar(found.length);
+            return { x: sum.x, y: sum.y, z: sum.z };
+          };
           select.current = (parts) => {
             selected = parts;
             glow();
@@ -765,6 +779,7 @@ export default function ModelViewer({
       lift.current = null;
       select.current = null;
       pulse.current = null;
+      centreOf.current = null;
       cancelAnimationFrame(pulseFrame.current);
       spin.current = null;
       reframe.current = null;
@@ -866,12 +881,15 @@ export default function ModelViewer({
             const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             const stagger = Math.min(PART_STAGGER_MS, 2600 / Math.max(1, partCards.length - 1));
             const duration = reduced ? 1000 : PART_PULSE_MS + (partCards.length - 1) * stagger;
+            // Random, each card far from the one before (lib/part-order): neighbours lit in turn read as one part.
+            const order = spreadOrder(partCards.map((card) => centreOf.current?.(card.parts) ?? null));
+            const slot = new Map(order.map((card, at) => [card, at]));
             const start = performance.now();
             const animate = (now: number) => {
               const elapsed = now - start;
               const levels = new Map<string, number>();
               partCards.forEach((card, index) => {
-                const progress = (elapsed - index * stagger) / PART_PULSE_MS;
+                const progress = (elapsed - (slot.get(index) ?? index) * stagger) / PART_PULSE_MS;
                 const level = reduced ? PICK_GLOW : progress > 0 && progress < 1 ? PICK_GLOW * Math.sin(Math.PI * progress) : 0;
                 for (const part of card.parts) levels.set(part, Math.max(levels.get(part) ?? 0, level));
               });
