@@ -68,7 +68,6 @@ import { memoryTraces } from "../lib/memory-traces";
 import { LivingMemory } from "./living-memory";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { StoryPanel, StoryProgress } from "./story-panel";
-import { StoryFlowMap } from "./story-flow-map";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
@@ -567,16 +566,6 @@ export function AkarApp() {
     return stories.length ? { ...site, stories } : undefined;
   }, [site, routeId]);
   const storyBlock = view === "story" ? storySite?.stories[storyIndex] : undefined;
-  const flowEnds = useMemo(() => {
-    const flow = storyBlock?.flow;
-    if (!flow) return null;
-    const at = (id: string | null) =>
-      state.sites.find((s) => s.id === id)?.coordinates;
-    const from = at(flow.fromSiteId),
-      to = flow.toPoint ?? at(flow.toSiteId);
-    const fromName = state.sites.find((s) => s.id === flow.fromSiteId)?.name;
-    return from && to && fromName ? { from, to, fromName } : null;
-  }, [storyBlock, state.sites]);
   const filtered = useMemo(
     () =>
       filterSites(state.sites, query).filter((s) =>
@@ -1334,8 +1323,7 @@ export function AkarApp() {
                     flow={
                       !live &&
                       view === "story" &&
-                      storyBlock?.id === "akar" &&
-                      !flowEnds
+                      storyBlock?.id === "akar"
                     }
                     onHotspot={(id) => {
                       const index = site.stories.findIndex((s) => s.id === id);
@@ -1444,15 +1432,6 @@ export function AkarApp() {
                     stories={storySite.stories}
                     index={storyIndex}
                     onIndex={setStoryIndex}
-                  />
-                )}
-                {view === "story" && storyBlock?.flow && flowEnds && (
-                  <StoryFlowMap
-                    key={storyBlock.id}
-                    flow={storyBlock.flow}
-                    fromName={flowEnds.fromName}
-                    from={flowEnds.from}
-                    to={flowEnds.to}
                   />
                 )}
                 {pick && (
