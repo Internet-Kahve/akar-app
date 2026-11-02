@@ -35,13 +35,13 @@ async function openReading(page: Page) {
     localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data));
     const said: string[] = [];
     (window as unknown as { said: string[] }).said = said;
-    // Each sentence ends after a moment, long enough for the test to see it highlighted.
+    // Each part ends after a moment, long enough for the test to see it highlighted and act on it.
     const voice = {
       speaking: false, pending: false, paused: false,
       getVoices: () => [], cancel() {}, pause() {}, resume() {}, addEventListener() {}, removeEventListener() {},
       speak(u: { text: string; onend?: () => void }) {
         said.push(u.text);
-        setTimeout(() => u.onend?.(), 400);
+        setTimeout(() => u.onend?.(), 1500);
       },
     };
     Object.defineProperty(window, "speechSynthesis", { value: voice, configurable: true });
@@ -63,17 +63,20 @@ const said = (page: Page) => page.evaluate(() => (window as unknown as { said: s
 test("a chapter's Dinle starts at its title; a tapped paragraph goes on from there; back crosses chapters", async ({ page }) => {
   const reading = await openReading(page);
   await reading.locator("[data-chapter='1'] .about-chapter-listen").click();
-  // Chapter 2 opens with its title and first paragraph, and that paragraph is the one highlighted.
-  await expect.poll(async () => (await said(page))[0]).toBe("Bölüm 2. Bölüm 2, paragraf 1.");
+  // Chapter 2 opens with its title, then its first paragraph, which is highlighted while the title is read.
+  await expect.poll(async () => (await said(page))[0]).toBe("Bölüm 2");
   await expect(reading.locator(".about-reading-now").first()).toHaveText("Bölüm 2, paragraf 1.");
+  await expect.poll(async () => (await said(page))[1]).toBe("Bölüm 2, paragraf 1.");
   // A tap on another chapter's paragraph goes on from it.
   await reading.locator(".about-p", { hasText: "Bölüm 3, paragraf 2." }).click();
   await expect.poll(async () => (await said(page)).at(-1)).toBe("Bölüm 3, paragraf 2.");
   const player = page.getByRole("region", { name: /Sesli okuma|okuma/ });
   await expect(player).toContainText("Bölüm 3");
-  // Back twice: the paragraph before, then the last paragraph of the chapter before.
+  // Back twice: the paragraph before (its chapter's first, so the title first), then the last paragraph of the
+  // chapter before.
+  const before = (await said(page)).length;
   await player.getByRole("button", { name: /Önceki paragraf/ }).click();
-  await expect.poll(async () => (await said(page)).at(-1)).toBe("Bölüm 3. Bölüm 3, paragraf 1.");
+  await expect.poll(async () => (await said(page)).slice(before, before + 2)).toEqual(["Bölüm 3", "Bölüm 3, paragraf 1."]);
   await player.getByRole("button", { name: /Önceki paragraf/ }).click();
   await expect.poll(async () => (await said(page)).at(-1)).toBe("Bölüm 2, paragraf 2.");
   await expect(player).toContainText("Bölüm 2");

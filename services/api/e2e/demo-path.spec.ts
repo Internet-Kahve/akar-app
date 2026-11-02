@@ -169,7 +169,9 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   // The published photo file is gone from public storage.
   expect((await fetch(photoUrl!)).ok).toBe(false);
 
-  // 5. The author sees the reason in Paylaşımlarım and deletes the memory for good.
+  // 5. The author sees the reason in Paylaşımlarım and deletes the memory for good. (A full load: the visitor is
+  // already on this address, and a jump within the page would keep the list read before the takedown.)
+  await visitor.page.goto("about:blank");
   await visitor.page.goto("/#view=map");
   await openProfile(visitor.page);
   const own = visitor.page.locator(".memory-row").filter({ hasText: text });
