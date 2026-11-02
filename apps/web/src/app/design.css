@@ -3693,45 +3693,43 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .detail-scene > .model-viewer > .model-inside { right: 16px; bottom: 38px; }
 }
 
-.route-builder { position: absolute; z-index: 18; bottom: 16px; left: 16px; right: 16px; background: var(--surface); color: var(--text); border-radius: 18px; box-shadow: var(--glass-shadow); padding: 8px 12px 12px; }
-.route-builder-grip { display: flex; justify-content: center; width: 100%; height: 20px; background: transparent; touch-action: none; }
-.route-builder-grip i { width: 36px; height: 4px; border-radius: 4px; background: var(--text-muted); }
-.route-builder-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.route-builder-bar input, .route-builder-bar select { min-width: 0; width: 140px; height: 36px; padding: 4px 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; }
-.route-builder-bar span { flex: 1; font-size: 12px; white-space: nowrap; }
-.route-builder-bar .btn { min-height: 36px; padding: 6px 10px; }
-.route-builder-stops { max-height: 40dvh; overflow: auto; }
-.route-builder-stops p { font-size: 12px; }
-.route-builder-stops ol { padding: 0; list-style: none; }
-.route-builder-stops li { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
-.route-builder-stops li span { flex: 1; }
-.route-builder-stops li button { background: transparent; color: var(--text); min-width: 32px; height: 36px; }
-.route-drag { touch-action: none; }
+/* Rotam in the side panel (Muhammed, 2 Nov 2026): heading, fields, summary, numbered stops, Vazgeç / Kaydet fixed
+   at the foot. On a phone the same, in the sheet. */
+.route-builder { display: flex; flex-direction: column; gap: 12px; min-height: 100%; padding-top: 4px; }
+.rb-head { display: flex; align-items: center; gap: 8px; }
+.rb-head h2 { flex: 1; margin: 0; font: 600 24px/30px var(--font-display); }
+.rb-delete { color: var(--danger, #b3261e); }
+.rb-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rb-fields label { display: grid; gap: 4px; min-width: 0; }
+.rb-fields span { font: 600 11px/14px var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.rb-fields :is(input, select) { width: 100%; min-width: 0; height: 40px; padding: 0 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); font: 500 14px var(--font); }
+.rb-summary { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--primary-light); color: var(--text); font: 600 14px/20px var(--font); }
+.rb-stops { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.rb-stops li { display: grid; grid-template-columns: 28px 26px 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px; border-radius: 14px; background: var(--surface); box-shadow: 0 1px 3px #141b2b1a; }
+.rb-drag { display: grid; place-items: center; width: 28px; height: 36px; padding: 0; border: 0; background: none; color: var(--text-muted); cursor: grab; touch-action: none; }
+.rb-no { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--gold, #c9a227); color: #2b2100; font: 700 13px/1 var(--font); }
+.rb-stops img, .rb-img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
+.rb-img { display: grid; place-items: center; background: var(--primary-light); color: var(--text-muted); }
+.rb-name { min-width: 0; font: 600 15px/20px var(--font); overflow: hidden; text-overflow: ellipsis; }
+.rb-name small { display: block; color: var(--text-muted); font: 500 12px/16px var(--font); }
+.rb-tools { display: flex; gap: 2px; }
+.rb-tools button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text-muted); }
+.rb-tools button:hover:not(:disabled) { background: var(--primary-light); color: var(--text); }
+.rb-tools button:disabled { opacity: .35; }
+.rb-empty { margin: 0; padding: 18px 14px; border: 1.5px dashed var(--border); border-radius: 14px; color: var(--text-muted); text-align: center; }
+.rb-hint { margin: 0; color: var(--text-muted); font-size: 12px; line-height: 17px; }
+.rb-foot { position: sticky; bottom: 0; display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; margin-top: auto; padding: 12px 0 4px; background: linear-gradient(180deg, transparent, var(--surface) 30%); }
+.rb-foot .btn { min-height: 44px; }
 @media (max-width: 899.98px) {
-  .route-builder { bottom: calc(var(--sheet-h, 200px) + 12px); left: 8px; right: 8px; }
-  .route-builder-bar input, .route-builder-bar select { flex: 1; width: 42%; }
-  .route-builder-bar span { flex-basis: 42%; }
+  .rb-fields { grid-template-columns: 1fr; }
+  .rb-foot { padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
 }
 
 .personal-route-list { display: grid; gap: 8px; margin-bottom: 16px; }
-@media (max-width: 899.98px) {
-  .route-builder-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .route-builder-bar input, .route-builder-bar select { grid-column: span 2; width: 100%; }
-  .route-builder-bar span { grid-column: span 2; }
-  .route-builder-bar .btn { width: 100%; padding-inline: 4px; }
-}
 /* The reading page's figures on a wide screen: as many to a row as fit (prototype `.hk-d .hk-rakamlar`), so three stand side by side. */
 @media (min-width: 900px) {
   .about-page .about-figures { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 }
-
-/* The income road on the story map (prototype «Akar akışı»): the two buildings and the road's label at its middle. */
-.flow-end { display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; }
-.flow-end i { width: 14px; height: 14px; border-radius: 50%; background: var(--sehir-aksan); border: 3px solid #E3BC5E; box-shadow: 0 2px 6px rgba(20, 27, 43, .3); order: 2; }
-.flow-end b { order: 1; padding: 2px 8px; border-radius: 999px; background: rgba(255, 255, 255, .86); color: var(--text); font: 600 15px/20px var(--font-display); white-space: nowrap; box-shadow: 0 1px 4px rgba(20, 27, 43, .15); }
-.flow-label { padding: 2px 8px; color: #8A6A16; font: 700 13px/18px var(--font); white-space: nowrap; text-shadow: 0 0 4px #fff, 0 0 4px #fff, 0 0 2px #fff; pointer-events: none; }
-[data-theme="night"] .flow-end b { background: rgba(26, 34, 46, .86); color: var(--text); }
-[data-theme="night"] .flow-label { color: #EBCB7C; text-shadow: 0 0 4px #161d27, 0 0 4px #161d27; }
 
 /* Back buttons a visitor can find at a glance (Muhammed, 2 Nov): the whole button is a pill, not a faint word beside
    a small circle. On light grounds a glass pill with ink text; on the site's coloured header a light outlined one. */

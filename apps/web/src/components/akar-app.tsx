@@ -912,6 +912,15 @@ export function AkarApp() {
     // Only a route opening or closing moves the sheet; its own height is read, not followed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, wide, isDetail, routeId]);
+  // Building Rotam on a phone: the sheet rises so the stops and Kaydet are in reach; it drops back when done.
+  const building = !!routeDraft;
+  useEffect(() => {
+    if (!ready || wide || isDetail) return;
+    if (building) setSheetHeight((h) => Math.max(h, Math.round(innerHeight * 0.62)));
+    else setSheetHeight(sheetLowest());
+    sheet.current?.scrollTo({ top: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [building]);
   // At its lowest stop the sheet keeps showing the new tab's heading line, whose height may differ.
   const lowestShown = useRef(0);
   useEffect(() => {
@@ -1281,6 +1290,9 @@ export function AkarApp() {
                       {t("common.backToExplore")}
                     </button>
                   </div>
+                ) : routeDraft && view === "map" ? (
+                  // Rotam is built in the panel (the map beside it shows the route as it grows).
+                  <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />
                 ) : (
                   <div className="discovery-panel">
                     {showRoutes && !routeId && personalRoutes.length > 0 && <section className="personal-route-list" aria-label={t("route.mine")}>
@@ -1362,7 +1374,6 @@ export function AkarApp() {
                 </button>
               )}
 
-                {routeDraft && view === "map" && <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />}
                 <button
                   className="panel-toggle"
                   aria-label={collapsed ? t("app.panelOpen") : t("app.panelClose")}
