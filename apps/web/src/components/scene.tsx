@@ -23,6 +23,7 @@ import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
 import { readPreference, writePreference } from "../lib/preferences";
 import { TrustTag } from "./side-sheet";
 import { clampCardScale, NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
+import type { FlowCompanion } from "../lib/flow-companion";
 import { Lightbox, useWide, type Shown } from "./about-reading";
 import { Cities, useCityIdentity, useCityScene } from "./city-scenes";
 import { Localized, useI18n } from "./i18n";
@@ -346,10 +347,13 @@ export function Scene({
   onPick,
   context = "detail",
   frameBottom = 0,
+  companion,
 }: {
   site: HeritageSite;
   /** Height kept free at the bottom (the phone's site card, closed): the model is framed above it. */
   frameBottom?: number;
+  /** A sentence about the waqf's income: the other building of the road, shown beside this one. */
+  companion?: FlowCompanion;
   /** Visitors' photographs of the site (Yaşayan hafıza): the gallery shows them after the site's own. */
   visitors?: VisitorPhoto[];
   /** «Fotoğrafını ekle», the gallery's last tile: İz Bırak. */
@@ -476,6 +480,7 @@ export function Scene({
             })}
             tour={context === "story" && !onPick && !highlights?.length && turn}
             frame={card && !cardPlace ? storyCardFrame(wide, cardScale) : frameBottom ? { left: 0, bottom: frameBottom } : NO_FRAME}
+            companion={companion}
             partCards={site.partCards}
             onPick={onPick}
             sources={site.sources}
