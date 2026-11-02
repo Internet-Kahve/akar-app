@@ -78,6 +78,12 @@ async function openProfile(page: Page) {
   await profile.click();
 }
 
+/** A phone's story opens on the one-sentence card (3 Nov 2026); the numbered list is behind its ☰ button. */
+async function openSentenceList(page: import("@playwright/test").Page) {
+  const button = page.getByRole("button", { name: "Cümle listesini aç" });
+  if (await button.isVisible()) await button.click();
+}
+
 test("discovery, story, memory moderation and persistence form one complete flow", async ({
   page,
 }) => {
@@ -281,6 +287,7 @@ test("admin photo wizard publishes complete content and persists shared images",
     "Güncellenen ortak görsel",
   );
   await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await openSentenceList(page);
   await expect(page.locator(".current .story-text")).toContainText(
     "bir fotoğraf ve bir kaynakla",
   );
@@ -396,6 +403,7 @@ test("reading keeps the chosen sentence while the list follows it, and the visit
   await expect(count).toHaveText("3 / 9");
   await page.waitForTimeout(1200);
   await expect(count).toHaveText("3 / 9");
+  await openSentenceList(page);
   await page.locator(".story-list").hover();
   await page.mouse.wheel(0, 400);
   await expect(count).not.toHaveText("3 / 9");
@@ -501,6 +509,7 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await openSentenceList(page);
   await expect(
     page.getByRole("button", { name: /Bursa’da bir başlangıç/ }),
   ).toBeVisible();

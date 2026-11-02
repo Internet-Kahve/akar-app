@@ -91,6 +91,9 @@ async function openStory(page: Page, modelServed?: Promise<void>) {
   );
   await page.goto("/#view=detail&site=ulu-cami");
   await page.getByRole("button", { name: "Oku", exact: true }).click();
+  // A phone opens on the one-sentence card; these checks read the numbered list (☰).
+  const list = page.getByRole("button", { name: "Cümle listesini aç" });
+  if (await list.isVisible()) await list.click();
   await expect(page.locator(".model-canvas canvas")).toBeVisible();
   return errors;
 }
@@ -211,7 +214,12 @@ test("the photo card's corner sizes it, the keyboard steps it, and both stay on 
   await expect(handle).toHaveAccessibleName("Kartın boyutu: yüzde 120");
   // Kept for the next story on this device.
   await page.reload();
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  // The story reopens where it was: on a phone as the one-sentence card (no «Oku» there), its list behind ☰.
+  const read = page.getByRole("button", { name: "Oku", exact: true });
+  const list = page.getByRole("button", { name: "Cümle listesini aç" });
+  await expect(read.or(list).first()).toBeVisible();
+  if (await read.isVisible()) await read.click();
+  if (await list.isVisible()) await list.click();
   await next(page);
   await next(page);
   await expect(card.getByRole("button", { name: /Kartın boyutu/ })).toHaveAccessibleName("Kartın boyutu: yüzde 120");

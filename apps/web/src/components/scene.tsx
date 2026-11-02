@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Expand,
-  Shrink,
   ImagePlus,
   User,
 } from "lucide-react";
@@ -31,44 +30,17 @@ import { Localized, useI18n } from "./i18n";
 import { ModelStage } from "./model-stage";
 import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
 
-/** How long the story's photo keeps its controls while nobody touches it. */
-const CONTROLS_MS = 3000;
 
-/** A sentence's photograph: fitted over its own blur, or filling the stage; the choice stays on the device. */
+/**
+ * A sentence's photograph, always whole and fitted over its own blur: it never fills the screen (Muhammed, 3 Nov
+ * 2026: the «fill» button and a photograph covering everything are gone).
+ */
 function StoryPhoto({ photo }: { photo: SitePhoto }) {
-  const { t, text } = useI18n();
-  const [fill, setFill] = useState(false),
-    [quiet, setQuiet] = useState(false);
-  useEffect(() => setFill(readPreference("akar.fotoKip") === "fill"), []);
-  useEffect(() => {
-    if (quiet) return;
-    const timer = setTimeout(() => setQuiet(true), CONTROLS_MS);
-    return () => clearTimeout(timer);
-  }, [quiet, photo.id]);
+  const { text } = useI18n();
   return (
-    <section
-      className={`story-photo${quiet ? " quiet" : ""}`}
-      aria-label={text(photo.title, photo.titleEn) || photo.alt}
-      onPointerMove={() => setQuiet(false)}
-      onPointerDown={() => setQuiet(false)}
-    >
+    <section className="story-photo" aria-label={text(photo.title, photo.titleEn) || photo.alt}>
       <img className="story-photo-blur" src={sized(photo.src, 96)} alt="" decoding="async" />
-      <img
-        className={`story-photo-main${fill ? " fill" : ""}`}
-        src={sized(photo.src, 1200)}
-        alt={photo.alt}
-      />
-      <button
-        className="story-photo-fill"
-        aria-pressed={fill}
-        aria-label={fill ? t("site.fitPhoto") : t("site.fillPhoto")}
-        onClick={() => {
-          writePreference("akar.fotoKip", fill ? "fit" : "fill");
-          setFill(!fill);
-        }}
-      >
-        {fill ? <Shrink size={18} /> : <Expand size={18} />}
-      </button>
+      <img className="story-photo-main" src={sized(photo.src, 1200)} alt={photo.alt} decoding="async" />
       <div className="story-photo-foot">
         <TrustTag trust={photo.trust} quote={text(photo.title, photo.titleEn) || photo.alt} />
         {(photo.title || photo.license) && (

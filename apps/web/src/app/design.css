@@ -1623,24 +1623,6 @@ h1,
   height: 100%;
   object-fit: contain;
 }
-.story-photo-main.fill {
-  object-fit: cover;
-}
-.story-photo-fill {
-  position: absolute;
-  right: 24px;
-  top: 76px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  background: var(--glass-solid);
-  font-size: 13px;
-  font-weight: 600;
-  transition: opacity 200ms;
-}
 .story-photo-credit {
   position: absolute;
   left: 16px;
@@ -1652,10 +1634,6 @@ h1,
   line-height: 16px;
   text-shadow: 0 1px 4px #000;
   transition: opacity 200ms;
-}
-.story-photo.quiet .story-photo-fill,
-.story-photo.quiet .story-photo-credit {
-  opacity: 0;
 }
 .scene-media-switch {
   position: absolute;
@@ -3008,7 +2986,6 @@ dialog.gv-perde::backdrop { background: transparent; }
 }
 
 /* Story photo, as the prototype: round fill button beside the view switch, trust and credit along the foot */
-.story-photo-fill { right: 16px; top: 22px; width: 40px; height: 40px; padding: 0; justify-content: center; background: rgba(20, 27, 43, .55); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
 .scene-media-switch.on-photo { right: 64px; top: 22px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
 .scene-media-switch.on-photo .btn.secondary { color: rgba(255, 255, 255, .86); }
 .scene-media-switch.on-photo .btn.secondary[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
@@ -3016,7 +2993,7 @@ dialog.gv-perde::backdrop { background: transparent; }
 .story-photo-foot .tag.trust-tag { flex: none; transform: scale(.85); transform-origin: left bottom; opacity: .9; }
 .story-photo-foot .story-photo-credit { position: static; min-width: 0; text-align: right; font-size: 11px; line-height: 15px; }
 .story-photo.quiet .story-photo-foot { opacity: 0; }
-@media (max-width: 899.98px) { .story-photo-fill { top: 22px; right: 16px; } .story-photo-foot .story-photo-credit { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } }
+@media (max-width: 899.98px) { .story-photo-foot .story-photo-credit { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } }
 
 /* 3D part card, as the prototype (app.css «parca-kart»; buzlu tema) */
 dialog.parca-kart-arka { position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(20, 27, 43, .45); }
@@ -3878,4 +3855,71 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
+}
+
+/* ---------------- The story on a phone (Muhammed, 3 Nov 2026; `mobile-revize/`): the scene above, a small card
+   below. The scene ends where the card begins (story-panel measures it: --story-card-h), so neither the model nor
+   the photograph hides behind it. On the card: the sentence (a tap on its left third goes back, elsewhere on), a
+   faint source line, and one sound button. ▾ folds it to a bar. */
+@media (max-width: 899.98px) {
+  .workspace.on-site:has(.story-panel.kart) .main-stage {
+    bottom: calc(var(--story-card-h, 180px) + 12px + 8px + env(safe-area-inset-bottom, 0px));
+  }
+  .workspace.on-site:has(.story-panel.kart) .side-panel { max-height: 46dvh; }
+  .story-panel.kart { padding: 0 14px 12px; }
+  .story-fold {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+  }
+  .story-tap { position: relative; }
+  .story-panel.kart .story-card-text { margin: 0 0 6px; font: 600 18px/25px var(--font); }
+  .story-tap .kaynak-link { position: relative; z-index: 2; color: var(--text-muted); font-size: 12px; }
+  .story-tap-prev,
+  .story-tap-next {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .story-tap-prev { left: 0; width: 33%; }
+  .story-tap-next { right: 0; width: 67%; }
+  .story-tap-prev:focus-visible,
+  .story-tap-next:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: 12px; }
+  .story-card-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .story-count { min-width: 44px; color: var(--text-muted); font: 600 13px/1 var(--font); font-variant-numeric: tabular-nums; }
+  .story-sound {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 46px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font: 600 15px var(--font);
+  }
+  .story-sound.on { background: var(--primary-light); color: var(--primary); box-shadow: inset 0 0 0 1.5px var(--primary); }
+  .story-all {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+  }
+  .story-panel.kart.folded .story-card-foot { margin-top: 0; }
 }

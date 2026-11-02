@@ -2,7 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
+  ChevronDown,
+  ChevronUp,
   Headphones,
+  List,
+  Volume2,
+  VolumeX,
   Pause,
   Play,
   SkipBack,
@@ -56,7 +61,10 @@ export function StoryPanel({
   const { t } = useI18n();
   const wide = useWide();
   const [listen, setListen] = useState(startListening),
-    [listOpen, setListOpen] = useState(!startListening),
+    // A phone always starts on the one-sentence card; the whole list is a tap away (☰).
+    [listOpen, setListOpen] = useState(() => !startListening && matchMedia("(min-width: 1000px)").matches),
+    [folded, setFolded] = useState(false),
+    cardRef = useRef<HTMLDivElement>(null),
     [playing, setPlaying] = useState(startListening),
     [rate, setRate] = useState(1),
     [error, setError] = useState<MessageKey | "">(""),
@@ -80,6 +88,20 @@ export function StoryPanel({
   }
   const advance = useRef(go);
   advance.current = go;
+  // The scene ends above the card (model and photograph are never behind it): the card's height, as it changes.
+  useEffect(() => {
+    const el = cardRef.current,
+      space = el?.closest<HTMLElement>(".workspace");
+    if (!el || !space) return;
+    const note = () => space.style.setProperty("--story-card-h", `${Math.round(el.getBoundingClientRect().height)}px`);
+    note();
+    const observer = new ResizeObserver(note);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      space.style.removeProperty("--story-card-h");
+    };
+  });
   useEffect(() => {
     writePreference(`akar.ilerleme.${site.id}`, String(index));
     if (pickedByScroll.current) {
@@ -261,35 +283,61 @@ export function StoryPanel({
       {index + 1} / {stories.length}
     </span>
   );
+  // Phone (Muhammed, 3 Nov 2026, «Instagram hikâyesi gibi, Spotify'dan da basit»): one sentence on a small card.
+  // A tap on the card's left third goes back, anywhere else on to the next. One sound button: on, the story reads
+  // itself aloud and moves on by itself; off, it stops. ▾ folds the card away so the model and photograph show whole.
   if (card)
     return (
-      <div className="story-panel kart">
-        <button className="story-grip" aria-label={t("site.storyOpenList")} onClick={() => setListOpen(true)}>
-          <i />
+      <div className={`story-panel kart${folded ? " folded" : ""}`} ref={cardRef}>
+        <button
+          className="story-fold"
+          aria-expanded={!folded}
+          aria-label={t(folded ? "site.storyCardOpen" : "site.storyCardFold")}
+          onClick={() => setFolded(!folded)}
+        >
+          {folded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
-        <div className="story-card-top">
-          {position}
-          {voiceControls}
-          <TrustTag trust={block.trust} quote={block.text} sources={sourceOf(block)} />
-        </div>
-        <p className="story-card-text">
-          <Localized tr={shownNow.tr} en={shownNow.en} />
-        </p>
-        {(current || site.source) && (
-          <SourceLink
-            label={
-              <>
-                {t("site.sourceLabel")} {current?.title ?? site.source}
-                {current?.detail ? ` · ${current.detail}` : ""}
-              </>
-            }
-            trust={block.trust}
-            quote={block.text}
-            sources={sourceOf(block)}
-          />
+        {!folded && (
+          <div className="story-tap">
+            <p className="story-card-text" aria-live="polite">
+              <Localized tr={shownNow.tr} en={shownNow.en} />
+            </p>
+            {(current || site.source) && (
+              <SourceLink
+                label={
+                  <>
+                    {current?.title ?? site.source}
+                    {current?.detail ? ` · ${current.detail}` : ""}
+                  </>
+                }
+                trust={block.trust}
+                quote={block.text}
+                sources={sourceOf(block)}
+              />
+            )}
+            <button className="story-tap-prev" aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)} />
+            <button className="story-tap-next" aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)} />
+          </div>
         )}
         {problem}
-        {player}
+        <div className="story-card-foot">
+          <span className="story-count">{index + 1} / {stories.length}</span>
+          <button
+            className={`story-sound${playing ? " on" : ""}`}
+            aria-pressed={playing}
+            aria-label={t(playing ? "site.soundOff" : "site.soundOn")}
+            onClick={() => {
+              if (!listen) setListen(true);
+              setPlaying(!playing);
+            }}
+          >
+            {playing ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            <span>{t(playing ? "site.soundOnLabel" : "site.soundOffLabel")}</span>
+          </button>
+          <button className="story-all" aria-label={t("site.storyOpenList")} onClick={() => setListOpen(true)}>
+            <List size={18} />
+          </button>
+        </div>
       </div>
     );
   return (
