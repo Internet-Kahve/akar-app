@@ -253,7 +253,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       };
       for (const site of manifest.sites) {
         // The seed includes every story photo; only editorial gallery entries belong in site_media. A gallery photo's
-        // 3D angle is set in the panel, not in the package: a re-import keeps it.
+        // 3D angle set in the panel is kept by a re-import; the package's (model.json `foto_acilari`) fills the rest.
         const cameras = new Map(
           (await tx.select({ mediaId: siteMedia.mediaId, camera: siteMedia.camera }).from(siteMedia).where(eq(siteMedia.siteId, site.id)))
             .flatMap((l) => (l.camera ? [[l.mediaId, l.camera] as const] : [])),
@@ -262,7 +262,12 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         const gallery = site.photos.filter((p) => p.galleryPosition !== null).sort((a, b) => a.galleryPosition! - b.galleryPosition!);
         const modelIds = site.model ? [`${site.id}-model`] : [];
         await tx.insert(siteMedia).values(
-          [...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({ siteId: site.id, mediaId, position, camera: cameras.get(mediaId) ?? null })),
+          [...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({
+            siteId: site.id,
+            mediaId,
+            position,
+            camera: cameras.get(mediaId) ?? gallery.find((p) => p.id === mediaId)?.camera ?? null,
+          })),
         );
         // English texts are written in the panel or by a translation, not in the content package (§11.64): an import
         // keeps them per id, like the story sentences' English (§11.62).

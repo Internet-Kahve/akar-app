@@ -32,5 +32,39 @@
     "Ic_Zemin",
     "Ic_Mihrap",
     "Minber"
+  ],
+  "_foto_acilari_not": "2 Kasım 2026: eser sayfasındaki ‹ İçini göster › oklarının açıları. foto: galeri fotoğrafının numarası (fotograflar.md); hedef/azimut/egim/uzaklik hikâye cümlesinin «Açı» sözcükleriyle aynı; ic: model açılır. tahmini: yön fotoğraftan kesin çıkmadı, panelden düzeltilecek (Muhammed). Panelde girilen açı bunun önüne geçer.",
+  "foto_acilari": [
+    {
+      "foto": "01",
+      "azimut": 13,
+      "egim": 45,
+      "uzaklik": "bütün yapı",
+      "not": "havadan; önde şadırvan ve son cemaat yeri"
+    },
+    {
+      "foto": "05",
+      "hedef": "Cami_SonCemaat",
+      "azimut": 13,
+      "egim": 10,
+      "uzaklik": "yakın",
+      "not": "son cemaat yeri ve ikiz kemer"
+    },
+    {
+      "foto": "04",
+      "azimut": 13,
+      "egim": 82,
+      "uzaklik": "çatı",
+      "not": "tepeden kubbeler"
+    },
+    {
+      "foto": "02",
+      "hedef": "Ic_Mihrap",
+      "azimut": 13,
+      "egim": 25,
+      "uzaklik": "orta",
+      "ic": true,
+      "not": "içeride mihrap ve minber"
+    }
   ]
 }

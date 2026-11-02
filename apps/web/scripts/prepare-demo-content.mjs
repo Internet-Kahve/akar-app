@@ -20,7 +20,7 @@ execFileSync("python3", [join(repo, "services/api/scripts/prepare-demo-content.p
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 
 const src = (file) => "/icerik/" + file.split("/").map(encodeURIComponent).join("/");
-const photo = (p, extra = {}) => ({ id: p.id, src: src(p.file), alt: p.alt, title: p.title, titleEn: p.titleEn ?? "", description: p.description, sourceId: p.sourceId ?? "", license: p.license, trust: p.trust, ...extra });
+const photo = (p, extra = {}) => ({ id: p.id, src: src(p.file), alt: p.alt, title: p.title, titleEn: p.titleEn ?? "", description: p.description, sourceId: p.sourceId ?? "", license: p.license, trust: p.trust, ...(p.camera && { camera: p.camera }), ...extra });
 const credited = (p, trust) => photo({ ...p, title: p.alt, description: p.credit, trust });
 
 /** Distinct node then mesh names of a GLB's JSON chunk, as the server's `media.glb-parts` job stores them. */

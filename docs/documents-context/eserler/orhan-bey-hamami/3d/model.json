@@ -8,5 +8,32 @@
   "kaydirma_m": {
     "dogu": 1.2,
     "kuzey": 4.2
-  }
+  },
+  "_foto_acilari_not": "2 Kasım 2026: eser sayfasındaki ‹ İçini göster › oklarının açıları. foto: galeri fotoğrafının numarası (fotograflar.md); hedef/azimut/egim/uzaklik hikâye cümlesinin «Açı» sözcükleriyle aynı; ic: model açılır. tahmini: yön fotoğraftan kesin çıkmadı, panelden düzeltilecek (Muhammed). Panelde girilen açı bunun önüne geçer.",
+  "foto_acilari": [
+    {
+      "foto": "01",
+      "hedef": "Hamam_Giris",
+      "azimut": 186,
+      "egim": 12,
+      "uzaklik": "orta",
+      "not": "güneydeki alınlıklı giriş"
+    },
+    {
+      "foto": "04",
+      "azimut": 186,
+      "egim": 82,
+      "uzaklik": "çatı",
+      "not": "tepeden iki büyük kubbe"
+    },
+    {
+      "foto": "05",
+      "hedef": "Hamam_Sicaklik",
+      "azimut": 186,
+      "egim": 40,
+      "uzaklik": "orta",
+      "tahmini": true,
+      "not": "kubbeler ve fenerler; yön tahmini"
+    }
+  ]
 }
