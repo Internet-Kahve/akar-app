@@ -47,6 +47,8 @@ const INSIDE_ELEVATION = 58;
 const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) };
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
+/** Height the angle's photograph takes above the phone's site card (design.css: 10 + 190 + 34 + 10 + 40 px of buttons). */
+const VIEW_PHOTO_PHONE = 290;
 /** One breath of a highlighted part: fade and light again. */
 const BREATH_MS = 1600;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
@@ -332,7 +334,12 @@ export default function ModelViewer({
   const tourRef = useRef(tour);
   tourRef.current = tour;
   const frameRef = useRef(frame);
-  frameRef.current = frame;
+  // On a phone the angle's photograph lies across the scene above the site card: while an angle is on, the model is
+  // framed in what is left above it.
+  const withPhoto = (f: SceneFrame): SceneFrame =>
+    typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? { ...f, bottom: f.bottom + VIEW_PHOTO_PHONE } : f;
+  const viewingRef = useRef(false);
+  frameRef.current = viewingRef.current ? withPhoto(frame) : frame;
   const poseRef = useRef(pose);
   poseRef.current = pose;
   const interiorRef = useRef(interior);
@@ -1060,6 +1067,9 @@ export default function ModelViewer({
       lift.current?.(open, false);
       setInside(open);
     }
+    viewingRef.current = true;
+    frameRef.current = withPhoto(frame);
+    reframe.current?.();
     aim.current(view.camera);
     setViewIndex(index);
   };
@@ -1069,6 +1079,9 @@ export default function ModelViewer({
       lift.current?.(before.inside, false);
       setInside(before.inside);
     }
+    viewingRef.current = false;
+    frameRef.current = frame;
+    reframe.current?.();
     if (before?.pose) aim.current?.(before.pose);
     beforeViews.current = null;
     setViewIndex(null);

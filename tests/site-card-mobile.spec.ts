@@ -77,12 +77,17 @@ test("«3D model · Temsili» and «İçini göster» ride on the card's top edg
   expect(Math.abs((await gap()) - closedGap)).toBeLessThanOrEqual(2);
 });
 
-test("scrolling the closed card's content raises it to where it scrolls", async ({ page }) => {
+test("scrolling the closed card's content raises it a little, enough to scroll, not all the way", async ({ page }) => {
   const c = await box(page, ".workspace.on-site .side-panel");
   await page.mouse.move(c.x + c.width / 2, c.y + c.height - 30);
   await page.mouse.wheel(0, 120);
   await expect(grip(page)).toHaveAttribute("aria-expanded", "true");
-  await expect(card(page).getByRole("button", { name: /Geçmişi Gör/ })).toBeInViewport();
+  await expect.poll(async () => (await box(page, ".workspace.on-site .side-panel")).height).toBeGreaterThan(c.height + 120);
+  const risen = (await box(page, ".workspace.on-site .side-panel")).height;
+  expect(risen).toBeLessThan(c.height + 180);
+  // From there the content scrolls inside the card.
+  await page.mouse.wheel(0, 300);
+  await expect.poll(() => page.evaluate(() => document.querySelector(".workspace.on-site .side-panel")!.scrollTop)).toBeGreaterThan(0);
 });
 
 test("the content fades out at the card's foot, also once the page has settled", async ({ page }) => {

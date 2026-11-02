@@ -131,6 +131,8 @@ type Overlay =
   | null;
 /** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
 const CONTROLS_ROOM = 110 + 194 + 32;
+/** How far a scroll on the closed site card raises it: enough for its content to scroll. */
+const CARD_SCROLL_RISE = 150;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
 const CATALOG_REFRESH_MS = 5 * 60_000;
 export function AkarApp() {
@@ -960,9 +962,17 @@ export function AkarApp() {
   const cardTouch = useRef<number | null>(null);
   const openCardForScroll = () => {
     if (sheetHeight > cardClosed + 8) return;
-    const stops = sheetStops();
-    setSheetHeight(stops.highest);
+    // Only a little: enough for the content to scroll (Muhammed, 2 Nov 2026), not all the way up.
+    setSheetHeight(Math.min(sheetStops().highest, cardClosed + CARD_SCROLL_RISE));
+    setCardRising(true);
   };
+  // That rise glides a little slower and softer than a drag's settle.
+  const [cardRising, setCardRising] = useState(false);
+  useEffect(() => {
+    if (!cardRising) return;
+    const timer = setTimeout(() => setCardRising(false), 520);
+    return () => clearTimeout(timer);
+  }, [cardRising]);
   // A route opens the sheet at 58 % and gives the earlier height back when it closes; a tab keeps the height
   // (the prototype's `altH`): Eserler | Rotalar must not drop the sheet the visitor pulled up.
   const heightBeforeRoute = useRef<number | null>(null);
@@ -1245,7 +1255,7 @@ export function AkarApp() {
               )}
               <aside
                 ref={sheet}
-                className={`side-panel${sheetDragging ? " dragging" : ""}${siteCard && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
+                className={`side-panel${sheetDragging ? " dragging" : ""}${cardRising ? " rising" : ""}${siteCard && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
                 onScroll={siteCard ? fadeCard : undefined}
                 onWheel={siteCard ? (e) => { if (e.deltaY > 4) openCardForScroll(); } : undefined}
                 onTouchStart={
