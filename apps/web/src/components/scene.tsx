@@ -27,6 +27,7 @@ import type { FlowCompanion } from "../lib/flow-companion";
 import { Lightbox, useWide, type Shown } from "./about-reading";
 import { Cities, useCityIdentity, useCityScene } from "./city-scenes";
 import { Localized, useI18n } from "./i18n";
+import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
 import { ModelStage } from "./model-stage";
 import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
 
@@ -52,6 +53,31 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
         )}
       </div>
     </section>
+  );
+}
+
+/**
+ * Asked once on a phone, the first time a site with a model opens (Muhammed, 3 Nov 2026): photographs (fast) or the
+ * 3D model. Meanwhile the photographs show, so nothing heavy loads before the answer; the answer is kept.
+ */
+function ViewChoice({ onPick }: { onPick: (mode: "photo" | "model") => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="view-choice" role="group" aria-label={t("view.ask")}>
+      <p>{t("view.ask")}</p>
+      <div>
+        <button onClick={() => onPick("photo")}>
+          <ImageIcon size={20} />
+          <b>{t("view.photos")}</b>
+          <small>{t("view.photosHint")}</small>
+        </button>
+        <button onClick={() => onPick("model")}>
+          <Box size={20} />
+          <b>{t("view.model")}</b>
+          <small>{t("view.modelHint")}</small>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -375,17 +401,22 @@ export function Scene({
     writePreference(CARD_KEY, JSON.stringify({ place: cardPlace, scale: cardScale }));
   }, [cardPlace, cardScale]);
   // A model site opens on the model, also in the story (its camera follows the sentences).
-  const [mode, setModeState] = useState<"photo" | "model">(
-    photoId && !site.model ? "photo" : "model",
-  );
+  // Photographs or the 3D model, as the visitor chose (kept on the device). A phone that has not chosen yet opens on
+  // the photographs (nothing heavy loads) and is asked once (`ask`); the 3D comes only when wanted.
+  const phoneLayout = useMedia(PHONE_LAYOUT);
+  const [chosen, setChosen] = useState(() => readPreference("akar.gorunum"));
+  const [mode, setModeState] = useState<"photo" | "model">(() => {
+    if (!site.model) return "photo";
+    const kept = readPreference("akar.gorunum");
+    if (kept === "photo" || kept === "model") return kept;
+    return typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? "photo" : "model";
+  });
   const setMode = (next: "photo" | "model") => {
     writePreference("akar.gorunum", next);
+    setChosen(next);
     setModeState(next);
   };
-  useEffect(() => {
-    if (site.model && readPreference("akar.gorunum") === "photo")
-      setModeState("photo");
-  }, [site.model]);
+  const ask = context === "detail" && phoneLayout && !!site.model && !chosen;
   const photo = [...(site.photos ?? []), ...(site.storyPhotos ?? [])].find(
     (p) => p.id === (photoId || site.coverPhotoId),
   );
@@ -414,14 +445,24 @@ export function Scene({
         {site.model && <MediaSwitch value="photo" onPhoto={() => {}} onModel={() => setMode("model")} dark />}
       </>
     ) : (
-      <PhotoGallery
-        key={photoId || site.id}
-        site={site}
-        photos={photos}
-        visitors={visitors}
-        onAddPhoto={onAddPhoto}
-        onModel={site.model ? () => setMode("model") : undefined}
-      />
+      <>
+        <PhotoGallery
+          key={photoId || site.id}
+          site={site}
+          photos={photos}
+          visitors={visitors}
+          onAddPhoto={onAddPhoto}
+          onModel={site.model ? () => setMode("model") : undefined}
+        />
+        {ask && <ViewChoice onPick={setMode} />}
+      </>
+    );
+  // A site with no gallery photograph, not yet answered: the question on the stage's plain ground, no 3D loading.
+  if (ask && mode === "photo" && site.model && !flow)
+    return (
+      <div className="scene media-scene detail-scene">
+        <ViewChoice onPick={setMode} />
+      </div>
     );
   if (site.model && !flow) {
     const card = photoCard && !onPick && mode === "model" ? photo : undefined;

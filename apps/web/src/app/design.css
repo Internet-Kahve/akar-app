@@ -4011,3 +4011,66 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .explore-back { padding-left: 8px; order: -1; }
   .explore-heading:has(.explore-back) h2 { flex: 1; margin: 0; font-size: 16px; }
 }
+
+/* ---------------- First-time hints (coach-tip.tsx) and the photo-or-3D question: small, dark, plain; only their
+   buttons take a tap, so nothing under them is blocked. */
+.coach-tip {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(340px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 16px;
+  border-radius: 16px;
+  background: rgba(20, 27, 43, 0.92);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  animation: coach-in 260ms var(--ease);
+}
+.coach-tip p { flex: 1; margin: 0; font: 500 14px/20px var(--font); }
+.coach-tip button {
+  pointer-events: auto;
+  flex: none;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #141b2b;
+  font: 600 13px var(--font);
+}
+.coach-tip.top { top: calc(118px + env(safe-area-inset-top, 0px)); }
+.coach-tip.above-card { bottom: calc(var(--peek-h, 120px) + 28px + env(safe-area-inset-bottom, 0px)); }
+/* On the site's page: just above its card (the photo-or-3D question stands at the top). */
+.coach-tip.above-site-card { bottom: calc(var(--sheet-h, 194px) + 12px + 64px + env(safe-area-inset-bottom, 0px)); }
+@keyframes coach-in { from { opacity: 0; transform: translate(-50%, 6px); } }
+.view-choice {
+  position: absolute;
+  z-index: 12;
+  left: 16px;
+  right: 16px;
+  top: calc(80px + env(safe-area-inset-top, 0px));
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--glass-solid);
+  box-shadow: var(--glass-edge), var(--glass-shadow);
+}
+.view-choice p { margin: 0 0 10px; font: 600 16px/22px var(--font); text-align: center; }
+.view-choice > div { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.view-choice button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+}
+.view-choice button b { font: 600 15px var(--font); }
+.view-choice button small { color: var(--text-muted); font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .coach-tip { animation: none; } }

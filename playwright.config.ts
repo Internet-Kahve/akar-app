@@ -15,7 +15,15 @@ export default defineConfig({
       origins: [
         {
           origin: "http://127.0.0.1:3000",
-          localStorage: [{ name: "akar.karsilama", value: "1" }],
+          // First-time steps seen (welcome, hints, the photo-or-3D question): each has its own test.
+          localStorage: [
+            { name: "akar.karsilama", value: "1" },
+            { name: "akar.gorunum", value: "model" },
+            { name: "akar.ipucu.harita", value: "1" },
+            { name: "akar.ipucu.kart", value: "1" },
+            { name: "akar.ipucu.detay", value: "1" },
+            { name: "akar.ipucu.hikaye", value: "1" },
+          ],
         },
       ],
     },

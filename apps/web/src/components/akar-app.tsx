@@ -72,6 +72,7 @@ import { StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
+import { CoachTip } from "./coach-tip";
 import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
@@ -1835,6 +1836,18 @@ export function AkarApp() {
           />
         )}
       </SourceSheetProvider>
+      {/* First-time hints on a phone (3 Nov 2026): one sentence each, once, where it matters. */}
+      {phone && !opening && !mapReturn && (
+        view === "map" && !peekSite && !routeDraft ? (
+          <CoachTip key="harita" id="harita" text={t("tip.map")} place="top" />
+        ) : view === "map" && peekSite ? (
+          <CoachTip key="kart" id="kart" text={t("tip.peek")} place="above-card" />
+        ) : siteCard ? (
+          <CoachTip key="detay" id="detay" text={t("tip.detail")} place="above-site-card" />
+        ) : view === "story" ? (
+          <CoachTip key="hikaye" id="hikaye" text={t("tip.story")} place="top" />
+        ) : null
+      )}
       {mapReturn && !opening && (
         <OpeningScreen
           cityName={openingCity?.name}
