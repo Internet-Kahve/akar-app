@@ -47,6 +47,8 @@ const INSIDE_ELEVATION = 58;
 const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) };
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
+/** One breath of a highlighted part: fade and light again. */
+const BREATH_MS = 1600;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
 const TAP_SLOP = 6;
 const TAP_MS = 600;
@@ -155,6 +157,8 @@ export default function ModelViewer({
     height: number;
   } | null>(null);
   const [stageReady, setStageReady] = useState(0);
+  const frontRef = useRef(model.placement?.frontDeg);
+  frontRef.current = model.placement?.frontDeg;
   useEffect(() => () => cancelAnimationFrame(pulseFrame.current), [model.src]);
   // The income road (lib/flow-companion): the companion beside the site, the gold tube drawn from the one that earns
   // to the one it keeps with coins along it, its label at the middle, and the camera stepped back to take both in.
@@ -168,9 +172,13 @@ export default function ModelViewer({
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const group = new THREE.Group();
     scene.add(group);
-    const look = controls.target.clone().sub(camera.position);
+    // Seen from the front, a little to the side (Muhammed, 2 Nov 2026): the façade's direction 35° to the left, from
+    // 28° up, whatever angle the visitor or the sentence before had left.
+    const az = THREE.MathUtils.degToRad((frontRef.current ?? 180) - 35);
+    const up = THREE.MathUtils.degToRad(28);
+    const fromFront = new THREE.Vector3(Math.sin(az) * Math.cos(up), Math.sin(up), -Math.cos(az) * Math.cos(up));
+    const look = fromFront.clone().negate();
     look.y = 0;
-    if (look.lengthSq() < 1e-6) look.set(0, 0, -1);
     look.normalize();
     const right = new THREE.Vector3().crossVectors(look, new THREE.Vector3(0, 1, 0)).normalize();
     const place = companionPlace(st.sphere, st.ground, right);
@@ -186,10 +194,8 @@ export default function ModelViewer({
     // A little above the buildings' middle: the road arcs over them.
     const goalTarget = new THREE.Vector3(place.middle.x, st.ground + st.height * 0.5, place.middle.z);
     const fov = THREE.MathUtils.degToRad(camera.fov) / 2;
-    const away = before.position.clone().sub(before.target).normalize();
-    away.y = Math.max(away.y, 0.42);
-    away.normalize();
-    const goalPosition = goalTarget.clone().add(away.multiplyScalar((place.span / Math.sin(fov * Math.min(1, camera.aspect))) * 1.3));
+    const away = fromFront.clone();
+    const goalPosition = goalTarget.clone().add(away.multiplyScalar((place.span / Math.sin(fov * Math.min(1, camera.aspect))) * 1.02));
     const cameraStart = performance.now();
     const drawRoad = (top: number) => {
       if (disposed || roadDrawn) return;
@@ -263,9 +269,10 @@ export default function ModelViewer({
         (gltf) => {
           if (disposed) return disposeObject(gltf.scene);
           const other = gltf.scene;
+          // With its presentation ground and trees, as it is shown on its own page; only the baked shadow goes.
           other.traverse((item) => {
             for (let node: THREE.Object3D | null = item; node && node !== other; node = node.parent)
-              if (/^Yer_Golgesi/.test(node.name) || PRESENTATION_PARTS.test(node.name)) item.visible = false;
+              if (/^Yer_Golgesi/.test(node.name)) item.visible = false;
           });
           const box = new THREE.Box3();
           other.traverse((item) => {
@@ -676,6 +683,11 @@ export default function ModelViewer({
           const baseColour = new WeakMap<THREE.Material, THREE.Color>();
           let hovered: string[] = [];
           let selected: string[] = [];
+          // Parts a sentence or a chapter is about: they breathe (fade and light again) instead of staying lit, so the
+          // eye goes to them without the model looking painted (Muhammed, 2 Nov 2026). A tapped part stays lit.
+          let highlighted: string[] = [];
+          let breath = 0,
+            breathFrame = 0;
           let pulses = new Map<string, number>();
           // Applied to the meshes' current materials: "İçini göster" swaps in its own copies later.
           // The night files are unlit (KHR_materials_unlit → MeshBasicMaterial): no emissive, so their colour takes
@@ -685,7 +697,11 @@ export default function ModelViewer({
             // By night the glow is stronger: the unlit night colours are dark and a light blue at day strength is faint.
             const tint = GLOW[night ? "night" : "day"];
             for (const [part, meshes] of meshesOf) {
-              const level = Math.max(pulses.get(part) ?? 0, selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0);
+              const level = Math.max(
+                pulses.get(part) ?? 0,
+                highlighted.includes(part) ? breath : 0,
+                selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0,
+              );
               for (const mesh of meshes)
                 for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
                   const colour =
@@ -785,6 +801,7 @@ export default function ModelViewer({
           canvas.addEventListener("pointermove", onMove);
           canvas.addEventListener("pointerleave", onLeave);
           detachPointer = () => {
+            cancelAnimationFrame(breathFrame);
             cancelAnimationFrame(hoverFrame);
             canvas.removeEventListener("pointerdown", onDown);
             canvas.removeEventListener("pointerup", onUp);
@@ -804,8 +821,22 @@ export default function ModelViewer({
             return { x: sum.x, y: sum.y, z: sum.z };
           };
           select.current = (parts) => {
-            selected = parts;
-            glow();
+            selected = [];
+            highlighted = parts;
+            cancelAnimationFrame(breathFrame);
+            if (!parts.length || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              breath = parts.length ? PICK_GLOW : 0;
+              glow();
+              return;
+            }
+            const start = performance.now();
+            const step = (now: number) => {
+              // From a faint glow to full and back, once every BREATH_MS.
+              breath = PICK_GLOW * (0.15 + 0.85 * (0.5 - 0.5 * Math.cos(((now - start) / BREATH_MS) * 2 * Math.PI)));
+              glow();
+              breathFrame = requestAnimationFrame(step);
+            };
+            breathFrame = requestAnimationFrame(step);
           };
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>

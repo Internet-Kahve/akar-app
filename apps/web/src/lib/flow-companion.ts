@@ -24,7 +24,7 @@ export type Vec = { x: number; y: number; z: number };
  * Where the companion stands: to the camera's right of the site, on the same ground, its bounding sphere `share` of
  * the site's, with a gap between them. `right` is the camera's right on the ground (unit, y = 0).
  */
-export function companionPlace(siteSphere: number, siteBottom: number, right: Vec, share = 0.55) {
+export function companionPlace(siteSphere: number, siteBottom: number, right: Vec, share = 0.7) {
   const sphere = siteSphere * share;
   const distance = (siteSphere + sphere) * 1.15;
   return {
