@@ -877,6 +877,8 @@ export function AkarApp() {
       : mapSheetStops(sheetLowest(), innerHeight);
   // The card's top part, measured once laid out: the model is framed above it, and it is where the card closes.
   const [cardClosed, setCardClosed] = useState(0);
+  const cardClosedRef = useRef(0);
+  cardClosedRef.current = cardClosed;
   // Fully open, the card shows its end and fades no more.
   const sheetStopsHighest =
     siteCard && typeof innerHeight === "number" && sheet.current
@@ -915,6 +917,35 @@ export function AkarApp() {
     });
     return () => cancelAnimationFrame(frame);
   }, [sheetHeight, siteCard, fadeCard]);
+  // Fonts and photographs arrive after the first measure and move the content: the fading edge and the closed
+  // height follow (the fade sometimes sat above the card's foot until the card was touched).
+  useEffect(() => {
+    const panel = sheet.current,
+      body = panel?.querySelector<HTMLElement>(".detail-panel");
+    if (!siteCard || !panel || !body) return;
+    const observer = new ResizeObserver(() => {
+      fadeCard();
+      const before = cardClosedRef.current,
+        lowest = cardLowest();
+      if (!before || Math.abs(before - lowest) <= 1) return;
+      cardClosedRef.current = lowest;
+      setCardClosed(lowest);
+      // A closed card stays closed at its new height; one the visitor moved stays where it is.
+      setSheetHeight((h) => (Math.abs(h - before) <= 2 ? lowest : h));
+    });
+    observer.observe(panel);
+    observer.observe(body);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteCard, siteId, fadeCard]);
+  // Scrolling the closed card's content (wheel down, or a finger pushing it up) raises the card to where it scrolls,
+  // smoothly, instead of doing nothing until its handle is pulled.
+  const cardTouch = useRef<number | null>(null);
+  const openCardForScroll = () => {
+    if (sheetHeight > cardClosed + 8) return;
+    const stops = sheetStops();
+    setSheetHeight(stops.highest);
+  };
   // A route opens the sheet at 58 % and gives the earlier height back when it closes; a tab keeps the height
   // (the prototype's `altH`): Eserler | Rotalar must not drop the sheet the visitor pulled up.
   const heightBeforeRoute = useRef<number | null>(null);
@@ -1199,6 +1230,25 @@ export function AkarApp() {
                 ref={sheet}
                 className={`side-panel${sheetDragging ? " dragging" : ""}${siteCard && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
                 onScroll={siteCard ? fadeCard : undefined}
+                onWheel={siteCard ? (e) => { if (e.deltaY > 4) openCardForScroll(); } : undefined}
+                onTouchStart={
+                  siteCard
+                    ? (e) => {
+                        const onHandle = (e.target as HTMLElement).closest(".sheet-grip, .panel-baslik");
+                        cardTouch.current = onHandle ? null : e.touches[0]!.clientY;
+                      }
+                    : undefined
+                }
+                onTouchMove={
+                  siteCard
+                    ? (e) => {
+                        const start = cardTouch.current;
+                        if (start === null || start - e.touches[0]!.clientY < 12) return;
+                        cardTouch.current = null;
+                        openCardForScroll();
+                      }
+                    : undefined
+                }
                 aria-label={t("app.panelAria")}
                 hidden={collapsed}
                 onPointerDown={(e) => {

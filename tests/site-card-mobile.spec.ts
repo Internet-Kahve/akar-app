@@ -76,3 +76,22 @@ test("«3D model · Temsili» and «İçini göster» ride on the card's top edg
   expect((await label.boundingBox())!.y).toBeLessThan(closedTop - 200);
   expect(Math.abs((await gap()) - closedGap)).toBeLessThanOrEqual(2);
 });
+
+test("scrolling the closed card's content raises it to where it scrolls", async ({ page }) => {
+  const c = await box(page, ".workspace.on-site .side-panel");
+  await page.mouse.move(c.x + c.width / 2, c.y + c.height - 30);
+  await page.mouse.wheel(0, 120);
+  await expect(grip(page)).toHaveAttribute("aria-expanded", "true");
+  await expect(card(page).getByRole("button", { name: /Geçmişi Gör/ })).toBeInViewport();
+});
+
+test("the content fades out at the card's foot, also once the page has settled", async ({ page }) => {
+  await page.waitForTimeout(1500);
+  const { g, edge } = await page.evaluate(() => {
+    const panel = document.querySelector<HTMLElement>(".workspace.on-site .side-panel")!;
+    const body = panel.querySelector<HTMLElement>(".detail-panel")!;
+    const padding = parseFloat(getComputedStyle(panel).paddingBottom) || 0;
+    return { g: parseFloat(body.style.getPropertyValue("--g")), edge: panel.clientHeight + panel.scrollTop - body.offsetTop - padding };
+  });
+  expect(Math.abs(g - edge)).toBeLessThanOrEqual(2);
+});
