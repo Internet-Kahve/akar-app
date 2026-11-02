@@ -220,7 +220,7 @@ test("rewriting the paragraphs keeps what the import attached: chapter and book 
   assert.deepEqual(listed.body.items.find((i) => i.id === site.id), (await call<AdminSiteDetail>("GET", base, editor)).body);
 });
 
-test("the admin detail carries the tasks and badges the public detail does, the task photograph resolves from its media, no answer key, and editing the paragraphs leaves them alone", async () => {
+test("the admin detail carries the tasks and badges of the public detail plus the answer key and after-the-answer texts only staff see, the task photograph resolves from its media, and editing the paragraphs leaves them alone", async () => {
   const site = await publishedSite("Görev Hanı");
   const db = app.deps.db;
   await db.insert(siteTasks).values({
@@ -232,15 +232,18 @@ test("the admin detail carries the tasks and badges the public detail does, the 
 
   const admin = (await call<AdminSiteDetail>("GET", `/v1/admin/sites/${site.id}`, editor)).body;
   const pub = (await call<AdminSiteDetail>("GET", `/v1/sites/${site.id}`)).body;
-  assert.deepEqual(admin.tasks, pub.tasks);
+  const { quiz: adminQuiz, ...adminTask } = admin.tasks[0]!;
+  const { quiz: pubQuiz, ...pubTask } = pub.tasks[0]!;
+  assert.deepEqual(adminTask, pubTask);
+  assert.deepEqual(adminQuiz, { ...pubQuiz, correctIndex: 1, correctText: "Gizli doğru metin", correctTextEn: null });
+  assert.ok(!JSON.stringify(pub).includes("Gizli doğru metin") && !/correctIndex/.test(JSON.stringify(pub)), "the public detail has no answer key");
   assert.deepEqual(admin.badges, pub.badges);
   assert.deepEqual(admin.tasks, [
     { id: `${site.id}-soru`, kind: "quiz", title: "Soru", prompt: "Hangisi?", titleEn: null, promptEn: null, photoId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified", enStatus: null,
-      quiz: { options: ["A", "B"], optionsEn: null, hints: ["İpucu"], hintsEn: null, wrongText: "Tekrar dene", wrongTextEn: null, fromHome: false } },
+      quiz: { options: ["A", "B"], optionsEn: null, hints: ["İpucu"], hintsEn: null, wrongText: "Tekrar dene", wrongTextEn: null, fromHome: false, correctIndex: 1, correctText: "Gizli doğru metin", correctTextEn: null } },
   ]);
   assert.deepEqual(admin.badges, [{ id: `${site.id}-rozet`, title: "Rozet", text: "Kazandın", titleEn: null, textEn: null, enStatus: null, condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false }]);
   assert.ok(admin.media.some((m) => m.id === "ph-2"), "the task photograph is part of the media list");
-  assert.ok(!JSON.stringify(admin).includes("Gizli doğru metin"));
 
   const edited = await send("PUT", `/v1/admin/sites/${site.id}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
   assert.equal(edited.tasks.length, 1);

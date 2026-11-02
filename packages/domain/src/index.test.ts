@@ -157,6 +157,29 @@ test("photo publications require valid cover, licenses and cue references; draft
   );
 });
 
+test("tasks and badges: options, answer key, unique ids and a task badge naming one of the site's tasks", () => {
+  const base = { ...createSeed().sites[0], editorVersion: 2 as const, status: "draft" as const, tasks: [], badges: [] };
+  const quiz = {
+    id: "q",
+    kind: "quiz" as const,
+    title: "Soru",
+    prompt: "Hangisi?",
+    trust: "verified" as const,
+    quiz: { options: ["A", "B"], hints: [], wrongText: "Yanlış", fromHome: false, correctIndex: 1, correctText: "Doğru" },
+  };
+  const badge = { id: "b", title: "Rozet", text: "Metin", condition: "task" as const, taskId: "q", onSiteLabel: false };
+  assert.doesNotThrow(() => validateSite({ ...base, tasks: [quiz], badges: [badge] }));
+  // A public quiz carries no answer key: not an error here.
+  const { correctIndex: _key, ...unkeyed } = quiz.quiz;
+  assert.doesNotThrow(() => validateSite({ ...base, tasks: [{ ...quiz, quiz: unkeyed }] }));
+  assert.throws(() => validateSite({ ...base, tasks: [{ ...quiz, quiz: { ...quiz.quiz, correctIndex: 2 } }] }), /Doğru seçenek/);
+  assert.throws(() => validateSite({ ...base, tasks: [{ ...quiz, quiz: { ...quiz.quiz, options: ["A"] } }] }), /2–6/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz, quiz] }), /tekrar/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz], badges: [{ ...badge, taskId: "missing" }] }), /rozet/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz], badges: [{ ...badge, condition: "story", taskId: "q" }] }), /rozet/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz], badges: [badge, badge] }), /Rozet kimlikleri/);
+});
+
 test("inventory imports never publish or overwrite duplicates and fail atomically", () => {
   const initial = createSeed();
   const fresh = { ...initial.sites[0], id: "new", name: "Yeni eser" };

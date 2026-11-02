@@ -128,7 +128,7 @@ function validateDisplayOrder(site: ContentSite): void {
     throw new Error(`Site ${site.id}: displayOrder must be an integer of at least 1 or absent, got ${JSON.stringify(order)}`);
 }
 
-/** `partCardsKept` (sites whose part cards the panel owns and the import left alone, §11.52) is filled only by --apply: a dry run does not read the database. */
+/** `partCardsKept` / `tasksKept` (sites whose part cards / tasks and badges the panel owns and the import left alone, §11.52, §11.67) are filled only by --apply: a dry run does not read the database. */
 export interface ImportReport {
   sites: number;
   objects: number;
@@ -137,12 +137,14 @@ export interface ImportReport {
   sampleTraces: number;
   applied: boolean;
   partCardsKept?: string[];
+  tasksKept?: string[];
 }
 
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
-export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env, options: { replacePartCards?: boolean } = {}): Promise<ImportReport> {
-  const { replacePartCards = false } = options;
+export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env, options: { replacePartCards?: boolean; replaceTasks?: boolean } = {}): Promise<ImportReport> {
+  const { replacePartCards = false, replaceTasks: replaceAllTasks = false } = options;
   const partCardsKept: string[] = [];
+  const tasksKept: string[] = [];
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
   if (manifest.version !== 1 || manifest.sites.length < 7) throw new Error("Expected a reviewed manifest of at least seven sites (version 1)");
   for (const city of manifest.cities) {
@@ -360,7 +362,9 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             if (photoIds.length) await tx.insert(sitePartCardPhotos).values(photoIds.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
           }
         } else partCardsKept.push(site.id);
-        await replaceTasks(tx, site);
+        // Tasks, answer keys and badges are the panel's too (§11.67): same rule, --replace-tasks restores the manifest's.
+        if (replaceAllTasks || !existing.has(site.id)) await replaceTasks(tx, site);
+        else tasksKept.push(site.id);
         for (const id of [...site.photos.map((p) => p.id), ...modelIds]) {
           const file = files.get(mediaFiles.get(id)!)!;
           // Shared content-addressed files are seed-managed (storage_key stays null); deleting one site must not delete another's photo.
@@ -389,7 +393,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       }
     });
   } finally { await pool.end(); }
-  return { ...report, partCardsKept };
+  return { ...report, partCardsKept, tasksKept };
 }
 
 /**
@@ -417,7 +421,7 @@ async function replaceTasks(tx: Tx, site: ContentSite): Promise<void> {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false }, "replace-part-cards": { type: "boolean", default: false } } });
-  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply] [--replace-part-cards]");
-  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply, process.env, { replacePartCards: values["replace-part-cards"] })));
+  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false }, "replace-part-cards": { type: "boolean", default: false }, "replace-tasks": { type: "boolean", default: false } } });
+  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply] [--replace-part-cards] [--replace-tasks]");
+  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply, process.env, { replacePartCards: values["replace-part-cards"], replaceTasks: values["replace-tasks"] })));
 }

@@ -415,6 +415,8 @@ export interface SiteTask {
   /** Quiz: the question; field: the task text. */
   prompt: string;
   promptEn?: string;
+  /** Source of the English texts of the row (`titleEn`, `promptEn`, `quiz`/`field` English); only the editor's view carries it. */
+  enStatus?: TranslationStatus;
   /** One of the site's photographs. */
   photo?: SitePhoto;
   /** Model part the task is about. */
@@ -434,12 +436,20 @@ export interface SiteTask {
     wrongTextEn?: string;
     /** Whether the question can be answered without being at the site. */
     fromHome: boolean;
+    /** The answer key: index into `options`. Editor only: the public detail never carries it, nor the two texts below. */
+    correctIndex?: number;
+    /** Shown after a right answer. Editor only. */
+    correctText?: string;
+    correctTextEn?: string;
   };
   field?: {
     /** Done at the site: the visitor's position must be within `radiusM` of the site. */
     onSite: { text: string; textEn?: string; radiusM: number };
     /** Done from home: tapping `part` on the 3D model. `null` = on site only. */
     fromHome: { text: string; textEn?: string; part: string } | null;
+    /** Shown when the task is done. Editor only. */
+    doneText?: string;
+    doneTextEn?: string;
   };
 }
 /** Badge of a site: earned by finishing the story or by one of the site's tasks. */
@@ -449,6 +459,8 @@ export interface SiteBadge {
   text: string;
   titleEn?: string;
   textEn?: string;
+  /** Source of `titleEn` and `textEn`; only the editor's view carries it. */
+  enStatus?: TranslationStatus;
   condition: "story" | "task";
   /** The task that earns it; `null` for a story badge. */
   taskId: string | null;
@@ -755,6 +767,7 @@ export function validateSite(site: HeritageSite) {
   if (site.status === "published" && !site.source.trim())
     throw new Error("Yayınlamak için kaynak bilgisi ekle.");
   validatePartCards(site);
+  validateTasks(site);
 }
 /**
  * The API's refusals for part cards, so the demo client answers the same: a title, a part, only parts of the model (none
@@ -778,6 +791,45 @@ function validatePartCards(site: HeritageSite) {
   const sourceIds = new Set((site.sources ?? []).map((s) => s.id));
   if (cards.some((c) => c.sourceId && !sourceIds.has(c.sourceId)))
     throw new Error("Kart kaynağı eserin kaynakları arasında olmalı.");
+}
+/**
+ * The API's refusals for tasks and badges, so the demo client answers the same: a title and a prompt, 2–6 options with the
+ * answer key (when the editor's view carries it) among them, unique ids, and a task badge naming one of the site's tasks.
+ * Not checked here: the answer key itself (a demo site's public tasks carry none) and the parts, which the API checks
+ * against the model (the demo sites' tasks name parts of models whose part names are not read).
+ */
+function validateTasks(site: HeritageSite) {
+  const tasks = site.tasks ?? [];
+  const badges = site.badges ?? [];
+  if (tasks.some((t) => !t.title.trim() || !t.prompt.trim()))
+    throw new Error("Her görevin başlığı ve metni olmalı.");
+  if (new Set(tasks.map((t) => t.id)).size !== tasks.length)
+    throw new Error("Görev kimlikleri tekrar ediyor.");
+  for (const t of tasks) {
+    // Only the kind in use counts: the editor keeps the other kind's details so a mistaken switch loses nothing.
+    const q = t.kind === "quiz" ? t.quiz : undefined;
+    if (q && (q.options.length < 2 || q.options.length > 6 || q.options.some((o) => !o.trim())))
+      throw new Error("Her sorunun 2–6 seçeneği olmalı, hiçbiri boş olmamalı.");
+    if (q?.correctIndex !== undefined && !(q.correctIndex >= 0 && q.correctIndex < q.options.length))
+      throw new Error("Doğru seçenek, seçeneklerden biri olmalı.");
+    if (t.kind === "field" && !t.field?.onSite.text.trim())
+      throw new Error("Saha görevinin yerinde yapılacak metni olmalı.");
+  }
+  if (new Set(badges.map((b) => b.id)).size !== badges.length)
+    throw new Error("Rozet kimlikleri tekrar ediyor.");
+  const taskIds = new Set(tasks.map((t) => t.id));
+  if (
+    badges.some(
+      (b) =>
+        !b.title.trim() ||
+        !b.text.trim() ||
+        (b.condition === "task") !== (b.taskId !== null) ||
+        (b.taskId !== null && !taskIds.has(b.taskId)),
+    )
+  )
+    throw new Error(
+      "Her rozetin başlığı ve metni olmalı; görev rozeti eserin bir görevine bağlı olmalı.",
+    );
 }
 /** Value ranges of a placement; the API refuses the same ones (`MapPlacementBody`). */
 export const placementLimits = {

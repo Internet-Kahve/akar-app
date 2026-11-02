@@ -194,14 +194,14 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   sites[0]!.tasks.reverse();
   sites[0]!.badges.reverse();
   await writeFile(path, JSON.stringify(manifest));
-  await importDemoContent(path, root, true, env);
+  await importDemoContent(path, root, true, env, { replaceTasks: true });
   assert.deepEqual((await db.select({ id: siteTasks.id }).from(siteTasks).where(eq(siteTasks.siteId, "test-0")).orderBy(siteTasks.position)).map((t) => t.id), ["task-f-0", "task-q-0"]);
   assert.equal((await db.select().from(userSiteTasks)).length, 2, "reordering keeps the progress");
   assert.equal((await db.select().from(userSiteBadges)).length, 2);
   sites[0]!.tasks = sites[0]!.tasks.filter((t) => t.id !== "task-f-0");
   sites[0]!.badges = sites[0]!.badges.filter((b) => b.id !== "badge-f-0");
   await writeFile(path, JSON.stringify(manifest));
-  await importDemoContent(path, root, true, env);
+  await importDemoContent(path, root, true, env, { replaceTasks: true });
   assert.deepEqual((await db.select({ id: siteTasks.id }).from(siteTasks).where(eq(siteTasks.siteId, "test-0"))).map((t) => t.id), ["task-q-0"]);
   assert.deepEqual((await db.select({ id: siteBadges.id }).from(siteBadges).where(eq(siteBadges.siteId, "test-0"))).map((b) => b.id), ["badge-s-0"]);
   assert.deepEqual((await db.select({ id: userSiteTasks.taskId }).from(userSiteTasks)).map((t) => t.id), ["task-q-0"], "only the vanished task's progress goes");
@@ -255,6 +255,15 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Panelde düzeltildi"], []]);
   assert.deepEqual((await importDemoContent(path, root, true, env, { replacePartCards: true })).partCardsKept, []);
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Kubbe"], ["Kubbe"]]);
+  // The panel owns tasks and badges of a site already in the database too (§11.67): a repeat import keeps its edits, --replace-tasks restores the manifest's.
+  const taskTitles = async (siteId: string) => (await db.select({ title: siteTasks.title }).from(siteTasks).where(eq(siteTasks.siteId, siteId)).orderBy(siteTasks.position)).map((t) => t.title);
+  await db.update(siteTasks).set({ title: "Panelde düzeltildi" }).where(eq(siteTasks.id, "task-q-0"));
+  await db.delete(siteTasks).where(eq(siteTasks.siteId, "test-1"));
+  await writeFile(path, JSON.stringify(manifest));
+  assert.equal((await importDemoContent(path, root, true, env)).tasksKept?.length, 7);
+  assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Panelde düzeltildi"], []]);
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceTasks: true })).tasksKept, []);
+  assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Soru"], ["Soru", "Saha"]]);
   // A stored placement is the panel's: a re-import sets the façade direction only where the package names one and leaves the rest.
   const placementOf = async (siteId: string) => (await db.select().from(siteMapPlacements).where(eq(siteMapPlacements.siteId, siteId)))[0]!;
   await db.update(siteMapPlacements).set({ frontDeg: 99, headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-1"));

@@ -35,6 +35,8 @@ Bu komut editoryal paketin yeniden yayımlanmasıdır: paketteki eserlerin katal
 
 **Parça kartları (§11.52).** Panel parça kartlarının sahibidir: aktarım veritabanında zaten olan eserin kartlarına dokunmaz, yalnız yeni oluşturduğu eserin kartlarını yazar (`--apply` çıktısındaki `partCardsKept` kartları korunan eserleri listeler; kuru çalıştırma veritabanını okumadığı için bu alanı vermez). Kartları dosyadaki hâline getirmek için komuta `--replace-part-cards` ekleyin; bu, panelde yapılmış kart düzenlemelerini siler.
 
+**Görevler ve rozetler (§11.67).** Panel bunların da sahibidir: aktarım veritabanında zaten olan eserin görevlerine, cevap anahtarlarına ve rozetlerine dokunmaz, yalnız yeni oluşturduğu eserinkileri yazar (`--apply` çıktısındaki `tasksKept` korunan eserleri listeler). `gorevler.json` içeriğini dosyadaki hâline getirmek için komuta `--replace-tasks` ekleyin; bu, panelde yapılmış görev ve rozet düzenlemelerini siler, görevi kaldırılan oyuncuların tamamlamaları ve rozetleri de gider (dosyada kalan görevlerin kimlikleri aynı olduğu sürece oyuncu kayıtları kalır).
+
 Dosyalar önce içerik özetiyle adlandırılmış nesnelere yüklenir. Aynı baytlar yeniden yüklenmez. Ardından tüm katalog ilişkileri tek veritabanı işlemi içinde güncellenir; hata olursa katalog değişmez. Ortak dosyalar seed yönetimindedir: bir eserin kaldırılması başka bir eserin kullandığı dosyayı silemez. Yeni bir paket eski dosyaları kendiliğinden silmez; temizlik öncesinde kullanım kontrolü yapılmalıdır.
 
 ## Doğrulama
