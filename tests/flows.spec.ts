@@ -107,7 +107,6 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
   await expect(page.getByRole("button", { name: /^Ziyaretim/ })).toBeVisible();
   await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByLabel("Sade anlatım").check();
   for (let i = 0; i < 8; i++)
     await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
