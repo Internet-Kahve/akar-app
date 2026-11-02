@@ -4,14 +4,14 @@ import { companionPlace, flowArc } from "./flow-companion";
 
 test("the companion stands beside the site, smaller, on the same ground, clear of it", () => {
   const place = companionPlace(10, -4, { x: 1, y: 0, z: 0 });
-  assert.equal(place.sphere, 5.5);
+  assert.equal(place.sphere, 7);
   // Centre to centre more than both spheres: they never overlap.
-  assert.ok(place.centre.x > 10 + 5.5);
+  assert.ok(place.centre.x > 10 + 7);
   assert.equal(place.centre.z, 0);
   // Its centre above the shared ground by most of its own size.
-  assert.ok(Math.abs(place.centre.y - (-4 + 5.5 * 0.7)) < 1e-9);
+  assert.ok(Math.abs(place.centre.y - (-4 + 7 * 0.7)) < 1e-9);
   // The camera's sphere takes in both.
-  assert.ok(place.span >= (place.centre.x + 10 + 5.5) / 2 - 1e-9);
+  assert.ok(place.span >= (place.centre.x + 10 + 7) / 2 - 1e-9);
 });
 
 test("the income arc runs from the one that earns to the one it keeps, raised in the middle", () => {
