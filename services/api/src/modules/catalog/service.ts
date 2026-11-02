@@ -351,6 +351,7 @@ export function chapterDto(c: ChapterRow): ChapterDto {
   return {
     id: c.id,
     title: c.title,
+    titleEn: c.titleEn,
     kind: c.kind,
     summary: r.summary,
     figures: r.figures,
@@ -360,6 +361,8 @@ export function chapterDto(c: ChapterRow): ChapterDto {
     camera: r.camera,
     interior: r.interior,
     focusParts: r.focusParts,
+    readingEn: c.readingEn,
+    enStatus: c.enStatus,
   };
 }
 
@@ -595,8 +598,10 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         id: s.id,
         kind: s.kind,
         title: s.title,
+        titleEn: s.titleEn,
         body: s.body,
         bodyEn: s.bodyEn,
+        enStatus: s.enStatus,
         trust: s.trust,
         sourceId: s.sourceId,
         chapterId: s.chapterId,
@@ -620,6 +625,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         presentMediaId: h.presentMediaId,
         caption: h.caption,
         captionEn: h.captionEn,
+        enStatus: h.enStatus,
         dateLabel: h.dateLabel,
         sourceId: h.sourceId,
         trust: h.trust,

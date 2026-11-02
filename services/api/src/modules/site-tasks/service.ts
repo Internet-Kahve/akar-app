@@ -8,7 +8,9 @@ import {
   userSiteBadges,
   userSiteTasks,
   type FieldTaskDetails,
+  type FieldTaskTextsEn,
   type QuizTaskDetails,
+  type QuizTaskTextsEn,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
 import type { Tx } from "../../platform/idempotency.ts";
@@ -30,6 +32,7 @@ async function playableTask(q: Reader, taskId: string) {
       siteId: siteTasks.siteId,
       kind: siteTasks.kind,
       details: siteTasks.details,
+      detailsEn: siteTasks.detailsEn,
       correctIndex: siteTaskAnswers.correctIndex,
     })
     .from(siteTasks)
@@ -51,6 +54,7 @@ export async function answerTask(q: Reader, userId: string | null, taskId: strin
     throw new AppError(400, "VALIDATION_FAILED", "Bu görev bir soru değil.", { id: ["Cevap yalnız soru görevlerine gönderilir."] });
   }
   const details = task.details as QuizTaskDetails;
+  const en = task.detailsEn as QuizTaskTextsEn | null;
   if (choice >= details.options.length) {
     throw new AppError(400, "VALIDATION_FAILED", "Girdi doğrulanamadı.", { choice: [`Seçenek 0–${details.options.length - 1} arasında olmalı.`] });
   }
@@ -66,6 +70,8 @@ export async function answerTask(q: Reader, userId: string | null, taskId: strin
     correct,
     correctText: correct ? details.correctText : null,
     wrongText: correct ? null : details.wrongText,
+    correctTextEn: correct ? (en?.correctText ?? null) : null,
+    wrongTextEn: correct ? null : (en?.wrongText ?? null),
     earnedBadges,
   };
 }
@@ -107,7 +113,7 @@ export async function completeFieldTask(q: Reader, userId: string | null, taskId
     await recordTaskCompletion(q, userId, taskId, onSite);
     earnedBadges = await awardTaskBadges(q, userId, taskId, onSite);
   }
-  return { doneText: details.doneText, onSite, earnedBadges };
+  return { doneText: details.doneText, doneTextEn: (task.detailsEn as FieldTaskTextsEn | null)?.doneText ?? null, onSite, earnedBadges };
 }
 
 /** The user's finished tasks and earned badges of every site, newest first. Rows of an unpublished site are kept: they come back when it is published again. */

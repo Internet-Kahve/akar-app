@@ -235,9 +235,10 @@ test("the admin detail carries the tasks and badges the public detail does, the 
   assert.deepEqual(admin.tasks, pub.tasks);
   assert.deepEqual(admin.badges, pub.badges);
   assert.deepEqual(admin.tasks, [
-    { id: `${site.id}-soru`, kind: "quiz", title: "Soru", prompt: "Hangisi?", photoId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified", quiz: { options: ["A", "B"], hints: ["İpucu"], wrongText: "Tekrar dene", fromHome: false } },
+    { id: `${site.id}-soru`, kind: "quiz", title: "Soru", prompt: "Hangisi?", titleEn: null, promptEn: null, photoId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified", enStatus: null,
+      quiz: { options: ["A", "B"], optionsEn: null, hints: ["İpucu"], hintsEn: null, wrongText: "Tekrar dene", wrongTextEn: null, fromHome: false } },
   ]);
-  assert.deepEqual(admin.badges, [{ id: `${site.id}-rozet`, title: "Rozet", text: "Kazandın", condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false }]);
+  assert.deepEqual(admin.badges, [{ id: `${site.id}-rozet`, title: "Rozet", text: "Kazandın", titleEn: null, textEn: null, enStatus: null, condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false }]);
   assert.ok(admin.media.some((m) => m.id === "ph-2"), "the task photograph is part of the media list");
   assert.ok(!JSON.stringify(admin).includes("Gizli doğru metin"));
 
