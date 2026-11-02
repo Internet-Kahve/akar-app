@@ -129,6 +129,16 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
 
       await tx.delete(siteSources).where(eq(siteSources.siteId, site.id));
       await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
+      // English texts are written in the panel (or by its translation), not in the content package: an import keeps
+      // them, and with them the English voice-overs, which only play while their text is unchanged.
+      const english = new Map(
+        (
+          await tx
+            .select({ id: storyBlocks.id, textEn: storyBlocks.textEn, textEnStatus: storyBlocks.textEnStatus, simpleEn: storyBlocks.simpleEn, simpleEnStatus: storyBlocks.simpleEnStatus })
+            .from(storyBlocks)
+            .where(eq(storyBlocks.siteId, site.id))
+        ).map((b) => [b.id, b]),
+      );
       await tx.delete(storyBlocks).where(eq(storyBlocks.siteId, site.id));
       if (site.sources?.length) {
         await tx.insert(siteSources).values(site.sources.map((s, position) => ({ siteId: site.id, sourceId: s.id, position })));
@@ -144,7 +154,7 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
             position,
             title: b.title,
             text: b.text,
-            textEn: b.textEn ?? null,
+            ...keptEnglish(english.get(b.id), b.textEn),
             simple: b.simple,
             trust: b.trust,
             photoId: b.photoId ?? null,
@@ -199,4 +209,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   } finally {
     await pool.end();
   }
+}
+
+type StoryEnglish = { textEn: string | null; textEnStatus: "machine" | "reviewed" | null; simpleEn: string | null; simpleEnStatus: "machine" | "reviewed" | null };
+
+/** The block's English after an import: what the database holds wins; the package's `textEn` only fills an empty one. */
+function keptEnglish(existing: StoryEnglish | undefined, packageText: string | undefined): StoryEnglish {
+  if (existing?.textEn) return existing;
+  return { textEn: packageText ?? null, textEnStatus: null, simpleEn: existing?.simpleEn ?? null, simpleEnStatus: existing?.simpleEnStatus ?? null };
 }
