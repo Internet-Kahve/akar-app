@@ -171,7 +171,10 @@ export function usePlacementEditor({
   };
 }
 
-/** Number input that lets half-typed values ("-", "") through and snaps back on leaving the field. */
+/**
+ * Number input that lets half-typed values ("-", "") through and snaps back on leaving the field. With `onClear` the
+ * value may be empty (`null`): emptying the field calls it.
+ */
 function NumberField({
   label,
   value,
@@ -180,20 +183,23 @@ function NumberField({
   step,
   disabled,
   onCommit,
+  onClear,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   min: number;
   max: number;
   step: number;
   disabled?: boolean;
   onCommit: (value: number) => void;
+  onClear?: () => void;
 }) {
-  const [text, setText] = useState(String(value));
+  const shown = value === null ? "" : String(value);
+  const [text, setText] = useState(shown);
   const focused = useRef(false);
   useEffect(() => {
-    if (!focused.current) setText(String(value));
-  }, [value]);
+    if (!focused.current) setText(shown);
+  }, [shown]);
   return (
     <label className="field">
       {label}
@@ -207,10 +213,14 @@ function NumberField({
         onFocus={() => (focused.current = true)}
         onBlur={() => {
           focused.current = false;
-          setText(String(value));
+          setText(shown);
         }}
         onChange={(e) => {
           setText(e.target.value);
+          if (e.target.value === "") {
+            onClear?.();
+            return;
+          }
           const n = e.target.valueAsNumber;
           if (Number.isFinite(n) && n >= min && n <= max) onCommit(n);
         }}
@@ -447,6 +457,15 @@ export function PlacementSection({
                 }
               />
             </label>
+            <NumberField
+              label="Ön cephe yönü (°)"
+              value={p.frontDeg ?? null}
+              min={0}
+              max={359.99}
+              step={0.5}
+              onCommit={(frontDeg) => editor.edit((v) => ({ ...v, frontDeg }))}
+              onClear={() => editor.edit((v) => ({ ...v, frontDeg: null }))}
+            />
             <NumberField
               label="Yükseklik (m)"
               value={p.altitudeM}

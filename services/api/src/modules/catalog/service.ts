@@ -379,6 +379,7 @@ export function resolvePlacement<T extends number | null>(
     lng: row.lng === null ? at.lng : row.lng,
     lat: row.lat === null ? at.lat : row.lat,
     headingDeg: row.headingDeg,
+    frontDeg: row.frontDeg,
     scale: row.scale,
     altitudeM: row.altitudeM,
     anchorNode: row.anchorNode,
@@ -667,6 +668,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         parts: m.parts,
         triangles: m.triangles,
         coverGroups: m.coverGroups,
+        interiorParts: m.interiorParts,
       })),
       sources: siteSourceList.map((s) => ({
         id: s.id,

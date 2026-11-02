@@ -270,6 +270,8 @@ export const siteMapPlacements = pgTable(
     location: point4326("location"),
     /** Clockwise from north. */
     headingDeg: doublePrecision("heading_deg").notNull().default(0),
+    /** The way the main façade faces, clockwise from north; null = unknown (the city's light direction). */
+    frontDeg: doublePrecision("front_deg"),
     scale: doublePrecision("scale").notNull().default(1),
     /** Metres above the ground the model rests on. */
     altitudeM: doublePrecision("altitude_m").notNull().default(0),
@@ -286,6 +288,7 @@ export const siteMapPlacements = pgTable(
   },
   (t) => [
     check("site_map_placements_heading", sql`${t.headingDeg} >= 0 AND ${t.headingDeg} < 360`),
+    check("site_map_placements_front", sql`${t.frontDeg} IS NULL OR (${t.frontDeg} >= 0 AND ${t.frontDeg} < 360)`),
     check("site_map_placements_scale", sql`${t.scale} >= 0.1 AND ${t.scale} <= 10`),
     check("site_map_placements_altitude", sql`${t.altitudeM} >= -50 AND ${t.altitudeM} <= 200`),
     check("site_map_placements_anchor", sql`${t.anchorNode} IS NULL OR char_length(${t.anchorNode}) <= 200`),

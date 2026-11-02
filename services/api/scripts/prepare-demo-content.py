@@ -244,8 +244,12 @@ for entry in editorial.eserleri_bul():
     shift = (model_info or {}).get('kaydirma_m') or {}
     east, north = shift.get('dogu', 0), shift.get('kuzey', 0)
     coords = [entry['lon'] + east/(111320*math.cos(math.radians(entry['lat']))), entry['lat'] + north/110540]
+    # model.json: yaw → heading, on_yonu → façade direction for the map sun, ana_parca → base point part, ic_parcalar → interior parts.
     model = dict(name=entry['ad']+' · temsili 3B model', file=f'eserler/{folder}/3d/export/{model_info["glb"]}_sunum.glb',
-                 src='', bytes=0, parts=[], trust='representative', coverGroups=model_info.get('ortu_gruplari') or []) if model_info else None
+                 src='', bytes=0, parts=[], trust='representative', coverGroups=model_info.get('ortu_gruplari') or [],
+                 interiorParts=model_info.get('ic_parcalar') or [],
+                 placement=dict(lng=coords[0], lat=coords[1], headingDeg=model_info.get('yaw') or 0, frontDeg=model_info.get('on_yonu'), scale=1, altitudeM=0,
+                                anchorNode=model_info.get('ana_parca') or None, hiddenPoints=[], keptPoints=[])) if model_info else None
     # Night theme model (1 Nov 2026): `glb_gece` names its export like `glb`; the presentation file is the one used.
     if model and model_info.get('glb_gece'):
         model['nightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece"]}_sunum.glb'

@@ -1987,6 +1987,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -2047,6 +2054,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -2205,6 +2213,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -2221,7 +2236,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -3909,6 +3925,13 @@
                                     "type": "number",
                                     "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                                   },
+                                  "frontDeg": {
+                                    "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
                                   "scale": {
                                     "type": "number",
                                     "description": "0,1–10; 1 = model birimi bir metre"
@@ -3969,6 +3992,7 @@
                                   "lng",
                                   "lat",
                                   "headingDeg",
+                                  "frontDeg",
                                   "scale",
                                   "altitudeM",
                                   "anchorNode",
@@ -4127,6 +4151,13 @@
                                     }
                                   },
                                   "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                                },
+                                "interiorParts": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -4143,7 +4174,8 @@
                                 "trust",
                                 "parts",
                                 "triangles",
-                                "coverGroups"
+                                "coverGroups",
+                                "interiorParts"
                               ],
                               "additionalProperties": false
                             },
@@ -7369,6 +7401,13 @@
                                     "type": "number",
                                     "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                                   },
+                                  "frontDeg": {
+                                    "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
                                   "scale": {
                                     "type": "number",
                                     "description": "0,1–10; 1 = model birimi bir metre"
@@ -7429,6 +7468,7 @@
                                   "lng",
                                   "lat",
                                   "headingDeg",
+                                  "frontDeg",
                                   "scale",
                                   "altitudeM",
                                   "anchorNode",
@@ -7587,6 +7627,13 @@
                                     }
                                   },
                                   "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                                },
+                                "interiorParts": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -7603,7 +7650,8 @@
                                 "trust",
                                 "parts",
                                 "triangles",
-                                "coverGroups"
+                                "coverGroups",
+                                "interiorParts"
                               ],
                               "additionalProperties": false
                             },
@@ -9558,6 +9606,13 @@
                       },
                       "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                     },
+                    "interiorParts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -9610,6 +9665,7 @@
                     "parts",
                     "triangles",
                     "coverGroups",
+                    "interiorParts",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -9706,6 +9762,13 @@
                       },
                       "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                     },
+                    "interiorParts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -9758,6 +9821,7 @@
                     "parts",
                     "triangles",
                     "coverGroups",
+                    "interiorParts",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -10297,6 +10361,13 @@
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                           },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
                           "bytes": {
                             "anyOf": [
                               {
@@ -10349,6 +10420,7 @@
                           "parts",
                           "triangles",
                           "coverGroups",
+                          "interiorParts",
                           "bytes",
                           "partsStatus",
                           "uploadedBy",
@@ -10692,6 +10764,13 @@
                       },
                       "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
                     },
+                    "interiorParts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -10744,6 +10823,7 @@
                     "parts",
                     "triangles",
                     "coverGroups",
+                    "interiorParts",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -13003,6 +13083,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -13063,6 +13150,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -13221,6 +13309,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -13237,7 +13332,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -13362,6 +13458,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -13431,6 +13534,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -15163,6 +15267,13 @@
                                     "type": "number",
                                     "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                                   },
+                                  "frontDeg": {
+                                    "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
                                   "scale": {
                                     "type": "number",
                                     "description": "0,1–10; 1 = model birimi bir metre"
@@ -15223,6 +15334,7 @@
                                   "lng",
                                   "lat",
                                   "headingDeg",
+                                  "frontDeg",
                                   "scale",
                                   "altitudeM",
                                   "anchorNode",
@@ -15381,6 +15493,13 @@
                                     }
                                   },
                                   "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                                },
+                                "interiorParts": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -15397,7 +15516,8 @@
                                 "trust",
                                 "parts",
                                 "triangles",
-                                "coverGroups"
+                                "coverGroups",
+                                "interiorParts"
                               ],
                               "additionalProperties": false
                             },
@@ -15522,6 +15642,13 @@
                                     "type": "number",
                                     "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                                   },
+                                  "frontDeg": {
+                                    "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                                    "type": [
+                                      "number",
+                                      "null"
+                                    ]
+                                  },
                                   "scale": {
                                     "type": "number",
                                     "description": "0,1–10; 1 = model birimi bir metre"
@@ -15591,6 +15718,7 @@
                                   "lng",
                                   "lat",
                                   "headingDeg",
+                                  "frontDeg",
                                   "scale",
                                   "altitudeM",
                                   "anchorNode",
@@ -17287,6 +17415,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -17347,6 +17482,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -17505,6 +17641,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -17521,7 +17664,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -17646,6 +17790,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -17715,6 +17866,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -19577,6 +19729,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -19637,6 +19796,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -19795,6 +19955,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -19811,7 +19978,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -19936,6 +20104,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -20005,6 +20180,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -21721,6 +21897,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -21781,6 +21964,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -21939,6 +22123,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -21955,7 +22146,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -22080,6 +22272,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -22149,6 +22348,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -23910,6 +24110,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -23970,6 +24177,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -24128,6 +24336,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -24144,7 +24359,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -24269,6 +24485,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -24338,6 +24561,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -26049,6 +26273,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -26109,6 +26340,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -26267,6 +26499,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -26283,7 +26522,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -26408,6 +26648,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -26477,6 +26724,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -26633,6 +26881,19 @@
                     "minimum": 0,
                     "exclusiveMaximum": 360,
                     "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
+                  },
+                  "frontDeg": {
+                    "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; yoksa ya da null = bilinmiyor",
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "exclusiveMaximum": 360
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "scale": {
                     "type": "number",
@@ -28288,6 +28549,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -28348,6 +28616,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -28506,6 +28775,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -28522,7 +28798,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -28647,6 +28924,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -28716,6 +29000,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -30501,6 +30786,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -30561,6 +30853,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -30719,6 +31012,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -30735,7 +31035,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -30860,6 +31161,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -30929,6 +31237,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -32703,6 +33012,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -32763,6 +33079,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -32921,6 +33238,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -32937,7 +33261,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -33062,6 +33387,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -33131,6 +33463,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -35105,6 +35438,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -35165,6 +35505,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -35323,6 +35664,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -35339,7 +35687,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -35464,6 +35813,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -35533,6 +35889,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -37302,6 +37659,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -37362,6 +37726,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -37520,6 +37885,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -37536,7 +37908,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -37661,6 +38034,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -37730,6 +38110,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -39579,6 +39960,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -39639,6 +40027,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -39797,6 +40186,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -39813,7 +40209,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -39938,6 +40335,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -40007,6 +40411,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -41806,6 +42211,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -41866,6 +42278,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -42024,6 +42437,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -42040,7 +42460,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -42165,6 +42586,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -42234,6 +42662,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -43916,6 +44345,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -43976,6 +44412,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -44134,6 +44571,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -44150,7 +44594,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -44275,6 +44720,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -44344,6 +44796,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -46026,6 +46479,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -46086,6 +46546,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",
@@ -46244,6 +46705,13 @@
                               }
                             },
                             "description": "«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"
+                          },
+                          "interiorParts": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -46260,7 +46728,8 @@
                           "trust",
                           "parts",
                           "triangles",
-                          "coverGroups"
+                          "coverGroups",
+                          "interiorParts"
                         ],
                         "additionalProperties": false
                       },
@@ -46385,6 +46854,13 @@
                               "type": "number",
                               "description": "Kuzeyden saat yönünde derece, 0 ≤ x < 360"
                             },
+                            "frontDeg": {
+                              "description": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)",
+                              "type": [
+                                "number",
+                                "null"
+                              ]
+                            },
                             "scale": {
                               "type": "number",
                               "description": "0,1–10; 1 = model birimi bir metre"
@@ -46454,6 +46930,7 @@
                             "lng",
                             "lat",
                             "headingDeg",
+                            "frontDeg",
                             "scale",
                             "altitudeM",
                             "anchorNode",

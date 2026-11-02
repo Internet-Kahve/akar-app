@@ -88,6 +88,7 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
                 bytes: site.model.bytes,
                 parts: site.model.parts,
                 coverGroups: site.model.coverGroups ?? [],
+                interiorParts: site.model.interiorParts ?? [],
               },
             ]
           : []),

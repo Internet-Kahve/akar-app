@@ -472,7 +472,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
   if (s.relatedSiteId) site.relatedSiteId = s.relatedSiteId;
   if (s.coverMediaId) site.coverPhotoId = s.coverMediaId;
   const model = modelOf(a);
-  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups };
+  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups, interiorParts: model.interiorParts };
   return site;
 }
 
@@ -660,6 +660,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       parts: m.parts,
       triangles: m.triangles,
       coverGroups: m.coverGroups,
+      interiorParts: m.interiorParts,
     })),
     sources: sourceList.map((r) => ({
       id: r.id,
@@ -1200,6 +1201,7 @@ const placementSnapshot = (p: PlacementRow | undefined) =>
     lng: p.lng,
     lat: p.lat,
     headingDeg: p.headingDeg,
+    frontDeg: p.frontDeg,
     scale: p.scale,
     altitudeM: p.altitudeM,
     anchorNode: p.anchorNode,
@@ -1231,6 +1233,7 @@ export async function setMapPlacement(tx: Tx, ctx: AuditCtx, id: string, input: 
   const values = {
     location: hasLocation ? ([input.lng!, input.lat!] as [number, number]) : null,
     headingDeg: input.headingDeg,
+    frontDeg: input.frontDeg ?? null,
     scale: input.scale,
     altitudeM: input.altitudeM,
     anchorNode: input.anchorNode ? input.anchorNode : null,

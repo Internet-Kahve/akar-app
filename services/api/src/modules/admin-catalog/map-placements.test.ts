@@ -122,6 +122,8 @@ test("ranges, a lone coordinate and more than 50 points are 400 VALIDATION_FAILE
   const bad: [string, Record<string, unknown>][] = [
     ["headingDeg", { headingDeg: 360 }],
     ["headingDeg", { headingDeg: -1 }],
+    ["frontDeg", { frontDeg: 360 }],
+    ["frontDeg", { frontDeg: -0.5 }],
     ["scale", { scale: 0.05 }],
     ["scale", { scale: 10.5 }],
     ["altitudeM", { altitudeM: -50.5 }],
@@ -173,6 +175,7 @@ test("a placement is replaced whole by PUT, audited, and an Idempotency-Key repl
     lng: 29.07,
     lat: 40.19,
     headingDeg: 123.5,
+    frontDeg: null,
     scale: 1.5,
     altitudeM: 2.5,
     anchorNode: "Govde",
@@ -194,7 +197,7 @@ test("a placement is replaced whole by PUT, audited, and an Idempotency-Key repl
   assert.equal(second.res.statusCode, 200);
   assert.deepEqual(
     { ...second.body.mapPlacement, updatedAt: undefined },
-    { lng: 29.06, lat: 40.18, headingDeg: 90, scale: 1, altitudeM: 0, anchorNode: null, hiddenPoints: [], keptPoints: [], visible: true, updatedAt: undefined },
+    { lng: 29.06, lat: 40.18, headingDeg: 90, frontDeg: null, scale: 1, altitudeM: 0, anchorNode: null, hiddenPoints: [], keptPoints: [], visible: true, updatedAt: undefined },
   );
   const rows = await app.deps.db.select().from(siteMapPlacements).where(eq(siteMapPlacements.siteId, site.id));
   assert.equal(rows.length, 1);
@@ -204,10 +207,27 @@ test("a placement is replaced whole by PUT, audited, and an Idempotency-Key repl
   assert.equal(audits.length, 2);
   assert.equal(audits[0]?.actorId, "editor-1");
   assert.equal(audits[0]?.before, null);
-  const firstSnapshot = { lng: 29.07, lat: 40.19, headingDeg: 123.5, scale: 1.5, altitudeM: 2.5, anchorNode: "Govde", hiddenPoints: [{ lng: 29.061, lat: 40.181 }], keptPoints: [{ lng: 29.062, lat: 40.182 }], visible: true };
+  const firstSnapshot = { lng: 29.07, lat: 40.19, headingDeg: 123.5, frontDeg: null, scale: 1.5, altitudeM: 2.5, anchorNode: "Govde", hiddenPoints: [{ lng: 29.061, lat: 40.181 }], keptPoints: [{ lng: 29.062, lat: 40.182 }], visible: true };
   assert.deepEqual(audits[0]?.after, firstSnapshot);
   assert.deepEqual(audits[1]?.before, firstSnapshot);
   assert.deepEqual(audits[1]?.after, { ...firstSnapshot, lng: null, lat: null, headingDeg: 90, scale: 1, altitudeM: 0, anchorNode: null, hiddenPoints: [], keptPoints: [] });
+});
+
+test("the façade direction round-trips through the PUT, shows up for visitors, is cleared by null or by leaving it out, and 360 is refused", async () => {
+  const site = await newSite("Cephe Hanı", { publish: true });
+  const saved = await put(site.id, placement({ frontDeg: 186.5 }));
+  assert.equal(saved.res.statusCode, 200, saved.res.body);
+  assert.equal(saved.body.mapPlacement?.frontDeg, 186.5);
+  assert.equal((await call<AdminSiteDetail>("GET", `/v1/admin/sites/${site.id}`, editor)).body.mapPlacement?.frontDeg, 186.5);
+  assert.equal((await publicDetail(site.id)).placement?.frontDeg, 186.5);
+  assert.equal((await put(site.id, placement({ frontDeg: 0 }))).body.mapPlacement?.frontDeg, 0, "north is a direction, not an absent one");
+  assert.equal((await put(site.id, placement({ frontDeg: null }))).body.mapPlacement?.frontDeg, null);
+  await put(site.id, placement({ frontDeg: 90 }));
+  assert.equal((await put(site.id, placement())).body.mapPlacement?.frontDeg, null, "a placement is replaced whole: left out means unknown");
+  const rejected = await put(site.id, placement({ frontDeg: 360 }));
+  assert.equal(rejected.res.statusCode, 400);
+  assert.ok(rejected.body.error.fieldErrors.frontDeg);
+  assert.equal((await publicDetail(site.id)).placement?.frontDeg, null, "the refused write stored nothing");
 });
 
 test("visitors get the placement of a published site with a model, and an ETag that changes with it", async () => {
@@ -227,6 +247,7 @@ test("visitors get the placement of a published site with a model, and an ETag t
     lng: 29.06,
     lat: 40.18,
     headingDeg: 45,
+    frontDeg: null,
     scale: 1,
     altitudeM: 0,
     anchorNode: "Govde",
@@ -263,6 +284,7 @@ test("a hidden placement is null for visitors but stays in the panel with visibl
     lng: 29.065,
     lat: 40.185,
     headingDeg: 270,
+    frontDeg: null,
     scale: 2,
     altitudeM: 5,
     anchorNode: "Govde",
@@ -307,7 +329,7 @@ test("the database refuses a placement outside its ranges even when written arou
   const site = await newSite("Kısıt Hanı");
   const insert = (over: Partial<typeof siteMapPlacements.$inferInsert>) =>
     app.deps.db.insert(siteMapPlacements).values({ siteId: site.id, updatedBy: "x", ...over });
-  for (const over of [{ headingDeg: 360 }, { scale: 0 }, { scale: 11 }, { altitudeM: 201 }, { anchorNode: "x".repeat(201) }]) {
+  for (const over of [{ headingDeg: 360 }, { frontDeg: 360 }, { frontDeg: -1 }, { scale: 0 }, { scale: 11 }, { altitudeM: 201 }, { anchorNode: "x".repeat(201) }]) {
     await assert.rejects(insert(over), { message: /./ }, JSON.stringify(over));
   }
   await assert.rejects(insert({ hiddenPoints: Array.from({ length: 51 }, () => ({ lng: 29, lat: 40 })) }));

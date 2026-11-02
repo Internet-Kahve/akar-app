@@ -4,7 +4,7 @@ import { extname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { and, eq, inArray, like, notInArray, sql } from "drizzle-orm";
-import { validateCityIdentity, validateCityMap, validateCityScene, validateSite, type CityRecord, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
+import { validateCityIdentity, validateCityMap, validateCityScene, validatePlacement, validateSite, type CityRecord, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
 import { slugify } from "../modules/catalog/service.ts";
 import { loadConfig } from "../config.ts";
 import type { Tx } from "../platform/idempotency.ts";
@@ -12,7 +12,7 @@ import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts"
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
-import { type HistoryViewpoint, cities, historyAngleMatches, historyImages, media, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type HistoryAngleMatch, type QuizTaskDetails } from "./schema/index.ts";
+import { type HistoryViewpoint, cities, historyAngleMatches, historyImages, media, siteAboutChapters, siteBadges, siteMapPlacements, siteMedia, sitePartCardPhotos, sitePartCards, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type HistoryAngleMatch, type QuizTaskDetails } from "./schema/index.ts";
 
 /**
  * A photograph the visitor sees with its credit line and licence word for word (§11.47): the present-day pair of an
@@ -213,6 +213,9 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     });
     const missing = (site.model?.coverGroups ?? []).flat().filter((part) => !parts.includes(part));
     if (missing.length) throw new Error(`Cover group parts are not model parts: ${site.id} ${missing.join(", ")}`);
+    const notInterior = (site.model?.interiorParts ?? []).filter((part) => !parts.includes(part));
+    if (notInterior.length) throw new Error(`Interior parts are not model parts: ${site.id} ${notInterior.join(", ")}`);
+    if (site.model?.placement) validatePlacement(site.model.placement);
     const outside = site.chapters.flatMap((c) => [...c.reading.focusParts, ...(c.reading.camera?.target ? [c.reading.camera.target] : [])]).filter((part) => !parts.includes(part));
     if (outside.length) throw new Error(`Chapter parts are not model parts: ${site.id} ${[...new Set(outside)].join(", ")}`);
     const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !parts.includes(part));
@@ -308,10 +311,24 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             triangles: triangles.get(nightModelId(site.id))!,
             parts: nightParts.get(site.id)!,
             coverGroups: site.model.coverGroups ?? [],
+            interiorParts: site.model.interiorParts ?? [],
             partsStatus: "done" as const,
           };
           await tx.insert(media).values({ id: nightModelId(site.id), ...row }).onConflictDoUpdate({ target: media.id, set: row });
           await tx.update(sites).set({ nightModelMediaId: nightModelId(site.id) }).where(eq(sites.id, site.id));
+        }
+        // The map placement belongs to the panel once it exists (§11.63): a site without one gets the package's (heading,
+        // base part, façade direction); a stored one keeps everything but the façade direction, which the package sets
+        // when it names one (`3d/model.json → on_yonu`) and leaves alone when it is silent.
+        const placement = site.model?.placement;
+        if (placement) {
+          const frontDeg = placement.frontDeg ?? null;
+          const row = { siteId: site.id, location: null, headingDeg: placement.headingDeg, frontDeg, scale: placement.scale, altitudeM: placement.altitudeM,
+            anchorNode: placement.anchorNode, hiddenPoints: [], keptPoints: [], updatedBy: "content-import" };
+          const insert = tx.insert(siteMapPlacements).values(row);
+          if (frontDeg === null) await insert.onConflictDoNothing();
+          else await insert.onConflictDoUpdate({ target: siteMapPlacements.siteId, set: { frontDeg, updatedBy: row.updatedBy, updatedAt: new Date() },
+            setWhere: sql`${siteMapPlacements.frontDeg} IS DISTINCT FROM ${frontDeg}` });
         }
         // The panel owns the part cards of a site that is already in the database (§11.52): only a new site gets the
         // manifest's cards, unless the run says to replace them. Photos cascade with their card.

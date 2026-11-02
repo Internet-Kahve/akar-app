@@ -46,7 +46,7 @@ API'de olup panelde ekranı olmayanlar:
 - [ ] Bulmacalar (`/v1/admin/quizzes`), hikâye kartları (`/v1/admin/cards`), içe aktarma (`/v1/admin/imports`), raporlar (`/v1/admin/reports/*`: taslak sorunları, konum, kopya), ekip davetleri (`/v1/admin/staff`).
 
 API'de de olmayanlar (Burak):
-- [ ] «İçini göster» grupları (`coverGroups`), iç mekân parçaları, ön cephe yönü (`frontDeg`): yazan uç yok; panelden eklenen eserde «İçini göster» çıkmaz.
+- [ ] «İçini göster» grupları (`coverGroups`) ve iç mekân parçaları (`interiorParts`) API'de okunur ve içerik aktarımıyla gelir; yazan uç yok, panelden eklenen eserde «İçini göster» çıkmaz. (Ön cephe yönü `frontDeg` tamam: aktarım yazar, panel yerleşim alanından düzenlenir.)
 - [ ] Eser görevleri ve rozetleri (`site_tasks`, `site_badges`) için yönetim ucu yok; yalnız içerik aktarımıyla geliyor.
 - [ ] Eseri silme.
 - [ ] Cümleye «Model dönsün» (`turn`) alanı.

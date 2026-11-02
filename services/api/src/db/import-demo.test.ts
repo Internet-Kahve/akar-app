@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startTestApp, TEST_RECEIPT_SECRET } from "../test/harness.ts";
 import { deleteUnreferencedMedia } from "../modules/media/service.ts";
-import { siteBadges, sitePartCards, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
+import { siteBadges, siteMapPlacements, sitePartCards, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
 import { importDemoContent } from "./import-demo.ts";
 
 let ctx: Awaited<ReturnType<typeof startTestApp>>;
@@ -36,7 +36,9 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
       // Off the gallery: only the part card shows it.
       { id: `detail-${i}`, file: "photo.jpg", src: "", alt: "Kubbe", title: "Kubbe", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: null },
     ],
-    coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative" },
+    coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative", interiorParts: i === 0 ? ["kubbe_1"] : [],
+      // `3d/model.json`: yaw, ana_parca and (test-0 only) on_yonu.
+      placement: { lng: 29.06, lat: 40.18, headingDeg: 13, frontDeg: i === 0 ? 7 : null, scale: 1, altitudeM: 0, anchorNode: "kubbe_1", hiddenPoints: [], keptPoints: [] } as Record<string, unknown> },
     // The archive photograph has a present-day pair (the team's choice) credited as its file says.
     historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}`,
       present: { id: `present-${i}`, file: "present.webp", alt: "Bugünkü görünüm: Eski eser", credit: "Fotoğraf: Proje arşivi", license: "Proje için verildi; kullanılabilir.", angleMatch: "near" } as Record<string, unknown> | null }], sections: [
@@ -130,6 +132,13 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual(detail.photoIds, ["photo-0"], "present-day and sample photographs are not gallery photographs");
   assert.deepEqual(detail.media.find((m: { kind: string }) => m.kind === "model").parts, ["kubbe_1"]);
   assert.equal(detail.media.find((m: { kind: string }) => m.kind === "model").triangles, 0, "the model's triangles are counted from its file");
+  // `on_yonu` and `ic_parcalar` of the package reach the detail: the façade direction in the placement, the interior parts on the model.
+  assert.equal(detail.placement.frontDeg, 7);
+  assert.deepEqual([detail.placement.headingDeg, detail.placement.anchorNode], [13, "kubbe_1"]);
+  assert.deepEqual(detail.media.find((m: { kind: string }) => m.kind === "model").interiorParts, ["kubbe_1"]);
+  const quiet = (await ctx.app.inject({ url: "/v1/sites/test-1" })).json();
+  assert.equal(quiet.placement.frontDeg, null, "a package without on_yonu leaves the façade direction unknown");
+  assert.deepEqual(quiet.media.find((m: { kind: string }) => m.kind === "model").interiorParts, []);
   assert.deepEqual(detail.partCards.map((c: { parts: string[]; photoIds: string[] }) => [c.parts, c.photoIds]), [[["kubbe_1"], ["detail-0", "photo-0"]]]);
   assert.ok(detail.media.some((m: { id: string }) => m.id === "detail-0"), "a card's off-gallery photo resolves from the detail's media");
   // The reading layer comes back whole: chapters in order, paragraphs tied to them, book photographs in order (a gallery photo and a book-only one).
@@ -227,6 +236,17 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Panelde düzeltildi"], []]);
   assert.deepEqual((await importDemoContent(path, root, true, env, { replacePartCards: true })).partCardsKept, []);
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Kubbe"], ["Kubbe"]]);
+  // A stored placement is the panel's: a re-import sets the façade direction only where the package names one and leaves the rest.
+  const placementOf = async (siteId: string) => (await db.select().from(siteMapPlacements).where(eq(siteMapPlacements.siteId, siteId)))[0]!;
+  await db.update(siteMapPlacements).set({ frontDeg: 99, headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-1"));
+  await db.update(siteMapPlacements).set({ headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-0"));
+  (sites[0]!.model.placement as { frontDeg: number }).frontDeg = 9;
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  assert.deepEqual([(await placementOf("test-1")).frontDeg, (await placementOf("test-1")).headingDeg], [99, 50], "a silent package keeps the stored façade direction");
+  assert.deepEqual([(await placementOf("test-0")).frontDeg, (await placementOf("test-0")).headingDeg], [9, 50], "a package that names one sets it, the panel's heading stays");
+  (sites[0]!.model.placement as { frontDeg: number }).frontDeg = 7;
+  await db.update(siteMapPlacements).set({ headingDeg: 13 }).where(eq(siteMapPlacements.siteId, "test-0"));
   // Present-day photographs and samples: a missing credit line or licence, an unknown angle word, a date that is not a day, an archive
   // photograph of another site or an id another photograph already has stops the import before anything is written.
   const attempt = async (record: Record<string, unknown>, change: Record<string, unknown>, expected: RegExp) => {
