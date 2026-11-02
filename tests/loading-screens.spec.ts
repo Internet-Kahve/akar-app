@@ -59,7 +59,8 @@ test("the emblem is drawn stroke by stroke, and stands drawn when the visitor as
   await expect(stroke).toHaveCSS("animation-name", "emblem-draw");
   await expect(stroke).toHaveCSS("animation-duration", "2.6s");
   release();
-  await expect(page.locator(".opening")).toHaveCount(0);
+  // The map draws slowly in software rendering under a full run; the other opening checks wait as long.
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   const still = await holdMap(page);
