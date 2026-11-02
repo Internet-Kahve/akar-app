@@ -1,0 +1,6 @@
+{
+  "_aciklama": "2 Kasım 2026: z-fighting. Revak tonozlarının uç yüzleri revak ve gövde duvarlarıyla, çatının güney kenarı revak taş kaplamasıyla, portalın yanları gövde duvarıyla aynı düzlemdeydi (dönerken titriyordu). Kutu ortasına göre yatay ölçek, dört GLB'ye bir kez uygulandı (_kutuphane/dugum_olcek.py). Kalan küçük çakışmalar parçaların kendi içinde (Govde_Dis sıva 1,7 m², Avlu_Revak 1,6 m², Ic_Koza 0,6 m²); blend'den yeniden üretimde giderilmeli. Aşağı bakan alt yüzlerdeki z=0 çakışmaları görünmez.",
+  "Revak_Tonozlari": 0.998,
+  "Cati": 1.001,
+  "Portal": 1.004
+}
