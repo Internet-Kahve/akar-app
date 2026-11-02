@@ -71,6 +71,7 @@ import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
+import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { SignInModal } from "./sign-in-modal";
@@ -195,6 +196,8 @@ export function AkarApp() {
     [mapDrawn, setMapDrawn] = useState(false),
     [openingLate, setOpeningLate] = useState(false);
   const wide = useWide();
+  // The bottom sheet and the floating site card follow the CSS's phone layout (900 px), not `wide` (1000 px).
+  const phone = useMedia(PHONE_LAYOUT);
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -832,7 +835,7 @@ export function AkarApp() {
    * the name, «Kısa hikâye» and Dinle | Oku, and 44 px of what follows, fading out; it opens to all its content, at
    * most 75 % of the screen. The same drag as the map's sheet moves it.
    */
-  const siteCard = view === "detail";
+  const siteCard = view === "detail" && phone;
   const cardLowest = () => {
     const panel = sheet.current;
     // Dinle | Oku closes the top part; a site without a story ends it with its notice.
@@ -884,7 +887,7 @@ export function AkarApp() {
     body.style.setProperty("--g", `${Math.round(visible)}px`);
   }, []);
   useEffect(() => {
-    if (!siteCard || wide) return;
+    if (!siteCard) return;
     // The height moves over 280 ms: follow it.
     const start = performance.now();
     let frame = requestAnimationFrame(function step() {
@@ -892,7 +895,7 @@ export function AkarApp() {
       if (performance.now() - start < 340) frame = requestAnimationFrame(step);
     });
     return () => cancelAnimationFrame(frame);
-  }, [sheetHeight, siteCard, wide, fadeCard]);
+  }, [sheetHeight, siteCard, fadeCard]);
   // A route opens the sheet at 58 % and gives the earlier height back when it closes; a tab keeps the height
   // (the prototype's `altH`): Eserler | Rotalar must not drop the sheet the visitor pulled up.
   const heightBeforeRoute = useRef<number | null>(null);
@@ -1166,8 +1169,8 @@ export function AkarApp() {
               )}
               <aside
                 ref={sheet}
-                className={`side-panel${sheetDragging ? " dragging" : ""}${siteCard && !wide && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
-                onScroll={siteCard && !wide ? fadeCard : undefined}
+                className={`side-panel${sheetDragging ? " dragging" : ""}${siteCard && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
+                onScroll={siteCard ? fadeCard : undefined}
                 aria-label={t("app.panelAria")}
                 hidden={collapsed}
                 onPointerDown={(e) => {
@@ -1373,7 +1376,7 @@ export function AkarApp() {
                     key={`${site.id}-${view}`}
                     context={view === "story" ? "story" : "detail"}
                     // Phone: the scene fills the screen behind the floating card; the model stays above it closed.
-                    frameBottom={!wide && siteCard && cardClosed ? cardClosed + 12 : 0}
+                    frameBottom={siteCard && cardClosed ? cardClosed + 12 : 0}
                     site={site}
                     live={live}
                     photoId={

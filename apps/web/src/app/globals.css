@@ -3358,15 +3358,16 @@ td small {
 }
 /* The story's photo card: a strip under the model (`storyCardFrame`), in the credit line's place on a small scene. */
 .story-photo-card {
+  --kart-s: 1;
   position: absolute;
   z-index: 6;
   left: 12px;
   right: 12px;
   bottom: 12px;
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: calc(96px * var(--kart-s)) minmax(0, 1fr);
   align-items: center;
-  height: 96px;
+  height: calc(96px * var(--kart-s));
   padding: 0;
   overflow: hidden;
   border: 0;
@@ -3380,6 +3381,12 @@ td small {
   touch-action: none;
   user-select: none;
 }
+/* The card is the frame; its content is one button (open, drag), laid out as the card's own children. */
+.story-photo-open {
+  all: unset;
+  display: contents;
+  cursor: inherit;
+}
 .story-photo-card.placed {
   right: auto;
   bottom: auto;
@@ -3388,18 +3395,17 @@ td small {
 .story-photo-card:active {
   cursor: grabbing;
 }
-.story-photo-card:focus-visible {
+.story-photo-card:has(.story-photo-open:focus-visible) {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 .story-photo-card img {
   display: block;
-  width: 96px;
-  height: 96px;
+  width: calc(96px * var(--kart-s));
+  height: calc(96px * var(--kart-s));
   object-fit: cover;
-  pointer-events: none;
 }
-.story-photo-card > span {
+.story-photo-card > button > span {
   min-width: 0;
   padding: 10px 14px;
 }
@@ -3417,10 +3423,41 @@ td small {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+/* The size handle (Muhammed, 2 Nov 2026): a small round grip in the card's corner, the top one while the strip
+   sits at the bottom of a phone (it grows upward), else the bottom one. */
+.story-photo-size {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  box-shadow: 0 1px 4px #141b2b33;
+  color: var(--text-muted);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.story-photo-card.placed .story-photo-size {
+  top: auto;
+  bottom: 6px;
+}
+.story-photo-size:hover {
+  color: var(--text);
+}
+.story-photo-size:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
 @media (max-width: 999.98px) {
   .media-scene:has(.story-photo-card:not(.placed)) .model-inside,
   .media-scene:has(.story-photo-card:not(.placed)) .model-part-name {
-    bottom: 120px;
+    bottom: calc(24px + 96px * var(--kart-s, 1));
   }
   .media-scene:has(.story-photo-card:not(.placed)) .scene-photo-credit {
     display: none;
@@ -3432,17 +3469,17 @@ td small {
     right: auto;
     bottom: 62px;
     display: block;
-    width: 320px;
+    width: calc(320px * var(--kart-s));
     height: auto;
   }
   .story-photo-card.placed {
-    width: 320px;
+    width: calc(320px * var(--kart-s));
   }
   .story-photo-card img {
     width: 100%;
-    height: 200px;
+    height: calc(200px * var(--kart-s));
   }
-  .story-photo-card > span {
+  .story-photo-card > button > span {
     display: block;
     padding: 12px 16px 14px;
   }
@@ -3454,6 +3491,11 @@ td small {
     font-size: 14px;
     line-height: 20px;
     -webkit-line-clamp: 3;
+  }
+  .story-photo-size {
+    top: auto;
+    bottom: 8px;
+    right: 8px;
   }
 }
 .part-card-photos {

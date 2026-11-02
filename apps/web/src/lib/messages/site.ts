@@ -147,6 +147,8 @@ export const tr = {
   "site.continueWithPhotos": "Görsellerle devam et",
   "site.photoCardOpenPart": "{title}: parça kartını aç. Sürükleyerek taşınabilir.",
   "site.photoCardEnlarge": "{title}: fotoğrafı büyüt. Sürükleyerek taşınabilir.",
+  "site.photoCardSize": "Kartın boyutu: yüzde {percent}",
+  "site.photoCardSizeHint": "Sürükle: büyüt ya da küçült · ← →: adım adım · çift tık: ilk hâline dön",
 
   // Story panel
   "site.sourceLabel": "Kaynak:",
@@ -543,6 +545,8 @@ export const en = {
   "site.continueWithPhotos": "Continue with images",
   "site.photoCardOpenPart": "{title}: open the part card. It can be moved by dragging.",
   "site.photoCardEnlarge": "{title}: enlarge the photo. It can be moved by dragging.",
+  "site.photoCardSize": "Card size: {percent} percent",
+  "site.photoCardSizeHint": "Drag: larger or smaller · ← →: step by step · double click: back as it was",
 
   // Story panel
   "site.sourceLabel": "Source:",
