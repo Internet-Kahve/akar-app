@@ -109,7 +109,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   visitor.page.on("pageerror", (e) => errors.push(e.message));
   await openSite(visitor.page, MEMORY_SITE.name);
   await visitor.page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  await visitor.page.getByRole("button", { name: /Bir anı bırak/ }).click();
+  await visitor.page.getByRole("button", { name: "İz Bırak", exact: true }).first().click();
   const form = visitor.page.getByRole("dialog").filter({ has: visitor.page.getByRole("heading", { name: "İz Bırak" }) });
   await form.getByLabel("Anı fotoğrafı").setInputFiles({ name: "iz.png", mimeType: "image/png", buffer: PNG });
   await expect(form.getByAltText("Paylaşılacak fotoğrafın önizlemesi")).toBeVisible();
@@ -145,7 +145,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   const reader = await guestPage(browser);
   await openSite(reader.page, MEMORY_SITE.name);
   await reader.page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  const memory = reader.page.locator(".hm-iz").filter({ hasText: text });
+  const memory = reader.page.locator(".hz-iz, .hzd-iz").filter({ hasText: text });
   await expect(memory).toBeVisible();
   const photo = memory.getByRole("img", { name: "Ziyaretçinin eser fotoğrafı" });
   await expect(photo).toHaveAttribute("src", /\/object\/public\/media\//);
@@ -156,7 +156,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   await moderator.page.goto("/");
   await openSite(moderator.page, MEMORY_SITE.name);
   await moderator.page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  const published = moderator.page.locator(".hm-iz").filter({ hasText: text });
+  const published = moderator.page.locator(".hz-iz, .hzd-iz").filter({ hasText: text });
   await expect(published.getByRole("button", { name: "Kalıcı sil" })).toHaveCount(0);
   const photoUrl = await published.getByRole("img", { name: "Ziyaretçinin eser fotoğrafı" }).getAttribute("src");
   await published.getByRole("button", { name: "Yayından kaldır" }).click();
@@ -188,11 +188,14 @@ test("a guest's saved site and Rotam move into the account at sign-in; Rotam the
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
 
-  // 1. As a guest: add the site to Rotam from the map's short card and save it (both kept on the device).
+  // 1. As a guest: add the site to Rotam from the map's short card (it opens the route builder on Rotam) and save
+  //    the site (both kept on the device).
   await peekSite(page, MEMORY_SITE.name);
-  const peek = page.locator(".site-peek");
-  await peek.getByRole("button", { name: "Rotama ekle" }).click();
-  await expect(peek.getByRole("button", { name: "Rotamdan çıkar" })).toBeVisible();
+  await page.locator(".site-peek").getByRole("button", { name: "Rotama ekle" }).click();
+  await page.getByRole("region", { name: "Rota oluştur" }).getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByRole("region", { name: "Rota oluştur" })).toHaveCount(0);
+  await peekSite(page, MEMORY_SITE.name);
+  await expect(page.locator(".site-peek").getByRole("button", { name: "Rotamdan çıkar" })).toBeVisible();
   await page.getByRole("button", { name: "Eseri incele" }).click();
   const save = page.getByRole("button", { name: "Eseri kaydet" });
   await save.click();
@@ -255,7 +258,7 @@ test("an admin deletes another visitor's approved memory permanently from the pu
   await page.goto("/");
   await openSite(page, MEMORY_SITE.name);
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  const card = page.locator(".hm-iz").filter({ hasText: text });
+  const card = page.locator(".hz-iz, .hzd-iz").filter({ hasText: text });
   await card.getByRole("button", { name: "Kalıcı sil" }).click();
   await page.getByRole("dialog", { name: "Anı kalıcı silinsin mi?" }).getByRole("button", { name: "Evet, kalıcı sil" }).click();
   await expect(card).toHaveCount(0);

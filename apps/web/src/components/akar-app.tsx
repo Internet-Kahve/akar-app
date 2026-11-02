@@ -1401,7 +1401,7 @@ export function AkarApp() {
                             onRead={() => openStory(false, 0, peekSite.id)}
                             onTasks={() => selectSite(peekSite.id)}
                             onNext={pickSite}
-                            onRoute={() => void openRouteBuilder(peekSite.id)}
+                            onRoute={() => void (state.routeIds.includes(peekSite.id) ? toggleRoute(peekSite.id) : openRouteBuilder(peekSite.id))}
                             onClose={() => changePeek(undefined)}
                           />
                         )

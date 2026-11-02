@@ -1,5 +1,5 @@
 {
-  "id": "922a8f9d-f7eb-4085-b917-d18e7ef7e7b9",
+  "id": "51a09686-7c12-4b04-80cf-356fc64e2eda",
   "prevId": "b54032f1-5440-4169-9eec-9589603c4845",
   "version": "7",
   "dialect": "postgresql",
@@ -4833,7 +4833,7 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.user_route_stops": {
       "name": "user_route_stops",
@@ -4947,6 +4947,22 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "user_routes_one_default": {
+          "name": "user_routes_one_default",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"user_routes\".\"is_default\"",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -4954,7 +4970,7 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.user_site_badges": {
       "name": "user_site_badges",
