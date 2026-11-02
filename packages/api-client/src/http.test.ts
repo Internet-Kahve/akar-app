@@ -2185,6 +2185,110 @@ test("a part card edit PUTs the whole ordered list with photo ids and a null sou
   });
 });
 
+test("tasks and badges map with the answer key and English status from the admin detail; an edit PUTs both lists whole; an unchanged list sends nothing", async () => {
+  let stored: any = {
+    ...siteA(),
+    status: "published",
+    photoIds: ["cover", "card-img", "old", "extra"],
+    sourceLinks: [],
+    openingCamera: null,
+    tasks: [
+      {
+        id: "q1",
+        kind: "quiz",
+        title: "Soru",
+        prompt: "Hangisi?",
+        titleEn: "Question",
+        promptEn: null,
+        enStatus: "machine",
+        photoId: "card-img",
+        part: null,
+        source: null,
+        trust: "verified",
+        quiz: {
+          options: ["A", "B"],
+          optionsEn: null,
+          hints: [],
+          hintsEn: null,
+          correctIndex: 1,
+          correctText: "Doğru",
+          correctTextEn: null,
+          wrongText: "Yanlış",
+          wrongTextEn: null,
+          fromHome: true,
+        },
+      },
+      {
+        id: "f1",
+        kind: "field",
+        title: "Saha",
+        prompt: "Git",
+        photoId: null,
+        part: null,
+        source: null,
+        trust: "verified",
+        field: {
+          onSite: { text: "Burada", textEn: null, radiusM: 80 },
+          fromHome: null,
+          doneText: "Bitti",
+          doneTextEn: null,
+        },
+      },
+    ],
+    badges: [
+      { id: "b1", title: "Rozet", text: "Metin", titleEn: null, textEn: null, enStatus: null, condition: "task", taskId: "q1", onSiteLabel: false },
+    ],
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored], nextCursor: null }),
+    "GET /v1/sites/a": () => stored,
+    "GET /v1/admin/sites/a": () => stored,
+    "PUT /v1/admin/sites/a/tasks": (c) => {
+      stored = { ...stored, ...(c.body as object) };
+      return stored;
+    },
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "T", fetch: api.fetch });
+  const current = (await client.getSnapshot()).sites[0]!;
+  const quiz = current.tasks![0]!;
+  assert.equal(quiz.enStatus, "machine");
+  assert.equal(quiz.quiz?.correctIndex, 1);
+  assert.equal(quiz.quiz?.correctText, "Doğru");
+  assert.equal(quiz.photo?.id, "card-img");
+  assert.equal("promptEn" in quiz, false);
+  assert.equal(current.tasks![1]!.field?.doneText, "Bitti");
+  assert.equal("enStatus" in current.badges![0]!, false);
+
+  await client.saveSite({ ...current, description: "Başka" }).catch(() => {});
+  assert.equal(api.calls.filter((c) => c.path.endsWith("/tasks")).length, 0);
+
+  await client.saveSite({
+    ...current,
+    tasks: [current.tasks![1]!, { ...quiz, quiz: { ...quiz.quiz!, correctIndex: 0, optionsEn: ["", ""] } }],
+  });
+  const put = api.calls.find((c) => c.path.endsWith("/tasks"))!;
+  const body = put.body as { tasks: any[]; badges: any[] };
+  assert.deepEqual(body.tasks.map((t) => t.id), ["f1", "q1"]);
+  assert.deepEqual(body.tasks[0].field, {
+    onSite: { text: "Burada", textEn: null, radiusM: 80 },
+    fromHome: null,
+    doneText: "Bitti",
+    doneTextEn: null,
+  });
+  assert.equal(body.tasks[1].quiz.correctIndex, 0);
+  assert.equal(body.tasks[1].quiz.optionsEn, null);
+  assert.equal(body.tasks[1].photoId, "card-img");
+  assert.deepEqual(body.badges, [
+    { id: "b1", title: "Rozet", text: "Metin", titleEn: null, textEn: null, condition: "task", taskId: "q1", onSiteLabel: false },
+  ]);
+
+  // A quiz without an answer key is not sent: the editor must mark one.
+  const { correctIndex: _key, ...unkeyed } = quiz.quiz!;
+  await assert.rejects(client.saveSite({ ...current, tasks: [{ ...quiz, quiz: unkeyed }] }), /doğru seçeneğini/);
+});
+
 test("the opening angle is read from the API and saved on the linked model alone; an unchanged one sends nothing", async () => {
   const pose = { target: null, azimuthDeg: 354, elevationDeg: 30, distance: 0.95 };
   let stored: any = { ...siteA(), status: "published", photoIds: ["cover", "card-img", "old", "extra"], sourceLinks: [], openingCamera: pose };

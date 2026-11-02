@@ -304,14 +304,20 @@ interface SiteDetailDto {
     part: string | null;
     source: string | null;
     trust: Trust;
-    quiz?: Omit<NonNullable<SiteTask["quiz"]>, "optionsEn" | "hintsEn" | "wrongTextEn"> & {
+    quiz?: Omit<NonNullable<SiteTask["quiz"]>, "optionsEn" | "hintsEn" | "wrongTextEn" | "correctIndex" | "correctText" | "correctTextEn"> & {
       optionsEn?: string[] | null;
       hintsEn?: string[] | null;
       wrongTextEn?: string | null;
+      /** The editor's view only (`AdminSiteDetail`): the answer key and the texts shown after answering. */
+      correctIndex?: number | null;
+      correctText?: string;
+      correctTextEn?: string | null;
     };
     field?: {
       onSite: { text: string; textEn?: string | null; radiusM: number };
       fromHome: { text: string; textEn?: string | null; part: string } | null;
+      doneText?: string;
+      doneTextEn?: string | null;
     };
   }>;
   /** Absent on older API versions. */
@@ -434,16 +440,17 @@ interface ReceiptsResponseDto {
 const present = <T>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined;
 /** A badge as the API sends it: English fields are `null` when not written. */
-type RawBadge = Omit<SiteBadge, "titleEn" | "textEn"> & {
+type RawBadge = Omit<SiteBadge, "titleEn" | "textEn" | "enStatus"> & {
   titleEn?: string | null;
   textEn?: string | null;
   enStatus?: "machine" | "reviewed" | null;
 };
-function mapBadge({ titleEn, textEn, enStatus: _status, ...badge }: RawBadge): SiteBadge {
+function mapBadge({ titleEn, textEn, enStatus, ...badge }: RawBadge): SiteBadge {
   return {
     ...badge,
     ...(present(titleEn) && { titleEn }),
     ...(present(textEn) && { textEn }),
+    ...(present(enStatus) && { enStatus }),
   };
 }
 
@@ -651,7 +658,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
       })),
     }),
     ...(d.tasks?.length && {
-      tasks: d.tasks.map(({ photoId, part, source, quiz, field, titleEn, promptEn, enStatus: _status, ...task }) => {
+      tasks: d.tasks.map(({ photoId, part, source, quiz, field, titleEn, promptEn, enStatus, ...task }) => {
         const m = photoId
           ? d.media.find((x) => x.id === photoId && x.kind === "photo")
           : undefined;
@@ -662,12 +669,15 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           ...(present(source) && { source }),
           ...(present(titleEn) && { titleEn }),
           ...(present(promptEn) && { promptEn }),
+          ...(present(enStatus) && { enStatus }),
           ...(quiz && {
-            quiz: (({ optionsEn, hintsEn, wrongTextEn, ...q }) => ({
+            quiz: (({ optionsEn, hintsEn, wrongTextEn, correctIndex, correctTextEn, ...q }) => ({
               ...q,
               ...(present(optionsEn) && { optionsEn }),
               ...(present(hintsEn) && { hintsEn }),
               ...(present(wrongTextEn) && { wrongTextEn }),
+              ...(present(correctIndex) && { correctIndex }),
+              ...(present(correctTextEn) && { correctTextEn }),
             }))(quiz),
           }),
           ...(field && {
@@ -676,6 +686,8 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
               fromHome:
                 field.fromHome &&
                 (({ textEn, ...h }) => ({ ...h, ...(present(textEn) && { textEn }) }))(field.fromHome),
+              ...(present(field.doneText) && { doneText: field.doneText }),
+              ...(present(field.doneTextEn) && { doneTextEn: field.doneTextEn }),
             },
           }),
         };
@@ -1690,8 +1702,75 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     );
   }
 
+  /** What `PUT …/tasks` takes for one task; an empty English text is `null`, which clears it. */
+  function taskBody(t: SiteTask, mediaId: (id: string) => string) {
+    const list = (items: string[] | undefined) => (items?.some((s) => s) ? items : null);
+    const base = {
+      id: t.id,
+      title: t.title,
+      prompt: t.prompt,
+      titleEn: t.titleEn || null,
+      promptEn: t.promptEn || null,
+      photoId: t.photo ? mediaId(t.photo.id) : null,
+      part: t.part || null,
+      source: t.source || null,
+      trust: t.trust,
+    };
+    if (t.kind === "quiz") {
+      const q = t.quiz;
+      if (!q) throw new Error("Soru görevinin seçenekleri eksik.");
+      if (q.correctIndex === undefined)
+        throw new Error(`«${t.title}» sorusunun doğru seçeneğini işaretle.`);
+      return {
+        ...base,
+        kind: t.kind,
+        quiz: {
+          options: q.options,
+          optionsEn: list(q.optionsEn),
+          hints: q.hints,
+          hintsEn: list(q.hintsEn),
+          correctIndex: q.correctIndex,
+          correctText: q.correctText ?? "",
+          correctTextEn: q.correctTextEn || null,
+          wrongText: q.wrongText,
+          wrongTextEn: q.wrongTextEn || null,
+          fromHome: q.fromHome,
+        },
+      };
+    }
+    const f = t.field;
+    if (!f) throw new Error("Saha görevinin metni eksik.");
+    return {
+      ...base,
+      kind: t.kind,
+      field: {
+        onSite: { text: f.onSite.text, textEn: f.onSite.textEn || null, radiusM: f.onSite.radiusM },
+        fromHome: f.fromHome && {
+          text: f.fromHome.text,
+          textEn: f.fromHome.textEn || null,
+          part: f.fromHome.part,
+        },
+        doneText: f.doneText ?? "",
+        doneTextEn: f.doneTextEn || null,
+      },
+    };
+  }
+
+  function badgeBody(b: SiteBadge) {
+    return {
+      id: b.id,
+      title: b.title,
+      text: b.text,
+      titleEn: b.titleEn || null,
+      textEn: b.textEn || null,
+      condition: b.condition,
+      taskId: b.condition === "task" ? b.taskId : null,
+      onSiteLabel: b.onSiteLabel,
+    };
+  }
+
   /**
-   * Sources, photos, model, story and part cards of an editor save, through the wizard's step endpoints. Order
+   * Sources, photos, model, story, part cards and tasks of an editor save, through the wizard's step endpoints. Order
    * follows the references: sources before the photos and sentences citing them, files before the
    * lists naming them, the model (and its part names) before the highlights. Each step is skipped
    * when unchanged. A new file is a data URL: it is uploaded and its domain id mapped to the media id.
@@ -1714,6 +1793,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
     const partCardsChanged = !same(site.partCards ?? [], cur.partCards ?? []);
+    const tasksChanged =
+      !same(site.tasks ?? [], cur.tasks ?? []) || !same(site.badges ?? [], cur.badges ?? []);
     if (
       !sourcesChanged &&
       !modelChanged &&
@@ -1721,7 +1802,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       !openingChanged &&
       !photosChanged &&
       !storiesChanged &&
-      !partCardsChanged
+      !partCardsChanged &&
+      !tasksChanged
     )
       return;
     // What the domain site does not carry: source locators, story cards and audio.
@@ -1780,7 +1862,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         });
         if (
           site.stories.some((s) => s.highlights?.length) ||
-          (partCardsChanged && site.partCards?.length)
+          ((partCardsChanged && site.partCards?.length) ||
+            (tasksChanged && site.tasks?.length))
         )
           await modelParts(path, id);
       } else if (linked && model.trust !== linked.trust) {
@@ -1888,6 +1971,16 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
             trust: c.trust,
             sourceId: c.sourceId || null,
           })),
+        },
+      });
+
+    // After the cards, like them: tasks name model parts and gallery photos; a badge names a task of the same list.
+    const tasksRemapped = (site.tasks ?? []).some((t) => t.photo && uploaded.has(t.photo.id));
+    if (tasksChanged || tasksRemapped)
+      await call("PUT", `${path}/tasks`, {
+        body: {
+          tasks: (site.tasks ?? []).map((t) => taskBody(t, mediaId)),
+          badges: (site.badges ?? []).map(badgeBody),
         },
       });
   }

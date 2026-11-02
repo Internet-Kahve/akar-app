@@ -1,6 +1,6 @@
 import { asc, inArray } from "drizzle-orm";
 import type { Db } from "../../db/client.ts";
-import { siteBadges, siteTasks, type FieldTaskDetails, type FieldTaskTextsEn, type QuizTaskDetails, type QuizTaskTextsEn } from "../../db/schema/index.ts";
+import { siteBadges, siteTaskAnswers, siteTasks, type FieldTaskDetails, type FieldTaskTextsEn, type QuizTaskDetails, type QuizTaskTextsEn } from "../../db/schema/index.ts";
 import type { Tx } from "../../platform/idempotency.ts";
 import type { SiteBadgeDto, SiteTaskDto } from "./schemas.ts";
 
@@ -18,6 +18,13 @@ export function loadTasks(q: Db | Tx, siteIds: string[]): Promise<TaskRow[]> {
 export function loadBadges(q: Db | Tx, siteIds: string[]): Promise<BadgeRow[]> {
   if (!siteIds.length) return Promise.resolve([]);
   return q.select().from(siteBadges).where(inArray(siteBadges.siteId, siteIds)).orderBy(asc(siteBadges.siteId), asc(siteBadges.position));
+}
+
+/** The answer keys (task id → correct option) of the given tasks; staff-only, never part of a public payload. */
+export async function loadTaskAnswers(q: Db | Tx, taskIds: string[]): Promise<Map<string, number>> {
+  if (!taskIds.length) return new Map();
+  const rows = await q.select().from(siteTaskAnswers).where(inArray(siteTaskAnswers.taskId, taskIds));
+  return new Map(rows.map((r) => [r.taskId, r.correctIndex]));
 }
 
 /**

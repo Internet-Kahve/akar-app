@@ -22,6 +22,7 @@ import {
   setSections,
   setSources,
   setStories,
+  setTasks,
   unpublishSite,
   updateCard,
   updateSiteInfo,
@@ -48,6 +49,7 @@ import {
   SiteMediaBody,
   SiteSourcesBody,
   StoriesBody,
+  TasksBody,
   UpdateCardBody,
 } from "./sites-schemas.ts";
 
@@ -303,6 +305,22 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => write(req, 200, (tx, ctx) => setPartCards(tx, ctx, req.params.id, req.body)),
+  );
+
+  app.put(
+    "/v1/admin/sites/:id/tasks",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary:
+          "Görevleri ve rozetleri sırasıyla değiştir; verilen kimlikler korunur (oyuncuların tamamlamaları ve rozetleri kalır, cevap anahtarı değişse de), listede olmayan görev ve rozet oyuncu kayıtlarıyla silinir (parça ve fotoğraf eserin olmalı, rozetin görevi aynı gövdede olmalı)",
+        params: IdParams,
+        body: TasksBody,
+        response: { 200: AdminSiteDetail },
+      },
+    },
+    async (req) => write(req, 200, (tx, ctx) => setTasks(tx, ctx, req.params.id, req.body)),
   );
 
   app.post(

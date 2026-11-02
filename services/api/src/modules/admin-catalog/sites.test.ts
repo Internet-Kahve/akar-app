@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
-import { auditLog, catalogRoutes, cities, media, routeStops, siteMedia, sitePartCardPhotos, sitePartCards, sites, sources } from "../../db/schema/index.ts";
+import { auditLog, catalogRoutes, cities, media, routeStops, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteTaskAnswers, siteTasks, sites, sources, userSiteBadges, userSiteTasks } from "../../db/schema/index.ts";
 import { AppError, type ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -123,6 +123,7 @@ test("the panel is for editors and admins: guests get 401, users and moderators 
     ["PUT", `${base}/sections`, { sections: [{ kind: "history", title: "Tarihçe", body: "Metin", trust: "verified" }] }],
     ["PUT", `${base}/history-images`, { images: [{ mediaId: "ph-1", trust: "verified" }] }],
     ["PUT", `${base}/part-cards`, { cards: [] }],
+    ["PUT", `${base}/tasks`, { tasks: [], badges: [] }],
     ["POST", `${base}/publish`],
     ["POST", `${base}/unpublish`],
     ["GET", "/v1/admin/cards"],
@@ -773,6 +774,198 @@ test("part card English texts follow the story rules: omitted keeps, written or 
   // Null or blank clears value and status.
   await send("PUT", `${base}/part-cards`, { cards: [card({ titleEn: null, bodyEn: "  " })] });
   assert.deepEqual(await read(), [null, null, null, null]);
+});
+
+test("tasks and badges are replaced whole and in order: ids keep the players' completions and badges through an edit and an answer-key change, left-out ones go with theirs, the answer key is never public", async () => {
+  const site = await newDraft("Görev Hanı");
+  const other = await newDraft("Görev Komşusu");
+  const base = `/v1/admin/sites/${site.id}`;
+  const db = app.deps.db;
+  await makePublishable(site.id);
+  await send("PUT", `${base}/model`, { mediaId: "m-1" });
+  await send("POST", `${base}/publish`);
+  let saves = 0;
+  const save = (tasks: object[], badges: object[]) => {
+    saves++;
+    return send("PUT", `${base}/tasks`, { tasks, badges });
+  };
+  const put = (id: string, tasks: object[], badges: object[] = []) => call<ErrorBody>("PUT", `/v1/admin/sites/${id}/tasks`, editor, { tasks, badges });
+  const quizBody = { options: ["A", "B", "C"], hints: ["İpucu"], correctIndex: 1, correctText: "B doğru", wrongText: "Tekrar dene", fromHome: true };
+  const quiz = (over: Record<string, unknown> = {}) => ({ id: "gq-1", kind: "quiz", title: "Soru", prompt: "Hangisi?", photoId: "ph-1", part: "kubbe", source: "E cilt-1 PDF s.27", trust: "verified", quiz: quizBody, ...over });
+  const fieldBody = { onSite: { text: "Önüne gel", radiusM: 80 }, fromHome: { text: "Kubbeye dokun", part: "minare" }, doneText: "Bulundu" };
+  const field = (over: Record<string, unknown> = {}) => ({ id: "gf-1", kind: "field", title: "Saha", prompt: "Kapıyı bul", trust: "inferred", field: fieldBody, ...over });
+  const storyBadge = { id: "gb-s", title: "Hikâye", text: "Dinledin", condition: "story" };
+  const taskBadge = { id: "gb-f", title: "Kapı", text: "Buldun", condition: "task", taskId: "gf-1", onSiteLabel: true };
+  const answers = async () => (await db.select().from(siteTaskAnswers)).filter((r) => r.taskId.startsWith("g")).map((r) => [r.taskId, r.correctIndex]).sort();
+
+  const saved = await save([quiz(), field()], [storyBadge, taskBadge]);
+  assert.deepEqual(saved.tasks.map((t) => [t.id, t.kind, t.title, t.photoId, t.part, t.source, t.trust]), [
+    ["gq-1", "quiz", "Soru", "ph-1", "kubbe", "E cilt-1 PDF s.27", "verified"],
+    ["gf-1", "field", "Saha", null, null, null, "inferred"],
+  ]);
+  assert.deepEqual(saved.tasks[0]?.quiz, { ...quizBody, optionsEn: null, hintsEn: null, correctTextEn: null, wrongTextEn: null });
+  assert.deepEqual(saved.tasks[1]?.field, { onSite: { text: "Önüne gel", textEn: null, radiusM: 80 }, fromHome: { text: "Kubbeye dokun", textEn: null, part: "minare" }, doneText: "Bulundu", doneTextEn: null });
+  assert.deepEqual(saved.badges.map((b) => [b.id, b.condition, b.taskId, b.onSiteLabel]), [["gb-s", "story", null, false], ["gb-f", "task", "gf-1", true]]);
+  assert.deepEqual(await answers(), [["gq-1", 1]]);
+
+  // The public detail carries neither the answer key nor the after-the-answer texts.
+  const publicItems = (await call<{ items: { id: string }[] }>("GET", "/v1/site-details?limit=100")).body.items;
+  const pubSite = JSON.stringify(publicItems.find((d) => d.id === site.id));
+  assert.ok(pubSite.includes("Hangisi?") && !/correctIndex|correctText|doneText|B doğru|Bulundu/.test(pubSite));
+
+  // An edit and a changed answer key keep the ids, so players' completions and badges stay; position changes do not trip the unique keys.
+  await db.insert(userSiteTasks).values([{ userId: "u1", taskId: "gq-1", onSite: false }, { userId: "u1", taskId: "gf-1", onSite: true }]);
+  await db.insert(userSiteBadges).values([{ userId: "u1", badgeId: "gb-s" }, { userId: "u1", badgeId: "gb-f", onSite: true }]);
+  const edited = await save(
+    [field({ title: "Saha 2" }), quiz({ title: "Soru 2", quiz: { ...quizBody, options: ["A", "B", "C", "D"], correctIndex: 3 } })],
+    [{ ...taskBadge, title: "Kapı 2" }, storyBadge],
+  );
+  assert.deepEqual(edited.tasks.map((t) => [t.id, t.title]), [["gf-1", "Saha 2"], ["gq-1", "Soru 2"]]);
+  assert.deepEqual(edited.badges.map((b) => [b.id, b.title]), [["gb-f", "Kapı 2"], ["gb-s", "Hikâye"]]);
+  assert.equal(edited.tasks[1]?.quiz?.correctIndex, 3);
+  assert.deepEqual(await answers(), [["gq-1", 3]]);
+  const progress = async () => [(await db.select().from(userSiteTasks)).map((r) => r.taskId).sort(), (await db.select().from(userSiteBadges)).map((r) => r.badgeId).sort()];
+  assert.deepEqual(await progress(), [["gf-1", "gq-1"], ["gb-f", "gb-s"]]);
+  assert.equal((await db.select().from(userSiteTasks)).find((r) => r.taskId === "gf-1")?.onSite, true, "an on-site completion stays on site");
+
+  // A task that changes kind loses its answer key and keeps its completion.
+  const switched = await save([field({ id: "gq-1", title: "Soru oldu saha" }), field()], [taskBadge]);
+  assert.deepEqual(switched.tasks.map((t) => [t.id, t.kind]), [["gq-1", "field"], ["gf-1", "field"]]);
+  assert.deepEqual(await answers(), []);
+  assert.deepEqual(await progress(), [["gf-1", "gq-1"], ["gb-f"]], "the left-out badge's earnings went; the tasks' completions stayed");
+  await save([quiz(), field()], [storyBadge, taskBadge]);
+
+  // Refusals write nothing: unknown parts, a photo the site does not list, a bad answer key, a missing badge task, repeated ids, a wrong-kind body.
+  const keep = (await call<AdminSiteDetail>("GET", base, editor)).body;
+  const refused: [object[], object[], string][] = [
+    [[quiz({ part: "yok" })], [], "tasks.0.part"],
+    [[field({ field: { ...fieldBody, fromHome: { text: "Dokun", part: "yok" } } })], [], "tasks.0.field.fromHome.part"],
+    [[quiz({ photoId: "ph-3" })], [], "tasks.0.photoId"],
+    [[quiz({ photoId: "ph-yok" })], [], "tasks.0.photoId"],
+    [[quiz({ quiz: { ...quizBody, correctIndex: 3 } })], [], "tasks.0.quiz.correctIndex"],
+    [[quiz({ quiz: { ...quizBody, options: ["tek"], correctIndex: 0 } })], [], "tasks.0.quiz.options"],
+    [[quiz({ quiz: { ...quizBody, optionsEn: ["A", "B"] } })], [], "tasks.0.quiz.optionsEn"],
+    [[quiz({ quiz: { ...quizBody, optionsEn: ["A", "", "C"] } })], [], "tasks.0.quiz.optionsEn"],
+    [[{ ...quiz(), quiz: undefined }], [], "tasks.0.quiz"],
+    [[quiz()], [{ ...taskBadge, taskId: "gy-yok" }], "badges.0.taskId"],
+    [[quiz()], [{ ...taskBadge, taskId: "gf-1" }], "badges.0.taskId"],
+    [[quiz()], [{ ...taskBadge, taskId: null }], "badges.0.taskId"],
+    [[quiz()], [{ ...storyBadge, taskId: "gq-1" }], "badges.0.taskId"],
+    [[quiz(), quiz()], [], "tasks.1.id"],
+    [[quiz()], [storyBadge, storyBadge], "badges.1.id"],
+  ];
+  for (const [tasks, badges, fieldName] of refused) {
+    const r = await put(site.id, tasks, badges);
+    assert.equal(r.res.statusCode, 400, `${fieldName}: ${r.res.body}`);
+    assert.ok(r.body.error.fieldErrors[fieldName], `${fieldName}: ${r.res.body}`);
+  }
+  assert.deepEqual((await call<AdminSiteDetail>("GET", base, editor)).body.tasks, keep.tasks);
+  assert.deepEqual((await call<AdminSiteDetail>("GET", base, editor)).body.badges, keep.badges);
+  assert.deepEqual(await progress(), [["gf-1", "gq-1"], ["gb-f"]]);
+
+  // An id of another site is a 409 naming it, for tasks and for badges; the other site stays empty.
+  const takenTask = await put(other.id, [quiz({ part: null, photoId: null })]);
+  assert.equal(takenTask.res.statusCode, 409);
+  assert.ok(takenTask.body.error.fieldErrors["tasks.0.id"]);
+  const takenBadge = await put(other.id, [], [storyBadge]);
+  assert.equal(takenBadge.res.statusCode, 409);
+  assert.ok(takenBadge.body.error.fieldErrors["badges.0.id"]);
+  const stranger = (await call<AdminSiteDetail>("GET", `/v1/admin/sites/${other.id}`, editor)).body;
+  assert.deepEqual([stranger.tasks, stranger.badges], [[], []]);
+  assert.equal((await put("yok", [])).res.statusCode, 404);
+
+  // Ids the server makes: a task and a badge sent without one get one (a badge can only name a task sent with its id).
+  const made = await save([quiz({ id: undefined }), field()], [{ title: "Yeni", text: "Yeni rozet", condition: "story" }]);
+  assert.match(made.tasks[0]!.id, /^gr-soru-[0-9a-f]{12}$/);
+  assert.match(made.badges[0]!.id, /^rz-yeni-[0-9a-f]{12}$/);
+  assert.deepEqual(await progress(), [["gf-1"], []], "the replaced quiz id and the badges went with their rows");
+
+  // Left out goes with its players' rows; an empty list empties both.
+  const removed = await save([field()], []);
+  assert.deepEqual([removed.tasks.map((t) => t.id), removed.badges], [["gf-1"], []]);
+  assert.deepEqual(await db.select().from(siteTasks).where(eq(siteTasks.siteId, site.id)).then((r) => r.map((t) => t.id)), ["gf-1"]);
+  assert.deepEqual(await progress(), [["gf-1"], []]);
+  assert.deepEqual((await save([], [])).tasks, []);
+  assert.deepEqual(await progress(), [[], []]);
+  assert.equal((await db.select().from(siteBadges).where(eq(siteBadges.siteId, site.id))).length, 0);
+
+  // One audit row per successful write, with the answer key in it for the history of a changed key.
+  const audits = (await auditOf(site.id)).filter((r) => (r.after as Record<string, unknown>)["tasks"] !== undefined);
+  assert.equal(audits.length, saves);
+  const keyChange = audits.find((r) => ((r.after as { tasks: { id: string; correctIndex: number | null }[] }).tasks).some((t) => t.id === "gq-1" && t.correctIndex === 3));
+  assert.ok(keyChange);
+  assert.equal(((keyChange.before as { tasks: { id: string; correctIndex: number | null }[] }).tasks).find((t) => t.id === "gq-1")?.correctIndex, 1);
+});
+
+test("task and badge English texts: omitted keeps value and status, written or changed is reviewed, unchanged keeps the status, empty clears, lists match the Turkish ones", async () => {
+  const site = await newDraft("Görev İngilizce Hanı");
+  const base = `/v1/admin/sites/${site.id}`;
+  const db = app.deps.db;
+  const quizBody = { options: ["A", "B"], hints: ["İpucu"], correctIndex: 0, correctText: "Doğru", wrongText: "Yanlış", fromHome: false };
+  const quiz = (over: Record<string, unknown> = {}, quizOver: Record<string, unknown> = {}) => ({ id: "en-q", kind: "quiz", title: "Soru", prompt: "Hangisi?", trust: "verified", quiz: { ...quizBody, ...quizOver }, ...over });
+  const badge = (over: Record<string, unknown> = {}) => ({ id: "en-b", title: "Rozet", text: "Kazandın", condition: "story", ...over });
+  const put = (tasks: object[], badges: object[]) => call<ErrorBody>("PUT", `${base}/tasks`, editor, { tasks, badges });
+  const task = async () => (await db.select().from(siteTasks).where(eq(siteTasks.id, "en-q")))[0]!;
+  const readTask = async () => {
+    const t = await task();
+    return [t.titleEn, t.promptEn, t.detailsEn, t.enStatus];
+  };
+  const readBadge = async () => {
+    const [b] = await db.select().from(siteBadges).where(eq(siteBadges.id, "en-b"));
+    return [b?.titleEn, b?.textEn, b?.enStatus];
+  };
+  const full = { options: ["A", "B"], hints: ["Hint"], correctText: "Right", wrongText: "Wrong" };
+  const fullEn = { optionsEn: ["A", "B"], hintsEn: ["Hint"], correctTextEn: "Right", wrongTextEn: "Wrong" };
+
+  await send("PUT", `${base}/tasks`, { tasks: [quiz()], badges: [badge()] });
+  assert.deepEqual(await readTask(), [null, null, null, null]);
+  assert.deepEqual(await readBadge(), [null, null, null]);
+
+  // Written English is the editor's own reading; the admin view shows it with its status.
+  const written = await send("PUT", `${base}/tasks`, { tasks: [quiz({ titleEn: "Question", promptEn: "Which?" }, fullEn)], badges: [badge({ titleEn: "Badge", textEn: "You won" })] });
+  assert.deepEqual(await readTask(), ["Question", "Which?", full, "reviewed"]);
+  assert.deepEqual(await readBadge(), ["Badge", "You won", "reviewed"]);
+  assert.deepEqual([written.tasks[0]?.titleEn, written.tasks[0]?.enStatus, written.tasks[0]?.quiz?.correctTextEn, written.tasks[0]?.quiz?.hintsEn], ["Question", "reviewed", "Right", ["Hint"]]);
+  assert.deepEqual([written.badges[0]?.titleEn, written.badges[0]?.enStatus], ["Badge", "reviewed"]);
+
+  // Machine drafts stay machine while nothing changes, also when the client omits the fields; any changed text makes the row reviewed.
+  await db.update(siteTasks).set({ enStatus: "machine" }).where(eq(siteTasks.id, "en-q"));
+  await db.update(siteBadges).set({ enStatus: "machine" }).where(eq(siteBadges.id, "en-b"));
+  await send("PUT", `${base}/tasks`, { tasks: [quiz()], badges: [badge()] });
+  assert.deepEqual(await readTask(), ["Question", "Which?", full, "machine"], "omitted keeps value and status");
+  assert.deepEqual(await readBadge(), ["Badge", "You won", "machine"]);
+  await send("PUT", `${base}/tasks`, { tasks: [quiz({ titleEn: "Question", promptEn: "Which?" }, fullEn)], badges: [badge({ titleEn: "Badge", textEn: "You won" })] });
+  assert.deepEqual(await readTask(), ["Question", "Which?", full, "machine"], "unchanged keeps the status");
+  assert.deepEqual(await readBadge(), ["Badge", "You won", "machine"]);
+  await send("PUT", `${base}/tasks`, { tasks: [quiz({}, { wrongTextEn: "Nope" })], badges: [badge({ textEn: "You won it" })] });
+  assert.deepEqual(await readTask(), ["Question", "Which?", { ...full, wrongText: "Nope" }, "reviewed"], "one changed text makes the row reviewed");
+  assert.deepEqual(await readBadge(), ["Badge", "You won it", "reviewed"]);
+
+  // An English list must match the Turkish one, also when it is kept: changing the options without it is refused.
+  const longer = await put([quiz({}, { options: ["A", "B", "C"] })], [badge()]);
+  assert.equal(longer.res.statusCode, 400);
+  assert.ok(longer.body.error.fieldErrors["tasks.0.quiz.optionsEn"]);
+  assert.deepEqual((await readTask())[2], { ...full, wrongText: "Nope" }, "a refused save writes nothing");
+  await send("PUT", `${base}/tasks`, { tasks: [quiz({}, { options: ["A", "B", "C"], optionsEn: ["A", "B", "C"] })], badges: [badge()] });
+  assert.deepEqual(((await task()).detailsEn as { options: string[] }).options, ["A", "B", "C"]);
+
+  // Null, blank or all-blank lists clear value and status.
+  await send("PUT", `${base}/tasks`, {
+    tasks: [quiz({ titleEn: null, promptEn: "  " }, { optionsEn: ["", ""], hintsEn: [""], correctTextEn: null, wrongTextEn: " " })],
+    badges: [badge({ titleEn: null, textEn: "" })],
+  });
+  assert.deepEqual(await readTask(), [null, null, null, null]);
+  assert.deepEqual(await readBadge(), [null, null, null]);
+  const cleared = (await call<AdminSiteDetail>("GET", base, editor)).body.tasks[0]!;
+  assert.deepEqual([cleared.quiz?.optionsEn, cleared.quiz?.hintsEn, cleared.quiz?.correctTextEn], [null, null, null]);
+
+  // A field task: English for the home variant only counts while the Turkish one exists.
+  const field = (fromHome: object | null, over: Record<string, unknown> = {}) => ({ id: "en-q", kind: "field", title: "Saha", prompt: "Bul", trust: "verified", field: { onSite: { text: "Gel", textEn: "Come", radiusM: 50 }, fromHome, doneText: "Oldu", doneTextEn: "Done" }, ...over });
+  await send("PUT", `${base}/model`, { mediaId: "m-1" });
+  await send("PUT", `${base}/tasks`, { tasks: [field({ text: "Dokun", textEn: "Touch", part: "kubbe" })], badges: [] });
+  assert.deepEqual((await task()).detailsEn, { onSite: { text: "Come" }, fromHome: { text: "Touch" }, doneText: "Done" });
+  await send("PUT", `${base}/tasks`, { tasks: [field(null)], badges: [] });
+  assert.deepEqual([(await task()).detailsEn, (await task()).enStatus], [{ onSite: { text: "Come" }, fromHome: null, doneText: "Done" }, "reviewed"]);
 });
 
 test("the panel list shows drafts with their issues and location source, filters, and pages without repeats or gaps", async () => {

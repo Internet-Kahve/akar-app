@@ -19,7 +19,7 @@ import {
 import { translationLabels } from "../lib/translation-labels";
 import { Notice } from "./ui";
 
-function moved<T>(list: T[], index: number, direction: number): T[] {
+export function moved<T>(list: T[], index: number, direction: number): T[] {
   const to = index + direction;
   if (to < 0 || to >= list.length) return list;
   const next = [...list];
