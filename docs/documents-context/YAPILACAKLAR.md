@@ -1,141 +1,82 @@
 # AKAR · Yapılacaklar
 
-*29 Ekim 2026'da yazıldı. Ayrıntılı geçmiş: `yaptiklarim-2.md`. Bir iş bitince buradan silinir ya da «Bitti» altına taşınır.*
+*29 Ekim 2026'da yazıldı; 2 Kasım 2026'da baştan güncellendi (bitenler çıkarıldı; eski hali Git geçmişinde). Muhammed'in dal üzerindeki sıradaki işleri: [`PROTOTIP_AKTARIM.md`](PROTOTIP_AKTARIM.md) §3. Bu dosya ekip düzeyindeki açık işleri toplar.*
 
-## Entegrasyon (30 Ekim 2026)
+## 1. Canlıya alma (Tamer)
 
-Prototip `apps/web`'e taşındı ve `docs` içinden kaldırıldı. Üründe olan: buzlu tema, il kimliği, üst çubuk, Eserler | Rotalar paneli, rol çipleri, konum kipi, kısa kart, pusula, mobil alt sayfa, karşılama, kaynak detayı, Vakıf nedir?, anlatım listesi ve oynatıcı, «Yalnız rotada», altın gelir yolu, tebrik kartı, Geçmişi Gör çekim haritası ve kamera, 3D açılamazsa kartı, tanıtım sayfası (`/tanitim`).
+- [ ] Migration'lar: `0028`–`0031` (0031 kişisel rotalar: Burak ve Tamer'le netleşecek), ayrıca `0030_photo_camera`.
+- [ ] İçerik yeniden aktarılmalı (`import-demo`): şehir desen/amblemleri, yeni dört eserin «Eser hakkında» bölümleri, altın gelir yolu, «Yalnız rotada».
+- [ ] **Aktarım hikâye cümlelerinin `routeOnly` ve `flow` alanlarını yazmıyordu** (`services/api/src/db/seed.ts → loadCatalog`): `prepare-demo-content.py` üretiyor ama veritabanına girmiyordu, yani altın gelir yolu yeniden aktarımla da açılmazdı. 2 Kasım'da düzeltildi; API testleri Docker gerektirdiği için yerelde koşulmadı, CI'da bakılmalı.
+- [ ] **Aktarımdan önce dikkat:** `loadCatalog` hikâye cümlelerini silip yeniden yazar. `textEn` içerik dosyasından gelir (çoğunda yok, yani boş); `simpleEn` ve çeviri durumu hiç yazılmaz. Panelde Gemini ile doldurulan İngilizce metinler bu yüzden silinir, o metinlerin İngilizce sesleri de eşleşmez (bkz. §2). Ya aktarım panelde dolmuş İngilizceyi korumalı (parça kartlarındaki gibi «panel sahibi» kuralı, §11.52) ya da aktarımdan sonra çeviri ve seslendirme yeniden çalıştırılmalı.
+- [ ] Supabase Storage dosyaları `cache-control: private, no-cache` ile geliyor (bkz. §5).
 
-Kalan farklar:
-- `cam` (gece) teması bağlanmadı; harita stili `design/harita/akar-style-cam.json`.
-- Adresler `#view=…&site=…`; prototipin `#/eser/<id>` biçimi yok.
-- «Bir hata mı gördün? Bildir» yalnız teşekkür gösteriyor, bildirim kaydı yok (`POST /reports` gerekir).
-- İngilizce içerik dosyaları içe aktarılmıyor; dil seçici var, çeviri olan alanlar değişmiyor.
-- Puan defteri ürün tarafında duruyor (tasarım puansız); karar bekliyor.
-- Migration `0024`, `0025` canlıya uygulanmadı; altın gelir yolu, «Yalnız rotada» ve çekim haritası içerik yeniden aktarılınca açılır.
+## 2. Seslendirme: durum ve Burak için notlar (2 Kasım)
 
-## Şu anki durum (bir bakışta)
+**Yapılan (Burak, 31 Ekim–1 Kasım):** Deepgram ile dört ses (TR/EN × kadın/erkek, `TTS_VOICES`), hikâye cümleleri (düz + sade anlatım) ve 3D parça kartları için; Gemini ile İngilizce taslak çeviri; panelde «Seslendir» ve «Çevir» düğmeleri; günlük karakter sınırı (`TTS_DAILY_CHAR_LIMIT`); metin değişince eski kayıt bayatlar ve yenilenir; ziyaretçi tarafında ses seçimi (dil, kadın/erkek; hesapta saklanır), kayıt yoksa tarayıcı sesi.
 
-- **İçerik paketi** (prototip kaldırıldı, tasarım `apps/web`'de): 11 eser, 3 il (Bursa 9, Konya 1, Hatay 1), 4 rol (Dinî, Ticari, Su, Eğitim); 7 eser 3D modelli, 4 eser yalnız fotoğraf (30 Ekim gece); asıl tema buzlu (30 Ekim). Yedi eserin hepsinde parça kartı, bulmaca/rozet (30 Ekim'de onaylandı), «Eser hakkında» tam metin + okuma düzeni + kitap fotoğrafları. Geçmişi Gör: Ulucami 21, Koza Han 6, Orhan Bey Camii 5, Türbe 5; Bedesten, Emir Hanı, Hamam'da Foto Atlas kaydı yok. Masaüstünde ve Redmi 9T'de denendi (29 Ekim): sorun yok.
-- **Modeller:** pastel renkler + pişmiş AO, yer gölgesi web'de. Toplam ≈ 2,7 MB.
-- **Harita önizlemesi:** `design/harita/akar-harita-onizleme-v3.html` (ışık/renk paneli, «Pişmiş» hazır ayarı).
-- **Git:** `docs` dalında commit var, **push edilmedi**.
+**Canlıdaki kayıtlar (2 Kasım, `GET /v1/sites/:id`):**
 
-## 1. Hemen
+| Eser | Hikâye cümlesi | Cümle sesleri (8 tür) | Parça kartı | Kart sesleri |
+|---|---|---|---|---|
+| Koza Han | 12 | tam (12×8) | 7 | 12 / 28 |
+| Emir Hanı | 8 | tam | 4 | tam (16) |
+| İnebey, Alaaddin Bey, Karatay, Habib-i Neccar | 8 / 5 | tam | — | — |
+| **Ulucami** | 11 | **yalnız 1 cümle** | 17 | **0** |
+| **Bedesten** | 10 | **0** | 8 | **0** |
+| **Orhan Bey Camii** | 8 | **0** | 11 | **0** |
+| **Orhan Bey Hamamı** | 8 | **0** | 4 | **0** |
+| **Orhan Gazi Türbesi** | **0** (hikâye yok) | — | 7 | **0** |
 
-| # | İş | Kim | Not |
-|---|---|---|---|
-| 1 | `git push origin docs` | Muhammed (terminal) | Bu bağlantıdan push yapılamıyor (sanal makinede SSH anahtarı yok). Sonra PR: https://github.com/Internet-Kahve/akar-app/pull/new/docs |
-| 2 | ~~Blender eşitleme~~ bitti (29 Ekim, commit fe54390). Sıradaki: parça sadeleştirme | 3D ajanı → Claude | Prompt: `promptlar/PROMPT_parca_sadelestirme_7_eser.md`. Bitince tıklama haritalarına bak; kartı olmayan eserde parçaya dokununca ne görüneceğine karar ver. |
-| 3 | ~~Redmi 9T denemesi~~ yapıldı (29 Ekim, Muhammed): sorun yok. | — | — |
-| 4 | ~~Diğer 6 esere bulmaca, Geçmişi Gör ve 3D parça kartları~~ yapıldı (30 Ekim gece, Claude; `yaptiklarim-2.md` §75). Görevler 30 Ekim'de onaylandı. Kalan: bugünkü eş / örnek iz (Koza Han, Orhan Bey Camii, Türbe) | Talha | Ayrıntı aşağıda. |
+Kalan işler:
+- [ ] Ulucami (demo eseri!), Bedesten, Orhan Bey Camii, Hamam: hikâye sesleri; yedi eserin parça kartı sesleri (Koza Han'da 16 eksik). Günlük sınıra dikkat: kabaca bir eser 8 tür × ~1.500 karakter.
+- [ ] **«Eser hakkında» sesli okuma** (`about-reading.tsx`) yalnız tarayıcı sesini kullanıyor; bölümler (`sections`) seslendirme konusu değil. Ya bölümler için de kayıt ya da bilinçli olarak tarayıcı sesi (karar).
+- [ ] Orhan Gazi Türbesi'nde hikâye yok (panelde «0 hikâye bölümü»); içerik paketi mi, aktarım mı, bakılmalı.
+- [ ] Yeniden aktarım İngilizce metni ve onun seslerini boşa düşürüyor (bkz. §1). Çözüm önerisi: aktarım `text_en`/`simple_en` panelde doluysa dokunmasın.
+- [ ] Ses dosyaları da `no-cache` ile sunuluyor (bkz. §5); bir cümle her dinlenişte yeniden indirilebilir.
 
-### Talha'nın işleri (7 eserin hepsi Ulucami seviyesine)
+## 3. Yönetim paneli (2 Kasım taraması)
 
-**Ulucami neredeyse hazır ve ana referans.** Diğer altı eserde (Bedesten, Koza Han, Orhan Bey Camii, Orhan Bey Hamamı, Emir Hanı, Orhan Gazi Türbesi) aynı üç iş yapılacak. Her işte biçim, ton ve uzunluk Ulucami'nin dosyasından alınır. Metin yalnız kaynaktan; kaynak sayfa kodu ve güven etiketi her kayıtta.
+Panelde olan: eser sihirbazı (Model, Bilgiler, Kaynaklar, Hikâye, Parça kartları, Yayın), 3D önizleme ve açılar, gece modeli, fotoğraf açıları, çeviri ve seslendirme, rotalar, harita ayarları, iz moderasyonu, üyeler ve roller, sağlık.
 
-| İş | Ulucami'deki referans | Diğer eserlerde yazılacak dosya | Prompt (`promptlar/`) |
-|---|---|---|---|
-| Bulmaca, saha görevi, rozetler | `eserler/ulu-cami/icerik/gorevler.json` | `eserler/<eser>/icerik/gorevler.json` | `PROMPT_gorevler_diger_eserler.md` |
-| Geçmişi Gör (eski fotoğraflar, bugünkü eş, örnek iz) | `eserler/ulu-cami/gecmisi-gor/` | `eserler/<eser>/gecmisi-gor/` | `PROMPT_gecmisi_gor_diger_eserler.md` |
-| 3D parça kartları (parçaya dokununca açılan kart) | `eserler/ulu-cami/icerik/parcalar.md` | `eserler/<eser>/icerik/parcalar.md` (başlangıç: `parcalar_taslak.md`) | `PROMPT_parca_kartlari_diger_eserler.md` |
+2 Kasım'da eklenen: Hikâye adımında cümleye **«Yalnız rotada»** kutusu (alan API'de ve domain'de vardı, panelde yoktu); cümle özetinde «Yalnız rotada · Akar akışı var» satırı. Panel kayıtta `flow` ve `routeOnly` alanlarını zaten koruyordu.
 
-Notlar:
-- **Parça adları 29 Ekim'de sadeleşti** (Koza Han'da `Mescit` tek parça vb.). Görev ve kartlarda adlar `model.json → glb` dosyasından okunur; eski adlar kullanılmaz. Prompt'lardaki küçük betik adları modelden listeler.
-- **Kart dosyası etkisi:** `parcalar.md` olan eserde yalnız kartı olan parça tıklanır. Hikâyede vurgulanan parçaların kartı olsun.
-- **Geçmişi Gör:** Bedesten, Emir Hanı ve Hamam için Foto Atlas'ta kayıt yok; yalnız rapor (izin durumu §4).
-- **Sıra önerisi (demo için):** önce Koza Han ve Bedesten (jüri haritada en çok bunlara tıklar), sonra diğerleri.
-- Her iş bitince raporu Claude'a getir. Sorular ve kartlar envanter metniyle karşılaştırılır, sonra commit.
+API'de olup panelde ekranı olmayanlar:
+- [ ] **Akar akışı** (`flow`: kaynak eser, hedef, etiket, kaynak, güven) — Muhammed'in sıradaki işi (`PROTOTIP_AKTARIM.md` §3.2).
+- [ ] «Eser hakkında» bölümleri (`PUT …/sections`), Geçmişi Gör eski fotoğrafları (`PUT …/history-images`).
+- [ ] Bulmacalar (`/v1/admin/quizzes`), hikâye kartları (`/v1/admin/cards`), içe aktarma (`/v1/admin/imports`), raporlar (`/v1/admin/reports/*`: taslak sorunları, konum, kopya), ekip davetleri (`/v1/admin/staff`).
 
-## 2. Tasarım
+API'de de olmayanlar (Burak):
+- [ ] «İçini göster» grupları (`coverGroups`), iç mekân parçaları, ön cephe yönü (`frontDeg`): yazan uç yok; panelden eklenen eserde «İçini göster» çıkmaz.
+- [ ] Eser görevleri ve rozetleri (`site_tasks`, `site_badges`) için yönetim ucu yok; yalnız içerik aktarımıyla geliyor.
+- [ ] Eseri silme.
+- [ ] Cümleye «Model dönsün» (`turn`) alanı.
+- [ ] «Bildir» kaydı (`POST /reports`).
 
-- [x] **Su ve Eğitim kategorileri, Konya ve Hatay** (30 Ekim gece): İnebey Medresesi, Alaaddin Bey Çeşmesi, Karatay Medresesi, Habib-i Neccar Camii; yalnız fotoğrafla. Kalan: koordinatların uydu ile doğrulanması, görevlerin gözden geçirilmesi, istenirse 3D.
+## 4. Jüri ve sunum (final 7–8 Kasım)
 
-- [x] **Asıl tema buzlu** (30 Ekim, Talha): prototipte varsayılan; ürüne taşınacak (`ENTEGRASYON_29EKIM.md` §5.13). Deneme tonları (`sicak`, `il`, `bant`) ve kullanılmayan tema dosyaları temizlenebilir.
+- [ ] «Bu Vakıf Katılım için neden önemli?»: akar kavramı, vakıf mirasının görünürlüğü, ölçülebilir hedefler.
+- [ ] Sürdürülebilirlik: içerik veri hattıyla geliyor; yeni şehir = yeni klasör (Konya, Hatay kodsuz eklendi).
+- [ ] Demo senaryosu (≈ 3 dk) ve yedek ekran kaydı.
+- [ ] Fotoğraf izinleri: Foto Atlas ND kayıtlar kırpılmaz; SALT için yazılı izin.
 
-- [x] **Figma güncellemesi** (29 Ekim, `promptlar/PROMPT_figma_guncelle_29ekim.md`): dokuz madde işlendi, Claude ekran görüntülerinden kontrol etti. Kalan küçük düzeltmeler (mobil geri düğmesi, sekme solması, lejant) ikinci prompt'la verildi.
-- [ ] **3D eser ekranı, masaüstünde sol panelin alt yarısı boş** (karar bekliyor): kısa künye (yaptıran, malzeme, envanter sayfası) ya da «İçini göster / parçalara dokun» ipucu.
-- [ ] **Pin çakışması:** düzeltildi (etiket yer bulamazsa öbür yana geçer, önemli eser önce çizilir, yakında pin küçülür) ama **etiketler test ortamında çizilemedi** (yazı tipi indirilemiyor). Gerçek haritada ve Redmi'de bak.
-- [x] **Diğer eserlerin kapak fotoğrafı:** 30 Ekim'de altı esere de yazıldı (envanterin açılış fotoğrafı; Türbe'de galeride olmadığı için dış fotoğraf).
-- [ ] **Ulucami ana referans.** Tasarım, UX kararları ve veri biçimi için örnek Ulucami. Diğer eserlerde bir şey eksikse Ulucami'deki karşılığına bakılır. Bunlar: okuma düzeni, parça kartları, «İçini göster», görev, Geçmişi Gör, kapak.
-- [x] **Eser hakkında okuma düzeni** yedi eserde (30 Ekim): envanter metninin tamamı + `eser-hakkinda-okuma.md` + kitap fotoğrafları.
-- [ ] **Kitap fotoğraflarının alt metinleri** (altı eser, geçici: «s. N, k. fotoğraf») ve arşivdeki yüksek çözünürlüklü asıllarla eşleştirme (Ulucami'deki gibi).
-- [ ] **Renk ince ayarı:** pastel renkler biraz açık bulunursa önizleme v3 sağ panelinde «Renk parlaklığı / Doygunluk» → «Ayarları kopyala» → `veri/sehir/bursa.json → harita_isik`.
+## 5. Telefon performansı (2 Kasım ölçümü; yapılmadı, öneri)
 
-## 2b. Figma'da olup prototipte olmayanlar (29 Ekim taraması)
+Önem sırasıyla:
 
-Figma `akar-yeni` ekranları prototiple tek tek karşılaştırıldı. Düğüm numaraları Figma'daki ekranlardır.
+1. **Fotoğraflar tam boy iniyor.** Ulucami'nin 154 fotoğrafı var; tekleri 0,9–1,45 MB. Galeri küçük resimleri, kapak, hikâye kartı aynı dosyayı indiriyor. Öneri: aktarımda 1600 px (tam ekran) ve 480 px (küçük resim) WebP/JPEG sürümleri üretip API'de `thumbUrl` vermek ya da Supabase görsel dönüşümü (`/render/image/…?width=`). Tek başına en büyük kazanç; mobil veride sayfa yükünü onda birine indirir.
+2. **Önbellek yok.** Supabase dosyaları `cache-control: private, no-cache` dönüyor (Ulucami GLB 1,7 MB, fotoğraflar, sesler). Adlar içerik özeti olduğu için değişmez; `storage-s3.ts → PutObjectCommand`'a `CacheControl: "public, max-age=31536000, immutable"` eklenmeli. Mevcut dosyalar için başlık güncellenmeli ya da yeniden yüklenmeli (Tamer).
+3. **Harita piksel oranı sınırsız.** MapLibre cihazın tam piksel oranıyla çiziyor (Redmi 9T ≈ 2,75), üstüne three.js modelleri antialias ve `PCFSoftShadowMap` gölgeyle. Öneri: `new maplibregl.Map({ pixelRatio: Math.min(devicePixelRatio, 2) })`, zayıf cihazda (`navigator.deviceMemory <= 4` ya da `hardwareConcurrency <= 4`) gölge türü `PCFShadowMap`/kapalı, antialias kapalı. Eser 3D'si zaten 1,5 ile sınırlı.
+4. **Buzlu cam (`backdrop-filter`) 42 yerde**, çoğu sürekli yeniden çizilen haritanın üstünde (panel, çipler, kartlar). Orta seviye Android'de kaydırma ve harita sürüklemede kare düşürür. Öneri: `@media (max-width: 899.98px)` ya da zayıf cihaz sınıfında bulanıklığı kapatıp yarı saydam düz renge düşmek (tasarımla konuşulmalı).
+5. **3D modelin boyutu ve ikinci model.** Ulucami sunum GLB'si 1,7 MB, gece modeli ayrı iniyor. Öneri: gece modelini yalnız gece temasında indirmek (bugün öyle mi, bakılmalı), haritada hafif GLB (Draco/meshopt + doku yok) ve detayda sunum GLB'si (ENTEGRASYON'daki «iki model» kararı).
+6. **Görsellerde `loading="lazy"` az.** 48 `<img>`'den 5'inde var. Galeri, Yaşayan hafıza duvarı, Geçmişi Gör şeridi ekran dışındaki görselleri baştan indiriyor. Öneri: ekran dışı her `<img>`'e `loading="lazy" decoding="async"` ve `width/height` (yerleşim kaymasını da önler).
+7. **Yazı tipleri:** Inter'in 4 ağırlığı × 2 alt küme ve Cormorant. Kabul edilebilir; istenirse Inter değişken (variable) tek dosya.
+8. **Büyük bileşen dosyaları:** `akar-app.tsx` 1.700 satır ve tek istemci paketi; panel (`admin-*`, ~5.000 satır) ziyaretçi paketine giriyor olabilir. Öneri: yönetim ekranlarını `next/dynamic` ile ayrı parçaya almak. Ölçmek için `ANALYZE` ile `next build` paket raporu.
+9. **CSS:** `design.css` + `globals.css` ≈ 8.700 satır, eski kurallar üst üste (ör. aynı seçicinin üç ayrı medya sorgusunda ezilmesi). Performanstan çok bakım sorunu; prototip aktarımı bitince temizlenmeli.
 
-**Demo için önerilen (prototipe eklenecek):** Hepsi yapıldı (29 Ekim akşamı; `yaptiklarim-2.md` §66, §67).
-1. ✅ **Anlatım · Akar akışı** (karar: haritada altın yay; veri `hikaye.md` «## Akar akışı») (D 1:2893, B 80:3004): «Yıldırım Bayezid, Ulucami'ye gelir sağlamak için Bedesten'i yaptırdı» cümlesinde harita Bedesten → Ulucami kesik çizgisini gösterir. Vakıf hikâyesinin özü; jüri için en önemli eksik.
-2. ✅ **İlk açılış karşılama kartı** (D 1:4042, WF 1:5616): şehir deseni şeridi, «Şehrin hikâyesine karış.», üç madde (Dinle ya da oku · Geçmişini gör · Vakfı anla), «Evden gez» / «Konumumu kullan», «Vakıf nedir? ›». Yükleme ekranından sonra yalnız ilk girişte.
-3. ✅ **3D açılamadı / görsel kademe** (D 1:4853, 1:4911; B 1:7802, 1:7840): 3D açılmazsa gravür/fotoğrafa düşer, üstte «3D açılamadı, görsellerle gösteriliyor · Yeniden dene». Zayıf cihazda «Bu cihazda 3D ağır kaldı» (bu kısım yapılmadı).
-4. ✅ **Kaynak detayı** (D 1:3193, WF 1:7027): «Kaynak: … ›» dokununca kitap, sayfa ve güven bilgisi.
-5. ✅ **Evden gez kipi ve konum seçimi** (D 1:4428, 1:4685; WF 1:5742, 1:7694): «Yakınımda ▾» menüsünde «Evden gez»; liste «Bursa'daki eserler», mesafe yok.
+Ölçüm önerisi: Redmi 9T'de Chrome uzaktan hata ayıklama → Performance kaydı (harita sürükleme, eser açma, hikâye oynatma), Lighthouse mobil; 1–3 maddeden önce ve sonra.
 
-**Üründe zaten olan (prototipe eklemeye gerek yok, ürün ekibi Figma'ya göre bitirir):**
-- İz Bırak akışı (1:3328, 1:3364, 1:3409; WF 1:7236, 1:7254, 1:7267, 108:2856).
-- Yaşayan hafıza (82:2735, 86:2733; WF 108:2765, 108:2807).
-- Giriş, e-posta kodu, KVKK, avatar menüsü, girişli profil (1:3055, 1:3816, 80:2930, 1:2065; WF 1:6960, 1:7672, 1:7544, 1:7372).
-- Rota akışı: Rotam, Rota aktif, Vardın, Rota tamamlandı, Tüm rotalar, Bana rota oluştur, Rota önerisi (1:2447, 1:2494, 80:2764, 80:2826, 1:3938, 80:2557, 80:2668; WF karşılıkları).
-- Arama ekranı ve sonuç yok (1:2141, 1:4522; WF 1:5925).
-- Tüm eserler + filtre (1:2296; WF 1:6065, 1:6119).
-- Bağlantı yok ve durum ekranları (1:4577, 1:7615).
+## 6. Teknik borç
 
-**Bilinçli fark (değiştirme):**
-- Şehir seçici (WF 1:5839): prototipte küre görünümü.
-- Anlatım altyazı düzeni (1:2730): alternatif; panel düzeni seçildi.
-- Birlikte Gez (1:3500; WF 1:7330, 1:7355): üründe de deneysel; kapsam kararı bekliyor.
-
-**Tersi (prototipte olup Figma'da olmayan, Figma'ya işlenecek):** hikâye bitince tebrik kartı (Hikâye sonrası 1:2991 / 1:6925 yerine), TR \| EN dil seçici.
-
-**Çakışma (çözüldü, 29 Ekim):** Figma'da «Giriş isteği (hikâye bitince)» var; prototipte hikâye bitince tebrik kartı çıkıyor. Karar: misafirse tebrik kartının altında «Rozetlerini kaybetme · Giriş yap» satırı; iki ayrı pencere üst üste açılmaz. Figma'ya da işlenmeli.
-
-## 3. Ekip notları (frontend / backend)
-
-«En son hazırlarız» denmişti; ürün (`apps/web`) prototipteki düzeltmeleri kullanmıyor. Yazılacak not (`docs/` altında) şunları kapsamalı:
-
-- [ ] Veri dosyaları ve alanları: `eserler/<eser>/eser.json` (hakkinda_kapak dahil), `3d/model.json`, `veri/sehir/*.json` (`kimlik`: renk, desen, 3D sahne zemini; `harita_isik`), `veri/rota/*.json`, `icerik/gorevler.json` (görev/rozet şeması), `gecmisi-gor/*.json`
-- [ ] GLB kuralları: AO `occlusionTexture.texCoord = 1`, köşe rengi yok, «Yer_Golgesi» yok, boyut sınırı, parça adları = hikâye vurgu adları
-- [ ] Haritadaki model katmanı: ışık `harita_isik`'ten, web yer gölgesi (kodla üretilen doku), taban izi ve OSM bina kaldırma kuralı (ürünle aynı: merkezi taban izi + 3 m içinde ve alanı taban izinin 1,6 katından küçük bina gizlenir; ENTEGRASYON §4), küre
-- [ ] Zemin titremesi (z-fighting) düzeltmesi ve model kuralı (zemin katmanları arası ≥ 3 cm)
-- [ ] Stil: `design/harita/akar-style-ozel-v2.json`
-
-### Admin paneli: 3D ayarları (1 Kasım 2026)
-
-Bitti (1 Kasım, `feat/harita-prototip`):
-- [x] Panelde 3D önizleme (Model ve Hikâye adımlarında sağda, 3D | Fotoğraf), «Bakılan yer» seçimi.
-- [x] Açılış açısı («Açılış açısı olarak kaydet»); eser sayfasındaki 3D bu açıyla açılır.
-- [x] Hikâye cümlesinin açısı («Açıyı kaydet → Cümle N», «Cümleyi oynat», «Açıyı sil») ve «İç mekân (3D)» kutusu.
-- [x] Fotoğraf açıları (Model adımı → «Fotoğraf açıları»: fotoğraf modelin üstüne yarı saydam biner, hizalanınca kaydedilir; «İçeriden çekilmiş» kutusu). Ziyaretçi 3D'sinde «İçini göster»in solunda ← → ve ✕, yanda küçük fotoğraf.
-- [x] Geri alma: «Değişiklikleri geri al» (son kayda döner), çıkışta «Vazgeç», açı kaydı/silmesinden sonra «Geri al».
-- [x] Eski «3D oynatıcı sonraki aşamada» notları düzeltildi.
-
-**Canlıya alırken (Tamer):** migration `0030_photo_camera` (`site_media.camera`) uygulanmalı; içe aktarma panelde girilen fotoğraf açılarını korur.
-
-Kalan:
-- [ ] **Açıları girmek** (Muhammed): 7 eserin açılış açısı, cümle açıları (Ulucami için öneriler `eserler/ulu-cami/icerik/hikaye.md` «Açı önerisi»), galeri fotoğraflarının açıları.
-- [ ] **«Model dönsün» anahtarı.** Bugün dönme vurguya bağlı (`scene.tsx`, `tour`). Öneri: cümleye isteğe bağlı `turn` alanı (yoksa bugünkü kural), içe aktarma, API, panelde onay kutusu. — Burak (alan, API), panel Muhammed.
-- [ ] **Model ayarları panelde ve API'de yok:** «İçini göster» grupları (`ortu_gruplari` → `coverGroups`, DB'de `media.cover_groups` var, yazan uç yok), iç mekân parçaları (`ic_parcalar`), ön cephe yönü (`on_yonu` → `frontDeg`, yerleşim gövdesinde yok). Panelden eklenen eserde «İçini göster» bu yüzden çıkmaz. — Burak (uçlar), panel Muhammed.
-- [ ] **Figma'da olup panelde olmayan:** düzenlemede Eser hakkında, Fotoğraflar ve Geçmişi Gör sekmeleri; model sürümleri ve parça farkı uyarısı («Etkilenen cümlelere git»); hafif GLB; cümle başına ses (TR/EN) ve İngilizce metin.
-- [ ] **Eseri silme** panelde ve API'de yok.
-- [ ] **Orhan Gazi Türbesi** panel listesinde «0 hikâye bölümü» gösteriyor; içerik paketi ya da içe aktarma kontrol edilmeli.
-
-## 4. Jüri ve sunum (ekip işi; Claude yardım edebilir)
-
-Değerlendirme: tasarım ve teknik güçlü; **zayıf yanlar bütünlük/demo ve etki hikâyesi.**
-
-- [ ] **«Bu Vakıf Katılım için neden önemli?»** Etki hikâyesi: akar kavramı (vakfı yaşatan gelir yapıları; han, bedesten, hamam), vakıf mirasının görünürlüğü, ziyaretçiyi esere getirme, ölçülebilir hedefler (ziyaret, okuma, rota tamamlama).
-- [ ] **Sürdürülebilirlik:** içerik envanterden veri hattıyla geliyor; yeni şehir = yeni klasör (Konya ve Hatay'da ilk eser 30 Ekim'de kodsuz eklendi; Kütahya «Yakında»); maliyet ve bakım.
-- [ ] **Demo senaryosu (≈ 3 dk):** harita → Ulucami 3D → İçini göster → Eser hakkında → Geçmişi Gör → bulmaca/rozet → rota. Jüri Ulucami dışına tıklarsa ne görecek? (bkz. 1.4 ve 2.)
-- [ ] **Yedek demo videosu:** internet ya da cihaz sorununa karşı ekran kaydı.
-- [ ] Fotoğraf izinleri/lisans: Foto Atlas ND kayıtlar kırpılmaz; SALT için yazılı izin; Bedesten/Emir/Hamam eski fotoğrafları (bkz. `yaptiklarim-2.md` §27).
-
-## 5. Teknik borç
-
-- [ ] Modellerde zemin katmanlarını ayır (≥ 3 cm) — `yaptiklarim-2.md` §22.
-- [x] Kaynak artık Blender + `malzeme-paleti.json` (eşitleme bitti); `renk_ao_v3/` yeniden kullanılmaz.
-- [ ] `design/test-redmi9t-v2/.onbellek/` içindeki geçici dosyalar (`_zemin_denemesi_*`, `_yedek_*`) silinebilir (git dışında).
-- [ ] `test.html` (performans testi) MapLibre 4.7'de kaldı.
-- [ ] v1 önizleme (`design/harita/akar-harita-onizleme.html`): döndürünce süzülmemiş OSM 3D katmanı açılıyor (v2/v3'te düzeltildi). v1 kullanılmıyorsa önemsiz.
-- [ ] `design/ilk-prototip-kılıç-ali-pasa-düz-stil/` (157 MB) repoda değil; kimin olduğu ekiple konuşulacak.
+- [ ] Modellerde zemin katmanlarını ayır (≥ 3 cm; z-fighting).
+- [ ] Kitap fotoğraflarının alt metinleri (altı eser, geçici «s. N, k. fotoğraf») ve arşiv asıllarıyla eşleştirme.
+- [ ] `design/ilk-prototip-kılıç-ali-pasa-düz-stil/` (157 MB) repoda değil; Akar akışı işi için gerekiyor.
