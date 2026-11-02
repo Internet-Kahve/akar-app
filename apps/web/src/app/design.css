@@ -3983,3 +3983,9 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .workspace.on-site:has(.detail-panel) .detail-scene :is(.model-label, .model-inside, .model-views),
   .card-grip svg { transition: none; }
 }
+
+/* «Eser hakkında» read aloud: a paragraph can be tapped to go on from it. */
+.about-scroll.voicing :is(.about-p, .about-inscription-meaning) { cursor: pointer; border-radius: 8px; transition: background-color 150ms; }
+@media (hover: hover) {
+  .about-scroll.voicing :is(.about-p, .about-inscription-meaning):not(.about-reading-now):hover { background: color-mix(in srgb, var(--primary-light) 70%, transparent); }
+}
