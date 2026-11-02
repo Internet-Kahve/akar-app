@@ -4018,3 +4018,23 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   /* With an angle on, ‹ ✕ › İçini göster fill the row: the «Temsili» tag steps aside (the photograph says what it is). */
   .detail-scene:has(.model-view-photo) .model-label { opacity: 0; pointer-events: none; }
 }
+
+@media (max-width: 899.98px) {
+  /* A scroll on the closed card raises it a little, gliding (akar-app CARD_SCROLL_RISE). */
+  .workspace.on-site .side-panel.rising { transition: height 480ms cubic-bezier(.22, 1, .36, 1); }
+  /* Phone: the angle's photograph sits right on the site card, as wide as it; ‹ ✕ › İçini göster go above it. */
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo,
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo.large {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: calc(var(--sheet-h, 194px) + 12px + 10px + env(safe-area-inset-bottom, 0px));
+  }
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo img { height: 190px; aspect-ratio: auto; }
+  .workspace.on-site:has(.detail-panel) .detail-scene:has(.model-view-photo) .model-views {
+    bottom: calc(var(--sheet-h, 194px) + 12px + 10px + 190px + 34px + 10px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
+  .workspace.on-site .side-panel.rising { transition: none; }
+}
