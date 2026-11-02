@@ -4,6 +4,8 @@ Güncel sürüm **v18** (29 Ekim 2026; aşağıda). Önceki not: güncel sürüm
 
 ## Güncel sürüm: v18 (29 Ekim 2026) · avlu ve revak ayrıntısı (iç parçalar yalnız sunumda)
 
+**2 Kasım 2026 · z-fighting düzeltmesi (geometri yeniden dışa aktarılmadı):** revak tonozlarının uç yüzleri revak ve gövde duvarlarıyla (≈ 85 m²), çatının güney kenarı revak taş kaplamasıyla (≈ 8 m²), portalın yanları gövde duvarıyla (≈ 2 m²) aynı düzlemdeydi; döndürünce titriyordu. Dört GLB'de (harita, sunum, iki gece) `Revak_Tonozlari` × 0,998, `Cati` × 1,001, `Portal` × 1,004 yatay ölçek (kutu ortasına göre) verildi: `_kutuphane/dugum_olcek.py`, ayar `dugum_olcek.json`. Görünür çakışma ≈ 98 → 4 m²; kalanlar parçaların kendi içinde, blend'den yeniden üretimde giderilmeli (v19'da aynı ölçek blend'e işlenmeli). z=0'daki büyük çakışmalar aşağı bakan alt yüzler, görünmez.
+
 Betik `build/build_v18.py` → `build/doku_ic_v18.py` (karo dokusu) → `build/build_v18_ic.py` (Blender, v17 blend'ini açar, dokunmaz) → `_kutuphane/blend_hat/uret.py`. **«İçini göster» yok:** avlu açık; revaklar ve avlu her açıdan görünüyor, kaldırılacak örtü yok (`model.json`'da `ortu_gruplari` yok). **ic_parcalar:** `Revak_Tonozlari`, `Revak_Doseme`. Harita GLB'si v17 ile aynı geometri. Kontrol `kontrol/v18/` (`ic_detay.png`, `dis_esitlik.png`, `tiklama_haritasi.png`, `doku_karo.png`, `parca_dogrulama.json`, `ic_rapor.json`, `blend_rapor.json`).
 
 | Kök parça | Ne | Ölçü | Kaynak |
