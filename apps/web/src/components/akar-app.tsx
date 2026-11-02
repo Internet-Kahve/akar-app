@@ -37,6 +37,7 @@ import {
   defaultMapSettings,
   filterSites,
   kindCategory,
+  modelFileFor,
   siteCategories,
   type Command,
   type HeritageSite,
@@ -72,6 +73,7 @@ import { StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
+import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { SignInModal } from "./sign-in-modal";
@@ -572,6 +574,23 @@ export function AkarApp() {
     return stories.length ? { ...site, stories } : undefined;
   }, [site, routeId]);
   const storyBlock = view === "story" ? storySite?.stories[storyIndex] : undefined;
+  // A sentence about the income road: the other building of the road comes beside the site in its own scene
+  // (its model in the page's theme, else its cover photograph; a place outside the catalogue by its name alone).
+  const flowCompanion = useMemo((): FlowCompanion | undefined => {
+    const road = storyBlock?.flow;
+    if (!road || !site) return undefined;
+    const otherId = road.fromSiteId === site.id ? road.toSiteId : road.fromSiteId;
+    const other = state.sites.find((s) => s.id === otherId);
+    const cover = other && ([...(other.storyPhotos ?? []), ...(other.photos ?? [])].find((p) => p.id === other.coverPhotoId) ?? other.photos?.[0]);
+    const name = other?.name ?? road.toName;
+    return {
+      ...(other?.model && { src: modelFileFor(other.model, theme).src }),
+      ...(cover && { photo: cover.src }),
+      name,
+      label: road.label || name,
+      incoming: road.fromSiteId !== site.id,
+    };
+  }, [storyBlock, site, state.sites, theme]);
   const filtered = useMemo(
     () =>
       filterSites(state.sites, query).filter((s) =>
@@ -1386,6 +1405,7 @@ export function AkarApp() {
                   <Scene
                     key={`${site.id}-${view}`}
                     context={view === "story" ? "story" : "detail"}
+                    companion={flowCompanion}
                     // Phone: the scene fills the screen behind the floating card; the model stays above it closed.
                     frameBottom={siteCard && cardClosed ? cardClosed + 12 : 0}
                     site={site}
@@ -1395,8 +1415,9 @@ export function AkarApp() {
                         ? storyBlock?.photoId
                         : undefined
                     }
+                    // The income road's sentence: the companion takes the camera back to show both buildings.
                     pose={
-                      view === "story"
+                      view === "story" && !flowCompanion
                         ? storySite?.stories
                             .slice(0, storyIndex + 1)
                             .findLast((s) => s.camera)?.camera
@@ -1426,9 +1447,10 @@ export function AkarApp() {
                       else setOverlay("about");
                     }}
                     turn={
-                      view !== "story" ||
-                      storyIndex === 0 ||
-                      storyIndex === (storySite?.stories.length ?? 1) - 1
+                      !flowCompanion &&
+                      (view !== "story" ||
+                        storyIndex === 0 ||
+                        storyIndex === (storySite?.stories.length ?? 1) - 1)
                     }
                     visitors={view === "detail" ? visitorPhotos : []}
                     onAddPhoto={() => setOverlay("memory")}

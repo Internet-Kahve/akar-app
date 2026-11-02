@@ -19,6 +19,7 @@ import { liftGroundLayers } from "../lib/ground-layers";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addModelLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
 import { spreadOrder, type PartPoint } from "../lib/part-order";
+import { companionPlace, flowArc, FLOW_COIN_MS, FLOW_DRAW_MS, textSprite, type FlowCompanion } from "../lib/flow-companion";
 import { currentTheme, subscribeTheme } from "../lib/theme";
 import {
   fitHalfAngle,
@@ -54,6 +55,17 @@ const TAP_MS = 600;
 const PART_PULSE_MS = 900;
 /** Overlap keeps a full pass under 3.5 seconds, even on models with many cards. */
 const PART_STAGGER_MS = 250;
+/** Frees a loaded model's geometry, materials and textures. */
+const disposeObject = (root: THREE.Object3D) =>
+  root.traverse((item) => {
+    if (!(item instanceof THREE.Mesh)) return;
+    item.geometry.dispose();
+    for (const material of Array.isArray(item.material) ? item.material : [item.material]) {
+      for (const value of Object.values(material)) if (value instanceof THREE.Texture) value.dispose();
+      material.dispose();
+    }
+  });
+
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
  * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
@@ -87,6 +99,7 @@ export default function ModelViewer({
   views,
   onPoseChange,
   onInsideChange,
+  companion,
 }: {
   model: SiteModel;
   detail?: boolean;
@@ -117,6 +130,8 @@ export default function ModelViewer({
   onPoseChange?: (pose: CameraPose) => void;
   /** The visitor opened or closed the model with «İçini göster». */
   onInsideChange?: (open: boolean) => void;
+  /** A sentence about the waqf's income: the other building of the road beside this one, with the gold road. */
+  companion?: FlowCompanion;
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
@@ -128,7 +143,172 @@ export default function ModelViewer({
   /** Centre of the given parts in the model's space (null when none is in the file): spreads the show-parts order. */
   const centreOf = useRef<((parts: string[]) => PartPoint) | null>(null);
   const pulseFrame = useRef(0);
+  /** The drawn model's stage, for what is added to it later (the income road's companion). */
+  const stage = useRef<{
+    scene: THREE.Scene;
+    camera: THREE.PerspectiveCamera;
+    controls: OrbitControls;
+    render: () => void;
+    decoder: DRACOLoader;
+    sphere: number;
+    ground: number;
+    height: number;
+  } | null>(null);
+  const [stageReady, setStageReady] = useState(0);
   useEffect(() => () => cancelAnimationFrame(pulseFrame.current), [model.src]);
+  // The income road (lib/flow-companion): the companion beside the site, the gold tube drawn from the one that earns
+  // to the one it keeps with coins along it, its label at the middle, and the camera stepped back to take both in.
+  // All of it goes, and the camera goes back, when the sentence changes.
+  const companionKey = companion ? JSON.stringify(companion) : "";
+  useEffect(() => {
+    const st = stage.current;
+    if (!st || !companionKey) return;
+    const road = JSON.parse(companionKey) as FlowCompanion;
+    const { scene, camera, controls, render } = st;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const group = new THREE.Group();
+    scene.add(group);
+    const look = controls.target.clone().sub(camera.position);
+    look.y = 0;
+    if (look.lengthSq() < 1e-6) look.set(0, 0, -1);
+    look.normalize();
+    const right = new THREE.Vector3().crossVectors(look, new THREE.Vector3(0, 1, 0)).normalize();
+    const place = companionPlace(st.sphere, st.ground, right);
+    const holder = new THREE.Group();
+    holder.position.set(place.centre.x, st.ground, place.centre.z);
+    group.add(holder);
+    const owned: { dispose: () => void }[] = [];
+    let disposed = false,
+      frame = 0,
+      roadDrawn = false;
+    // The camera: back along its own direction until both stand in view, looking at their middle.
+    const before = { position: camera.position.clone(), target: controls.target.clone() };
+    // A little above the buildings' middle: the road arcs over them.
+    const goalTarget = new THREE.Vector3(place.middle.x, st.ground + st.height * 0.5, place.middle.z);
+    const fov = THREE.MathUtils.degToRad(camera.fov) / 2;
+    const away = before.position.clone().sub(before.target).normalize();
+    away.y = Math.max(away.y, 0.42);
+    away.normalize();
+    const goalPosition = goalTarget.clone().add(away.multiplyScalar((place.span / Math.sin(fov * Math.min(1, camera.aspect))) * 1.3));
+    const cameraStart = performance.now();
+    const drawRoad = (top: number) => {
+      if (disposed || roadDrawn) return;
+      roadDrawn = true;
+      const there = new THREE.Vector3(place.centre.x, top, place.centre.z);
+      const here = new THREE.Vector3(0, st.ground + st.height * 0.85, 0);
+      const curve = flowArc(road.incoming ? there : here, road.incoming ? here : there, st.sphere * 0.7);
+      const SEG = 64, RAD = 6;
+      const tube = new THREE.TubeGeometry(curve, SEG, st.sphere * 0.012, RAD, false);
+      const rim = new THREE.TubeGeometry(curve, SEG, st.sphere * 0.02, RAD, false);
+      const gold = new THREE.MeshBasicMaterial({ color: "#E3BC5E" });
+      const ink = new THREE.MeshBasicMaterial({ color: "#A8781F", side: THREE.BackSide });
+      const coinGeo = new THREE.SphereGeometry(st.sphere * 0.024, 10, 6);
+      const coinMat = new THREE.MeshBasicMaterial({ color: "#FFF1B8" });
+      const coins = [0, 1, 2].map(() => new THREE.Mesh(coinGeo, coinMat));
+      coins.forEach((c) => (c.visible = false));
+      const label = textSprite(road.label, st.sphere * 0.09);
+      label.position.copy(curve.getPoint(0.5)).add(new THREE.Vector3(0, st.sphere * 0.09, 0));
+      label.visible = false;
+      group.add(new THREE.Mesh(rim, ink), new THREE.Mesh(tube, gold), ...coins, label);
+      owned.push(tube, rim, gold, ink, coinGeo, coinMat, label.material.map!, label.material);
+      const start = performance.now();
+      const step = (now: number) => {
+        if (disposed) return;
+        const k = reduced ? 1 : Math.min(1, (now - start) / FLOW_DRAW_MS);
+        const n = Math.floor(k * SEG) * RAD * 6;
+        tube.setDrawRange(0, n);
+        rim.setDrawRange(0, n);
+        label.visible = k >= 0.5;
+        if (k >= 1 && !reduced)
+          coins.forEach((c, i) => {
+            c.visible = true;
+            c.position.copy(curve.getPoint(((now - start - FLOW_DRAW_MS) / FLOW_COIN_MS + i / 3) % 1));
+          });
+        render();
+        if (!reduced) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    };
+    const showPhoto = () => {
+      if (!road.photo) {
+        // A place outside the catalogue, with no photograph yet (Koza Han's income to Istanbul): its name stands at
+        // the road's end. The panel can give it a photograph.
+        const sign = textSprite(road.name, st.sphere * 0.1);
+        sign.position.y = place.sphere * 0.9;
+        holder.add(sign);
+        owned.push(sign.material.map!, sign.material);
+        return drawRoad(st.ground + place.sphere * 0.75);
+      }
+      new THREE.TextureLoader().load(
+        road.photo,
+        (texture) => {
+          if (disposed) return texture.dispose();
+          texture.colorSpace = THREE.SRGBColorSpace;
+          const image = texture.image as { width: number; height: number };
+          const h = place.sphere * 1.2;
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
+          sprite.scale.set((h * image.width) / image.height, h, 1);
+          sprite.position.y = h / 2;
+          holder.add(sprite);
+          owned.push(texture, sprite.material);
+          drawRoad(st.ground + h);
+        },
+        undefined,
+        () => drawRoad(st.ground + place.sphere),
+      );
+    };
+    if (road.src)
+      new GLTFLoader().setDRACOLoader(st.decoder).load(
+        road.src,
+        (gltf) => {
+          if (disposed) return disposeObject(gltf.scene);
+          const other = gltf.scene;
+          other.traverse((item) => {
+            for (let node: THREE.Object3D | null = item; node && node !== other; node = node.parent)
+              if (/^Yer_Golgesi/.test(node.name) || PRESENTATION_PARTS.test(node.name)) item.visible = false;
+          });
+          const box = new THREE.Box3();
+          other.traverse((item) => {
+            if (item instanceof THREE.Mesh && item.visible) box.expandByObject(item);
+          });
+          if (box.isEmpty()) box.setFromObject(other);
+          const size = box.getSize(new THREE.Vector3()),
+            mid = box.getCenter(new THREE.Vector3());
+          const scale = place.sphere / (size.length() / 2 || 1);
+          other.scale.setScalar(scale);
+          other.position.set(-mid.x * scale, -box.min.y * scale, -mid.z * scale);
+          holder.add(other);
+          owned.push({ dispose: () => disposeObject(other) });
+          drawRoad(st.ground + size.y * scale);
+        },
+        undefined,
+        showPhoto,
+      );
+    else showPhoto();
+    // Camera: eased over 1.2 s (at once with reduced motion), the road appears as it goes.
+    const glide = (now: number) => {
+      if (disposed) return;
+      const t = reduced ? 1 : Math.min(1, (now - cameraStart) / 1200);
+      const k = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      camera.position.lerpVectors(before.position, goalPosition, k);
+      controls.target.lerpVectors(before.target, goalTarget, k);
+      controls.maxDistance = Math.max(controls.maxDistance, goalPosition.distanceTo(goalTarget) * 1.3);
+      controls.update();
+      render();
+      if (t < 1) requestAnimationFrame(glide);
+    };
+    requestAnimationFrame(glide);
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
+      scene.remove(group);
+      owned.forEach((o) => o.dispose());
+      camera.position.copy(before.position);
+      controls.target.copy(before.target);
+      controls.update();
+      render();
+    };
+  }, [companionKey, stageReady]);
   const spin = useRef<((on: boolean) => void) | null>(null);
   const reframe = useRef<(() => void) | null>(null);
   /** The pose the running tour started from; empty once it stopped. */
@@ -192,18 +372,6 @@ export default function ModelViewer({
     let cancelLift = () => {};
     let detachPointer = () => {};
     let unfollowTheme = () => {};
-    const disposeObject = (root: THREE.Object3D) =>
-      root.traverse((item) => {
-        if (!(item instanceof THREE.Mesh)) return;
-        item.geometry.dispose();
-        for (const material of Array.isArray(item.material)
-          ? item.material
-          : [item.material]) {
-          for (const value of Object.values(material))
-            if (value instanceof THREE.Texture) value.dispose();
-          material.dispose();
-        }
-      });
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -414,6 +582,11 @@ export default function ModelViewer({
           controls!.maxDistance = radius * 4;
           controls!.target.set(0, 0, 0);
           controls!.update();
+          stage.current = {
+            scene, camera, controls: controls!, render, decoder: decoder!, sphere,
+            ground: box.min.y - center.y, height: size.y,
+          };
+          setStageReady((n) => n + 1);
           // The part the camera last went to: a pose read back keeps it, as the camera turns around it.
           let aimedTarget: string | null = null;
           const fitDistance = () => {
@@ -772,6 +945,7 @@ export default function ModelViewer({
     return () => {
       disposed = true;
       aim.current = null;
+      stage.current = null;
       if (poseReader) poseReader.current = null;
       readPose.current = null;
       beforeViews.current = null;
