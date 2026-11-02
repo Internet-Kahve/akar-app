@@ -215,6 +215,9 @@ export const MediaDto = z.object({
   coverGroups: z
     .array(z.array(z.string()))
     .describe("«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"),
+  interiorParts: z
+    .array(z.string())
+    .describe("Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"),
 });
 
 export const SourceDto = z.object({
@@ -383,6 +386,7 @@ export const MapPlacementDto = z.object({
   lng: z.number().describe("Modelin boylamı; yerleşimde konum verilmemişse eserin konumu"),
   lat: z.number().describe("Modelin enlemi; yerleşimde konum verilmemişse eserin konumu"),
   headingDeg: z.number().describe("Kuzeyden saat yönünde derece, 0 ≤ x < 360"),
+  frontDeg: z.number().nullable().describe("Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)"),
   scale: z.number().describe("0,1–10; 1 = model birimi bir metre"),
   altitudeM: z.number().describe("Modelin zemine oturmuş hâlinin üstüne eklenen yükseklik, metre (−50–200)"),
   anchorNode: z.string().nullable().describe("Taban noktasının hesaplandığı modeldeki parça adı; null = presentasyon parçaları dışındaki tüm parçalar"),

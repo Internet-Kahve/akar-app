@@ -2817,6 +2817,7 @@ test("the placement command PUTs the whole placement with an Idempotency-Key, re
     lng: 29.0625,
     lat: 40.1841,
     headingDeg: 90,
+    frontDeg: 186,
     scale: 1,
     altitudeM: 1.5,
     anchorNode: "Govde",

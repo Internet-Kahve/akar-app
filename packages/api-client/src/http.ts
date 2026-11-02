@@ -147,6 +147,8 @@ interface MediaDto {
   triangles?: number | null;
   /** "İçini göster" groups of a model; absent on older API versions. */
   coverGroups?: string[][];
+  /** Interior parts of a model (the map leaves them out); absent on older API versions. */
+  interiorParts?: string[];
 }
 interface SiteSummaryDto {
   id: string;
@@ -633,6 +635,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         trust: model.trust,
         triangles: model.triangles ?? null,
         ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
+        ...(model.interiorParts?.length && { interiorParts: model.interiorParts }),
         ...(night && {
           night: {
             name: night.title || night.id,
@@ -656,6 +659,7 @@ const mapAdminPlacement = (
   lng: p.lng ?? at[0],
   lat: p.lat ?? at[1],
   headingDeg: p.headingDeg,
+  frontDeg: p.frontDeg ?? null,
   scale: p.scale,
   altitudeM: p.altitudeM,
   anchorNode: p.anchorNode,
@@ -2070,6 +2074,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               lng: p.lng,
               lat: p.lat,
               headingDeg: p.headingDeg,
+              frontDeg: p.frontDeg ?? null,
               scale: p.scale,
               altitudeM: p.altitudeM,
               anchorNode: p.anchorNode,

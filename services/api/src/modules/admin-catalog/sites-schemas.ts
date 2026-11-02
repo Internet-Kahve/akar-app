@@ -151,6 +151,7 @@ export const MapPlacementBody = z
     lng: z.number().min(-180).max(180).nullable().optional().describe("Modelin boylamı; lat ile birlikte verilir. Yoksa ya da null ise eserin konumu"),
     lat: z.number().min(-90).max(90).nullable().optional().describe("Modelin enlemi; lng ile birlikte verilir"),
     headingDeg: z.number().min(0).lt(360).describe("Kuzeyden saat yönünde derece, 0 ≤ x < 360"),
+    frontDeg: z.number().min(0).lt(360).nullable().optional().describe("Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; yoksa ya da null = bilinmiyor"),
     scale: z.number().min(0.1).max(10).describe("0,1–10; 1 = model birimi bir metre"),
     altitudeM: z.number().min(-50).max(200).describe("Zemine oturmuş modelin üstüne eklenen yükseklik, metre"),
     anchorNode: nullableText(200).describe("Taban noktasının hesaplandığı parça adı; null ya da boş = tüm parçalar"),

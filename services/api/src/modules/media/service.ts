@@ -104,6 +104,7 @@ export function toMediaItem(row: MediaRow): MediaItem {
     parts: row.parts,
     triangles: row.triangles,
     coverGroups: row.coverGroups,
+    interiorParts: row.interiorParts,
     bytes: row.bytes,
     partsStatus: row.partsStatus,
     uploadedBy: row.uploadedBy,

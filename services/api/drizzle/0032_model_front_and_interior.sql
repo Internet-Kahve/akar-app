@@ -1,0 +1,3 @@
+ALTER TABLE "site_map_placements" ADD COLUMN "front_deg" double precision;--> statement-breakpoint
+ALTER TABLE "media" ADD COLUMN "interior_parts" text[] DEFAULT '{}'::text[] NOT NULL;--> statement-breakpoint
+ALTER TABLE "site_map_placements" ADD CONSTRAINT "site_map_placements_front" CHECK ("site_map_placements"."front_deg" IS NULL OR ("site_map_placements"."front_deg" >= 0 AND "site_map_placements"."front_deg" < 360));
