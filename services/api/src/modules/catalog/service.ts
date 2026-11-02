@@ -27,7 +27,7 @@ import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
 import { currentNarrations, loadNarrationRows, narrationsOfSubject } from "../narrations/read.ts";
 import { loadSampleTraces, sampleTraceDto } from "./sample-traces.ts";
 import { badgeDto, loadBadges, loadTasks, taskDto } from "./tasks.ts";
-import type { ChapterDto, ContentFlag, MapPlacementDto, SectionPhotoDto, SiteDetail, SiteSummary } from "./schemas.ts";
+import type { ChapterDto, ContentFlag, MapPlacementDto, NarrationDto, SectionPhotoDto, SiteDetail, SiteSummary } from "./schemas.ts";
 
 /** Single definition of "visible to the public"; every read path goes through it. */
 export const published = eq(sites.status, "published");
@@ -346,7 +346,7 @@ export function loadSectionPhotos(q: Db | Tx, siteIds: string[]): Promise<Sectio
     .orderBy(asc(siteSectionPhotos.siteId), asc(siteSectionPhotos.sectionId), asc(siteSectionPhotos.position));
 }
 
-export function chapterDto(c: ChapterRow): ChapterDto {
+export function chapterDto(c: ChapterRow, narrations: NarrationDto[]): ChapterDto {
   const r = c.reading;
   return {
     id: c.id,
@@ -363,6 +363,7 @@ export function chapterDto(c: ChapterRow): ChapterDto {
     focusParts: r.focusParts,
     readingEn: c.readingEn,
     enStatus: c.enStatus,
+    narrations,
   };
 }
 
@@ -477,7 +478,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
   const rowById = new Map(rows.map((r) => [r.id, r]));
   const extraById = new Map(extras.map((e) => [e.id, e]));
   const cardById = new Map(cardRows.map((c) => [c.id, c]));
-  const narrationsOf = bySite(currentNarrations(narrationRows, storyRows, partCardRows));
+  const narrationsOf = bySite(currentNarrations(narrationRows, { stories: storyRows, partCards: partCardRows, chapters: chapterRows, sections: sectionRows }));
   const [storiesOf, sectionsOf, historyOf, partCardsOf, chaptersOf, sectionPhotosOf, tasksOf, badgesOf, tracesOf, mediaLinksOf, sourceLinksOf] = [
     bySite(storyRows),
     bySite(sectionRows),
@@ -606,8 +607,9 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         sourceId: s.sourceId,
         chapterId: s.chapterId,
         photos: photosOf.get(s.id) ?? [],
+        narrations: narrationsOfSubject(narrationList, "about_section", row.id, s.id),
       })),
-      chapters: chapters.map(chapterDto),
+      chapters: chapters.map((c) => chapterDto(c, narrationsOfSubject(narrationList, "about_chapter", row.id, c.id))),
       cards: siteCards.map((c) => ({
         id: c.id,
         kind: c.kind,

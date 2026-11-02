@@ -11,8 +11,10 @@ import {
   narrations,
   narrationVariants,
   narrationVoices,
+  siteAboutChapters,
   sitePartCards,
   sites,
+  siteSections,
   storyBlocks,
   type NarrationLang,
   type NarrationSubjectType,
@@ -27,7 +29,7 @@ import type { Translator, TranslateFields } from "../../platform/translate.ts";
 import { voiceKey, type TtsProvider } from "../../platform/tts.ts";
 import { deleteMediaObjects, deleteUnreferencedMedia, discardUnsavedObjects, requireDep } from "../media/service.ts";
 import type { Trust } from "@akar/domain";
-import { spokenFor, spokenForCard } from "./read.ts";
+import { spokenFor, spokenForCard, spokenForChapter, spokenForSection } from "./read.ts";
 import type { NarrateTarget } from "./schemas.ts";
 import { narrationHash } from "./spoken.ts";
 
@@ -40,7 +42,7 @@ const AUDIO_LICENSE = "Akar yapay zekâ seslendirmesi";
 /** Wall-clock time of the statement, like the wizard writes: public readers key off the site's `updated_at`. */
 const touched = sql`clock_timestamp()`;
 
-/** A text a voice reads: a story sentence or a 3D part card. */
+/** A text a voice reads: a story sentence, a 3D part card, an «Eser hakkında» chapter title or paragraph. */
 type Subject = { type: NarrationSubjectType; id: string; title: string; trust: Trust };
 type Item = {
   subject: Subject;
@@ -82,10 +84,11 @@ function isUniqueViolation(err: unknown): boolean {
 export type NarrationDeps = { db: Db; storage: StorageBuckets | null; tts: TtsProvider | null; config: Config; log: FastifyBaseLogger };
 
 /**
- * Generates the missing and the stale recordings of a site's texts (decisions §11.56, §11.59): of every story
+ * Generates the missing and the stale recordings of a site's texts (decisions §11.56, §11.59, §11.65): of every story
  * sentence `text` and `simple` in Turkish, `text_en` and `simple_en` in English when written; of every part card its
- * `body` and `body_en` (variant `text`); each in the four voices, one after another. An up-to-date recording (same
- * hash of spoken text and voice model) is left alone, so a second call generates nothing.
+ * `body` and `body_en`, of every «Eser hakkında» chapter its title and of every paragraph its spoken text (variant
+ * `text`); each in the four voices, one after another. An up-to-date recording (same hash of spoken text and voice
+ * model) is left alone, so a second call generates nothing.
  *
  * No transaction is held while the voice service works (the pool is two connections): every recording is its own
  * short transaction (media row, narration row, old recording's media, audit). A failure midway keeps what was done;
@@ -98,7 +101,7 @@ export async function generateNarrations(deps: NarrationDeps, ctx: NarrationCtx,
 
   const [site] = await db.select({ id: sites.id }).from(sites).where(eq(sites.id, siteId));
   if (!site) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
-  const { blocks, cards } = await loadTargets(db, siteId, target);
+  const { blocks, cards, chapters, sections } = await loadTargets(db, siteId, target);
   const recorded = await db.select().from(narrations).where(eq(narrations.siteId, siteId));
   const recordedSlot = new Map(recorded.map((r) => [`${r.subjectType}|${r.subjectId}|${r.variant}|${r.lang}|${r.voice}`, r]));
 
@@ -125,6 +128,14 @@ export async function generateNarrations(deps: NarrationDeps, ctx: NarrationCtx,
     const subject: Subject = { type: "part_card", id: card.id, title: card.title, trust: card.trust };
     for (const lang of narrationLangs) plan(subject, "text", lang, spokenForCard(card, lang));
   }
+  for (const chapter of chapters) {
+    const subject: Subject = { type: "about_chapter", id: chapter.id, title: chapter.title, trust: "verified" };
+    for (const lang of narrationLangs) plan(subject, "text", lang, spokenForChapter(chapter, lang));
+  }
+  for (const section of sections) {
+    const subject: Subject = { type: "about_section", id: section.id, title: section.title, trust: section.trust };
+    for (const lang of narrationLangs) plan(subject, "text", lang, spokenForSection(section, lang));
+  }
 
   const wanted = todo.reduce((sum, item) => sum + item.spoken.length, 0);
   if (wanted > 0) {
@@ -145,31 +156,74 @@ export async function generateNarrations(deps: NarrationDeps, ctx: NarrationCtx,
 }
 
 /**
- * The story sentences and part cards a request covers, in order: the one named sentence or card (404 when it does
- * not exist), or without a target every sentence and every card of the site.
+ * The subjects a request covers, in order: the one named sentence, card, chapter or paragraph (404 when it does not
+ * exist), or without a target every one of the site.
  */
 async function loadTargets(q: Db | Tx, siteId: string, target: NarrateTarget) {
-  const { storyBlockId, partCardId } = target;
+  const { storyBlockId, partCardId, aboutChapterId, aboutSectionId } = target;
+  const whole = storyBlockId === undefined && partCardId === undefined && aboutChapterId === undefined && aboutSectionId === undefined;
   const blocks =
-    partCardId !== undefined
-      ? []
-      : await q
+    whole || storyBlockId !== undefined
+      ? await q
           .select()
           .from(storyBlocks)
           .where(and(eq(storyBlocks.siteId, siteId), storyBlockId === undefined ? undefined : eq(storyBlocks.id, storyBlockId)))
-          .orderBy(asc(storyBlocks.position));
+          .orderBy(asc(storyBlocks.position))
+      : [];
   if (storyBlockId !== undefined && !blocks.length) throw new AppError(404, "NOT_FOUND", "Hikâye cümlesi bulunamadı.");
   const cards =
-    storyBlockId !== undefined
-      ? []
-      : await q
+    whole || partCardId !== undefined
+      ? await q
           .select()
           .from(sitePartCards)
           .where(and(eq(sitePartCards.siteId, siteId), partCardId === undefined ? undefined : eq(sitePartCards.id, partCardId)))
-          .orderBy(asc(sitePartCards.position));
+          .orderBy(asc(sitePartCards.position))
+      : [];
   if (partCardId !== undefined && !cards.length) throw new AppError(404, "NOT_FOUND", "Parça kartı bulunamadı.");
-  return { blocks, cards };
+  const chapters =
+    whole || aboutChapterId !== undefined
+      ? await q
+          .select()
+          .from(siteAboutChapters)
+          .where(and(eq(siteAboutChapters.siteId, siteId), aboutChapterId === undefined ? undefined : eq(siteAboutChapters.id, aboutChapterId)))
+          .orderBy(asc(siteAboutChapters.position))
+      : [];
+  if (aboutChapterId !== undefined && !chapters.length) throw new AppError(404, "NOT_FOUND", "«Eser hakkında» bölümü bulunamadı.");
+  const sections =
+    whole || aboutSectionId !== undefined
+      ? await q
+          .select()
+          .from(siteSections)
+          .where(and(eq(siteSections.siteId, siteId), aboutSectionId === undefined ? undefined : eq(siteSections.id, aboutSectionId)))
+          .orderBy(asc(siteSections.position))
+      : [];
+  if (aboutSectionId !== undefined && !sections.length) throw new AppError(404, "NOT_FOUND", "«Eser hakkında» paragrafı bulunamadı.");
+  return { blocks, cards, chapters, sections };
 }
+
+/** The row of `subject`, locked against a concurrent save deleting it until the transaction commits; undefined when gone. */
+async function lockSubject(tx: Tx, siteId: string, subject: Subject): Promise<{ id: string } | undefined> {
+  switch (subject.type) {
+    case "story_block":
+      return (await tx.select({ id: storyBlocks.id }).from(storyBlocks).where(and(eq(storyBlocks.siteId, siteId), eq(storyBlocks.id, subject.id))).for("share"))[0];
+    case "part_card":
+      return (await tx.select({ id: sitePartCards.id }).from(sitePartCards).where(and(eq(sitePartCards.siteId, siteId), eq(sitePartCards.id, subject.id))).for("share"))[0];
+    case "about_chapter":
+      return (
+        await tx.select({ id: siteAboutChapters.id }).from(siteAboutChapters).where(and(eq(siteAboutChapters.siteId, siteId), eq(siteAboutChapters.id, subject.id))).for("share")
+      )[0];
+    case "about_section":
+      return (await tx.select({ id: siteSections.id }).from(siteSections).where(and(eq(siteSections.siteId, siteId), eq(siteSections.id, subject.id))).for("share"))[0];
+  }
+}
+
+/** The audit key of a subject. */
+const AUDIT_SUBJECT: Record<NarrationSubjectType, string> = {
+  story_block: "storyBlockId",
+  part_card: "partCardId",
+  about_chapter: "aboutChapterId",
+  about_section: "aboutSectionId",
+};
 
 async function recordOne(env: {
   db: Db;
@@ -196,20 +250,8 @@ async function recordOne(env: {
   let removed: string[];
   try {
     const outcome = await db.transaction(async (tx) => {
-      // The sentence or card must still exist: the lock keeps a concurrent save from deleting it until this commits.
-      const [still] =
-        subject.type === "story_block"
-          ? await tx
-              .select({ id: storyBlocks.id })
-              .from(storyBlocks)
-              .where(and(eq(storyBlocks.siteId, siteId), eq(storyBlocks.id, subject.id)))
-              .for("share")
-          : await tx
-              .select({ id: sitePartCards.id })
-              .from(sitePartCards)
-              .where(and(eq(sitePartCards.siteId, siteId), eq(sitePartCards.id, subject.id)))
-              .for("share");
-      if (!still) return null;
+      // The subject must still exist: the lock keeps a concurrent save from deleting it until this commits.
+      if (!(await lockSubject(tx, siteId, subject))) return null;
       const [current] = await tx
         .select()
         .from(narrations)
@@ -263,7 +305,7 @@ async function recordOne(env: {
         action: NARRATION_ACTION,
         entityType: "site",
         entityId: siteId,
-        after: { ...(subject.type === "story_block" ? { storyBlockId: subject.id } : { partCardId: subject.id }), variant, lang, voice, model: item.model, mediaId, chars, replaced: current?.mediaId ?? null },
+        after: { [AUDIT_SUBJECT[subject.type]]: subject.id, variant, lang, voice, model: item.model, mediaId, chars, replaced: current?.mediaId ?? null },
         requestId: ctx.requestId,
       });
       return current ? await deleteUnreferencedMedia(tx, [current.mediaId]) : [];
@@ -301,6 +343,9 @@ export async function translateTexts(
   const { db } = deps;
   const [site] = await db.select({ id: sites.id }).from(sites).where(eq(sites.id, siteId));
   if (!site) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
+  if (target.aboutChapterId !== undefined || target.aboutSectionId !== undefined) {
+    throw new AppError(400, "VALIDATION_FAILED", "«Eser hakkında» metinleri bu uçla çevrilmez; İngilizceleri panelden ya da içe aktarmayla yazılır.");
+  }
   const { blocks, cards } = await loadTargets(db, siteId, target);
 
   const summary: TranslateSummary = { translated: 0, skipped: 0 };

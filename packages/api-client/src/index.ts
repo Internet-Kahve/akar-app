@@ -198,8 +198,9 @@ export interface AkarClient {
   ): Promise<{ site: HeritageSite; snapshot: Snapshot }>;
   /**
    * `POST /v1/admin/sites/:id/narrations`, editor and admin: records the missing and outdated voice-overs of the
-   * saved story texts and part card texts, the whole site or one `target` (a sentence or a card). The server
-   * answers 503 without a voice service key and 429 past its daily limit. The demo records nothing.
+   * saved story texts, part card texts and «Eser hakkında» chapter titles and paragraphs, the whole site or one
+   * `target` (a sentence or a card). The server answers 503 without a voice service key and 429 past its daily
+   * limit. The demo records nothing.
    */
   narrateSite(siteId: string, target?: JobTarget): Promise<NarrationRun>;
   /**

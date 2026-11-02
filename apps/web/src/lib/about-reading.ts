@@ -56,7 +56,8 @@ export type Block =
       kind: "inscription";
       id: string;
       original: string;
-      meaning: string[];
+      /** The meaning lines, each with the paragraph (`Section.id`) it comes from: a voice-over belongs to that paragraph. */
+      meaning: Array<{ sectionId: string; text: string }>;
       trust: Trust;
       photos: AboutPhoto[];
     };
@@ -82,14 +83,14 @@ export function chapterBlocks(sections: Section[], summary: string[]): Block[] {
       meaning?.at === 0 &&
       !last.photos.length
     ) {
-      last.meaning.push(text.slice(meaning.end).trim());
+      last.meaning.push({ sectionId: section.id, text: text.slice(meaning.end).trim() });
       last.photos = photos;
     } else if (text.startsWith("“")) {
       blocks.push({
         kind: "inscription",
         id: section.id,
         original: meaning ? text.slice(0, meaning.at).trim() : text,
-        meaning: meaning ? [text.slice(meaning.end).trim()] : [],
+        meaning: meaning ? [{ sectionId: section.id, text: text.slice(meaning.end).trim() }] : [],
         trust: section.trust,
         photos,
       });

@@ -1,0 +1,2 @@
+ALTER TABLE "narrations" DROP CONSTRAINT "narrations_subject_type_check";--> statement-breakpoint
+ALTER TABLE "narrations" ADD CONSTRAINT "narrations_subject_type_check" CHECK ("narrations"."subject_type" in ('story_block', 'part_card', 'about_chapter', 'about_section'));

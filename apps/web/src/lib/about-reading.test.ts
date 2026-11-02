@@ -127,7 +127,7 @@ test("the English page shows only when every paragraph has its English, and its 
   assert.deepEqual(en.site.chapters![0]!.summary, ["First a sentence."]);
   const blocks = chapterBlocks(en.site.sections!, en.site.chapters![0]!.summary);
   assert.ok(blocks[0]!.kind === "text" && blocks[0]!.inSummary);
-  assert.ok(blocks[1]!.kind === "inscription" && blocks[1]!.meaning[0] === "the sense");
+  assert.ok(blocks[1]!.kind === "inscription" && blocks[1]!.meaning[0]!.text === "the sense");
 
   const half = { ...site, sections: [...site.sections!, section("d", "Çevrilmemiş.", { chapterId: "c1" })] };
   const tr = aboutInLang(half, "en");

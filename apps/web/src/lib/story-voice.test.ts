@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { StoryNarration } from "@akar/domain";
-import { pickCardNarration, pickNarration, voiceFromAccount } from "./story-voice";
+import { pickTextNarration, pickNarration, voiceFromAccount } from "./story-voice";
 
 const clip = (variant: StoryNarration["variant"], lang: StoryNarration["lang"], voice: StoryNarration["voice"]): StoryNarration => ({
   variant,
@@ -40,8 +40,8 @@ test("an account's voice wins; a key it has not chosen keeps the device's", () =
 
 test("a part card plays the plain recording of the chosen voice only", () => {
   const card = { narrations: [clip("text", "tr", "female"), clip("text", "en", "male")] };
-  assert.equal(pickCardNarration(card, "en", "male")?.url, "https://cdn.test/text-en-male.mp3");
-  assert.equal(pickCardNarration(card, "tr", "female")?.lang, "tr");
-  assert.equal(pickCardNarration(card, "tr", "male"), undefined);
-  assert.equal(pickCardNarration({}, "tr", "female"), undefined);
+  assert.equal(pickTextNarration(card, "en", "male")?.url, "https://cdn.test/text-en-male.mp3");
+  assert.equal(pickTextNarration(card, "tr", "female")?.lang, "tr");
+  assert.equal(pickTextNarration(card, "tr", "male"), undefined);
+  assert.equal(pickTextNarration({}, "tr", "female"), undefined);
 });

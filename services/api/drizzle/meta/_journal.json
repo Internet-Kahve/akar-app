@@ -239,6 +239,13 @@
       "when": 1793629887844,
       "tag": "0033_about_en",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793638610265,
+      "tag": "0034_about_narrations",
+      "breakpoints": true
     }
   ]
 }
