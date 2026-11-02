@@ -1,5 +1,7 @@
 "use client";
 import {
+  createContext,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -34,6 +36,7 @@ import { Modal, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import {
   STRIP_MAX,
+  aboutInLang,
   chapterBlocks,
   chapterPages,
   dominantTrust,
@@ -46,6 +49,8 @@ import {
 
 type Section = NonNullable<HeritageSite["sections"]>[number];
 type Term = AboutChapter["terms"][number];
+/** `"tr"` while the English site shows the Turkish text (no English written); undefined = the text is in the site language. */
+const TextLang = createContext<"tr" | undefined>(undefined);
 
 /** Wide screens read with the 3D model beside the text; narrow ones never load it. */
 const WIDE = "(min-width: 1000px)";
@@ -112,9 +117,15 @@ export function AboutModal({
   onClose: () => void;
 } & AboutActions) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const about = useMemo(() => aboutInLang(site, lang), [site, lang]);
+  const content = lang === "en" && !about.english ? "tr" : undefined;
+  site = about.site;
   if (site.chapters?.length)
-    return <ReadingPage site={site} chapters={site.chapters} onClose={onClose} {...actions} />;
+    return (
+      <TextLang.Provider value={content}>
+        <ReadingPage site={site} chapters={site.chapters} onClose={onClose} {...actions} />
+      </TextLang.Provider>
+    );
   return (
     <Modal title={t("site.aboutTitle")} onClose={onClose}>
       <h3>
@@ -191,7 +202,7 @@ function Reading({
 } & AboutActions) {
   const i18n = useI18n();
   const { t, lang } = i18n;
-  const content = lang === "en" ? "tr" : undefined;
+  const content = useContext(TextLang);
   const wide = useWide();
   const cityScene = useCityScene(site.city);
   const identity = useCityIdentity(site.city);
@@ -380,7 +391,7 @@ function Reading({
     if (voice.playing) {
       const title = voice.paragraph === 0 ? `${grouped[voice.chapter]!.chapter.title}. ` : "";
       const utterance = new SpeechSynthesisUtterance(title + (el.textContent ?? "").trim());
-      utterance.lang = "tr-TR";
+      utterance.lang = content || lang === "tr" ? "tr-TR" : "en-US";
       utterance.rate = voice.rate;
       utterance.onend = () => {
         if (live) setVoice((v) => v && { ...v, paragraph: v.paragraph + 1 });
@@ -763,7 +774,7 @@ function ChapterView({
   onTerm: (term: Term, el: HTMLElement) => void;
 }) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const content = useContext(TextLang);
   const pages = chapterPages(sources);
   const [showSources, setShowSources] = useState(false);
   const minutes = readingMinutes(words);
@@ -920,7 +931,7 @@ function BlockView({
   onTerm: (term: Term, el: HTMLElement) => void;
 }) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const content = useContext(TextLang);
   // The chapter's first photograph already opens the chapter.
   const photos = block.photos.filter((p) => p !== cover);
   return (

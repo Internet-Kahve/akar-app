@@ -8,6 +8,7 @@ import { locateOnce } from "../lib/locate";
 import { Localized, useI18n } from "./i18n";
 import { Notice, Tag } from "./ui";
 import { isFieldTask, isQuizTask, type FieldDone } from "./site-tasks";
+import { answerText, badgeInLang, taskInLang } from "../lib/task-text";
 
 const STAR = Array.from({ length: 16 }, (_, i) => {
   const r = i % 2 ? 11.2 : 15,
@@ -31,7 +32,15 @@ export function BadgeIcon({ held = true, size = 32 }: { held?: boolean; size?: n
 }
 
 type Outcome =
-  | { kind: "right"; title: string; text: string; onSite: boolean; badges: SiteBadge[] }
+  | {
+      kind: "right";
+      title: string;
+      text: string;
+      /** `text` is in the site language (else the Turkish one in the English site). */
+      english: boolean;
+      onSite: boolean;
+      badges: SiteBadge[];
+    }
   | { kind: "wrong"; openedHint: boolean };
 
 /** The first task still to do; every task done opens the first one. */
@@ -78,7 +87,7 @@ export function SitePuzzle({
   onToast: (text: string) => void;
 }) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const tr = lang === "en" ? "tr" : undefined;
   const tasks = site.tasks ?? [];
   const ref = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(() => Math.min(start, Math.max(0, tasks.length - 1)));
@@ -88,15 +97,16 @@ export function SitePuzzle({
     [error, setError] = useState(""),
     [outcome, setOutcome] = useState<Outcome | null>(() => {
       const task = tasks[start];
-      return found && task
-        ? {
-            kind: "right",
-            title: t("puzzle.found", { title: task.title }),
-            text: found.doneText,
-            onSite: found.onSite,
-            badges: found.earnedBadges,
-          }
-        : null;
+      if (!found || !task) return null;
+      const done = answerText(lang, found.doneText, found.doneTextEn);
+      return {
+        kind: "right",
+        title: t("puzzle.found", { title: taskInLang(task, lang).task.title }),
+        text: done.text,
+        english: done.english,
+        onSite: found.onSite,
+        badges: found.earnedBadges,
+      };
     });
   const options = useRef<HTMLDivElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
@@ -112,8 +122,10 @@ export function SitePuzzle({
   useEffect(() => {
     if (outcome) sheet.current?.querySelector<HTMLElement>(".btn")?.focus({ preventScroll: true });
   }, [outcome]);
-  const task = tasks[index];
-  if (!task) return null;
+  const original = tasks[index];
+  if (!original) return null;
+  const { task, english } = taskInLang(original, lang);
+  const content = english ? undefined : tr;
   const count = tasks.length;
   const quiz = isQuizTask(task) ? task.quiz : null;
   const field = isFieldTask(task) ? task.field : null;
@@ -134,10 +146,12 @@ export function SitePuzzle({
     try {
       const result = await client.answerSiteTask(task.id, choice);
       if (result.correct) {
+        const right = answerText(lang, result.correctText, result.correctTextEn);
         setOutcome({
           kind: "right",
           title: t("puzzle.right", { option: quiz.options[choice] ?? "" }),
-          text: result.correctText ?? "",
+          text: right.text,
+          english: right.english,
           onSite: false,
           badges: result.earnedBadges,
         });
@@ -173,10 +187,12 @@ export function SitePuzzle({
         accuracyM: position.accuracyM,
       });
       if (result.done) {
+        const done = answerText(lang, result.doneText, result.doneTextEn);
         setOutcome({
           kind: "right",
           title: t("puzzle.found", { title: task.title }),
-          text: result.doneText,
+          text: done.text,
+          english: done.english,
           onSite: result.onSite,
           badges: result.earnedBadges,
         });
@@ -285,7 +301,7 @@ export function SitePuzzle({
               <b>{t("puzzle.fromHome")}</b>
             </div>
             <p lang={content}>{field.fromHome.text}</p>
-            <button className="btn secondary full" onClick={() => onPick(task)}>
+            <button className="btn secondary full" onClick={() => onPick(original)}>
               {t("puzzle.findOnModel")}
             </button>
           </div>
@@ -306,7 +322,7 @@ export function SitePuzzle({
             <h2 className="gv-sonuc-baslik" lang={content}>
               {outcome.title}
             </h2>
-            <p lang={content}>{outcome.text}</p>
+            <p lang={outcome.english ? undefined : tr}>{outcome.text}</p>
             <div className="gv-cipler">
               <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>
               {task.source && (
@@ -316,15 +332,18 @@ export function SitePuzzle({
               )}
               {outcome.onSite && <span className="gv-yerinde">{t("site.onSiteTag")}</span>}
             </div>
-            {outcome.badges.map((badge) => (
-              <div className="gv-rozet" key={badge.id}>
-                <BadgeIcon size={36} />
-                <div>
-                  <b lang={content}>{badge.title}</b>
-                  <small>{t("puzzle.badgeAdded")}</small>
+            {outcome.badges.map((earned) => {
+              const { badge, english: badgeEnglish } = badgeInLang(earned, lang);
+              return (
+                <div className="gv-rozet" key={badge.id}>
+                  <BadgeIcon size={36} />
+                  <div>
+                    <b lang={badgeEnglish ? undefined : tr}>{badge.title}</b>
+                    <small>{t("puzzle.badgeAdded")}</small>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {guest && (
               <button className="metin-btn" onClick={onSignIn}>
                 {t("site.badgeSignIn")}
@@ -340,7 +359,7 @@ export function SitePuzzle({
               </button>
             )}
             <button className="metin-btn" onClick={onClose}>
-              {t("puzzle.backToSite", { name: site.name })}
+              {t("puzzle.backToSite", { name: lang === "en" && site.nameEn ? site.nameEn : site.name })}
             </button>
           </>
         ) : (

@@ -69,6 +69,9 @@ export interface SiteTaskAnswerResult {
   correctText: string | null;
   /** Only when wrong. */
   wrongText: string | null;
+  /** English of `correctText` / `wrongText`; absent or null = none written. */
+  correctTextEn?: string | null;
+  wrongTextEn?: string | null;
   /** Badges this answer earned; always empty for a guest. */
   earnedBadges: SiteBadge[];
 }
@@ -81,6 +84,8 @@ export type SiteTaskCompletion =
   | {
       done: true;
       doneText: string;
+      /** Absent or null = no English written. */
+      doneTextEn?: string | null;
       onSite: boolean;
       earnedBadges: SiteBadge[];
     }

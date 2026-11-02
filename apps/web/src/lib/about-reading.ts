@@ -1,6 +1,32 @@
 import type { AboutChapter, AboutPhoto, HeritageSite, Trust } from "@akar/domain";
+import type { Lang } from "./i18n";
 
 type Section = NonNullable<HeritageSite["sections"]>[number];
+
+/**
+ * "Eser hakkında" in the site language. English only when every paragraph has its English: a page is never
+ * half Turkish, half English. Then chapter and paragraph titles and the reading layer use their English where
+ * written. `english: false` = the Turkish text is shown (and read aloud) as it is.
+ */
+export function aboutInLang(site: HeritageSite, lang: Lang): { site: HeritageSite; english: boolean } {
+  const sections = site.sections ?? [];
+  if (lang !== "en" || !sections.length || !sections.every((s) => s.bodyEn?.trim()))
+    return { site, english: false };
+  return {
+    english: true,
+    site: {
+      ...site,
+      sections: sections.map((s) => ({ ...s, title: s.titleEn?.trim() || s.title, body: s.bodyEn!.trim() })),
+      ...(site.chapters && {
+        chapters: site.chapters.map((c) => ({
+          ...c,
+          ...c.readingEn,
+          title: c.titleEn?.trim() || c.title,
+        })),
+      }),
+    },
+  };
+}
 
 /** Average reading speed used for "N dk okuma". */
 const WORDS_PER_MINUTE = 200;
@@ -35,7 +61,12 @@ export type Block =
       photos: AboutPhoto[];
     };
 
-const MEANING = "Mealen:";
+/** Opens the meaning lines of an inscription: «Mealen:» in the Turkish text, «Meaning:» in the English one. */
+const MEANING = /(Mealen|Meaning):/;
+const meaningAt = (text: string) => {
+  const m = MEANING.exec(text);
+  return m ? { at: m.index, end: m.index + m[0].length } : null;
+};
 
 /** Chapter paragraphs in book order; book photographs stay after the paragraph they were placed behind. */
 export function chapterBlocks(sections: Section[], summary: string[]): Block[] {
@@ -45,20 +76,20 @@ export function chapterBlocks(sections: Section[], summary: string[]): Block[] {
     const text = section.body.trim();
     const photos = section.photos ?? [];
     const last = blocks[blocks.length - 1];
+    const meaning = meaningAt(text);
     if (
       last?.kind === "inscription" &&
-      text.startsWith(MEANING) &&
+      meaning?.at === 0 &&
       !last.photos.length
     ) {
-      last.meaning.push(text.slice(MEANING.length).trim());
+      last.meaning.push(text.slice(meaning.end).trim());
       last.photos = photos;
     } else if (text.startsWith("“")) {
-      const at = text.indexOf(MEANING);
       blocks.push({
         kind: "inscription",
         id: section.id,
-        original: at > 0 ? text.slice(0, at).trim() : text,
-        meaning: at > 0 ? [text.slice(at + MEANING.length).trim()] : [],
+        original: meaning ? text.slice(0, meaning.at).trim() : text,
+        meaning: meaning ? [text.slice(meaning.end).trim()] : [],
         trust: section.trust,
         photos,
       });

@@ -26,6 +26,7 @@ import {
 import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@akar/api-client";
 import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
+import { badgeInLang, taskInLang } from "../lib/task-text";
 import { SiteEditor } from "./admin-site-editor";
 import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
 import { MemoryActions } from "./memory-actions";
@@ -184,11 +185,15 @@ export function Profile({
           <section className="card profile-badges">
             <div className="row between"><h3>{t("profile.badges")}</h3><span>{badges.filter((b) => b.earned).length} / {badges.length}</span></div>
             {badges.length ? <div className="badges">
-              {badges.map((badge) => <div key={badge.id} className={badge.earned ? "earned" : ""}>
-                <img src={`/figma/${badge.earned ? "718a4" : "b8133"}.svg`} alt="" />
-                <b lang={tr}>{badge.title}</b>
-                <small lang={tr}>{badge.earned ? badge.site.name : badge.condition === "story" ? t("profile.badgeStory") : t("profile.badgeTask", { title: badge.site.tasks?.find((task) => task.id === badge.taskId)?.title ?? badge.title })}</small>
-              </div>)}
+              {badges.map((owned) => {
+                const { badge, english } = badgeInLang(owned, lang);
+                const task = owned.site.tasks?.find((x) => x.id === owned.taskId);
+                return <div key={badge.id} className={owned.earned ? "earned" : ""}>
+                <img src={`/figma/${owned.earned ? "718a4" : "b8133"}.svg`} alt="" />
+                <b lang={english ? undefined : tr}>{badge.title}</b>
+                <small>{owned.earned ? <Localized tr={owned.site.name} en={owned.site.nameEn} /> : owned.condition === "story" ? t("profile.badgeStory") : t("profile.badgeTask", { title: task ? taskInLang(task, lang).task.title : badge.title })}</small>
+              </div>;
+              })}
             </div> : <p className="muted">{t("profile.noBadges")}</p>}
           </section>
           <section className="card profile-saved">

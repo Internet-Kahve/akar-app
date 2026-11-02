@@ -4,6 +4,7 @@ import {
   validatePlacement,
   validateSite,
   type AboutChapter,
+  type AboutReadingEn,
   type AngleMatch,
   type SiteBadge,
   type CameraPose,
@@ -208,6 +209,10 @@ interface SiteDetailDto {
     kind: "history" | "architecture" | "waqf";
     title: string;
     body: string;
+    /** Absent on older API versions. */
+    titleEn?: string | null;
+    bodyEn?: string | null;
+    enStatus?: "machine" | "reviewed" | null;
     trust: Trust;
     sourceId: string | null;
     /** Absent on older API versions. */
@@ -223,6 +228,10 @@ interface SiteDetailDto {
   chapters?: Array<{
     id: string;
     title: string;
+    /** Absent on older API versions. */
+    titleEn?: string | null;
+    readingEn?: Omit<AboutReadingEn, "quotes"> & { quotes: Array<{ text: string; by: string | null }> } | null;
+    enStatus?: "machine" | "reviewed" | null;
     kind: "history" | "architecture" | "waqf";
     summary: string[];
     figures: AboutChapter["figures"];
@@ -239,6 +248,9 @@ interface SiteDetailDto {
     mediaId: string;
     presentMediaId: string | null;
     caption?: string;
+    /** Absent on older API versions. */
+    captionEn?: string | null;
+    enStatus?: "machine" | "reviewed" | null;
     dateLabel?: string;
     sourceId?: string | null;
     trust?: Trust;
@@ -279,16 +291,27 @@ interface SiteDetailDto {
     kind: "quiz" | "field";
     title: string;
     prompt: string;
+    /** Absent on older API versions. */
+    titleEn?: string | null;
+    promptEn?: string | null;
+    enStatus?: "machine" | "reviewed" | null;
     /** A site photograph; resolves in `media`. */
     photoId: string | null;
     part: string | null;
     source: string | null;
     trust: Trust;
-    quiz?: NonNullable<SiteTask["quiz"]>;
-    field?: NonNullable<SiteTask["field"]>;
+    quiz?: Omit<NonNullable<SiteTask["quiz"]>, "optionsEn" | "hintsEn" | "wrongTextEn"> & {
+      optionsEn?: string[] | null;
+      hintsEn?: string[] | null;
+      wrongTextEn?: string | null;
+    };
+    field?: {
+      onSite: { text: string; textEn?: string | null; radiusM: number };
+      fromHome: { text: string; textEn?: string | null; part: string } | null;
+    };
   }>;
   /** Absent on older API versions. */
-  badges?: SiteBadge[];
+  badges?: RawBadge[];
   media: MediaDto[];
   /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
   placement?: MapPlacement | null;
@@ -406,6 +429,19 @@ interface ReceiptsResponseDto {
 
 const present = <T>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined;
+/** A badge as the API sends it: English fields are `null` when not written. */
+type RawBadge = Omit<SiteBadge, "titleEn" | "textEn"> & {
+  titleEn?: string | null;
+  textEn?: string | null;
+  enStatus?: "machine" | "reviewed" | null;
+};
+function mapBadge({ titleEn, textEn, enStatus: _status, ...badge }: RawBadge): SiteBadge {
+  return {
+    ...badge,
+    ...(present(titleEn) && { titleEn }),
+    ...(present(textEn) && { textEn }),
+  };
+}
 
 /** Public media DTO → domain photo. */
 const toPhoto = (m: MediaDto): SitePhoto => ({
@@ -505,7 +541,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     photos,
     sources: d.sources,
     sections: (d.sections ?? []).map(
-      ({ chapterId, photos: aboutPhotos, ...section }) => {
+      ({ chapterId, photos: aboutPhotos, titleEn, bodyEn, enStatus: _status, ...section }) => {
         const placed = (aboutPhotos ?? []).flatMap((p) => {
           const m = d.media.find((x) => x.id === p.mediaId && x.kind === "photo");
           return m
@@ -522,18 +558,27 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           ...section,
           sourceId: section.sourceId ?? "",
           ...(present(chapterId) && { chapterId }),
+          ...(present(titleEn) && { titleEn }),
+          ...(present(bodyEn) && { bodyEn }),
           ...(placed.length && { photos: placed }),
         };
       },
     ),
     ...(d.chapters?.length && {
-      chapters: d.chapters.map(({ camera, quotes, ...chapter }) => ({
+      chapters: d.chapters.map(({ camera, quotes, titleEn, readingEn, enStatus: _status, ...chapter }) => ({
         ...chapter,
         quotes: quotes.map(({ text, by }) => ({
           text,
           ...(present(by) && { by }),
         })),
         ...(present(camera) && { camera }),
+        ...(present(titleEn) && { titleEn }),
+        ...(present(readingEn) && {
+          readingEn: {
+            ...readingEn,
+            quotes: readingEn.quotes.map(({ text, by }) => ({ text, ...(present(by) && { by }) })),
+          },
+        }),
       })),
     }),
     ...(aboutCover && { aboutCover: toPhoto(aboutCover) }),
@@ -553,6 +598,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           id: h.id ?? h.mediaId,
           photo: toPhoto(image),
           caption: h.caption ?? image.title,
+          ...(present(h.captionEn) && { captionEn: h.captionEn }),
           dateLabel: h.dateLabel ?? "Tarih bilinmiyor",
           sourceId: h.sourceId ?? image.sourceId ?? "",
           trust: h.trust ?? image.trust,
@@ -599,7 +645,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
       })),
     }),
     ...(d.tasks?.length && {
-      tasks: d.tasks.map(({ photoId, part, source, quiz, field, ...task }) => {
+      tasks: d.tasks.map(({ photoId, part, source, quiz, field, titleEn, promptEn, enStatus: _status, ...task }) => {
         const m = photoId
           ? d.media.find((x) => x.id === photoId && x.kind === "photo")
           : undefined;
@@ -608,12 +654,28 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           ...(m && { photo: toPhoto(m) }),
           ...(present(part) && { part }),
           ...(present(source) && { source }),
-          ...(quiz && { quiz }),
-          ...(field && { field }),
+          ...(present(titleEn) && { titleEn }),
+          ...(present(promptEn) && { promptEn }),
+          ...(quiz && {
+            quiz: (({ optionsEn, hintsEn, wrongTextEn, ...q }) => ({
+              ...q,
+              ...(present(optionsEn) && { optionsEn }),
+              ...(present(hintsEn) && { hintsEn }),
+              ...(present(wrongTextEn) && { wrongTextEn }),
+            }))(quiz),
+          }),
+          ...(field && {
+            field: {
+              onSite: (({ textEn, ...s }) => ({ ...s, ...(present(textEn) && { textEn }) }))(field.onSite),
+              fromHome:
+                field.fromHome &&
+                (({ textEn, ...h }) => ({ ...h, ...(present(textEn) && { textEn }) }))(field.fromHome),
+            },
+          }),
         };
       }),
     }),
-    ...(d.badges?.length && { badges: d.badges }),
+    ...(d.badges?.length && { badges: d.badges.map(mapBadge) }),
     ...(d.editorVersion === 2 && { editorVersion: 2 as const }),
     ...(present(d.nameEn) && { nameEn: d.nameEn }),
     ...(present(d.descriptionEn) && { descriptionEn: d.descriptionEn }),
@@ -2344,12 +2406,14 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         };
       }),
     // Optional auth: a signed-in user's token earns badges, a guest plays without storing anything.
-    answerSiteTask: (taskId, choice) =>
-      call<SiteTaskAnswerResult>(
+    answerSiteTask: async (taskId, choice) => {
+      const res = await call<Omit<SiteTaskAnswerResult, "earnedBadges"> & { earnedBadges: RawBadge[] }>(
         "POST",
         `/v1/site-tasks/${encodeURIComponent(taskId)}/answer`,
         { body: { choice } },
-      ),
+      );
+      return { ...res, earnedBadges: res.earnedBadges.map(mapBadge) };
+    },
     completeSiteTask: async (taskId, input) => {
       const body =
         input.mode === "onSite"
@@ -2365,14 +2429,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       try {
         const done = await call<{
           doneText: string;
+          doneTextEn: string | null;
           onSite: boolean;
-          earnedBadges: SiteBadge[];
+          earnedBadges: RawBadge[];
         }>(
           "POST",
           `/v1/site-tasks/${encodeURIComponent(taskId)}/complete`,
           { body },
         );
-        return { done: true, ...done };
+        return { done: true, ...done, earnedBadges: done.earnedBadges.map(mapBadge) };
       } catch (e) {
         // Not a failed request: the visitor is too far away or tapped another part.
         if (
