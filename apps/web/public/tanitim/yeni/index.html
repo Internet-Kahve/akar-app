@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="tr">
 <head>
+<!-- The introduction is the site's main page: the address bar shows the bare address. /tanitim stays the page's served
+     (canonical) address. The app lives on the same address behind its views (/#view=…), so a link into it is a
+     change of fragment on this document: reload to let the app load. -->
+<script>try{if(location.pathname==="/tanitim"){history.replaceState(history.state,"","/"+location.hash);addEventListener("hashchange",function(){if(/(^|[#&])view=/.test(location.hash))location.reload()})}}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EDEEEA">
