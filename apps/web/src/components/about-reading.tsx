@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
   type CSSProperties,
 } from "react";
+import { sized } from "../lib/image-size";
 import {
   ChevronDown,
   ChevronLeft,
@@ -552,7 +553,7 @@ function Reading({
         )}
         {cover && (
           <div className="about-cover-photo">
-            <img src={cover.src} alt={cover.alt} />
+            <img src={sized(cover.src, 1200)} alt={cover.alt} decoding="async" />
           </div>
         )}
         <div className={identity?.pattern ? "about-cover-panel desenli" : "about-cover-panel"}>

@@ -1,5 +1,6 @@
 "use client";
 import { useContext, useEffect, useRef, useState } from "react";
+import { sized } from "../lib/image-size";
 import {
   ArrowRight,
   ImageIcon,
@@ -51,10 +52,10 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
       onPointerMove={() => setQuiet(false)}
       onPointerDown={() => setQuiet(false)}
     >
-      <img className="story-photo-blur" src={photo.src} alt="" />
+      <img className="story-photo-blur" src={sized(photo.src, 96)} alt="" decoding="async" />
       <img
         className={`story-photo-main${fill ? " fill" : ""}`}
-        src={photo.src}
+        src={sized(photo.src, 1200)}
         alt={photo.alt}
       />
       <button
@@ -237,7 +238,7 @@ function PhotoGallery({
             <button className="galeri-f" aria-label={t("gal.enlarge", { alt: photo.alt })} onClick={() => setOpen(index)}>
               <img
                 className="scene-photo"
-                src={photo.src}
+                src={sized(photo.src, index % 3 === 0 ? 560 : 360)}
                 alt={photo.alt}
                 loading={index < 3 ? "eager" : "lazy"}
                 decoding="async"
@@ -261,7 +262,7 @@ function PhotoGallery({
         {visitors.map((v, k) => (
           <figure key={v.id} className={`${(photos.length + k) % 3 === 0 ? "buyuk" : "kucuk"} ziyaretci`}>
             <button className="galeri-f" aria-label={t("gal.enlarge", { alt: v.alt })} onClick={() => setOpen(photos.length + k)}>
-              <img src={v.src} alt={v.alt} loading="lazy" decoding="async" />
+              <img src={sized(v.src, 360)} alt={v.alt} loading="lazy" decoding="async" />
               <span className="buyut-ic" aria-hidden="true">
                 <Expand size={15} />
               </span>

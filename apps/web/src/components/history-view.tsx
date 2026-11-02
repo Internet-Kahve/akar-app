@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { sized } from "../lib/image-size";
 import { Camera, ChevronDown, ChevronLeft, ChevronRight, History, Image as ImageIcon, MapPin, MapPinOff } from "lucide-react";
 import type { HeritageSite, HistoryImage } from "@akar/domain";
 import { pairOf, type HistoryPair } from "../lib/history-pair";
@@ -137,12 +138,12 @@ function PhotoBox({
     >
       {pair && (
         <div className="gg-bugun-kat">
-          <img className="b-bulanik" src={pair.photo.src} alt="" draggable={false} />
+          <img className="b-bulanik" src={sized(pair.photo.src, 96)} alt="" draggable={false} decoding="async" />
           <img className="b-ana" src={pair.photo.src} alt={pair.photo.alt} draggable={false} />
         </div>
       )}
       <div className="gg-eski-kat">
-        <img className="bulanik" src={image.photo.src} alt="" draggable={false} />
+        <img className="bulanik" src={sized(image.photo.src, 96)} alt="" draggable={false} decoding="async" />
         <img
           className="ana"
           src={image.photo.src}
@@ -304,7 +305,7 @@ export function HistoryView({
             className="gg-uzak-satir"
             onClick={() => onSite(v.site.id, v.site.historyImages!.indexOf(v.image))}
           >
-            <img src={v.image.photo.src} alt="" />
+            <img src={sized(v.image.photo.src, 96)} alt="" loading="lazy" decoding="async" />
             <div>
               <b><Localized tr={v.image.caption} en={v.image.captionEn} /></b>
               <small>{t("gg.farRow", { date: v.image.dateLabel, m: v.distance })}</small>
@@ -418,7 +419,7 @@ export function HistoryView({
           const paired = !!pairOf(site, item, lang);
           return (
             <button key={item.id} aria-current={k === index} onClick={() => select(k)}>
-              <img src={item.photo.src} alt="" loading="lazy" />
+              <img src={sized(item.photo.src, 128)} alt="" loading="lazy" decoding="async" />
               {!paired && (
                 <i className="gg-cek-isaret" title={t("gg.noToday")}>
                   <Camera size={11} />

@@ -1,5 +1,6 @@
 "use client";
 import { useRef } from "react";
+import { sized } from "../lib/image-size";
 import { ArrowDown, ArrowUp, ChevronLeft, GripVertical, MapPin, Trash2, X } from "lucide-react";
 import type { HeritageSite, PersonalRoute } from "@akar/domain";
 import { useI18n } from "./i18n";
@@ -91,7 +92,7 @@ export function RouteBuilder({ draft, routes, sites, busy, onChange, onSave, onC
                   <GripVertical size={16} />
                 </button>
                 <b className="rb-no" aria-hidden="true">{index + 1}</b>
-                {photo ? <img src={photo.src} alt="" loading="lazy" decoding="async" /> : <span className="rb-img"><MapPin size={16} /></span>}
+                {photo ? <img src={sized(photo.src, 48)} alt="" loading="lazy" decoding="async" /> : <span className="rb-img"><MapPin size={16} /></span>}
                 <span className="rb-name">
                   {text(site.name, site.nameEn)}
                   <small>{site.year}</small>

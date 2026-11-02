@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { sized } from "../lib/image-size";
 import { Scaling } from "lucide-react";
 import type { PartCard, SitePhoto, SiteSource } from "@akar/domain";
 import { Lightbox, useWide } from "./about-reading";
@@ -167,7 +168,7 @@ export function StoryPhotoCard({
             else setOpen(true);
           }}
         >
-          <img src={photo.src} alt="" draggable={false} />
+          <img src={sized(photo.src, 512)} alt="" draggable={false} decoding="async" />
           <span>
             <strong>
               <Localized tr={photo.title} en={photo.titleEn} />

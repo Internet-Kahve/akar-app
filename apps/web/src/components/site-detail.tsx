@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Puzzle,
 } from "lucide-react";
+import { sized } from "../lib/image-size";
 import type { HeritageSite } from "@akar/domain";
 import type { SiteProgress } from "@akar/api-client";
 import { readingMinutes, wordCount } from "../lib/about-reading";
@@ -132,7 +133,7 @@ export function SiteDetail({
         <div className="eb-govde">
           {cover && (
             <div className="eb-foto">
-              <img src={cover.src} alt="" />
+              <img src={sized(cover.src, 96)} alt="" decoding="async" />
             </div>
           )}
           <div>
@@ -201,8 +202,8 @@ export function SiteDetail({
           <span className="ky-ik">
             {oldest ? (
               <span className="ky-foto">
-                <img src={oldest.photo.src} alt="" />
-                {cover && <img className="bugun" src={cover.src} alt="" />}
+                <img src={sized(oldest.photo.src, 64)} alt="" loading="lazy" decoding="async" />
+                {cover && <img className="bugun" src={sized(cover.src, 64)} alt="" loading="lazy" decoding="async" />}
               </span>
             ) : (
               <span className="ky-daire">

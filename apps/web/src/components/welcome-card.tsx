@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef } from "react";
+import { sized } from "../lib/image-size";
 import { Headphones, History, House, Landmark, MapPin } from "lucide-react";
 import type { CSSProperties } from "react";
 import type { HeritageSite } from "@akar/domain";
@@ -50,7 +51,7 @@ export function WelcomeCard({
         <div className="welcome-band" aria-hidden="true" />
         {photo && (
           <div className="welcome-photo">
-            <img src={photo.src} alt={photo.alt} />
+            <img src={sized(photo.src, 520)} alt={photo.alt} decoding="async" />
           </div>
         )}
         <img className="welcome-logo" src="/logo/logo-web.png" alt="AKAR" width={800} height={237} />

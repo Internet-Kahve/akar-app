@@ -1,5 +1,6 @@
 "use client";
 import { Landmark } from "lucide-react";
+import { sized } from "../lib/image-size";
 import type { HeritageSite } from "@akar/domain";
 import { Architecture } from "./scene";
 
@@ -16,9 +17,10 @@ export function SiteArtwork({
     return (
       <img
         className="site-photo"
-        src={photo.src}
+        src={sized(photo.src, 96)}
         alt={photo.alt}
         loading="lazy"
+        decoding="async"
       />
     );
   return live ? (
