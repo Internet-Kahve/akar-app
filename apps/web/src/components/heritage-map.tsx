@@ -123,6 +123,7 @@ export type MapFlight =
   /** A city picked from the city button's menu (3 Nov 2026): straight there, «ışınlanır». */
   | { key: number; to: "city"; name: string };
 export function HeritageMap({
+  resting = false,
   sites,
   selectedId,
   highlightId,
@@ -145,6 +146,8 @@ export function HeritageMap({
   finishedIds,
   routeColour = colors.cityBursa,
 }: {
+  /** Hidden behind a site's page, kept for the way back: no model downloads meanwhile. */
+  resting?: boolean;
   sites: HeritageSite[];
   selectedId?: string | undefined;
   /** A site the list points at (a row under the pointer): its pin shows as selected, the camera stays. */
@@ -206,7 +209,8 @@ export function HeritageMap({
     openRef = useRef(onOpen),
     // Set once the visitor moves the map: a late city record must not pull the map back.
     moved = useRef(false),
-    latest = useRef({ sites, mapSettings, scenes, cities });
+    latest = useRef({ sites, mapSettings, scenes, cities }),
+    restingRef = useRef(resting);
   const [loaded, setLoaded] = useState(false),
     [failed, setFailed] = useState(false),
     [cityMode, setCityMode] = useState<
@@ -219,6 +223,10 @@ export function HeritageMap({
   cityRef.current = onCityInView;
   selectedRef.current = selectedId;
   latest.current = { sites, mapSettings, scenes, cities };
+  restingRef.current = resting;
+  useEffect(() => {
+    models.current?.setResting(resting);
+  }, [resting]);
   /**
    * Puts the short card `PEEK_CLEAR` to the right of its pin, level with it, and draws the thin line from the card to the
    * pin. Where the right side has no room the card goes as far to the pin's left, so the site stays in view.
@@ -423,6 +431,7 @@ export function HeritageMap({
               .then(({ createMapModels }) => {
                 if (disposed) return;
                 models.current = createMapModels(m, lib.MercatorCoordinate);
+                models.current.setResting(restingRef.current);
                 if (latest.current.mapSettings)
                   models.current.update(
                     latest.current.sites,

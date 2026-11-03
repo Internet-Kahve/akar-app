@@ -1666,6 +1666,7 @@ export function AkarApp() {
                     built anew (Muhammed, 3 Nov 2026: «geri butonuna basıyorum zar yükleniyor»). */}
                 <div className={`map-keep${isDetail && site ? " parked" : ""}`} inert={isDetail && !!site}>
                     <HeritageMap
+                      resting={isDetail && !!site}
                       sites={routeId && routeSites.length ? routeSites : filtered}
                       selectedId={peekId}
                       highlightId={hoverId}

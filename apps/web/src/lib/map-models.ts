@@ -209,6 +209,7 @@ export class MapModelLayer implements CustomLayerInterface {
   private near = false;
   /** Close enough for the lit files (`CLOSE_ZOOM`). */
   private close = false;
+  private resting = false;
   private lastFrame = 0;
   /**
    * A turning ring where a model is coming in (Muhammed, 3 Nov 2026: «modeller yüklenirken oldukları yerde dairesel
@@ -300,6 +301,13 @@ export class MapModelLayer implements CustomLayerInterface {
     this.offscreen.dispose();
     this.decoder = this.loader = this.renderer = this.map = null;
     this.rendered = false;
+  }
+
+  /** The map stands hidden behind a site's page: nothing new comes in meanwhile, what is here stays. */
+  setResting(resting: boolean) {
+    if (this.resting === resting) return;
+    this.resting = resting;
+    this.reconcile();
   }
 
   setSites(sites: MapModelSite[]) {
@@ -589,7 +597,7 @@ export class MapModelLayer implements CustomLayerInterface {
 
   private readonly reconcile = () => {
     const map = this.map;
-    if (!map || !this.loader) return;
+    if (!map || !this.loader || this.resting) return;
     const wanted = this.select(map);
     let changed = false;
     for (const [id, entry] of this.loaded) {
@@ -811,6 +819,8 @@ export interface MapModels {
   pick(x: number, y: number): string | null;
   /** Relights the models for the page theme. */
   setTheme(theme: Theme): void;
+  /** Hidden behind a site's page, the map downloads no models (a site opened by its link has no use for them). */
+  setResting(resting: boolean): void;
   dispose(): void;
 }
 
@@ -863,6 +873,7 @@ export function createMapModels(
       );
     },
     pick: (x, y) => models.pick(x, y),
+    setResting: (resting) => models.setResting(resting),
     setTheme(theme) {
       models.setTheme(theme);
       if (last) this.update(...last);

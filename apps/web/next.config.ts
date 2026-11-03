@@ -16,7 +16,7 @@ const config: NextConfig = {
   },
   // The introduction is the site's main page (the bare address goes there, layout INTRO_BOOT).
   async rewrites() {
-    return [{ source: "/tanitim", destination: "/tanitim/yeni/index.html" }];
+    return [{ source: "/tanitim", destination: "/tanitim2/index.html" }];
   },
 };
 export default config;

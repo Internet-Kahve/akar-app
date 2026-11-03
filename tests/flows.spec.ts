@@ -386,7 +386,7 @@ test.describe("first visit", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
   test("the bare address shows the introduction, whose «Haritayı aç» opens the map straight away", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /vakıf eserlerini haritada/ })).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
     await page.getByRole("link", { name: /Haritayı aç/ }).first().click();
     await expect(page).toHaveURL(/\/#view=map$/);
@@ -395,7 +395,7 @@ test.describe("first visit", () => {
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.locator(".side-panel .site-row").first()).toBeVisible();
     await page.goBack();
-    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /vakıf eserlerini haritada/ })).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
   });
 });

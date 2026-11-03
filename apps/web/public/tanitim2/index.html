@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AKAR · Bursa'nın vakıf eserleri haritada</title>
+<meta name="description" content="AKAR, Bursa'daki vakıf eserlerini gösteren bir harita uygulaması. Bir esere dokun; hikâyesini dinle, 3D modelini gez, eski fotoğrafıyla karşılaştır.">
+<meta name="theme-color" content="#F4F4F1">
+<link rel="icon" href="/logo/favicon-32.png" sizes="32x32">
+<link rel="icon" href="/logo/favicon-64.png" sizes="64x64">
+<link rel="apple-touch-icon" href="/logo/apple-touch-icon.png">
+<link rel="preload" href="/tanitim2/yazi/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="/tanitim2/medya/kapak-1600.webp" imagesrcset="/tanitim2/medya/kapak-800.webp 800w, /tanitim2/medya/kapak-1600.webp 1600w" imagesizes="100vw" fetchpriority="high">
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+<script>try{if(location.pathname==="/tanitim"){history.replaceState(history.state,"","/"+location.hash);addEventListener("hashchange",function(){if(/(^|[#&])view=/.test(location.hash))location.reload()})}}catch(e){}</script>
+<script type="importmap">{"imports":{"three":"/tanitim/yeni/three/three.module.js","three/addons/":"/tanitim/yeni/three/addons/"}}</script>
+<style>
+@font-face{font-family:'Geist';font-style:normal;font-weight:100 900;font-display:swap;src:url(/tanitim2/yazi/geist-latin-ext-wght-normal.woff2) format('woff2-variations');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Geist';font-style:normal;font-weight:100 900;font-display:swap;src:url(/tanitim2/yazi/geist-latin-wght-normal.woff2) format('woff2-variations');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--zemin:#F4F4F1;--kagit:#FFFFFF;--murekkep:#161C20;--soluk:#59636A;--cizgi:#DEDFDA;--vurgu:#225471;--koyu:#12191E;--egri:cubic-bezier(.2,.8,.2,1);--kenar:clamp(20px,5vw,64px);--en:1200px;font:400 17px/1.6 'Geist',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--zemin);color:var(--murekkep);-webkit-font-smoothing:antialiased;overflow-x:clip}
+img{display:block;max-width:100%;height:auto}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.025em;text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--vurgu);outline-offset:3px}
+.ic{width:min(var(--en),100% - 2*var(--kenar));margin-inline:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border-radius:999px;text-decoration:none;font-weight:600;font-size:16px;background:var(--murekkep);color:#fff;transition:background .2s}
+.btn:hover{background:var(--vurgu)}
+.btn svg{width:18px;height:18px;flex:none}
+.nav{position:sticky;top:0;z-index:10;background:var(--zemin);border-bottom:1px solid var(--cizgi)}
+.nav .ic{display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav img{height:28px;width:auto}
+.nav .btn{min-height:42px;padding:0 18px;font-size:15px}
+.giris{padding:clamp(40px,7vw,88px) 0 0}
+h1{max-width:17ch;font-size:clamp(40px,6.4vw,84px);line-height:1.02}
+.giris .alt{margin-top:20px;max-width:46ch;font-size:clamp(18px,1.8vw,21px);color:var(--soluk)}
+.giris .btn{margin-top:28px}
+.kapak{margin:clamp(32px,5vw,56px) 0 0}
+.kapak img{width:100%;aspect-ratio:2/1;object-fit:cover;background:#cfd3d1}
+figcaption,.not{font-size:13px;line-height:1.5;color:var(--soluk)}
+.kapak figcaption{width:min(var(--en),100% - 2*var(--kenar));margin:10px auto 0}
+.bolum{padding:clamp(64px,9vw,120px) 0;border-top:1px solid var(--cizgi)}
+.giris + .bolum{border-top:0}
+h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08}
+.acik{margin-top:14px;max-width:52ch;font-size:18px;color:var(--soluk)}
+.ekranlar{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin:44px 0 0;padding:0;list-style:none}
+.ekranlar img{width:100%;aspect-ratio:390/844;object-fit:cover;object-position:top;border-radius:20px;border:1px solid var(--cizgi);background:#dfe3e1}
+.ekranlar h3{margin-top:16px;font-size:19px;letter-spacing:-.01em}
+.ekranlar p{margin-top:4px;font-size:15px;line-height:1.45;color:var(--soluk)}
+.model-kutu{position:relative;margin-top:36px;aspect-ratio:16/8;border-radius:20px;overflow:hidden;background:#dfe4e4;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.model-kutu:active{cursor:grabbing}
+.model-kutu canvas,.model-kutu>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.model-kutu>img{transition:opacity .5s}
+.model-kutu.hazir>img{opacity:0;pointer-events:none}
+.durum{position:absolute;left:14px;bottom:14px;padding:5px 12px;border-radius:999px;background:rgba(18,25,30,.72);color:#fff;font-size:13px}
+.model-kutu.hazir .durum{display:none}
+.secim{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.secim button{min-height:44px;padding:0 18px;border:1px solid var(--cizgi);border-radius:999px;background:var(--kagit);color:var(--murekkep);font:600 15px/1 inherit;font-family:inherit;cursor:pointer}
+.secim button[aria-pressed=true]{background:var(--murekkep);border-color:var(--murekkep);color:#fff}
+.iki{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,6vw,80px);align-items:center}
+.kiyas{position:relative;margin:0;aspect-ratio:786/1000;max-height:82vh;border-radius:20px;overflow:hidden;background:#cfc6b4;--ayrim:50%}
+.kiyas img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.kiyas .eski{clip-path:inset(0 calc(100% - var(--ayrim)) 0 0)}
+.kiyas i{position:absolute;top:0;bottom:0;left:var(--ayrim);width:2px;margin-left:-1px;background:#fff;pointer-events:none}
+.kiyas i::after{content:"‹ ›";position:absolute;top:50%;left:50%;display:grid;place-items:center;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;color:var(--murekkep);font-style:normal;font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.kiyas span{position:absolute;top:12px;padding:3px 10px;border-radius:999px;background:rgba(18,25,30,.72);color:#fff;font-size:13px;pointer-events:none}
+.kiyas input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize;touch-action:pan-y}
+.cift{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center}
+.cift figure{margin:0}
+.cift img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;background:#cfd3d1}
+.cift b{display:block;margin-top:10px;font-size:17px;font-weight:600}
+.cift span{font-size:14px;color:var(--soluk)}
+.cift svg{width:28px;height:28px;color:var(--vurgu)}
+.kaynak{margin-top:18px;padding-left:14px;border-left:2px solid var(--cizgi);font-size:15px;color:var(--soluk)}
+.son{padding:clamp(72px,10vw,120px) 0;background:var(--koyu);color:#fff}
+.son .ic{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:32px}
+.son h2{font-size:clamp(34px,5vw,60px)}
+.son p{margin-top:12px;color:rgba(255,255,255,.72);font-size:18px}
+.son .btn{margin-top:26px;background:#fff;color:var(--murekkep)}
+.son .btn:hover{background:#dfe8ee}
+.qr-kutu{display:flex;align-items:center;gap:14px}
+.qr{width:112px;height:112px;padding:8px;border-radius:12px;background:#fff;color:#12191E}
+.qr-kutu b{display:block;font-size:17px;font-weight:600}
+.qr-kutu small{color:rgba(255,255,255,.7);font-size:13px}
+footer{padding:20px 0;font-size:13px;color:var(--soluk)}
+@media (max-width:900px){
+  .kapak img{aspect-ratio:3/2}
+  .ekranlar{display:flex;gap:14px;margin-inline:calc(-1*var(--kenar));padding-inline:var(--kenar);overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .ekranlar::-webkit-scrollbar{display:none}
+  .ekranlar li{flex:0 0 66vw;max-width:280px;scroll-snap-align:center}
+  .model-kutu{aspect-ratio:1/1}
+  .iki{grid-template-columns:1fr}
+  .iki .kiyas{max-height:none}
+  .qr-kutu{display:none}
+}
+@media (max-width:900px),(pointer:coarse){.qr-kutu{display:none}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="nav"><div class="ic">
+  <a href="#" aria-label="AKAR, sayfanın başı"><img src="/logo/logo-web.png" alt="AKAR" width="800" height="237"></a>
+  <a class="btn" href="/#view=map">Haritayı aç</a>
+</div></header>
+<main>
+<section class="giris">
+  <div class="ic">
+    <h1>Bursa'nın vakıf eserlerini haritada keşfet.</h1>
+    <p class="alt">Haritada bir esere dokun. Hikâyesini dinle, 3D modelini gez, eski fotoğrafıyla bugününü karşılaştır.</p>
+    <a class="btn" href="/#view=map">Haritayı aç <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+  <figure class="kapak">
+    <img src="/tanitim2/medya/kapak-1600.webp" srcset="/tanitim2/medya/kapak-800.webp 800w, /tanitim2/medya/kapak-1600.webp 1600w" sizes="100vw" width="1600" height="800" alt="Bursa Ulucami ve iki minaresi, havadan" fetchpriority="high" decoding="async">
+    <figcaption>Ulucami, Bursa. Fotoğraf: Bursa Vakıf Eserleri Envanteri arşivi</figcaption>
+  </figure>
+</section>
+
+<section class="bolum" id="uygulama"><div class="ic">
+  <h2>Uygulamada neler var?</h2>
+  <ul class="ekranlar">
+    <li><img src="/tanitim2/medya/ekran-harita.webp" width="600" height="1298" alt="Haritada Ulucami, Bedesten ve Koza Han modelleri" loading="lazy" decoding="async"><h3>Harita</h3><p>Eserler yerlerinde durur. Birine dokun.</p></li>
+    <li><img src="/tanitim2/medya/ekran-eser.webp" width="600" height="1298" alt="Ulucami'nin eser sayfası ve 3D modeli" loading="lazy" decoding="async"><h3>3D model</h3><p>Modeli çevir, içini aç, parçalarına dokun.</p></li>
+    <li><img src="/tanitim2/medya/ekran-hikaye.webp" width="600" height="1298" alt="Hikâye ekranı: üstte model, altında fotoğraf ve cümle" loading="lazy" decoding="async"><h3>Hikâye</h3><p>Birkaç dakikada sesli anlatım. Model ve fotoğraf birlikte.</p></li>
+    <li><img src="/tanitim2/medya/ekran-gecmis.webp" width="600" height="1298" alt="Geçmişi Gör ekranı: eski ve bugünkü fotoğraf karşılaştırması" loading="lazy" decoding="async"><h3>Geçmişi Gör</h3><p>Yüz elli yıl önceki fotoğrafla bugünü kıyasla.</p></li>
+  </ul>
+</div></section>
+
+<section class="bolum" id="model"><div class="ic">
+  <h2>Ulucami'yi gez</h2>
+  <p class="acik">Sürükleyerek çevir. İçeride düğmesi çatıyı kaldırır.</p>
+  <div class="model-kutu" id="model-kutu" role="img" aria-label="Ulucami'nin 3D modeli">
+    <img src="/tanitim2/medya/ulucami.webp" alt="" width="720" height="540" loading="lazy" decoding="async">
+    <span class="durum" id="durum" aria-live="polite">Model yükleniyor</span>
+  </div>
+  <div class="secim" id="secim" role="group" aria-label="Modele nereden bakılsın?">
+    <button type="button" data-nokta="dis" aria-pressed="true">Dışarıdan</button>
+    <button type="button" data-nokta="kubbe" aria-pressed="false">Kubbeler</button>
+    <button type="button" data-nokta="ic" aria-pressed="false">İçeride</button>
+    <button type="button" data-nokta="minber" aria-pressed="false">Minber</button>
+  </div>
+</div></section>
+
+<section class="bolum" id="gecmis"><div class="ic iki">
+  <div>
+    <h2>Yüz elli yıl önce, aynı yer</h2>
+    <p class="acik">Çizgiyi sağa sola kaydır. Solda 1875–84, sağda bugün: Ulucami'nin mihrabı.</p>
+    <p class="not" style="margin-top:18px">Eski fotoğraf: Sébah &amp; Joaillier, Getty Research Institute (CC0), Foto Atlas aracılığıyla. Bugünkü: Bursa Vakıf Eserleri Envanteri arşivi.</p>
+  </div>
+  <figure class="kiyas" id="kiyas">
+    <img src="/tanitim2/medya/kiyas-bugun.webp" alt="Ulucami mihrabı, bugün" width="904" height="1150" loading="lazy" decoding="async">
+    <img class="eski" src="/tanitim2/medya/kiyas-eski.webp" alt="Ulucami mihrabı, 1875–84" width="1000" height="1272" loading="lazy" decoding="async">
+    <span style="left:12px">1875–84</span><span style="right:12px">Bugün</span>
+    <i></i>
+    <input type="range" min="0" max="100" value="50" aria-label="Eski ve bugünkü fotoğrafı karşılaştır">
+  </figure>
+</div></section>
+
+<section class="bolum" id="akar"><div class="ic iki">
+  <div>
+    <h2>Akar ne demek?</h2>
+    <p class="acik">Cami, çeşme, medrese halka ücretsiz hizmet verir. Bunların masrafını kira getiren han, hamam, bedesten karşılar. Gelir getiren bu yapılara akar denir.</p>
+    <p class="kaynak">Yıldırım Bayezid, Ulucami'ye gelir sağlamak için yakınına Bedesten'i de yaptırdı. <span style="white-space:nowrap">Bursa Vakıf Eserleri Envanteri, Cilt 1</span></p>
+    <p class="acik" style="font-size:16px">Uygulamadaki bilgiler Vakıf Katılım'ın envanterinden gelir. Her cümlenin altında kaynağı yazar.</p>
+  </div>
+  <div class="cift">
+    <figure><img src="/tanitim2/medya/bedesten.webp" width="720" height="540" alt="Bursa Bedesten, tepeden" loading="lazy" decoding="async"><b>Bedesten</b><span>Kira getirir</span></figure>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="gelir verir"><path d="M4 12h16M14 6l6 6-6 6"/></svg>
+    <figure><img src="/tanitim2/medya/ulucami.webp" width="720" height="540" alt="Bursa Ulucami, dışarıdan" loading="lazy" decoding="async"><b>Ulucami</b><span>Geliriyle ayakta</span></figure>
+  </div>
+</div></section>
+</main>
+
+<section class="son"><div class="ic">
+  <div>
+    <h2>Haritada gör.</h2>
+    <p>Ulucami'den başla, hikâyesi birkaç dakika.</p>
+    <a class="btn" href="/#view=map">Haritayı aç <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+  <div class="qr-kutu"><svg class="qr" viewBox="0 0 29 29" role="img" aria-label="Uygulamanın adresine giden QR kod: akar.tamerakdeniz.com" shape-rendering="crispEdges"><path fill="currentColor" d="M0,0h1v1h-1zM1,0h1v1h-1zM2,0h1v1h-1zM3,0h1v1h-1zM4,0h1v1h-1zM5,0h1v1h-1zM6,0h1v1h-1zM8,0h1v1h-1zM12,0h1v1h-1zM17,0h1v1h-1zM18,0h1v1h-1zM22,0h1v1h-1zM23,0h1v1h-1zM24,0h1v1h-1zM25,0h1v1h-1zM26,0h1v1h-1zM27,0h1v1h-1zM28,0h1v1h-1zM0,1h1v1h-1zM6,1h1v1h-1zM9,1h1v1h-1zM11,1h1v1h-1zM16,1h1v1h-1zM17,1h1v1h-1zM19,1h1v1h-1zM22,1h1v1h-1zM28,1h1v1h-1zM0,2h1v1h-1zM2,2h1v1h-1zM3,2h1v1h-1zM4,2h1v1h-1zM6,2h1v1h-1zM11,2h1v1h-1zM13,2h1v1h-1zM15,2h1v1h-1zM16,2h1v1h-1zM17,2h1v1h-1zM20,2h1v1h-1zM22,2h1v1h-1zM24,2h1v1h-1zM25,2h1v1h-1zM26,2h1v1h-1zM28,2h1v1h-1zM0,3h1v1h-1zM2,3h1v1h-1zM3,3h1v1h-1zM4,3h1v1h-1zM6,3h1v1h-1zM8,3h1v1h-1zM9,3h1v1h-1zM10,3h1v1h-1zM11,3h1v1h-1zM14,3h1v1h-1zM15,3h1v1h-1zM16,3h1v1h-1zM18,3h1v1h-1zM22,3h1v1h-1zM24,3h1v1h-1zM25,3h1v1h-1zM26,3h1v1h-1zM28,3h1v1h-1zM0,4h1v1h-1zM2,4h1v1h-1zM3,4h1v1h-1zM4,4h1v1h-1zM6,4h1v1h-1zM8,4h1v1h-1zM13,4h1v1h-1zM14,4h1v1h-1zM16,4h1v1h-1zM17,4h1v1h-1zM18,4h1v1h-1zM22,4h1v1h-1zM24,4h1v1h-1zM25,4h1v1h-1zM26,4h1v1h-1zM28,4h1v1h-1zM0,5h1v1h-1zM6,5h1v1h-1zM8,5h1v1h-1zM9,5h1v1h-1zM10,5h1v1h-1zM11,5h1v1h-1zM12,5h1v1h-1zM13,5h1v1h-1zM14,5h1v1h-1zM15,5h1v1h-1zM18,5h1v1h-1zM19,5h1v1h-1zM20,5h1v1h-1zM22,5h1v1h-1zM28,5h1v1h-1zM0,6h1v1h-1zM1,6h1v1h-1zM2,6h1v1h-1zM3,6h1v1h-1zM4,6h1v1h-1zM5,6h1v1h-1zM6,6h1v1h-1zM8,6h1v1h-1zM10,6h1v1h-1zM12,6h1v1h-1zM14,6h1v1h-1zM16,6h1v1h-1zM18,6h1v1h-1zM20,6h1v1h-1zM22,6h1v1h-1zM23,6h1v1h-1zM24,6h1v1h-1zM25,6h1v1h-1zM26,6h1v1h-1zM27,6h1v1h-1zM28,6h1v1h-1zM8,7h1v1h-1zM9,7h1v1h-1zM10,7h1v1h-1zM14,7h1v1h-1zM17,7h1v1h-1zM18,7h1v1h-1zM20,7h1v1h-1zM0,8h1v1h-1zM4,8h1v1h-1zM6,8h1v1h-1zM7,8h1v1h-1zM8,8h1v1h-1zM9,8h1v1h-1zM11,8h1v1h-1zM12,8h1v1h-1zM13,8h1v1h-1zM14,8h1v1h-1zM15,8h1v1h-1zM16,8h1v1h-1zM17,8h1v1h-1zM19,8h1v1h-1zM20,8h1v1h-1zM21,8h1v1h-1zM22,8h1v1h-1zM23,8h1v1h-1zM24,8h1v1h-1zM25,8h1v1h-1zM28,8h1v1h-1zM1,9h1v1h-1zM3,9h1v1h-1zM4,9h1v1h-1zM17,9h1v1h-1zM22,9h1v1h-1zM24,9h1v1h-1zM25,9h1v1h-1zM26,9h1v1h-1zM27,9h1v1h-1zM28,9h1v1h-1zM3,10h1v1h-1zM4,10h1v1h-1zM6,10h1v1h-1zM9,10h1v1h-1zM10,10h1v1h-1zM11,10h1v1h-1zM12,10h1v1h-1zM13,10h1v1h-1zM14,10h1v1h-1zM15,10h1v1h-1zM20,10h1v1h-1zM23,10h1v1h-1zM24,10h1v1h-1zM28,10h1v1h-1zM0,11h1v1h-1zM1,11h1v1h-1zM2,11h1v1h-1zM3,11h1v1h-1zM4,11h1v1h-1zM5,11h1v1h-1zM7,11h1v1h-1zM8,11h1v1h-1zM9,11h1v1h-1zM11,11h1v1h-1zM12,11h1v1h-1zM13,11h1v1h-1zM15,11h1v1h-1zM16,11h1v1h-1zM17,11h1v1h-1zM19,11h1v1h-1zM21,11h1v1h-1zM23,11h1v1h-1zM25,11h1v1h-1zM27,11h1v1h-1zM28,11h1v1h-1zM0,12h1v1h-1zM1,12h1v1h-1zM4,12h1v1h-1zM5,12h1v1h-1zM6,12h1v1h-1zM8,12h1v1h-1zM9,12h1v1h-1zM10,12h1v1h-1zM11,12h1v1h-1zM13,12h1v1h-1zM17,12h1v1h-1zM18,12h1v1h-1zM20,12h1v1h-1zM21,12h1v1h-1zM23,12h1v1h-1zM27,12h1v1h-1zM0,13h1v1h-1zM2,13h1v1h-1zM4,13h1v1h-1zM12,13h1v1h-1zM13,13h1v1h-1zM14,13h1v1h-1zM16,13h1v1h-1zM17,13h1v1h-1zM18,13h1v1h-1zM21,13h1v1h-1zM22,13h1v1h-1zM23,13h1v1h-1zM24,13h1v1h-1zM25,13h1v1h-1zM26,13h1v1h-1zM27,13h1v1h-1zM28,13h1v1h-1zM1,14h1v1h-1zM3,14h1v1h-1zM4,14h1v1h-1zM6,14h1v1h-1zM7,14h1v1h-1zM8,14h1v1h-1zM9,14h1v1h-1zM11,14h1v1h-1zM16,14h1v1h-1zM18,14h1v1h-1zM20,14h1v1h-1zM22,14h1v1h-1zM25,14h1v1h-1zM26,14h1v1h-1zM28,14h1v1h-1zM3,15h1v1h-1zM9,15h1v1h-1zM14,15h1v1h-1zM17,15h1v1h-1zM21,15h1v1h-1zM22,15h1v1h-1zM23,15h1v1h-1zM27,15h1v1h-1zM28,15h1v1h-1zM0,16h1v1h-1zM1,16h1v1h-1zM2,16h1v1h-1zM6,16h1v1h-1zM9,16h1v1h-1zM11,16h1v1h-1zM12,16h1v1h-1zM13,16h1v1h-1zM14,16h1v1h-1zM15,16h1v1h-1zM16,16h1v1h-1zM17,16h1v1h-1zM19,16h1v1h-1zM20,16h1v1h-1zM21,16h1v1h-1zM27,16h1v1h-1zM0,17h1v1h-1zM1,17h1v1h-1zM3,17h1v1h-1zM4,17h1v1h-1zM7,17h1v1h-1zM9,17h1v1h-1zM18,17h1v1h-1zM22,17h1v1h-1zM23,17h1v1h-1zM24,17h1v1h-1zM25,17h1v1h-1zM27,17h1v1h-1zM28,17h1v1h-1zM2,18h1v1h-1zM3,18h1v1h-1zM6,18h1v1h-1zM8,18h1v1h-1zM9,18h1v1h-1zM10,18h1v1h-1zM12,18h1v1h-1zM13,18h1v1h-1zM14,18h1v1h-1zM15,18h1v1h-1zM21,18h1v1h-1zM22,18h1v1h-1zM24,18h1v1h-1zM26,18h1v1h-1zM28,18h1v1h-1zM2,19h1v1h-1zM4,19h1v1h-1zM5,19h1v1h-1zM8,19h1v1h-1zM10,19h1v1h-1zM13,19h1v1h-1zM15,19h1v1h-1zM16,19h1v1h-1zM17,19h1v1h-1zM18,19h1v1h-1zM19,19h1v1h-1zM22,19h1v1h-1zM23,19h1v1h-1zM24,19h1v1h-1zM27,19h1v1h-1zM28,19h1v1h-1zM0,20h1v1h-1zM1,20h1v1h-1zM2,20h1v1h-1zM3,20h1v1h-1zM4,20h1v1h-1zM5,20h1v1h-1zM6,20h1v1h-1zM8,20h1v1h-1zM9,20h1v1h-1zM10,20h1v1h-1zM12,20h1v1h-1zM13,20h1v1h-1zM17,20h1v1h-1zM19,20h1v1h-1zM20,20h1v1h-1zM21,20h1v1h-1zM22,20h1v1h-1zM23,20h1v1h-1zM24,20h1v1h-1zM25,20h1v1h-1zM28,20h1v1h-1zM8,21h1v1h-1zM10,21h1v1h-1zM11,21h1v1h-1zM12,21h1v1h-1zM13,21h1v1h-1zM14,21h1v1h-1zM16,21h1v1h-1zM17,21h1v1h-1zM18,21h1v1h-1zM20,21h1v1h-1zM24,21h1v1h-1zM28,21h1v1h-1zM0,22h1v1h-1zM1,22h1v1h-1zM2,22h1v1h-1zM3,22h1v1h-1zM4,22h1v1h-1zM5,22h1v1h-1zM6,22h1v1h-1zM8,22h1v1h-1zM9,22h1v1h-1zM10,22h1v1h-1zM11,22h1v1h-1zM12,22h1v1h-1zM16,22h1v1h-1zM18,22h1v1h-1zM19,22h1v1h-1zM20,22h1v1h-1zM22,22h1v1h-1zM24,22h1v1h-1zM25,22h1v1h-1zM26,22h1v1h-1zM28,22h1v1h-1zM0,23h1v1h-1zM6,23h1v1h-1zM10,23h1v1h-1zM11,23h1v1h-1zM12,23h1v1h-1zM14,23h1v1h-1zM17,23h1v1h-1zM18,23h1v1h-1zM19,23h1v1h-1zM20,23h1v1h-1zM24,23h1v1h-1zM27,23h1v1h-1zM0,24h1v1h-1zM2,24h1v1h-1zM3,24h1v1h-1zM4,24h1v1h-1zM6,24h1v1h-1zM8,24h1v1h-1zM10,24h1v1h-1zM12,24h1v1h-1zM13,24h1v1h-1zM14,24h1v1h-1zM15,24h1v1h-1zM17,24h1v1h-1zM19,24h1v1h-1zM20,24h1v1h-1zM21,24h1v1h-1zM22,24h1v1h-1zM23,24h1v1h-1zM24,24h1v1h-1zM25,24h1v1h-1zM27,24h1v1h-1zM28,24h1v1h-1zM0,25h1v1h-1zM2,25h1v1h-1zM3,25h1v1h-1zM4,25h1v1h-1zM6,25h1v1h-1zM10,25h1v1h-1zM13,25h1v1h-1zM17,25h1v1h-1zM18,25h1v1h-1zM20,25h1v1h-1zM21,25h1v1h-1zM27,25h1v1h-1zM0,26h1v1h-1zM2,26h1v1h-1zM3,26h1v1h-1zM4,26h1v1h-1zM6,26h1v1h-1zM10,26h1v1h-1zM13,26h1v1h-1zM15,26h1v1h-1zM17,26h1v1h-1zM18,26h1v1h-1zM19,26h1v1h-1zM21,26h1v1h-1zM25,26h1v1h-1zM26,26h1v1h-1zM27,26h1v1h-1zM28,26h1v1h-1zM0,27h1v1h-1zM6,27h1v1h-1zM9,27h1v1h-1zM13,27h1v1h-1zM14,27h1v1h-1zM17,27h1v1h-1zM18,27h1v1h-1zM20,27h1v1h-1zM25,27h1v1h-1zM27,27h1v1h-1zM28,27h1v1h-1zM0,28h1v1h-1zM1,28h1v1h-1zM2,28h1v1h-1zM3,28h1v1h-1zM4,28h1v1h-1zM5,28h1v1h-1zM6,28h1v1h-1zM8,28h1v1h-1zM9,28h1v1h-1zM12,28h1v1h-1zM13,28h1v1h-1zM14,28h1v1h-1zM15,28h1v1h-1zM17,28h1v1h-1zM18,28h1v1h-1zM20,28h1v1h-1zM21,28h1v1h-1zM24,28h1v1h-1zM25,28h1v1h-1zM27,28h1v1h-1z"/></svg><div><b>Telefonunda aç</b><small>akar.tamerakdeniz.com</small></div></div>
+</div></section>
+<footer><div class="ic">AKAR · Fotoğraflar ve bilgiler: Bursa Vakıf Eserleri Envanteri</div></footer>
+
+<script>
+/* Eski ve bugünkü fotoğraf: çizgi parmağı izler; sayfa dikey kaydırılabilir. */
+(function(){var k=document.getElementById('kiyas');if(!k)return;var i=k.querySelector('input');var c=function(){k.style.setProperty('--ayrim',i.value+'%')};i.addEventListener('input',c);c();})();
+</script>
+<script type="module">
+/* Ulucami: görünür olunca yüklenir, yalnız hareket edince çizilir, kaydırmaya bağlı değildir. */
+const kutu = document.getElementById('model-kutu'), durum = document.getElementById('durum'), secim = document.getElementById('secim');
+const bas = async () => {
+  try {
+    const THREE = await import('three');
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+    const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
+    const gltf = await new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/')).loadAsync('/tanitim/modeller/ulu-cami_v32_sunum.glb');
+    const r = new THREE.WebGLRenderer({ antialias: devicePixelRatio < 2, alpha: true, powerPreference: 'high-performance' });
+    r.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
+    r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; r.shadowMap.autoUpdate = false;
+    kutu.prepend(r.domElement);
+    const sahne = new THREE.Scene(), kam = new THREE.PerspectiveCamera(32, 1, 1, 2000), kok = gltf.scene;
+    kok.rotation.y = -174 * Math.PI / 180; kok.updateMatrixWorld(true);
+    const ortu = ['Alemler', 'Sadirvan_Iskeleti', 'Kubbeler_19', 'Sadirvan_Kubbe', 'Kasnak_Pencereleri', 'Cati'].flatMap((a) => kok.getObjectByName(a) ?? []), agac = [];
+    kok.traverse((o) => { if (/^Yer_Golgesi/.test(o.name)) o.visible = false; if (/^(Cevre|Avlu)_Agac/.test(o.name)) agac.push(o); if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+    const kut = new THREE.Box3(); kok.getObjectByName('Govde') ? kut.setFromObject(kok.getObjectByName('Govde')) : kut.setFromObject(kok);
+    const orta = kut.getCenter(new THREE.Vector3()), R = kut.getSize(new THREE.Vector3()).length() / 2;
+    kok.position.sub(orta); kok.position.y += kut.getSize(new THREE.Vector3()).y * .3; kok.updateMatrixWorld(true); sahne.add(kok);
+    sahne.add(new THREE.HemisphereLight(0xf4f1ea, 0x8c948f, 1.15));
+    const gunes = new THREE.DirectionalLight(0xfff4e0, 2.1), ga = (354 + 40) * Math.PI / 180, ge = 50 * Math.PI / 180;
+    gunes.position.set(Math.sin(ga) * Math.cos(ge), Math.sin(ge), -Math.cos(ga) * Math.cos(ge)).multiplyScalar(R * 3);
+    gunes.castShadow = true; gunes.shadow.mapSize.set(1024, 1024); gunes.shadow.bias = -.0004; gunes.shadow.normalBias = R / 1024;
+    Object.assign(gunes.shadow.camera, { left: -R * 1.3, right: R * 1.3, top: R * 1.3, bottom: -R * 1.3, near: R * .5, far: R * 6 }); gunes.shadow.camera.updateProjectionMatrix(); sahne.add(gunes);
+    const merkez = (a) => { const o = a && kok.getObjectByName(a); return o ? new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()) : new THREE.Vector3(); };
+    const NOKTA = {
+      dis: { h: null, az: 354, el: 24, d: 2.5, ic: false },
+      kubbe: { h: 'Sadirvan_Kubbe', az: 40, el: 42, d: 1.05, ic: false },
+      ic: { h: 'Ic_Sadirvan_Havuz', az: 354, el: 52, d: .95, ic: true },
+      minber: { h: 'Minber', az: 340, el: 45, d: .7, ic: true },
+    };
+    const dar = () => kutu.clientWidth / kutu.clientHeight < 1.2 ? 1.35 : 1;
+    let s = { hx: 0, hy: 0, hz: 0, az: 354, el: 24, d: 2.5 * dar() }, tw = 0, gorunur = true;
+    const ciz = () => {
+      const a = s.az * Math.PI / 180, e = s.el * Math.PI / 180, D = s.d * R;
+      kam.position.set(s.hx + Math.sin(a) * Math.cos(e) * D, s.hy + Math.sin(e) * D, s.hz - Math.cos(a) * Math.cos(e) * D);
+      kam.lookAt(s.hx, s.hy, s.hz); r.render(sahne, kam);
+    };
+    const boy = () => { const w = kutu.clientWidth, h = kutu.clientHeight; r.setSize(w, h, false); kam.aspect = w / h; kam.updateProjectionMatrix(); ciz(); };
+    new ResizeObserver(boy).observe(kutu); boy();
+    const ac = (acik) => { for (const o of [...ortu, ...agac]) o.visible = !acik; r.shadowMap.needsUpdate = true; };
+    const az = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const git = (ad) => {
+      const n = NOKTA[ad], h = merkez(n.h), t0 = performance.now(), b = { ...s }, H = { hx: h.x, hy: h.y, hz: h.z, az: n.az, el: n.el, d: n.d * dar() };
+      H.az = b.az + ((H.az - b.az + 540) % 360 - 180);
+      ac(n.ic); cancelAnimationFrame(tw);
+      for (const d of secim.querySelectorAll('button')) d.setAttribute('aria-pressed', String(d.dataset.nokta === ad));
+      const adim = (t) => { const x = az ? 1 : Math.min(1, (t - t0) / 1100), k = x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+        for (const a in H) s[a] = b[a] + (H[a] - b[a]) * k; ciz(); if (x < 1) tw = requestAnimationFrame(adim); };
+      tw = requestAnimationFrame(adim);
+    };
+    secim.addEventListener('click', (e) => { const d = e.target.closest('button'); if (d) git(d.dataset.nokta); });
+    /* Sürükleme: parmak yalnız yana çevirir, dikey hareket sayfayı kaydırır (touch-action: pan-y); fare iki yönde de çevirir. */
+    let son = null;
+    kutu.addEventListener('pointerdown', (e) => { son = { x: e.clientX, y: e.clientY, tip: e.pointerType }; cancelAnimationFrame(tw); kutu.setPointerCapture(e.pointerId); });
+    kutu.addEventListener('pointermove', (e) => { if (!son) return; s.az -= (e.clientX - son.x) * .35; if (son.tip === 'mouse') s.el = Math.min(80, Math.max(6, s.el + (e.clientY - son.y) * .25)); son.x = e.clientX; son.y = e.clientY; requestAnimationFrame(ciz); });
+    for (const o of ['pointerup', 'pointercancel']) kutu.addEventListener(o, () => (son = null));
+    r.shadowMap.needsUpdate = true; ciz();
+    kutu.classList.add('hazir');
+  } catch (e) { durum.textContent = 'Model bu cihazda açılamadı; haritada deneyebilirsin.'; }
+};
+const baglanti = navigator.connection;
+if (baglanti && (baglanti.saveData || /2g/.test(baglanti.effectiveType || ''))) durum.textContent = 'Model haritada açılır.';
+else new IntersectionObserver((g, o) => { if (g[0].isIntersecting) { o.disconnect(); bas(); } }, { rootMargin: '300px' }).observe(kutu);
+</script>
+</body>
+</html>

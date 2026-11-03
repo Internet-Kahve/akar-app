@@ -90,6 +90,16 @@ Her ipucu bir kez gösterilir; cihazda `akar.ipucu.<id>` olarak saklanır. Bir z
 
 Testlerin cihazında hepsi görülmüş sayılır (`playwright.config.ts`, storageState); ilk adımların kendi testi `tests/first-steps-mobile.spec.ts`.
 
+## 4 Kasım gecesi eklenenler
+
+- **Tanıtım sayfası:** `/tanitim` artık `public/tanitim2/index.html`. Başlık, fotoğraf, «Haritayı aç»; dört ekran; kullanıcının kendi gezdiği Ulucami modeli; eski/bugün kaydırıcısı; «Akar ne demek?». Kaydırmaya bağlı hareket yok. Eski uzun sayfa `/tanitim/yeni/` adresinde duruyor; üç boyutlu kitaplığı ve model dosyası yeni sayfada da kullanılıyor, silinmedi.
+- **Sesler:** kayıtlar canlı API'de, demo içerikte yoktu; bu yüzden makine sesi okuyordu. `prepare-demo-content.mjs` metni aynı olan kayıtları canlıdan alıyor (227 metin). Tarayıcı sesi engellerse kayıt sonraki dokunuşu bekliyor.
+- **Hikâye (telefon):** üstte model, ekranın %30'u fotoğraf, altta küçük kart. Fotoğrafı olan her cümle fotoğrafını gösterir; olmayanda model döner.
+- **Açılar:** `hikaye.md` «## Açı» tablosu ve `model.json` `foto_acilari` yenilendi; uzaklık sayı olabilir (panel en az 0,05). Fotoğraflarla birebir değil, göz kararı yakın. Panelden ince ayar yapılabilir.
+- **Geçmişi Gör:** 15 temsili görsel (`scripts/content/temsili_es_uret.mjs`), «Temsili görsel» etiketiyle. Canlıda görünmesi için `import-demo` ve `temsili` bilgisinin taşınması gerekir.
+- **Pişmiş Ulucami:** dördüncü denemede 16 karenin 6'sı ölçüyü geçti. Yakın zoomda sunum modeline geçildiği için dosya 17,5'e kadar kullanılır; 440 m'de fark küçük. `pisik_onay` satırı commit edilmedi, karar Muhammed'in.
+- **Canlıya aktarılacak alanlar (Burak):** `mapBaked`, `hideClosedInterior`, `temsili`, yeni açılar.
+
 ## Pişirme ölçümü (3 Kasım)
 
 Ulucami, ana dosya `ulu-cami_v32`, 1170×2000 piksel, birleştirme sonrası. Yazılımsal GPU telefon değildir; oranlar yol göstericidir.
