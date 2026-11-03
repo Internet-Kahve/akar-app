@@ -155,6 +155,8 @@ export default function ModelViewer({
     camera: THREE.PerspectiveCamera;
     controls: OrbitControls;
     render: () => void;
+    /** The model changed (not the camera): its shadows are drawn again on the next frame. */
+    staleShadows: () => void;
     decoder: DRACOLoader;
     sphere: number;
     ground: number;
@@ -289,6 +291,7 @@ export default function ModelViewer({
           other.scale.setScalar(scale);
           other.position.set(-mid.x * scale, -box.min.y * scale, -mid.z * scale);
           holder.add(other);
+          st.staleShadows();
           owned.push({ dispose: () => disposeObject(other) });
           drawRoad(st.ground + size.y * scale);
         },
@@ -392,7 +395,7 @@ export default function ModelViewer({
     let detachPointer = () => {};
     let unfollowTheme = () => {};
     try {
-      // A modest phone: fewer pixels, no antialiasing and no real-time shadows (the ground shade stays).
+      // A modest phone: fewer pixels, no antialiasing, a smaller shadow map.
       const modest = modestDevice();
       renderer = new THREE.WebGLRenderer({ antialias: !modest, alpha: true, powerPreference: "high-performance" });
       renderer.setPixelRatio(modelPixelRatio());
@@ -400,9 +403,12 @@ export default function ModelViewer({
       {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = DETAIL_LIGHT[currentTheme()].exposure;
-        renderer.shadowMap.enabled = !modest;
+        renderer.shadowMap.enabled = true;
         // Three r186 removed PCFSoftShadowMap; its supported replacement is PCF.
         renderer.shadowMap.type = THREE.PCFShadowMap;
+        // The sun stands still against the model, so its shadows do not change as the camera turns: drawn once, and
+        // again only when the model itself changes (`shadowsStale`: loaded, a lift, a theme, a building added).
+        renderer.shadowMap.autoUpdate = false;
       }
       renderer.domElement.setAttribute("aria-label", labelRef.current);
       renderer.domElement.setAttribute("role", "img");
@@ -418,8 +424,19 @@ export default function ModelViewer({
       // Until the model's shaders are compiled in the background (below), nothing draws: a draw would compile them
       // on the spot, which held the page for 1.7–3.3 s on a slow phone.
       let compiling = false;
+      let shadowsStale = true;
+      const staleShadows = () => {
+        shadowsStale = true;
+      };
+      scene.addEventListener("childadded", staleShadows);
+      scene.addEventListener("childremoved", staleShadows);
       const render = () => {
-        if (!disposed && !compiling) renderer!.render(scene, camera);
+        if (disposed || compiling) return;
+        if (shadowsStale) {
+          renderer!.shadowMap.needsUpdate = true;
+          shadowsStale = false;
+        }
+        renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
       // Damped turning goes on after the hand lets go: the controls are stepped each frame until they come to rest.
@@ -552,11 +569,16 @@ export default function ModelViewer({
           object.position.sub(center);
           {
             const R = size.length() / 2 * 1.3;
-            addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
+            const sun = addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
+            if (modest) {
+              sun.shadow.mapSize.set(1024, 1024);
+              sun.shadow.normalBias = R / 1024;
+            }
             // A theme switch relights the open model in place, without reloading it.
             unfollowTheme = subscribeTheme((theme) => {
               setSceneLights(scene, DETAIL_LIGHT[theme]);
               renderer!.toneMappingExposure = DETAIL_LIGHT[theme].exposure;
+              staleShadows();
               render();
             });
           }
@@ -607,7 +629,7 @@ export default function ModelViewer({
           controls!.target.set(0, 0, 0);
           controls!.update();
           stage.current = {
-            scene, camera, controls: controls!, render, decoder: decoder!, sphere,
+            scene, camera, controls: controls!, render, staleShadows, decoder: decoder!, sphere,
             ground: box.min.y - center.y, height: size.y,
           };
           setStageReady((n) => n + 1);
@@ -891,7 +913,8 @@ export default function ModelViewer({
             let liftFrame = 0;
             let last = 0;
             cancelLift = () => cancelAnimationFrame(liftFrame);
-            const place = () =>
+            const place = () => {
+              staleShadows();
               parts.forEach((g, i) => {
                 const t = progress[i]!;
                 // easeOutBack: a slight overshoot as the group settles.
@@ -912,6 +935,7 @@ export default function ModelViewer({
                   f.material.userData.akarLift = t;
                 }
               });
+            };
             const step = (now: number) => {
               const dt = Math.min(64, now - last) / LIFT_MS;
               last = now;

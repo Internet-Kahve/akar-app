@@ -66,6 +66,9 @@ interface Entry {
   floor: THREE.Mesh;
   /** The sun or the model moved: its shadow map is drawn again on the next frame, otherwise kept. */
   shadowDirty: boolean;
+  /** 0–1: how far it has faded in (`FADE_MS`); `fadeTo` is where it is going. */
+  fade: number;
+  fadeTo: 0 | 1;
 }
 
 const LAYER_ID = "akar-models";
@@ -115,8 +118,14 @@ const sameLight = (a: SceneLight, b: SceneLight) =>
  * Models load only at `modelMinZoom` and above, at most `maxVisibleModels` of them, the ones nearest the
  * map centre among those in view; a model that leaves that set is disposed.
  */
-/** How many models out of view are kept ready (`parked`); a modest phone keeps fewer. */
+/** How many models out of view are kept ready (`parked`). */
 const PARKED_MAX = 8;
+/** A model comes in and goes out over this long, not at once (Muhammed, 3 Nov 2026: «bir var bir yok»). */
+const FADE_MS = 500;
+/** Zoomed out this far below `modelMinZoom` the models go; they come back at `modelMinZoom` (no flicker at the line). */
+const ZOOM_SLACK = 0.5;
+/** A modest phone's sun: a smaller shadow map, drawn once like every other (`shadowDirty`). */
+const MODEST_SHADOW_MAP = 512;
 
 export class MapModelLayer implements CustomLayerInterface {
   readonly id = LAYER_ID;
@@ -148,6 +157,11 @@ export class MapModelLayer implements CustomLayerInterface {
    * geliyor»). The oldest goes beyond `PARKED_MAX`.
    */
   private readonly parked = new Map<string, Entry>();
+  /** Models fading out (`fadeTo` 0); parked once gone. */
+  private readonly leaving = new Map<string, Entry>();
+  /** Near enough for the models, with `ZOOM_SLACK` on the way out. */
+  private near = false;
+  private lastFrame = 0;
 
   private opacity = 1;
   private theme: Theme = currentTheme();
@@ -178,8 +192,8 @@ export class MapModelLayer implements CustomLayerInterface {
     // shadow map is drawn once, again only when it moves; the light stays put when the map turns.
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = (this.theme === "night" ? MAP_NIGHT_LIGHT : MAP_LIGHT).exposure;
-    // A modest phone draws the map's models without real-time shadows (their baked ground shade stays).
-    this.renderer.shadowMap.enabled = !modestDevice();
+    // Shadows are drawn once per model (`shadowDirty`), not each frame: a modest phone keeps them, smaller.
+    this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     // Same decoder files as the story viewer (`public/draco`).
@@ -194,9 +208,10 @@ export class MapModelLayer implements CustomLayerInterface {
   onRemove(map: MapLibreMap) {
     map.off("moveend", this.reconcile);
     this.loading.clear();
-    for (const entry of [...this.loaded.values(), ...this.parked.values()]) disposeObject(entry.scene);
+    for (const entry of [...this.loaded.values(), ...this.parked.values(), ...this.leaving.values()]) disposeObject(entry.scene);
     this.loaded.clear();
     this.parked.clear();
+    this.leaving.clear();
     this.decoder?.dispose();
     this.renderer?.dispose();
     this.offscreen.dispose();
@@ -273,11 +288,11 @@ export class MapModelLayer implements CustomLayerInterface {
 
   render(gl: WebGL2RenderingContext, options: CustomRenderMethodInput) {
     const renderer = this.renderer;
-    if (!renderer || !this.map || !this.loaded.size) return;
+    if (!renderer || !this.map || (!this.loaded.size && !this.leaving.size)) return;
     // Below the city threshold the map shows cities (globe view, §11.45), never models.
     const zoom = this.map.getZoom();
-    if (zoom < this.settings.modelMinZoom || zoom < CITY_MARKER_MAX_ZOOM)
-      return;
+    if (!this.isNear(zoom) || zoom < CITY_MARKER_MAX_ZOOM) return;
+    const fading = this.stepFades();
     // Mid globe-to-flat transition `mainMatrix` is the globe's; the Mercator fallback keeps models on the ground.
     const d = options.defaultProjectionData;
     this.projection.fromArray(
@@ -320,10 +335,66 @@ export class MapModelLayer implements CustomLayerInterface {
     }
     // The map may have resized its canvas since three.js saw it.
     renderer.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    for (const entry of this.loaded.values()) {
+    for (const entry of [...this.loaded.values(), ...this.leaving.values()]) {
       aim(entry);
       renderer.render(entry.scene, this.camera);
     }
+    if (fading) this.map.triggerRepaint();
+  }
+
+  private isNear(zoom: number) {
+    const min = this.settings.modelMinZoom;
+    this.near = zoom >= min ? true : zoom < min - ZOOM_SLACK ? false : this.near;
+    return this.near;
+  }
+
+  /** Moves each fading model on by the time since the last frame; a model faded out is parked. True while any fades. */
+  private stepFades() {
+    const now = performance.now();
+    // The first frame of a fade moves it one frame's worth, not all the way.
+    const step = (this.lastFrame ? Math.min(100, now - this.lastFrame) : 16) / FADE_MS;
+    this.lastFrame = now;
+    const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let any = false;
+    for (const [id, entry] of [...this.loaded, ...this.leaving]) {
+      if (entry.fade === entry.fadeTo) continue;
+      entry.fade = reduced
+        ? entry.fadeTo
+        : entry.fadeTo ? Math.min(1, entry.fade + step) : Math.max(0, entry.fade - step);
+      this.applyFade(entry);
+      if (entry.fade !== entry.fadeTo) any = true;
+      else if (entry.fadeTo === 0) {
+        this.leaving.delete(id);
+        this.parked.delete(id);
+        this.parked.set(id, entry);
+      }
+    }
+    if (!any) this.lastFrame = 0;
+    return any;
+  }
+
+  /** A fading model is see-through (no depth writes meanwhile); faded in, it is as modelled again. */
+  private applyFade(entry: Entry) {
+    if (entry.fade >= 1) {
+      this.applyOpacity(entry.model);
+      return;
+    }
+    entry.model.traverse((item) => {
+      if (!(item instanceof THREE.Mesh)) return;
+      for (const material of Array.isArray(item.material) ? item.material : [item.material]) {
+        const own = (material.userData.akarOwn ??= {
+          opacity: material.opacity,
+          transparent: material.transparent,
+          depthWrite: material.depthWrite,
+        }) as { opacity: number; transparent: boolean; depthWrite: boolean };
+        if (!material.transparent) {
+          material.transparent = true;
+          material.depthWrite = false;
+          material.needsUpdate = true;
+        }
+        material.opacity = own.opacity * this.opacity * entry.fade;
+      }
+    });
   }
 
   /** The site whose model is under the screen point (pixels from the map's top left), the nearest one on a hit. */
@@ -351,12 +422,13 @@ export class MapModelLayer implements CustomLayerInterface {
 
   /** At most `maxVisibleModels` at once; a modest phone draws 4 at most, the nearest the centre. */
   private visibleLimit() {
-    return modestDevice() ? Math.min(4, this.settings.maxVisibleModels) : this.settings.maxVisibleModels;
+    // Kept ready out of view (`parked`), a modest phone can show twice as many as it did (8, not 4) without loading.
+    return modestDevice() ? Math.min(8, this.settings.maxVisibleModels) : this.settings.maxVisibleModels;
   }
 
   /** The models that should be on screen now: in view, nearest the centre, at most `maxVisibleModels`. */
   private select(map: MapLibreMap): Map<string, MapModelSite> {
-    if (map.getZoom() < this.settings.modelMinZoom) return new Map();
+    if (!this.isNear(map.getZoom())) return new Map();
     // The panel preview keeps its one model wherever the map is panned.
     if (this.everywhere)
       return new Map(
@@ -399,10 +471,10 @@ export class MapModelLayer implements CustomLayerInterface {
     for (const [id, entry] of this.loaded) {
       const next = wanted.get(id);
       if (!next) {
-        // Out of view: kept for a return (`parked`).
+        // Out of view: it fades out (`leaving`), then is kept for a return (`parked`).
         this.loaded.delete(id);
-        this.parked.delete(id);
-        this.parked.set(id, entry);
+        entry.fadeTo = 0;
+        this.leaving.set(id, entry);
         changed = true;
       } else if (
         next.src !== entry.site.src ||
@@ -425,11 +497,12 @@ export class MapModelLayer implements CustomLayerInterface {
       if (next?.src !== pending.src || !sameLight(next.light, pending.light))
         this.loading.delete(id);
     }
-    // Back in view: a parked model of the same file and light shows again at once.
+    // Back in view: a parked (or still fading out) model of the same file and light fades in again at once.
     for (const [id, site] of wanted) {
-      const entry = this.parked.get(id);
+      const entry = this.leaving.get(id) ?? this.parked.get(id);
       if (!entry || this.loaded.has(id)) continue;
       this.parked.delete(id);
+      this.leaving.delete(id);
       if (entry.site.src !== site.src || !sameLight(entry.site.light, site.light)) {
         disposeObject(entry.scene);
         continue;
@@ -439,6 +512,7 @@ export class MapModelLayer implements CustomLayerInterface {
       if (!samePose(entry.site.placement, site.placement)) this.place(entry, site);
       else entry.site = site;
       entry.shadowDirty = true;
+      entry.fadeTo = 1;
       this.loaded.set(id, entry);
       changed = true;
     }
@@ -480,7 +554,7 @@ export class MapModelLayer implements CustomLayerInterface {
       stripScenery(gltf.scene, site.interiorParts);
       saturate(gltf.scene, site.light.saturation);
       gltf.scene.traverse((node) => {
-        if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = !modest;
+        if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = true;
       });
       // On the visitor's map, one draw call per material instead of one per mesh (lib/model-merge). The base point
       // needs the parts, so it is measured first; the panel's preview, where the anchor part is edited, keeps them.
@@ -505,9 +579,15 @@ export class MapModelLayer implements CustomLayerInterface {
         footprint: [],
         bases,
         shadow: null,
-        sun: addMapLights(scene),
+        sun: (() => {
+          const sun = addMapLights(scene);
+          if (modest) sun.shadow.mapSize.set(MODEST_SHADOW_MAP, MODEST_SHADOW_MAP);
+          return sun;
+        })(),
         floor,
         shadowDirty: true,
+        fade: 0,
+        fadeTo: 1,
       };
       themeMapLights(scene, this.theme);
       this.applyOpacity(entry.model);

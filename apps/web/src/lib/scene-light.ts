@@ -145,7 +145,7 @@ export function aimMapSun(
     .add(centre);
   sun.target.position.copy(centre);
   sun.target.updateMatrixWorld();
-  sun.shadow.normalBias = radius / MAP_LIGHT.shadowMapSize;
+  sun.shadow.normalBias = radius / sun.shadow.mapSize.x;
   Object.assign(sun.shadow.camera, {
     left: -radius,
     right: radius,
