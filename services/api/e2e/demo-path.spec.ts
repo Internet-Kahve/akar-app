@@ -31,14 +31,16 @@ test.beforeAll(async () => {
   expect(mail?.ok, "Mailpit (yerel Supabase) kapalı: `npm run api`").toBe(true);
 });
 
-/** Signs in through the real e-mail code flow; the code is read from Mailpit. */
+/** Signs in through the e-mail code path; the code is read from Mailpit. The new-password step is skipped. */
 async function signIn(page: Page, email: string) {
   const dialog = page.getByRole("dialog").filter({ has: page.getByRole("heading", { name: "Giriş yap" }) });
+  await dialog.getByRole("button", { name: "Kodla giriş yap" }).click();
   await dialog.getByRole("textbox", { name: "E-posta" }).fill(email);
   await dialog.getByRole("button", { name: "Kod gönder" }).click();
   await expect(dialog.getByRole("textbox", { name: "Doğrulama kodu" })).toBeVisible();
   await dialog.getByRole("textbox", { name: "Doğrulama kodu" }).fill(await otpFor(email));
-  await dialog.getByRole("button", { name: "Giriş yap" }).click();
+  await dialog.getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await dialog.getByRole("button", { name: "Şimdi değil" }).click();
   await expect(page.getByText("Giriş yaptın.")).toBeVisible();
   await expect(dialog).toBeHidden();
 }

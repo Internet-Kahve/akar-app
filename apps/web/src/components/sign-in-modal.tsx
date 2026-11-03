@@ -1,9 +1,19 @@
 "use client";
 import { useState } from "react";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, KeyRound, Mail } from "lucide-react";
+import type { AuthError } from "@supabase/supabase-js";
 import { getSupabase } from "../lib/supabase";
 import { Modal, Notice } from "./ui";
 import { useI18n } from "./i18n";
+
+/**
+ * password: e-mail + password sign-in (default).
+ * signup: new account; the e-mail is confirmed once with a code.
+ * code: e-mail code sign-in (forgot password, accounts without a password); a new password follows.
+ */
+type Mode = "password" | "signup" | "code";
+/** form: e-mail (+ password); verify: code from the e-mail; newPassword: after a code sign-in. */
+type Stage = "form" | "verify" | "newPassword";
 
 export function SignInModal({
   reason,
@@ -16,67 +26,149 @@ export function SignInModal({
   onSignedIn: () => void;
 }) {
   const { t } = useI18n();
-  const wait = t("signin.wait");
-  const [email, setEmail] = useState(""),
+  const [mode, setMode] = useState<Mode>("password"),
+    [stage, setStage] = useState<Stage>("form"),
+    [email, setEmail] = useState(""),
+    [password, setPassword] = useState(""),
     [code, setCode] = useState(""),
-    [sent, setSent] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const supabase = getSupabase();
-  async function sendCode() {
+  const address = email.trim();
+
+  /** Runs one auth call with the busy flag; returns its error, already shown when `fallback` is given. */
+  async function run(call: () => Promise<{ error: AuthError | null }>, fallback: string) {
+    setBusy(true);
+    setError("");
+    const { error: failure } = await call();
+    setBusy(false);
+    if (failure) setError(messageFor(failure, fallback));
+    return failure;
+  }
+  function messageFor(failure: AuthError, fallback: string) {
+    if (failure.status === 429) return t("signin.wait");
+    if (failure.code === "weak_password") return t("signin.weakPassword");
+    if (failure.code === "invalid_credentials") return t("signin.wrongPassword");
+    return fallback;
+  }
+  function switchMode(next: Mode) {
+    setMode(next);
+    setStage("form");
+    setCode("");
+    setPassword("");
+    setError("");
+  }
+
+  async function google() {
+    if (!supabase) return;
+    // The page comes back with the session in the URL; the Supabase client reads it on load.
+    await run(
+      () =>
+        supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: window.location.href.split("#")[0] },
+        }),
+      t("signin.googleFailed"),
+    );
+  }
+  async function signInWithPassword() {
     if (!supabase) return;
     setBusy(true);
     setError("");
-    const { error: failure } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { shouldCreateUser: true },
-    });
+    const { error: failure } = await supabase.auth.signInWithPassword({ email: address, password });
+    if (failure?.code === "email_not_confirmed") {
+      // Sign-up was never confirmed: send a fresh code and continue there.
+      const { error: resendFailure } = await supabase.auth.resend({ type: "signup", email: address });
+      setBusy(false);
+      if (resendFailure) setError(messageFor(resendFailure, t("signin.sendFailed")));
+      else {
+        setMode("signup");
+        setStage("verify");
+        setError(t("signin.notConfirmed"));
+      }
+      return;
+    }
     setBusy(false);
-    if (failure)
-      setError(
-        failure.status === 429
-          ? wait
-          : t("signin.sendFailed"),
-      );
-    else setSent(true);
+    if (failure) setError(messageFor(failure, t("signin.wrongPassword")));
+    else onSignedIn();
+  }
+  async function signUp() {
+    if (!supabase) return;
+    setBusy(true);
+    setError("");
+    const { data, error: failure } = await supabase.auth.signUp({ email: address, password });
+    setBusy(false);
+    if (failure) setError(messageFor(failure, t("signin.signupFailed")));
+    else if (data.session) onSignedIn();
+    else setStage("verify");
+  }
+  async function sendCode() {
+    if (!supabase) return;
+    const failure =
+      mode === "signup"
+        ? await run(() => supabase.auth.resend({ type: "signup", email: address }), t("signin.sendFailed"))
+        : await run(
+            () => supabase.auth.signInWithOtp({ email: address, options: { shouldCreateUser: true } }),
+            t("signin.sendFailed"),
+          );
+    if (!failure) setStage("verify");
   }
   async function verify() {
     if (!supabase) return;
-    setBusy(true);
-    setError("");
-    const { error: failure } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: code.replace(/\s/g, ""),
-      type: "email",
-    });
-    setBusy(false);
-    if (failure)
-      setError(
-        failure.status === 429
-          ? wait
-          : t("signin.codeInvalid"),
-      );
-    else onSignedIn();
+    const failure = await run(
+      () =>
+        supabase.auth.verifyOtp({ email: address, token: code.replace(/\s/g, ""), type: "email" }),
+      t("signin.codeInvalid"),
+    );
+    if (failure) return;
+    if (mode === "code") {
+      setPassword("");
+      setStage("newPassword");
+    } else onSignedIn();
   }
+  async function savePassword() {
+    if (!supabase) return;
+    const failure = await run(() => supabase.auth.updateUser({ password }), t("signin.passwordFailed"));
+    if (!failure) onSignedIn();
+  }
+
+  function submit() {
+    if (stage === "verify") return verify();
+    if (stage === "newPassword") return savePassword();
+    if (mode === "password") return signInWithPassword();
+    if (mode === "signup") return signUp();
+    return sendCode();
+  }
+
+  const passwordField = (label: string, autoComplete: string) => (
+    <label className="field">
+      {label}
+      <input
+        type="password"
+        autoComplete={autoComplete}
+        required
+        minLength={8}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+    </label>
+  );
+
   return (
-    <Modal title={t("common.signIn")} onClose={onClose}>
+    <Modal title={mode === "signup" ? t("signin.createAccount") : t("common.signIn")} onClose={onClose}>
       {!supabase ? (
-        <Notice>
-          {t("signin.notConfigured")}
-        </Notice>
+        <Notice>{t("signin.notConfigured")}</Notice>
       ) : (
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            void (sent ? verify() : sendCode());
+            void submit();
           }}
         >
           {reason && <Notice>{reason}</Notice>}
-          {sent ? (
+          {stage === "verify" ? (
             <>
-              <p className="muted">
-                {t("signin.sentTo", { email: email.trim() })}
-              </p>
+              <p className="muted">{t("signin.sentTo", { email: address })}</p>
               <label className="field">
                 {t("signin.code")}
                 <input
@@ -92,11 +184,26 @@ export function SignInModal({
                 />
               </label>
             </>
+          ) : stage === "newPassword" ? (
+            <>
+              <p className="muted">{t("signin.newPasswordIntro")}</p>
+              {passwordField(t("signin.newPassword"), "new-password")}
+              <p className="muted">{t("signin.passwordHint")}</p>
+            </>
           ) : (
             <>
-              <p className="muted">
-                {t("signin.intro")}
-              </p>
+              <button
+                type="button"
+                className="btn secondary signin-google"
+                disabled={busy}
+                onClick={() => void google()}
+              >
+                {t("signin.google")}
+              </button>
+              <p className="muted">{t("signin.or")}</p>
+              {mode !== "password" && (
+                <p className="muted">{mode === "signup" ? t("signin.signupIntro") : t("signin.intro")}</p>
+              )}
               <label className="field">
                 {t("signin.email")}
                 <input
@@ -108,6 +215,13 @@ export function SignInModal({
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
+              {mode === "password" && passwordField(t("signin.password"), "current-password")}
+              {mode === "signup" && (
+                <>
+                  {passwordField(t("signin.password"), "new-password")}
+                  <p className="muted">{t("signin.passwordHint")}</p>
+                </>
+              )}
             </>
           )}
           {error && (
@@ -116,14 +230,13 @@ export function SignInModal({
             </p>
           )}
           <div className="modal-actions">
-            {sent ? (
-              <button
-                type="button"
-                className="btn secondary"
-                disabled={busy}
-                onClick={() => void sendCode()}
-              >
+            {stage === "verify" ? (
+              <button type="button" className="btn secondary" disabled={busy} onClick={() => void sendCode()}>
                 {t("signin.resend")}
+              </button>
+            ) : stage === "newPassword" ? (
+              <button type="button" className="btn secondary" disabled={busy} onClick={onSignedIn}>
+                {t("signin.later")}
               </button>
             ) : (
               <button type="button" className="btn secondary" onClick={onClose}>
@@ -131,22 +244,60 @@ export function SignInModal({
               </button>
             )}
             <button className="btn" disabled={busy}>
-              {sent ? (busy ? t("signin.verifying") : t("common.signIn")) : t("signin.sendCode")}
-              {sent ? <ArrowRight size={16} /> : <Mail size={16} />}
+              {stage === "verify" ? (
+                <>
+                  {busy ? t("signin.verifying") : t("common.signIn")}
+                  <ArrowRight size={16} />
+                </>
+              ) : stage === "newPassword" ? (
+                <>
+                  {t("signin.savePassword")}
+                  <KeyRound size={16} />
+                </>
+              ) : mode === "code" ? (
+                <>
+                  {t("signin.sendCode")}
+                  <Mail size={16} />
+                </>
+              ) : (
+                <>
+                  {mode === "signup" ? t("signin.createAccount") : t("common.signIn")}
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
           </div>
-          {sent && (
+          {stage === "verify" && (
             <button
               type="button"
               className="text-btn"
               onClick={() => {
-                setSent(false);
+                setStage("form");
                 setCode("");
                 setError("");
               }}
             >
               {t("signin.changeEmail")}
             </button>
+          )}
+          {stage === "form" && (
+            <div className="signin-links">
+              {mode !== "signup" && (
+                <button type="button" className="text-btn" onClick={() => switchMode("signup")}>
+                  {t("signin.toSignup")}
+                </button>
+              )}
+              {mode !== "password" && (
+                <button type="button" className="text-btn" onClick={() => switchMode("password")}>
+                  {t("signin.toPassword")}
+                </button>
+              )}
+              {mode !== "code" && (
+                <button type="button" className="text-btn" onClick={() => switchMode("code")}>
+                  {t("signin.toCode")}
+                </button>
+              )}
+            </div>
           )}
         </form>
       )}
