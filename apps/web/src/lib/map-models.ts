@@ -162,6 +162,38 @@ export class MapModelLayer implements CustomLayerInterface {
   /** Near enough for the models, with `ZOOM_SLACK` on the way out. */
   private near = false;
   private lastFrame = 0;
+  /**
+   * A turning ring where a model is coming in (Muhammed, 3 Nov 2026: «modeller yüklenirken oldukları yerde dairesel
+   * bir yükleme»): one small element per loading model over the map, placed at its point on every move.
+   */
+  private readonly rings = new Map<string, HTMLElement>();
+  private readonly placeRings = () => {
+    const map = this.map;
+    if (!map) return;
+    for (const [id, ring] of this.rings) {
+      const p = this.sites.get(id)?.placement;
+      if (!p) continue;
+      const point = map.project([p.lng, p.lat]);
+      ring.style.transform = `translate(${Math.round(point.x)}px, ${Math.round(point.y)}px)`;
+    }
+  };
+  private ringOn(id: string) {
+    const map = this.map;
+    if (!map || this.rings.has(id) || typeof document === "undefined") return;
+    const ring = document.createElement("div");
+    ring.className = "model-ring";
+    ring.setAttribute("aria-hidden", "true");
+    map.getCanvasContainer().appendChild(ring);
+    this.rings.set(id, ring);
+    this.placeRings();
+  }
+  private ringOff(id: string) {
+    const ring = this.rings.get(id);
+    if (!ring) return;
+    this.rings.delete(id);
+    ring.classList.add("gone");
+    setTimeout(() => ring.remove(), 300);
+  }
 
   private opacity = 1;
   private theme: Theme = currentTheme();
@@ -202,11 +234,14 @@ export class MapModelLayer implements CustomLayerInterface {
       .setWorkerLimit(2);
     this.loader = new GLTFLoader().setDRACOLoader(this.decoder);
     map.on("moveend", this.reconcile);
+    map.on("move", this.placeRings);
     this.reconcile();
   }
 
   onRemove(map: MapLibreMap) {
     map.off("moveend", this.reconcile);
+    map.off("move", this.placeRings);
+    for (const id of [...this.rings.keys()]) this.ringOff(id);
     this.loading.clear();
     for (const entry of [...this.loaded.values(), ...this.parked.values(), ...this.leaving.values()]) disposeObject(entry.scene);
     this.loaded.clear();
@@ -494,8 +529,10 @@ export class MapModelLayer implements CustomLayerInterface {
     }
     for (const [id, pending] of this.loading) {
       const next = wanted.get(id);
-      if (next?.src !== pending.src || !sameLight(next.light, pending.light))
+      if (next?.src !== pending.src || !sameLight(next.light, pending.light)) {
         this.loading.delete(id);
+        this.ringOff(id);
+      }
     }
     // Back in view: a parked (or still fading out) model of the same file and light fades in again at once.
     for (const [id, site] of wanted) {
@@ -539,11 +576,13 @@ export class MapModelLayer implements CustomLayerInterface {
     if (!loader) return;
     const token = {};
     this.loading.set(site.id, { src: site.src, light: site.light, token });
+    this.ringOn(site.id);
     try {
       const gltf = await loader.loadAsync(site.src);
       if (this.loading.get(site.id)?.token !== token) {
         // Left the set, or the layer was removed, while the file came in.
         disposeObject(gltf.scene);
+        if (!this.loading.has(site.id)) this.ringOff(site.id);
         return;
       }
       this.loading.delete(site.id);
@@ -593,9 +632,11 @@ export class MapModelLayer implements CustomLayerInterface {
       this.applyOpacity(entry.model);
       this.place(entry, site);
       this.loaded.set(site.id, entry);
+      this.ringOff(site.id);
       this.map?.triggerRepaint();
       this.onChange();
     } catch {
+      this.ringOff(site.id);
       if (this.loading.get(site.id)?.token !== token) return;
       this.loading.delete(site.id);
       // A model that cannot be read leaves the map as it is; its pin still opens the site.

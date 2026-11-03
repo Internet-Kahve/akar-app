@@ -2,11 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
   BookmarkPlus,
-  BookOpen,
   BookOpenText,
   ChevronRight,
   ChevronUp,
-  Headphones,
+  Play,
   Puzzle,
   X,
 } from "lucide-react";
@@ -187,16 +186,11 @@ export function SitePeek({
       {listenFirst ? (
         <>
           <div className="peek-actions">
-            <div className="ikili" role="group" aria-label={t("site.shortStory")}>
-              <button className="ik-sol" onClick={onListen}>
-                <Headphones size={20} />
-                {t("site.listen", { minutes: site.minutes })}
-              </button>
-              <button className="ik-sag" onClick={onRead}>
-                <BookOpen size={20} />
-                {t("app.read")}
-              </button>
-            </div>
+            {/* One way into the story, as on the site's page (3 Nov 2026); its sound button reads it aloud. */}
+            <button className="hikaye-basla peek-start" onClick={onRead}>
+              <Play size={18} fill="currentColor" />
+              {t("site.storyStart")}
+            </button>
             {route}
           </div>
           <button className="peek-more" onClick={onOpen}>

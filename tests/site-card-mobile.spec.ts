@@ -51,16 +51,25 @@ test("the handle opens the card all the way and closes it, by tap and by keyboar
   await expect(grip(page)).toHaveAttribute("aria-expanded", "false");
 });
 
-test("dragging the handle leaves the card where it is let go", async ({ page }) => {
+test("let go half way, the card goes to its nearest stop, never left cut in the middle", async ({ page }) => {
   const g = await box(page, ".card-grip");
-  const before = (await box(page, ".workspace.on-site .side-panel")).height;
-  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
-  await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2 - i * 20);
-  await page.mouse.up();
-  const after = (await box(page, ".workspace.on-site .side-panel")).height;
-  expect(after).toBeGreaterThan(before + 150);
-  expect(after).toBeLessThan(before + 250);
+  const closed = (await box(page, ".workspace.on-site .side-panel")).height;
+  const drag = async (dy: number) => {
+    const at = await box(page, ".card-grip");
+    await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+    await page.mouse.down();
+    for (let i = 1; i <= 10; i++) await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2 - (dy * i) / 10, { steps: 2 });
+    await page.mouse.up();
+  };
+  // A short pull: back to closed (3 Nov 2026: «yarım duruyor; kendiliğinden yerine dönsün»).
+  await drag(60);
+  await expect.poll(async () => Math.round((await box(page, ".workspace.on-site .side-panel")).height)).toBe(Math.round(closed));
+  // A long pull: all the way open.
+  await drag(Math.round(page.viewportSize()!.height * 0.5));
+  await expect(grip(page)).toHaveAttribute("aria-expanded", "true");
+  const open = (await box(page, ".workspace.on-site .side-panel")).height;
+  expect(open).toBeGreaterThan(closed + 200);
+  void g;
 });
 
 test("«3D model · Temsili» and «İçini göster» ride on the card's top edge", async ({ page }) => {

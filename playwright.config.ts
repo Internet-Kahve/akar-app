@@ -23,6 +23,13 @@ export default defineConfig({
             { name: "akar.ipucu.kart", value: "1" },
             { name: "akar.ipucu.detay", value: "1" },
             { name: "akar.ipucu.hikaye", value: "1" },
+            { name: "akar.ipucu.cevir", value: "1" },
+            { name: "akar.ipucu.parca", value: "1" },
+            { name: "akar.ipucu.masa.harita", value: "1" },
+            { name: "akar.ipucu.masa.detay", value: "1" },
+            { name: "akar.ipucu.masa.hikaye", value: "1" },
+            // The story speaks by default (3 Nov 2026); the tests' device has turned it off.
+            { name: "akar.ses", value: "0" },
           ],
         },
       ],

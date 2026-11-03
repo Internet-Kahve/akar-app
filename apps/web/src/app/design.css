@@ -4463,3 +4463,141 @@ body:has(.view-choice) .coach-tip.above-site-card { display: none; }
   .rb-coach-plus,
   .rb-coach-finger { animation: none; }
 }
+
+/* ---------------- An angle's photograph on a phone (3 Nov 2026, `mobile/Pasted 8.57.54`): the site card goes down to
+   the screen's foot (its handle and name left), the photograph takes the lower half; ✕ brings the card back up. */
+@media (max-width: 899.98px) {
+  .workspace.on-site:has(.detail-panel) .side-panel { transition: height 280ms var(--ease), transform 380ms cubic-bezier(.22, 1, .36, 1); }
+  .workspace.on-site:has(.detail-panel) .side-panel.rising { transition: height 480ms cubic-bezier(.22, 1, .36, 1), transform 380ms cubic-bezier(.22, 1, .36, 1); }
+  .workspace.on-site:has(.detail-panel) .side-panel.dragging { transition: none; }
+  .workspace.on-site:has(.detail-panel):has(.model-view-photo) .side-panel {
+    transform: translateY(calc(var(--sheet-h, 194px) - 64px));
+  }
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo,
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo.large {
+    bottom: calc(64px + 10px + env(safe-area-inset-bottom, 0px));
+  }
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo img { height: 46dvh; }
+  .workspace.on-site:has(.detail-panel) .detail-scene:has(.model-view-photo) .model-views {
+    bottom: calc(64px + 10px + 46dvh + 34px + 10px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
+  .workspace.on-site:has(.detail-panel) .side-panel { transition: none; }
+}
+
+/* Wide screens: «Hikâyeyi başlat» on the map's card; the story's bar with the round sound button in its middle. */
+.site-peek .peek-actions .peek-start { flex: 1; margin-top: 0; height: 48px; }
+.story-bar { display: flex; align-items: center; gap: 10px; }
+.story-bar-sound { flex: 1; display: flex; justify-content: center; }
+.story-bar-sound .story-sound {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 6px 16px rgba(20, 27, 43, 0.2);
+}
+.story-bar-sound .story-sound.on { background: var(--gold, #c9a24a); color: #1b1407; }
+
+/* ---------------- Loading, turning not blinking (3 Nov 2026): the emblem draws itself once, then turns slowly in its
+   place, a thin arc running round it; nothing fades out and back. */
+.emblem { overflow: visible; }
+.emblem path { animation: emblem-draw-once 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.emblem .emblem-turn { transform-origin: 0 0; transform-box: view-box; animation: emblem-turn 9s linear 1.2s infinite; }
+.emblem .emblem-ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.18 0.82;
+  opacity: 0.55;
+  transform-origin: 0 0;
+  transform-box: view-box;
+  animation: emblem-ring 1.4s linear infinite;
+}
+@keyframes emblem-draw-once { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes emblem-turn { to { transform: rotate(360deg); } }
+@keyframes emblem-ring { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .emblem path { animation: none; stroke-dashoffset: 0; }
+  .emblem .emblem-turn,
+  .emblem .emblem-ring { animation: none; }
+}
+
+/* A model coming in on the map (map-models `rings`): a small turning arc in the city's colour at its point. */
+.model-ring {
+  position: absolute;
+  left: -22px;
+  top: -22px;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+  z-index: 2;
+}
+.model-ring::before,
+.model-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.model-ring::before { border: 3px solid color-mix(in srgb, var(--sehir-aksan, #22566e) 22%, transparent); }
+.model-ring::after {
+  border: 3px solid transparent;
+  border-top-color: var(--sehir-aksan, #22566e);
+  border-right-color: var(--sehir-aksan, #22566e);
+  animation: model-ring 0.9s linear infinite;
+}
+.model-ring.gone { opacity: 0; transition: opacity 260ms ease; }
+@keyframes model-ring { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .model-ring::after { animation-duration: 2.4s; } }
+
+/* ---------------- Spotlight (coach-tip.tsx, 3 Nov 2026): the screen dark but for what a hint is about; an arrow
+   bouncing under what to press. It takes no touch. */
+.spotlight { position: fixed; inset: 0; z-index: 39; pointer-events: none; animation: spot-in 360ms var(--ease) both; }
+.spotlight svg { position: absolute; inset: 0; }
+.spotlight path { fill: rgba(8, 12, 22, 0.62); }
+.spotlight-arrow {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  border-radius: 50%;
+  background: #fff;
+  color: #141b2b;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  animation: spot-arrow 1.1s ease-in-out infinite;
+}
+@keyframes spot-in { from { opacity: 0; } }
+@keyframes spot-arrow { 50% { transform: translateY(8px); } }
+/* Placed by the lit element (CoachTip `under-spot`): just under it, or over it when there is no room below. */
+.coach-tip.under-spot { top: 40%; }
+/* A turn: the finger drags to the right across the model, and comes back. */
+.coach-tip.turn .coach-finger { animation: coach-turn 2s ease-in-out infinite; }
+@keyframes coach-turn { 0%, 100% { transform: translateX(-46px); } 15% { transform: translateX(-46px) scale(0.9); } 65% { transform: translateX(46px) scale(0.9); } 80% { transform: translateX(46px); } }
+/* A click (wide screens): the cursor presses, a ring spreads. */
+.coach-tip.click .coach-finger { animation: coach-press 1.4s ease-in-out infinite; }
+.coach-tip.click .coach-ring { animation: coach-ripple 1.4s ease-out infinite; }
+/* While the story's hint shows, its card plays a make-believe step on, in time with the finger's tap on the right
+   (3 Nov 2026: «ilk başta fake bir sağa geçiş olsun»); the visitor's first tap does not skip a sentence. */
+body[data-coach="hikaye"] .story-card-body { animation: demo-next 2.4s ease-in-out infinite; }
+@keyframes demo-next {
+  0%, 18% { transform: none; opacity: 1; }
+  26% { transform: translateX(-24px); opacity: 0; }
+  34% { transform: translateX(24px); opacity: 0; }
+  44%, 100% { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spotlight, .spotlight-arrow, .coach-tip.turn .coach-finger { animation: none; }
+  body[data-coach="hikaye"] .story-card-body { animation: none; }
+}
+/* The question stands a little lower, so the arrow pointing up at the switch has its room. */
+.view-choice { top: calc(124px + env(safe-area-inset-top, 0px)); z-index: 41; }
+body:has(.view-choice) .galeri-arac .scene-media-switch { position: relative; z-index: 41; }

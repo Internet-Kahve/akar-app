@@ -133,6 +133,8 @@ type Overlay =
 const CONTROLS_ROOM = 110 + 194 + 32;
 /** The height of a story's photograph card on a phone (design.css `.story-photo-card`, the stage's foot). */
 const STORY_PHOTO_CARD_PHONE = 140;
+/** A sheet left between its stops this long, untouched, goes to the nearest one. */
+const SHEET_IDLE_MS = 1800;
 /** Pulled this far below its closed height, the site's card goes back to the map. */
 const CARD_CLOSE_PULL = 70;
 /** How far a scroll on the closed site card raises it: enough for its content to scroll. */
@@ -655,6 +657,9 @@ export function AkarApp() {
     [returnLate, setReturnLate] = useState(false);
   const wasOnMap = useRef(showMap);
   const stageTap = useRef<{ x: number; y: number; at: number } | null>(null);
+  // The story's hints come one after another: a hint put away asks for a new render, which shows the next.
+  const [tipTick, setTipTick] = useState(0);
+  const storyModel = view === "story" && !!storySite?.model && readPreference("akar.gorunum") !== "photo";
   useEffect(() => {
     // Back from a site the map was kept (`map-keep`): only a map built anew needs the cover.
     const back = showMap && onMapView && !wasOnMap.current && !opening;
@@ -851,6 +856,10 @@ export function AkarApp() {
       y: number;
       height: number;
       handle: boolean;
+      /** The last two moves, for the speed at the end (a flick). */
+      lastY?: number;
+      lastAt?: number;
+      speed?: number;
       moved: boolean;
     } | null>(null);
   const sheetLowest = () => {
@@ -972,6 +981,34 @@ export function AkarApp() {
   };
   // That rise glides a little slower and softer than a drag's settle.
   const [cardRising, setCardRising] = useState(false);
+  // A sheet left between its stops (a scroll's rise, a resize) goes, after a moment with no touch and its content at
+  // the top, to its nearest stop, gliding (Muhammed, 3 Nov 2026: «yarım duruyor; kendiliğinden yerine dönsün»).
+  useEffect(() => {
+    if (wide || sheetDragging) return;
+    const panel = sheet.current;
+    let timer = 0;
+    const later = () => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (sheetDrag.current || (panel && panel.scrollTop > 4)) return;
+        const stops = sheetStops();
+        const goal = settleSheet(sheetHeight, stops);
+        if (Math.abs(goal - sheetHeight) > 6) {
+          setCardRising(true);
+          setSheetHeight(goal);
+        }
+      }, SHEET_IDLE_MS);
+    };
+    later();
+    panel?.addEventListener("scroll", later, { passive: true });
+    panel?.addEventListener("pointerdown", later);
+    return () => {
+      clearTimeout(timer);
+      panel?.removeEventListener("scroll", later);
+      panel?.removeEventListener("pointerdown", later);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheetHeight, sheetDragging, wide, view]);
   useEffect(() => {
     if (!cardRising) return;
     const timer = setTimeout(() => setCardRising(false), 520);
@@ -1312,6 +1349,10 @@ export function AkarApp() {
                   const wanted = drag.height + drag.y - e.clientY;
                   const stops = sheetStops();
                   setSheetHeight(clampSheet(wanted, stops));
+                  if (drag.lastY !== undefined && drag.lastAt !== undefined && e.timeStamp > drag.lastAt)
+                    drag.speed = (drag.lastY - e.clientY) / (e.timeStamp - drag.lastAt);
+                  drag.lastY = e.clientY;
+                  drag.lastAt = e.timeStamp;
                   // A site's card pulled below its closed height follows the finger down: let go far enough, back to
                   // the map (as a story closes).
                   if (siteCard)
@@ -1331,7 +1372,7 @@ export function AkarApp() {
                   }
                   if (drag.moved)
                     setSheetHeight(
-                      settleSheet(drag.height + drag.y - e.clientY, stops),
+                      settleSheet(drag.height + drag.y - e.clientY, stops, drag.speed ?? 0),
                     );
                   else if (drag.handle)
                     setSheetHeight(toggleSheet(drag.height, stops));
@@ -1876,18 +1917,34 @@ export function AkarApp() {
           />
         )}
       </SourceSheetProvider>
-      {/* First-time hints on a phone (3 Nov 2026): a finger doing what to do and a few words, once each. */}
-      {phone && !opening && !mapReturn && (
+      {/* First-time hints (3 Nov 2026): a finger (a cursor on a wide screen) doing what to do and a few words, once
+          each; some darken the screen but for what they are about. In a story with the model, three in a row: turn
+          the model, the parts button, a tap on the right. */}
+      {!opening && !mapReturn && (phone ? (
         view === "map" && !peekSite && !routeDraft ? (
           <CoachTip key="harita" id="harita" text={t("tip.map")} place="map" gesture="tap" />
         ) : view === "map" && peekSite ? (
-          <CoachTip key="kart" id="kart" text={t("tip.peek")} place="above-card" gesture="swipe-up" />
+          <CoachTip key="kart" id="kart" text={t("tip.peek")} place="above-card" gesture="swipe-up" spot=".site-peek" />
         ) : siteCard ? (
           <CoachTip key="detay" id="detay" text={t("tip.detail")} place="above-site-card" gesture="swipe-down" />
         ) : view === "story" ? (
-          <CoachTip key="hikaye" id="hikaye" text={t("tip.story")} place="stage" gesture="tap-sides" />
+          storyModel && !readPreference("akar.ipucu.cevir") ? (
+            <CoachTip key="cevir" id="cevir" text={t("tip.turn")} place="stage" gesture="turn" spot=".main-stage .model-canvas" needs=".main-stage .model-canvas canvas" swallow onDone={() => setTipTick((n) => n + 1)} />
+          ) : storyModel && !readPreference("akar.ipucu.parca") ? (
+            <CoachTip key="parca" id="parca" text={t("tip.parts")} place="under-spot" gesture="tap" spot=".model-show-parts" arrowTo=".model-show-parts" needs=".model-show-parts" swallow pressSpot onDone={() => setTipTick((n) => n + 1)} />
+          ) : (
+            <CoachTip key={`hikaye${tipTick}`} id="hikaye" text={t("tip.story")} place="stage" gesture="tap-sides" swallow />
+          )
         ) : null
-      )}
+      ) : (
+        view === "map" && !peekSite && !routeDraft ? (
+          <CoachTip key="m-harita" id="masa.harita" text={t("tip.mapWide")} place="map" gesture="click" />
+        ) : view === "detail" ? (
+          <CoachTip key="m-detay" id="masa.detay" text={t("tip.detailWide")} place="under-spot" gesture="click" spot=".detail-panel .hikaye-basla" />
+        ) : view === "story" ? (
+          <CoachTip key="m-hikaye" id="masa.hikaye" text={t("tip.storyWide")} place="under-spot" gesture="click" spot=".story-panel .story-transport" />
+        ) : null
+      ))}
       {mapReturn && !opening && (
         <OpeningScreen
           cityName={openingCity?.name}

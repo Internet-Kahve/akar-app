@@ -50,7 +50,9 @@ const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) 
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
 /** Height the angle's photograph takes above the phone's site card (design.css: 10 + 190 + 34 + 10 + 40 px of buttons). */
-const VIEW_PHOTO_PHONE = 290;
+/** A phone's angle photograph: this share of the screen's height, above the lowered card and the ‹ ✕ › row. */
+const VIEW_PHOTO_PHONE_SHARE = 0.46;
+const VIEW_PHOTO_PHONE_FOOT = 116;
 /** One breath of a highlighted part: fade and light again. */
 const BREATH_MS = 1600;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
@@ -341,8 +343,12 @@ export default function ModelViewer({
   const frameRef = useRef(frame);
   // On a phone the angle's photograph lies across the scene above the site card: while an angle is on, the model is
   // framed in what is left above it.
+  // On a phone the site card goes down to the screen's foot meanwhile and the photograph takes the lower half
+  // (design.css, 3 Nov 2026): the model is framed above that half.
   const withPhoto = (f: SceneFrame): SceneFrame =>
-    typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? { ...f, bottom: f.bottom + VIEW_PHOTO_PHONE } : f;
+    typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches
+      ? { ...f, bottom: Math.round(VIEW_PHOTO_PHONE_FOOT + innerHeight * VIEW_PHOTO_PHONE_SHARE) }
+      : f;
   const viewingRef = useRef(false);
   frameRef.current = viewingRef.current ? withPhoto(frame) : frame;
   const poseRef = useRef(pose);

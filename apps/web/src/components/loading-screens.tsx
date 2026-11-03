@@ -21,7 +21,11 @@ export function Emblem({ className = "" }: { className?: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      <path pathLength={1} d={EMBLEM_PATH} />
+      {/* A thin ring turning round the emblem: something is coming (3 Nov 2026: «yanıp sönmesin, dönsün»). */}
+      <circle className="emblem-ring" r="80" pathLength={1} />
+      <g className="emblem-turn">
+        <path pathLength={1} d={EMBLEM_PATH} />
+      </g>
     </svg>
   );
 }

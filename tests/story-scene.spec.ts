@@ -222,7 +222,7 @@ test("the photo card's corner sizes it, the keyboard steps it, and both stay on 
   // The story reopens where it was: on a phone as the one-sentence card (no «Oku» there), its list behind ☰.
   const read = page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first();
   const list = page.getByRole("button", { name: "Cümle listesini aç" });
-  await expect(read.or(list).first()).toBeVisible();
+  await expect(page.locator(".story-panel").or(read).first()).toBeVisible();
   if (await read.isVisible()) await read.click();
   if (await list.isVisible()) await list.click();
   await next(page);

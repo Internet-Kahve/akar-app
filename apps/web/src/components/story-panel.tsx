@@ -1,16 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import {
-  BookOpen,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Headphones,
   List,
   Volume2,
   VolumeX,
-  Pause,
   Play,
   SkipBack,
   SkipForward,
@@ -68,12 +65,14 @@ export function StoryPanel({
 }) {
   const { t } = useI18n();
   const wide = useWide();
-  const [listen, setListen] = useState(startListening),
+  // The sound is on unless the visitor turned it off (Muhammed, 3 Nov 2026: «ses default olarak açık olsun»).
+  const soundKept = () => startListening || readPreference("akar.ses") !== "0";
+  const [listen, setListen] = useState(soundKept),
     // A phone always starts on the one-sentence card; the whole list is a tap away (☰).
     [listOpen, setListOpen] = useState(() => !startListening && matchMedia("(min-width: 1000px)").matches),
     [folded, setFolded] = useState(false),
     cardRef = useRef<HTMLDivElement>(null),
-    [playing, setPlaying] = useState(startListening),
+    [playing, setPlayingState] = useState(soundKept),
     [rate, setRate] = useState(1),
     // Autoplay: with the sound off the sentences still move on by themselves, at about the time each takes to read.
     [auto, setAutoState] = useState(() => readPreference("akar.otomatik") === "1"),
@@ -98,6 +97,13 @@ export function StoryPanel({
   }
   const advance = useRef(go);
   advance.current = go;
+  // The visitor's own switch is kept; the story's end or an error stopping it is not a choice.
+  const setPlaying = (next: boolean | ((p: boolean) => boolean)) => setPlayingState(next);
+  const chooseSound = (next: boolean) => {
+    writePreference("akar.ses", next ? "1" : "0");
+    if (next && !listen) setListen(true);
+    setPlayingState(next);
+  };
   const setAuto = (next: boolean) => {
     writePreference("akar.otomatik", next ? "1" : "0");
     setAutoState(next);
@@ -283,16 +289,6 @@ export function StoryPanel({
         <button aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)}>
           <SkipBack size={18} />
         </button>
-        <button
-          className="story-play"
-          aria-label={playing ? t("site.stopAudio") : t("site.startAudio")}
-          onClick={() => {
-            if (!listen) setListen(true);
-            setPlaying(!playing);
-          }}
-        >
-          {playing ? <Pause size={22} /> : <Play size={22} />}
-        </button>
         <button aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)}>
           <SkipForward size={18} />
         </button>
@@ -322,10 +318,7 @@ export function StoryPanel({
       className={`story-sound${playing ? " on" : ""}`}
       aria-pressed={playing}
       aria-label={t(playing ? "site.soundOff" : "site.soundOn")}
-      onClick={() => {
-        if (!listen) setListen(true);
-        setPlaying(!playing);
-      }}
+      onClick={() => chooseSound(!playing)}
     >
       {playing ? <Volume2 size={22} /> : <VolumeX size={22} />}
     </button>
@@ -475,16 +468,8 @@ export function StoryPanel({
         <button className="round-btn" onClick={onClose} aria-label={t("site.closeStory")}>
           <X size={18} />
         </button>
-        <div className="story-mode" role="group" aria-label={t("site.storyMode")}>
-          <button aria-pressed={listen} onClick={() => chooseMode(true)}>
-            <Headphones size={16} />
-            {t("site.listenMode")}
-          </button>
-          <button aria-pressed={!listen} onClick={() => chooseMode(false)}>
-            <BookOpen size={16} />
-            {t("site.read")}
-          </button>
-        </div>
+        {/* Wide screens too (3 Nov 2026): no Dinle | Oku; the round sound button in the middle. */}
+        <div className="story-bar-sound">{sound}</div>
         {voiceControls}
         {position}
       </div>
