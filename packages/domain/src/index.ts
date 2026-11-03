@@ -229,6 +229,12 @@ export interface SiteModelFile {
 export const modelFileFor = (model: SiteModel, theme: "day" | "night"): SiteModelFile =>
   theme === "night" && model.night ? model.night : model;
 /**
+ * The file the map draws: the baked one for the theme when the site has it (light and shadow in its textures, so the
+ * phone computes neither), otherwise what the site's own page shows.
+ */
+export const mapModelSrc = (model: SiteModel, theme: "day" | "night"): string =>
+  (theme === "night" && model.night ? model.mapBaked?.night : model.mapBaked?.day) ?? modelFileFor(model, theme).src;
+/**
  * Part names the site's content uses that its night file lacks: story highlights and cameras, "Eser hakkında"
  * chapters, part cards, tasks and cover groups. They would not show by night. Only names in use are compared: a
  * file's part list may also carry mesh names, read differently by the server and by the editor.
@@ -265,6 +271,8 @@ export interface SiteModel {
    * file at night too. It carries the day file's part names, so placement, highlights, cards and cover groups hold.
    */
   night?: SiteModelFile;
+  /** The map's baked files, day and night, where they exist and are approved; the site's page never uses them. */
+  mapBaked?: { day?: string; night?: string };
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
 }

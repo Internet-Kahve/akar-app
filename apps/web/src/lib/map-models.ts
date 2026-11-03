@@ -1,7 +1,7 @@
 import {
   CITY_MARKER_MAX_ZOOM,
   defaultMapSettings,
-  modelFileFor,
+  mapModelSrc,
   type CityScene,
   type HeritageSite,
   type MapPlacement,
@@ -19,7 +19,7 @@ import type {
 import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { modelBase, PRESENTATION_PARTS, type ModelBase } from "./model-anchor";
+import { modelBase, BAKED_SHADOW, PRESENTATION_PARTS, type ModelBase } from "./model-anchor";
 import { OsmBuildingLayer } from "./map-buildings";
 import { pinLayersOn } from "./map-pins";
 import { currentTheme, type Theme } from "./theme";
@@ -61,6 +61,8 @@ interface Entry {
   bases: Map<string | null, ModelBase>;
   /** Soft ground shadow inside `group`; null when the city's light has none. */
   shadow: THREE.Mesh | null;
+  /** A baked file: light and shadow are in its textures, so the sun casts nothing and the shadow floor stays off. */
+  baked: boolean;
   /** The shadow-casting sun and the ground that shows its shadow, both in `scene` (world axes). */
   sun: THREE.DirectionalLight;
   floor: THREE.Mesh;
@@ -87,6 +89,29 @@ function stripScenery(root: THREE.Object3D, interior: string[] = []) {
       scenery.push(node);
   });
   for (const node of scenery) node.removeFromParent();
+}
+/** Every material unlit (`KHR_materials_unlit`): a baked file, needing no lights. */
+function isBaked(root: THREE.Object3D) {
+  let meshes = 0;
+  let unlit = 0;
+  root.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    meshes++;
+    if (node.material instanceof THREE.MeshBasicMaterial) unlit++;
+  });
+  return meshes > 0 && meshes === unlit;
+}
+/** A baked file's ground shadow lies on the map: under the building, untouchable, and clear of the ground's depth. */
+function settleBakedShadow(root: THREE.Object3D) {
+  root.traverse((node) => {
+    if (!(node instanceof THREE.Mesh) || !BAKED_SHADOW.test((node.material as THREE.Material).name)) return;
+    const material = node.material as THREE.Material;
+    material.polygonOffset = true;
+    material.polygonOffsetFactor = 2;
+    material.polygonOffsetUnits = 8;
+    node.renderOrder = -1;
+    node.raycast = () => {};
+  });
 }
 const disposeObject = (root: THREE.Object3D) =>
   root.traverse((item) => {
@@ -591,9 +616,10 @@ export class MapModelLayer implements CustomLayerInterface {
       site = this.sites.get(site.id)!;
       const modest = modestDevice();
       stripScenery(gltf.scene, site.interiorParts);
-      saturate(gltf.scene, site.light.saturation);
+      const baked = isBaked(gltf.scene);
+      if (!baked) saturate(gltf.scene, site.light.saturation);
       gltf.scene.traverse((node) => {
-        if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = true;
+        if (node instanceof THREE.Mesh) node.castShadow = node.receiveShadow = !baked;
       });
       // On the visitor's map, one draw call per material instead of one per mesh (lib/model-merge). The base point
       // needs the parts, so it is measured first; the panel's preview, where the anchor part is edited, keeps them.
@@ -603,17 +629,20 @@ export class MapModelLayer implements CustomLayerInterface {
         bases.set(site.placement.anchorNode ?? null, modelBase(gltf.scene, site.placement.anchorNode));
         mergeByMaterial(gltf.scene);
       }
+      if (baked) settleBakedShadow(gltf.scene);
       const scene = new THREE.Scene();
       const group = new THREE.Group();
       group.add(gltf.scene);
       scene.add(group);
       const floor = shadowFloor();
+      floor.visible = !baked;
       scene.add(floor);
       const entry: Entry = {
         site,
         scene,
         group,
         model: gltf.scene,
+        baked,
         matrix: new THREE.Matrix4(),
         footprint: [],
         bases,
@@ -621,6 +650,7 @@ export class MapModelLayer implements CustomLayerInterface {
         sun: (() => {
           const sun = addMapLights(scene);
           if (modest) sun.shadow.mapSize.set(MODEST_SHADOW_MAP, MODEST_SHADOW_MAP);
+          sun.castShadow = !baked;
           return sun;
         })(),
         floor,
@@ -683,7 +713,7 @@ export class MapModelLayer implements CustomLayerInterface {
       (entry.shadow.material as THREE.Material).dispose();
       entry.shadow = null;
     }
-    if (site.light.groundShadow > 0) {
+    if (!entry.baked && site.light.groundShadow > 0) {
       entry.shadow = groundShadow(
         base.footprint,
         0.03,
@@ -747,8 +777,8 @@ export function createMapModels(
             ? [
                 {
                   id: s.id,
-                  // The night file by night; a new source reloads the model (`reconcile`).
-                  src: modelFileFor(s.model, theme).src,
+                  // The baked file where there is one, the night file by night; a new source reloads it (`reconcile`).
+                  src: mapModelSrc(s.model, theme),
                   placement: s.model.placement,
                   light: sceneOf(s, scenes).light,
                   ...(s.model.interiorParts?.length && {

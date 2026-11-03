@@ -1967,7 +1967,7 @@ export function AkarApp() {
             tips={[
               { id: "detay", text: t("tip.detail"), place: "above-site-card", gesture: "swipe-down", spot: ".workspace.on-site .side-panel" },
               { id: "d.parca", text: t("tip.parts"), place: "under-spot", gesture: "tap", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", needs: ".detail-scene .model-show-parts", swallow: true, pressSpot: true },
-              { id: "d.parcaya", text: t("tip.aPart"), place: "stage", gesture: "tap", spot: ".detail-scene .model-canvas", needs: ".detail-scene .model-canvas canvas", swallow: true, pressSpot: true },
+              { id: "d.parcaya", text: t("tip.aPart"), place: "stage", gesture: "tap", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', swallow: true, pressSpot: true },
             ]}
           />
         ) : view === "story" ? (
@@ -1996,7 +1996,7 @@ export function AkarApp() {
               { id: "masa.detay", text: t("tip.detailWide"), place: "under-spot", gesture: "click", spot: ".detail-panel .hikaye-basla" },
               { id: "masa.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch", pressSpot: true, swallow: true },
               { id: "masa.parca", text: t("tip.partsWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", needs: ".detail-scene .model-show-parts", swallow: true, pressSpot: true },
-              { id: "masa.parcaya", text: t("tip.aPartWide"), place: "stage", gesture: "click", spot: ".detail-scene .model-canvas", needs: ".detail-scene .model-canvas canvas", swallow: true, pressSpot: true },
+              { id: "masa.parcaya", text: t("tip.aPartWide"), place: "stage", gesture: "click", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', swallow: true, pressSpot: true },
             ]}
           />
         ) : view === "story" ? (

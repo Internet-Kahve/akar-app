@@ -48,6 +48,13 @@ const sites = manifest.sites.map((s) => {
       ...(s.model.nightFile && {
         night: { name: s.model.name + " · gece", bytes: statSync(join(content, s.model.nightFile)).size, src: src(s.model.nightFile), parts: glbParts(join(content, s.model.nightFile)), triangles: null },
       }),
+      // The map's baked files (model.json `glb_harita_pisik`), once they have been looked at and approved: `pisik_onay`.
+      ...(info.pisik_onay && info.glb_harita_pisik && {
+        mapBaked: {
+          day: src(`eserler/${folder}/3d/export/${info.glb_harita_pisik}.glb`),
+          ...(info.glb_gece_harita_pisik && { night: src(`eserler/${folder}/3d/export/${info.glb_gece_harita_pisik}.glb`) }),
+        },
+      }),
       placement: { lng: s.coordinates[0], lat: s.coordinates[1], headingDeg: info.yaw ?? 0, frontDeg: info.on_yonu ?? null, scale: 1, altitudeM: 0,
         anchorNode: info.ana_parca || null, hiddenPoints: [], keptPoints: [] },
     };

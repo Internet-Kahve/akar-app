@@ -68,9 +68,11 @@ Ayrıntılı geçmiş:
 18. **Geçmişi Gör:** telefonda foto alanı sabit yükseklikte; sayfa yana kaymıyor.
 19. **Düğme basma efekti:** `translate` ile, `transform` ile değil. Ortalanmış düğmeler artık kaymıyor; parça kartı oklarında üst yarı çalışmıyordu.
 
+20. **Harita güneşi:** eser sayfasıyla aynı (cepheden 40°, yükseklik 50°, gündüz güç 2,1; `MAP_LIGHT` ikisinin ortak kaynağı).
+
 ## İpucu sıraları (`akar-app.tsx`, «First-time hints»)
 
-Her ipucu bir kez gösterilir; cihazda `akar.ipucu.<id>` olarak saklanır. Bir ipucu açıkken ilk dokunuş yalnız onu kapatır (`swallow`); gösterdiği düğmeye basmak çalışır (`pressSpot`). Hedefi ekranda olmayan ipucu bu sefer atlanır, hedef çıkınca gösterilir (`TipRow`). Hepsinde × var.
+Her ipucu bir kez gösterilir; cihazda `akar.ipucu.<id>` olarak saklanır. Bir ziyarette en çok 2 ipucu çıkar, kalanı sonraki ziyarete kalır; aralarında 0,5 sn ara vardır. «Şimdi bir parçaya dokun» yalnız parça düğmesine basılınca gelir (`when`) ve sayıya girmez. Bir ipucu açıkken ilk dokunuş yalnız onu kapatır (`swallow`); gösterdiği düğmeye basmak çalışır (`pressSpot`). Hedefi ekranda olmayan ipucu hiç görünmeden atlanır, hedef çıkınca gösterilir (`TipRow`). Hepsinde × var.
 
 | Ekran | Telefon | Masaüstü |
 |---|---|---|
@@ -82,12 +84,27 @@ Her ipucu bir kez gösterilir; cihazda `akar.ipucu.<id>` olarak saklanır. Bir i
 
 Testlerin cihazında hepsi görülmüş sayılır (`playwright.config.ts`, storageState); ilk adımların kendi testi `tests/first-steps-mobile.spec.ts`.
 
+## Pişirme ölçümü (3 Kasım)
+
+Ulucami, ana dosya `ulu-cami_v32`, 1170×2000 piksel, birleştirme sonrası. Yazılımsal GPU telefon değildir; oranlar yol göstericidir.
+
+| | Mevcut, gölgeli | Pişmiş |
+|---|---|---|
+| Kare, tek model, yazılımsal GPU | 150 ms | 75 ms |
+| Kare, 4 model, yazılımsal GPU | 209 ms | 130 ms |
+| Kare, 8 model, Apple M4 | 8,8 ms | 6,2 ms |
+| İşlemci, 8 model, M4 | 1,6 ms | 0,4 ms |
+| Çizim çağrısı, 8 model | 272 | 16 |
+| İlk kare, tek model, yazılımsal GPU | 1300 ms | 280 ms |
+| Geometri belleği, model başına | 7 MB | 3 MB |
+| Doku belleği, model başına | 10 MB | 23 MB (daha kötü) |
+| İndirme, gündüz / gece | 1,72 / 2,44 MB (harita sunum dosyasını indirir) | 0,78 / 0,94 MB |
+
+Denenen alternatifler (Lambert malzeme, tepe noktası rengiyle malzeme birleştirme) yakın sonuç vermedi: kare süresi en iyi 145 ms, çizim çağrısı en az 21.
+
 ## Bekleyenler
 
-- **Pişmiş harita modelleri (Blender):** başka bir yapay zekâya istem verildi. Ulucami gündüz dosyası geldi: `eserler/ulu-cami/3d/export/ulu-cami_v32_harita_pisik.glb`. Betikler `_kutuphane/blend_hat/pisik*.{py,mjs}`; bunlar bu dalda commit'li değil. Gece dosyası ve doğrulama raporu gelince uygulama tarafı yapılacak:
-  - `model.json → glb_harita_pisik` / `glb_gece_harita_pisik` alanları demo içeriğe aktarılacak (`services/api/scripts/prepare-demo-content.py`, `apps/web/scripts/prepare-demo-content.mjs`);
-  - harita o dosyayı kullanacak, ışık ve gölge kapatılacak (`lib/map-models.ts`);
-  - eser sayfası «bir kez çiz» ile kalacak.
+- **Pişmiş harita modelleri:** ölçüldü, alınacak (sayılar aşağıda). Uygulama tarafı hazır. Üçüncü deneme istemi: `PISIRME_ISTEMI_3KASIM.md`. Dosya gelip Muhammed onaylayınca `model.json` içine `"pisik_onay": true` yazılır, `prepare-demo-content.mjs` çalıştırılır; harita o dosyayı kullanır. Sonra kalan 6 eser. Canlı API bu alanı (`SiteModel.mapBaked`) henüz taşımıyor: Burak'ın eklemesi gerekir, yoksa canlıda eski yol sürer.
 - **Burak / Tamer:**
   - Storage dosyalarına `cache-control: immutable`;
   - canlı içeriğin yeniden aktarımı (`import-demo`);

@@ -12,6 +12,7 @@ import {
   validateCityIdentity,
   validateSite,
   memoryPermissions,
+  mapModelSrc,
   modelFileFor,
   nightPartsMissing,
   type HeritageSite,
@@ -461,4 +462,16 @@ test("a night file is checked against the part names the content uses, not again
   };
   assert.deepEqual(nightPartsMissing(site), ["Minare"]);
   assert.deepEqual(nightPartsMissing({ ...site, model: { ...site.model!, night: { ...site.model!.night!, parts: [] } } }), []);
+});
+
+test("the map draws a baked file where there is one, and the site's own file otherwise", () => {
+  const night = { name: "gece", bytes: 1, src: "/gece.glb", parts: [] };
+  const day = { name: "gündüz", bytes: 1, src: "/gunduz.glb", parts: [], trust: "representative" } as Parameters<typeof mapModelSrc>[0];
+  assert.equal(mapModelSrc(day, "day"), "/gunduz.glb");
+  assert.equal(mapModelSrc({ ...day, night }, "night"), "/gece.glb");
+  const baked = { ...day, night, mapBaked: { day: "/p.glb", night: "/pg.glb" } };
+  assert.equal(mapModelSrc(baked, "day"), "/p.glb");
+  assert.equal(mapModelSrc(baked, "night"), "/pg.glb");
+  // Baked by day only: the night keeps its own file, never the day's baked light.
+  assert.equal(mapModelSrc({ ...day, night, mapBaked: { day: "/p.glb" } }, "night"), "/gece.glb");
 });

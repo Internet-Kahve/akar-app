@@ -118,21 +118,29 @@ export function CoachTip({
     setShown(false);
     onDone?.();
   };
-  // A hint about an element that is not on screen (no parts to tap on this site) passes.
+  // It shows once its element is on screen. An element that does not come (no parts to tap on this site) passes the
+  // hint without its ever having shown, never a dark screen pointing at nothing.
+  const [present, setPresent] = useState(!needs);
   useEffect(() => {
     if (!shown || !needs) return;
-    const timer = setTimeout(() => {
-      if (document.querySelector(needs)) return;
-      if (onSkip) {
-        setShown(false);
-        onSkip();
-      } else done();
-    }, 1600);
-    return () => clearTimeout(timer);
+    const gaveUpAt = Date.now() + 1600;
+    const timer = setInterval(() => {
+      if (document.querySelector(needs)) {
+        clearInterval(timer);
+        setPresent(true);
+      } else if (Date.now() > gaveUpAt) {
+        clearInterval(timer);
+        if (onSkip) {
+          setShown(false);
+          onSkip();
+        } else done();
+      }
+    }, 100);
+    return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, needs]);
   useEffect(() => {
-    if (!shown) return;
+    if (!shown || !present) return;
     document.body.dataset.coach = id;
     // A moment's grace, so the touch that opened this screen does not put its hint away.
     let armed = false;
@@ -145,13 +153,24 @@ export function CoachTip({
       if (swallow && !onSpot) {
         e.stopPropagation();
         e.preventDefault();
-        // The rest of that touch (its up and click) goes nowhere either.
-        const eat = (ev: Event) => {
-          ev.stopPropagation();
-          ev.preventDefault();
-        };
-        window.addEventListener("pointerup", eat, { capture: true, once: true });
-        window.addEventListener("click", eat, { capture: true, once: true });
+        // The rest of that touch (its up and click) goes nowhere either. No more than that: the hint's ✕ leaves the
+        // page under the finger, so that touch may end in no click at all, and the visitor's next press must work.
+        if (e.type === "pointerdown") {
+          const eat = (ev: Event) => {
+            ev.stopPropagation();
+            ev.preventDefault();
+          };
+          const stop = () => {
+            window.removeEventListener("pointerup", stop, true);
+            window.removeEventListener("pointercancel", stop, true);
+            window.removeEventListener("pointerup", eat, true);
+            setTimeout(() => window.removeEventListener("click", eat, true), 350);
+          };
+          window.addEventListener("pointerup", eat, true);
+          window.addEventListener("click", eat, true);
+          window.addEventListener("pointerup", stop, true);
+          window.addEventListener("pointercancel", stop, true);
+        }
       }
       done();
     };
@@ -166,9 +185,9 @@ export function CoachTip({
       window.removeEventListener("keydown", away, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shown, key, swallow, pressSpot, spot]);
+  }, [shown, present, key, swallow, pressSpot, spot]);
   const spotRect = useRects(shown && place === "under-spot" ? spot : undefined)[0];
-  if (!shown) return null;
+  if (!shown || !present) return null;
   const Icon = gesture === "click" ? MousePointer2 : Pointer;
   const tip = (
     <div
@@ -205,28 +224,64 @@ export function CoachTip({
   );
 }
 
-export type TipProps = Omit<Parameters<typeof CoachTip>[0], "onDone" | "onSkip">;
+export type TipProps = Omit<Parameters<typeof CoachTip>[0], "onDone" | "onSkip"> & {
+  /**
+   * Comes only once this element is on screen, that is, after the visitor did what makes it true («Şimdi bir parçaya
+   * dokun» once the parts are lit). It answers the visitor's own step, so it does not count against `TIPS_PER_VISIT`.
+   */
+  when?: string;
+};
+
+/** Hints shown on one visit to a screen; the rest wait for the next visit, so a screen is never a tour to sit through. */
+const TIPS_PER_VISIT = 2;
+/** The pause between two hints, so the next reads as a new one and the screen shows itself between them. */
+const TIP_REST_MS = 500;
 
 /**
  * Hints in a row (3 Nov 2026: «her bölüm sırayla tanıtılsın»): the first not yet seen shows; put away, the next one
- * comes. One whose element is not on screen is passed over for now and comes another time.
+ * comes after a breath. At most `TIPS_PER_VISIT` on a visit. One whose element is not on screen is passed over for now
+ * and comes another time.
  */
 export function TipRow({ tips, onDone }: { tips: TipProps[]; onDone?: () => void }) {
   const [, setTick] = useState(0);
   const [skipped] = useState(() => new Set<string>());
-  const current = tips.find((tip) => !skipped.has(tip.id) && !readPreference(`akar.ipucu.${tip.id}`));
+  const [resting, setResting] = useState(false);
+  const [seen, setSeen] = useState(0);
+  const open = tips.filter((tip) => !skipped.has(tip.id) && !readPreference(`akar.ipucu.${tip.id}`));
+  // Once its step is done it stays done: the parts glow for a second only, the hint stays until it is put away.
+  const [met] = useState(() => new Set<string>());
+  for (const tip of open)
+    if (tip.when && typeof document !== "undefined" && document.querySelector(tip.when)) met.add(tip.id);
+  const current = open.find((tip) => (tip.when ? met.has(tip.id) : seen < TIPS_PER_VISIT));
+  const waiting = !current && open.some((tip) => tip.when);
+  // Nothing left for this visit, but for what waits on the visitor's own step.
+  const over = !resting && !open.some((tip) => !tip.when && seen < TIPS_PER_VISIT);
   useEffect(() => {
-    if (!current) onDone?.();
+    if (over) onDone?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [!current]);
-  if (!current) return null;
+  }, [over]);
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setInterval(() => setTick((n) => n + 1), 300);
+    return () => clearInterval(timer);
+  }, [waiting]);
+  useEffect(() => {
+    if (!resting) return;
+    const timer = setTimeout(() => setResting(false), TIP_REST_MS);
+    return () => clearTimeout(timer);
+  }, [resting]);
+  if (!current || resting) return null;
+  const { when, ...tip } = current;
   return (
     <CoachTip
-      key={current.id}
-      {...current}
-      onDone={() => setTick((n) => n + 1)}
+      key={tip.id}
+      {...tip}
+      onDone={() => {
+        if (!when) setSeen((n) => n + 1);
+        setResting(true);
+      }}
       onSkip={() => {
-        skipped.add(current.id);
+        skipped.add(tip.id);
         setTick((n) => n + 1);
       }}
     />
