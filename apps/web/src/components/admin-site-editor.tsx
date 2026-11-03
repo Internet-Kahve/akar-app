@@ -31,6 +31,8 @@ import { ApiError, routes, type AkarClient, type JobTarget } from "@akar/api-cli
 import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
+import { TasksStep } from "./admin-site-tasks";
+import { AboutStep } from "./admin-site-about";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
 import { AdminModelPreview, poseSummary } from "./admin-model-preview";
 import { prepareModel } from "../lib/editor-media";
@@ -41,6 +43,8 @@ const steps = [
   "Kaynaklar",
   "Hikâye",
   "Parça kartları",
+  "Görevler ve rozetler",
+  "Eser hakkında",
   "Yayın",
 ];
 function prepareSite(site: HeritageSite): HeritageSite {
@@ -1051,6 +1055,29 @@ export function SiteEditor({
             />
           )}
           {step === 5 && (
+            <TasksStep
+              tasks={draft.tasks ?? []}
+              badges={draft.badges ?? []}
+              modelParts={draft.model?.parts}
+              photos={photos}
+              onChange={(tasks, badges) => {
+                field("tasks", tasks);
+                field("badges", badges);
+              }}
+            />
+          )}
+          {step === 6 && (
+            <AboutStep
+              chapters={draft.chapters ?? []}
+              sections={draft.sections ?? []}
+              sources={sources}
+              onChange={(chapters, sections) => {
+                field("chapters", chapters);
+                field("sections", sections);
+              }}
+            />
+          )}
+          {step === 7 && (
             <div className="editor-step-content">
               <h2>Yayın kontrolü</h2>
               <div className="publish-checks" role="status">

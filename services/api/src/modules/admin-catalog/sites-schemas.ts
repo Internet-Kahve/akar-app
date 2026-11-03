@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { cardKinds, historyAngleMatches, publishStatuses, sectionKinds, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
+import { aboutLimits } from "@akar/domain";
+import { cardKinds, historyAngleMatches, publishStatuses, sectionKinds, siteBadgeConditions, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
 import { PageQuery, pageResponse } from "../../platform/pagination.ts";
-import { CardDto, KindSchema, MapPlacementDto, SiteDetail, TrustSchema } from "../catalog/schemas.ts";
+import { CardDto, KindSchema, MapPlacementDto, SiteDetail, SiteTaskDto, TrustSchema } from "../catalog/schemas.ts";
 
 // ── input building blocks ────────────────────────────────────────────────────
 
@@ -70,8 +71,34 @@ export type AdminSiteListItem = z.infer<typeof AdminSiteListItem>;
 
 export const AdminSiteListResponse = pageResponse(AdminSiteListItem);
 
+/**
+ * The task as the editor sees it: the public one plus what only staff may read, the answer key and the texts the player
+ * only gets after answering (the public detail never carries them, `taskDto`).
+ */
+export const AdminSiteTaskDto = SiteTaskDto.extend({
+  quiz: SiteTaskDto.shape.quiz
+    .unwrap()
+    .extend({
+      correctIndex: z.number().int().nullable().describe("Doğru seçeneğin sırası (0'dan); cevap anahtarı kaydı yoksa null"),
+      correctText: z.string().describe("Doğru cevapta gösterilen metin"),
+      correctTextEn: z.string().nullable(),
+    })
+    .optional()
+    .describe("Yalnız kind = quiz"),
+  field: SiteTaskDto.shape.field
+    .unwrap()
+    .extend({
+      doneText: z.string().describe("Görev tamamlanınca gösterilen metin"),
+      doneTextEn: z.string().nullable(),
+    })
+    .optional()
+    .describe("Yalnız kind = field"),
+});
+export type AdminSiteTaskDto = z.infer<typeof AdminSiteTaskDto>;
+
 /** The public detail, but a draft may lack type and location; plus the editor's bookkeeping. */
 export const AdminSiteDetail = SiteDetail.extend({
+  tasks: z.array(AdminSiteTaskDto).describe("Eser görevleri, sıralı; cevap anahtarı ve doğru cevap / tamamlama metinleri yalnız bu panel görünümünde"),
   kind: KindSchema.nullable().describe("Yapı türü (site_types); yayın için zorunlu"),
   categoryId: z.string().nullable().describe("Vakıf rolü kategorisi; türden gelir"),
   coordinates: z.tuple([z.number(), z.number()]).nullable().describe("[boylam, enlem]; yayın için zorunlu"),
@@ -244,17 +271,57 @@ export const StoriesBody = z.object({ blocks: z.array(StoryInput).max(100).descr
 export type StoriesInput = z.infer<typeof StoriesBody>;
 
 const SectionInput = z.object({
-  id: Id.optional(),
+  id: Id.optional().describe("Verilirse paragrafın kimliği korunur (kitap fotoğrafları ve sesli okuması kalır); yoksa sunucu üretir"),
   kind: z.enum(sectionKinds),
-  title: text(200).min(1),
-  body: text(8000),
-  bodyEn: nullableText(8000).optional(),
+  title: text(aboutLimits.title).min(1),
+  titleEn: nullableText(aboutLimits.title).optional().describe("İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler"),
+  body: text(aboutLimits.body).min(1),
+  bodyEn: nullableText(aboutLimits.body).optional().describe("İngilizce metin; titleEn ile aynı kurallar"),
   trust: TrustSchema,
   sourceId: Id.nullable().default(null),
 });
 
-export const SectionsBody = z.object({ sections: z.array(SectionInput).max(20).describe("Eser hakkında bölümleri, sırasıyla") });
-export type SectionsInput = z.infer<typeof SectionsBody>;
+/** The reading texts of a chapter, in Turkish and (item for item) in English. */
+const readingShape = {
+  summary: z.array(text(1000).min(1)).max(20).describe("Metinden seçilen özet cümleleri"),
+  figures: z.array(z.object({ value: text(40).min(1), label: text(120).min(1), evidence: text(500).min(1) })).max(12).describe("Sayı kartları"),
+  quotes: z.array(z.object({ text: text(600).min(1), by: nullableText(120).default(null) })).max(10),
+  timeline: z.array(z.object({ year: text(40).min(1), evidence: text(500).min(1) })).max(30),
+  terms: z.array(z.object({ word: text(120).min(1), definition: text(600).min(1) })).max(40).describe("Dokununca tanımı açılan sözcükler"),
+};
+const readingLists = Object.keys(readingShape) as (keyof typeof readingShape)[];
+
+const ChapterInput = z
+  .object({
+    id: Id.optional().describe("Verilirse bölümün kimliği korunur (kamera açısı, sesli okuma ve paragraflar bağlı kalır); yoksa sunucu üretir. Başka eserin bölüm kimliği 409 verir"),
+    title: text(aboutLimits.title).min(1),
+    titleEn: nullableText(aboutLimits.title).optional().describe("İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler"),
+    kind: z.enum(sectionKinds),
+    ...readingShape,
+    readingEn: z
+      .object(readingShape)
+      .nullable()
+      .optional()
+      .describe("Okuma metinlerinin İngilizcesi; her liste Türkçesiyle aynı uzunlukta ve eksiksiz; null siler, verilmezse kayıtlı değer korunur (listelerin uzunluğu hâlâ uyuyorsa). Kamera açısı, iç görünüm ve vurgulu parçalar gönderilmez: sunucuda olduğu gibi kalır"),
+    sections: z.array(SectionInput).describe("Bölümün paragrafları, sırasıyla"),
+  })
+  .superRefine((c, ctx) => {
+    if (!c.readingEn) return;
+    for (const key of readingLists)
+      if (c.readingEn[key].length !== c[key].length)
+        ctx.addIssue({ code: "custom", path: ["readingEn", key], message: "İngilizce liste Türkçe ile aynı uzunlukta olmalı." });
+  });
+
+export const AboutBody = z
+  .object({
+    chapters: z.array(ChapterInput).max(aboutLimits.chapters).describe("Eser hakkında bölümleri, sırasıyla; her biri kendi paragraflarıyla; listede olmayan bölüm ve paragraf (kitap fotoğrafları ve sesli okumalarıyla birlikte) silinir"),
+    looseSections: z.array(SectionInput).describe("Hiçbir bölüme bağlı olmayan paragraflar, sırasıyla (bölümlerden sonra gösterilir)"),
+  })
+  .superRefine((body, ctx) => {
+    const sections = [...body.chapters.flatMap((c) => c.sections), ...body.looseSections];
+    if (sections.length > aboutLimits.paragraphs) ctx.addIssue({ code: "custom", path: ["looseSections"], message: `En çok ${aboutLimits.paragraphs} paragraf gönderilebilir.` });
+  });
+export type AboutInput = z.infer<typeof AboutBody>;
 
 const HistoryImageInput = z.object({
   id: Id.optional().describe("Verilirse görselin kimliği korunur (rota durakları buna bağlanır)"),
@@ -292,6 +359,88 @@ const PartCardInput = z.object({
 
 export const PartCardsBody = z.object({ cards: z.array(PartCardInput).max(100).describe("3B parça kartları, sırasıyla") });
 export type PartCardsInput = z.infer<typeof PartCardsBody>;
+
+/** A string array of English texts is either all written or all blank (blank = none); the length must match its Turkish list. */
+const englishList = (what: string) => z.array(text(1000)).max(10).nullable().optional().describe(`${what} İngilizcesi, Türkçe liste ile aynı uzunlukta ve sırada; tümü boş ya da null = yok; verilmezse kayıtlı değer korunur`);
+
+const QuizInput = z
+  .object({
+    options: z.array(text(300).min(1)).min(2).max(6).describe("Seçenekler (2–6); sıraları cevabın yeridir, sırayı değiştirince correctIndex de değişir"),
+    optionsEn: englishList("Seçeneklerin"),
+    hints: z.array(text(500).min(1)).max(10).default([]).describe("İpuçları, sırayla istendikçe açılır"),
+    hintsEn: englishList("İpuçlarının"),
+    correctIndex: z.number().int().min(0).describe("Doğru seçeneğin sırası (0'dan); cevap anahtarı, herkese açık yanıtlarda yoktur"),
+    correctText: text(1000).default("").describe("Doğru cevapta gösterilen metin"),
+    correctTextEn: nullableText(1000).optional(),
+    wrongText: text(1000).default("").describe("Yanlış cevapta gösterilen metin"),
+    wrongTextEn: nullableText(1000).optional(),
+    fromHome: z.boolean().describe("Evden çözülebilir mi"),
+  })
+  .superRefine((q, ctx) => {
+    if (q.correctIndex >= q.options.length) ctx.addIssue({ code: "custom", path: ["correctIndex"], message: "Doğru seçenek, seçeneklerden biri olmalı." });
+    for (const [key, list, tr] of [["optionsEn", q.optionsEn, q.options], ["hintsEn", q.hintsEn, q.hints]] as const) {
+      if (!list) continue;
+      if (list.length !== tr.length) ctx.addIssue({ code: "custom", path: [key], message: "İngilizce liste Türkçe ile aynı uzunlukta olmalı." });
+      else if (list.some((s) => !s) && list.some((s) => s)) ctx.addIssue({ code: "custom", path: [key], message: "Her öğenin İngilizcesi yazılmalı ya da hepsi boş bırakılmalı." });
+    }
+  });
+
+const FieldInput = z.object({
+  onSite: z.object({
+    text: text(1000).min(1).describe("Yerinde yapılacak görev metni"),
+    textEn: nullableText(1000).optional(),
+    radiusM: z.number().int().min(10).max(5000).describe("Eserin noktasından en çok bu kadar metre uzakta (konum hassasiyeti payıyla)"),
+  }),
+  fromHome: z
+    .object({
+      text: text(1000).min(1),
+      textEn: nullableText(1000).optional(),
+      part: text(200).min(1).describe("Dokunulacak model parça adı (eserin modelinde olmalı)"),
+    })
+    .nullable()
+    .default(null)
+    .describe("Evden karşılığı; null = yalnız yerinde"),
+  doneText: text(1000).default("").describe("Görev tamamlanınca gösterilen metin"),
+  doneTextEn: nullableText(1000).optional(),
+});
+
+const taskBase = {
+  id: Id.optional().describe("Verilirse görevin kimliği korunur (oyuncuların tamamlamaları ve rozetleri kalır; rozet buna bağlanır); yoksa sunucu üretir"),
+  title: text(200).min(1),
+  prompt: text(2000).min(1).describe("Soru ya da görev metni"),
+  titleEn: nullableText(200).optional().describe("İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' (gözden geçirilmiş) olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler"),
+  promptEn: nullableText(2000).optional().describe("İngilizce soru / görev metni; titleEn ile aynı kurallar"),
+  photoId: Id.nullable().default(null).describe("kind=photo medya; eserin medya listesinde olmalı"),
+  part: text(200).min(1).nullable().default(null).describe("Görevin konusu olan model parça adı (eserin modelinde olmalı); null = yok"),
+  source: nullableText(500).default(null).describe("Kaynak satırı (serbest metin); boş = yok"),
+  trust: TrustSchema,
+};
+
+const TaskInput = z.discriminatedUnion("kind", [
+  z.object({ ...taskBase, kind: z.literal("quiz"), quiz: QuizInput }),
+  z.object({ ...taskBase, kind: z.literal("field"), field: FieldInput }),
+]);
+
+const BadgeInput = z
+  .object({
+    id: Id.optional().describe("Verilirse rozetin kimliği korunur (kazanan oyuncular kalır); yoksa sunucu üretir"),
+    title: text(200).min(1),
+    text: text(1000).min(1),
+    titleEn: nullableText(200).optional().describe("İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler"),
+    textEn: nullableText(1000).optional().describe("İngilizce metin; titleEn ile aynı kurallar"),
+    condition: z.enum(siteBadgeConditions).describe("story = hikâyeyi bitirince, task = taskId görevini yapınca"),
+    taskId: Id.nullable().default(null).describe("condition = task ise aynı gövdedeki görevlerden birinin kimliği (görev `id` ile gönderilmiş olmalı); story için null"),
+    onSiteLabel: z.boolean().default(false).describe("Yerinde (GPS ile) kazanılınca «Yerinde» etiketi gösterilir"),
+  })
+  .superRefine((b, ctx) => {
+    if ((b.condition === "task") !== (b.taskId !== null)) ctx.addIssue({ code: "custom", path: ["taskId"], message: "Görev rozetinde görev seçilmeli; hikâye rozetinde seçilmemeli." });
+  });
+
+export const TasksBody = z.object({
+  tasks: z.array(TaskInput).max(50).describe("Eser görevleri, sırasıyla; listede olmayan görev (oyuncu tamamlamalarıyla birlikte) silinir"),
+  badges: z.array(BadgeInput).max(50).describe("Eser rozetleri, sırasıyla; listede olmayan rozet (kazananlarla birlikte) silinir"),
+});
+export type TasksInput = z.infer<typeof TasksBody>;
 
 // ── cards ────────────────────────────────────────────────────────────────────
 

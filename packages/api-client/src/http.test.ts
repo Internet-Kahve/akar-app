@@ -2185,6 +2185,160 @@ test("a part card edit PUTs the whole ordered list with photo ids and a null sou
   });
 });
 
+test("tasks and badges map with the answer key and English status from the admin detail; an edit PUTs both lists whole; an unchanged list sends nothing", async () => {
+  let stored: any = {
+    ...siteA(),
+    status: "published",
+    photoIds: ["cover", "card-img", "old", "extra"],
+    sourceLinks: [],
+    openingCamera: null,
+    tasks: [
+      {
+        id: "q1",
+        kind: "quiz",
+        title: "Soru",
+        prompt: "Hangisi?",
+        titleEn: "Question",
+        promptEn: null,
+        enStatus: "machine",
+        photoId: "card-img",
+        part: null,
+        source: null,
+        trust: "verified",
+        quiz: {
+          options: ["A", "B"],
+          optionsEn: null,
+          hints: [],
+          hintsEn: null,
+          correctIndex: 1,
+          correctText: "Doğru",
+          correctTextEn: null,
+          wrongText: "Yanlış",
+          wrongTextEn: null,
+          fromHome: true,
+        },
+      },
+      {
+        id: "f1",
+        kind: "field",
+        title: "Saha",
+        prompt: "Git",
+        photoId: null,
+        part: null,
+        source: null,
+        trust: "verified",
+        field: {
+          onSite: { text: "Burada", textEn: null, radiusM: 80 },
+          fromHome: null,
+          doneText: "Bitti",
+          doneTextEn: null,
+        },
+      },
+    ],
+    badges: [
+      { id: "b1", title: "Rozet", text: "Metin", titleEn: null, textEn: null, enStatus: null, condition: "task", taskId: "q1", onSiteLabel: false },
+    ],
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored], nextCursor: null }),
+    "GET /v1/sites/a": () => stored,
+    "GET /v1/admin/sites/a": () => stored,
+    "PUT /v1/admin/sites/a/tasks": (c) => {
+      stored = { ...stored, ...(c.body as object) };
+      return stored;
+    },
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "T", fetch: api.fetch });
+  const current = (await client.getSnapshot()).sites[0]!;
+  const quiz = current.tasks![0]!;
+  assert.equal(quiz.enStatus, "machine");
+  assert.equal(quiz.quiz?.correctIndex, 1);
+  assert.equal(quiz.quiz?.correctText, "Doğru");
+  assert.equal(quiz.photo?.id, "card-img");
+  assert.equal("promptEn" in quiz, false);
+  assert.equal(current.tasks![1]!.field?.doneText, "Bitti");
+  assert.equal("enStatus" in current.badges![0]!, false);
+
+  await client.saveSite({ ...current, description: "Başka" }).catch(() => {});
+  assert.equal(api.calls.filter((c) => c.path.endsWith("/tasks")).length, 0);
+
+  await client.saveSite({
+    ...current,
+    tasks: [current.tasks![1]!, { ...quiz, quiz: { ...quiz.quiz!, correctIndex: 0, optionsEn: ["", ""] } }],
+  });
+  const put = api.calls.find((c) => c.path.endsWith("/tasks"))!;
+  const body = put.body as { tasks: any[]; badges: any[] };
+  assert.deepEqual(body.tasks.map((t) => t.id), ["f1", "q1"]);
+  assert.deepEqual(body.tasks[0].field, {
+    onSite: { text: "Burada", textEn: null, radiusM: 80 },
+    fromHome: null,
+    doneText: "Bitti",
+    doneTextEn: null,
+  });
+  assert.equal(body.tasks[1].quiz.correctIndex, 0);
+  assert.equal(body.tasks[1].quiz.optionsEn, null);
+  assert.equal(body.tasks[1].photoId, "card-img");
+  assert.deepEqual(body.badges, [
+    { id: "b1", title: "Rozet", text: "Metin", titleEn: null, textEn: null, condition: "task", taskId: "q1", onSiteLabel: false },
+  ]);
+
+  // A quiz without an answer key is not sent: the editor must mark one.
+  const { correctIndex: _key, ...unkeyed } = quiz.quiz!;
+  await assert.rejects(client.saveSite({ ...current, tasks: [{ ...quiz, quiz: unkeyed }] }), /doğru seçeneğini/);
+});
+
+test("the about chapters and paragraphs map with their English status; an edit PUTs the chapters with their paragraphs and the loose ones whole; an unchanged text sends nothing", async () => {
+  const reading = { summary: ["Özet."], figures: [{ value: "1491", label: "yıl", evidence: "1491'de" }], quotes: [{ text: "Söz", by: null }], timeline: [], terms: [] };
+  const para = (id: string, chapterId: string | null, over: Record<string, unknown> = {}) => ({
+    id, kind: "history", title: "Tarihçe", titleEn: null, body: `Metin ${id}.`, bodyEn: null, enStatus: null, trust: "verified", sourceId: null, chapterId, photos: [], narrations: [], ...over,
+  });
+  let stored: any = {
+    ...siteA(),
+    status: "published",
+    photoIds: ["cover", "card-img", "old", "extra"],
+    sourceLinks: [],
+    openingCamera: null,
+    chapters: [
+      { id: "c1", title: "Tarihçe", titleEn: "History", kind: "history", ...reading, readingEn: { summary: ["Summary."], figures: [{ value: "1491", label: "year", evidence: "in 1491" }], quotes: [{ text: "Word", by: null }], timeline: [], terms: [] }, camera: null, interior: false, focusParts: [], enStatus: "machine", narrations: [] },
+      { id: "c2", title: "Mimari", titleEn: null, kind: "architecture", ...reading, readingEn: null, camera: null, interior: false, focusParts: [], enStatus: null, narrations: [] },
+    ],
+    sections: [para("s1", "c1", { enStatus: "machine", bodyEn: "Text s1." }), para("s2", "c2"), para("s3", null, { title: "Ek" })],
+  };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/site-details": () => ({ items: [stored], nextCursor: null }),
+    "GET /v1/sites/a": () => stored,
+    "GET /v1/admin/sites/a": () => stored,
+    "PUT /v1/admin/sites/a/about": () => stored,
+  });
+  const client = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "T", fetch: api.fetch });
+  const current = (await client.getSnapshot()).sites[0]!;
+  assert.deepEqual([current.chapters![0]!.enStatus, current.chapters![1]!.enStatus], ["machine", undefined]);
+  assert.deepEqual(current.sections!.map((s) => [s.id, s.chapterId, s.enStatus]), [["s1", "c1", "machine"], ["s2", "c2", undefined], ["s3", undefined, undefined]]);
+
+  await client.saveSite({ ...current, description: "Başka" }).catch(() => {});
+  assert.equal(api.calls.filter((c) => c.path.endsWith("/about")).length, 0);
+
+  // The second chapter first, a paragraph moved into it, an English text cleared, a loose paragraph kept.
+  await client.saveSite({
+    ...current,
+    chapters: [current.chapters![1]!, { ...current.chapters![0]!, readingEn: undefined, titleEn: "" }],
+    sections: [current.sections![0]!, current.sections![1]!, { ...current.sections![2]!, body: "Düzeltildi." }].map((s, i) => (i === 0 ? { ...s, chapterId: "c2", bodyEn: "" } : s)),
+  });
+  const put = api.calls.find((c) => c.path.endsWith("/about"))!;
+  const body = put.body as { chapters: any[]; looseSections: any[] };
+  assert.deepEqual(body.chapters.map((c) => [c.id, c.titleEn, c.readingEn, c.sections.map((s: any) => [s.id, s.bodyEn])]), [
+    ["c2", null, null, [["s1", null], ["s2", null]]],
+    ["c1", null, null, []],
+  ]);
+  assert.deepEqual(body.chapters[0].quotes, [{ text: "Söz", by: null }]);
+  assert.deepEqual(body.looseSections.map((s) => [s.id, s.body, s.sourceId]), [["s3", "Düzeltildi.", null]]);
+  assert.deepEqual(Object.keys(body.looseSections[0]).sort(), ["body", "bodyEn", "id", "kind", "sourceId", "title", "titleEn", "trust"]);
+});
+
 test("the opening angle is read from the API and saved on the linked model alone; an unchanged one sends nothing", async () => {
   const pose = { target: null, azimuthDeg: 354, elevationDeg: 30, distance: 0.95 };
   let stored: any = { ...siteA(), status: "published", photoIds: ["cover", "card-img", "old", "extra"], sourceLinks: [], openingCamera: pose };

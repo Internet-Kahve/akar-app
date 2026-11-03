@@ -1547,6 +1547,17 @@ input[type="checkbox"] {
   letter-spacing: 0.4em;
   text-align: center;
 }
+.signin-google {
+  width: 100%;
+  justify-content: center;
+}
+.signin-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+}
 .account-email {
   overflow-wrap: anywhere;
 }
@@ -2420,6 +2431,7 @@ td small {
 }
 .editor-steps {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 24px;
 }
@@ -2779,6 +2791,24 @@ td small {
 .cue-top .field {
   flex: 1;
   min-width: 0;
+}
+.about-item {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.about-block {
+  margin: 18px 0;
+}
+.about-chapter > summary,
+.about-paragraph > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+.about-paragraph {
+  border-top: 1px solid var(--border);
+  padding: 12px 0;
 }
 .story-jobs {
   display: grid;

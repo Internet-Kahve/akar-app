@@ -42,7 +42,7 @@ Panelde olan: eser sihirbazı (Model, Bilgiler, Kaynaklar, Hikâye, Parça kartl
 
 API'de olup panelde ekranı olmayanlar:
 - [ ] **Akar akışı** (`flow`: kaynak eser, hedef, etiket, kaynak, güven) — Muhammed'in sıradaki işi (`PROTOTIP_AKTARIM.md` §3.2).
-- [ ] «Eser hakkında» bölümleri (`PUT …/sections`), Geçmişi Gör eski fotoğrafları (`PUT …/history-images`).
+- [ ] Geçmişi Gör eski fotoğrafları (`PUT …/history-images`). («Eser hakkında» bölümleri artık `PUT …/about` ile panelde, §11.69; kitap fotoğrafları ve bölüm kamerası panelde yok.)
 - [ ] Bulmacalar (`/v1/admin/quizzes`), hikâye kartları (`/v1/admin/cards`), içe aktarma (`/v1/admin/imports`), raporlar (`/v1/admin/reports/*`: taslak sorunları, konum, kopya), ekip davetleri (`/v1/admin/staff`).
 
 API'de de olmayanlar (Burak):

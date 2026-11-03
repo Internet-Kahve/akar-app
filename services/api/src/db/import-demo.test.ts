@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startTestApp, TEST_RECEIPT_SECRET } from "../test/harness.ts";
 import { deleteUnreferencedMedia } from "../modules/media/service.ts";
-import { historyImages, siteAboutChapters, siteBadges, siteMapPlacements, sitePartCards, sites as sitesTable, siteSections, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
+import { historyImages, siteAboutChapters, siteBadges, siteMapPlacements, sitePartCards, sites as sitesTable, siteSections, siteTaskAnswers, siteTasks, storyBlocks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
 import { importDemoContent } from "./import-demo.ts";
 
 let ctx: Awaited<ReturnType<typeof startTestApp>>;
@@ -194,14 +194,14 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   sites[0]!.tasks.reverse();
   sites[0]!.badges.reverse();
   await writeFile(path, JSON.stringify(manifest));
-  await importDemoContent(path, root, true, env);
+  await importDemoContent(path, root, true, env, { replaceTasks: true });
   assert.deepEqual((await db.select({ id: siteTasks.id }).from(siteTasks).where(eq(siteTasks.siteId, "test-0")).orderBy(siteTasks.position)).map((t) => t.id), ["task-f-0", "task-q-0"]);
   assert.equal((await db.select().from(userSiteTasks)).length, 2, "reordering keeps the progress");
   assert.equal((await db.select().from(userSiteBadges)).length, 2);
   sites[0]!.tasks = sites[0]!.tasks.filter((t) => t.id !== "task-f-0");
   sites[0]!.badges = sites[0]!.badges.filter((b) => b.id !== "badge-f-0");
   await writeFile(path, JSON.stringify(manifest));
-  await importDemoContent(path, root, true, env);
+  await importDemoContent(path, root, true, env, { replaceTasks: true });
   assert.deepEqual((await db.select({ id: siteTasks.id }).from(siteTasks).where(eq(siteTasks.siteId, "test-0"))).map((t) => t.id), ["task-q-0"]);
   assert.deepEqual((await db.select({ id: siteBadges.id }).from(siteBadges).where(eq(siteBadges.siteId, "test-0"))).map((b) => b.id), ["badge-s-0"]);
   assert.deepEqual((await db.select({ id: userSiteTasks.taskId }).from(userSiteTasks)).map((t) => t.id), ["task-q-0"], "only the vanished task's progress goes");
@@ -255,6 +255,50 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Panelde düzeltildi"], []]);
   assert.deepEqual((await importDemoContent(path, root, true, env, { replacePartCards: true })).partCardsKept, []);
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Kubbe"], ["Kubbe"]]);
+  // The panel owns tasks and badges of a site already in the database too (§11.67): a repeat import keeps its edits, --replace-tasks restores the manifest's.
+  const taskTitles = async (siteId: string) => (await db.select({ title: siteTasks.title }).from(siteTasks).where(eq(siteTasks.siteId, siteId)).orderBy(siteTasks.position)).map((t) => t.title);
+  await db.update(siteTasks).set({ title: "Panelde düzeltildi" }).where(eq(siteTasks.id, "task-q-0"));
+  await db.delete(siteTasks).where(eq(siteTasks.siteId, "test-1"));
+  await writeFile(path, JSON.stringify(manifest));
+  assert.equal((await importDemoContent(path, root, true, env)).tasksKept?.length, 7);
+  assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Panelde düzeltildi"], []]);
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceTasks: true })).tasksKept, []);
+  assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Soru"], ["Soru", "Saha"]]);
+  // The panel owns the chapters and paragraphs of a site already in the database too (§11.69): a repeat import keeps its edits (and the English), --replace-about restores the manifest's.
+  const aboutOf = async (siteId: string) => ({
+    chapters: (await db.select({ id: siteAboutChapters.id, title: siteAboutChapters.title }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, siteId)).orderBy(siteAboutChapters.position)).map((c) => `${c.id}:${c.title}`),
+    sections: (await db.select({ id: siteSections.id, body: siteSections.body }).from(siteSections).where(eq(siteSections.siteId, siteId)).orderBy(siteSections.position)).map((s) => `${s.id}:${s.body}`),
+  });
+  await db.update(siteAboutChapters).set({ title: "Panelde düzeltildi" }).where(eq(siteAboutChapters.id, "chapter-0"));
+  await db.delete(siteSections).where(eq(siteSections.id, "sec-0-2"));
+  await db.delete(siteAboutChapters).where(eq(siteAboutChapters.siteId, "test-1"));
+  await writeFile(path, JSON.stringify(manifest));
+  assert.equal((await importDemoContent(path, root, true, env)).aboutKept?.length, 7);
+  assert.deepEqual(await aboutOf("test-0"), { chapters: ["chapter-0:Panelde düzeltildi"], sections: ["sec-0-1:Cami 1399 yılında açıldı."] });
+  assert.deepEqual((await aboutOf("test-1")).chapters, [], "a panel-emptied site stays empty");
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceAbout: true })).aboutKept, []);
+  assert.deepEqual(await aboutOf("test-0"), { chapters: ["chapter-0:Tarihçe"], sections: ["sec-0-1:Cami 1399 yılında açıldı.", "sec-0-2:Kubbeli."] });
+  assert.deepEqual((await aboutOf("test-1")).chapters, ["chapter-1:Tarihçe"]);
+  assert.equal((await db.select().from(siteAboutChapters).where(eq(siteAboutChapters.id, "chapter-0")))[0]!.titleEn, "History", "the English written since is kept per id on a replace");
+  // The panel owns a story sentence's 3D view (§11.70): a repeat import keeps camera, highlights, interior and card but takes
+  // the text from the package; --replace-story-views restores the package's views.
+  const packageCamera = { target: "kubbe_1", azimuthDeg: 10, elevationDeg: 20, distance: 1 };
+  (sites[0] as { stories: unknown[] }).stories = [{ id: "story-0-1", title: "Giriş", text: "Cami 1399'da açıldı.", simple: "Cami eski.", trust: "verified", photoId: "photo-0", sourceId: "source-0", highlights: [], camera: packageCamera }];
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  const panelCamera = { target: "kubbe_1", azimuthDeg: 90, elevationDeg: 30, distance: 0.5 };
+  await db.update(storyBlocks).set({ camera: panelCamera, highlights: ["kubbe_1"], interior: true, showCard: true }).where(eq(storyBlocks.id, "story-0-1"));
+  (sites[0] as { stories: Array<{ text: string }> }).stories[0]!.text = "Cami 1399 yılında açıldı.";
+  await writeFile(path, JSON.stringify(manifest));
+  const viewOf = async () => {
+    const [s] = await db.select().from(storyBlocks).where(eq(storyBlocks.id, "story-0-1"));
+    return { text: s!.text, camera: s!.camera, highlights: s!.highlights, interior: s!.interior, showCard: s!.showCard };
+  };
+  assert.ok((await importDemoContent(path, root, true, env)).storyViewsKept?.includes("test-0"));
+  assert.deepEqual(await viewOf(), { text: "Cami 1399 yılında açıldı.", camera: panelCamera, highlights: ["kubbe_1"], interior: true, showCard: true });
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceStoryViews: true })).storyViewsKept, []);
+  assert.deepEqual(await viewOf(), { text: "Cami 1399 yılında açıldı.", camera: packageCamera, highlights: [], interior: false, showCard: null });
+  (sites[0] as { stories: unknown[] }).stories = [];
   // A stored placement is the panel's: a re-import sets the façade direction only where the package names one and leaves the rest.
   const placementOf = async (siteId: string) => (await db.select().from(siteMapPlacements).where(eq(siteMapPlacements.siteId, siteId)))[0]!;
   await db.update(siteMapPlacements).set({ frontDeg: 99, headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-1"));
@@ -313,6 +357,6 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified", chapterId: null, photos: [] }];
   await writeFile(path, JSON.stringify(manifest));
-  await assert.rejects(importDemoContent(path, root, true, env));
+  await assert.rejects(importDemoContent(path, root, true, env, { replaceAbout: true }));
   assert.equal((await ctx.app.inject({ url: "/v1/sites/test-0" })).json().name, "Eser 0");
 });

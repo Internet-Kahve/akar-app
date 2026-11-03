@@ -74,7 +74,7 @@ async function publishedSite(name: string): Promise<AdminSiteDetail> {
       { title: "Devam", text: "Avlusu geniştir.", simple: "Avlu geniş.", trust: "verified", photoId: "ph-2", sourceId: "src-vgm", highlights: [] },
     ],
   });
-  await send("PUT", `${base}/sections`, { sections: [{ kind: "history", title: "Tarihçe", body: "Han 1491'de yapıldı.", trust: "verified", sourceId: "src-vgm" }] });
+  await send("PUT", `${base}/about`, { chapters: [], looseSections: [{ kind: "history", title: "Tarihçe", body: "Han 1491'de yapıldı.", trust: "verified", sourceId: "src-vgm" }] });
   await send("PUT", `${base}/history-images`, { images: [{ mediaId: "ph-1", presentMediaId: "ph-2", trust: "inferred", sourceId: "src-vgm" }] });
   return send("POST", `${base}/publish`);
 }
@@ -179,12 +179,13 @@ test("a malformed cursor is 400 INVALID_CURSOR and a limit over 100 is refused",
   assert.equal(tooMany.body.error.code, "VALIDATION_FAILED");
 });
 
-test("rewriting the paragraphs keeps what the import attached: chapter and book photographs follow the paragraph's id, a new paragraph joins the chapter with its title", async () => {
+test("rewriting the about texts keeps what the import attached: the chapter's 3D view and the book photographs follow the ids; a left-out paragraph takes its photographs, a left-out chapter goes, the cover stays", async () => {
   const site = await publishedSite("Okuma Hanı");
   const base = `/v1/admin/sites/${site.id}`;
   const db = app.deps.db;
   const first = site.sections[0]!;
-  const reading = { summary: ["Han 1491'de yapıldı."], figures: [], quotes: [], timeline: [], terms: [], camera: null, interior: false, focusParts: [] };
+  const camera = { target: null, azimuthDeg: 30, elevationDeg: 10, distance: 0.9 };
+  const reading = { summary: ["Han 1491'de yapıldı."], figures: [], quotes: [], timeline: [], terms: [], camera, interior: true, focusParts: ["kubbe"] };
   const chapterId = `chapter-${site.id}`;
   await db.insert(siteAboutChapters).values({ id: chapterId, siteId: site.id, position: 0, title: "Tarihçe", kind: "history", reading });
   await db.update(siteSections).set({ chapterId }).where(eq(siteSections.siteId, site.id));
@@ -194,33 +195,38 @@ test("rewriting the paragraphs keeps what the import attached: chapter and book 
   ]);
   await db.update(sites).set({ aboutCoverMediaId: "ph-2" }).where(eq(sites.id, site.id));
 
-  const edited = await send("PUT", `${base}/sections`, {
-    sections: [
-      { kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" },
-      { id: first.id, kind: "history", title: "Tarihçe", body: "Han 1491'de inşa edildi.", trust: "verified", sourceId: "src-vgm" },
-      { kind: "history", title: "Tarihçe", body: "Sonradan eklenen paragraf.", trust: "verified" },
+  const edited = await send("PUT", `${base}/about`, {
+    chapters: [
+      {
+        id: chapterId, title: "Tarihçe", kind: "history", summary: ["Han 1491'de inşa edildi."], figures: [], quotes: [], timeline: [], terms: [],
+        sections: [
+          { id: first.id, kind: "history", title: "Tarihçe", body: "Han 1491'de inşa edildi.", trust: "verified", sourceId: "src-vgm" },
+          { kind: "history", title: "Tarihçe", body: "Sonradan eklenen paragraf.", trust: "verified" },
+        ],
+      },
     ],
+    looseSections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }],
   });
   assert.deepEqual(edited.sections.map((x) => [x.title, x.chapterId, x.photos.map((p) => p.alt)]), [
-    ["Mimari", null, []],
     ["Tarihçe", chapterId, ["Birinci", "İkinci"]],
     ["Tarihçe", chapterId, []],
+    ["Mimari", null, []],
   ]);
-  assert.equal(edited.sections[1]!.photos[0]!.aspect, 1.5);
-  assert.deepEqual(edited.chapters.map((c) => c.id), [chapterId]);
+  assert.equal(edited.sections[0]!.photos[0]!.aspect, 1.5);
+  assert.deepEqual(edited.chapters.map((c) => [c.id, c.summary, c.camera, c.interior, c.focusParts]), [[chapterId, ["Han 1491'de inşa edildi."], camera, true, ["kubbe"]]]);
   assert.equal(edited.aboutCoverMediaId, "ph-2");
 
-  // A paragraph left out takes its photographs with it; the chapter and the cover stay.
-  const trimmed = await send("PUT", `${base}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
+  // Left out: the chapter and the paragraph with the photographs go; the cover stays.
+  const trimmed = await send("PUT", `${base}/about`, { chapters: [], looseSections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
   assert.equal(trimmed.sections.length, 1);
-  assert.equal(trimmed.chapters.length, 1);
+  assert.equal(trimmed.chapters.length, 0);
   assert.equal(trimmed.aboutCoverMediaId, "ph-2");
   assert.equal((await db.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, site.id))).length, 0);
   const listed = await call<DetailPage>("GET", `/v1/admin/site-details?query=${encodeURIComponent("okuma hani")}`, editor);
   assert.deepEqual(listed.body.items.find((i) => i.id === site.id), (await call<AdminSiteDetail>("GET", base, editor)).body);
 });
 
-test("the admin detail carries the tasks and badges the public detail does, the task photograph resolves from its media, no answer key, and editing the paragraphs leaves them alone", async () => {
+test("the admin detail carries the tasks and badges of the public detail plus the answer key and after-the-answer texts only staff see, the task photograph resolves from its media, and editing the paragraphs leaves them alone", async () => {
   const site = await publishedSite("Görev Hanı");
   const db = app.deps.db;
   await db.insert(siteTasks).values({
@@ -232,17 +238,20 @@ test("the admin detail carries the tasks and badges the public detail does, the 
 
   const admin = (await call<AdminSiteDetail>("GET", `/v1/admin/sites/${site.id}`, editor)).body;
   const pub = (await call<AdminSiteDetail>("GET", `/v1/sites/${site.id}`)).body;
-  assert.deepEqual(admin.tasks, pub.tasks);
+  const { quiz: adminQuiz, ...adminTask } = admin.tasks[0]!;
+  const { quiz: pubQuiz, ...pubTask } = pub.tasks[0]!;
+  assert.deepEqual(adminTask, pubTask);
+  assert.deepEqual(adminQuiz, { ...pubQuiz, correctIndex: 1, correctText: "Gizli doğru metin", correctTextEn: null });
+  assert.ok(!JSON.stringify(pub).includes("Gizli doğru metin") && !/correctIndex/.test(JSON.stringify(pub)), "the public detail has no answer key");
   assert.deepEqual(admin.badges, pub.badges);
   assert.deepEqual(admin.tasks, [
     { id: `${site.id}-soru`, kind: "quiz", title: "Soru", prompt: "Hangisi?", titleEn: null, promptEn: null, photoId: "ph-2", part: null, source: "E cilt-1 PDF s.27", trust: "verified", enStatus: null,
-      quiz: { options: ["A", "B"], optionsEn: null, hints: ["İpucu"], hintsEn: null, wrongText: "Tekrar dene", wrongTextEn: null, fromHome: false } },
+      quiz: { options: ["A", "B"], optionsEn: null, hints: ["İpucu"], hintsEn: null, wrongText: "Tekrar dene", wrongTextEn: null, fromHome: false, correctIndex: 1, correctText: "Gizli doğru metin", correctTextEn: null } },
   ]);
   assert.deepEqual(admin.badges, [{ id: `${site.id}-rozet`, title: "Rozet", text: "Kazandın", titleEn: null, textEn: null, enStatus: null, condition: "task", taskId: `${site.id}-soru`, onSiteLabel: false }]);
   assert.ok(admin.media.some((m) => m.id === "ph-2"), "the task photograph is part of the media list");
-  assert.ok(!JSON.stringify(admin).includes("Gizli doğru metin"));
 
-  const edited = await send("PUT", `/v1/admin/sites/${site.id}/sections`, { sections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
+  const edited = await send("PUT", `/v1/admin/sites/${site.id}/about`, { chapters: [], looseSections: [{ kind: "architecture", title: "Mimari", body: "Avlulu.", trust: "verified" }] });
   assert.equal(edited.tasks.length, 1);
   assert.equal(edited.badges.length, 1);
 });

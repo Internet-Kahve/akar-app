@@ -261,7 +261,7 @@ test("admin photo wizard publishes complete content and persists shared images",
   await page
     .getByRole("button", { name: "Demo Vakıf Kütüphanesi düzenle" })
     .click();
-  await page.getByRole("button", { name: "6 Yayın" }).click();
+  await page.getByRole("button", { name: "8 Yayın" }).click();
   await expect(page.getByText("Türkçe içerik yayın için hazır.")).toBeVisible();
   expect(
     await page.evaluate(
