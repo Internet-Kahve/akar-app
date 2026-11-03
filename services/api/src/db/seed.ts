@@ -36,8 +36,14 @@ function photoMime(photo: SitePhoto): string {
  * Upserts domain sites and catalog routes. Idempotent: entities are keyed by their domain ids and
  * ordered children (stories, stops, links) are replaced, so a second run changes nothing.
  * Existing `created_at`/`updated_at` are left alone; this is a content loader, not an editor.
+ * `keepStoryViews`: a sentence already in the database keeps its 3D view (camera, highlights, interior, card),
+ * which the panel owns (§11.70); its text still comes from the input.
  */
-export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; routes: HeritageRoute[] }): Promise<void> {
+export async function loadCatalog(
+  db: Db | Tx,
+  input: { sites: HeritageSite[]; routes: HeritageRoute[] },
+  options: { keepStoryViews?: boolean } = {},
+): Promise<void> {
   for (const site of input.sites) validateSite(site);
 
   await db.transaction(async (tx) => {
@@ -139,10 +145,13 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
       await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
       // English texts are written in the panel (or by its translation), not in the content package: an import keeps
       // them, and with them the English voice-overs, which only play while their text is unchanged.
-      const english = new Map(
+      const stored = new Map(
         (
           await tx
-            .select({ id: storyBlocks.id, textEn: storyBlocks.textEn, textEnStatus: storyBlocks.textEnStatus, simpleEn: storyBlocks.simpleEn, simpleEnStatus: storyBlocks.simpleEnStatus })
+            .select({
+              id: storyBlocks.id, textEn: storyBlocks.textEn, textEnStatus: storyBlocks.textEnStatus, simpleEn: storyBlocks.simpleEn, simpleEnStatus: storyBlocks.simpleEnStatus,
+              camera: storyBlocks.camera, highlights: storyBlocks.highlights, interior: storyBlocks.interior, showCard: storyBlocks.showCard,
+            })
             .from(storyBlocks)
             .where(eq(storyBlocks.siteId, site.id))
         ).map((b) => [b.id, b]),
@@ -156,24 +165,27 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
       }
       if (site.stories.length) {
         await tx.insert(storyBlocks).values(
-          site.stories.map((b, position) => ({
-            siteId: site.id,
-            id: b.id,
-            position,
-            title: b.title,
-            text: b.text,
-            ...keptEnglish(english.get(b.id), b.textEn),
-            simple: b.simple,
-            trust: b.trust,
-            photoId: b.photoId ?? null,
-            sourceId: b.sourceId ?? null,
-            showCard: b.showCard ?? null,
-            highlights: b.highlights ?? [],
-            camera: b.camera ?? null,
-            interior: b.interior ?? false,
-            routeOnly: b.routeOnly ?? false,
-            flow: b.flow ?? null,
-          })),
+          site.stories.map((b, position) => {
+            const old = stored.get(b.id);
+            const view = options.keepStoryViews && old
+              ? { showCard: old.showCard, highlights: old.highlights, camera: old.camera, interior: old.interior }
+              : { showCard: b.showCard ?? null, highlights: b.highlights ?? [], camera: b.camera ?? null, interior: b.interior ?? false };
+            return {
+              siteId: site.id,
+              id: b.id,
+              position,
+              title: b.title,
+              text: b.text,
+              ...keptEnglish(old, b.textEn),
+              simple: b.simple,
+              trust: b.trust,
+              photoId: b.photoId ?? null,
+              sourceId: b.sourceId ?? null,
+              ...view,
+              routeOnly: b.routeOnly ?? false,
+              flow: b.flow ?? null,
+            };
+          }),
         );
       }
     }

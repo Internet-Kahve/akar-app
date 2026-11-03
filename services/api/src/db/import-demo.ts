@@ -128,7 +128,7 @@ function validateDisplayOrder(site: ContentSite): void {
     throw new Error(`Site ${site.id}: displayOrder must be an integer of at least 1 or absent, got ${JSON.stringify(order)}`);
 }
 
-/** `partCardsKept` / `tasksKept` / `aboutKept` (sites whose part cards / tasks and badges / chapters and paragraphs the panel owns and the import left alone, §11.52, §11.67, §11.69) are filled only by --apply: a dry run does not read the database. */
+/** `partCardsKept` / `tasksKept` / `aboutKept` / `storyViewsKept` (sites whose part cards / tasks and badges / chapters and paragraphs / story sentence 3D views the panel owns and the import left alone, §11.52, §11.67, §11.69, §11.70) are filled only by --apply: a dry run does not read the database. */
 export interface ImportReport {
   sites: number;
   objects: number;
@@ -139,14 +139,16 @@ export interface ImportReport {
   partCardsKept?: string[];
   tasksKept?: string[];
   aboutKept?: string[];
+  storyViewsKept?: string[];
 }
 
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
-export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env, options: { replacePartCards?: boolean; replaceTasks?: boolean; replaceAbout?: boolean } = {}): Promise<ImportReport> {
-  const { replacePartCards = false, replaceTasks: replaceAllTasks = false, replaceAbout = false } = options;
+export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env, options: { replacePartCards?: boolean; replaceTasks?: boolean; replaceAbout?: boolean; replaceStoryViews?: boolean } = {}): Promise<ImportReport> {
+  const { replacePartCards = false, replaceTasks: replaceAllTasks = false, replaceAbout = false, replaceStoryViews = false } = options;
   const partCardsKept: string[] = [];
   const tasksKept: string[] = [];
   const aboutKept: string[] = [];
+  const storyViewsKept: string[] = [];
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
   if (manifest.version !== 1 || manifest.sites.length < 7) throw new Error("Expected a reviewed manifest of at least seven sites (version 1)");
   for (const city of manifest.cities) {
@@ -250,7 +252,14 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   try {
     await db.transaction(async (tx) => {
       const existing = new Set((await tx.select({ id: sites.id }).from(sites).where(inArray(sites.id, manifest.sites.map((s) => s.id)))).map((r) => r.id));
-      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sampleTraces: _traces, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes });
+      // The panel owns the 3D view of a story sentence already in the database (camera, highlights, interior, card;
+      // §11.70); the sentence text still comes from the package. --replace-story-views restores the package's views.
+      await loadCatalog(
+        tx,
+        { sites: manifest.sites.map(({ historyImages: _history, sampleTraces: _traces, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes },
+        { keepStoryViews: !replaceStoryViews },
+      );
+      if (!replaceStoryViews) storyViewsKept.push(...manifest.sites.filter((s) => existing.has(s.id)).map((s) => s.id));
       // A present-day photograph or a sample's photograph is a `media` row of its own, credited as the file says.
       const upsertPhoto = async (p: CreditedPhoto, trust: Trust) => {
         const file = files.get(p.file)!;
@@ -399,7 +408,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       }
     });
   } finally { await pool.end(); }
-  return { ...report, partCardsKept, tasksKept, aboutKept };
+  return { ...report, partCardsKept, tasksKept, aboutKept, storyViewsKept };
 }
 
 /**
@@ -427,7 +436,7 @@ async function replaceTasks(tx: Tx, site: ContentSite): Promise<void> {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false }, "replace-part-cards": { type: "boolean", default: false }, "replace-tasks": { type: "boolean", default: false }, "replace-about": { type: "boolean", default: false } } });
-  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply] [--replace-part-cards] [--replace-tasks] [--replace-about]");
-  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply, process.env, { replacePartCards: values["replace-part-cards"], replaceTasks: values["replace-tasks"], replaceAbout: values["replace-about"] })));
+  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false }, "replace-part-cards": { type: "boolean", default: false }, "replace-tasks": { type: "boolean", default: false }, "replace-about": { type: "boolean", default: false }, "replace-story-views": { type: "boolean", default: false } } });
+  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply] [--replace-part-cards] [--replace-tasks] [--replace-about] [--replace-story-views]");
+  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply, process.env, { replacePartCards: values["replace-part-cards"], replaceTasks: values["replace-tasks"], replaceAbout: values["replace-about"], replaceStoryViews: values["replace-story-views"] })));
 }
