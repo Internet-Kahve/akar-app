@@ -2428,6 +2428,7 @@ td small {
 }
 .editor-steps {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 24px;
 }
