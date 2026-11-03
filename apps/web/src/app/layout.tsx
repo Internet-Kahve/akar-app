@@ -18,7 +18,7 @@ import { INTRO_BOOT, THEME_BOOT } from "../lib/theme-boot";
 export const metadata: Metadata = {
   title: "AKAR · Şehrin hikâyesine karış",
   description:
-    "Geçmişi gör. Hikâyesini dinle. İzini bırak. Bursa’nın kültürel mirasını keşfet.",
+    "Geçmişi gör. Hikâyesini dinle. İzini bırak. Türkiye’nin vakıf eserlerini keşfet.",
   icons: {
     icon: [
       { url: "/logo/favicon-32.png", sizes: "32x32", type: "image/png" },

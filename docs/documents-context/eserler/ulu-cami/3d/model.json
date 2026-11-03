@@ -67,5 +67,9 @@
       "ic": true,
       "not": "içeride havuz ve selsebil"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "ulu-cami_v32_harita_pisik",
+  "glb_gece_harita_pisik": "night/ulu-cami_v32_night_v2_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 220°, 50° (dünya 34°); atlas mevcut harita dosyasından yansıtıldı; ölçüm ve ışık değerleri README'de."
 }

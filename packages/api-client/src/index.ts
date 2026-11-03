@@ -388,6 +388,14 @@ export function createMockClient(
   let cities = demoCities;
   let taskKeys = demoSiteTaskKeys;
   let fresh = createSeed;
+  const panelKey = `${key}-panel`;
+  const panelEdits = (): Record<string, HeritageSite> => {
+    try {
+      return JSON.parse(storage?.getItem(panelKey) ?? "{}") as Record<string, HeritageSite>;
+    } catch {
+      return {};
+    }
+  };
   const content = contentUrl
     ? fetch(contentUrl)
         .then((r) => {
@@ -400,7 +408,8 @@ export function createMockClient(
             sites: structuredClone(c.sites),
             catalogRoutes: structuredClone(c.routes),
           });
-          state = { ...state, sites: c.sites, catalogRoutes: c.routes };
+          // What the panel saved in this browser stands over the file: the demo has no database to keep it.
+          state = { ...state, sites: c.sites.map((s) => panelEdits()[s.id] ?? s), catalogRoutes: c.routes };
           cities = c.cities;
           taskKeys = c.taskKeys;
         })
@@ -570,6 +579,13 @@ export function createMockClient(
     },
     async saveSite(site) {
       const snapshot = persist(reduceSnapshot(state, { type: "site", site }));
+      if (contentUrl) {
+        try {
+          storage?.setItem(panelKey, JSON.stringify({ ...panelEdits(), [site.id]: snapshot.sites.find((s) => s.id === site.id) }));
+        } catch {
+          // Too large for this browser: it still holds until the page is opened again.
+        }
+      }
       return { site: snapshot.sites.find((s) => s.id === site.id)!, snapshot };
     },
     async narrateSite(siteId, target) {
