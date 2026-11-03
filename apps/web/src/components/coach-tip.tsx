@@ -1,8 +1,9 @@
 "use client";
-import { ArrowUp, MousePointer2, Pointer } from "lucide-react";
+import { ArrowUp, MousePointer2, Pointer, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { readPreference, writePreference } from "../lib/preferences";
+import { useI18n } from "./i18n";
 
 /** What the finger (or, on a wide screen, the cursor) shows: a tap, a swipe up or down, taps on the right, a turn. */
 export type CoachGesture = "tap" | "swipe-up" | "swipe-down" | "tap-sides" | "turn" | "click";
@@ -92,6 +93,7 @@ export function CoachTip({
   swallow = false,
   pressSpot = false,
   onDone,
+  onSkip,
 }: {
   id: string;
   text: string;
@@ -104,7 +106,11 @@ export function CoachTip({
   /** With `swallow`: a press on the lit element is not swallowed (it is what the hint asks for). */
   pressSpot?: boolean;
   onDone?: () => void;
+  /** `needs` is not on screen: passed over this time, not marked seen (it comes when its element does). */
+  onSkip?: () => void;
 }) {
+  const { t } = useI18n();
+  const closeLabel = t("common.close");
   const key = `akar.ipucu.${id}`;
   const [shown, setShown] = useState(() => typeof window !== "undefined" && !readPreference(key));
   const done = () => {
@@ -116,7 +122,11 @@ export function CoachTip({
   useEffect(() => {
     if (!shown || !needs) return;
     const timer = setTimeout(() => {
-      if (!document.querySelector(needs)) done();
+      if (document.querySelector(needs)) return;
+      if (onSkip) {
+        setShown(false);
+        onSkip();
+      } else done();
     }, 1600);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,6 +191,9 @@ export function CoachTip({
         <Icon size={30} strokeWidth={1.8} />
       </span>
       <p>{text}</p>
+      <button className="coach-close" aria-label={closeLabel} onClick={done}>
+        <X size={14} strokeWidth={2.6} />
+      </button>
     </div>
   );
   return spot ? (
@@ -189,5 +202,33 @@ export function CoachTip({
     </Spotlight>
   ) : (
     tip
+  );
+}
+
+export type TipProps = Omit<Parameters<typeof CoachTip>[0], "onDone" | "onSkip">;
+
+/**
+ * Hints in a row (3 Nov 2026: «her bölüm sırayla tanıtılsın»): the first not yet seen shows; put away, the next one
+ * comes. One whose element is not on screen is passed over for now and comes another time.
+ */
+export function TipRow({ tips, onDone }: { tips: TipProps[]; onDone?: () => void }) {
+  const [, setTick] = useState(0);
+  const [skipped] = useState(() => new Set<string>());
+  const current = tips.find((tip) => !skipped.has(tip.id) && !readPreference(`akar.ipucu.${tip.id}`));
+  useEffect(() => {
+    if (!current) onDone?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!current]);
+  if (!current) return null;
+  return (
+    <CoachTip
+      key={current.id}
+      {...current}
+      onDone={() => setTick((n) => n + 1)}
+      onSkip={() => {
+        skipped.add(current.id);
+        setTick((n) => n + 1);
+      }}
+    />
   );
 }

@@ -13,9 +13,10 @@ test("the map shows a finger on a tap once; the first touch puts it away for goo
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   const tip = page.locator(".coach-tip");
   await expect(tip).toContainText("Bir esere dokun");
-  // A finger and a few words; no button to press.
+  // A finger and a few words; its only button is ✕.
   await expect(tip.locator(".coach-finger")).toBeVisible();
-  await expect(tip.getByRole("button")).toHaveCount(0);
+  await expect(tip.getByRole("button")).toHaveCount(1);
+  await expect(tip.getByRole("button", { name: "Kapat" })).toBeVisible();
   await page.waitForTimeout(800);
   await page.mouse.click(20, 200);
   await expect(tip).toHaveCount(0);

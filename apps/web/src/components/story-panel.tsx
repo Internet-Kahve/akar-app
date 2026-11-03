@@ -9,8 +9,6 @@ import {
   Volume2,
   VolumeX,
   Play,
-  SkipBack,
-  SkipForward,
   X,
 } from "lucide-react";
 import type { HeritageSite, StoryBlock } from "@akar/domain";
@@ -50,6 +48,7 @@ export function StoryPanel({
   voiceLang,
   voiceGender,
   onVoice,
+  hold = false,
 }: {
   site: HeritageSite;
   index: number;
@@ -62,6 +61,8 @@ export function StoryPanel({
   voiceLang: Lang;
   voiceGender: VoiceGender;
   onVoice: (choice: { lang?: Lang; gender?: VoiceGender }) => void;
+  /** A first-time hint is on screen: the story waits (no voice, no autoplay) until it is put away (3 Nov 2026). */
+  hold?: boolean;
 }) {
   const { t } = useI18n();
   const wide = useWide();
@@ -109,13 +110,13 @@ export function StoryPanel({
     setAutoState(next);
   };
   useEffect(() => {
-    if (!auto || playing) return;
+    if (!auto || playing || hold) return;
     const timer = setTimeout(
       () => advance.current(index + 1),
       Math.max(3500, (sentenceSeconds(block.text) * 1000) / rate),
     );
     return () => clearTimeout(timer);
-  }, [auto, playing, index, block, rate]);
+  }, [auto, playing, index, block, rate, hold]);
   useEffect(() => {
     const step = (e: Event) => advance.current(index + ((e as CustomEvent<number>).detail < 0 ? -1 : 1));
     window.addEventListener(STORY_STEP_EVENT, step);
@@ -162,7 +163,7 @@ export function StoryPanel({
     return () => window.removeEventListener(PART_VOICE_EVENT, quiet);
   }, []);
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || hold) return;
     let stopped = false;
     // No recording for this voice, or one that fails: the browser voice reads the sentence, never silence.
     const speak = () => {
@@ -208,7 +209,7 @@ export function StoryPanel({
       }
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     };
-  }, [playing, block, rate, index, voiceLang, voiceGender]);
+  }, [playing, block, rate, index, voiceLang, voiceGender, hold]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -274,6 +275,17 @@ export function StoryPanel({
       }));
   const current = sourceOf(block)[0];
   const shownNow = storyText(block, false, lang);
+  // One round sound button in the middle: on, the story reads itself aloud and moves on by itself; off, it stops.
+  const sound = (
+    <button
+      className={`story-sound${playing ? " on" : ""}`}
+      aria-pressed={playing}
+      aria-label={t(playing ? "site.soundOff" : "site.soundOn")}
+      onClick={() => chooseSound(!playing)}
+    >
+      {playing ? <Volume2 size={22} /> : <VolumeX size={22} />}
+    </button>
+  );
   const player = (
     <div className="story-player">
       {wide ? (
@@ -286,20 +298,24 @@ export function StoryPanel({
         </button>
       )}
       <div className="story-transport">
-        <button aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)}>
-          <SkipBack size={18} />
+        <button className="story-step-wide" aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)}>
+          <ChevronLeft size={26} />
         </button>
-        <button aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)}>
-          <SkipForward size={18} />
+        {sound}
+        <button className="story-step-wide" aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)}>
+          <ChevronRight size={26} />
         </button>
       </div>
-      <button
-        className="story-rate"
-        aria-label={t("site.speechRate", { rate })}
-        onClick={() => setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)}
-      >
-        {rate}x
-      </button>
+      <div className="story-player-end">
+        <button
+          className="story-rate"
+          aria-label={t("site.speechRate", { rate })}
+          onClick={() => setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)}
+        >
+          {rate}x
+        </button>
+        {voiceControls}
+      </div>
     </div>
   );
   const problem = error && (
@@ -311,17 +327,6 @@ export function StoryPanel({
     <span className={card ? "sayac story-count" : "sr-only story-count"}>
       {index + 1} / {stories.length}
     </span>
-  );
-  // One round sound button in the middle: on, the story reads itself aloud and moves on by itself; off, it stops.
-  const sound = (
-    <button
-      className={`story-sound${playing ? " on" : ""}`}
-      aria-pressed={playing}
-      aria-label={t(playing ? "site.soundOff" : "site.soundOn")}
-      onClick={() => chooseSound(!playing)}
-    >
-      {playing ? <Volume2 size={22} /> : <VolumeX size={22} />}
-    </button>
   );
   // ‹ and › beside it (3 Nov 2026): where a tap on the picture is not at hand (the income road's map), and for anyone
   // who looks for them.
@@ -468,9 +473,8 @@ export function StoryPanel({
         <button className="round-btn" onClick={onClose} aria-label={t("site.closeStory")}>
           <X size={18} />
         </button>
-        {/* Wide screens too (3 Nov 2026): no Dinle | Oku; the round sound button in the middle. */}
-        <div className="story-bar-sound">{sound}</div>
-        {voiceControls}
+        {/* Wide screens (3 Nov 2026): the bar keeps only ✕ and the count; the sound sits between ‹ and › below. */}
+        <span className="story-bar-gap" />
         {position}
       </div>
       {listen && !clip && <p className="story-voice-note">{t("site.voiceBrowser")}</p>}

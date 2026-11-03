@@ -72,7 +72,7 @@ import { STORY_STEP_EVENT, StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
-import { CoachTip } from "./coach-tip";
+import { TipRow, type TipProps } from "./coach-tip";
 import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
@@ -657,9 +657,28 @@ export function AkarApp() {
     [returnLate, setReturnLate] = useState(false);
   const wasOnMap = useRef(showMap);
   const stageTap = useRef<{ x: number; y: number; at: number } | null>(null);
-  // The story's hints come one after another: a hint put away asks for a new render, which shows the next.
-  const [tipTick, setTipTick] = useState(0);
+  // Geçmişi Gör, part by part (3 Nov 2026): the old photograph, the comparison, «Bugününü sen çek», the strip,
+  // «Nereden çekildi?». A part not on this page (no comparison here) comes another time.
+  const historyTips = (touch: boolean): TipProps[] => [
+    { id: `${touch ? "" : "masa."}g.foto`, text: t(touch ? "tip.histPhoto" : "tip.histPhotoWide"), place: "under-spot", gesture: touch ? "tap-sides" : "click", spot: ".gg-foto" },
+    { id: `${touch ? "" : "masa."}g.kiyas`, text: t("tip.histCompare"), place: "under-spot", gesture: "turn", spot: ".gg-foto.esli", needs: ".gg-foto.esli .gg-k-tutamak", pressSpot: true, swallow: true },
+    { id: `${touch ? "" : "masa."}g.bugun`, text: t("tip.histToday"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-bugun", needs: ".gg-bugun", pressSpot: true, swallow: true },
+    { id: `${touch ? "" : "masa."}g.serit`, text: t("tip.histStrip"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-serit", needs: ".gg-serit", pressSpot: true, swallow: true },
+    { id: `${touch ? "" : "masa."}g.nereden`, text: t("tip.histWhere"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-nereye", needs: ".gg-nereye", pressSpot: true, swallow: true },
+  ];
   const storyModel = view === "story" && !!storySite?.model && readPreference("akar.gorunum") !== "photo";
+  // While the story's first-time hints are still to be seen, it waits to speak.
+  // The row is over (each hint seen, or passed over for now): the story speaks.
+  const [storyTipsOver, setStoryTipsOver] = useState(false);
+  useEffect(() => {
+    if (view !== "story") setStoryTipsOver(false);
+  }, [view]);
+  const storyHold =
+    view === "story" &&
+    !storyTipsOver &&
+    (phone ? ["hikaye", storyModel ? "cevir" : "yakinlas"] : ["masa.hikaye", ...(storyModel ? ["masa.cevir"] : [])]).some(
+      (id) => !readPreference(`akar.ipucu.${id}`),
+    );
   useEffect(() => {
     // Back from a site the map was kept (`map-keep`): only a map built anew needs the cover.
     const back = showMap && onMapView && !wasOnMap.current && !opening;
@@ -860,6 +879,9 @@ export function AkarApp() {
       lastY?: number;
       lastAt?: number;
       speed?: number;
+      /** The height followed by the finger, written straight to the page (no render per move). */
+      live?: number;
+      frame?: number;
       moved: boolean;
     } | null>(null);
   const sheetLowest = () => {
@@ -1348,7 +1370,15 @@ export function AkarApp() {
                   }
                   const wanted = drag.height + drag.y - e.clientY;
                   const stops = sheetStops();
-                  setSheetHeight(clampSheet(wanted, stops));
+                  // Smooth on a phone (3 Nov 2026: «çekerken kasıyor»): the finger moves the sheet by its CSS height
+                  // alone, once a frame; the app renders again only when it is let go.
+                  drag.live = clampSheet(wanted, stops);
+                  const space = e.currentTarget.closest<HTMLElement>(".workspace");
+                  if (space && !drag.frame)
+                    drag.frame = requestAnimationFrame(() => {
+                      drag.frame = 0;
+                      if (drag.live !== undefined) space.style.setProperty("--sheet-h", `${drag.live}px`);
+                    });
                   if (drag.lastY !== undefined && drag.lastAt !== undefined && e.timeStamp > drag.lastAt)
                     drag.speed = (drag.lastY - e.clientY) / (e.timeStamp - drag.lastAt);
                   drag.lastY = e.clientY;
@@ -1364,23 +1394,29 @@ export function AkarApp() {
                   sheetDrag.current = null;
                   if (!drag) return;
                   setSheetDragging(false);
+                  if (drag.frame) cancelAnimationFrame(drag.frame);
                   const stops = sheetStops();
                   e.currentTarget.style.transform = "";
                   if (siteCard && drag.moved && drag.height + drag.y - e.clientY < stops.lowest - CARD_CLOSE_PULL) {
                     go("map");
                     return;
                   }
-                  if (drag.moved)
-                    setSheetHeight(
-                      settleSheet(drag.height + drag.y - e.clientY, stops, drag.speed ?? 0),
-                    );
+                  if (drag.moved) {
+                    const goal = settleSheet(drag.height + drag.y - e.clientY, stops, drag.speed ?? 0);
+                    // Written to the page too: back where it started, the state does not change and would not.
+                    e.currentTarget.closest<HTMLElement>(".workspace")?.style.setProperty("--sheet-h", `${goal}px`);
+                    setSheetHeight(goal);
+                  }
                   else if (drag.handle)
                     setSheetHeight(toggleSheet(drag.height, stops));
                 }}
                 onPointerCancel={(e) => {
+                  const drag = sheetDrag.current;
                   sheetDrag.current = null;
                   setSheetDragging(false);
                   e.currentTarget.style.transform = "";
+                  if (drag?.frame) cancelAnimationFrame(drag.frame);
+                  if (drag?.live !== undefined) setSheetHeight(settleSheet(drag.live, sheetStops()));
                 }}
               >
                 {siteCard ? (
@@ -1412,6 +1448,7 @@ export function AkarApp() {
                       voiceLang={voice.lang ?? lang}
                       voiceGender={voice.gender ?? "female"}
                       onVoice={changeVoice}
+                      hold={storyHold}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {
@@ -1918,31 +1955,63 @@ export function AkarApp() {
         )}
       </SourceSheetProvider>
       {/* First-time hints (3 Nov 2026): a finger (a cursor on a wide screen) doing what to do and a few words, once
-          each; some darken the screen but for what they are about. In a story with the model, three in a row: turn
-          the model, the parts button, a tap on the right. */}
+          each, in rows; most darken the screen but for what they are about. Phone and wide screen each their own. */}
       {!opening && !mapReturn && (phone ? (
         view === "map" && !peekSite && !routeDraft ? (
-          <CoachTip key="harita" id="harita" text={t("tip.map")} place="map" gesture="tap" />
+          <TipRow key="t-harita" tips={[{ id: "harita", text: t("tip.map"), place: "map", gesture: "tap" }]} />
         ) : view === "map" && peekSite ? (
-          <CoachTip key="kart" id="kart" text={t("tip.peek")} place="above-card" gesture="swipe-up" spot=".site-peek" />
+          <TipRow key="t-kart" tips={[{ id: "kart", text: t("tip.peek"), place: "above-card", gesture: "swipe-up", spot: ".site-peek" }]} />
         ) : siteCard ? (
-          <CoachTip key="detay" id="detay" text={t("tip.detail")} place="above-site-card" gesture="swipe-down" />
+          <TipRow
+            key="t-detay"
+            tips={[
+              { id: "detay", text: t("tip.detail"), place: "above-site-card", gesture: "swipe-down", spot: ".workspace.on-site .side-panel" },
+              { id: "d.parca", text: t("tip.parts"), place: "under-spot", gesture: "tap", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", needs: ".detail-scene .model-show-parts", swallow: true, pressSpot: true },
+              { id: "d.parcaya", text: t("tip.aPart"), place: "stage", gesture: "tap", spot: ".detail-scene .model-canvas", needs: ".detail-scene .model-canvas canvas", swallow: true, pressSpot: true },
+            ]}
+          />
         ) : view === "story" ? (
-          storyModel && !readPreference("akar.ipucu.cevir") ? (
-            <CoachTip key="cevir" id="cevir" text={t("tip.turn")} place="stage" gesture="turn" spot=".main-stage .model-canvas" needs=".main-stage .model-canvas canvas" swallow onDone={() => setTipTick((n) => n + 1)} />
-          ) : storyModel && !readPreference("akar.ipucu.parca") ? (
-            <CoachTip key="parca" id="parca" text={t("tip.parts")} place="under-spot" gesture="tap" spot=".model-show-parts" arrowTo=".model-show-parts" needs=".model-show-parts" swallow pressSpot onDone={() => setTipTick((n) => n + 1)} />
-          ) : (
-            <CoachTip key={`hikaye${tipTick}`} id="hikaye" text={t("tip.story")} place="stage" gesture="tap-sides" swallow />
-          )
+          <TipRow
+            key="t-hikaye"
+            onDone={() => setStoryTipsOver(true)}
+            // The story's own two, in this order (Muhammed, 3 Nov 2026: «sırası önemli»): the tap on the right
+            // first, then turning the model (or, on a photograph, the pinch). The parts are the site page's.
+            tips={[
+              { id: "hikaye", text: t("tip.story"), place: "stage", gesture: "tap-sides", swallow: true },
+              storyModel
+                ? { id: "cevir", text: t("tip.turn"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas canvas", swallow: true }
+                : { id: "yakinlas", text: t("tip.pinch"), place: "stage", gesture: "tap", spot: ".main-stage .story-photo", needs: ".main-stage .story-photo .zoom-photo", swallow: true },
+            ]}
+          />
+        ) : view === "history" ? (
+          <TipRow key="t-gecmis" tips={historyTips(true)} />
         ) : null
       ) : (
         view === "map" && !peekSite && !routeDraft ? (
-          <CoachTip key="m-harita" id="masa.harita" text={t("tip.mapWide")} place="map" gesture="click" />
+          <TipRow key="m-harita" tips={[{ id: "masa.harita", text: t("tip.mapWide"), place: "map", gesture: "click" }]} />
         ) : view === "detail" ? (
-          <CoachTip key="m-detay" id="masa.detay" text={t("tip.detailWide")} place="under-spot" gesture="click" spot=".detail-panel .hikaye-basla" />
+          <TipRow
+            key="m-detay"
+            tips={[
+              { id: "masa.detay", text: t("tip.detailWide"), place: "under-spot", gesture: "click", spot: ".detail-panel .hikaye-basla" },
+              { id: "masa.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch", pressSpot: true, swallow: true },
+              { id: "masa.parca", text: t("tip.partsWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", needs: ".detail-scene .model-show-parts", swallow: true, pressSpot: true },
+              { id: "masa.parcaya", text: t("tip.aPartWide"), place: "stage", gesture: "click", spot: ".detail-scene .model-canvas", needs: ".detail-scene .model-canvas canvas", swallow: true, pressSpot: true },
+            ]}
+          />
         ) : view === "story" ? (
-          <CoachTip key="m-hikaye" id="masa.hikaye" text={t("tip.storyWide")} place="under-spot" gesture="click" spot=".story-panel .story-transport" />
+          <TipRow
+            key="m-hikaye"
+            onDone={() => setStoryTipsOver(true)}
+            tips={[
+              { id: "masa.hikaye", text: t("tip.storyWide"), place: "under-spot", gesture: "click", spot: ".story-panel .story-transport" },
+              ...(storyModel
+                ? [{ id: "masa.cevir", text: t("tip.turnWide"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas canvas", swallow: true } as const]
+                : []),
+            ]}
+          />
+        ) : view === "history" ? (
+          <TipRow key="m-gecmis" tips={historyTips(false)} />
         ) : null
       ))}
       {mapReturn && !opening && (
