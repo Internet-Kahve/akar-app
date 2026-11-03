@@ -3200,7 +3200,7 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 .gg-foto .bulanik { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(28px) brightness(.85); transform: scale(1.15); }
 .gg-foto .ana { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity var(--sure-3); }
 .gg-eski-kat, .gg-bugun-kat { position: absolute; inset: 0; }
-.gg-foto.esli { touch-action: none; cursor: ew-resize; }
+.gg-foto.esli { touch-action: pan-y; cursor: ew-resize; }
 .gg-foto.esli img { -webkit-user-drag: none; user-select: none; }
 .gg-foto.esli .gg-eski-kat { clip-path: inset(0 calc(100% - var(--ayrim)) 0 0); }
 .gg-foto .b-bulanik { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(28px) brightness(.85); transform: scale(1.15); }
@@ -3285,8 +3285,12 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 .gg-not { margin: auto 0 0; padding-top: 16px; color: var(--text-muted); font-size: 12px; line-height: 16px; }
 .gg-d .gg-bos { height: min(560px, calc(100vh - 230px)); }
 .gg-akis .gg-kaydir { bottom: 0; padding-bottom: calc(24px + var(--sab)); }
+/* A column, so the photograph's margin below (it keeps the page's length as it gets smaller) adds up and does not collapse. */
+.gg-akis .gg-kaydir { display: flex; flex-direction: column; }
+.gg-akis .gg-kaydir > * { flex: none; }
 .gg-akis .gg-foto { position: sticky; top: 0; z-index: 3; box-shadow: 0 -20px 0 0 var(--bg), 0 10px 24px rgba(20, 27, 43, .18); }
-.gg-akis .gg-foto.kucuk { height: 200px; }
+/* Smaller with the scroll, one pixel for one, down to 200 px; the margin keeps the page's length, so nothing moves under the finger. */
+.gg-akis .gg-foto { --gg-kuculme: min(var(--gg-kaydir, 0px), max(0px, var(--gg-h) - 200px)); height: calc(var(--gg-h) - var(--gg-kuculme)); margin-bottom: var(--gg-kuculme); }
 .gg-akis .gg-yer { margin-top: 20px; }
 .gg-akis .gg-yer .gg-harita-kap { height: 280px; flex: none; margin-top: 12px; min-height: 0; }
 .gg-akis .gg-lejant { margin-top: 8px; }
@@ -4254,26 +4258,45 @@ body:has(.view-choice) .coach-tip.above-site-card { display: none; }
    stage, the screen's width, a large photograph beside its title; the model is framed above it (akar-app
    STORY_PHOTO_CARD_PHONE). Not moved or resized there: one place, nothing to manage. */
 @media (max-width: 899.98px) {
+  /* Muhammed, 4 Nov 2026: the model above, under it the photograph the screen's width, about 30% of the screen, to compare
+     them; its words small, on it. The sheet below keeps to little meanwhile (`.fotolu`), and when the photograph goes
+     it is as the visitor left it. */
   .story-photo-card,
   .story-photo-card.placed {
-    left: 12px !important;
-    right: 12px !important;
+    left: 8px !important;
+    right: 8px !important;
     top: auto !important;
-    bottom: 12px !important;
+    bottom: 8px !important;
     width: auto !important;
-    height: 140px;
-    grid-template-columns: 46% minmax(0, 1fr);
-    border-radius: 20px;
+    height: 30dvh;
+    display: block;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #1d2124;
     cursor: pointer;
     touch-action: manipulation;
   }
-  .story-photo-card img { width: 100%; height: 140px; }
-  .story-photo-card > button > span { padding: 12px 14px; }
-  .story-photo-card strong { font-size: 16px; line-height: 21px; }
-  .story-photo-card small { -webkit-line-clamp: 4; }
+  .story-photo-card .story-photo-open { position: relative; display: block; width: 100%; height: 100%; padding: 0; }
+  .story-photo-card img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .story-photo-card > button > span {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    max-width: calc(100% - 16px);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+  }
+  .story-photo-card strong { display: block; overflow: hidden; color: inherit; font-size: 11px; font-weight: 500; line-height: 16px; white-space: nowrap; text-overflow: ellipsis; }
+  .story-photo-card small { display: none; }
   .story-photo-size { display: none; }
   .media-scene:has(.story-photo-card) .model-inside,
-  .media-scene:has(.story-photo-card) .model-part-name { bottom: 184px; }
+  .media-scene:has(.story-photo-card) .model-part-name { bottom: calc(30dvh + 20px); }
+  .story-panel.kart.fotolu { padding-bottom: 8px; }
+  .story-panel.kart.fotolu .story-card-text { margin: 0 0 2px; font: 500 15px/20px var(--font); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .story-panel.kart.fotolu .story-card-body > :not(.story-card-text) { display: none; }
+  .story-panel.kart.fotolu .story-fold { height: 18px; }
 }
 /* The ☰ list takes the foot of the stage: the story's photograph card stands aside meanwhile. */
 @media (max-width: 899.98px) {
@@ -4605,12 +4628,13 @@ body:has(.view-choice) .galeri-arac .scene-media-switch { position: relative; z-
 /* ---------------- Geçmişi Gör on a phone (3 Nov 2026, `mobile/Pasted 9.48–9.49`): the photograph's frame keeps one
    height whatever the photograph (it fits inside, its own blur fills the rest), so the page does not grow and shrink
    from one photograph to the next; and the page never moves sideways (the comparison's handle is dragged, not it). */
-.gg-m .gg-foto { height: min(54vh, 460px); transition: none; }
+.gg-m .gg-foto { --gg-h: min(54vh, 460px); transition: none; }
+.gg-m:not(.gg-akis) .gg-foto { height: var(--gg-h); }
 body:has(.gg) { overflow-x: clip; }
 .gg, .gg-m { overflow-x: clip; max-width: 100vw; }
 .gg-m { touch-action: pan-y; }
 .gg-foto.esli,
-.gg-foto.esli * { touch-action: none; }
+.gg-foto.esli * { touch-action: pan-y; }
 
 /* ---------------- The story on a wide screen (3 Nov 2026, `mobile/Pasted 10.23.58`): the bar only ✕ and the count;
    below, ‹ [sound] › in the middle, clear and large, the clock on the left, the speed and the voice on the right. */

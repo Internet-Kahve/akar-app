@@ -37,7 +37,6 @@ function PhotoBox({
   index,
   count,
   wide,
-  small,
   sourceTitle,
   onStep,
 }: {
@@ -47,7 +46,6 @@ function PhotoBox({
   index: number;
   count: number;
   wide: boolean;
-  small: boolean;
   onStep: (step: number) => void;
 }) {
   const { t, lang, text } = useI18n();
@@ -60,6 +58,7 @@ function PhotoBox({
   const box = useRef<HTMLDivElement>(null),
     start = useRef<number | null>(null),
     dragging = useRef(false),
+    sideways = useRef<number | null>(null),
     touched = useRef(false);
   useEffect(() => {
     const el = box.current;
@@ -112,22 +111,40 @@ function PhotoBox({
   return (
     <div
       ref={box}
-      className={`gg-foto${pair ? " esli" : ""}${small ? " kucuk" : ""}`}
+      className={`gg-foto${pair ? " esli" : ""}`}
       style={{ "--ayrim": `${split}%`, "--oran": ratio } as CSSProperties}
       onPointerDown={(e) => {
         if (pair && !(e.target as HTMLElement).closest("button")) {
-          e.preventDefault();
+          // A finger going up or down scrolls the page (`touch-action: pan-y`, then the browser cancels this touch);
+          // only one going sideways moves the line. A mouse takes hold at once.
           dragging.current = true;
+          sideways.current = e.pointerType === "mouse" ? null : e.clientX;
+          if (e.pointerType === "mouse") {
+            e.preventDefault();
+            place(e.currentTarget, e.clientX);
+          }
           e.currentTarget.setPointerCapture(e.pointerId);
-          place(e.currentTarget, e.clientX);
           return;
         }
         start.current = e.clientX;
       }}
-      onPointerMove={(e) => dragging.current && place(e.currentTarget, e.clientX)}
+      onPointerMove={(e) => {
+        if (!dragging.current) return;
+        if (sideways.current !== null) {
+          if (Math.abs(e.clientX - sideways.current) < 4) return;
+          sideways.current = null;
+        }
+        place(e.currentTarget, e.clientX);
+      }}
+      onPointerCancel={() => {
+        dragging.current = false;
+        start.current = null;
+      }}
       onPointerUp={(e) => {
         if (dragging.current) {
           dragging.current = false;
+          // A tap on the photograph puts the line there.
+          if (sideways.current !== null) place(e.currentTarget, e.clientX);
           return;
         }
         if (start.current === null || wide) return;
@@ -229,7 +246,6 @@ export function HistoryView({
   const images = site.historyImages ?? [];
   const [index, setIndex] = useState(() => Math.min(Math.max(0, start), Math.max(0, images.length - 1))),
     [camera, setCamera] = useState(false),
-    [small, setSmall] = useState(false),
     [whereHidden, setWhereHidden] = useState(false);
   const strip = useRef<HTMLDivElement>(null),
     whereRef = useRef<HTMLDivElement>(null),
@@ -352,7 +368,6 @@ export function HistoryView({
       index={index}
       count={count}
       wide={wide}
-      small={small}
       sourceTitle={site.sources?.find((s) => s.id === image.sourceId)?.title ?? ""}
       onStep={(step) => select(index + step)}
     />
@@ -535,11 +550,9 @@ export function HistoryView({
       {head}
       <div
         className="gg-kaydir"
-        onScroll={(e) => {
-          const top = e.currentTarget.scrollTop;
-          if (top > 80) setSmall(true);
-          else if (top < 10) setSmall(false);
-        }}
+        // The photograph gets smaller with the scroll, one pixel for one, and the page keeps its length (design.css):
+        // a sudden change of height moved the page under the finger, and at the foot it could not settle.
+        onScroll={(e) => e.currentTarget.style.setProperty("--gg-kaydir", `${e.currentTarget.scrollTop}px`)}
       >
         {photo}
         {near}

@@ -426,7 +426,7 @@ export function StoryPanel({
   // itself aloud and moves on by itself; off, it stops. ▾ folds the card away so the model and photograph show whole.
   if (card)
     return (
-      <div className={`story-panel kart${folded ? " folded" : ""}`} ref={cardRef}>
+      <div className={`story-panel kart${folded ? " folded" : ""}${block.photoId ? " fotolu" : ""}`} ref={cardRef}>
         <button
           className="story-fold"
           aria-expanded={!folded}

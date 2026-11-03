@@ -152,7 +152,8 @@ test("the photo card stays clear of the model, is dragged away and opens the par
   test.skip(isMobile, "the phone's photo card is docked");
   const errors = await openStory(page);
   const card = page.locator(".story-photo-card");
-  await expect(card).toHaveCount(0);
+  // Every sentence with a photograph shows it, the first too (4 Nov 2026).
+  await expect(card).toBeVisible();
   await next(page);
   await next(page);
   await expect(card).toBeVisible();

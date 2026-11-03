@@ -139,3 +139,17 @@ test("the wide screen never tells to take today's photograph", async ({ page, is
     if (await shown.count()) await shown.click({ timeout: 1000 }).catch(() => {});
   }
 });
+
+test("putting away the story's hint never skips a sentence", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the wide screen's › button is under the hint");
+  await seen(page, "masa.detay", "masa.foto", "masa.parca", "masa.cevir");
+  await open(page);
+  await page.getByRole("button", { name: /^Hikâyeyi başlat$/ }).filter({ visible: true }).first().click();
+  await expect(tip(page)).toContainText("ile ilerle", { timeout: 15000 });
+  const before = await page.locator(".story-panel").innerText();
+  await page.waitForTimeout(800);
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).first().click();
+  await expect(tip(page)).toHaveCount(0);
+  await page.waitForTimeout(300);
+  expect(await page.locator(".story-panel").innerText()).toBe(before);
+});

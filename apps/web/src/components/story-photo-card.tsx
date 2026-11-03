@@ -168,7 +168,7 @@ export function StoryPhotoCard({
             else setOpen(true);
           }}
         >
-          <img src={sized(photo.src, 512)} alt="" draggable={false} decoding="async" />
+          <img src={sized(photo.src, 1024)} alt="" draggable={false} decoding="async" />
           <span>
             <strong>
               <Localized tr={photo.title} en={photo.titleEn} />

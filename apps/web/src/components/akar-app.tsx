@@ -131,8 +131,8 @@ type Overlay =
   | null;
 /** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
 const CONTROLS_ROOM = 110 + 194 + 32;
-/** The height of a story's photograph card on a phone (design.css `.story-photo-card`, the stage's foot). */
-const STORY_PHOTO_CARD_PHONE = 140;
+/** The height of a story's photograph on a phone (design.css `.story-photo-card`: 30% of the screen, the stage's foot). */
+const storyPhotoPhoneHeight = () => (typeof window === "undefined" ? 0 : Math.round(window.innerHeight * 0.3));
 /** A sheet left between its stops this long, untouched, goes to the nearest one. */
 const SHEET_IDLE_MS = 1800;
 /** Pulled this far below its closed height, the site's card goes back to the map. */
@@ -1606,8 +1606,8 @@ export function AkarApp() {
                       siteCard && cardClosed
                         ? cardClosed + 12
                         : // A story's photograph card lies along the stage's foot on a phone: the model is framed above it.
-                          phone && view === "story" && storyBlock?.showCard
-                          ? STORY_PHOTO_CARD_PHONE + 48
+                          phone && view === "story" && storyBlock?.photoId
+                          ? storyPhotoPhoneHeight() + 24
                           : 0
                     }
                     site={site}
@@ -1630,8 +1630,9 @@ export function AkarApp() {
                         ? (storyBlock?.interior ?? false)
                         : undefined
                     }
+                    // Every sentence with a photograph shows it (Muhammed, 4 Nov 2026: «ilk cümlelerin fotoğrafları olmuyor»).
                     photoCard={
-                      view === "story" && storyBlock?.showCard
+                      view === "story" && !!storyBlock?.photoId
                     }
                     highlights={
                       view === "story"
@@ -1652,7 +1653,9 @@ export function AkarApp() {
                       !flowCompanion &&
                       (view !== "story" ||
                         storyIndex === 0 ||
-                        storyIndex === (storySite?.stories.length ?? 1) - 1)
+                        storyIndex === (storySite?.stories.length ?? 1) - 1 ||
+                        // With no photograph to look at, the model never stands still.
+                        !storyBlock?.photoId)
                     }
                     visitors={view === "detail" ? visitorPhotos : []}
                     onAddPhoto={() => setOverlay("memory")}
@@ -2009,7 +2012,7 @@ export function AkarApp() {
             key="m-hikaye"
             onDone={() => setStoryTipsOver(true)}
             tips={[
-              { id: "masa.hikaye", text: t("tip.storyWide"), place: "under-spot", gesture: "click", spot: ".story-panel .story-transport" },
+              { id: "masa.hikaye", text: t("tip.storyWide"), place: "under-spot", gesture: "click", spot: ".story-panel .story-transport", swallow: true },
               ...(storyModel
                 ? [{ id: "masa.cevir", text: t("tip.turnWide"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas[data-drawn]", waitMs: 8000, swallow: true } as const]
                 : []),
