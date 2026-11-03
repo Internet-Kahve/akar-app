@@ -1,6 +1,6 @@
 "use client";
 import { ArrowUp, MousePointer2, Pointer, X } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { readPreference, writePreference } from "../lib/preferences";
 import { useI18n } from "./i18n";
@@ -48,7 +48,7 @@ const rounded = ({ x, y, w, h }: Rect, r = 16) =>
  * üzerinde siyah opaklık»): the elements of `holes` stay lit, an arrow can point at `arrowTo`. It takes no touch:
  * the lit elements are pressed as ever.
  */
-export function Spotlight({ holes, arrowTo, children }: { holes: string; arrowTo?: string; children?: ReactNode }) {
+export function Spotlight({ holes, arrowTo, clear = false, children }: { holes: string; arrowTo?: string; clear?: boolean; children?: ReactNode }) {
   const lit = useRects(holes);
   const target = useRects(arrowTo, 0)[0];
   if (typeof document === "undefined") return null;
@@ -56,7 +56,7 @@ export function Spotlight({ holes, arrowTo, children }: { holes: string; arrowTo
   const h = window.innerHeight;
   return createPortal(
     <>
-      <div className="spotlight" aria-hidden="true">
+      <div className={`spotlight${clear ? " clear" : ""}`} aria-hidden="true">
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
           <path fillRule="evenodd" d={`M0,0H${w}V${h}H0Z ${lit.map((r) => rounded(r)).join(" ")}`} />
         </svg>
@@ -178,13 +178,11 @@ export function CoachTip({
       done();
     };
     window.addEventListener("pointerdown", away, true);
-    window.addEventListener("wheel", away, { capture: true, passive: true });
     window.addEventListener("keydown", away, true);
     return () => {
       clearTimeout(arm);
       if (document.body.dataset.coach === id) delete document.body.dataset.coach;
       window.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("wheel", away, true);
       window.removeEventListener("keydown", away, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,8 +234,11 @@ export type TipProps = Omit<Parameters<typeof CoachTip>[0], "onDone" | "onSkip">
   doneBy?: string;
 };
 
-/** Hints shown on one visit to a screen; the rest wait for the next visit, so a screen is never a tour to sit through. */
-const TIPS_PER_VISIT = 2;
+/**
+ * Hints shown on one visit to a screen: one, unless the screen says otherwise; the rest wait for a later visit, so the
+ * visitor first gets to use the screen (Muhammed, 4 Nov 2026: «henüz bir şey yapmadan alta kaydır dedi»).
+ */
+const TIPS_PER_VISIT = 1;
 /** The pause before a hint: the screen shows itself first, and the next hint reads as a new one. */
 const TIP_REST_MS = 500;
 
@@ -246,17 +247,25 @@ const TIP_REST_MS = 500;
  * senaryolar var»): the first not yet seen whose moment has come shows; put away, the next comes after a breath. What the
  * visitor already did is not taught. At most `TIPS_PER_VISIT` on a visit. Not mounted while a card is open (`akar-app`).
  */
-export function TipRow({ tips, onDone }: { tips: TipProps[]; onDone?: () => void }) {
+export function TipRow({ tips, onDone, max = TIPS_PER_VISIT, wait = TIP_REST_MS }: {
+  tips: TipProps[];
+  onDone?: () => void;
+  /** Hints on this visit. */
+  max?: number;
+  /** How long the screen shows itself before the first hint. */
+  wait?: number;
+}) {
   const [, setTick] = useState(0);
   const [skipped] = useState(() => new Set<string>());
   const [resting, setResting] = useState(true);
+  const first = useRef(true);
   const [seen, setSeen] = useState(0);
   const open = tips.filter((tip) => !skipped.has(tip.id) && !readPreference(`akar.ipucu.${tip.id}`));
   // Once its moment has come it stays come: the parts glow for a second only, the hint stays until it is put away.
   const [met] = useState(() => new Set<string>());
   for (const tip of open)
     if (tip.when && typeof document !== "undefined" && document.querySelector(tip.when)) met.add(tip.id);
-  const within = (tip: TipProps) => tip.follows || seen < TIPS_PER_VISIT;
+  const within = (tip: TipProps) => tip.follows || seen < max;
   const current = open.find((tip) => within(tip) && (!tip.when || met.has(tip.id)));
   const waiting = !current && open.some((tip) => tip.when && within(tip));
   // Nothing left for this visit, but for what waits on its moment.
@@ -272,8 +281,10 @@ export function TipRow({ tips, onDone }: { tips: TipProps[]; onDone?: () => void
   }, [waiting]);
   useEffect(() => {
     if (!resting) return;
-    const timer = setTimeout(() => setResting(false), TIP_REST_MS);
+    const timer = setTimeout(() => setResting(false), first.current ? wait : TIP_REST_MS);
+    first.current = false;
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resting]);
   const doneByKey = tips.map((tip) => `${tip.id}\n${tip.doneBy ?? ""}`).join("\n");
   useEffect(() => {

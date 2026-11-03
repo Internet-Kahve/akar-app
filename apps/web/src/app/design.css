@@ -4628,7 +4628,7 @@ body:has(.view-choice) .galeri-arac .scene-media-switch { position: relative; z-
 /* ---------------- Geçmişi Gör on a phone (3 Nov 2026, `mobile/Pasted 9.48–9.49`): the photograph's frame keeps one
    height whatever the photograph (it fits inside, its own blur fills the rest), so the page does not grow and shrink
    from one photograph to the next; and the page never moves sideways (the comparison's handle is dragged, not it). */
-.gg-m .gg-foto { --gg-h: min(54vh, 460px); transition: none; }
+.gg-m .gg-foto { --gg-h: min(42vh, 380px); transition: none; }
 .gg-m:not(.gg-akis) .gg-foto { height: var(--gg-h); }
 body:has(.gg) { overflow-x: clip; }
 .gg, .gg-m { overflow-x: clip; max-width: 100vw; }
@@ -4690,3 +4690,22 @@ body:has(.gg) { overflow-x: clip; }
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
 }
+
+/* ---------------- See the Past on a phone, lighter (Muhammed, 4 Nov 2026: «çok yazı var», «diğer görseller gözükmüyor»):
+   the photograph smaller, the other photographs straight under it, the words few and small. */
+@media (max-width: 899.98px) {
+  .gg-m .gg-yakin { margin-top: 4px; font-size: 11px; line-height: 14px; }
+  .gg-m #gg-bilgi { margin-top: 12px; }
+  .gg-m .gg-ad { font-size: 16px; line-height: 21px; }
+  .gg-m .gg-meta { font-size: 12px; line-height: 16px; }
+  .gg-m .gg-kaynak { margin-top: 2px; font-size: 10px; line-height: 13px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .gg-m .gg-bugun { margin-top: 8px; padding: 8px 10px; column-gap: 8px; row-gap: 6px; border-radius: 12px; }
+  .gg-m .gg-bugun .gb-ik { width: 26px; height: 26px; }
+  .gg-m .gg-bugun b { font-size: 13px; line-height: 18px; }
+  .gg-m .gg-bugun small { display: none; }
+  .gg-m .gg-bugun .btn { min-height: 38px; font-size: 14px; }
+  .gg-m .gg-nereye { left: auto; right: 12px; transform: none; height: 36px; font-size: 13px; }
+  .gg .gg-m .gg-nereye:not(:disabled):active, .gg-m.gg .gg-nereye:not(:disabled):active { transform: translateY(1px); }
+  .gg-m .gg-baslik::after { content: ""; display: block; width: 28px; height: 2px; margin: 3px auto 0; border-radius: 2px; background: var(--gold); }
+}
+.spotlight.clear path { fill: transparent; }

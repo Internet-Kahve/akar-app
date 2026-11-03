@@ -46,22 +46,19 @@ const close = async (page: Page) => {
   await tip(page).getByRole("button", { name: "Kapat" }).click();
 };
 
-test("two hints on a visit, the others on the next one", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the wide screen's row of four");
+test("one hint on a visit, the next on the next visit", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the wide screen's row");
   await open(page);
   await expect(tip(page)).toContainText("Hikâyeyi buradan başlat", { timeout: 15000 });
   await close(page);
-  await expect(tip(page)).toContainText("Fotoğraf ya da 3D");
-  await close(page);
-  await page.waitForTimeout(1500);
-  await expect(tip(page)).toHaveCount(0);
+  await noTip(page, 1500);
   await page.reload();
-  await expect(tip(page)).toContainText("Buna tıkla, parçaları gör", { timeout: 15000 });
+  await expect(tip(page)).toContainText("Fotoğraf ya da 3D", { timeout: 15000 });
 });
 
 test("«now tap a part» waits until the parts are lit", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone's row");
-  await seen(page, "detay", "d.foto");
+  await seen(page, "d.foto");
   await open(page);
   await expect(tip(page)).toContainText("Buna dokun, parçaları gör", { timeout: 15000 });
   // Put away without pressing: nothing tells to tap a part that is not lit.
@@ -92,13 +89,13 @@ test("a story seen through: no hint over the card, none offering the story again
   // The card is what this moment is about.
   await noTip(page);
   await finished.getByRole("button", { name: "Devam et" }).click();
-  await expect(tip(page)).toContainText("Fotoğraf ya da 3D", { timeout: 15000 });
+  await expect(tip(page)).toContainText(isMobile ? "Fotoğraf ya da 3D" : "Fotoğraf ya da 3D", { timeout: 15000 });
   await expect(tip(page)).not.toContainText("Hikâye");
   if (!isMobile) await expect(page.locator(".coach-tip", { hasText: "Hikâyeyi buradan başlat" })).toHaveCount(0);
 });
 
 test("what is said about the model waits for the model", async ({ page }) => {
-  await seen(page, "detay", "d.foto", "masa.detay", "masa.foto");
+  await seen(page, "d.foto", "masa.detay", "masa.foto");
   let serve = () => {};
   const served = new Promise<void>((resolve) => (serve = resolve));
   const opened = open(page, true, served);
@@ -111,19 +108,23 @@ test("what is said about the model waits for the model", async ({ page }) => {
 
 test("what the visitor did on their own is not taught afterwards", async ({ page, isMobile }) => {
   test.skip(isMobile, "the wide screen's row");
+  await seen(page, "masa.detay", "masa.foto");
   await open(page);
-  // This visit's two hints are spent, so the parts hint is still to come when the button is pressed.
-  await expect(tip(page)).toContainText("Hikâyeyi buradan başlat", { timeout: 15000 });
-  await close(page);
-  await expect(tip(page)).toContainText("Fotoğraf ya da 3D");
-  await close(page);
-  await noTip(page, 1000);
+  // Before its hint has come in, the visitor presses the parts button.
   await page.locator(".detail-scene .model-show-parts").click();
-  await expect(tip(page)).toContainText("Şimdi bir parçaya tıkla");
+  await expect(tip(page)).toContainText("Şimdi bir parçaya tıkla", { timeout: 15000 });
   await close(page);
   await page.reload();
   await expect(page.locator(".model-canvas[data-drawn]")).toHaveCount(1, { timeout: 15000 });
-  await noTip(page, 1500);
+  await noTip(page, 5000);
+});
+
+test("nothing tells the phone's visitor to go back before they have done anything", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the phone's row");
+  await seen(page, "d.foto");
+  await open(page);
+  await expect(tip(page)).toContainText("parçaları gör", { timeout: 15000 });
+  await expect(page.locator(".coach-tip", { hasText: "Aşağı kaydır" })).toHaveCount(0);
 });
 
 test("the wide screen never tells to take today's photograph", async ({ page, isMobile }) => {

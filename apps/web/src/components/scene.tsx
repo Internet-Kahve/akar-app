@@ -68,8 +68,8 @@ function ViewChoice({ onPick }: { onPick: (mode: "photo" | "model") => void }) {
   // its two answers follow one after the other, each with a small moving picture of what it opens.
   return (
     <div className="view-choice" role="group" aria-label={t("view.ask")}>
-      {/* The rest of the screen dark; an arrow under the two buttons at the top the question speaks of (3 Nov 2026). */}
-      <Spotlight holes=".view-choice, .galeri-arac .scene-media-switch" arrowTo=".galeri-arac .scene-media-switch" />
+      {/* An arrow under the two buttons at the top the question speaks of; the screen stays as it is (4 Nov 2026). */}
+      <Spotlight clear holes=".view-choice, .galeri-arac .scene-media-switch" arrowTo=".galeri-arac .scene-media-switch" />
       <p className="vc-title">{t("view.ask")}</p>
       <p className="vc-sub">{t("view.askSub")}</p>
       <div className="vc-options">
@@ -428,6 +428,8 @@ export function Scene({
     return typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? "photo" : "model";
   });
   const setMode = (next: "photo" | "model") => {
+    // The question has shown where to change this: no hint repeats it.
+    if (ask) for (const id of ["d.foto", "masa.foto"]) writePreference(`akar.ipucu.${id}`, "1");
     writePreference("akar.gorunum", next);
     setChosen(next);
     setModeState(next);

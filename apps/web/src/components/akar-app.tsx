@@ -1449,7 +1449,7 @@ export function AkarApp() {
                       startListening={listening}
                       lang={lang}
                       voiceLang={voice.lang ?? lang}
-                      voiceGender={voice.gender ?? "female"}
+                      voiceGender={voice.gender ?? "male"}
                       onVoice={changeVoice}
                       hold={storyHold}
                       onClose={() => go("detail", site.id)}
@@ -1908,7 +1908,7 @@ export function AkarApp() {
   );
   return (
     <LangProvider lang={lang}>
-    <VoiceProvider value={{ lang: voice.lang ?? lang, gender: voice.gender ?? "female" }}>
+    <VoiceProvider value={{ lang: voice.lang ?? lang, gender: voice.gender ?? "male" }}>
     <Cities.Provider value={cityRecords}>
       <SourceSheetProvider
         fallback={defaultCity?.inventory?.name ?? ""}
@@ -1972,16 +1972,21 @@ export function AkarApp() {
         ) : siteCard ? (
           <TipRow
             key="t-detay"
+            wait={3500}
             tips={[
-              { id: "detay", text: t("tip.detail"), place: "above-site-card", gesture: "swipe-down", spot: ".workspace.on-site .side-panel" },
               { id: "d.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "tap", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch.kayan", doneBy: ".scene-media-switch", pressSpot: true, swallow: true },
               { id: "d.parca", text: t("tip.parts"), place: "under-spot", gesture: "tap", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", when: ".detail-scene .model-canvas[data-drawn] ~ .model-show-parts", doneBy: ".model-show-parts", swallow: true, pressSpot: true },
               { id: "d.parcaya", text: t("tip.aPart"), place: "stage", gesture: "tap", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', follows: true, swallow: true, pressSpot: true },
+              // Going back is told once the visitor has done something here: a part looked at, a story heard.
+              ...(state.readIds.length || readPreference("akar.ipucu.d.parcaya")
+                ? [{ id: "detay", text: t("tip.detail"), place: "above-site-card", gesture: "swipe-down", spot: ".workspace.on-site .side-panel" } as const]
+                : []),
             ]}
           />
         ) : view === "story" ? (
           <TipRow
             key="t-hikaye"
+            max={2}
             onDone={() => setStoryTipsOver(true)}
             // The story's own two, in this order (Muhammed, 3 Nov 2026: «sırası önemli»): the tap on the right
             // first, then turning the model (or, on a photograph, the pinch). The parts are the site page's.
@@ -2001,6 +2006,7 @@ export function AkarApp() {
         ) : view === "detail" ? (
           <TipRow
             key="m-detay"
+            wait={3500}
             tips={[
               { id: "masa.detay", text: t("tip.detailWide"), place: "under-spot", gesture: "click", spot: ".detail-panel .hikaye-basla" },
               { id: "masa.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch", doneBy: ".scene-media-switch", pressSpot: true, swallow: true },
@@ -2011,6 +2017,7 @@ export function AkarApp() {
         ) : view === "story" ? (
           <TipRow
             key="m-hikaye"
+            max={2}
             onDone={() => setStoryTipsOver(true)}
             tips={[
               { id: "masa.hikaye", text: t("tip.storyWide"), place: "under-spot", gesture: "click", spot: ".story-panel .story-transport", swallow: true },

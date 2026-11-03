@@ -45,6 +45,7 @@ figcaption,.not{font-size:13px;line-height:1.5;color:var(--soluk)}
 .bolum{padding:clamp(64px,9vw,120px) 0;border-top:1px solid var(--cizgi)}
 .giris + .bolum{border-top:0}
 h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08}
+.bolum h2::after{content:"";display:block;width:36px;height:2px;margin-top:14px;border-radius:2px;background:#C9A13B}
 .acik{margin-top:14px;max-width:52ch;font-size:18px;color:var(--soluk)}
 .ekranlar{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin:44px 0 0;padding:0;list-style:none}
 .ekranlar img{width:100%;aspect-ratio:390/844;object-fit:cover;object-position:top;border-radius:20px;border:1px solid var(--cizgi);background:#dfe3e1}
@@ -75,8 +76,9 @@ h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08}
 .cift span{font-size:14px;color:var(--soluk)}
 .cift svg{width:28px;height:28px;color:var(--vurgu)}
 .kaynak{margin-top:18px;padding-left:14px;border-left:2px solid var(--cizgi);font-size:15px;color:var(--soluk)}
-.son{padding:clamp(72px,10vw,120px) 0;background:var(--koyu);color:#fff}
-.son .ic{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:32px}
+.son{position:relative;padding:clamp(72px,10vw,120px) 0;background:var(--koyu);color:#fff;overflow:hidden}
+.son::before{content:"";position:absolute;inset:0;background:url('/desenler/desen-bursa-kesik-gecme.svg') center/280px;opacity:.06;pointer-events:none}
+.son .ic{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:32px}
 .son h2{font-size:clamp(34px,5vw,60px)}
 .son p{margin-top:12px;color:rgba(255,255,255,.72);font-size:18px}
 .son .btn{margin-top:26px;background:#fff;color:var(--murekkep)}
@@ -97,6 +99,25 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
   .qr-kutu{display:none}
 }
 @media (max-width:900px),(pointer:coarse){.qr-kutu{display:none}}
+/* Geniş ekran: aynı içerik, daha geniş bir sahne. Giriş ekranı dolduran fotoğraf, ekranlar ve kıyas daha ferah. */
+@media (min-width:1000px){
+  .giris{position:relative;display:grid;min-height:min(calc(100vh - 65px),860px);padding:0;color:#fff;overflow:hidden}
+  .giris>.ic,.giris .kapak{grid-area:1/1}
+  .giris>.ic{position:relative;z-index:1;align-self:end;padding-bottom:clamp(56px,8vh,96px)}
+  .giris .alt{color:rgba(255,255,255,.88)}
+  .giris .btn{background:#fff;color:var(--murekkep)}
+  .giris .btn:hover{background:#dfe8ee}
+  .kapak{position:relative;margin:0;height:100%}
+  .kapak img{position:absolute;inset:0;height:100%;aspect-ratio:auto}
+  .kapak::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(10,16,20,.78) 0%,rgba(10,16,20,.34) 42%,rgba(10,16,20,0) 70%)}
+  .kapak figcaption{position:absolute;z-index:1;right:var(--kenar);bottom:18px;width:auto;margin:0;color:rgba(255,255,255,.72)}
+  .ekranlar{gap:32px;margin-top:56px}
+  .ekranlar li:nth-child(even){margin-top:56px}
+  .ekranlar img{box-shadow:0 18px 44px rgba(18,30,38,.14)}
+  .model-kutu{aspect-ratio:2/1;box-shadow:0 18px 44px rgba(18,30,38,.1)}
+  .kiyas{max-height:680px;margin-left:auto;width:min(100%,540px);box-shadow:0 18px 44px rgba(18,30,38,.14)}
+  #gecmis h2,#akar h2{font-size:clamp(34px,3.6vw,52px)}
+}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 </style>
 </head>

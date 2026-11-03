@@ -79,6 +79,11 @@ function PhotoBox({
     if (w) setPos(clamp(((x - r.left - (r.width - w) / 2) / w) * 100));
   };
   const loaded = shown === image.photo.src;
+  // Each photograph opens with the line in the middle, so both sides show.
+  useEffect(() => {
+    touched.current = false;
+    setPos(50);
+  }, [image.id]);
   useEffect(() => {
     // Once the photograph is in, the handle sways right, left and back, so the visitor sees it can be moved.
     if (!pair || !loaded || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -114,7 +119,11 @@ function PhotoBox({
       className={`gg-foto${pair ? " esli" : ""}`}
       style={{ "--ayrim": `${split}%`, "--oran": ratio } as CSSProperties}
       onPointerDown={(e) => {
-        if (pair && !(e.target as HTMLElement).closest("button")) {
+        // On a phone a finger on the line moves it; a swipe elsewhere goes to the next photograph, as on any other, and a
+        // tap there puts the line there (Muhammed, 4 Nov 2026: «sağa kaydıramıyorum»).
+        const r = e.currentTarget.getBoundingClientRect();
+        const onLine = wide || e.pointerType === "mouse" || Math.abs(e.clientX - (r.left + (split / 100) * r.width)) < 56;
+        if (pair && onLine && !(e.target as HTMLElement).closest("button")) {
           // A finger going up or down scrolls the page (`touch-action: pan-y`, then the browser cancels this touch);
           // only one going sideways moves the line. A mouse takes hold at once.
           dragging.current = true;
@@ -151,6 +160,7 @@ function PhotoBox({
         const dx = e.clientX - start.current;
         start.current = null;
         if (Math.abs(dx) > 40) onStep(dx < 0 ? 1 : -1);
+        else if (pair && Math.abs(dx) < 10 && !(e.target as HTMLElement).closest("button")) place(e.currentTarget, e.clientX);
       }}
     >
       {pair && (
@@ -556,9 +566,9 @@ export function HistoryView({
       >
         {photo}
         {near}
+        {thumbs}
         {info}
         {today}
-        {thumbs}
         <section className="gg-yer">
           {where}
           {map}
