@@ -119,7 +119,9 @@ export type MapFlight =
   | { key: number; to: "point"; point: LngLat }
   /** Back from a site's page: the map stays as it was when the site is in view, and goes there when it is not. */
   | { key: number; to: "site"; point: LngLat }
-  | { key: number; to: "route"; points: LngLat[] };
+  | { key: number; to: "route"; points: LngLat[] }
+  /** A city picked from the city button's menu (3 Nov 2026): straight there, «ışınlanır». */
+  | { key: number; to: "city"; name: string };
 export function HeritageMap({
   sites,
   selectedId,
@@ -626,6 +628,20 @@ export function HeritageMap({
     const flat = { left: 0, right: 0, top: 0, bottom: 0 };
     if (flight.to === "point")
       m.easeTo({ center: flight.point, zoom: 16.5, duration: 900 });
+    else if (flight.to === "city") {
+      const city = latest.current.cities.find((c) => c.name === flight.name && c.map);
+      if (!city) return;
+      // A short fly, as a jump: far enough to feel the move, quick enough not to wait.
+      m.flyTo({
+        ...cityView(city),
+        pitch: tiltPitch(),
+        bearing: 0,
+        padding: flat,
+        duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1400,
+        curve: 1.8,
+        essential: true,
+      });
+    }
     else if (flight.to === "site") {
       if (m.getBounds().contains(flight.point)) return;
       const here = m.getCenter();

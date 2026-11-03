@@ -1487,7 +1487,7 @@ export function AkarApp() {
                   const tap = stageTap.current;
                   stageTap.current = null;
                   if (!tap || Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 10 || e.timeStamp - tap.at > 400) return;
-                  if ((e.target as HTMLElement).closest("button, a, input, dialog, .story-photo-card, .model-view-photo, .story-progress"))
+                  if ((e.target as HTMLElement).closest("button, a, input, dialog, .story-photo-card, .model-view-photo, .story-progress, [data-zoomed]"))
                     return;
                   const box = e.currentTarget.getBoundingClientRect();
                   window.dispatchEvent(
@@ -1636,6 +1636,8 @@ export function AkarApp() {
                     />
                     <MapChips
                       city={cityName}
+                      cities={cityRecords.filter((c) => c.map).map((c) => c.name)}
+                      onCity={(name) => setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "city", name }))}
                       onCities={() =>
                         setFlight((f) => ({
                           key: (f?.key ?? 0) + 1,

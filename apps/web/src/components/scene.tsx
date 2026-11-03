@@ -24,7 +24,7 @@ import { readPreference, writePreference } from "../lib/preferences";
 import { TrustTag } from "./side-sheet";
 import { clampCardScale, NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
 import type { FlowCompanion } from "../lib/flow-companion";
-import { Lightbox, useWide, type Shown } from "./about-reading";
+import { Lightbox, useWide, ZoomPhoto, type Shown } from "./about-reading";
 import { Cities, useCityIdentity, useCityScene } from "./city-scenes";
 import { Localized, useI18n } from "./i18n";
 import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
@@ -41,7 +41,8 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
   return (
     <section className="story-photo" aria-label={text(photo.title, photo.titleEn) || photo.alt}>
       <img className="story-photo-blur" src={sized(photo.src, 96)} alt="" decoding="async" />
-      <img className="story-photo-main" src={sized(photo.src, 1200)} alt={photo.alt} decoding="async" />
+      {/* Two fingers zoom the story's photograph too (3 Nov 2026). */}
+      <ZoomPhoto className="story-photo-main" src={sized(photo.src, 1200)!} alt={photo.alt} doubleTap={false} />
       <div className="story-photo-foot">
         <TrustTag trust={photo.trust} quote={text(photo.title, photo.titleEn) || photo.alt} />
         {(photo.title || photo.license) && (
@@ -62,17 +63,27 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
  */
 function ViewChoice({ onPick }: { onPick: (mode: "photo" | "model") => void }) {
   const { t } = useI18n();
+  // Not at once (Muhammed, 3 Nov 2026: «direkt buton çıkmasın»): the page shows first, then the question comes in;
+  // its two answers follow one after the other, each with a small moving picture of what it opens.
   return (
     <div className="view-choice" role="group" aria-label={t("view.ask")}>
-      <p>{t("view.ask")}</p>
-      <div>
-        <button onClick={() => onPick("photo")}>
-          <ImageIcon size={20} />
+      <p className="vc-title">{t("view.ask")}</p>
+      <p className="vc-sub">{t("view.askSub")}</p>
+      <div className="vc-options">
+        <button className="vc-photo" onClick={() => onPick("photo")}>
+          <span className="vc-art" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
           <b>{t("view.photos")}</b>
           <small>{t("view.photosHint")}</small>
         </button>
-        <button onClick={() => onPick("model")}>
-          <Box size={20} />
+        <span className="vc-or" aria-hidden="true">{t("view.or")}</span>
+        <button className="vc-model" onClick={() => onPick("model")}>
+          <span className="vc-art" aria-hidden="true">
+            <Box size={30} strokeWidth={1.6} />
+          </span>
           <b>{t("view.model")}</b>
           <small>{t("view.modelHint")}</small>
         </button>

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Headphones,
   List,
@@ -16,7 +18,7 @@ import {
 } from "lucide-react";
 import type { HeritageSite, StoryBlock } from "@akar/domain";
 import { sentenceSeconds, storySeconds, clock } from "../lib/story-time";
-import { writePreference } from "../lib/preferences";
+import { readPreference, writePreference } from "../lib/preferences";
 import { useWide } from "./about-reading";
 import { PART_VOICE_EVENT } from "./part-card";
 import { SourceLink, TrustTag } from "./side-sheet";
@@ -73,6 +75,8 @@ export function StoryPanel({
     cardRef = useRef<HTMLDivElement>(null),
     [playing, setPlaying] = useState(startListening),
     [rate, setRate] = useState(1),
+    // Autoplay: with the sound off the sentences still move on by themselves, at about the time each takes to read.
+    [auto, setAutoState] = useState(() => readPreference("akar.otomatik") === "1"),
     [error, setError] = useState<MessageKey | "">(""),
     list = useRef<HTMLOListElement>(null),
     // Only the visitor's own scrolling picks a sentence; a scroll that follows the sentence never does.
@@ -94,6 +98,18 @@ export function StoryPanel({
   }
   const advance = useRef(go);
   advance.current = go;
+  const setAuto = (next: boolean) => {
+    writePreference("akar.otomatik", next ? "1" : "0");
+    setAutoState(next);
+  };
+  useEffect(() => {
+    if (!auto || playing) return;
+    const timer = setTimeout(
+      () => advance.current(index + 1),
+      Math.max(3500, (sentenceSeconds(block.text) * 1000) / rate),
+    );
+    return () => clearTimeout(timer);
+  }, [auto, playing, index, block, rate]);
   useEffect(() => {
     const step = (e: Event) => advance.current(index + ((e as CustomEvent<number>).detail < 0 ? -1 : 1));
     window.addEventListener(STORY_STEP_EVENT, step);
@@ -314,6 +330,8 @@ export function StoryPanel({
       {playing ? <Volume2 size={22} /> : <VolumeX size={22} />}
     </button>
   );
+  // ‹ and › beside it (3 Nov 2026): where a tap on the picture is not at hand (the income road's map), and for anyone
+  // who looks for them.
   const foot = (
     <div className="story-card-foot">
       {listOpen ? (
@@ -323,8 +341,47 @@ export function StoryPanel({
           <List size={20} />
         </button>
       )}
+      <button className="story-step" aria-hidden="true" tabIndex={-1} disabled={index === 0} onClick={() => go(index - 1)}>
+        <ChevronLeft size={24} />
+      </button>
       {sound}
+      <button className="story-step" aria-hidden="true" tabIndex={-1} onClick={() => go(index + 1)}>
+        <ChevronRight size={24} />
+      </button>
       <span className="story-count">{index + 1} / {stories.length}</span>
+    </div>
+  );
+  // The ☰ sheet's settings: autoplay, the speed, the voice (its language and gender).
+  const settings = (
+    <div className="story-settings">
+      <button className={`story-chip${auto ? " on" : ""}`} aria-pressed={auto} onClick={() => setAuto(!auto)}>
+        <Play size={14} fill={auto ? "currentColor" : "none"} />
+        {t("site.autoplay")}
+      </button>
+      <button
+        className="story-chip"
+        aria-label={t("site.speechRate", { rate })}
+        onClick={() => setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)}
+      >
+        {rate}×
+      </button>
+      <button
+        className="story-chip"
+        aria-label={t("site.voiceSelected", { voice: voiceLabel })}
+        onClick={() => onVoice({ gender: voiceGender === "female" ? "male" : "female" })}
+      >
+        <span aria-hidden="true">{voiceGender === "female" ? "♀" : "♂"}</span>
+        {voiceLabel}
+      </button>
+      {languageAvailable && (
+        <button
+          className="story-chip"
+          aria-label={t("site.voiceLanguage", { lang: voiceLang.toUpperCase() })}
+          onClick={() => onVoice({ lang: nextVoiceLang })}
+        >
+          {voiceLang.toUpperCase()}
+        </button>
+      )}
     </div>
   );
   // A phone's whole list (☰): the sentences and the same sound button; no modes, no transport (3 Nov 2026).
@@ -337,6 +394,7 @@ export function StoryPanel({
             <X size={18} />
           </button>
         </div>
+        {settings}
         {problem}
         <button className="sr-only" aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)} />
         <button className="sr-only" aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)} />

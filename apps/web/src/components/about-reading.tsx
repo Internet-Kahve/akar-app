@@ -1102,7 +1102,20 @@ function PhotoGroup({
  * two fingers pinch it (1–5×), one finger moves it while zoomed, a double tap zooms in or back; not zoomed, a
  * sideways swipe goes to the next or previous photograph.
  */
-function ZoomPhoto({ src, alt, onSwipe }: { src: string; alt: string; onSwipe?: ((by: number) => void) | undefined }) {
+export function ZoomPhoto({
+  src,
+  alt,
+  onSwipe,
+  className = "",
+  doubleTap = true,
+}: {
+  src: string;
+  alt: string;
+  onSwipe?: ((by: number) => void) | undefined;
+  className?: string;
+  /** A story's photograph: a single tap moves the story on, so no double tap there. */
+  doubleTap?: boolean;
+}) {
   const [view, setView] = useState({ scale: 1, x: 0, y: 0 });
   const [moving, setMoving] = useState(false);
   const fingers = useRef(new Map<number, { x: number; y: number }>());
@@ -1119,7 +1132,9 @@ function ZoomPhoto({ src, alt, onSwipe }: { src: string; alt: string; onSwipe?: 
     <img
       src={src}
       alt={alt}
-      className="zoom-photo"
+      className={`zoom-photo ${className}`}
+      data-zoomed={view.scale > 1.02 ? "true" : undefined}
+      decoding="async"
       draggable={false}
       style={{
         transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
@@ -1168,7 +1183,7 @@ function ZoomPhoto({ src, alt, onSwipe }: { src: string; alt: string; onSwipe?: 
           onSwipe(dx < 0 ? 1 : -1);
           return;
         }
-        if (!g.moved) {
+        if (!g.moved && doubleTap) {
           const now = Date.now();
           if (now - lastTap.current < 300) {
             setView(view.scale > 1 ? { scale: 1, x: 0, y: 0 } : { scale: 2.5, x: 0, y: 0 });

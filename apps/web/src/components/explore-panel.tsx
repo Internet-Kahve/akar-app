@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -27,15 +28,78 @@ export type ExploreTab = "sites" | "routes";
 export type PlaceMode = "home" | "near";
 
 /** Over the map: the city, a button that opens the list of cities (3 Nov 2026: role chips and «Evden gez» gone). */
-export function MapChips({ city, onCities }: { city: string; onCities: () => void }) {
+/**
+ * The city over the map; its ▾ opens the other cities, and a pick takes the map there at once (Muhammed, 3 Nov 2026:
+ * «diğer şehirlere ışınlanılsın»). The last line shows the whole country.
+ */
+export function MapChips({
+  city,
+  cities,
+  onCity,
+  onCities,
+}: {
+  city: string;
+  cities: string[];
+  onCity: (name: string) => void;
+  onCities: () => void;
+}) {
   const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const key = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("pointerdown", away, true);
+    window.addEventListener("keydown", key);
+    return () => {
+      window.removeEventListener("pointerdown", away, true);
+      window.removeEventListener("keydown", key);
+    };
+  }, [open]);
   return (
-    <div className="map-chips">
-      <button className="chip city-only city-pick" onClick={onCities} title={t("header.cities")} aria-haspopup="dialog">
+    <div className="map-chips" ref={root}>
+      <button
+        className="chip city-only city-pick"
+        onClick={() => setOpen(!open)}
+        title={t("header.cities")}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
         <i className="city-motif" aria-hidden="true" />
         {city}
-        <ChevronDown size={15} aria-hidden="true" />
+        <ChevronDown size={15} aria-hidden="true" className={open ? "turned" : undefined} />
       </button>
+      {open && (
+        <div className="city-menu" role="menu" aria-label={t("header.cities")}>
+          {cities.map((name) => (
+            <button
+              key={name}
+              role="menuitemradio"
+              aria-checked={name === city}
+              onClick={() => {
+                setOpen(false);
+                if (name !== city) onCity(name);
+              }}
+            >
+              <span>{name}</span>
+              {name === city && <Check size={16} aria-hidden="true" />}
+            </button>
+          ))}
+          <button
+            role="menuitem"
+            className="city-menu-all"
+            onClick={() => {
+              setOpen(false);
+              onCities();
+            }}
+          >
+            {t("map.wholeCountry")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
