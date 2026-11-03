@@ -180,6 +180,35 @@ test("tasks and badges: options, answer key, unique ids and a task badge naming 
   assert.throws(() => validateSite({ ...base, tasks: [quiz], badges: [badge, badge] }), /Rozet kimlikleri/);
 });
 
+test("about chapters and paragraphs: titles and texts, unique ids, a paragraph in one of the chapters, no blank reading item, the English reading matches the Turkish one", () => {
+  const chapter = {
+    id: "c1",
+    title: "Tarihçe",
+    kind: "history" as const,
+    summary: ["Özet."],
+    figures: [{ value: "1491", label: "yıl", evidence: "1491'de" }],
+    quotes: [{ text: "Söz" }],
+    timeline: [],
+    terms: [],
+    interior: false,
+    focusParts: [],
+  };
+  const section = { id: "s1", kind: "history" as const, title: "Tarihçe", body: "Metin.", trust: "verified" as const, sourceId: "", chapterId: "c1" };
+  const base = { ...createSeed().sites[0], editorVersion: 2 as const, status: "draft" as const, chapters: [chapter], sections: [section] };
+  assert.doesNotThrow(() => validateSite(base));
+  assert.doesNotThrow(() => validateSite({ ...base, chapters: [], sections: [{ ...section, chapterId: undefined }] }));
+  assert.throws(() => validateSite({ ...base, chapters: [chapter, chapter] }), /Bölüm kimlikleri/);
+  assert.throws(() => validateSite({ ...base, sections: [section, section] }), /Paragraf kimlikleri/);
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, title: " " }] }), /başlığı olmalı/);
+  assert.throws(() => validateSite({ ...base, sections: [{ ...section, body: "" }] }), /paragrafın/);
+  assert.throws(() => validateSite({ ...base, sections: [{ ...section, chapterId: "yok" }] }), /bölümüne/);
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, summary: [""] }] }), /boş alan/);
+  const en = { summary: ["Summary."], figures: [{ value: "1491", label: "year", evidence: "in 1491" }], quotes: [{ text: "Word" }], timeline: [], terms: [] };
+  assert.doesNotThrow(() => validateSite({ ...base, chapters: [{ ...chapter, readingEn: en }] }));
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, readingEn: { ...en, quotes: [] } }] }), /aynı sayıda/);
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, readingEn: { ...en, summary: [" "] } }] }), /eksiksiz/);
+});
+
 test("inventory imports never publish or overwrite duplicates and fail atomically", () => {
   const initial = createSeed();
   const fresh = { ...initial.sites[0], id: "new", name: "Yeni eser" };

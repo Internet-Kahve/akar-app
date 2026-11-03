@@ -41575,9 +41575,9 @@
         }
       }
     },
-    "/v1/admin/sites/{id}/sections": {
+    "/v1/admin/sites/{id}/about": {
       "put": {
-        "summary": "Eser hakkında bölümleri (Tarihçe, Mimari, Vakıf ve akar) sırasıyla değiştir",
+        "summary": "Eser hakkında: bölümleri (başlık, okuma metinleri TR/EN) ve paragrafları sırasıyla değiştir; kimliği verilen satır ve kitap fotoğrafları korunur",
         "tags": [
           "admin-sites"
         ],
@@ -41588,13 +41588,403 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "sections": {
-                    "maxItems": 20,
+                  "chapters": {
+                    "maxItems": 40,
                     "type": "array",
                     "items": {
                       "type": "object",
                       "properties": {
                         "id": {
+                          "description": "Verilirse bölümün kimliği korunur (kamera açısı, sesli okuma ve paragraflar bağlı kalır); yoksa sunucu üretir. Başka eserin bölüm kimliği 409 verir",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                        },
+                        "title": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 200
+                        },
+                        "titleEn": {
+                          "description": "İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 200
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "history",
+                            "architecture",
+                            "waqf"
+                          ]
+                        },
+                        "summary": {
+                          "maxItems": 20,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 1000
+                          },
+                          "description": "Metinden seçilen özet cümleleri"
+                        },
+                        "figures": {
+                          "maxItems": 12,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
+                              },
+                              "label": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "evidence": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 500
+                              }
+                            },
+                            "required": [
+                              "value",
+                              "label",
+                              "evidence"
+                            ]
+                          },
+                          "description": "Sayı kartları"
+                        },
+                        "quotes": {
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 600
+                              },
+                              "by": {
+                                "default": null,
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 120
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "text"
+                            ]
+                          }
+                        },
+                        "timeline": {
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "year": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
+                              },
+                              "evidence": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 500
+                              }
+                            },
+                            "required": [
+                              "year",
+                              "evidence"
+                            ]
+                          }
+                        },
+                        "terms": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "word": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "definition": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 600
+                              }
+                            },
+                            "required": [
+                              "word",
+                              "definition"
+                            ]
+                          },
+                          "description": "Dokununca tanımı açılan sözcükler"
+                        },
+                        "readingEn": {
+                          "description": "Okuma metinlerinin İngilizcesi; her liste Türkçesiyle aynı uzunlukta ve eksiksiz; null siler, verilmezse kayıtlı değer korunur (listelerin uzunluğu hâlâ uyuyorsa). Kamera açısı, iç görünüm ve vurgulu parçalar gönderilmez: sunucuda olduğu gibi kalır",
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "summary": {
+                                  "maxItems": 20,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 1000
+                                  },
+                                  "description": "Metinden seçilen özet cümleleri"
+                                },
+                                "figures": {
+                                  "maxItems": 12,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "value": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 40
+                                      },
+                                      "label": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 120
+                                      },
+                                      "evidence": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 500
+                                      }
+                                    },
+                                    "required": [
+                                      "value",
+                                      "label",
+                                      "evidence"
+                                    ]
+                                  },
+                                  "description": "Sayı kartları"
+                                },
+                                "quotes": {
+                                  "maxItems": 10,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "text": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 600
+                                      },
+                                      "by": {
+                                        "default": null,
+                                        "anyOf": [
+                                          {
+                                            "type": "string",
+                                            "maxLength": 120
+                                          },
+                                          {
+                                            "type": "null"
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "text"
+                                    ]
+                                  }
+                                },
+                                "timeline": {
+                                  "maxItems": 30,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "year": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 40
+                                      },
+                                      "evidence": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 500
+                                      }
+                                    },
+                                    "required": [
+                                      "year",
+                                      "evidence"
+                                    ]
+                                  }
+                                },
+                                "terms": {
+                                  "maxItems": 40,
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "word": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 120
+                                      },
+                                      "definition": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 600
+                                      }
+                                    },
+                                    "required": [
+                                      "word",
+                                      "definition"
+                                    ]
+                                  },
+                                  "description": "Dokununca tanımı açılan sözcükler"
+                                }
+                              },
+                              "required": [
+                                "summary",
+                                "figures",
+                                "quotes",
+                                "timeline",
+                                "terms"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sections": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "description": "Verilirse paragrafın kimliği korunur (kitap fotoğrafları ve sesli okuması kalır); yoksa sunucu üretir",
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 100,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "history",
+                                  "architecture",
+                                  "waqf"
+                                ]
+                              },
+                              "title": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200
+                              },
+                              "titleEn": {
+                                "description": "İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler",
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 200
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "body": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 8000
+                              },
+                              "bodyEn": {
+                                "description": "İngilizce metin; titleEn ile aynı kurallar",
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 8000
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "trust": {
+                                "type": "string",
+                                "enum": [
+                                  "verified",
+                                  "inferred",
+                                  "representative"
+                                ]
+                              },
+                              "sourceId": {
+                                "default": null,
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 100,
+                                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "title",
+                              "body",
+                              "trust"
+                            ]
+                          },
+                          "description": "Bölümün paragrafları, sırasıyla"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "kind",
+                        "summary",
+                        "figures",
+                        "quotes",
+                        "timeline",
+                        "terms",
+                        "sections"
+                      ]
+                    },
+                    "description": "Eser hakkında bölümleri, sırasıyla; her biri kendi paragraflarıyla; listede olmayan bölüm ve paragraf (kitap fotoğrafları ve sesli okumalarıyla birlikte) silinir"
+                  },
+                  "looseSections": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "description": "Verilirse paragrafın kimliği korunur (kitap fotoğrafları ve sesli okuması kalır); yoksa sunucu üretir",
                           "type": "string",
                           "minLength": 1,
                           "maxLength": 100,
@@ -41613,11 +42003,25 @@
                           "minLength": 1,
                           "maxLength": 200
                         },
+                        "titleEn": {
+                          "description": "İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler",
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 200
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "body": {
                           "type": "string",
+                          "minLength": 1,
                           "maxLength": 8000
                         },
                         "bodyEn": {
+                          "description": "İngilizce metin; titleEn ile aynı kurallar",
                           "anyOf": [
                             {
                               "type": "string",
@@ -41658,11 +42062,12 @@
                         "trust"
                       ]
                     },
-                    "description": "Eser hakkında bölümleri, sırasıyla"
+                    "description": "Hiçbir bölüme bağlı olmayan paragraflar, sırasıyla (bölümlerden sonra gösterilir)"
                   }
                 },
                 "required": [
-                  "sections"
+                  "chapters",
+                  "looseSections"
                 ]
               }
             }

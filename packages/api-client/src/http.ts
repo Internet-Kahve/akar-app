@@ -552,7 +552,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     photos,
     sources: d.sources,
     sections: (d.sections ?? []).map(
-      ({ chapterId, photos: aboutPhotos, titleEn, bodyEn, enStatus: _status, narrations, ...section }) => {
+      ({ chapterId, photos: aboutPhotos, titleEn, bodyEn, enStatus, narrations, ...section }) => {
         const placed = (aboutPhotos ?? []).flatMap((p) => {
           const m = d.media.find((x) => x.id === p.mediaId && x.kind === "photo");
           return m
@@ -572,12 +572,13 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           ...(present(titleEn) && { titleEn }),
           ...(narrations?.length && { narrations: mapNarrations({ narrations }, d.media) }),
           ...(present(bodyEn) && { bodyEn }),
+          ...(present(enStatus) && { enStatus }),
           ...(placed.length && { photos: placed }),
         };
       },
     ),
     ...(d.chapters?.length && {
-      chapters: d.chapters.map(({ camera, quotes, titleEn, readingEn, enStatus: _status, narrations, ...chapter }) => ({
+      chapters: d.chapters.map(({ camera, quotes, titleEn, readingEn, enStatus, narrations, ...chapter }) => ({
         ...chapter,
         quotes: quotes.map(({ text, by }) => ({
           text,
@@ -585,6 +586,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         })),
         ...(present(camera) && { camera }),
         ...(present(titleEn) && { titleEn }),
+        ...(present(enStatus) && { enStatus }),
         ...(narrations?.length && { narrations: mapNarrations({ narrations }, d.media) }),
         ...(present(readingEn) && {
           readingEn: {
@@ -1795,6 +1797,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     const partCardsChanged = !same(site.partCards ?? [], cur.partCards ?? []);
     const tasksChanged =
       !same(site.tasks ?? [], cur.tasks ?? []) || !same(site.badges ?? [], cur.badges ?? []);
+    const aboutChanged =
+      !same(site.chapters ?? [], cur.chapters ?? []) || !same(site.sections ?? [], cur.sections ?? []);
     if (
       !sourcesChanged &&
       !modelChanged &&
@@ -1803,7 +1807,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       !photosChanged &&
       !storiesChanged &&
       !partCardsChanged &&
-      !tasksChanged
+      !tasksChanged &&
+      !aboutChanged
     )
       return;
     // What the domain site does not carry: source locators, story cards and audio.
@@ -1983,6 +1988,43 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           badges: (site.badges ?? []).map(badgeBody),
         },
       });
+
+    // Last of all: the paragraphs cite the site's sources.
+    if (aboutChanged) {
+      const chapters = site.chapters ?? [];
+      const known = new Set(chapters.map((c) => c.id));
+      const paragraphs = site.sections ?? [];
+      const body = (s: NonNullable<HeritageSite["sections"]>[number]) => ({
+        id: s.id,
+        kind: s.kind,
+        title: s.title,
+        titleEn: s.titleEn || null,
+        body: s.body,
+        bodyEn: s.bodyEn || null,
+        trust: s.trust,
+        sourceId: s.sourceId || null,
+      });
+      await call("PUT", `${path}/about`, {
+        body: {
+          chapters: chapters.map((c) => ({
+            id: c.id,
+            title: c.title,
+            titleEn: c.titleEn || null,
+            kind: c.kind,
+            summary: c.summary,
+            figures: c.figures,
+            quotes: c.quotes.map((q) => ({ text: q.text, by: q.by || null })),
+            timeline: c.timeline,
+            terms: c.terms,
+            readingEn: c.readingEn
+              ? { ...c.readingEn, quotes: c.readingEn.quotes.map((q) => ({ text: q.text, by: q.by || null })) }
+              : null,
+            sections: paragraphs.filter((s) => s.chapterId === c.id).map(body),
+          })),
+          looseSections: paragraphs.filter((s) => !s.chapterId || !known.has(s.chapterId)).map(body),
+        },
+      });
+    }
   }
 
   async function updateRoutes(input: HeritageRoute[]) {
