@@ -659,10 +659,11 @@ export function AkarApp() {
   const stageTap = useRef<{ x: number; y: number; at: number } | null>(null);
   // Geçmişi Gör, part by part (3 Nov 2026): the old photograph, the comparison, «Bugününü sen çek», the strip,
   // «Nereden çekildi?». A part not on this page (no comparison here) comes another time.
+  // Each screen's own list: the wide screen has no «take today's» (the phone's camera), so it never hears of it.
   const historyTips = (touch: boolean): TipProps[] => [
     { id: `${touch ? "" : "masa."}g.foto`, text: t(touch ? "tip.histPhoto" : "tip.histPhotoWide"), place: "under-spot", gesture: touch ? "tap-sides" : "click", spot: ".gg-foto" },
     { id: `${touch ? "" : "masa."}g.kiyas`, text: t("tip.histCompare"), place: "under-spot", gesture: "turn", spot: ".gg-foto.esli", needs: ".gg-foto.esli .gg-k-tutamak", pressSpot: true, swallow: true },
-    { id: `${touch ? "" : "masa."}g.bugun`, text: t("tip.histToday"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-bugun", needs: ".gg-bugun", pressSpot: true, swallow: true },
+    ...(touch ? [{ id: "g.bugun", text: t("tip.histToday"), place: "under-spot", gesture: "tap", spot: ".gg-bugun", needs: ".gg-bugun", pressSpot: true, swallow: true } as const] : []),
     { id: `${touch ? "" : "masa."}g.serit`, text: t("tip.histStrip"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-serit", needs: ".gg-serit", pressSpot: true, swallow: true },
     { id: `${touch ? "" : "masa."}g.nereden`, text: t("tip.histWhere"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-nereye", needs: ".gg-nereye", pressSpot: true, swallow: true },
   ];
@@ -723,6 +724,8 @@ export function AkarApp() {
     go("detail", id);
   }
   function openStory(listen = false, index?: number, id = siteId) {
+    // Whoever has started a story needs no hint to start one.
+    writePreference("akar.ipucu.masa.detay", "1");
     const kept = Number(readPreference(`akar.ilerleme.${id}`));
     setStoryIndex(index ?? (Number.isInteger(kept) ? kept : 0));
     setListening(listen);
@@ -1535,6 +1538,7 @@ export function AkarApp() {
                         onHover={setHoverId}
                         onPick={pickSite}
                         onRoute={(id) => void toggleRoute(id)}
+                        onOpen={routeDraft ? undefined : (id) => go("detail", id)}
                         onOpenRoute={(id) => {
                           setQuery("");
                           setTab("routes");
@@ -1956,7 +1960,7 @@ export function AkarApp() {
       </SourceSheetProvider>
       {/* First-time hints (3 Nov 2026): a finger (a cursor on a wide screen) doing what to do and a few words, once
           each, in rows; most darken the screen but for what they are about. Phone and wide screen each their own. */}
-      {!opening && !mapReturn && (phone ? (
+      {!opening && !mapReturn && !completion && !overlay && !puzzle && signIn === null && (phone ? (
         view === "map" && !peekSite && !routeDraft ? (
           <TipRow key="t-harita" tips={[{ id: "harita", text: t("tip.map"), place: "map", gesture: "tap" }]} />
         ) : view === "map" && peekSite ? (
@@ -1966,8 +1970,9 @@ export function AkarApp() {
             key="t-detay"
             tips={[
               { id: "detay", text: t("tip.detail"), place: "above-site-card", gesture: "swipe-down", spot: ".workspace.on-site .side-panel" },
-              { id: "d.parca", text: t("tip.parts"), place: "under-spot", gesture: "tap", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", needs: ".detail-scene .model-show-parts", swallow: true, pressSpot: true },
-              { id: "d.parcaya", text: t("tip.aPart"), place: "stage", gesture: "tap", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', swallow: true, pressSpot: true },
+              { id: "d.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "tap", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch.kayan", doneBy: ".scene-media-switch", pressSpot: true, swallow: true },
+              { id: "d.parca", text: t("tip.parts"), place: "under-spot", gesture: "tap", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", when: ".detail-scene .model-canvas[data-drawn] ~ .model-show-parts", doneBy: ".model-show-parts", swallow: true, pressSpot: true },
+              { id: "d.parcaya", text: t("tip.aPart"), place: "stage", gesture: "tap", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', follows: true, swallow: true, pressSpot: true },
             ]}
           />
         ) : view === "story" ? (
@@ -1979,7 +1984,7 @@ export function AkarApp() {
             tips={[
               { id: "hikaye", text: t("tip.story"), place: "stage", gesture: "tap-sides", swallow: true },
               storyModel
-                ? { id: "cevir", text: t("tip.turn"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas canvas", swallow: true }
+                ? { id: "cevir", text: t("tip.turn"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas[data-drawn]", waitMs: 8000, swallow: true }
                 : { id: "yakinlas", text: t("tip.pinch"), place: "stage", gesture: "tap", spot: ".main-stage .story-photo", needs: ".main-stage .story-photo .zoom-photo", swallow: true },
             ]}
           />
@@ -1994,9 +1999,9 @@ export function AkarApp() {
             key="m-detay"
             tips={[
               { id: "masa.detay", text: t("tip.detailWide"), place: "under-spot", gesture: "click", spot: ".detail-panel .hikaye-basla" },
-              { id: "masa.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch", pressSpot: true, swallow: true },
-              { id: "masa.parca", text: t("tip.partsWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", needs: ".detail-scene .model-show-parts", swallow: true, pressSpot: true },
-              { id: "masa.parcaya", text: t("tip.aPartWide"), place: "stage", gesture: "click", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', swallow: true, pressSpot: true },
+              { id: "masa.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch", doneBy: ".scene-media-switch", pressSpot: true, swallow: true },
+              { id: "masa.parca", text: t("tip.partsWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", when: ".detail-scene .model-canvas[data-drawn] ~ .model-show-parts", doneBy: ".model-show-parts", swallow: true, pressSpot: true },
+              { id: "masa.parcaya", text: t("tip.aPartWide"), place: "stage", gesture: "click", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', follows: true, swallow: true, pressSpot: true },
             ]}
           />
         ) : view === "story" ? (
@@ -2006,7 +2011,7 @@ export function AkarApp() {
             tips={[
               { id: "masa.hikaye", text: t("tip.storyWide"), place: "under-spot", gesture: "click", spot: ".story-panel .story-transport" },
               ...(storyModel
-                ? [{ id: "masa.cevir", text: t("tip.turnWide"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas canvas", swallow: true } as const]
+                ? [{ id: "masa.cevir", text: t("tip.turnWide"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas[data-drawn]", waitMs: 8000, swallow: true } as const]
                 : []),
             ]}
           />

@@ -9,7 +9,7 @@ import { triangleGlb } from "./support/triangle-glb";
 test.use({ storageState: { cookies: [], origins: [] } });
 
 /** The site's page with a model and one part card; with `parts: false`, a model without any. */
-async function open(page: Page, parts = true) {
+async function open(page: Page, parts = true, modelServed?: Promise<void>) {
   const snapshot = createSeed();
   const site = snapshot.sites[0]!;
   site.model = { src: "/hint-model.glb", name: "Model", bytes: 0, parts: ["Roof"], trust: "representative" };
@@ -17,7 +17,10 @@ async function open(page: Page, parts = true) {
     ? [{ id: "roof-card", title: "Örtü", body: "Örtünün açıklaması.", parts: ["Roof"], photos: [], trust: "verified" }]
     : [];
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
-  await page.route("**/hint-model.glb", (route) => route.fulfill({ contentType: "model/gltf-binary", body: triangleGlb("Roof") }));
+  await page.route("**/hint-model.glb", async (route) => {
+    await modelServed;
+    await route.fulfill({ contentType: "model/gltf-binary", body: triangleGlb("Roof") });
+  });
   await page.addInitScript((data) => {
     localStorage.setItem("akar.karsilama", "1");
     localStorage.setItem("akar.gorunum", "model");
@@ -27,6 +30,16 @@ async function open(page: Page, parts = true) {
   await expect(page.locator(".model-canvas canvas")).toBeVisible({ timeout: 15000 });
 }
 
+const seen = (page: Page, ...ids: string[]) =>
+  page.addInitScript((list) => list.forEach((id) => localStorage.setItem(`akar.ipucu.${id}`, "1")), ids);
+/** No hint in this long, watched all along: one that flashes for a moment is caught too. */
+async function noTip(page: Page, ms = 2500) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    await expect(tip(page)).toHaveCount(0);
+    await page.waitForTimeout(100);
+  }
+}
 const tip = (page: Page) => page.locator(".coach-tip");
 const close = async (page: Page) => {
   await page.waitForTimeout(800);
@@ -48,7 +61,7 @@ test("two hints on a visit, the others on the next one", async ({ page, isMobile
 
 test("«now tap a part» waits until the parts are lit", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone's row");
-  await page.addInitScript(() => localStorage.setItem("akar.ipucu.detay", "1"));
+  await seen(page, "detay", "d.foto");
   await open(page);
   await expect(tip(page)).toContainText("Buna dokun, parçaları gör", { timeout: 15000 });
   // Put away without pressing: nothing tells to tap a part that is not lit.
@@ -62,13 +75,67 @@ test("«now tap a part» waits until the parts are lit", async ({ page, isMobile
 
 test("a hint whose button this site does not have never shows", async ({ page, isMobile }) => {
   test.skip(!isMobile, "the phone's row");
-  await page.addInitScript(() => localStorage.setItem("akar.ipucu.detay", "1"));
+  await seen(page, "detay", "d.foto");
   await open(page, false);
-  let seen = false;
-  const end = Date.now() + 2500;
+  await noTip(page);
+});
+
+test("a story seen through: no hint over the card, none offering the story again, and then the next thing", async ({ page, isMobile }) => {
+  await seen(page, "hikaye", "cevir", "yakinlas", "masa.hikaye", "masa.cevir", "detay");
+  await open(page);
+  await page.getByRole("button", { name: /^Hikâyeyi başlat$/ }).filter({ visible: true }).first().click({ force: true });
+  await expect(page.locator(".story-panel")).toBeVisible();
+  for (let i = 0; i < 8; i++) await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
+  await page.getByRole("button", { name: "Hikâyeyi tamamla" }).dispatchEvent("click");
+  const finished = page.getByRole("dialog");
+  await expect(finished).toContainText("Hikâye tamamlandı");
+  // The card is what this moment is about.
+  await noTip(page);
+  await finished.getByRole("button", { name: "Devam et" }).click();
+  await expect(tip(page)).toContainText("Fotoğraf ya da 3D", { timeout: 15000 });
+  await expect(tip(page)).not.toContainText("Hikâye");
+  if (!isMobile) await expect(page.locator(".coach-tip", { hasText: "Hikâyeyi buradan başlat" })).toHaveCount(0);
+});
+
+test("what is said about the model waits for the model", async ({ page }) => {
+  await seen(page, "detay", "d.foto", "masa.detay", "masa.foto");
+  let serve = () => {};
+  const served = new Promise<void>((resolve) => (serve = resolve));
+  const opened = open(page, true, served);
+  await page.waitForTimeout(3000);
+  await noTip(page, 2500);
+  serve();
+  await opened;
+  await expect(tip(page)).toContainText("parçaları gör", { timeout: 15000 });
+});
+
+test("what the visitor did on their own is not taught afterwards", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the wide screen's row");
+  await open(page);
+  // This visit's two hints are spent, so the parts hint is still to come when the button is pressed.
+  await expect(tip(page)).toContainText("Hikâyeyi buradan başlat", { timeout: 15000 });
+  await close(page);
+  await expect(tip(page)).toContainText("Fotoğraf ya da 3D");
+  await close(page);
+  await noTip(page, 1000);
+  await page.locator(".detail-scene .model-show-parts").click();
+  await expect(tip(page)).toContainText("Şimdi bir parçaya tıkla");
+  await close(page);
+  await page.reload();
+  await expect(page.locator(".model-canvas[data-drawn]")).toHaveCount(1, { timeout: 15000 });
+  await noTip(page, 1500);
+});
+
+test("the wide screen never tells to take today's photograph", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the phone has the camera");
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
+  await page.addInitScript(() => localStorage.setItem("akar.karsilama", "1"));
+  await page.goto("/#view=history&site=ulu-cami");
+  const end = Date.now() + 7000;
   while (Date.now() < end) {
-    if (await tip(page).count()) seen = true;
+    await expect(page.locator(".coach-tip", { hasText: "bugününü" })).toHaveCount(0);
     await page.waitForTimeout(100);
+    const shown = tip(page).getByRole("button", { name: "Kapat" });
+    if (await shown.count()) await shown.click({ timeout: 1000 }).catch(() => {});
   }
-  expect(seen).toBe(false);
 });

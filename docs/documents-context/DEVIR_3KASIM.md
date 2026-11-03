@@ -70,7 +70,13 @@ Ayrıntılı geçmiş:
 
 20. **Harita güneşi:** eser sayfasıyla aynı (cepheden 40°, yükseklik 50°, gündüz güç 2,1; `MAP_LIGHT` ikisinin ortak kaynağı).
 
+21. **Kapalı iç mekân:** eser sayfasında örtü kapalıyken iç parçalar çizilmiyor (`lib/interior.ts`). Örtü açılınca, kamera binaya girince ya da söz o parçadaysa geri geliyor. Eser başına açılır: `model.json` içinde `"ic_gizle": true` (Ulu Cami, Bedesten, Orhan Gazi Türbesi). Koza Han ve Orhan Bey Camii bilerek dışarıda; biri açıkta görünüyor, diğerinde görüntü farkı büyük. Canlı API bu alanı (`SiteModel.hideClosedInterior`) henüz taşımıyor.
+
+22. **Yakın zoom:** pişmiş model yakınlaşma 17,5'te sunum modeline geçer, 17'nin altında döner (`CLOSE_ZOOM`, `lib/map-models.ts`). Biri öbürünün üzerine belirir, sonra eskisi kalkar.
+
 ## İpucu sıraları (`akar-app.tsx`, «First-time hints»)
+
+**Senaryo kuralları (4 Kasım):** Rozet kartı, bulmaca, üst katman ya da giriş açıkken ipucu çıkmaz; kapanınca kısa aradan sonra gelir. Hikâyeyi başlatan birine «Hikâyeyi başlat» ipucu çıkmaz (`openStory`). Düğmeye kendi basan kişiye o düğmenin ipucu çıkmaz (`doneBy`). 3D ipuçları model gerçekten çizilince gelir (`.model-canvas[data-drawn]`, `when`). Masaüstünde «Bugününü sen çek» yok. Telefonda da fotoğraf/3D düğmesi ipucu var (`d.foto`).
 
 Her ipucu bir kez gösterilir; cihazda `akar.ipucu.<id>` olarak saklanır. Bir ziyarette en çok 2 ipucu çıkar, kalanı sonraki ziyarete kalır; aralarında 0,5 sn ara vardır. «Şimdi bir parçaya dokun» yalnız parça düğmesine basılınca gelir (`when`) ve sayıya girmez. Bir ipucu açıkken ilk dokunuş yalnız onu kapatır (`swallow`); gösterdiği düğmeye basmak çalışır (`pressSpot`). Hedefi ekranda olmayan ipucu hiç görünmeden atlanır, hedef çıkınca gösterilir (`TipRow`). Hepsinde × var.
 

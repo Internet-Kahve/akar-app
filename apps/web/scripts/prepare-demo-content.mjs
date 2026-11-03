@@ -45,6 +45,7 @@ const sites = manifest.sites.map((s) => {
       name: s.model.name, bytes: statSync(file).size, src: src(s.model.file), parts: glbParts(file), trust: s.model.trust, triangles: null,
       ...(s.model.coverGroups.length && { coverGroups: s.model.coverGroups }),
       ...(info.ic_parcalar?.length && { interiorParts: info.ic_parcalar }),
+      ...(info.ic_gizle && { hideClosedInterior: true }),
       ...(s.model.nightFile && {
         night: { name: s.model.name + " · gece", bytes: statSync(join(content, s.model.nightFile)).size, src: src(s.model.nightFile), parts: glbParts(join(content, s.model.nightFile)), triangles: null },
       }),

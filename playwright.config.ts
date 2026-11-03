@@ -28,6 +28,7 @@ export default defineConfig({
             { name: "akar.ipucu.masa.harita", value: "1" },
             { name: "akar.ipucu.masa.detay", value: "1" },
             { name: "akar.ipucu.masa.hikaye", value: "1" },
+            { name: "akar.ipucu.d.foto", value: "1" },
             { name: "akar.ipucu.d.parca", value: "1" },
             { name: "akar.ipucu.d.parcaya", value: "1" },
             { name: "akar.ipucu.yakinlas", value: "1" },

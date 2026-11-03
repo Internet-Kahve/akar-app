@@ -92,6 +92,7 @@ export function CoachTip({
   needs,
   swallow = false,
   pressSpot = false,
+  waitMs = 1600,
   onDone,
   onSkip,
 }: {
@@ -102,6 +103,8 @@ export function CoachTip({
   spot?: string;
   arrowTo?: string;
   needs?: string;
+  /** How long `needs` may take to come before the hint passes. */
+  waitMs?: number;
   swallow?: boolean;
   /** With `swallow`: a press on the lit element is not swallowed (it is what the hint asks for). */
   pressSpot?: boolean;
@@ -123,7 +126,7 @@ export function CoachTip({
   const [present, setPresent] = useState(!needs);
   useEffect(() => {
     if (!shown || !needs) return;
-    const gaveUpAt = Date.now() + 1600;
+    const gaveUpAt = Date.now() + waitMs;
     const timer = setInterval(() => {
       if (document.querySelector(needs)) {
         clearInterval(timer);
@@ -225,37 +228,39 @@ export function CoachTip({
 }
 
 export type TipProps = Omit<Parameters<typeof CoachTip>[0], "onDone" | "onSkip"> & {
-  /**
-   * Comes only once this element is on screen, that is, after the visitor did what makes it true («Şimdi bir parçaya
-   * dokun» once the parts are lit). It answers the visitor's own step, so it does not count against `TIPS_PER_VISIT`.
-   */
+  /** Comes only once this element is on screen («the model is drawn»), however long that takes; never otherwise. */
   when?: string;
+  /** Answers the visitor's own step («Şimdi bir parçaya dokun» once the parts are lit): not counted in `TIPS_PER_VISIT`. */
+  follows?: boolean;
+  /** A click on this does what the hint would teach: done by the visitor, the hint is never shown. */
+  doneBy?: string;
 };
 
 /** Hints shown on one visit to a screen; the rest wait for the next visit, so a screen is never a tour to sit through. */
 const TIPS_PER_VISIT = 2;
-/** The pause between two hints, so the next reads as a new one and the screen shows itself between them. */
+/** The pause before a hint: the screen shows itself first, and the next hint reads as a new one. */
 const TIP_REST_MS = 500;
 
 /**
- * Hints in a row (3 Nov 2026: «her bölüm sırayla tanıtılsın»): the first not yet seen shows; put away, the next one
- * comes after a breath. At most `TIPS_PER_VISIT` on a visit. One whose element is not on screen is passed over for now
- * and comes another time.
+ * Hints in a row (3 Nov 2026: «her bölüm sırayla tanıtılsın»), by what the visitor is doing (4 Nov 2026: «çeşitli
+ * senaryolar var»): the first not yet seen whose moment has come shows; put away, the next comes after a breath. What the
+ * visitor already did is not taught. At most `TIPS_PER_VISIT` on a visit. Not mounted while a card is open (`akar-app`).
  */
 export function TipRow({ tips, onDone }: { tips: TipProps[]; onDone?: () => void }) {
   const [, setTick] = useState(0);
   const [skipped] = useState(() => new Set<string>());
-  const [resting, setResting] = useState(false);
+  const [resting, setResting] = useState(true);
   const [seen, setSeen] = useState(0);
   const open = tips.filter((tip) => !skipped.has(tip.id) && !readPreference(`akar.ipucu.${tip.id}`));
-  // Once its step is done it stays done: the parts glow for a second only, the hint stays until it is put away.
+  // Once its moment has come it stays come: the parts glow for a second only, the hint stays until it is put away.
   const [met] = useState(() => new Set<string>());
   for (const tip of open)
     if (tip.when && typeof document !== "undefined" && document.querySelector(tip.when)) met.add(tip.id);
-  const current = open.find((tip) => (tip.when ? met.has(tip.id) : seen < TIPS_PER_VISIT));
-  const waiting = !current && open.some((tip) => tip.when);
-  // Nothing left for this visit, but for what waits on the visitor's own step.
-  const over = !resting && !open.some((tip) => !tip.when && seen < TIPS_PER_VISIT);
+  const within = (tip: TipProps) => tip.follows || seen < TIPS_PER_VISIT;
+  const current = open.find((tip) => within(tip) && (!tip.when || met.has(tip.id)));
+  const waiting = !current && open.some((tip) => tip.when && within(tip));
+  // Nothing left for this visit, but for what waits on its moment.
+  const over = !resting && !open.some((tip) => !tip.when && within(tip));
   useEffect(() => {
     if (over) onDone?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -270,14 +275,27 @@ export function TipRow({ tips, onDone }: { tips: TipProps[]; onDone?: () => void
     const timer = setTimeout(() => setResting(false), TIP_REST_MS);
     return () => clearTimeout(timer);
   }, [resting]);
+  const doneByKey = tips.map((tip) => `${tip.id}\n${tip.doneBy ?? ""}`).join("\n");
+  useEffect(() => {
+    const did = (e: Event) => {
+      for (const tip of tips)
+        if (tip.doneBy && !readPreference(`akar.ipucu.${tip.id}`) && (e.target as Element | null)?.closest?.(tip.doneBy)) {
+          writePreference(`akar.ipucu.${tip.id}`, "1");
+          setTick((n) => n + 1);
+        }
+    };
+    window.addEventListener("click", did, true);
+    return () => window.removeEventListener("click", did, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doneByKey]);
   if (!current || resting) return null;
-  const { when, ...tip } = current;
+  const { when: _when, follows, doneBy: _doneBy, ...tip } = current;
   return (
     <CoachTip
       key={tip.id}
       {...tip}
       onDone={() => {
-        if (!when) setSeen((n) => n + 1);
+        if (!follows) setSeen((n) => n + 1);
         setResting(true);
       }}
       onSkip={() => {

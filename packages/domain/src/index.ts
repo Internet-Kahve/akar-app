@@ -234,6 +234,11 @@ export const modelFileFor = (model: SiteModel, theme: "day" | "night"): SiteMode
  */
 export const mapModelSrc = (model: SiteModel, theme: "day" | "night"): string =>
   (theme === "night" && model.night ? model.mapBaked?.night : model.mapBaked?.day) ?? modelFileFor(model, theme).src;
+/** The lit file the map shows close up in place of a baked one; nothing where the map draws the lit file anyway. */
+export const mapCloseSrc = (model: SiteModel, theme: "day" | "night"): string | undefined => {
+  const lit = modelFileFor(model, theme).src;
+  return mapModelSrc(model, theme) === lit ? undefined : lit;
+};
 /**
  * Part names the site's content uses that its night file lacks: story highlights and cameras, "Eser hakkında"
  * chapters, part cards, tasks and cover groups. They would not show by night. Only names in use are compared: a
@@ -266,6 +271,11 @@ export interface SiteModel {
    * prototype's map file has none. Absent or empty = the map draws every part but the scenery.
    */
   interiorParts?: string[];
+  /**
+   * The site's page leaves the interior undrawn while the cover is closed. Only for buildings closed all round: through
+   * an open arcade or a window seen up close the interior shows, so this is set per site after looking at it.
+   */
+  hideClosedInterior?: boolean;
   /**
    * The night theme's file of the same model (`SiteDetail.nightModelId`, `3d/model.json → glb_gece`); absent = the day
    * file at night too. It carries the day file's part names, so placement, highlights, cards and cover groups hold.

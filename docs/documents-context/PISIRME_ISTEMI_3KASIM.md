@@ -74,3 +74,74 @@ Bunları yapma, bilgi için:
 - Harita tamamı ışıksız bir dosyayı kendisi tanır: ışık ve gölge hesabını kapatır, ACES ve pozlamayı açık tutar.
 - `Harita_Golge` taban ve ayak izi hesabına katılmaz; adı değişmesin.
 - Şehir doygunluğu pişmiş dosyaya uygulanmaz.
+
+---
+
+# Dördüncü deneme: revizyon (4 Kasım)
+
+Ulucami'nin pişmiş harita dosyalarını revize et. Üçüncü denemede ışık, ton ve gölge doğru; ayrıntılar yanlış: en yakın görünümde kafesler, taş örgüsü ve kurşun ek çizgileri kayboldu, leke ve gürültü çıktı. Yalnız Ulucami. Commit ve push yapma, `apps/web` altına dokunma. Diğer 6 esere başlama.
+
+**Yöntem: her adımı mevcut modelle karşılaştırarak ilerle. Mevcut model tek doğrudur.** Bir adımı ölçmeden sonrakine geçme, sonucu tahmin etme.
+
+## 1. Değişmeyecekler
+
+Güneş, gece ayarları, `ORTAM_YUMUSAT`, `PARLAMA`, `AY_KATKI`, `Harita_Golge` yönü, düğüm adları. Şadırvan camı opak kalır. Atlas 2048 kalır. `model.json` içinde yalnız `_pisik_not` satırını yeni değerlerle güncelle (hâlâ 200° ve 62° diyor); `ic_gizle` ve `pisik_onay` uygulamanındır.
+
+## 2. Pişmiş dosya nerede görünüyor
+
+Uygulama değişti: harita yakınlaşma 17,5'te ve üzerinde mevcut modele geçiyor, uzaklaşırken 17'nin altında pişmiş dosyaya dönüyor. Yani en yakın görünüm artık pişmiş dosyanın işi değil, ama 17,5'e kadar mevcut modele yakın durmalı; geçişte fark göze batmamalı.
+
+Ölçüm kamerası, uygulamanın telefondaki görünümü: 780 × 1688 piksel, perspektif, dikey görüş açısı 36,87°, eğim 60°, uzaklık 440 m (yakınlaşma 17,4). Bir de yarı uzaklık, 220 m: güvenlik payı.
+
+## 3. Önce karşılaştırma aracı, sonra pişirme
+
+`pisik_gorsel` aracını şöyle genişlet ve **pişirmeye başlamadan önce** çalıştır:
+
+- Aynı kameradan **mevcut | pişmiş | fark** üçlüsü. Mevcut, uygulamanın bugünkü ışığıyla `export/ulu-cami_v32.glb` (gece `night/ulu-cami_v32_night_v2.glb`).
+- Sekiz detay karesi, her biri gündüz ve gece, iki uzaklıkta:
+  kurşun kubbe ve ek çizgileri · şadırvan kubbesi · kasnak pencereleri · üst cephe pencereleri · alt pencere parmaklıkları · cephe taş örgüsü · taç kapı · alem ve minare şerefesi.
+- Her kare için şunları ölç ve `rapor.json` içinde tablo yap:
+  - **Keskinlik oranı:** pişmiş / mevcut kenar enerjisi (Sobel ya da Laplace)
+  - **SSIM** (parlaklık kanalında)
+  - **Parlaklık oranı medyanı**
+  - **Renk sapması:** mevcutta olmayan renk üreten piksel payı (kırmızı saçak, beyaz leke gibi)
+
+Şu anki dosyaların tablosu başlangıç çizgisidir, ilk teslimde onu da ver. Dosyaların bir kopyasını sakla ki geri dönülebilsin.
+
+## 4. Düzeltilecekler
+
+Karşılaştırma görüntüleri: `kontrol/v32_pisik/uygulama_yakin_gunduz.png`, `uygulama_yakin_gece.png` (sol mevcut, sağ pişmiş). Sırayla ve **her maddeden sonra tabloyu yeniden ölçerek**:
+
+1. **Leke ve taşma:** Üst pencere kemerinde kırmızı saçak, alem dibinde beyaz leke, alt pencerelerde kırmızımsı gürültü. Nedeni büyük ihtimalle atlasta komşu adadan taşma; kenar payı, taşırma ve doku süzmesini kontrol et, nedeni bulup yaz.
+2. **Pencere kafesleri:** Kasnak ve cephe pencereleri düz leke. Kafes deseni okunmalı; gece delikler ışıklı, araları koyu kalmalı. Bu parçalara atlasta çok daha yüksek yoğunluk ver (hedef en çok 3 cm/piksel).
+3. **Cam kubbe:** Gündüz yatay çizikler, gece benekli. Temiz ve yumuşak olsun, iskelet çizgileri korunsun.
+4. **Kurşun ek çizgileri:** Mevcut model kadar okunsun. Çizgileri dokudan keskin aktar.
+5. **Taş örgüsü:** Silik. Atlas içinde yapılabildiği kadar geri getir.
+6. **Dalgalı kenarlar:** Cephe kemerleri ve pencere çevresi.
+
+Atlasta yer gerekiyorsa önce gizli ve görünmeyen yüzlerden al, sonra düz cephe boşluklarından.
+
+## 5. Kabul
+
+440 m kamerasında, sekiz karenin **her birinde**, gündüz ve gece:
+
+| Ölçüt | Sınır |
+|---|---|
+| Keskinlik oranı | ≥ 0,80 |
+| SSIM | ≥ 0,90 |
+| Parlaklık oranı medyanı | 0,97–1,03 |
+| Renk sapması | ≤ %0,5 |
+
+220 m kamerasında sınır yok ama değerleri raporla. Genel ölçütler öncekiyle aynı (p10, p90, koyu piksel, üçgen, iki ışıksız malzeme, düğüm adları). Boyut: gündüz en çok 1100 KB, gece en çok 1300 KB; ayrıntı için önceki sınırı biraz gevşettim.
+
+Ortalama yeterli değil, her kare ayrı geçmeli. Bir madde daha önce geçen bir kareyi bozarsa o değişikliği geri al.
+
+## 6. Durma kuralı
+
+Üç denemede sınır tutmuyorsa zorlamayı bırak. Hangi karenin neden tutmadığını, 2048 atlasın gerçek sınırını ve kaç piksel gerektiğini yaz. Sınırı sessizce gevşetme, sayıları yuvarlama.
+
+## 7. Teslim
+
+- Üçlü görüntüler ve ölçüm tablosu: başlangıç, her madde sonrası, son.
+- README'nin pişirme bölümü güncel.
+- «Geçti» demeden önce son dosyaları tabloya göre yeniden ölç; onay Muhammed'indir.

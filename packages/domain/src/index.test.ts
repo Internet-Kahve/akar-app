@@ -12,6 +12,7 @@ import {
   validateCityIdentity,
   validateSite,
   memoryPermissions,
+  mapCloseSrc,
   mapModelSrc,
   modelFileFor,
   nightPartsMissing,
@@ -474,4 +475,8 @@ test("the map draws a baked file where there is one, and the site's own file oth
   assert.equal(mapModelSrc(baked, "night"), "/pg.glb");
   // Baked by day only: the night keeps its own file, never the day's baked light.
   assert.equal(mapModelSrc({ ...day, night, mapBaked: { day: "/p.glb" } }, "night"), "/gece.glb");
+  // Close up a baked model gives way to the lit file of its theme; a lit model has nothing to give way to.
+  assert.equal(mapCloseSrc(baked, "day"), "/gunduz.glb");
+  assert.equal(mapCloseSrc(baked, "night"), "/gece.glb");
+  assert.equal(mapCloseSrc(day, "day"), undefined);
 });

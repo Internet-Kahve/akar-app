@@ -18,6 +18,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
 import { liftGroundLayers } from "../lib/ground-layers";
+import { hideableInterior, interiorNeeded } from "../lib/interior";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addModelLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
 import { spreadOrder, type PartPoint } from "../lib/part-order";
@@ -386,6 +387,7 @@ export default function ModelViewer({
   const beforeViews = useRef<{ pose: CameraPose | null; inside: boolean } | null>(null);
   const heading = model.placement?.headingDeg ?? 0;
   const groupsKey = JSON.stringify(model.coverGroups ?? []);
+  const hiddenKey = JSON.stringify(model.hideClosedInterior ? hideableInterior(model.interiorParts, model.coverGroups) : []);
   const lightKey = JSON.stringify(cityScene.light);
   useEffect(() => {
     const element = host.current;
@@ -436,8 +438,11 @@ export default function ModelViewer({
       };
       scene.addEventListener("childadded", staleShadows);
       scene.addEventListener("childremoved", staleShadows);
+      // Closed cover: the interior is not drawn (`lib/interior`); set once the model is here.
+      let syncInterior = () => {};
       const render = () => {
         if (disposed || compiling) return;
+        syncInterior();
         if (shadowsStale) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
@@ -885,6 +890,7 @@ export default function ModelViewer({
             };
             breathFrame = requestAnimationFrame(step);
           };
+          let coverOpen: (() => boolean) | null = null;
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>
             names.flatMap((n) => root.getObjectByName(n) ?? []),
@@ -916,6 +922,7 @@ export default function ModelViewer({
             });
             const progress = groups.map(() => 0);
             let goal = 0;
+            coverOpen = () => goal === 1 || progress.some((t) => t > 0);
             let liftFrame = 0;
             let last = 0;
             cancelLift = () => cancelAnimationFrame(liftFrame);
@@ -989,6 +996,27 @@ export default function ModelViewer({
             if (open) lift.current(true, false);
             setInside(open);
           }
+          // Only where the cover can open: otherwise nothing would ever show the interior again.
+          const hiddenNames = JSON.parse(hiddenKey) as string[];
+          const hiddenNodes = coverOpen ? hiddenNames.flatMap((n) => root.getObjectByName(n) ?? []) : [];
+          let interiorReady = false;
+          if (hiddenNodes.length) {
+            // The box of the building where it now stands: a camera inside it sees the interior, cover or not.
+            const inner = box.clone().translate(center.clone().negate());
+            syncInterior = () => {
+              const show =
+                !interiorReady ||
+                interiorNeeded({
+                  coverOpen: coverOpen!(),
+                  cameraInside: inner.containsPoint(camera.position),
+                  parts: [...highlighted, ...selected, ...(aimedTarget ? [aimedTarget] : [])],
+                  hidden: hiddenNames,
+                });
+              if (hiddenNodes[0]!.visible === show) return;
+              for (const node of hiddenNodes) node.visible = show;
+              staleShadows();
+            };
+          }
           if (highlightRef.current?.length) select.current(highlightRef.current);
           reframe.current?.();
           if (poseRef.current) aim.current(poseRef.current);
@@ -1013,7 +1041,18 @@ export default function ModelViewer({
             .finally(() => {
               compiling = false;
               if (disposed) return;
+              // Its shaders were compiled above with the rest; its textures go up now too, so opening the cover
+              // does not stop to do it.
+              for (const node of hiddenNodes)
+                node.traverse((item) => {
+                  if (!(item instanceof THREE.Mesh)) return;
+                  for (const m of Array.isArray(item.material) ? item.material : [item.material])
+                    for (const value of Object.values(m)) if (value instanceof THREE.Texture) renderer!.initTexture(value);
+                });
+              interiorReady = true;
               render();
+              // What is said about the model waits for the model (`TipRow`).
+              element.dataset.drawn = "";
               settledRef.current?.("ready");
             });
         },
@@ -1034,6 +1073,7 @@ export default function ModelViewer({
     }
     return () => {
       disposed = true;
+      delete element.dataset.drawn;
       aim.current = null;
       stage.current = null;
       if (poseReader) poseReader.current = null;
@@ -1061,7 +1101,7 @@ export default function ModelViewer({
       renderer?.forceContextLoss();
       renderer?.domElement.remove();
     };
-  }, [model.src, name, heading, model.placement?.frontDeg, groupsKey, partsKey, lightKey, detail]);
+  }, [model.src, name, heading, model.placement?.frontDeg, groupsKey, hiddenKey, partsKey, lightKey, detail]);
   // Before the pose: a sentence's camera is worked out for the frame of that sentence.
   useEffect(() => {
     reframe.current?.();

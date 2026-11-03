@@ -125,6 +125,7 @@ function SiteRow({
   showModelTag,
   onPick,
   onRoute,
+  onOpen,
   onHover,
 }: {
   routeIndex: number;
@@ -134,6 +135,8 @@ function SiteRow({
   showModelTag: boolean;
   onPick: () => void;
   onRoute: () => void;
+  /** Goes straight to the site's page; without it (a route being built) the row's button adds the site instead. */
+  onOpen?: () => void;
   onHover: (id: string | undefined) => void;
 }) {
   const { t, text } = useI18n();
@@ -154,14 +157,20 @@ function SiteRow({
           {showModelTag && site.model && <em>3D</em>}
         </span>
       </button>
-      <button
-        className="site-row-add"
-        aria-pressed={routeIndex > 0}
-        aria-label={t("explore.addSite", { name: text(site.name, site.nameEn) })}
-        onClick={onRoute}
-      >
-        {routeIndex > 0 ? <span>★{routeIndex}</span> : <Plus size={16} />}
-      </button>
+      {onOpen ? (
+        <button className="site-row-add" aria-label={t("explore.openSite", { name: text(site.name, site.nameEn) })} onClick={onOpen}>
+          <ChevronRight size={18} />
+        </button>
+      ) : (
+        <button
+          className="site-row-add"
+          aria-pressed={routeIndex > 0}
+          aria-label={t("explore.addSite", { name: text(site.name, site.nameEn) })}
+          onClick={onRoute}
+        >
+          {routeIndex > 0 ? <span>★{routeIndex}</span> : <Plus size={16} />}
+        </button>
+      )}
     </li>
   );
 }
@@ -184,6 +193,7 @@ export function ExplorePanel({
   onPick,
   onRoute,
   onOpenRoute,
+  onOpen,
   onCustomRoute,
   onCities,
   onClearFilters,
@@ -206,6 +216,8 @@ export function ExplorePanel({
   onPick: (id: string) => void;
   onRoute: (id: string) => void;
   onOpenRoute: (id: string) => void;
+  /** Straight to a site's page from the list; left out while a route is being built. */
+  onOpen?: (id: string) => void;
   onCustomRoute: () => void;
   onCities: () => void;
   onClearFilters: () => void;
@@ -352,6 +364,7 @@ export function ExplorePanel({
                 showModelTag={someModelMissing}
                 onPick={() => onPick(site.id)}
                 onRoute={() => onRoute(site.id)}
+                onOpen={onOpen ? () => onOpen(site.id) : undefined}
                 onHover={onHover}
               />
             ))}

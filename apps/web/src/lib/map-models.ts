@@ -1,6 +1,7 @@
 import {
   CITY_MARKER_MAX_ZOOM,
   defaultMapSettings,
+  mapCloseSrc,
   mapModelSrc,
   type CityScene,
   type HeritageSite,
@@ -46,6 +47,8 @@ export interface MapModelSite {
   light: SceneLight;
   /** Interior parts left out on the map (`SiteModel.interiorParts`). */
   interiorParts?: string[];
+  /** The lit file a baked model gives way to close up (`CLOSE_ZOOM`); none for a model that is lit already. */
+  closeSrc?: string;
 }
 interface Entry {
   site: MapModelSite;
@@ -151,6 +154,24 @@ const FADE_MS = 500;
 const ZOOM_SLACK = 0.5;
 /** A modest phone's sun: a smaller shadow map, drawn once like every other (`shadowDirty`). */
 const MODEST_SHADOW_MAP = 512;
+/**
+ * Close up a baked model gives way to the site's own lit file (Muhammed, 4 Nov 2026: «tüm detayları öldürmüş»): a baked
+ * atlas holds about 10 cm a pixel, and from here on a phone's pixel shows less than that, so lattices, masonry and lead
+ * seams go. The sun is the same in both, so only the detail changes. Few models are on screen this close.
+ */
+const CLOSE_ZOOM = 17.5;
+/** Back to the baked file this far below `CLOSE_ZOOM` (no flicker at the line). */
+const CLOSE_SLACK = 0.5;
+/** Lit close-up models at once, the nearest the centre. */
+const CLOSE_MAX = 2;
+/** The close-up file of a site is a site of its own in the layer, under this key. */
+const CLOSE_KEY = "|yakin";
+const baseKey = (key: string) => (key.endsWith(CLOSE_KEY) ? key.slice(0, -CLOSE_KEY.length) : key);
+const partnerKey = (key: string) => (key.endsWith(CLOSE_KEY) ? baseKey(key) : key + CLOSE_KEY);
+
+/** Whether the map is close enough for the lit file, given whether it was: in at `CLOSE_ZOOM`, out `CLOSE_SLACK` below. */
+export const closeUpAt = (zoom: number, was: boolean) =>
+  zoom >= CLOSE_ZOOM ? true : zoom < CLOSE_ZOOM - CLOSE_SLACK ? false : was;
 
 export class MapModelLayer implements CustomLayerInterface {
   readonly id = LAYER_ID;
@@ -186,6 +207,8 @@ export class MapModelLayer implements CustomLayerInterface {
   private readonly leaving = new Map<string, Entry>();
   /** Near enough for the models, with `ZOOM_SLACK` on the way out. */
   private near = false;
+  /** Close enough for the lit files (`CLOSE_ZOOM`). */
+  private close = false;
   private lastFrame = 0;
   /**
    * A turning ring where a model is coming in (Muhammed, 3 Nov 2026: «modeller yüklenirken oldukları yerde dairesel
@@ -280,7 +303,14 @@ export class MapModelLayer implements CustomLayerInterface {
   }
 
   setSites(sites: MapModelSite[]) {
-    this.sites = new Map(sites.map((s) => [s.id, s]));
+    this.sites = new Map(
+      sites.flatMap((s) => {
+        const own: [string, MapModelSite] = [s.id, s];
+        if (!s.closeSrc) return [own];
+        const { closeSrc, ...site } = s;
+        return [own, [s.id + CLOSE_KEY, { ...site, id: s.id + CLOSE_KEY, src: closeSrc }] as [string, MapModelSite]];
+      }),
+    );
     this.reconcile();
   }
 
@@ -423,6 +453,8 @@ export class MapModelLayer implements CustomLayerInterface {
         : entry.fadeTo ? Math.min(1, entry.fade + step) : Math.max(0, entry.fade - step);
       this.applyFade(entry);
       if (entry.fade !== entry.fadeTo) any = true;
+      // One of a baked and lit pair is all there: the other can go (`select`).
+      else if (entry.fadeTo === 1 && this.hasPartner(id)) setTimeout(this.reconcile);
       else if (entry.fadeTo === 0) {
         this.leaving.delete(id);
         this.parked.delete(id);
@@ -433,8 +465,25 @@ export class MapModelLayer implements CustomLayerInterface {
     return any;
   }
 
+  /** The other file of the same building is here: the two swap, one fading in over the other. */
+  private hasPartner(key: string) {
+    return this.sites.has(partnerKey(key)) && this.loaded.has(partnerKey(key));
+  }
+
   /** A fading model is see-through (no depth writes meanwhile); faded in, it is as modelled again. */
   private applyFade(entry: Entry) {
+    // Over its own other file it lies a hair in front, or the two would fight for the same surfaces.
+    const over = entry.fade < 1 && this.hasPartner(entry.site.id);
+    entry.floor.visible = !entry.baked && (entry.fade >= 1 || !over);
+    entry.model.traverse((item) => {
+      if (!(item instanceof THREE.Mesh)) return;
+      for (const material of Array.isArray(item.material) ? item.material : [item.material]) {
+        if (BAKED_SHADOW.test(material.name)) continue;
+        material.polygonOffset = over;
+        material.polygonOffsetFactor = over ? -1 : 0;
+        material.polygonOffsetUnits = over ? -4 : 0;
+      }
+    });
     if (entry.fade >= 1) {
       this.applyOpacity(entry.model);
       return;
@@ -465,7 +514,8 @@ export class MapModelLayer implements CustomLayerInterface {
     const ndcY = 1 - (y / canvas.clientHeight) * 2;
     const raycaster = new THREE.Raycaster();
     let best: { id: string; distance: number } | null = null;
-    for (const [id, entry] of this.loaded) {
+    for (const [key, entry] of this.loaded) {
+      const id = baseKey(key);
       // Back to model space: the ray runs through the model's own metres.
       const inverse = new THREE.Matrix4()
         .multiplyMatrices(this.projection, entry.matrix)
@@ -489,6 +539,7 @@ export class MapModelLayer implements CustomLayerInterface {
   /** The models that should be on screen now: in view, nearest the centre, at most `maxVisibleModels`. */
   private select(map: MapLibreMap): Map<string, MapModelSite> {
     if (!this.isNear(map.getZoom())) return new Map();
+    this.close = closeUpAt(map.getZoom(), this.close);
     // The panel preview keeps its one model wherever the map is panned.
     if (this.everywhere)
       return new Map(
@@ -501,8 +552,9 @@ export class MapModelLayer implements CustomLayerInterface {
     const padLng = (view.getEast() - view.getWest()) * VIEW_MARGIN;
     const padLat = (view.getNorth() - view.getSouth()) * VIEW_MARGIN;
     const cos = Math.cos((centre.lat * Math.PI) / 180);
-    return new Map(
+    const wanted = new Map(
       [...this.sites.values()]
+        .filter((site) => !site.id.endsWith(CLOSE_KEY))
         .filter(
           ({ placement: p }) =>
             p.lng >= view.getWest() - padLng &&
@@ -521,6 +573,18 @@ export class MapModelLayer implements CustomLayerInterface {
         .slice(0, Math.max(0, this.visibleLimit()))
         .map(({ site }) => [site.id, site]),
     );
+    // Each close-up file comes over its baked one, which stays until it is all there; and the same on the way back.
+    let closeLeft = CLOSE_MAX;
+    for (const [id, site] of [...wanted]) {
+      if (!site.closeSrc) continue;
+      const key = id + CLOSE_KEY;
+      const closeUp = this.sites.get(key)!;
+      if (this.close && closeLeft-- > 0) {
+        wanted.set(key, closeUp);
+        if (this.loaded.get(key)?.fade === 1) wanted.delete(id);
+      } else if (this.loaded.has(key) && this.loaded.get(id)?.fade !== 1) wanted.set(key, closeUp);
+    }
+    return wanted;
   }
 
   private readonly reconcile = () => {
@@ -531,10 +595,17 @@ export class MapModelLayer implements CustomLayerInterface {
     for (const [id, entry] of this.loaded) {
       const next = wanted.get(id);
       if (!next) {
-        // Out of view: it fades out (`leaving`), then is kept for a return (`parked`).
         this.loaded.delete(id);
-        entry.fadeTo = 0;
-        this.leaving.set(id, entry);
+        if (this.loaded.get(partnerKey(id))?.fade === 1) {
+          // Its other file stands all there in its place: nothing to see of this one fading, it goes at once.
+          entry.fade = entry.fadeTo = 0;
+          this.parked.delete(id);
+          this.parked.set(id, entry);
+        } else {
+          // Out of view: it fades out (`leaving`), then is kept for a return (`parked`).
+          entry.fadeTo = 0;
+          this.leaving.set(id, entry);
+        }
         changed = true;
       } else if (
         next.src !== entry.site.src ||
@@ -779,6 +850,7 @@ export function createMapModels(
                   id: s.id,
                   // The baked file where there is one, the night file by night; a new source reloads it (`reconcile`).
                   src: mapModelSrc(s.model, theme),
+                  ...(mapCloseSrc(s.model, theme) && { closeSrc: mapCloseSrc(s.model, theme) }),
                   placement: s.model.placement,
                   light: sceneOf(s, scenes).light,
                   ...(s.model.interiorParts?.length && {
