@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm";
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { App } from "../../app.ts";
-import { auditLog, catalogRoutes, cities, media, routeStops, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteTaskAnswers, siteTasks, sites, sources, userSiteBadges, userSiteTasks } from "../../db/schema/index.ts";
+import { auditLog, catalogRoutes, cities, media, routeStops, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, sources, userSiteBadges, userSiteTasks } from "../../db/schema/index.ts";
 import { AppError, type ErrorBody } from "../../errors.ts";
 import { authHeader } from "../../test/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -120,7 +120,7 @@ test("the panel is for editors and admins: guests get 401, users and moderators 
     ["PUT", `${base}/media`, { photoIds: ["ph-1"], coverPhotoId: "ph-1" }],
     ["PUT", `${base}/sources`, { sources: [{ title: "Kaynak", kind: "book", trust: "verified" }] }],
     ["PUT", `${base}/stories`, { blocks: [story()] }],
-    ["PUT", `${base}/sections`, { sections: [{ kind: "history", title: "Tarihçe", body: "Metin", trust: "verified" }] }],
+    ["PUT", `${base}/about`, { chapters: [], looseSections: [{ kind: "history", title: "Tarihçe", body: "Metin", trust: "verified" }] }],
     ["PUT", `${base}/history-images`, { images: [{ mediaId: "ph-1", trust: "verified" }] }],
     ["PUT", `${base}/part-cards`, { cards: [] }],
     ["PUT", `${base}/tasks`, { tasks: [], badges: [] }],
@@ -1030,7 +1030,7 @@ test("every write leaves one audit row naming the actor and request, with before
   await write("PUT", "/media", { photoIds: ["ph-1"], coverPhotoId: "ph-1" });
   await write("PUT", "/sources", { sources: [{ id: "src-vgm", title: "VGM Bursa Envanteri", kind: "book", trust: "verified" }] });
   await write("PUT", "/stories", { blocks: [story()] });
-  await write("PUT", "/sections", { sections: [{ kind: "history", title: "Tarihçe", body: "Han 1491'de yapıldı.", trust: "verified", sourceId: "src-vgm" }] });
+  await write("PUT", "/about", { chapters: [], looseSections: [{ kind: "history", title: "Tarihçe", body: "Han 1491'de yapıldı.", trust: "verified", sourceId: "src-vgm" }] });
   await write("PUT", "/history-images", { images: [{ mediaId: "ph-1", trust: "inferred" }] });
   await write("POST", "/publish");
   await write("POST", "/unpublish");
@@ -1065,4 +1065,162 @@ test("every write leaves one audit row naming the actor and request, with before
   assert.equal(first.res.statusCode, 200);
   assert.deepEqual(replay.body.stories.map((s) => s.id), first.body.stories.map((s) => s.id));
   assert.equal((await auditOf(id)).length, rows.length + 1);
+});
+
+const aboutPara = (over: Record<string, unknown> = {}) => ({ kind: "history", title: "Tarihçe", body: "Han 1491'de yapıldı.", trust: "verified", sourceId: "src-vgm", ...over });
+const aboutChapter = (over: Record<string, unknown> = {}) => ({
+  title: "Tarihçe",
+  kind: "history",
+  summary: ["Han 1491'de yapıldı."],
+  figures: [{ value: "1491", label: "Yapım yılı", evidence: "Han 1491'de yapıldı." }],
+  quotes: [{ text: "Bu han Bursa'nın göz bebeğidir.", by: "Seyyah" }],
+  timeline: [{ year: "1491", evidence: "Han yapıldı." }],
+  terms: [{ word: "Han", definition: "Konaklama yeri." }],
+  sections: [aboutPara()],
+  ...over,
+});
+const putAbout = (id: string, chapters: object[], looseSections: object[] = []) => call<ErrorBody>("PUT", `/v1/admin/sites/${id}/about`, editor, { chapters, looseSections });
+
+test("the about chapters and their paragraphs are replaced whole and in order: ids stay, paragraphs move between chapters and out of them, left-out ones go, the 3D view and the book photographs stay", async () => {
+  const site = await newDraft("Hakkında Hanı");
+  const other = await newDraft("Hakkında Komşusu");
+  const base = `/v1/admin/sites/${site.id}`;
+  const db = app.deps.db;
+  await send("PUT", `${base}/sources`, { sources: [{ id: "src-vgm", title: "VGM Bursa Envanteri", kind: "book", trust: "verified" }] });
+  const save = (chapters: object[], looseSections: object[] = []) => send("PUT", `${base}/about`, { chapters, looseSections });
+
+  // Ids are generated for new rows; text, lists, kind and source round-trip; a paragraph without a chapter comes after the chapters.
+  const saved = await save(
+    [aboutChapter(), aboutChapter({ title: "Mimari", kind: "architecture", summary: [], figures: [], quotes: [{ text: "Avlulu.", by: null }], timeline: [], terms: [], sections: [aboutPara({ title: "Mimari", kind: "architecture", body: "Avlulu.", sourceId: null })] })],
+    [aboutPara({ title: "Ek", body: "Sonradan." })],
+  );
+  const [c1, c2] = saved.chapters as [(typeof saved.chapters)[number], (typeof saved.chapters)[number]];
+  assert.deepEqual(saved.chapters.map((c) => [c.title, c.kind, c.summary.length, c.figures.length, c.quotes.length, c.timeline.length, c.terms.length]), [
+    ["Tarihçe", "history", 1, 1, 1, 1, 1],
+    ["Mimari", "architecture", 0, 0, 1, 0, 0],
+  ]);
+  assert.deepEqual(c2.quotes, [{ text: "Avlulu.", by: null }]);
+  assert.deepEqual(saved.sections.map((s) => [s.title, s.chapterId, s.sourceId, s.trust]), [
+    ["Tarihçe", c1.id, "src-vgm", "verified"],
+    ["Mimari", c2.id, null, "verified"],
+    ["Ek", null, "src-vgm", "verified"],
+  ]);
+  const [p1, p2, p3] = saved.sections as [(typeof saved.sections)[number], (typeof saved.sections)[number], (typeof saved.sections)[number]];
+
+  // Public read shows the same chapters and paragraphs once published.
+  await makePublishable(site.id);
+  await send("POST", `${base}/publish`);
+  const pub = (await call<SiteDetail>("GET", `/v1/sites/${site.id}`)).body;
+  assert.deepEqual(pub.chapters.map((c) => c.id), [c1.id, c2.id]);
+  assert.deepEqual(pub.sections.map((s) => s.id), [p1.id, p2.id, p3.id]);
+
+  // The 3D view and a book photograph belong to the id, not to the editor's body.
+  const camera = { target: null, azimuthDeg: 30, elevationDeg: 10, distance: 0.9 };
+  await db.update(siteAboutChapters).set({ reading: { summary: [], figures: [], quotes: [], timeline: [], terms: [], camera, interior: true, focusParts: ["kubbe"] } }).where(eq(siteAboutChapters.id, c1.id));
+  await db.insert(siteSectionPhotos).values({ siteId: site.id, sectionId: p3.id, position: 0, mediaId: "ph-2", aspect: 1.5, alt: "Kitap" });
+  await db.update(sites).set({ aboutCoverMediaId: "ph-2" }).where(eq(sites.id, site.id));
+
+  // Reorder the chapters, move a paragraph from the loose list into the second chapter and one into the first, edit a text.
+  const moved = await save(
+    [
+      { ...c2, sections: [{ ...p2 }, { ...p3, body: "Sonradan, düzeltildi." }] },
+      { ...c1, sections: [] },
+    ],
+    [{ ...p1, title: "Bölümsüz" }],
+  );
+  assert.deepEqual(moved.chapters.map((c) => c.id), [c2.id, c1.id]);
+  assert.deepEqual(moved.sections.map((s) => [s.id, s.chapterId, s.title, s.body]), [
+    [p2.id, c2.id, "Mimari", "Avlulu."],
+    [p3.id, c2.id, "Ek", "Sonradan, düzeltildi."],
+    [p1.id, null, "Bölümsüz", "Han 1491'de yapıldı."],
+  ]);
+  assert.deepEqual(moved.chapters.find((c) => c.id === c1.id)!.camera, camera);
+  assert.equal(moved.chapters.find((c) => c.id === c1.id)!.interior, true);
+  assert.deepEqual(moved.chapters.find((c) => c.id === c1.id)!.focusParts, ["kubbe"]);
+  assert.deepEqual(moved.sections.find((s) => s.id === p3.id)!.photos.map((p) => [p.alt, p.aspect]), [["Kitap", 1.5]]);
+  assert.equal(moved.aboutCoverMediaId, "ph-2");
+
+  // A chapter left out goes; the paragraph sent again under another chapter stays, one not sent goes with its photographs.
+  const trimmed = await save([{ ...c2, sections: [p3] }]);
+  assert.deepEqual(trimmed.chapters.map((c) => c.id), [c2.id]);
+  assert.deepEqual(trimmed.sections.map((s) => [s.id, s.chapterId]), [[p3.id, c2.id]]);
+  assert.equal((await db.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, site.id))).length, 1);
+  assert.equal((await save([])).sections.length, 0);
+  assert.equal((await db.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, site.id))).length, 0);
+  assert.equal((await call<AdminSiteDetail>("GET", base, editor)).body.aboutCoverMediaId, "ph-2");
+
+  // Refusals write nothing: foreign source, a repeated id, a chapter of another site, a blank text, a paragraph for no chapter.
+  const bare = { ...c2, sections: [] };
+  const keep = await save([bare]);
+  const refused: { body: [object[], object[]?]; field: string }[] = [
+    { body: [[aboutChapter({ sections: [aboutPara({ sourceId: "yok" })] })]], field: "chapters.0.sections.0.sourceId" },
+    { body: [[bare, bare]], field: "chapters.1.id" },
+    { body: [[aboutChapter({ sections: [aboutPara({ id: "pa-1" }), aboutPara({ id: "pa-1" })] })]], field: "chapters.0.sections.1.id" },
+    { body: [[aboutChapter({ title: "  " })]], field: "chapters.0.title" },
+    { body: [[aboutChapter({ sections: [aboutPara({ body: "" })] })]], field: "chapters.0.sections.0.body" },
+    { body: [[aboutChapter({ quotes: [{ text: "", by: null }] })]], field: "chapters.0.quotes.0.text" },
+    { body: [[], [aboutPara({ title: "" })]], field: "looseSections.0.title" },
+  ];
+  for (const { body, field } of refused) {
+    const r = await putAbout(site.id, ...body);
+    assert.equal(r.res.statusCode, 400, field);
+    assert.ok(r.body.error.fieldErrors[field], `${field}: ${r.res.body}`);
+  }
+  assert.deepEqual((await call<AdminSiteDetail>("GET", base, editor)).body.chapters, keep.chapters);
+
+  const taken = await putAbout(other.id, [{ ...aboutChapter(), id: c2.id }]);
+  assert.equal(taken.res.statusCode, 409);
+  assert.ok(taken.body.error.fieldErrors["chapters.0.id"]);
+  assert.deepEqual((await call<AdminSiteDetail>("GET", `/v1/admin/sites/${other.id}`, editor)).body.chapters, []);
+  assert.equal((await putAbout("yok", [aboutChapter()])).res.statusCode, 404);
+
+  // One audit row per accepted write, with the chapters and paragraphs before and after.
+  const rows = (await auditOf(site.id)).filter((r) => (r.after as Record<string, unknown>)["chapters"] !== undefined);
+  assert.equal(rows.length, 5);
+  assert.equal(((rows[0]!.before as { chapters: unknown[] }).chapters).length, 0);
+  assert.equal(((rows[0]!.after as { chapters: unknown[] }).chapters).length, 2);
+});
+
+test("the about English texts follow the card rules: omitted keeps, written or changed is reviewed, unchanged keeps the status, empty clears, and the reading lists match the Turkish ones", async () => {
+  const site = await newDraft("Hakkında İngilizce Hanı");
+  const base = `/v1/admin/sites/${site.id}`;
+  const db = app.deps.db;
+  const read = async () => {
+    const d = (await call<AdminSiteDetail>("GET", base, editor)).body;
+    const c = d.chapters[0]!;
+    const s = d.sections[0]!;
+    return { chapter: [c.titleEn, c.readingEn?.summary ?? null, c.enStatus], section: [s.titleEn, s.bodyEn, s.enStatus] };
+  };
+  const chapter = (over: Record<string, unknown> = {}, para: Record<string, unknown> = {}) => aboutChapter({ id: "hk-en", sections: [aboutPara({ id: "hk-en-1", sourceId: null, ...para })], ...over });
+
+  // Saved without English: none.
+  await send("PUT", `${base}/about`, { chapters: [chapter()], looseSections: [] });
+  assert.deepEqual(await read(), { chapter: [null, null, null], section: [null, null, null] });
+
+  // Written English is the editor's own reading.
+  const en = { summary: ["Built in 1491."], figures: [{ value: "1491", label: "Year", evidence: "Built in 1491." }], quotes: [{ text: "Jewel of Bursa.", by: "Traveller" }], timeline: [{ year: "1491", evidence: "Built." }], terms: [{ word: "Inn", definition: "A lodging." }] };
+  await send("PUT", `${base}/about`, { chapters: [chapter({ titleEn: "History", readingEn: en }, { titleEn: "History", bodyEn: "The inn was built in 1491." })], looseSections: [] });
+  assert.deepEqual(await read(), { chapter: ["History", ["Built in 1491."], "reviewed"], section: ["History", "The inn was built in 1491.", "reviewed"] });
+
+  // Machine drafts stay machine while unchanged, also when the client omits the fields; only changed English becomes reviewed.
+  await db.update(siteAboutChapters).set({ enStatus: "machine" }).where(eq(siteAboutChapters.id, "hk-en"));
+  await db.update(siteSections).set({ enStatus: "machine" }).where(eq(siteSections.id, "hk-en-1"));
+  await send("PUT", `${base}/about`, { chapters: [chapter({ summary: ["Han 1491'de yapıldı, onarıldı."] })], looseSections: [] });
+  assert.deepEqual(await read(), { chapter: ["History", ["Built in 1491."], "machine"], section: ["History", "The inn was built in 1491.", "machine"] }, "only the Turkish changed: English and its status stay");
+  await send("PUT", `${base}/about`, { chapters: [chapter({ titleEn: "History", readingEn: en }, { titleEn: "History", bodyEn: "The inn was built in 1491." })], looseSections: [] });
+  assert.deepEqual(await read(), { chapter: ["History", ["Built in 1491."], "machine"], section: ["History", "The inn was built in 1491.", "machine"] }, "unchanged English keeps the status");
+  await send("PUT", `${base}/about`, { chapters: [chapter({ titleEn: "History", readingEn: en }, { titleEn: "History", bodyEn: "The inn was built in 1492." })], looseSections: [] });
+  assert.deepEqual(await read(), { chapter: ["History", ["Built in 1491."], "machine"], section: ["History", "The inn was built in 1492.", "reviewed"] }, "a paragraph's change does not touch its chapter");
+  await send("PUT", `${base}/about`, { chapters: [chapter({ titleEn: "History", readingEn: { ...en, summary: ["Built in 1491, restored."] } }, { titleEn: "History", bodyEn: "The inn was built in 1492." })], looseSections: [] });
+  assert.deepEqual((await read()).chapter, ["History", ["Built in 1491, restored."], "reviewed"]);
+
+  // A reading list in English of another length than the Turkish one is refused; the saved texts stay.
+  const uneven = await putAbout(site.id, [chapter({ titleEn: "History", readingEn: { ...en, terms: [] } })]);
+  assert.equal(uneven.res.statusCode, 400);
+  assert.ok(uneven.body.error.fieldErrors["chapters.0.readingEn.terms"], uneven.res.body);
+  assert.deepEqual((await read()).chapter, ["History", ["Built in 1491, restored."], "reviewed"]);
+
+  // Null or blank clears value and status.
+  await send("PUT", `${base}/about`, { chapters: [chapter({ titleEn: null, readingEn: null }, { titleEn: " ", bodyEn: null })], looseSections: [] });
+  assert.deepEqual(await read(), { chapter: [null, null, null], section: [null, null, null] });
 });

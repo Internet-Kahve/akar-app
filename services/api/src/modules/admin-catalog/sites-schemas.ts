@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { aboutLimits } from "@akar/domain";
 import { cardKinds, historyAngleMatches, publishStatuses, sectionKinds, siteBadgeConditions, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
 import { PageQuery, pageResponse } from "../../platform/pagination.ts";
 import { CardDto, KindSchema, MapPlacementDto, SiteDetail, SiteTaskDto, TrustSchema } from "../catalog/schemas.ts";
@@ -270,17 +271,57 @@ export const StoriesBody = z.object({ blocks: z.array(StoryInput).max(100).descr
 export type StoriesInput = z.infer<typeof StoriesBody>;
 
 const SectionInput = z.object({
-  id: Id.optional(),
+  id: Id.optional().describe("Verilirse paragrafın kimliği korunur (kitap fotoğrafları ve sesli okuması kalır); yoksa sunucu üretir"),
   kind: z.enum(sectionKinds),
-  title: text(200).min(1),
-  body: text(8000),
-  bodyEn: nullableText(8000).optional(),
+  title: text(aboutLimits.title).min(1),
+  titleEn: nullableText(aboutLimits.title).optional().describe("İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler"),
+  body: text(aboutLimits.body).min(1),
+  bodyEn: nullableText(aboutLimits.body).optional().describe("İngilizce metin; titleEn ile aynı kurallar"),
   trust: TrustSchema,
   sourceId: Id.nullable().default(null),
 });
 
-export const SectionsBody = z.object({ sections: z.array(SectionInput).max(20).describe("Eser hakkında bölümleri, sırasıyla") });
-export type SectionsInput = z.infer<typeof SectionsBody>;
+/** The reading texts of a chapter, in Turkish and (item for item) in English. */
+const readingShape = {
+  summary: z.array(text(1000).min(1)).max(20).describe("Metinden seçilen özet cümleleri"),
+  figures: z.array(z.object({ value: text(40).min(1), label: text(120).min(1), evidence: text(500).min(1) })).max(12).describe("Sayı kartları"),
+  quotes: z.array(z.object({ text: text(600).min(1), by: nullableText(120).default(null) })).max(10),
+  timeline: z.array(z.object({ year: text(40).min(1), evidence: text(500).min(1) })).max(30),
+  terms: z.array(z.object({ word: text(120).min(1), definition: text(600).min(1) })).max(40).describe("Dokununca tanımı açılan sözcükler"),
+};
+const readingLists = Object.keys(readingShape) as (keyof typeof readingShape)[];
+
+const ChapterInput = z
+  .object({
+    id: Id.optional().describe("Verilirse bölümün kimliği korunur (kamera açısı, sesli okuma ve paragraflar bağlı kalır); yoksa sunucu üretir. Başka eserin bölüm kimliği 409 verir"),
+    title: text(aboutLimits.title).min(1),
+    titleEn: nullableText(aboutLimits.title).optional().describe("İngilizce başlık; kaydedilen İngilizce metinler 'reviewed' olur, hiçbiri değişmediyse önceki durum korunur; verilmezse kayıtlı değer korunur, null ya da boş metin siler"),
+    kind: z.enum(sectionKinds),
+    ...readingShape,
+    readingEn: z
+      .object(readingShape)
+      .nullable()
+      .optional()
+      .describe("Okuma metinlerinin İngilizcesi; her liste Türkçesiyle aynı uzunlukta ve eksiksiz; null siler, verilmezse kayıtlı değer korunur (listelerin uzunluğu hâlâ uyuyorsa). Kamera açısı, iç görünüm ve vurgulu parçalar gönderilmez: sunucuda olduğu gibi kalır"),
+    sections: z.array(SectionInput).describe("Bölümün paragrafları, sırasıyla"),
+  })
+  .superRefine((c, ctx) => {
+    if (!c.readingEn) return;
+    for (const key of readingLists)
+      if (c.readingEn[key].length !== c[key].length)
+        ctx.addIssue({ code: "custom", path: ["readingEn", key], message: "İngilizce liste Türkçe ile aynı uzunlukta olmalı." });
+  });
+
+export const AboutBody = z
+  .object({
+    chapters: z.array(ChapterInput).max(aboutLimits.chapters).describe("Eser hakkında bölümleri, sırasıyla; her biri kendi paragraflarıyla; listede olmayan bölüm ve paragraf (kitap fotoğrafları ve sesli okumalarıyla birlikte) silinir"),
+    looseSections: z.array(SectionInput).describe("Hiçbir bölüme bağlı olmayan paragraflar, sırasıyla (bölümlerden sonra gösterilir)"),
+  })
+  .superRefine((body, ctx) => {
+    const sections = [...body.chapters.flatMap((c) => c.sections), ...body.looseSections];
+    if (sections.length > aboutLimits.paragraphs) ctx.addIssue({ code: "custom", path: ["looseSections"], message: `En çok ${aboutLimits.paragraphs} paragraf gönderilebilir.` });
+  });
+export type AboutInput = z.infer<typeof AboutBody>;
 
 const HistoryImageInput = z.object({
   id: Id.optional().describe("Verilirse görselin kimliği korunur (rota durakları buna bağlanır)"),

@@ -44,6 +44,7 @@ import {
   type PhotoCamera,
   type QuizTaskDetails,
   type QuizTaskTextsEn,
+  type AboutReadingEn,
   type TranslationStatus,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
@@ -90,7 +91,7 @@ import type {
   ModelInput,
   NightModelInput,
   PartCardsInput,
-  SectionsInput,
+  AboutInput,
   SiteInfoInput,
   SiteMediaInput,
   SiteSourcesInput,
@@ -1480,68 +1481,127 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
   );
 }
 
-/** "Eser hakkında" paragraphs (Tarihçe / Mimari / Vakıf ve akar), replaced in order. */
-export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsInput): Promise<AdminSiteDetail> {
+/** An English reading as stored: every list empty = none written. */
+function readingEnOrNull(r: AboutReadingEn | null | undefined): AboutReadingEn | null {
+  return r && (r.summary.length || r.figures.length || r.quotes.length || r.timeline.length || r.terms.length) ? r : null;
+}
+
+/**
+ * "Eser hakkında" (§11.69): the reading chapters and the paragraphs under them, replaced whole and in order, plus the
+ * paragraphs that belong to no chapter (shown after the chapters). Rows are upserted by id and only the left-out ones are
+ * deleted, so a paragraph that is kept keeps its book photographs and its voice-over, a chapter its voice-over, whatever
+ * the editor changed or moved. A left-out paragraph takes its photographs and recordings along; so does a left-out chapter
+ * with the voice-over of its title (its paragraphs must be sent again under another chapter to stay). Chapter ids are global:
+ * one owned by another site is a 409 (paragraph ids are per site). The 3D view of a chapter (camera, interior, parts) is not
+ * in the body: a kept chapter keeps it, a new one has none. The English texts follow `rowEnglishStatus` (§11.64). The cover
+ * and the book photographs themselves are not edited here.
+ */
+export function setAbout(tx: Tx, ctx: AuditCtx, id: string, input: AboutInput): Promise<AdminSiteDetail> {
   return mutate(
     tx,
     ctx,
     id,
-    (a) => ({ sections: a.sections }),
+    (a) => ({ chapters: a.chapters, sections: a.sections }),
     async (before) => {
-      const rows = input.sections.map((s) => ({ ...s, id: s.id ?? newId("sec", s.title) }));
+      const oldChapters = new Map(before.chapters.map((c) => [c.id, c]));
+      const oldSections = new Map(before.sections.map((s) => [s.id, s]));
+      const chapterRows = input.chapters.map((c) => ({ ...c, id: c.id ?? newId("ch", c.title) }));
+      // Paragraph order: chapter by chapter, then the loose ones.
+      const sectionRows = [
+        ...chapterRows.flatMap((c, i) => c.sections.map((s, j) => ({ ...s, chapterId: c.id as string | null, path: `chapters.${i}.sections.${j}` }))),
+        ...input.looseSections.map((s, j) => ({ ...s, chapterId: null, path: `looseSections.${j}` })),
+      ].map((s) => ({ ...s, id: s.id ?? newId("sec", s.title) }));
       const errors = new FieldErrors();
-      checkUnique(errors, (i) => `sections.${i}.id`, rows.map((r) => r.id), "Aynı kimlik birden fazla bölümde kullanılmış.");
-      const sourceIds = await existingSourceIds(tx, distinct(rows.map((r) => r.sourceId)));
-      rows.forEach((r, i) => {
-        if (r.sourceId && !sourceIds.has(r.sourceId)) errors.add(`sections.${i}.sourceId`, "Kaynak bulunamadı.");
+      checkUnique(errors, (i) => `chapters.${i}.id`, chapterRows.map((c) => c.id), "Aynı kimlik birden fazla bölümde kullanılmış.");
+      const sectionIds = new Set<string>();
+      for (const s of sectionRows) {
+        if (sectionIds.has(s.id)) errors.add(`${s.path}.id`, "Aynı kimlik birden fazla paragrafta kullanılmış.");
+        sectionIds.add(s.id);
+      }
+      const sourceIds = await existingSourceIds(tx, distinct(sectionRows.map((s) => s.sourceId)));
+      for (const s of sectionRows) if (s.sourceId && !sourceIds.has(s.sourceId)) errors.add(`${s.path}.sourceId`, "Kaynak bulunamadı.");
+
+      const chapterEnglish = chapterRows.map((c, i) => {
+        const old = oldChapters.get(c.id);
+        const titleEn = keptText(c.titleEn, old?.titleEn);
+        const readingEn = readingEnOrNull(c.readingEn === undefined ? old?.readingEn : c.readingEn);
+        if (readingEn)
+          for (const key of ["summary", "figures", "quotes", "timeline", "terms"] as const)
+            if (readingEn[key].length !== c[key].length) errors.add(`chapters.${i}.readingEn.${key}`, "İngilizce liste Türkçe ile aynı uzunlukta olmalı.");
+        const status = rowEnglishStatus([titleEn, readingEn], old && { texts: [old.titleEn, readingEnOrNull(old.readingEn)], status: old.enStatus });
+        return { titleEn, readingEn, enStatus: status };
       });
       errors.throwIfAny();
 
-      // The rows are replaced, but what the import attached to them stays: a paragraph that keeps its id keeps its
-      // chapter and book photographs; a new one joins the chapter with the same title (null when there is none).
-      // Paragraphs left out lose their photographs with them (the foreign key cascades); chapters stay.
-      const chapters = await tx.select({ id: siteAboutChapters.id, title: siteAboutChapters.title }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, id)).orderBy(asc(siteAboutChapters.position));
-      const chapterOfTitle = new Map<string, string>();
-      for (const c of chapters) if (!chapterOfTitle.has(c.title)) chapterOfTitle.set(c.title, c.id);
-      const chapterOfSection = new Map(before.sections.map((x) => [x.id, x.chapterId]));
-      const oldSection = new Map(before.sections.map((x) => [x.id, x]));
-      const photos = await tx.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, id));
-
-      await tx.delete(siteSections).where(eq(siteSections.siteId, id));
-      if (rows.length) {
-        await tx.insert(siteSections).values(
-          rows.map((r, position) => {
-            // The panel edits only the body's English; the title's stays. One status for both (§11.64).
-            const old = oldSection.get(r.id);
-            const bodyEn = englishState(r.bodyEn || null, old && { value: old.bodyEn, status: old.enStatus });
-            const titleEn = old?.titleEn ?? null;
-            return {
-              siteId: id,
-              id: r.id,
-              position,
-              chapterId: chapterOfSection.has(r.id) ? chapterOfSection.get(r.id)! : (chapterOfTitle.get(r.title) ?? null),
-              kind: r.kind,
-              title: r.title,
-              body: r.body,
-              bodyEn: bodyEn.value,
-              titleEn,
-              enStatus: bodyEn.value || titleEn ? (bodyEn.status ?? old?.enStatus ?? null) : null,
-              trust: r.trust,
-              sourceId: r.sourceId,
-            };
-          }),
-        );
-        const kept = new Set(rows.map((r) => r.id));
-        const restored = photos.filter((p) => kept.has(p.sectionId));
-        if (restored.length) await tx.insert(siteSectionPhotos).values(restored);
+      const taken = chapterRows.length
+        ? await tx.select({ id: siteAboutChapters.id }).from(siteAboutChapters).where(and(inArray(siteAboutChapters.id, chapterRows.map((c) => c.id)), ne(siteAboutChapters.siteId, id)))
+        : [];
+      if (taken.length) {
+        const owned = new Set(taken.map((t) => t.id));
+        const fieldErrors: Record<string, string[]> = {};
+        chapterRows.forEach((c, i) => {
+          if (owned.has(c.id)) fieldErrors[`chapters.${i}.id`] = ["Bu kimlik başka bir eserin bölümüne ait."];
+        });
+        throw new AppError(409, "CONFLICT", "Bölüm kimliği başka bir esere ait.", fieldErrors);
       }
-      // Recordings of paragraphs left out go with them, as in `setStories`.
-      const keptIds = rows.map((r) => r.id);
-      const orphaned = await tx
-        .delete(narrations)
-        .where(and(eq(narrations.siteId, id), eq(narrations.subjectType, "about_section"), keptIds.length ? notInArray(narrations.subjectId, keptIds) : undefined))
-        .returning({ mediaId: narrations.mediaId });
-      await deleteUnreferencedMedia(tx, orphaned.map((n) => n.mediaId));
+
+      // Park the positions below zero: the (site, position) unique keys would refuse a reorder row by row.
+      await tx.update(siteAboutChapters).set({ position: sql`-${siteAboutChapters.position} - 1` }).where(eq(siteAboutChapters.siteId, id));
+      await tx.update(siteSections).set({ position: sql`-${siteSections.position} - 1` }).where(eq(siteSections.siteId, id));
+      for (const [position, c] of chapterRows.entries()) {
+        const old = oldChapters.get(c.id);
+        const row = {
+          siteId: id,
+          position,
+          title: c.title,
+          kind: c.kind,
+          reading: {
+            summary: c.summary,
+            figures: c.figures,
+            quotes: c.quotes,
+            timeline: c.timeline,
+            terms: c.terms,
+            camera: old?.reading.camera ?? null,
+            interior: old?.reading.interior ?? false,
+            focusParts: old?.reading.focusParts ?? [],
+          },
+          ...chapterEnglish[position]!,
+        };
+        await tx.insert(siteAboutChapters).values({ id: c.id, ...row }).onConflictDoUpdate({ target: siteAboutChapters.id, set: row });
+      }
+      for (const [position, s] of sectionRows.entries()) {
+        const old = oldSections.get(s.id);
+        const titleEn = keptText(s.titleEn, old?.titleEn);
+        const bodyEn = keptText(s.bodyEn, old?.bodyEn);
+        const row = {
+          siteId: id,
+          position,
+          chapterId: s.chapterId,
+          kind: s.kind,
+          title: s.title,
+          body: s.body,
+          titleEn,
+          bodyEn,
+          enStatus: rowEnglishStatus([titleEn, bodyEn], old && { texts: [old.titleEn, old.bodyEn], status: old.enStatus }),
+          trust: s.trust,
+          sourceId: s.sourceId,
+        };
+        await tx.insert(siteSections).values({ id: s.id, ...row }).onConflictDoUpdate({ target: [siteSections.siteId, siteSections.id], set: row });
+      }
+      // Left out. Paragraphs first: every kept one already points at its new chapter, so a chapter's delete cascades only
+      // to paragraphs the editor dropped. A paragraph's book photographs cascade with it.
+      const keptSections = sectionRows.map((s) => s.id);
+      const keptChapters = chapterRows.map((c) => c.id);
+      await tx.delete(siteSections).where(and(eq(siteSections.siteId, id), keptSections.length ? notInArray(siteSections.id, keptSections) : undefined));
+      await tx.delete(siteAboutChapters).where(and(eq(siteAboutChapters.siteId, id), keptChapters.length ? notInArray(siteAboutChapters.id, keptChapters) : undefined));
+      // Recordings of what was left out go with it, as in `setStories`.
+      for (const [subjectType, kept] of [["about_section", keptSections], ["about_chapter", keptChapters]] as const) {
+        const orphaned = await tx
+          .delete(narrations)
+          .where(and(eq(narrations.siteId, id), eq(narrations.subjectType, subjectType), kept.length ? notInArray(narrations.subjectId, kept) : undefined))
+          .returning({ mediaId: narrations.mediaId });
+        await deleteUnreferencedMedia(tx, orphaned.map((n) => n.mediaId));
+      }
       return {};
     },
   );

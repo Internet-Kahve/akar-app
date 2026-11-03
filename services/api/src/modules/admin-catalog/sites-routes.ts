@@ -19,7 +19,7 @@ import {
   setNightModel,
   setPartCards,
   setPhotos,
-  setSections,
+  setAbout,
   setSources,
   setStories,
   setTasks,
@@ -44,7 +44,7 @@ import {
   ModelBody,
   NightModelBody,
   PartCardsBody,
-  SectionsBody,
+  AboutBody,
   SiteInfoBody,
   SiteMediaBody,
   SiteSourcesBody,
@@ -263,18 +263,18 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.put(
-    "/v1/admin/sites/:id/sections",
+    "/v1/admin/sites/:id/about",
     {
       preHandler: editor,
       schema: {
         tags: sitesTag,
-        summary: "Eser hakkında bölümleri (Tarihçe, Mimari, Vakıf ve akar) sırasıyla değiştir",
+        summary: "Eser hakkında: bölümleri (başlık, okuma metinleri TR/EN) ve paragrafları sırasıyla değiştir; kimliği verilen satır ve kitap fotoğrafları korunur",
         params: IdParams,
-        body: SectionsBody,
+        body: AboutBody,
         response: { 200: AdminSiteDetail },
       },
     },
-    async (req) => write(req, 200, (tx, ctx) => setSections(tx, ctx, req.params.id, req.body)),
+    async (req) => write(req, 200, (tx, ctx) => setAbout(tx, ctx, req.params.id, req.body)),
   );
 
   app.put(

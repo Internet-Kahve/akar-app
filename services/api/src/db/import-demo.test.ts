@@ -264,6 +264,22 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Panelde düzeltildi"], []]);
   assert.deepEqual((await importDemoContent(path, root, true, env, { replaceTasks: true })).tasksKept, []);
   assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Soru"], ["Soru", "Saha"]]);
+  // The panel owns the chapters and paragraphs of a site already in the database too (§11.69): a repeat import keeps its edits (and the English), --replace-about restores the manifest's.
+  const aboutOf = async (siteId: string) => ({
+    chapters: (await db.select({ id: siteAboutChapters.id, title: siteAboutChapters.title }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, siteId)).orderBy(siteAboutChapters.position)).map((c) => `${c.id}:${c.title}`),
+    sections: (await db.select({ id: siteSections.id, body: siteSections.body }).from(siteSections).where(eq(siteSections.siteId, siteId)).orderBy(siteSections.position)).map((s) => `${s.id}:${s.body}`),
+  });
+  await db.update(siteAboutChapters).set({ title: "Panelde düzeltildi" }).where(eq(siteAboutChapters.id, "chapter-0"));
+  await db.delete(siteSections).where(eq(siteSections.id, "sec-0-2"));
+  await db.delete(siteAboutChapters).where(eq(siteAboutChapters.siteId, "test-1"));
+  await writeFile(path, JSON.stringify(manifest));
+  assert.equal((await importDemoContent(path, root, true, env)).aboutKept?.length, 7);
+  assert.deepEqual(await aboutOf("test-0"), { chapters: ["chapter-0:Panelde düzeltildi"], sections: ["sec-0-1:Cami 1399 yılında açıldı."] });
+  assert.deepEqual((await aboutOf("test-1")).chapters, [], "a panel-emptied site stays empty");
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceAbout: true })).aboutKept, []);
+  assert.deepEqual(await aboutOf("test-0"), { chapters: ["chapter-0:Tarihçe"], sections: ["sec-0-1:Cami 1399 yılında açıldı.", "sec-0-2:Kubbeli."] });
+  assert.deepEqual((await aboutOf("test-1")).chapters, ["chapter-1:Tarihçe"]);
+  assert.equal((await db.select().from(siteAboutChapters).where(eq(siteAboutChapters.id, "chapter-0")))[0]!.titleEn, "History", "the English written since is kept per id on a replace");
   // A stored placement is the panel's: a re-import sets the façade direction only where the package names one and leaves the rest.
   const placementOf = async (siteId: string) => (await db.select().from(siteMapPlacements).where(eq(siteMapPlacements.siteId, siteId)))[0]!;
   await db.update(siteMapPlacements).set({ frontDeg: 99, headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-1"));
@@ -322,6 +338,6 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified", chapterId: null, photos: [] }];
   await writeFile(path, JSON.stringify(manifest));
-  await assert.rejects(importDemoContent(path, root, true, env));
+  await assert.rejects(importDemoContent(path, root, true, env, { replaceAbout: true }));
   assert.equal((await ctx.app.inject({ url: "/v1/sites/test-0" })).json().name, "Eser 0");
 });

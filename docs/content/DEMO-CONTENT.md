@@ -37,6 +37,8 @@ Bu komut editoryal paketin yeniden yayımlanmasıdır: paketteki eserlerin katal
 
 **Görevler ve rozetler (§11.67).** Panel bunların da sahibidir: aktarım veritabanında zaten olan eserin görevlerine, cevap anahtarlarına ve rozetlerine dokunmaz, yalnız yeni oluşturduğu eserinkileri yazar (`--apply` çıktısındaki `tasksKept` korunan eserleri listeler). `gorevler.json` içeriğini dosyadaki hâline getirmek için komuta `--replace-tasks` ekleyin; bu, panelde yapılmış görev ve rozet düzenlemelerini siler, görevi kaldırılan oyuncuların tamamlamaları ve rozetleri de gider (dosyada kalan görevlerin kimlikleri aynı olduğu sürece oyuncu kayıtları kalır).
 
+**«Eser hakkında» bölümleri ve paragrafları (§11.69).** Panel bunların da sahibidir: aktarım veritabanında zaten olan eserin bölümlerine ve paragraflarına dokunmaz, yalnız yeni oluşturduğu eserinkileri yazar (`--apply` çıktısındaki `aboutKept` korunan eserleri listeler). `eser-hakkinda-okuma.md` ve kitap paragraflarını dosyadaki hâline getirmek için komuta `--replace-about` ekleyin; bu, panelde yapılmış bölüm ve paragraf düzenlemelerini siler (İngilizce metinler kimlik başına korunur). Kitap fotoğrafları ve kapak medyası her aktarmada yazılmaya devam eder.
+
 Dosyalar önce içerik özetiyle adlandırılmış nesnelere yüklenir. Aynı baytlar yeniden yüklenmez. Ardından tüm katalog ilişkileri tek veritabanı işlemi içinde güncellenir; hata olursa katalog değişmez. Ortak dosyalar seed yönetimindedir: bir eserin kaldırılması başka bir eserin kullandığı dosyayı silemez. Yeni bir paket eski dosyaları kendiliğinden silmez; temizlik öncesinde kullanım kontrolü yapılmalıdır.
 
 ## Doğrulama
