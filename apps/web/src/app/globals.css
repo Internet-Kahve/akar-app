@@ -1544,6 +1544,17 @@ input[type="checkbox"] {
   letter-spacing: 0.4em;
   text-align: center;
 }
+.signin-google {
+  width: 100%;
+  justify-content: center;
+}
+.signin-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+}
 .account-email {
   overflow-wrap: anywhere;
 }
