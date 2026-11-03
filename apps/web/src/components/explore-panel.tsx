@@ -10,6 +10,7 @@ import {
   Footprints,
   Plus,
   Route,
+  X,
 } from "lucide-react";
 import {
   kindCategory,
@@ -394,6 +395,7 @@ export function RoutePreview({
   live,
   visitedIds,
   onBack,
+  onClose,
   onSite,
   onStart,
 }: {
@@ -403,6 +405,8 @@ export function RoutePreview({
   live: boolean;
   visitedIds: string[];
   onBack: () => void;
+  /** Takes the route off the map altogether. */
+  onClose: () => void;
   onSite: (id: string) => void;
   onStart: () => void;
 }) {
@@ -411,6 +415,9 @@ export function RoutePreview({
   const done = sites.filter((s) => visitedIds.includes(s.id)).length;
   return (
     <div className="route-page">
+      <button className="route-close" aria-label={t("route.close")} title={t("route.close")} onClick={onClose}>
+        <X size={18} />
+      </button>
       <Back onClick={onBack}>{t("route.all")}</Back>
       <div className="route-cover">
         <SiteArtwork site={sites[0]} live={live} />

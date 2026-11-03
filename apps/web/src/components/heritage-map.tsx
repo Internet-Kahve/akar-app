@@ -138,6 +138,7 @@ export function HeritageMap({
   onFirstDraw,
   onSettled,
   onCityInView,
+  onWholeCountry,
   onLocate,
   flight,
   bottomInset = 0,
@@ -170,6 +171,8 @@ export function HeritageMap({
   onSettled?: () => void;
   /** The city nearest to the map's centre whenever the map comes to rest. */
   onCityInView?: (city: CityRecord) => void;
+  /** Zoomed out past the cities (true), or back at one (false). */
+  onWholeCountry?: (whole: boolean) => void;
   /** The position button; the page decides what «near me» means. */
   onLocate?: () => void;
   flight?: MapFlight | undefined;
@@ -194,6 +197,7 @@ export function HeritageMap({
     selectRef = useRef(onSelect),
     clearRef = useRef(onClear),
     cityRef = useRef(onCityInView),
+    countryRef = useRef(onWholeCountry),
     selectedRef = useRef(selectedId),
     peekRef = useRef<HTMLDivElement>(null),
     // The padding the map is moving to: a pick's glide and the sheet's inset must not undo each other.
@@ -221,6 +225,7 @@ export function HeritageMap({
   openRef.current = onOpen;
   clearRef.current = onClear;
   cityRef.current = onCityInView;
+  countryRef.current = onWholeCountry;
   selectedRef.current = selectedId;
   latest.current = { sites, mapSettings, scenes, cities };
   restingRef.current = resting;
@@ -375,6 +380,7 @@ export function HeritageMap({
           // Far out only dots stay for the cities without sites, so the labels do not pile up.
           const mode = () => {
             const z = m.getZoom();
+            countryRef.current?.(z < CITY_MARKER_MAX_ZOOM);
             setCityMode(
               z >= CITY_MARKER_MAX_ZOOM
                 ? ""

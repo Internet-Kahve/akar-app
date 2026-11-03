@@ -9,6 +9,7 @@
 <link rel="icon" href="/logo/favicon-32.png" sizes="32x32">
 <link rel="icon" href="/logo/favicon-64.png" sizes="64x64">
 <link rel="apple-touch-icon" href="/logo/apple-touch-icon.png">
+<script>try{if(localStorage.getItem("akar.tema")==="night")document.documentElement.dataset.theme="night"}catch(e){}</script>
 <link rel="preload" href="/tanitim2/yazi/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" as="image" href="/tanitim2/medya/kapak-1600.webp" imagesrcset="/tanitim2/medya/kapak-800.webp 800w, /tanitim2/medya/kapak-1600.webp 1600w" imagesizes="100vw" fetchpriority="high">
 <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
@@ -36,7 +37,10 @@ a{color:inherit}
 .nav .btn{min-height:42px;padding:0 18px;font-size:15px}
 .giris{padding:clamp(40px,7vw,88px) 0 0}
 h1{max-width:17ch;font-size:clamp(40px,6.4vw,84px);line-height:1.02}
-.giris .alt{margin-top:20px;max-width:46ch;font-size:clamp(18px,1.8vw,21px);color:var(--soluk)}
+.suslu{display:flex;align-items:center;gap:10px;width:min(240px,60%);margin-top:18px;color:#C9A13B}
+.suslu i{flex:1;height:1px;background:currentColor;opacity:.8}
+.suslu img{width:22px;height:22px;flex:none}
+.giris .alt{margin-top:14px;max-width:46ch;font-size:clamp(18px,1.8vw,21px);color:var(--soluk)}
 .giris .btn{margin-top:28px}
 .kapak{margin:clamp(32px,5vw,56px) 0 0}
 .kapak img{width:100%;aspect-ratio:2/1;object-fit:cover;background:#cfd3d1}
@@ -82,19 +86,70 @@ h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08}
 .son .ic{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:32px}
 .son h2{font-size:clamp(34px,5vw,60px)}
 .son p{margin-top:12px;color:rgba(255,255,255,.72);font-size:18px}
-.son .btn{margin-top:26px;background:#fff;color:var(--murekkep)}
+.son .btn{margin-top:26px;background:#fff;color:#161C20}
 .son .btn:hover{background:#dfe8ee}
 .qr-kutu{display:flex;align-items:center;gap:14px}
 .qr{width:112px;height:112px;padding:8px;border-radius:12px;background:#fff;color:#12191E}
 .qr-kutu b{display:block;font-size:17px;font-weight:600}
 .qr-kutu small{color:rgba(255,255,255,.7);font-size:13px}
+.nav-sag{display:flex;align-items:center;gap:8px}
+.dil,.tema{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:42px;min-width:42px;padding:0 10px;border:1px solid var(--cizgi);border-radius:999px;background:transparent;color:var(--murekkep);font:500 13px/1 inherit;font-family:inherit;cursor:pointer}
+.dil b{font-weight:700}.dil span{color:var(--soluk)}
+.tema svg{width:18px;height:18px}
+h1 em{font-style:normal;color:#C9A13B}
+.giris-alt{display:flex;flex-wrap:wrap;align-items:center;gap:18px 28px;margin-top:26px}
+.giris-alt .btn{margin:0}
+.sehirler{display:flex;flex-wrap:wrap;gap:10px 20px;margin:0;padding:0;list-style:none}
+.sehirler li{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600}
+.sehirler img{width:26px;height:26px}
+.sehirler small{font-size:12px;font-weight:400;opacity:.72}
+.sehirler .yakin{opacity:.72}
+.tur{position:relative;height:520vh;border-top:1px solid var(--cizgi)}
+.tur-yapiskan{position:sticky;top:65px;height:calc(100vh - 65px);height:calc(100svh - 65px);overflow:hidden}
+.tur .model-kutu{position:absolute;inset:0;margin:0;aspect-ratio:auto;border-radius:0;box-shadow:none;cursor:default;touch-action:auto;background:#dfe4e4}
+.tur-bas{position:absolute;left:var(--kenar);top:20px;max-width:min(520px,calc(100% - 2*var(--kenar)));padding:12px 16px;border-radius:14px;background:rgba(244,244,241,.88)}
+.tur-bas h2{font-size:clamp(20px,2.2vw,30px)}
+.tur-bas h2::after{display:none}
+.tur-bas p{margin-top:2px;font-size:14px;color:var(--soluk)}
+.tur-adim{position:absolute;left:var(--kenar);bottom:34px;width:min(420px,calc(100% - 2*var(--kenar)));margin:0;padding:0;list-style:none}
+.tur-adim li{position:absolute;left:0;right:0;bottom:0;padding:16px 18px;border-radius:16px;background:rgba(255,255,255,.93);opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s;pointer-events:none}
+.tur-adim li.acik{opacity:1;transform:none}
+.tur-adim h3{font-size:20px}
+.tur-adim p{margin-top:4px;font-size:15px;line-height:1.45;color:var(--soluk)}
+.tur-cizgi{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(0,0,0,.12)}
+.tur-cizgi i{display:block;width:100%;height:100%;background:#C9A13B;transform:scaleX(0);transform-origin:left}
+.anlat{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(28px,5vw,72px);align-items:center}
+.anlat-foto{border-radius:20px;overflow:hidden;background:#cfd3d1;aspect-ratio:4/3}
+.anlat-foto img{width:100%;height:100%;object-fit:cover}
+.anlat-sec{display:inline-flex;margin-top:22px;padding:4px;border-radius:999px;background:var(--kagit);box-shadow:inset 0 0 0 1px var(--cizgi)}
+.anlat-sec button{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 20px;border:0;border-radius:999px;background:transparent;color:var(--murekkep);font:600 15px/1 inherit;font-family:inherit;cursor:pointer}
+.anlat-sec svg{width:18px;height:18px}
+.anlat-sec button[aria-pressed=true]{background:var(--murekkep);color:var(--zemin)}
+.anlat-kutu{margin-top:18px;min-height:210px}
+.an-oynat{display:flex;align-items:center;gap:10px}
+.an-oynat button{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--cizgi);border-radius:50%;background:var(--kagit);color:var(--murekkep);font:500 22px/1 inherit;font-family:inherit;cursor:pointer}
+.an-oynat .cal{width:60px;height:60px;border:0;background:#C9A13B;color:#1C1606}
+.an-oynat .cal svg{width:26px;height:26px}
+.an-oynat small{margin-left:auto;color:var(--soluk);font-size:14px}
+.dalga{display:inline-flex;align-items:center;gap:3px;height:26px;margin-left:6px}
+.dalga i{width:3px;height:6px;border-radius:2px;background:#C9A13B;transition:height .2s}
+.caliyor .dalga i{animation:dalga .9s ease-in-out infinite alternate}
+.caliyor .dalga i:nth-child(2){animation-delay:.15s}.caliyor .dalga i:nth-child(3){animation-delay:.3s}.caliyor .dalga i:nth-child(4){animation-delay:.45s}.caliyor .dalga i:nth-child(5){animation-delay:.6s}
+@keyframes dalga{from{height:6px}to{height:24px}}
+.an-cumle{margin-top:16px;font-size:clamp(20px,2vw,25px);line-height:1.3;font-weight:500;letter-spacing:-.01em}
+.an-liste{margin:0;padding:0;list-style:none}
+.an-liste button{display:block;width:100%;padding:8px 12px;border:0;border-left:2px solid var(--cizgi);background:transparent;color:var(--soluk);font:400 16px/1.4 inherit;font-family:inherit;text-align:left;cursor:pointer}
+.an-liste button[aria-current=true]{border-left-color:#C9A13B;color:var(--murekkep);font-weight:500}
+#an-kaynak{margin-top:12px}
+@media (max-width:900px){.anlat{grid-template-columns:1fr}.anlat-kutu{min-height:230px}}
+@media (prefers-reduced-motion:reduce){.caliyor .dalga i{animation:none;height:16px}}
 footer{padding:20px 0;font-size:13px;color:var(--soluk)}
+@media (max-width:560px){.nav-sag .btn{display:none}}
 @media (max-width:900px){
   .kapak img{aspect-ratio:3/2}
   .ekranlar{display:flex;gap:14px;margin-inline:calc(-1*var(--kenar));padding-inline:var(--kenar);overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .ekranlar::-webkit-scrollbar{display:none}
   .ekranlar li{flex:0 0 66vw;max-width:280px;scroll-snap-align:center}
-  .model-kutu{aspect-ratio:1/1}
   .iki{grid-template-columns:1fr}
   .iki .kiyas{max-height:none}
   .qr-kutu{display:none}
@@ -106,32 +161,53 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
   .giris>.ic,.giris .kapak{grid-area:1/1}
   .giris>.ic{position:relative;z-index:1;align-self:end;padding-bottom:clamp(56px,8vh,96px)}
   .giris .alt{color:rgba(255,255,255,.88)}
-  .giris .btn{background:#fff;color:var(--murekkep)}
+  .giris .btn{background:#fff;color:#161C20}
+  .giris .sehirler img{filter:brightness(0) invert(1)}
   .giris .btn:hover{background:#dfe8ee}
   .kapak{position:relative;margin:0;height:100%}
   .kapak img{position:absolute;inset:0;height:100%;aspect-ratio:auto}
-  .kapak::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(10,16,20,.78) 0%,rgba(10,16,20,.34) 42%,rgba(10,16,20,0) 70%)}
+  .kapak::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(10,16,20,.82) 0%,rgba(10,16,20,.5) 42%,rgba(10,16,20,0) 72%)}
+  .kapak::before{content:"";position:absolute;z-index:1;left:0;bottom:0;width:62%;height:66%;background:url('/desenler/desen-bursa-sekiz-yildiz.svg') left bottom/170px;opacity:.24;filter:invert(1) brightness(2);-webkit-mask-image:linear-gradient(to top right,#000 10%,transparent 70%);mask-image:linear-gradient(to top right,#000 10%,transparent 70%);pointer-events:none}
   .kapak figcaption{position:absolute;z-index:1;right:var(--kenar);bottom:18px;width:auto;margin:0;color:rgba(255,255,255,.72)}
   .ekranlar{grid-template-columns:repeat(3,minmax(0,320px));justify-content:space-between;row-gap:64px;margin-top:56px}
   .ekranlar img{box-shadow:0 18px 44px rgba(18,30,38,.14)}
-  .model-kutu{aspect-ratio:2/1;box-shadow:0 18px 44px rgba(18,30,38,.1)}
   .kiyas{max-height:680px;margin-left:auto;width:min(100%,540px);box-shadow:0 18px 44px rgba(18,30,38,.14)}
   #gecmis h2,#akar h2{font-size:clamp(34px,3.6vw,52px)}
 }
+/* Gece */
+[data-theme=night]{--zemin:#10181E;--kagit:#18232B;--murekkep:#EEF1F0;--soluk:#A6B1B8;--cizgi:#27343D;--vurgu:#8FBAD6;--koyu:#0A1014}
+[data-theme=night] .nav img{filter:invert(1) hue-rotate(180deg) brightness(1.2)}
+[data-theme=night] .btn:not(.giris .btn):not(.son .btn){color:#10181E}
+[data-theme=night] .btn:not(.giris .btn):not(.son .btn):hover{background:#cfe0ea}
+[data-theme=night] .model-kutu{background:#141D25}
+[data-theme=night] .tur-bas,[data-theme=night] .tur-adim li{background:rgba(16,24,30,.9)}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 </style>
 </head>
 <body>
 <header class="nav"><div class="ic">
   <a href="#" aria-label="AKAR, sayfanın başı"><img src="/logo/logo-web.png" alt="AKAR" width="800" height="237"></a>
-  <a class="btn" href="/#view=map">Haritayı aç</a>
+  <div class="nav-sag">
+    <button type="button" class="dil" id="dil" aria-label="Dil / Language"><b>TR</b><span>EN</span></button>
+    <button type="button" class="tema" id="tema" aria-label="Gece teması"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg></button>
+    <a class="btn" href="/#view=map">Haritayı aç</a>
+  </div>
 </div></header>
 <main>
 <section class="giris">
   <div class="ic">
-    <h1>Türkiye'nin vakıf eserlerini haritada keşfet.</h1>
-    <p class="alt">Haritada bir esere dokun. Hikâyesini dinle, 3D modelini gez, eski fotoğrafıyla bugününü karşılaştır. Bursa, Konya ve Hatay'dan 11 eserle başladık; yeni şehirler ekleniyor.</p>
+    <h1>Türkiye'nin vakıf eserlerini <em>haritada</em> keşfet.</h1>
+    <div class="suslu" aria-hidden="true"><i></i><img src="/desenler/amblem-akar-yildiz.svg" alt="" width="22" height="22"><i></i></div>
+    <p class="alt">Haritada bir esere dokun. Hikâyesini dinle, 3D modelini gez, eski fotoğrafıyla bugününü karşılaştır.</p>
+    <div class="giris-alt">
     <a class="btn" href="/#view=map">Haritayı aç <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <ul class="sehirler">
+      <li><img src="/tanitim2/medya/amblem-bursa.svg" alt="" width="26" height="26"><span>Bursa</span><small>9 eser</small></li>
+      <li><img src="/tanitim2/medya/amblem-konya.svg" alt="" width="26" height="26"><span>Konya</span><small>1 eser</small></li>
+      <li><img src="/tanitim2/medya/amblem-hatay.svg" alt="" width="26" height="26"><span>Hatay</span><small>1 eser</small></li>
+      <li class="yakin"><span>Kütahya</span><small>yakında</small></li>
+    </ul>
+    </div>
   </div>
   <figure class="kapak">
     <img src="/tanitim2/medya/kapak-1600.webp" srcset="/tanitim2/medya/kapak-800.webp 800w, /tanitim2/medya/kapak-1600.webp 1600w" sizes="100vw" width="1600" height="800" alt="Bursa Ulucami ve iki minaresi, havadan" fetchpriority="high" decoding="async">
@@ -151,20 +227,49 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
   </ul>
 </div></section>
 
-<section class="bolum" id="model"><div class="ic">
-  <h2>Bir eseri gez: Bursa Ulucami</h2>
-  <p class="acik">Sürükleyerek çevir. İçeride düğmesi çatıyı kaldırır.</p>
-  <div class="model-kutu" id="model-kutu" role="img" aria-label="Ulucami'nin 3D modeli">
-    <img src="/tanitim2/medya/ulucami.webp" alt="" width="720" height="540" loading="lazy" decoding="async">
-    <span class="durum" id="durum" aria-live="polite">Model yükleniyor</span>
-  </div>
-  <div class="secim" id="secim" role="group" aria-label="Modele nereden bakılsın?">
-    <button type="button" data-nokta="dis" aria-pressed="true">Dışarıdan</button>
-    <button type="button" data-nokta="kubbe" aria-pressed="false">Kubbeler</button>
-    <button type="button" data-nokta="ic" aria-pressed="false">İçeride</button>
-    <button type="button" data-nokta="minber" aria-pressed="false">Minber</button>
+<section class="bolum" id="anlat"><div class="ic anlat">
+  <div class="anlat-foto"><img id="an-foto" src="/tanitim2/medya/h-01.webp" alt="" width="900" height="675" loading="lazy" decoding="async"></div>
+  <div class="anlat-sag">
+    <h2>İster dinle, ister oku</h2>
+    <p class="acik">Her eser cümle cümle anlatılır; her cümlenin fotoğrafı ve kaynağı vardır. Dene:</p>
+    <div class="anlat-sec" role="group" aria-label="Anlatım biçimi">
+      <button type="button" id="an-dinle" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>Dinle</button>
+      <button type="button" id="an-oku" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-2v15c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2z"/><path d="M12 6v15"/></svg>Oku</button>
+    </div>
+    <div class="anlat-kutu" id="an-kutu">
+      <div class="an-dinle" id="an-dinle-kutu">
+        <div class="an-oynat">
+          <button type="button" id="an-geri" aria-label="Önceki cümle">‹</button>
+          <button type="button" id="an-cal" class="cal" aria-label="Sesi başlat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+          <button type="button" id="an-ileri" aria-label="Sonraki cümle">›</button>
+          <span class="dalga" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <small id="an-sayac">1 / 4</small>
+        </div>
+        <p class="an-cumle" id="an-cumle" aria-live="polite"></p>
+      </div>
+      <ol class="an-liste" id="an-liste" hidden></ol>
+      <p class="not" id="an-kaynak"></p>
+    </div>
   </div>
 </div></section>
+
+<section class="tur" id="model">
+  <div class="tur-yapiskan">
+    <div class="model-kutu" id="model-kutu" role="img" aria-label="Ulucami'nin 3D modeli">
+      <img src="/tanitim2/medya/ulucami.webp" alt="" width="720" height="540" loading="lazy" decoding="async">
+      <span class="durum" id="durum" aria-live="polite">Model yükleniyor</span>
+    </div>
+    <div class="tur-bas"><h2>Bir eseri gez: Bursa Ulucami</h2><p>Aşağı kaydırdıkça etrafında ve içinde gezersin.</p></div>
+    <ol class="tur-adim" id="adim">
+      <li class="acik"><h3>Dışarıdan</h3><p>Yıldırım Bayezid yaptırdı; 1399'da ibadete açıldı.</p></li>
+      <li><h3>Kubbeler</h3><p>Yapının üstünü yirmi kubbe örter. Ortadaki, ışık ve hava girsin diye açık bırakıldı.</p></li>
+      <li><h3>İçeride</h3><p>Çatı kalkar: kubbeler on iki kare payenin üzerine oturur.</p></li>
+      <li><h3>Minber</h3><p>Çivi ve tutkal kullanılmadan birbirine geçen parçalarla yapıldı.</p></li>
+      <li><h3>Havuz</h3><p>Ortadaki kubbenin altındaki mermer havuzda selsebilden su akar.</p></li>
+    </ol>
+    <div class="tur-cizgi" aria-hidden="true"><i id="tur-cizgi"></i></div>
+  </div>
+</section>
 
 <section class="bolum" id="gecmis"><div class="ic iki">
   <div>
@@ -205,75 +310,168 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
 <footer><div class="ic">AKAR · Fotoğraflar ve bilgiler: Vakıf Katılım vakıf eserleri envanteri</div></footer>
 
 <script>
+/* İster dinle, ister oku: uygulamadaki gerçek kayıtlar ve cümleler. Ses yalnız düğmeye basınca iner. */
+window.AN_CUMLE=[{"tr": "Ulucami'yi Sultan Yıldırım Bayezid yaptırdı.", "en": "Ulucami was commissioned by Sultan Yıldırım Bayezid.", "ses": {"tr": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/4bc39c25-6074-4656-a3ce-5dcac870f1a2.mp3", "en": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/a0753af5-4afe-4cf4-acb4-8317b0f963b2.mp3"}, "kaynak": "s. 20", "foto": "01_dis-havadan-kuzey"}, {"tr": "Üç yıl süren inşaatın ardından cami, 1399'da bir cuma günü ibadete açıldı.", "en": "After three years of construction, the mosque opened for worship on a Friday in 1399.", "ses": {"tr": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/8b53545c-684c-4d01-89e7-5377f8fe7fda.mp3", "en": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/ec1d0017-bead-4098-a4a5-a811fb64db2d.mp3"}, "kaynak": "s. 19", "foto": "02_ic-genel"}, {"tr": "Bu kubbenin altındaki mermer havuzda, üç katlı bir selsebilden su akar.", "en": "In the marble pool beneath this dome, water flows from a three-tiered selsebil.", "ses": {"tr": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/ed6561f1-c7bc-4635-8c5c-a4e3831bbccc.mp3", "en": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/3022e42d-41e0-48bc-b260-00676ebb1119.mp3"}, "kaynak": "s. 33", "foto": "03_ic-sadirvan-havuz"}, {"tr": "Ahşap minber, çivi ve tutkal kullanılmadan birbirine geçen parçalarla yapılmıştır.", "en": "The wooden minbar is made of interlocking pieces joined without nails or glue.", "ses": {"tr": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/1fa3254b-ea38-4af8-8182-5184d47ba70b.mp3", "en": "https://iygbqrumtwipyxusbxux.supabase.co/storage/v1/object/public/media/audio/2026/11/96d704f0-5a91-4e14-b0be-97c46a8541d4.mp3"}, "kaynak": "s. 27", "foto": "05_minber"}];
+</script>
+<script>
+/* Dil ve tema: uygulamayla aynı tercihler (akar.dil, akar.tema). Çeviri metin metin yapılır; Türkçesi sayfanın kendisidir. */
+(function(){
+var EN={
+"Türkiye'nin vakıf eserlerini ":"Discover Türkiye's waqf heritage ","haritada":"on the map"," keşfet.":".",
+"Haritada bir esere dokun. Hikâyesini dinle, 3D modelini gez, eski fotoğrafıyla bugününü karşılaştır.":"Tap a site on the map. Listen to its story, walk around its 3D model, compare its old photograph with today.",
+"Haritayı aç":"Open the map","yakında":"soon","9 eser":"9 sites","1 eser":"1 site",
+"Ulucami, Bursa. Fotoğraf: Bursa Vakıf Eserleri Envanteri arşivi":"Ulucami, Bursa. Photo: Bursa Foundation Works Inventory archive",
+"Uygulamada neler var?":"What is in the app?",
+"Harita":"Map","Eserler yerlerinde durur. Birine dokun.":"Sites stand where they are. Tap one.",
+"3D model":"3D model","Modeli çevir, çatısını kaldır, içine bak.":"Turn the model, lift its roof, look inside.",
+"Hikâye":"Story","Birkaç dakikada sesli anlatım. Model ve fotoğraf birlikte.":"A spoken story in a few minutes, with the model and photographs together.",
+"Geçmişi Gör":"See the Past","Yüz elli yıl önceki fotoğrafla bugünü kıyasla.":"Compare a photograph from 150 years ago with today.",
+"Parçaya dokun":"Tap a part","Modelde bir parçaya dokun: minber, hat levhası, havuz. Kartında anlatımı ve fotoğrafı açılır.":"Tap a part of the model: minbar, calligraphy panel, pool. Its card opens with text and photographs.",
+"Eser hakkında":"About the site","Detaylı anlatım: envanterin tam metni, bölüm bölüm, fotoğraflı ve kaynaklı.":"The full account: the inventory's text, chapter by chapter, with photographs and sources.",
+"Bir eseri gez: Bursa Ulucami":"Walk through a site: Bursa Ulucami","Aşağı kaydırdıkça etrafında ve içinde gezersin.":"Scroll down to move around it and inside it.",
+"Model yükleniyor":"Loading the model",
+"Dışarıdan":"Outside","Yıldırım Bayezid yaptırdı; 1399'da ibadete açıldı.":"Built by Yıldırım Bayezid; opened for worship in 1399.",
+"Kubbeler":"Domes","Yapının üstünü yirmi kubbe örter. Ortadaki, ışık ve hava girsin diye açık bırakıldı.":"Twenty domes cover the building. The middle one was left open for light and air.",
+"İçeride":"Inside","Çatı kalkar: kubbeler on iki kare payenin üzerine oturur.":"The roof lifts: the domes rest on twelve square piers.",
+"Minber":"Minbar","Çivi ve tutkal kullanılmadan birbirine geçen parçalarla yapıldı.":"Made of interlocking pieces, without nails or glue.",
+"Havuz":"Pool","Ortadaki kubbenin altındaki mermer havuzda selsebilden su akar.":"Under the middle dome, water runs from a fountain into a marble pool.",
+"Yüz elli yıl önce, aynı yer":"150 years ago, the same place","Çizgiyi sağa sola kaydır. Solda 1875–84, sağda bugün: Ulucami'nin mihrabı.":"Move the line sideways. Left 1875–84, right today: Ulucami's mihrab.",
+"Eski fotoğraf: Sébah & Joaillier, Getty Research Institute (CC0), Foto Atlas aracılığıyla. Bugünkü: Bursa Vakıf Eserleri Envanteri arşivi.":"Old photo: Sébah & Joaillier, Getty Research Institute (CC0), via Foto Atlas. Today: Bursa Foundation Works Inventory archive.",
+"Bugün":"Today",
+"Akar ne demek?":"What does akar mean?","Cami, çeşme, medrese halka ücretsiz hizmet verir. Bunların masrafını kira getiren han, hamam, bedesten karşılar. Gelir getiren bu yapılara akar denir.":"Mosques, fountains and madrasas serve the public free of charge. Their costs are met by rent-earning inns, baths and covered markets. These income-earning buildings are called akar.",
+"Yıldırım Bayezid, Ulucami'ye gelir sağlamak için yakınına Bedesten'i de yaptırdı. ":"Yıldırım Bayezid also built the Bedesten nearby to provide income for Ulucami. ","Bursa Vakıf Eserleri Envanteri, Cilt 1":"Bursa Foundation Works Inventory, Vol. 1",
+"Uygulamadaki bilgiler Vakıf Katılım'ın envanterinden gelir. Her cümlenin altında kaynağı yazar.":"The app's content comes from Vakıf Katılım's inventory. Every sentence shows its source.",
+"Bedesten kira getirir, gelir Ulucami'ye gider. Uygulamada hikâyenin içinde böyle görünür.":"The Bedesten earns rent, the income goes to Ulucami. This is how it looks inside a story in the app.",
+"İster dinle, ister oku":"Listen or read, as you like","Her eser cümle cümle anlatılır; her cümlenin fotoğrafı ve kaynağı vardır. Dene:":"Every site is told sentence by sentence, each with its photograph and source. Try it:","Dinle":"Listen","Oku":"Read","Haritada gör.":"See it on the map.","Ulucami'den başla, hikâyesi birkaç dakika.":"Start at Ulucami; its story takes a few minutes.","Telefonunda aç":"Open on your phone",
+"AKAR · Fotoğraflar ve bilgiler: Vakıf Katılım vakıf eserleri envanteri":"AKAR · Photographs and content: Vakıf Katılım's inventory of foundation works"
+};
+var ATTR={"Gece teması":"Night theme","Anlatım biçimi":"How to take the story","Önceki cümle":"Previous sentence","Sonraki cümle":"Next sentence","Sesi başlat":"Play the voice","Ulucami'nin 3D modeli":"3D model of Ulucami","Eski ve bugünkü fotoğrafı karşılaştır":"Compare the old and present photographs","Bursa Ulucami ve iki minaresi, havadan":"Bursa Ulucami and its two minarets, from the air"};
+var ilk=new Map(),attrIlk=[];
+var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),d;
+while(d=w.nextNode()){var k=d.nodeValue,t=k.trim();if(t&&EN[k]!==undefined)ilk.set(d,{tr:k,en:EN[k]});else if(t&&EN[t]!==undefined)ilk.set(d,{tr:k,en:k.replace(t,EN[t])});}
+document.querySelectorAll('[alt],[aria-label]').forEach(function(e){['alt','aria-label'].forEach(function(a){var v=e.getAttribute(a);if(v&&ATTR[v])attrIlk.push([e,a,v,ATTR[v]]);});});
+var trBaslik=document.title,dilBtn=document.getElementById('dil');
+function dil(l){ilk.forEach(function(v,n){n.nodeValue=l==='en'?v.en:v.tr});attrIlk.forEach(function(x){x[0].setAttribute(x[1],l==='en'?x[3]:x[2])});document.documentElement.lang=l;document.title=l==='en'?"AKAR · Türkiye's waqf heritage on the map":trBaslik;dilBtn.innerHTML=l==='en'?'<span>TR</span><b>EN</b>':'<b>TR</b><span>EN</span>';window.AKAR_DIL=l;}
+var kayit=null;try{kayit=localStorage.getItem('akar.dil')}catch(e){}
+dil(kayit==='en'||kayit==='tr'?kayit:(/^tr/i.test(navigator.language||'tr')?'tr':'en'));
+dilBtn.addEventListener('click',function(){var n=window.AKAR_DIL==='en'?'tr':'en';dil(n);try{localStorage.setItem('akar.dil',n)}catch(e){}});
+document.getElementById('tema').addEventListener('click',function(){var r=document.documentElement,g=r.dataset.theme==='night';if(g)delete r.dataset.theme;else r.dataset.theme='night';try{localStorage.setItem('akar.tema',g?'day':'night')}catch(e){}window.dispatchEvent(new Event('akar-tema'));});
+})();
+(function(){
+var C=window.AN_CUMLE,i=0,g=function(x){return document.getElementById(x)},ses=null,calar=false;
+var L=function(){return window.AKAR_DIL==='en'?'en':'tr'};
+function kaynak(c){return L()==='en'?'Inventory Vol. 1, '+c.kaynak.replace('s.','p.'):'Envanter Cilt 1, '+c.kaynak}
+function yaz(){var c=C[i];g('an-foto').src='/tanitim2/medya/h-'+c.foto.slice(0,2)+'.webp';g('an-cumle').textContent=c[L()]||c.tr;g('an-sayac').textContent=(i+1)+' / '+C.length;g('an-kaynak').textContent=kaynak(c);
+ var l=g('an-liste');l.innerHTML='';C.forEach(function(x,n){var li=document.createElement('li'),b=document.createElement('button');b.type='button';b.textContent=x[L()]||x.tr;if(n===i)b.setAttribute('aria-current','true');b.onclick=function(){i=n;yaz()};li.appendChild(b);l.appendChild(li)});}
+function dur(){if(ses)ses.pause();calar=false;g('an-kutu').classList.remove('caliyor');g('an-cal').innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'}
+function cal(){var u=C[i].ses[L()]||C[i].ses.tr;if(!u)return;ses=ses||new Audio();ses.src=u;ses.onended=function(){if(i<C.length-1){i++;yaz();cal()}else dur()};ses.onerror=dur;ses.play().then(function(){calar=true;g('an-kutu').classList.add('caliyor');g('an-cal').innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>'}).catch(dur)}
+function git(n){i=(n+C.length)%C.length;yaz();if(calar)cal()}
+g('an-cal').onclick=function(){calar?dur():cal()};g('an-geri').onclick=function(){git(i-1)};g('an-ileri').onclick=function(){git(i+1)};
+function kip(o){dur();g('an-dinle').setAttribute('aria-pressed',String(!o));g('an-oku').setAttribute('aria-pressed',String(o));g('an-dinle-kutu').hidden=o;g('an-liste').hidden=!o}
+g('an-dinle').onclick=function(){kip(false)};g('an-oku').onclick=function(){kip(true)};
+g('dil').addEventListener('click',function(){dur();yaz()});yaz();
+})();
 /* Eski ve bugünkü fotoğraf: çizgi parmağı izler; sayfa dikey kaydırılabilir. */
 (function(){var k=document.getElementById('kiyas');if(!k)return;var i=k.querySelector('input');var c=function(){k.style.setProperty('--ayrim',i.value+'%')};i.addEventListener('input',c);c();})();
 </script>
 <script type="module">
-/* Ulucami: görünür olunca yüklenir, yalnız hareket edince çizilir, kaydırmaya bağlı değildir. */
-const kutu = document.getElementById('model-kutu'), durum = document.getElementById('durum'), secim = document.getElementById('secim');
+/* Ulucami: görünür olunca yüklenir. Kaydırma yalnız hedefi belirler; kamera ona sabit bir yumuşaklıkla gider, bu yüzden hızlanıp
+   yavaşlamaz. Yalnız hareket varken çizer. */
+const kutu = document.getElementById('model-kutu'), durum = document.getElementById('durum'), tur = document.getElementById('model');
+const adimlar = [...document.querySelectorAll('#adim li')], cizgi = document.getElementById('tur-cizgi');
+const dur = (x, a, b) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const ilerleme = () => { const r = tur.getBoundingClientRect(); return Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight + 65))); };
+const metin = () => { const p = ilerleme(), a = Math.round(p * (adimlar.length - 1)); adimlar.forEach((l, i) => l.classList.toggle('acik', i === a)); cizgi.style.transform = `scaleX(${p})`; };
+addEventListener('scroll', metin, { passive: true }); metin();
 const bas = async () => {
   try {
     const THREE = await import('three');
     const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
     const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
-    const gltf = await new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/')).loadAsync('/tanitim/modeller/ulu-cami_v32_sunum.glb');
-    const r = new THREE.WebGLRenderer({ antialias: devicePixelRatio < 2, alpha: true, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-    r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05;
+    const yukleyici = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/'));
+    const dar = innerWidth < 900;
+    const r = new THREE.WebGLRenderer({ antialias: !dar, alpha: true, powerPreference: 'high-performance' });
+    r.setPixelRatio(Math.min(devicePixelRatio, dar ? 1.25 : 1.5));
+    r.toneMapping = THREE.ACESFilmicToneMapping;
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; r.shadowMap.autoUpdate = false;
     kutu.prepend(r.domElement);
-    const sahne = new THREE.Scene(), kam = new THREE.PerspectiveCamera(32, 1, 1, 2000), kok = gltf.scene;
-    kok.rotation.y = -174 * Math.PI / 180; kok.updateMatrixWorld(true);
-    const ortu = ['Alemler', 'Sadirvan_Iskeleti', 'Kubbeler_19', 'Sadirvan_Kubbe', 'Kasnak_Pencereleri', 'Cati'].flatMap((a) => kok.getObjectByName(a) ?? []), agac = [];
-    kok.traverse((o) => { if (/^Yer_Golgesi/.test(o.name)) o.visible = false; if (/^(Cevre|Avlu)_Agac/.test(o.name)) agac.push(o); if (o.isMesh) o.castShadow = o.receiveShadow = true; });
-    const kut = new THREE.Box3(); kok.getObjectByName('Govde') ? kut.setFromObject(kok.getObjectByName('Govde')) : kut.setFromObject(kok);
-    const orta = kut.getCenter(new THREE.Vector3()), R = kut.getSize(new THREE.Vector3()).length() / 2;
-    kok.position.sub(orta); kok.position.y += kut.getSize(new THREE.Vector3()).y * .3; kok.updateMatrixWorld(true); sahne.add(kok);
-    sahne.add(new THREE.HemisphereLight(0xf4f1ea, 0x8c948f, 1.15));
-    const gunes = new THREE.DirectionalLight(0xfff4e0, 2.1), ga = (354 + 40) * Math.PI / 180, ge = 50 * Math.PI / 180;
-    gunes.position.set(Math.sin(ga) * Math.cos(ge), Math.sin(ge), -Math.cos(ga) * Math.cos(ge)).multiplyScalar(R * 3);
-    gunes.castShadow = true; gunes.shadow.mapSize.set(1024, 1024); gunes.shadow.bias = -.0004; gunes.shadow.normalBias = R / 1024;
-    Object.assign(gunes.shadow.camera, { left: -R * 1.3, right: R * 1.3, top: R * 1.3, bottom: -R * 1.3, near: R * .5, far: R * 6 }); gunes.shadow.camera.updateProjectionMatrix(); sahne.add(gunes);
-    const merkez = (a) => { const o = a && kok.getObjectByName(a); return o ? new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()) : new THREE.Vector3(); };
-    const NOKTA = {
-      dis: { h: null, az: 354, el: 24, d: 2.5, ic: false },
-      kubbe: { h: 'Sadirvan_Kubbe', az: 40, el: 42, d: 1.05, ic: false },
-      ic: { h: 'Ic_Sadirvan_Havuz', az: 354, el: 52, d: .95, ic: true },
-      minber: { h: 'Minber', az: 25, el: 9, d: .42, ic: true },
+    const kam = new THREE.PerspectiveCamera(32, 1, 1, 2000);
+    const IS = {
+      gunduz: { dosya: '/tanitim/modeller/ulu-cami_v32_sunum.glb', poz: 1.05, gok: 0xf4f1ea, yer: 0x8c948f, ort: 1.15, gun: 0xfff4e0, guc: 2.1 },
+      gece: { dosya: '/tanitim/yeni/modeller/ulu-cami_v32_night_v2_sunum.glb', poz: .85, gok: 0x8fa3c8, yer: 0x1b2330, ort: .9, gun: 0xd6e2ff, guc: 1.2 },
     };
-    const dar = () => kutu.clientWidth / kutu.clientHeight < 1.2 ? 1.35 : 1;
-    let s = { hx: 0, hy: 0, hz: 0, az: 354, el: 24, d: 2.5 * dar() }, tw = 0, gorunur = true;
+    const onbellek = {};
+    let S = null;
+    const kur = async (ad) => {
+      if (onbellek[ad]) return onbellek[ad];
+      const L = IS[ad], gltf = await yukleyici.loadAsync(L.dosya), sahne = new THREE.Scene(), kok = gltf.scene;
+      kok.rotation.y = -174 * Math.PI / 180; kok.updateMatrixWorld(true);
+      const ortu = ['Alemler', 'Sadirvan_Iskeleti', 'Kubbeler_19', 'Sadirvan_Kubbe', 'Kasnak_Pencereleri', 'Cati'].flatMap((a) => kok.getObjectByName(a) ?? []), agac = [];
+      kok.traverse((o) => { if (/^Yer_Golgesi/.test(o.name)) o.visible = false; if (/^(Cevre|Avlu)_Agac/.test(o.name)) agac.push(o); if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+      const govde = kok.getObjectByName('Govde'), kut = new THREE.Box3().setFromObject(govde ?? kok), boy = kut.getSize(new THREE.Vector3()), R = boy.length() / 2;
+      kok.position.sub(kut.getCenter(new THREE.Vector3())); kok.position.y += boy.y * .3; kok.updateMatrixWorld(true); sahne.add(kok);
+      sahne.add(new THREE.HemisphereLight(L.gok, L.yer, L.ort));
+      const gunes = new THREE.DirectionalLight(L.gun, L.guc), ga = (354 + 40) * Math.PI / 180, ge = 50 * Math.PI / 180;
+      gunes.position.set(Math.sin(ga) * Math.cos(ge), Math.sin(ge), -Math.cos(ga) * Math.cos(ge)).multiplyScalar(R * 3);
+      gunes.castShadow = true; gunes.shadow.mapSize.set(dar ? 1024 : 2048, dar ? 1024 : 2048); gunes.shadow.bias = -.0004; gunes.shadow.normalBias = R / 1024;
+      Object.assign(gunes.shadow.camera, { left: -R * 1.3, right: R * 1.3, top: R * 1.3, bottom: -R * 1.3, near: R * .5, far: R * 6 }); gunes.shadow.camera.updateProjectionMatrix(); sahne.add(gunes);
+      const merkez = (a) => { const o = a && kok.getObjectByName(a); return o ? new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()) : new THREE.Vector3(); };
+      const N = [
+        { h: merkez(null), az: 354, el: 24, d: 2.5 },
+        { h: merkez('Sadirvan_Kubbe'), az: 400, el: 42, d: 1.05 },
+        { h: merkez('Ic_Sadirvan_Havuz'), az: 354, el: 52, d: .95 },
+        { h: merkez('Minber'), az: 385, el: 9, d: .42 },
+        { h: merkez('Ic_Sadirvan_Havuz'), az: 380, el: 62, d: .55 },
+      ];
+      const parca = ortu.map((o) => ({ o, y: o.position.y }));
+      return (onbellek[ad] = { L, sahne, N, R, parca, agac, boy, acik: -1 });
+    };
+    const gorunum = (x) => { const k = kutu.clientWidth / kutu.clientHeight < 1 ? 1.5 : 1; return k; };
+    const hedef = () => {
+      const n = S.N.length - 1, t = ilerleme() * n, i = Math.min(n - 1, Math.floor(t)), k = dur(t - i, .22, .78), a = S.N[i], b = S.N[i + 1], u = gorunum();
+      return { x: a.h.x + (b.h.x - a.h.x) * k, y: a.h.y + (b.h.y - a.h.y) * k, z: a.h.z + (b.h.z - a.h.z) * k, az: a.az + (b.az - a.az) * k, el: a.el + (b.el - a.el) * k, d: Math.exp(Math.log(a.d) + (Math.log(b.d) - Math.log(a.d)) * k) * (i < 2 ? u : 1), ort: t <= 1 ? 0 : t >= 2 ? 1 : dur(t, 1.1, 1.9) };
+    };
+    let c = null, son = 0, kare = 0;
     const ciz = () => {
-      const a = s.az * Math.PI / 180, e = s.el * Math.PI / 180, D = s.d * R;
-      kam.position.set(s.hx + Math.sin(a) * Math.cos(e) * D, s.hy + Math.sin(e) * D, s.hz - Math.cos(a) * Math.cos(e) * D);
-      kam.lookAt(s.hx, s.hy, s.hz); r.render(sahne, kam);
+      const a = c.az * Math.PI / 180, e = c.el * Math.PI / 180, D = c.d * S.R;
+      kam.position.set(c.x + Math.sin(a) * Math.cos(e) * D, c.y + Math.sin(e) * D, c.z - Math.cos(a) * Math.cos(e) * D);
+      kam.near = Math.max(.1, D * .02); kam.far = S.R * 30; kam.updateProjectionMatrix(); kam.lookAt(c.x, c.y, c.z);
+      const rise = S.boy.y * .9;
+      for (const p of S.parca) { p.o.position.y = p.y + rise * c.ort; p.o.visible = c.ort < .98; }
+      const acik = c.ort > .02 ? 1 : 0;
+      if (acik !== S.acik) { S.acik = acik; for (const o of S.agac) o.visible = !acik; }
+      if (c.ort === 0 || c.ort === 1) { if (S.golge !== c.ort) { S.golge = c.ort; r.shadowMap.needsUpdate = true; } }
+      r.render(S.sahne, kam);
     };
-    const boy = () => { const w = kutu.clientWidth, h = kutu.clientHeight; r.setSize(w, h, false); kam.aspect = w / h; kam.updateProjectionMatrix(); ciz(); };
-    new ResizeObserver(boy).observe(kutu); boy();
-    const ac = (acik) => { for (const o of [...ortu, ...agac]) o.visible = !acik; r.shadowMap.needsUpdate = true; };
     const az = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const git = (ad) => {
-      const n = NOKTA[ad], h = merkez(n.h), t0 = performance.now(), b = { ...s }, H = { hx: h.x, hy: h.y, hz: h.z, az: n.az, el: n.el, d: n.d * dar() };
-      H.az = b.az + ((H.az - b.az + 540) % 360 - 180);
-      ac(n.ic); cancelAnimationFrame(tw);
-      for (const d of secim.querySelectorAll('button')) d.setAttribute('aria-pressed', String(d.dataset.nokta === ad));
-      const adim = (t) => { const x = az ? 1 : Math.min(1, (t - t0) / 1100), k = x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
-        for (const a in H) s[a] = b[a] + (H[a] - b[a]) * k; ciz(); if (x < 1) tw = requestAnimationFrame(adim); };
-      tw = requestAnimationFrame(adim);
+    const dongu = (t) => {
+      kare = 0;
+      const H = hedef(), dt = Math.min(64, t - son || 16); son = t;
+      const m = az ? 1 : 1 - Math.exp(-dt * .0065);
+      let fark = 0;
+      for (const k in H) { const f = H[k] - c[k]; c[k] += f * m; fark = Math.max(fark, Math.abs(f)); }
+      if (fark < .002) Object.assign(c, H);
+      ciz();
+      if (fark >= .002) kare = requestAnimationFrame(dongu);
     };
-    secim.addEventListener('click', (e) => { const d = e.target.closest('button'); if (d) git(d.dataset.nokta); });
-    /* Sürükleme: parmak yalnız yana çevirir, dikey hareket sayfayı kaydırır (touch-action: pan-y); fare iki yönde de çevirir. */
-    let son = null;
-    kutu.addEventListener('pointerdown', (e) => { son = { x: e.clientX, y: e.clientY, tip: e.pointerType }; cancelAnimationFrame(tw); kutu.setPointerCapture(e.pointerId); });
-    kutu.addEventListener('pointermove', (e) => { if (!son) return; s.az -= (e.clientX - son.x) * .35; if (son.tip === 'mouse') s.el = Math.min(80, Math.max(6, s.el + (e.clientY - son.y) * .25)); son.x = e.clientX; son.y = e.clientY; requestAnimationFrame(ciz); });
-    for (const o of ['pointerup', 'pointercancel']) kutu.addEventListener(o, () => (son = null));
-    r.shadowMap.needsUpdate = true; ciz();
+    const uyan = () => { if (!kare && S) { son = performance.now(); kare = requestAnimationFrame(dongu); } };
+    addEventListener('scroll', uyan, { passive: true });
+    const boyut = () => { const w = kutu.clientWidth, h = kutu.clientHeight; r.setSize(w, h, false); kam.aspect = w / h; kam.updateProjectionMatrix(); if (S && c) ciz(); };
+    new ResizeObserver(boyut).observe(kutu);
+    const temaYap = async () => {
+      const ad = document.documentElement.dataset.theme === 'night' ? 'gece' : 'gunduz';
+      const yeni = await kur(ad);
+      S = yeni; S.golge = -1; r.toneMappingExposure = S.L.poz; c = c ?? hedef(); r.shadowMap.needsUpdate = true; boyut(); ciz(); uyan();
+    };
+    addEventListener('akar-tema', temaYap);
+    await temaYap();
     kutu.classList.add('hazir');
-  } catch (e) { durum.textContent = 'Model bu cihazda açılamadı; haritada deneyebilirsin.'; }
+  } catch (e) { durum.textContent = window.AKAR_DIL === 'en' ? 'The model could not open on this device.' : 'Model bu cihazda açılamadı.'; }
 };
 const baglanti = navigator.connection;
-if (baglanti && (baglanti.saveData || /2g/.test(baglanti.effectiveType || ''))) durum.textContent = 'Model haritada açılır.';
-else new IntersectionObserver((g, o) => { if (g[0].isIntersecting) { o.disconnect(); bas(); } }, { rootMargin: '300px' }).observe(kutu);
+if (baglanti && (baglanti.saveData || /2g/.test(baglanti.effectiveType || ''))) durum.textContent = window.AKAR_DIL === 'en' ? 'The model opens on the map.' : 'Model haritada açılır.';
+else new IntersectionObserver((g, o) => { if (g[0].isIntersecting) { o.disconnect(); bas(); } }, { rootMargin: '400px' }).observe(tur);
 </script>
+
 </body>
 </html>

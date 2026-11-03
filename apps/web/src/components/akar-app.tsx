@@ -621,14 +621,18 @@ export function AkarApp() {
   const cities = [...new Set(published.map((s) => s.city))];
   const defaultCity = cityRecords.find((c) => c.isDefault);
   const activeCity = cityInView ?? defaultCity ?? null;
-  const cityName = activeCity?.name ?? cities[0] ?? "Bursa";
+  // Zoomed out to the country the map looks at no one city: the button and the list say so.
+  const [wholeCountry, setWholeCountry] = useState(false);
+  const cityName = wholeCountry ? t("map.country") : (activeCity?.name ?? cities[0] ?? "Bursa");
   // The list shows the city the map looks at; a search reaches every city.
   const listed = useMemo(() => {
     const here = query
       ? filtered
-      : filtered.filter((s) => !s.city || s.city === cityName);
+      : wholeCountry
+        ? filtered
+        : filtered.filter((s) => !s.city || s.city === cityName);
     return nearPoint ? nearestFirst(here, nearPoint) : byDisplayOrder(here);
-  }, [filtered, query, cityName, nearPoint]);
+  }, [filtered, query, cityName, nearPoint, wholeCountry]);
   const chipCategories = useMemo(() => categoriesOf(published), [published]);
   const peekSite = published.find((s) => s.id === peekId);
   // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
@@ -722,6 +726,10 @@ export function AkarApp() {
   function selectSite(id: string) {
     setStoryIndex(0);
     go("detail", id);
+  }
+  function closeRoute() {
+    setRouteId(undefined);
+    if (state.routeIds.length) void commit({ type: "set-route", siteIds: [] });
   }
   function openStory(listen = false, index?: number, id = siteId) {
     // Whoever has started a story needs no hint to start one.
@@ -1314,6 +1322,13 @@ export function AkarApp() {
               }
               className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""} ${crowded ? "controls-crowded" : ""}`}
             >
+              {/* A started route stays on the map after its page: it needs its own way off (Muhammed, 4 Nov 2026). */}
+              {onMapView && !routeId && !routeDraft && !peekSite && state.routeIds.length > 0 && (
+                <button className="route-off" onClick={closeRoute}>
+                  <X size={16} />
+                  {t("route.close")}
+                </button>
+              )}
               {routeId && showRoutes && !isDetail && (
                 <button className="round-btn route-mobile-back" aria-label={t("route.all")} onClick={() => setRouteId(undefined)}>
                   <ChevronLeft size={20} />
@@ -1502,6 +1517,7 @@ export function AkarApp() {
                         live={live}
                         visitedIds={state.visitedIds}
                         onBack={() => setRouteId(undefined)}
+                        onClose={closeRoute}
                         onSite={selectSite}
                         onStart={async () => {
                           const ids = routeSites.map((s) => s.id);
@@ -1681,6 +1697,7 @@ export function AkarApp() {
                       onFirstDraw={() => setMapDrawn(true)}
                       onSettled={() => setMapSettled(true)}
                       onCityInView={setCityInView}
+                      onWholeCountry={setWholeCountry}
                       onLocate={chooseNear}
                       flight={flight}
                       bottomInset={peekSite ? PEEK_INSET : sheetHeight}

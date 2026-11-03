@@ -4709,3 +4709,10 @@ body:has(.gg) { overflow-x: clip; }
   .gg-m .gg-baslik::after { content: ""; display: block; width: 28px; height: 2px; margin: 3px auto 0; border-radius: 2px; background: var(--gold); }
 }
 .spotlight.clear path { fill: transparent; }
+
+/* A route's own way off (4 Nov 2026): on its page, and on the map once it has been started. */
+.route-page { position: relative; }
+.route-close { position: absolute; top: 0; right: 0; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--line, rgba(0, 0, 0, 0.1)); border-radius: 50%; background: var(--surface); color: var(--text); cursor: pointer; }
+.route-off { position: absolute; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 12; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px 0 14px; border: 0; border-radius: 999px; background: var(--text); color: var(--surface); font: 600 14px/1 var(--font); white-space: nowrap; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22); }
+.route-off:not(:disabled):active { transform: translate(-50%, 1px); }
+@media (max-width: 899.98px) { .route-off { top: calc(112px + env(safe-area-inset-top, 0px)); bottom: auto; } }

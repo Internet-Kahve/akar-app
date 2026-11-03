@@ -18,4 +18,8 @@ test("the city button opens the cities and a pick takes the map there", async ({
   await expect
     .poll(() => page.evaluate(() => (window.akarMap!.isMoving() ? 0 : window.akarMap!.getCenter().lng)), { timeout: 10000 })
     .toBeGreaterThan(32);
+  // The whole country: the button says so, not the city it passes over.
+  await button.click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Bütün Türkiye" }).click();
+  await expect(button).toContainText("Türkiye", { timeout: 15000 });
 });
