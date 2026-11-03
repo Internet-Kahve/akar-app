@@ -4074,3 +4074,22 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 .view-choice button b { font: 600 15px var(--font); }
 .view-choice button small { color: var(--text-muted); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) { .coach-tip { animation: none; } }
+
+/* ---------------- Zoom with the fingers (3 Nov 2026): the photograph in the viewer takes the pinch, the page does
+   not. The app's pages do not zoom on a phone; the map and the 3D zoom themselves. */
+.about-lightbox { overflow: hidden; }
+.about-lightbox .zoom-photo {
+  position: relative;
+  z-index: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transform-origin: center;
+  transition: transform 220ms var(--ease);
+  will-change: transform;
+}
+.about-lightbox p { position: relative; z-index: 1; }
+.about-lightbox button { z-index: 1; }
+@media (max-width: 899.98px) {
+  html:has(.workspace) { touch-action: pan-x pan-y; }
+}

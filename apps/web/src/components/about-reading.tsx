@@ -1097,6 +1097,94 @@ function PhotoGroup({
   );
 }
 
+/**
+ * The photograph in the viewer, zoomed by the fingers (Muhammed, 3 Nov 2026: «sayfa değil fotoğraf yakınlaşsın»):
+ * two fingers pinch it (1–5×), one finger moves it while zoomed, a double tap zooms in or back; not zoomed, a
+ * sideways swipe goes to the next or previous photograph.
+ */
+function ZoomPhoto({ src, alt, onSwipe }: { src: string; alt: string; onSwipe?: ((by: number) => void) | undefined }) {
+  const [view, setView] = useState({ scale: 1, x: 0, y: 0 });
+  const [moving, setMoving] = useState(false);
+  const fingers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<{ dist: number; scale: number; mid: { x: number; y: number }; x: number; y: number; start: { x: number; y: number }; moved: boolean } | null>(null);
+  const lastTap = useRef(0);
+  const clamp = (scale: number) => Math.min(5, Math.max(1, scale));
+  const begin = () => {
+    const pts = [...fingers.current.values()];
+    const mid = pts.length > 1 ? { x: (pts[0]!.x + pts[1]!.x) / 2, y: (pts[0]!.y + pts[1]!.y) / 2 } : pts[0]!;
+    const dist = pts.length > 1 ? Math.hypot(pts[0]!.x - pts[1]!.x, pts[0]!.y - pts[1]!.y) : 0;
+    gesture.current = { dist, scale: view.scale, mid, x: view.x, y: view.y, start: mid, moved: gesture.current?.moved ?? false };
+  };
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="zoom-photo"
+      draggable={false}
+      style={{
+        transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
+        transition: moving ? "none" : undefined,
+        cursor: view.scale > 1 ? "grab" : undefined,
+      }}
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        gesture.current = null;
+        begin();
+        setMoving(true);
+      }}
+      onPointerMove={(e) => {
+        if (!fingers.current.has(e.pointerId) || !gesture.current) return;
+        fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const g = gesture.current;
+        const pts = [...fingers.current.values()];
+        if (pts.length > 1 && g.dist) {
+          const dist = Math.hypot(pts[0]!.x - pts[1]!.x, pts[0]!.y - pts[1]!.y);
+          const mid = { x: (pts[0]!.x + pts[1]!.x) / 2, y: (pts[0]!.y + pts[1]!.y) / 2 };
+          const scale = clamp((g.scale * dist) / g.dist);
+          g.moved = true;
+          setView({ scale, x: g.x + mid.x - g.mid.x, y: g.y + mid.y - g.mid.y });
+        } else if (pts.length === 1) {
+          const dx = pts[0]!.x - g.mid.x;
+          const dy = pts[0]!.y - g.mid.y;
+          if (Math.hypot(dx, dy) > 6) g.moved = true;
+          if (view.scale > 1) setView({ scale: view.scale, x: g.x + dx, y: g.y + dy });
+        }
+      }}
+      onPointerUp={(e) => {
+        const g = gesture.current;
+        const end = { x: e.clientX, y: e.clientY };
+        fingers.current.delete(e.pointerId);
+        if (fingers.current.size) {
+          begin();
+          return;
+        }
+        setMoving(false);
+        gesture.current = null;
+        if (view.scale <= 1.02) setView({ scale: 1, x: 0, y: 0 });
+        if (!g) return;
+        const dx = end.x - g.start.x;
+        if (view.scale <= 1.02 && onSwipe && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(end.y - g.start.y)) {
+          onSwipe(dx < 0 ? 1 : -1);
+          return;
+        }
+        if (!g.moved) {
+          const now = Date.now();
+          if (now - lastTap.current < 300) {
+            setView(view.scale > 1 ? { scale: 1, x: 0, y: 0 } : { scale: 2.5, x: 0, y: 0 });
+            lastTap.current = 0;
+          } else lastTap.current = now;
+        }
+      }}
+      onPointerCancel={(e) => {
+        fingers.current.delete(e.pointerId);
+        gesture.current = null;
+        setMoving(false);
+      }}
+    />
+  );
+}
+
 export function Lightbox({
   photos,
   index,
@@ -1135,7 +1223,7 @@ export function Lightbox({
       <button className="about-lightbox-close" aria-label={t("common.close")} onClick={onClose}>
         <X size={20} />
       </button>
-      <img src={shown.src} alt={shown.alt} />
+      <ZoomPhoto key={shown.src} src={shown.src} alt={shown.alt} onSwipe={photos.length > 1 ? step : undefined} />
       <p>
         {photos.length > 1 ? `${index + 1} / ${photos.length} · ` : ""}
         {shown.caption}

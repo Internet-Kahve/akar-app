@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { createSeed } from "../../packages/api-client/src/seed";
 
-async function openGallery(page: Page, model: boolean) {
+export async function openGallery(page: Page, model: boolean) {
   const snapshot = createSeed();
   const site = snapshot.sites[0]!;
   if (!model) delete site.model;
