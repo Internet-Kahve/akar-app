@@ -19,10 +19,12 @@ test("Rotam opens in the panel with the site as its first stop, and closes back 
   await expect(builder.locator(".rb-stops li")).toContainText("Ulucami");
   await expect(builder.locator(".rb-summary")).toContainText("1 durak");
   await expect(builder.getByRole("button", { name: "Kaydet" })).toBeInViewport();
-  // A stop leaves the list; the empty state says how to add one.
+  // A stop leaves the list; the empty state shows how to add one.
   await builder.getByRole("button", { name: "Rotadan çıkar" }).click();
   await expect(builder.locator(".rb-stops li")).toHaveCount(0);
-  await expect(builder.locator(".rb-empty")).toBeVisible();
+  // A finger tapping a pin's «+» (3 Nov 2026); nothing to save yet.
+  await expect(builder.locator(".rb-coach")).toContainText("«+» rozetine dokun");
+  await expect(builder.getByRole("button", { name: "Kaydet" })).toBeDisabled();
   // Vazgeç gives the panel back to the list.
   await builder.getByRole("button", { name: "Vazgeç" }).last().click();
   await expect(page.getByRole("region", { name: "Rota oluştur" })).toHaveCount(0);

@@ -1,7 +1,7 @@
 "use client";
 import { useRef } from "react";
 import { sized } from "../lib/image-size";
-import { ArrowDown, ArrowUp, ChevronLeft, GripVertical, MapPin, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronLeft, GripVertical, MapPin, Plus, Pointer, Trash2, X } from "lucide-react";
 import type { HeritageSite, PersonalRoute } from "@akar/domain";
 import { useI18n } from "./i18n";
 
@@ -56,7 +56,8 @@ export function RouteBuilder({ draft, routes, sites, busy, onChange, onSave, onC
         )}
       </header>
       <div className="rb-fields">
-        <label>
+        {/* Which route: only when the visitor already has one to choose from. */}
+        {routes.some((route) => route.siteIds.length > 0 || route.id === draft.id && !!draft.id) && <label>
           <span>{t("route.choose")}</span>
           <select value={draft.id} disabled={busy} onChange={(event) => {
             const route = routes.find((route) => route.id === event.target.value);
@@ -65,15 +66,17 @@ export function RouteBuilder({ draft, routes, sites, busy, onChange, onSave, onC
             <option value="">{t("route.new")}</option>
             {routes.map((route) => <option key={route.id} value={route.id}>{route.name}</option>)}
           </select>
-        </label>
+        </label>}
         <label>
           <span>{t("route.name")}</span>
           <input maxLength={80} value={draft.name} disabled={busy} onChange={(event) => onChange({ ...draft, name: event.target.value })} />
         </label>
       </div>
-      <p className="rb-summary" aria-live="polite">
-        {t("route.summary", { count: stops.length, minutes: stops.length ? minutes : 0, km: km.toFixed(1) })}
-      </p>
+      {stops.length > 0 && (
+        <p className="rb-summary" aria-live="polite">
+          {t("route.summary", { count: stops.length, minutes, km: km.toFixed(1) })}
+        </p>
+      )}
       {stops.length ? (
         <ol className="rb-stops">
           {stops.map((site, index) => {
@@ -107,12 +110,25 @@ export function RouteBuilder({ draft, routes, sites, busy, onChange, onSave, onC
           })}
         </ol>
       ) : (
-        <p className="rb-empty">{t("route.empty")}</p>
+        // No stop yet (Muhammed, 3 Nov 2026: «tatlı bir uyarı, artıya bas»): a finger taps a pin's «+», as on the map.
+        <div className="rb-coach" role="status">
+          <span className="rb-coach-art" aria-hidden="true">
+            <span className="rb-coach-pin">
+              <MapPin size={22} />
+              <i className="rb-coach-plus"><Plus size={11} strokeWidth={3} /></i>
+            </span>
+            <span className="rb-coach-finger"><Pointer size={22} strokeWidth={1.8} /></span>
+          </span>
+          <span className="rb-coach-text">
+            <b>{t("route.emptyTitle")}</b>
+            <small>{t("route.emptySub")}</small>
+          </span>
+        </div>
       )}
-      <p className="rb-hint">{t("route.hint")}</p>
+      {stops.length > 1 && <p className="rb-hint">{t("route.hintShort")}</p>}
       <footer className="rb-foot">
         <button className="btn secondary" disabled={busy} onClick={onCancel}>{t("route.cancel")}</button>
-        <button className="btn" disabled={busy || !draft.name.trim()} onClick={onSave}>{t("route.save")}</button>
+        <button className="btn" disabled={busy || !draft.name.trim() || !stops.length} onClick={onSave}>{t("route.save")}</button>
       </footer>
     </section>
   );

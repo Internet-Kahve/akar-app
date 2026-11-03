@@ -282,8 +282,14 @@ export function ExplorePanel({
               );
             })}
           </div>
-          <button className="custom-route" onClick={onCustomRoute}>
-            <Route size={20} />
+          {/* A new route (Muhammed, 3 Nov 2026: «rezalet, değiştirelim»): a clear card, a small walk drawn on it. */}
+          <button className="custom-route yeni" onClick={onCustomRoute}>
+            <svg className="cr-art" viewBox="0 0 64 44" aria-hidden="true">
+              <path d="M8 34 C 20 34, 18 12, 32 14 S 46 30, 56 10" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
+              <circle cx="8" cy="34" r="4.5" />
+              <circle cx="32" cy="14" r="4.5" />
+              <circle cx="56" cy="10" r="4.5" className="cr-new" />
+            </svg>
             <span>
               <strong>{t("explore.custom")}</strong>
               <small>
@@ -292,7 +298,7 @@ export function ExplorePanel({
                   : t("explore.customEmpty")}
               </small>
             </span>
-            <Plus size={18} />
+            <span className="cr-plus" aria-hidden="true"><Plus size={20} strokeWidth={2.4} /></span>
           </button>
         </>
       ) : (

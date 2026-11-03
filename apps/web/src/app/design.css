@@ -4371,3 +4371,95 @@ body:has(.view-choice) .coach-tip.above-site-card { display: none; }
   transition: transform 220ms var(--ease);
 }
 .story-photo { overflow: hidden; }
+
+/* ---------------- Routes, the new route card (3 Nov 2026, `mobile/Pasted 6.37.24`): a solid card in the city's
+   colour with a small dotted walk whose last stop pulses, the words, and a round «+». */
+.custom-route.yeni {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 14px 14px 16px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--sehir-aksan, var(--primary));
+  color: #fff;
+  text-align: left;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--sehir-aksan, var(--primary)) 30%, transparent);
+  transition: transform 160ms var(--ease);
+}
+.custom-route.yeni:active { transform: scale(0.985); }
+.custom-route.yeni strong { display: block; color: #fff; font: 600 17px/22px var(--font); }
+.custom-route.yeni small { display: block; margin-top: 2px; color: rgba(255, 255, 255, 0.8); font-size: 13px; line-height: 18px; }
+.cr-art { width: 64px; height: 44px; color: rgba(255, 255, 255, 0.7); }
+.cr-art circle { fill: #fff; }
+.cr-art .cr-new { fill: var(--gold, #c9a24a); transform-origin: 56px 10px; animation: cr-pulse 1.8s ease-in-out infinite; }
+.cr-plus { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--sehir-aksan, var(--primary)); }
+@keyframes cr-pulse { 50% { transform: scale(1.35); } }
+
+/* The route builder with no stop yet: a finger taps a pin's «+», as on the map, beside two lines. */
+.rb-coach {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--primary-light);
+}
+.rb-coach-art { position: relative; width: 76px; height: 64px; }
+.rb-coach-pin {
+  position: absolute;
+  left: 10px;
+  top: 6px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  background: var(--sehir-aksan, var(--primary));
+  color: #fff;
+}
+.rb-coach-pin > svg { transform: rotate(45deg); }
+.rb-coach-plus {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--gold, #c9a24a);
+  color: #1b1407;
+  transform: rotate(45deg);
+  animation: rb-plus 1.6s ease-in-out infinite;
+}
+.rb-coach-finger {
+  position: absolute;
+  left: 38px;
+  top: 20px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: #141b2b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: rb-tap 1.6s ease-in-out infinite;
+}
+.rb-coach-text b { display: block; font: 600 15px/20px var(--font); color: var(--text); }
+.rb-coach-text small { display: block; margin-top: 3px; color: var(--text-muted); font-size: 13px; line-height: 18px; }
+@keyframes rb-tap { 0%, 100% { transform: translate(8px, 10px); } 40%, 55% { transform: translate(0, 0) scale(0.9); } }
+@keyframes rb-plus { 40%, 55% { transform: rotate(45deg) scale(1.3); } }
+@media (prefers-reduced-motion: reduce) {
+  .cr-art .cr-new,
+  .rb-coach-plus,
+  .rb-coach-finger { animation: none; }
+}

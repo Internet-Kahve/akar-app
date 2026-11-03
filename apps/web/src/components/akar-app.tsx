@@ -1440,6 +1440,8 @@ export function AkarApp() {
                           setTab(next);
                           setRouteId(undefined);
                           if (next === "routes") setQuery("");
+                          // A phone opens its sheet on the routes, so they and «Yeni rota oluştur» are in sight.
+                          if (next === "routes" && phone) setSheetHeight(Math.max(sheetHeight, sheetStops().open));
                         }}
                         mode={place}
                         city={cityName}
