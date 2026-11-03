@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startTestApp, TEST_RECEIPT_SECRET } from "../test/harness.ts";
 import { deleteUnreferencedMedia } from "../modules/media/service.ts";
-import { historyImages, siteAboutChapters, siteBadges, siteMapPlacements, sitePartCards, sites as sitesTable, siteSections, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
+import { historyImages, siteAboutChapters, siteBadges, siteMapPlacements, sitePartCards, sites as sitesTable, siteSections, siteTaskAnswers, siteTasks, storyBlocks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
 import { importDemoContent } from "./import-demo.ts";
 
 let ctx: Awaited<ReturnType<typeof startTestApp>>;
@@ -280,6 +280,25 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual(await aboutOf("test-0"), { chapters: ["chapter-0:Tarihçe"], sections: ["sec-0-1:Cami 1399 yılında açıldı.", "sec-0-2:Kubbeli."] });
   assert.deepEqual((await aboutOf("test-1")).chapters, ["chapter-1:Tarihçe"]);
   assert.equal((await db.select().from(siteAboutChapters).where(eq(siteAboutChapters.id, "chapter-0")))[0]!.titleEn, "History", "the English written since is kept per id on a replace");
+  // The panel owns a story sentence's 3D view (§11.70): a repeat import keeps camera, highlights, interior and card but takes
+  // the text from the package; --replace-story-views restores the package's views.
+  const packageCamera = { target: "kubbe_1", azimuthDeg: 10, elevationDeg: 20, distance: 1 };
+  (sites[0] as { stories: unknown[] }).stories = [{ id: "story-0-1", title: "Giriş", text: "Cami 1399'da açıldı.", simple: "Cami eski.", trust: "verified", photoId: "photo-0", sourceId: "source-0", highlights: [], camera: packageCamera }];
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  const panelCamera = { target: "kubbe_1", azimuthDeg: 90, elevationDeg: 30, distance: 0.5 };
+  await db.update(storyBlocks).set({ camera: panelCamera, highlights: ["kubbe_1"], interior: true, showCard: true }).where(eq(storyBlocks.id, "story-0-1"));
+  (sites[0] as { stories: Array<{ text: string }> }).stories[0]!.text = "Cami 1399 yılında açıldı.";
+  await writeFile(path, JSON.stringify(manifest));
+  const viewOf = async () => {
+    const [s] = await db.select().from(storyBlocks).where(eq(storyBlocks.id, "story-0-1"));
+    return { text: s!.text, camera: s!.camera, highlights: s!.highlights, interior: s!.interior, showCard: s!.showCard };
+  };
+  assert.ok((await importDemoContent(path, root, true, env)).storyViewsKept?.includes("test-0"));
+  assert.deepEqual(await viewOf(), { text: "Cami 1399 yılında açıldı.", camera: panelCamera, highlights: ["kubbe_1"], interior: true, showCard: true });
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceStoryViews: true })).storyViewsKept, []);
+  assert.deepEqual(await viewOf(), { text: "Cami 1399 yılında açıldı.", camera: packageCamera, highlights: [], interior: false, showCard: null });
+  (sites[0] as { stories: unknown[] }).stories = [];
   // A stored placement is the panel's: a re-import sets the façade direction only where the package names one and leaves the rest.
   const placementOf = async (siteId: string) => (await db.select().from(siteMapPlacements).where(eq(siteMapPlacements.siteId, siteId)))[0]!;
   await db.update(siteMapPlacements).set({ frontDeg: 99, headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-1"));

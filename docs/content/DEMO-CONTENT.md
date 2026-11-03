@@ -39,6 +39,8 @@ Bu komut editoryal paketin yeniden yayımlanmasıdır: paketteki eserlerin katal
 
 **«Eser hakkında» bölümleri ve paragrafları (§11.69).** Panel bunların da sahibidir: aktarım veritabanında zaten olan eserin bölümlerine ve paragraflarına dokunmaz, yalnız yeni oluşturduğu eserinkileri yazar (`--apply` çıktısındaki `aboutKept` korunan eserleri listeler). `eser-hakkinda-okuma.md` ve kitap paragraflarını dosyadaki hâline getirmek için komuta `--replace-about` ekleyin; bu, panelde yapılmış bölüm ve paragraf düzenlemelerini siler (İngilizce metinler kimlik başına korunur). Kitap fotoğrafları ve kapak medyası her aktarmada yazılmaya devam eder.
 
+**Hikâye cümlelerinin 3B bakışı (§11.70).** Panelde cümleye kaydedilen açı, vurgulanan parçalar, «İçini göster» ve «Kart göster» aktarımda korunur: veritabanında aynı kimlikle olan cümlenin yalnız metni (başlık, metin, sade metin, güven, fotoğraf, kaynak, sıra) dosyadan güncellenir (`--apply` çıktısındaki `storyViewsKept` bu eserleri listeler). Bakışları dosyadaki hâline getirmek için komuta `--replace-story-views` ekleyin; bu, panelde ayarlanmış bakışları siler.
+
 Dosyalar önce içerik özetiyle adlandırılmış nesnelere yüklenir. Aynı baytlar yeniden yüklenmez. Ardından tüm katalog ilişkileri tek veritabanı işlemi içinde güncellenir; hata olursa katalog değişmez. Ortak dosyalar seed yönetimindedir: bir eserin kaldırılması başka bir eserin kullandığı dosyayı silemez. Yeni bir paket eski dosyaları kendiliğinden silmez; temizlik öncesinde kullanım kontrolü yapılmalıdır.
 
 ## Doğrulama
