@@ -778,6 +778,8 @@ export default function ModelViewer({
               performance.now() - press.at < TAP_MS;
             press = null;
             if (!tap) return;
+            // A phone's story: a tap on the model moves the story on (akar-app, STORY_STEP_EVENT); no part card.
+            if (!pickRef.current && canvas.closest(".workspace")?.querySelector(".story-panel:is(.kart, .liste)")) return;
             const part = partAt(e);
             if (!part) return;
             if (pickRef.current) {

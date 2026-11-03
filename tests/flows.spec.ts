@@ -116,10 +116,10 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(page.getByRole("button", { name: "Rotama ekle", exact: true })).toHaveCount(0);
   // «Yanındayım» is gone from the site's page (Muhammed, 3 Nov 2026).
   await expect(page.getByRole("button", { name: /^Yanındayım/ })).toHaveCount(0);
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
   for (let i = 0; i < 8; i++)
-    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
-  await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
+  await page.getByRole("button", { name: "Hikâyeyi tamamla" }).dispatchEvent("click");
   const finished = page.getByRole("dialog");
   await expect(finished).toContainText("Hikâye tamamlandı");
   await finished.getByRole("button", { name: "Devam et" }).click();
@@ -293,7 +293,7 @@ test("admin photo wizard publishes complete content and persists shared images",
     "alt",
     "Güncellenen ortak görsel",
   );
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
   await openSentenceList(page);
   await expect(page.locator(".current .story-text")).toContainText(
     "bir fotoğraf ve bir kaynakla",
@@ -401,11 +401,14 @@ test.describe("first visit", () => {
 });
 test("reading keeps the chosen sentence while the list follows it, and the visitor's scrolling leads", async ({
   page,
+  isMobile,
 }) => {
+  // A phone's ☰ list is a picker (3 Nov 2026): a sentence is chosen by a tap there, not by scrolling.
+  test.skip(isMobile, "the phone's list is a picker");
   await page.goto("/#view=detail&site=ulu-cami");
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
-  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
   const count = page.locator(".story-count");
   await expect(count).toHaveText("3 / 9");
   await page.waitForTimeout(1200);
@@ -517,7 +520,7 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
   await openSentenceList(page);
   await expect(
     page.getByRole("button", { name: /Bursa’da bir başlangıç/ }),

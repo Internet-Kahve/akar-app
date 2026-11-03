@@ -157,7 +157,7 @@ test("the 3D card tells the percentage and the megabytes of the download itself,
     await expect(page.locator(".model-viewer")).toHaveCSS("background-image", /linear-gradient/);
 
     // The panel beside the scene works while the model comes: «Oku» opens the story.
-    await page.getByRole("button", { name: "Oku", exact: true }).click();
+    await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
     await expect(page).toHaveURL(/view=story/);
     const storyCard = page.locator(".model-loading");
     await expect(storyCard.locator(".model-loading-title")).toHaveText("3D model yükleniyor · %62");

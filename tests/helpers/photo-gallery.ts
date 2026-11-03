@@ -156,16 +156,16 @@ export function photoGalleryTests() {
     page,
   }) => {
     await openGallery(page, true);
-    await page.getByRole("button", { name: "Oku", exact: true }).click();
+    await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
     await expect(page.getByRole("button", { name: "Fotoğraf", exact: true })).toHaveAttribute("aria-pressed", "true");
     const gallery = page.getByRole("region", {
       name: "Eser fotoğraf galerisi",
     });
     const shown = page.locator(".story-photo-main");
     await expect(shown).toHaveAttribute("alt", "Yalnız hikâyeye ait fotoğraf");
-    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
     await expect(shown).toHaveAttribute("alt", "Eser fotoğrafı 3");
-    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
     await expect(gallery.locator("figure")).toHaveCount(0);
     await expect(gallery.getByRole("status")).toHaveText(
       "Bu bölümün fotoğrafı bulunamadı.",

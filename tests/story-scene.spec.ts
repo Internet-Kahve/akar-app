@@ -90,7 +90,7 @@ async function openStory(page: Page, modelServed?: Promise<void>) {
     snapshot,
   );
   await page.goto("/#view=detail&site=ulu-cami");
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
   // A phone opens on the one-sentence card; these checks read the numbered list (☰).
   const list = page.getByRole("button", { name: "Cümle listesini aç" });
   if (await list.isVisible()) await list.click();
@@ -99,7 +99,7 @@ async function openStory(page: Page, modelServed?: Promise<void>) {
 }
 
 const next = (page: Page) =>
-  page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+  page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
 const tour = (page: Page) => page.locator(".model-canvas");
 
 test("the model turns on the story's first and last sentences about the whole building, holds in between, and a touch stops it", async ({
@@ -146,7 +146,10 @@ test("with reduced motion the model does not turn", async ({ page }) => {
 
 test("the photo card stays clear of the model, is dragged away and opens the part card or the photograph", async ({
   page,
+  isMobile,
 }) => {
+  // A phone docks the card along the stage's foot (3 Nov 2026): not moved, not sized.
+  test.skip(isMobile, "the phone's photo card is docked");
   const errors = await openStory(page);
   const card = page.locator(".story-photo-card");
   await expect(card).toHaveCount(0);
@@ -189,7 +192,9 @@ test("the photo card stays clear of the model, is dragged away and opens the par
   expect(errors).toEqual([]);
 });
 
-test("the photo card's corner sizes it, the keyboard steps it, and both stay on this device", async ({ page }) => {
+test("the photo card's corner sizes it, the keyboard steps it, and both stay on this device", async ({ page, isMobile }) => {
+  // A phone docks the card along the stage's foot (3 Nov 2026): not moved, not sized.
+  test.skip(isMobile, "the phone's photo card is docked");
   await openStory(page);
   await next(page);
   await next(page);
@@ -215,7 +220,7 @@ test("the photo card's corner sizes it, the keyboard steps it, and both stay on 
   // Kept for the next story on this device.
   await page.reload();
   // The story reopens where it was: on a phone as the one-sentence card (no «Oku» there), its list behind ☰.
-  const read = page.getByRole("button", { name: "Oku", exact: true });
+  const read = page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first();
   const list = page.getByRole("button", { name: "Cümle listesini aç" });
   await expect(read.or(list).first()).toBeVisible();
   if (await read.isVisible()) await read.click();

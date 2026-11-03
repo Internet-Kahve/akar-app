@@ -236,9 +236,11 @@ function PhotoGallery({
             <button className="galeri-f" aria-label={t("gal.enlarge", { alt: photo.alt })} onClick={() => setOpen(index)}>
               <img
                 className="scene-photo"
-                src={sized(photo.src, index % 3 === 0 ? 560 : 360)}
+                // A phone's tiles are narrower: smaller files, there sooner.
+                src={sized(photo.src, index % 3 === 0 ? (wide ? 560 : 300) : wide ? 360 : 180)}
                 alt={photo.alt}
                 loading={index < 3 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : undefined}
                 decoding="async"
                 onLoad={measure}
               />

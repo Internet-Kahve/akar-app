@@ -9,6 +9,7 @@ import {
   Headphones,
   History,
   MessageCircle,
+  Play,
   Puzzle,
 } from "lucide-react";
 import { sized } from "../lib/image-size";
@@ -161,6 +162,11 @@ export function SiteDetail({
             {t("site.shortStoryMeta", { minutes: site.minutes })}
             <Depth minutes={site.minutes} />
           </div>
+          {/* A phone (3 Nov 2026): one way in; the story's own sound button reads it aloud. */}
+          <button className={`hikaye-basla${read ? " bitti" : ""}`} onClick={() => onStory()}>
+            <Play size={18} fill="currentColor" />
+            {t(read ? "site.storyAgain" : "site.storyStart")}
+          </button>
           <div className="ikili" role="group" aria-label={t("site.shortStory")}>
             <button
               className={`ik-sol${read ? " bitti" : ""}`}

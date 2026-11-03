@@ -68,7 +68,7 @@ import { HistoryView, type MemoryDraft } from "./history-view";
 import { memoryTraces } from "../lib/memory-traces";
 import { LivingMemory } from "./living-memory";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
-import { StoryPanel, StoryProgress } from "./story-panel";
+import { STORY_STEP_EVENT, StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
@@ -131,6 +131,8 @@ type Overlay =
   | null;
 /** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
 const CONTROLS_ROOM = 110 + 194 + 32;
+/** The height of a story's photograph card on a phone (design.css `.story-photo-card`, the stage's foot). */
+const STORY_PHOTO_CARD_PHONE = 140;
 /** Pulled this far below its closed height, the site's card goes back to the map. */
 const CARD_CLOSE_PULL = 70;
 /** How far a scroll on the closed site card raises it: enough for its content to scroll. */
@@ -652,6 +654,7 @@ export function AkarApp() {
     [mapSettled, setMapSettled] = useState(false),
     [returnLate, setReturnLate] = useState(false);
   const wasOnMap = useRef(showMap);
+  const stageTap = useRef<{ x: number; y: number; at: number } | null>(null);
   useEffect(() => {
     // Back from a site the map was kept (`map-keep`): only a map built anew needs the cover.
     const back = showMap && onMapView && !wasOnMap.current && !opening;
@@ -869,6 +872,12 @@ export function AkarApp() {
   const cardLowest = () => {
     const panel = sheet.current;
     // Dinle | Oku closes the top part; a site without a story ends it with its notice.
+    // A phone's card closes right under «Hikâyeyi başlat», nothing half shown below it (3 Nov 2026).
+    const start = panel?.querySelector<HTMLElement>(".detail-panel .hikaye-basla");
+    if (panel && start && start.offsetParent) {
+      const bottomPad = parseFloat(getComputedStyle(panel).paddingBottom) || 0;
+      return Math.round(start.getBoundingClientRect().bottom - panel.getBoundingClientRect().top + panel.scrollTop + bottomPad + 14);
+    }
     const top =
       panel?.querySelector<HTMLElement>(".detail-panel .ikili") ??
       panel?.querySelector<HTMLElement>(".detail-panel .hikaye-blok > :first-child");
@@ -1467,7 +1476,25 @@ export function AkarApp() {
                   </div>
                 )}
               </aside>
-              <div className="main-stage">
+              <div
+                className="main-stage"
+                // A phone's story moves on a tap on its photograph or model, as an Instagram story does: the left third
+                // goes back, the rest on. A drag (turning the model) or a press on a button is not a tap.
+                onPointerDown={(e) => {
+                  stageTap.current = phone && view === "story" ? { x: e.clientX, y: e.clientY, at: e.timeStamp } : null;
+                }}
+                onPointerUp={(e) => {
+                  const tap = stageTap.current;
+                  stageTap.current = null;
+                  if (!tap || Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 10 || e.timeStamp - tap.at > 400) return;
+                  if ((e.target as HTMLElement).closest("button, a, input, dialog, .story-photo-card, .model-view-photo, .story-progress"))
+                    return;
+                  const box = e.currentTarget.getBoundingClientRect();
+                  window.dispatchEvent(
+                    new CustomEvent(STORY_STEP_EVENT, { detail: e.clientX < box.left + box.width / 3 ? -1 : 1 }),
+                  );
+                }}
+              >
               {view === "detail" && site && (
                 // The phone's way back over the photographs or the model (prototype `.gorus-ust .geri`); the wide
                 // screen has the panel's own «‹ Harita».
@@ -1491,7 +1518,14 @@ export function AkarApp() {
                     context={view === "story" ? "story" : "detail"}
                     companion={flowCompanion}
                     // Phone: the scene fills the screen behind the floating card; the model stays above it closed.
-                    frameBottom={siteCard && cardClosed ? cardClosed + 12 : 0}
+                    frameBottom={
+                      siteCard && cardClosed
+                        ? cardClosed + 12
+                        : // A story's photograph card lies along the stage's foot on a phone: the model is framed above it.
+                          phone && view === "story" && storyBlock?.showCard
+                          ? STORY_PHOTO_CARD_PHONE + 48
+                          : 0
+                    }
                     site={site}
                     live={live}
                     photoId={
@@ -1838,16 +1872,16 @@ export function AkarApp() {
           />
         )}
       </SourceSheetProvider>
-      {/* First-time hints on a phone (3 Nov 2026): one sentence each, once, where it matters. */}
+      {/* First-time hints on a phone (3 Nov 2026): a finger doing what to do and a few words, once each. */}
       {phone && !opening && !mapReturn && (
         view === "map" && !peekSite && !routeDraft ? (
-          <CoachTip key="harita" id="harita" text={t("tip.map")} place="top" />
+          <CoachTip key="harita" id="harita" text={t("tip.map")} place="map" gesture="tap" />
         ) : view === "map" && peekSite ? (
-          <CoachTip key="kart" id="kart" text={t("tip.peek")} place="above-card" />
+          <CoachTip key="kart" id="kart" text={t("tip.peek")} place="above-card" gesture="swipe-up" />
         ) : siteCard ? (
-          <CoachTip key="detay" id="detay" text={t("tip.detail")} place="above-site-card" />
+          <CoachTip key="detay" id="detay" text={t("tip.detail")} place="above-site-card" gesture="swipe-down" />
         ) : view === "story" ? (
-          <CoachTip key="hikaye" id="hikaye" text={t("tip.story")} place="top" />
+          <CoachTip key="hikaye" id="hikaye" text={t("tip.story")} place="stage" gesture="tap-sides" />
         ) : null
       )}
       {mapReturn && !opening && (

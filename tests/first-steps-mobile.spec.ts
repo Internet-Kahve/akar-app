@@ -7,13 +7,17 @@ import { expect, test } from "@playwright/test";
 test.skip(({ isMobile }) => !isMobile, "the first-time hints are the phone's");
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test("the map hints at a tap once; «Tamam» puts it away for good", async ({ page }) => {
+test("the map shows a finger on a tap once; the first touch puts it away for good", async ({ page }) => {
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort());
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   const tip = page.locator(".coach-tip");
   await expect(tip).toContainText("Bir esere dokun");
-  await tip.getByRole("button", { name: "Tamam" }).click();
+  // A finger and a few words; no button to press.
+  await expect(tip.locator(".coach-finger")).toBeVisible();
+  await expect(tip.getByRole("button")).toHaveCount(0);
+  await page.waitForTimeout(800);
+  await page.mouse.click(20, 200);
   await expect(tip).toHaveCount(0);
   await page.reload();
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });

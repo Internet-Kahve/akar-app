@@ -2603,7 +2603,7 @@ h1,
   .model-view-photo { right: auto; left: 16px; bottom: calc(12px + 40px + 12px); width: 168px; }
   .model-view-photo.large { width: min(300px, 80vw); }
   .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo {
-    bottom: calc(var(--sheet-h, 194px) + 12px + 16px + 40px + 12px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 16px + 40px + 12px + env(safe-area-inset-bottom, 0px));
     transition: width 240ms var(--ease), bottom 280ms var(--ease);
   }
 }
@@ -3771,12 +3771,12 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .detail-panel .detail-summary { order: 7; margin: 0 0 4px; }
   /* «3D model · Temsili» 10 px and «İçini göster» 4 px above the card, moving with it (prototype `temsiliKonum`). */
   .workspace.on-site:has(.detail-panel) .detail-scene .model-label {
-    bottom: calc(var(--sheet-h, 194px) + 22px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 10px + env(safe-area-inset-bottom, 0px));
     transition: bottom 280ms var(--ease);
   }
   .workspace.on-site:has(.detail-panel) .detail-scene > .model-viewer > .model-inside,
   .workspace.on-site:has(.detail-panel) .detail-scene .model-views {
-    bottom: calc(var(--sheet-h, 194px) + 16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 4px + env(safe-area-inset-bottom, 0px));
     transition: bottom 280ms var(--ease);
   }
   .workspace:has(.side-panel.dragging) .detail-scene :is(.model-label, .model-inside, .model-views) { transition: none; }
@@ -3828,11 +3828,11 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
     left: 12px;
     right: 12px;
     width: auto;
-    bottom: calc(var(--sheet-h, 194px) + 12px + 10px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 10px + env(safe-area-inset-bottom, 0px));
   }
   .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo img { height: 190px; aspect-ratio: auto; }
   .workspace.on-site:has(.detail-panel) .detail-scene:has(.model-view-photo) .model-views {
-    bottom: calc(var(--sheet-h, 194px) + 12px + 10px + 190px + 34px + 10px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 10px + 190px + 34px + 10px + env(safe-area-inset-bottom, 0px));
   }
 }
 @media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
@@ -3857,71 +3857,125 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   }
 }
 
-/* ---------------- The story on a phone (Muhammed, 3 Nov 2026; `mobile-revize/`): the scene above, a small card
-   below. The scene ends where the card begins (story-panel measures it: --story-card-h), so neither the model nor
-   the photograph hides behind it. On the card: the sentence (a tap on its left third goes back, elsewhere on), a
-   faint source line, and one sound button. ▾ folds it to a bar. */
+/* ---------------- The story on a phone (Muhammed, 3 Nov 2026; `mobile-revize/`, second round): the photograph or
+   model above, taking the taps (left third back, elsewhere on); below, one sheet the screen's width: the sentence,
+   a faint source, and a foot of three: ☰ the list, the round sound button in the middle, the count. ▾ folds it.
+   The ☰ list is the same sheet, taller: the sentences, and the same foot. The scene ends where the sheet begins
+   (--story-card-h, measured by story-panel). */
 @media (max-width: 899.98px) {
-  .workspace.on-site:has(.story-panel.kart) .main-stage {
-    bottom: calc(var(--story-card-h, 180px) + 12px + 8px + env(safe-area-inset-bottom, 0px));
+  .workspace.on-site:has(.story-panel:is(.kart, .liste)) .main-stage {
+    top: 0;
+    height: auto;
+    bottom: var(--story-card-h, 180px);
   }
-  .workspace.on-site:has(.story-panel.kart) .side-panel { max-height: 46dvh; }
-  .story-panel.kart { padding: 0 14px 12px; }
+  .workspace.on-site:has(.story-panel:is(.kart, .liste)) .side-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: auto;
+    max-height: 46dvh;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
+    background: var(--surface);
+  }
+  .workspace.on-site:has(.story-panel.liste) .side-panel { max-height: 68dvh; }
+  .story-panel:is(.kart, .liste) {
+    height: auto;
+    margin: 0;
+    padding: 0 20px calc(12px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .story-panel.liste { max-height: 68dvh; }
   .story-fold {
     display: grid;
     place-items: center;
-    width: 100%;
-    height: 28px;
+    width: 64px;
+    height: 26px;
+    margin: 0 auto;
     padding: 0;
     border: 0;
     background: none;
     color: var(--text-muted);
   }
-  .story-tap { position: relative; }
-  .story-panel.kart .story-card-text { margin: 0 0 6px; font: 600 18px/25px var(--font); }
-  .story-tap .kaynak-link { position: relative; z-index: 2; color: var(--text-muted); font-size: 12px; }
-  .story-tap-prev,
-  .story-tap-next {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 1;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .story-tap-prev { left: 0; width: 33%; }
-  .story-tap-next { right: 0; width: 67%; }
-  .story-tap-prev:focus-visible,
-  .story-tap-next:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: 12px; }
-  .story-card-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
-  .story-count { min-width: 44px; color: var(--text-muted); font: 600 13px/1 var(--font); font-variant-numeric: tabular-nums; }
-  .story-sound {
-    flex: 1;
-    display: inline-flex;
+  .story-card-body { padding: 2px 0 4px; }
+  .story-panel.kart .story-card-text { margin: 0 0 8px; font: 600 19px/27px var(--font); color: var(--text); }
+  .story-card-body .kaynak-link { color: var(--text-muted); font-size: 12px; }
+  .story-card-foot {
+    display: grid;
+    grid-template-columns: 48px 1fr 48px;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 46px;
-    border: 0;
-    border-radius: 999px;
-    background: var(--primary);
-    color: var(--on-primary);
-    font: 600 15px var(--font);
+    margin-top: 10px;
   }
-  .story-sound.on { background: var(--primary-light); color: var(--primary); box-shadow: inset 0 0 0 1.5px var(--primary); }
-  .story-all {
+  .story-sound {
+    justify-self: center;
     display: grid;
     place-items: center;
-    width: 46px;
-    height: 46px;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 0 6px 16px rgba(20, 27, 43, 0.22);
+    transition: transform 160ms var(--ease), background 160ms var(--ease);
+  }
+  .story-sound:active { transform: scale(0.94); }
+  .story-sound.on { background: var(--gold, #c9a24a); color: #1b1407; }
+  .story-all,
+  .story-foot-side {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--text);
+  }
+  .story-card-foot .story-count {
+    justify-self: end;
+    min-width: 0;
+    color: var(--text-muted);
+    font: 600 13px/1 var(--font);
+    font-variant-numeric: tabular-nums;
+  }
+  .story-panel.kart.folded .story-card-foot { margin-top: 0; }
+  /* The ☰ list */
+  .story-list-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 6px; }
+  .story-list-head b { font: 600 16px/22px var(--font); }
+  .story-list-close {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
     border: 0;
     border-radius: 50%;
     background: var(--primary-light);
-    color: var(--primary);
+    color: var(--text);
   }
-  .story-panel.kart.folded .story-card-foot { margin-top: 0; }
+  .story-panel.liste .story-list { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -20px; padding: 0 8px; }
+  .story-panel.liste .story-list li { margin: 0; padding: 0; border: 0; min-height: 0; background: none; }
+  .story-panel.liste .story-list li::before { display: none; }
+  .story-panel.liste .story-list li button {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 14px;
+    background: none;
+    text-align: left;
+    color: var(--text-muted);
+  }
+  .story-panel.liste .story-list li.current button { background: var(--primary-light); color: var(--text); }
+  .story-panel.liste .story-list li button > span { font: 600 13px/22px var(--font); font-variant-numeric: tabular-nums; }
+  .story-panel.liste .story-list .story-text { margin: 0; font: 500 15px/22px var(--font); }
 }
 
 /* ---------------- The phone's short card (3 Nov 2026): which site it is, nothing more. A small photograph, the name,
@@ -4012,42 +4066,75 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .explore-heading:has(.explore-back) h2 { flex: 1; margin: 0; font-size: 16px; }
 }
 
-/* ---------------- First-time hints (coach-tip.tsx) and the photo-or-3D question: small, dark, plain; only their
-   buttons take a tap, so nothing under them is blocked. */
+/* ---------------- First-time hints (coach-tip.tsx, second round, 3 Nov 2026): a finger doing what to do above an
+   opaque pill of a few words. No button: the first touch anywhere puts it away; it takes no touch itself. */
 .coach-tip {
   position: fixed;
   z-index: 40;
   left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
   transform: translateX(-50%);
-  width: min(340px, calc(100vw - 32px));
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 12px 12px 16px;
-  border-radius: 16px;
-  background: rgba(20, 27, 43, 0.92);
-  color: #fff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
   pointer-events: none;
-  animation: coach-in 260ms var(--ease);
+  animation: coach-in 320ms var(--ease) both;
 }
-.coach-tip p { flex: 1; margin: 0; font: 500 14px/20px var(--font); }
-.coach-tip button {
-  pointer-events: auto;
-  flex: none;
-  height: 34px;
-  padding: 0 14px;
-  border: 0;
+.coach-tip p {
+  margin: 0;
+  padding: 9px 16px;
   border-radius: 999px;
+  background: #141b2b;
+  color: #fff;
+  font: 600 14px/18px var(--font);
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.coach-finger {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   background: #fff;
   color: #141b2b;
-  font: 600 13px var(--font);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
 }
-.coach-tip.top { top: calc(118px + env(safe-area-inset-top, 0px)); }
+.coach-finger svg { position: relative; z-index: 1; }
+.coach-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  opacity: 0;
+}
+/* tap: the finger presses, a ring spreads */
+.coach-tip.tap .coach-finger { animation: coach-press 1.4s ease-in-out infinite; }
+.coach-tip.tap .coach-ring { animation: coach-ripple 1.4s ease-out infinite; }
+/* swipe up / down: the finger travels and comes back */
+.coach-tip.swipe-up .coach-finger { animation: coach-up 1.6s var(--ease) infinite; }
+.coach-tip.swipe-down .coach-finger { animation: coach-down 1.6s var(--ease) infinite; }
+/* taps on the right: the finger presses on the right, then on the left, faint */
+.coach-tip.tap-sides .coach-finger { animation: coach-sides 2.4s ease-in-out infinite; }
+.coach-tip.tap-sides .coach-ring { animation: coach-ripple 1.2s ease-out infinite; }
+@keyframes coach-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+@keyframes coach-press { 0%, 60%, 100% { transform: scale(1); } 30% { transform: scale(0.86); } }
+@keyframes coach-ripple { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
+@keyframes coach-up { 0% { transform: translateY(26px); opacity: 0; } 20% { opacity: 1; } 70% { transform: translateY(-26px); opacity: 1; } 100% { transform: translateY(-26px); opacity: 0; } }
+@keyframes coach-down { 0% { transform: translateY(-26px); opacity: 0; } 20% { opacity: 1; } 70% { transform: translateY(26px); opacity: 1; } 100% { transform: translateY(26px); opacity: 0; } }
+@keyframes coach-sides { 0%, 45% { transform: translateX(70px) scale(1); } 20% { transform: translateX(70px) scale(0.86); } 55%, 100% { transform: translateX(-70px) scale(1); opacity: 0.5; } 75% { transform: translateX(-70px) scale(0.86); } }
+.coach-tip.map { top: 42%; }
+.coach-tip.stage { top: 34%; }
 .coach-tip.above-card { bottom: calc(var(--peek-h, 120px) + 28px + env(safe-area-inset-bottom, 0px)); }
-/* On the site's page: just above its card (the photo-or-3D question stands at the top). */
-.coach-tip.above-site-card { bottom: calc(var(--sheet-h, 194px) + 12px + 64px + env(safe-area-inset-bottom, 0px)); }
-@keyframes coach-in { from { opacity: 0; transform: translate(-50%, 6px); } }
+.coach-tip.above-card .coach-finger { order: 0; }
+.coach-tip.above-site-card { bottom: calc(var(--sheet-h, 194px) + 24px + env(safe-area-inset-bottom, 0px)); }
+/* The photo-or-3D question first; its hint after the answer. */
+body:has(.view-choice) .coach-tip.above-site-card { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .coach-tip,
+  .coach-tip .coach-finger,
+  .coach-tip .coach-ring { animation: none; }
+}
 .view-choice {
   position: absolute;
   z-index: 12;
@@ -4073,7 +4160,7 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 }
 .view-choice button b { font: 600 15px var(--font); }
 .view-choice button small { color: var(--text-muted); font-size: 12px; }
-@media (prefers-reduced-motion: reduce) { .coach-tip { animation: none; } }
+
 
 /* ---------------- Zoom with the fingers (3 Nov 2026): the photograph in the viewer takes the pinch, the page does
    not. The app's pages do not zoom on a phone; the map and the 3D zoom themselves. */
@@ -4097,3 +4184,86 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 /* The map kept behind a site's page (akar-app `map-keep`): laid out as before, not drawn over the site, no taps. */
 .map-keep { display: contents; }
 .map-keep.parked { visibility: hidden; }
+
+/* ---------------- A story's photograph card on a phone (3 Nov 2026, `mobile-revize/2.jpg`): along the foot of the
+   stage, the screen's width, a large photograph beside its title; the model is framed above it (akar-app
+   STORY_PHOTO_CARD_PHONE). Not moved or resized there: one place, nothing to manage. */
+@media (max-width: 899.98px) {
+  .story-photo-card,
+  .story-photo-card.placed {
+    left: 12px !important;
+    right: 12px !important;
+    top: auto !important;
+    bottom: 12px !important;
+    width: auto !important;
+    height: 140px;
+    grid-template-columns: 46% minmax(0, 1fr);
+    border-radius: 20px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .story-photo-card img { width: 100%; height: 140px; }
+  .story-photo-card > button > span { padding: 12px 14px; }
+  .story-photo-card strong { font-size: 16px; line-height: 21px; }
+  .story-photo-card small { -webkit-line-clamp: 4; }
+  .story-photo-size { display: none; }
+  .media-scene:has(.story-photo-card) .model-inside,
+  .media-scene:has(.story-photo-card) .model-part-name { bottom: 184px; }
+}
+/* The ☰ list takes the foot of the stage: the story's photograph card stands aside meanwhile. */
+@media (max-width: 899.98px) {
+  .workspace:has(.story-panel.liste) .story-photo-card { display: none; }
+}
+
+/* ---------------- The phone's site card, second round (3 Nov 2026, `mobile-revize/4.jpg`): the screen's width, solid,
+   nothing fading. Closed: the name, «Kısa hikâye · 1 dk» and one button, «Hikâyeyi başlat» (Dinle | Oku went: the
+   story's sound button reads it aloud). Pulled up: «Eser hakkında» as a plain row, then Keşfet. */
+.hikaye-basla { display: none; }
+@media (max-width: 899.98px) {
+  .workspace.on-site:has(.detail-panel) .side-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(var(--sheet-h, 194px) + env(safe-area-inset-bottom, 0px));
+    padding: 0 20px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-radius: 24px 24px 0 0;
+    background: var(--surface);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
+  }
+  .workspace.on-site .side-panel:not(.full) .detail-panel { -webkit-mask-image: none; mask-image: none; }
+  .workspace.on-site .detail-panel .ikili { display: none; }
+  .hikaye-basla {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 52px;
+    margin-top: 10px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font: 600 16px var(--font);
+  }
+  .hikaye-basla:active { transform: scale(0.985); }
+  .hikaye-basla.bitti { background: var(--primary-light); color: var(--primary); }
+  /* «Eser hakkında»: a plain row, as Keşfet's rows. */
+  .detail-panel .tam-kart {
+    margin-top: 22px;
+    padding: 12px 12px 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: none;
+  }
+  .detail-panel .tam-kart.desenli::before { display: none; }
+  .detail-panel .tk-yazi small { color: var(--text-muted); letter-spacing: 0.06em; }
+  .detail-panel .tk-yazi b { color: var(--text); font-size: 20px; line-height: 24px; }
+  .detail-panel .tk-alt { color: var(--text-muted); }
+  .detail-panel .tk-alt .derinlik i { background: var(--border); }
+  .detail-panel .tk-ok { width: 36px; height: 36px; background: var(--primary-light); box-shadow: none; color: var(--primary); }
+}
+/* A photograph not come in yet is a soft tile, not a white hole. */
+.galeri figure .scene-photo { background: color-mix(in srgb, var(--text) 8%, var(--surface)); }
