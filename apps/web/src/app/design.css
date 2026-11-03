@@ -4093,3 +4093,7 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 @media (max-width: 899.98px) {
   html:has(.workspace) { touch-action: pan-x pan-y; }
 }
+
+/* The map kept behind a site's page (akar-app `map-keep`): laid out as before, not drawn over the site, no taps. */
+.map-keep { display: contents; }
+.map-keep.parked { visibility: hidden; }

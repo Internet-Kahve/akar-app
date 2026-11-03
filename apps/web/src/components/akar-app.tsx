@@ -651,17 +651,18 @@ export function AkarApp() {
   const [mapReturn, setMapReturn] = useState(false),
     [mapSettled, setMapSettled] = useState(false),
     [returnLate, setReturnLate] = useState(false);
-  const wasOnMap = useRef(onMapView);
+  const wasOnMap = useRef(showMap);
   useEffect(() => {
-    const back = onMapView && !wasOnMap.current && !opening;
-    wasOnMap.current = onMapView;
+    // Back from a site the map was kept (`map-keep`): only a map built anew needs the cover.
+    const back = showMap && onMapView && !wasOnMap.current && !opening;
+    wasOnMap.current = showMap;
     if (!back) return;
     setMapReturn(true);
     setMapSettled(false);
     setReturnLate(false);
     const timer = setTimeout(() => setReturnLate(true), OPENING_MAX_MS);
     return () => clearTimeout(timer);
-  }, [onMapView, opening]);
+  }, [showMap, onMapView, opening]);
   // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
   // to wait for, as soon as the page can show something.
   const openingDone =
@@ -1484,7 +1485,7 @@ export function AkarApp() {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                {isDetail && site ? (
+                {isDetail && site && (
                   <Scene
                     key={`${site.id}-${view}`}
                     context={view === "story" ? "story" : "detail"}
@@ -1539,8 +1540,10 @@ export function AkarApp() {
                     onAddPhoto={() => setOverlay("memory")}
                     onPick={pick ? pickPart : undefined}
                   />
-                ) : (
-                  <>
+                )}
+                {/* The map stays behind a site's page (hidden, still), so back from the site it is there at once, not
+                    built anew (Muhammed, 3 Nov 2026: «geri butonuna basıyorum zar yükleniyor»). */}
+                <div className={`map-keep${isDetail && site ? " parked" : ""}`} inert={isDetail && !!site}>
                     <HeritageMap
                       sites={routeId && routeSites.length ? routeSites : filtered}
                       selectedId={peekId}
@@ -1606,8 +1609,7 @@ export function AkarApp() {
                         }))
                       }
                     />
-                  </>
-                )}
+                </div>
                 {view === "story" && storySite && !wide && (
                   <button
                     className="round-btn story-stage-close"

@@ -68,6 +68,14 @@ const SITE_EASE_MS = 700;
 const SITE_ZOOM = 17;
 /** Angled view the map opens with; the tilt button toggles between this and 0 (top view). Same as the prototype. */
 const TILT_PITCH = 55;
+/**
+ * A phone (Muhammed, 3 Nov 2026: «yakınlaşınca 3D, uzaklaşınca 2D»): near enough for the models the map tilts into
+ * 3D, out of that it lies flat with its photograph pins; a lower tilt there, as a tilted view loads tiles to the
+ * horizon. The flat earth only: no globe, which a phone draws slowly.
+ */
+const PHONE_TILT_PITCH = 45;
+const phoneMap = () => typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches;
+const tiltPitch = () => (phoneMap() ? PHONE_TILT_PITCH : TILT_PITCH);
 /** The opening view turns a little west of north, as the prototype opens (models and labels read better). */
 const OPENING_BEARING = -12;
 /** Where the globe flies out to: Türkiye whole on the screen. */
@@ -295,7 +303,7 @@ export function HeritageMap({
           const m = new lib.Map({
             container: container.current,
             ...openingView(latest.current.cities),
-            pitch: TILT_PITCH,
+            pitch: tiltPitch(),
             bearing: OPENING_BEARING,
             minZoom: MIN_ZOOM,
             maxBounds: TURKEY_BOUNDS,
@@ -369,7 +377,21 @@ export function HeritageMap({
           m.on("load", () => {
             if (disposed) return;
             // Globe view (§11.45): far out the earth is round, near a city MapLibre turns flat by itself.
-            m.setProjection({ type: "globe" });
+            if (!phoneMap()) m.setProjection({ type: "globe" });
+            // A phone tilts into 3D where the models show and lies flat out of it, when the zoom crosses that line
+            // (a press on 2D / 3D in between is kept).
+            if (phoneMap()) {
+              const near = () => m.getZoom() >= (latest.current.mapSettings?.modelMinZoom ?? 16) - 0.25;
+              let wasNear = near();
+              m.on("zoomend", () => {
+                const now = near();
+                if (now === wasNear) return;
+                wasNear = now;
+                const tilted = m.getPitch() > 5;
+                if (now && !tilted) m.easeTo({ pitch: PHONE_TILT_PITCH, duration: 450 });
+                else if (!now && tilted) m.easeTo({ pitch: 0, bearing: 0, duration: 450 });
+              });
+            }
             m.setSky(sky(currentTheme()));
             mode();
             setLoaded(true);
@@ -442,7 +464,7 @@ export function HeritageMap({
     moved.current = true;
     m.flyTo({
       ...cityView(city),
-      pitch: m.getPitch() > 5 ? TILT_PITCH : 0,
+      pitch: m.getPitch() > 5 ? tiltPitch() : 0,
       bearing: 0,
       duration: 2600,
       essential: true,
@@ -488,7 +510,7 @@ export function HeritageMap({
             setNotice("");
             m.flyTo({
               ...cityView(city),
-              pitch: m.getPitch() > 5 ? TILT_PITCH : 0,
+              pitch: m.getPitch() > 5 ? tiltPitch() : 0,
               bearing: 0,
               duration: 2600,
               essential: true,
@@ -640,7 +662,7 @@ export function HeritageMap({
     else if (flight.to === "home")
       m.easeTo({
         ...openingView(latest.current.cities),
-        pitch: TILT_PITCH,
+        pitch: tiltPitch(),
         bearing: 0,
         padding: flat,
         duration: 900,
@@ -703,7 +725,7 @@ export function HeritageMap({
       <MapControls
         map={loaded ? map.current : null}
         ready={loaded}
-        tiltPitch={TILT_PITCH}
+        tiltPitch={tiltPitch()}
         onMove={() => {
           moved.current = true;
         }}

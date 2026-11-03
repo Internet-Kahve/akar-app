@@ -115,6 +115,9 @@ const sameLight = (a: SceneLight, b: SceneLight) =>
  * Models load only at `modelMinZoom` and above, at most `maxVisibleModels` of them, the ones nearest the
  * map centre among those in view; a model that leaves that set is disposed.
  */
+/** How many models out of view are kept ready (`parked`); a modest phone keeps fewer. */
+const PARKED_MAX = 8;
+
 export class MapModelLayer implements CustomLayerInterface {
   readonly id = LAYER_ID;
   readonly type = "custom" as const;
@@ -139,6 +142,12 @@ export class MapModelLayer implements CustomLayerInterface {
   >();
   /** `site id` → source that failed to load; not retried until the source changes. */
   private readonly failed = new Map<string, string>();
+  /**
+   * Models that left the view (panned away, zoomed out) kept ready, not drawn: coming back they show at once
+   * instead of being read, decoded and uploaded again (Muhammed, 3 Nov 2026: «gitti mi zor geliyor, geldi mi zor
+   * geliyor»). The oldest goes beyond `PARKED_MAX`.
+   */
+  private readonly parked = new Map<string, Entry>();
 
   private opacity = 1;
   private theme: Theme = currentTheme();
@@ -185,8 +194,9 @@ export class MapModelLayer implements CustomLayerInterface {
   onRemove(map: MapLibreMap) {
     map.off("moveend", this.reconcile);
     this.loading.clear();
-    for (const entry of this.loaded.values()) disposeObject(entry.scene);
+    for (const entry of [...this.loaded.values(), ...this.parked.values()]) disposeObject(entry.scene);
     this.loaded.clear();
+    this.parked.clear();
     this.decoder?.dispose();
     this.renderer?.dispose();
     this.offscreen.dispose();
@@ -388,8 +398,13 @@ export class MapModelLayer implements CustomLayerInterface {
     let changed = false;
     for (const [id, entry] of this.loaded) {
       const next = wanted.get(id);
-      if (
-        !next ||
+      if (!next) {
+        // Out of view: kept for a return (`parked`).
+        this.loaded.delete(id);
+        this.parked.delete(id);
+        this.parked.set(id, entry);
+        changed = true;
+      } else if (
         next.src !== entry.site.src ||
         !sameLight(next.light, entry.site.light)
       ) {
@@ -409,6 +424,28 @@ export class MapModelLayer implements CustomLayerInterface {
       const next = wanted.get(id);
       if (next?.src !== pending.src || !sameLight(next.light, pending.light))
         this.loading.delete(id);
+    }
+    // Back in view: a parked model of the same file and light shows again at once.
+    for (const [id, site] of wanted) {
+      const entry = this.parked.get(id);
+      if (!entry || this.loaded.has(id)) continue;
+      this.parked.delete(id);
+      if (entry.site.src !== site.src || !sameLight(entry.site.light, site.light)) {
+        disposeObject(entry.scene);
+        continue;
+      }
+      themeMapLights(entry.scene, this.theme);
+      this.applyOpacity(entry.model);
+      if (!samePose(entry.site.placement, site.placement)) this.place(entry, site);
+      else entry.site = site;
+      entry.shadowDirty = true;
+      this.loaded.set(id, entry);
+      changed = true;
+    }
+    while (this.parked.size > PARKED_MAX) {
+      const [oldest, entry] = this.parked.entries().next().value!;
+      disposeObject(entry.scene);
+      this.parked.delete(oldest);
     }
     for (const [id, site] of wanted)
       if (
