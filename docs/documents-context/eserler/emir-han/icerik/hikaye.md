@@ -23,15 +23,17 @@ Rota eseri: 8 cümle (~1 dk).
 - **Ölçü:** Hikâyede ölçü verilmedi. Envanter «yaklaşık 45 × 45 m» (s.108) der; 3D modelde Vakıf 1983'e göre 46 × 50 m kullanılıyor (`emir-han_notlar.md`).
 - **Vurgu adları** ilk olarak `emir-hani_v02.glb`'den alındı; dördü de (`Emir_Hani`, `Han_Avlu`, `Avlu_Revaklari`, `Sadirvan`) güncel `emir-hani_v05.glb`'de var (22 Ekim 2026).
 
-## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
+## Açı
 
-Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model döndürülerek kaydediliyor (`FRONTEND_BACKEND_NOTLARI.md` §4). Aşağısı öneridir. Azimut: 0° = kuzeyden bakış, saat yönünde. Kaydedilmeyen cümle bir öncekinin açısında kalır.
+Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün model kadrajda, küçüldükçe yakın). 4 Kasım 2026: fotoğraflara ve tanıtım sayfasına göre yakın ve alçak açılar.
 
-| # | Hedef | Azimut | Eğim | Uzaklık | Neden |
-|---|---|---|---|---|---|
-| 1 | Merkez | 45° (kuzeydoğu) | 40° | bütün yapı | Kapak fotoğrafıyla aynı yön: kuzeydoğudan bakış, Ulucami hanın arkasında (güneybatıda) |
-| 2–3 | Han_Avlu | 0° | 60° | avlu | Avlunun içi |
-| 4 | Merkez | 0° (kuzey) | 20° | giriş | Kantar peykeleri girişteydi |
-| 5–6 | Avlu_Revaklari | 90° (doğu) | 25° | yakın | İki kat revak |
-| 7 | Merkez | 180° | 35° | bütün yapı | Güney: Ulucami yönü |
-| 8 | Sadirvan | 0° | 45° | avlu | Şadırvan |
+| # | Hedef | Azimut | Eğim | Uzaklık |
+|---|---|---|---|---|
+| 1 | Emir_Hani | 45° | 30° | 0.5 |
+| 2 | Han_Avlu | 7° | 55° | 0.3 |
+| 3 | Han_Avlu | 60° | 45° | 0.25 |
+| 4 | Sadirvan | 7° | 50° | 0.2 |
+| 5 | Avlu_Revaklari | 90° | 40° | 0.2 |
+| 6 | Avlu_Revaklari | 200° | 38° | 0.2 |
+| 7 | Merkez | 187° | 30° | 0.55 |
+| 8 | Sadirvan | 120° | 52° | 0.16 |

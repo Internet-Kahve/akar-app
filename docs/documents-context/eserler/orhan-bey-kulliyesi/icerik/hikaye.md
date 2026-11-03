@@ -23,20 +23,20 @@ Rota eseri: 8 cümle (~1 dk). 30 Ekim 2026 (model v11, iç mekân): 7. cümlenin
 - **Cümle 8:** Şadırvan v06'da modele eklendi (`Sadirvan`); vurgu bu parçaya bağlandı. Fotoğraf modelin de gösterdiği dış görünüş olduğu için kart «hayır» yapıldı (20 Ekim 2026).
 - **Vurgu adları** `orhan-bey-camii_v06.glb`'den (v07'de aynı, 22 Ekim 2026): `Kubbe_Ana`, `Cami_SonCemaat`, `Revak_Kemerler`, `Cami_Mihrap`, `Sadirvan`. İlk dördü v05'teki adlarla aynı.
 
-## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
+## Açı
 
-Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model döndürülerek kaydediliyor (`FRONTEND_BACKEND_NOTLARI.md` §4). Aşağısı öneridir. Azimut: 0° = kuzeyden bakış, saat yönünde. Kaydedilmeyen cümle bir öncekinin açısında kalır.
+Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün model kadrajda, küçüldükçe yakın). 4 Kasım 2026: fotoğraflara ve tanıtım sayfasına göre yakın ve alçak açılar.
 
-| # | Hedef | Azimut | Eğim | Uzaklık | Neden |
-|---|---|---|---|---|---|
-| 1 | Merkez | 0° (kuzey) | 30° | bütün yapı | Son cemaat cephesi önde (kapak fotoğrafı da kuzeyden) |
-| 2–3 | Merkez | 0° | 75° | bütün yapı | Kubbe dizisi tepeden |
-| 4 | — | (3'te kalır) |  |  | Kart hamamı gösterir |
-| 5 | Cami_SonCemaat | 0° | 10° | yakın | Cümle kapısı |
-| 6 | Cami_SonCemaat | 300° (kuzeybatı) | 15° | yakın | Yan cephedeki ikiz kemer |
-| 7 | Ic_Mihrap | 0° (kuzey) | 50° | orta | İçini göster: örtü kalkar; kuzeyden kıble duvarına bakış, alçı mihrap önde (Ulucami 9 ile aynı kural). 30 Ekim 2026; eski: Cami_Mihrap, 180°, 35° |
-| 8 | Sadirvan | 0° | 30° | şadırvan + son cemaat cephesi | Avlu tarafı; kapak fotoğrafıyla aynı yön |
-
+| # | Hedef | Azimut | Eğim | Uzaklık |
+|---|---|---|---|---|
+| 1 | Merkez | 13° | 26° | 0.5 |
+| 2 | Kubbe_Ana | 40° | 50° | 0.3 |
+| 3 | Merkez | 300° | 30° | 0.55 |
+| 4 | Merkez | 120° | 30° | 0.6 |
+| 5 | Cami_SonCemaat | 50° | 12° | 0.17 |
+| 6 | Cami_SonCemaat | 60° | 12° | 0.16 |
+| 7 | Ic_Mihrap | 13° | 45° | 0.2 |
+| 8 | Sadirvan | 40° | 20° | 0.1 |
 ## Akar akışı
 
 Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.

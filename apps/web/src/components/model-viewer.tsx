@@ -43,6 +43,8 @@ const LIFT_MS = 700;
 const LIFT_GAP = 0.35;
 /** "İçini göster" raises a low camera to this elevation so the inside is visible. */
 const INSIDE_ELEVATION = 58;
+/** A pose closer than this (of the distance where the whole model fits) has the trees stand aside. */
+const CLOSE_POSE = 0.4;
 /**
  * Part glow: hover (mouse) and the open card's parts. Gold by day; blue by night, where the night files' lit windows
  * and minarets are already gold and a gold glow did not stand out (Muhammed, 2 Nov 2026).
@@ -440,9 +442,11 @@ export default function ModelViewer({
       scene.addEventListener("childremoved", staleShadows);
       // Closed cover: the interior is not drawn (`lib/interior`); set once the model is here.
       let syncInterior = () => {};
+      let syncTrees = () => {};
       const render = () => {
         if (disposed || compiling) return;
         syncInterior();
+        syncTrees();
         if (shadowsStale) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
@@ -646,6 +650,7 @@ export default function ModelViewer({
           setStageReady((n) => n + 1);
           // The part the camera last went to: a pose read back keeps it, as the camera turns around it.
           let aimedTarget: string | null = null;
+          let closePose = false;
           const fitDistance = () => {
             const { width, height } = element.getBoundingClientRect();
             return sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
@@ -664,9 +669,12 @@ export default function ModelViewer({
           if (poseReader) poseReader.current = readPose.current;
           aim.current = (next) => {
             aimedTarget = next.target;
+            closePose = next.distance < CLOSE_POSE;
             // Distance at which the bounding sphere fits the narrower field of view of the free part.
             const fit = fitDistance();
             controls!.maxDistance = Math.max(radius * 4, fit * 1.6);
+            // A close pose comes as close as it says, as the story needs to look inside (the hand's limit goes with it).
+            controls!.minDistance = Math.min(radius * 0.35, fit * next.distance * 0.8);
             const part = next.target ? root.getObjectByName(next.target) : undefined;
             const goal = part
               ? new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3())
@@ -891,6 +899,7 @@ export default function ModelViewer({
             breathFrame = requestAnimationFrame(step);
           };
           let coverOpen: (() => boolean) | null = null;
+          let coverWanted = () => false;
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>
             names.flatMap((n) => root.getObjectByName(n) ?? []),
@@ -923,6 +932,7 @@ export default function ModelViewer({
             const progress = groups.map(() => 0);
             let goal = 0;
             coverOpen = () => goal === 1 || progress.some((t) => t > 0);
+            coverWanted = () => goal === 1;
             let liftFrame = 0;
             let last = 0;
             cancelLift = () => cancelAnimationFrame(liftFrame);
@@ -989,13 +999,24 @@ export default function ModelViewer({
                   target: null,
                   azimuthDeg: THREE.MathUtils.radToDeg(Math.atan2(offset.x, -offset.z)),
                   elevationDeg: INSIDE_ELEVATION,
-                  distance: 0.95,
+                  distance: 0.6,
                 });
             };
             const open = interiorRef.current ?? false;
             if (open) lift.current(true, false);
             setInside(open);
           }
+          // Open, or with the camera sent close, the trees stand aside: it must not meet one on the way.
+          const trees: THREE.Object3D[] = [];
+          root.traverse((node) => {
+            if (/^(Cevre|Avlu)_Agac/.test(node.name)) trees.push(node);
+          });
+          syncTrees = () => {
+            const show = !closePose && !coverWanted();
+            if (!trees.length || trees[0]!.visible === show) return;
+            for (const tree of trees) tree.visible = show;
+            staleShadows();
+          };
           // Only where the cover can open: otherwise nothing would ever show the interior again.
           const hiddenNames = JSON.parse(hiddenKey) as string[];
           const hiddenNodes = coverOpen ? hiddenNames.flatMap((n) => root.getObjectByName(n) ?? []) : [];

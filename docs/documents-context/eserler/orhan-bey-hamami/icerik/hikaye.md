@@ -26,21 +26,20 @@ Rota eseri: 8 cümle (~1 dk).
 - **Giriş yönü:** Ayrıntı `orhan-bey-hamami_notlar.md` §3.4. Güneydeki alınlıklı blok 1958 sonrası açılan girişlerden (TDV); envanterin «kuzeydeki giriş özgündür» tarifi ayrı, düz cepheli kuzey kapısına ait.
 - **Vurgu adları** `orhan-bey-hamami_v04.glb`'den (v05'te aynı, 22 Ekim 2026): `Hamam_Giris`, `Hamam_Sogukluk_Erkek`, `Hamam_Sogukluk_Kadin`, `Kubbe_Sicaklik`. Adlar v02 ile aynı, ama `Hamam_Giris` v02'de kuzeydeydi, v03'ten beri güneydeki alınlıklı blok.
 
-## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
+## Açı
 
-Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model döndürülerek kaydediliyor (`FRONTEND_BACKEND_NOTLARI.md` §4). Aşağısı öneridir. Azimut: 0° = kuzeyden bakış, saat yönünde. Kaydedilmeyen cümle bir öncekinin açısında kalır.
+Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün model kadrajda, küçüldükçe yakın). 4 Kasım 2026: fotoğraflara ve tanıtım sayfasına göre yakın ve alçak açılar.
 
-| # | Hedef | Azimut | Eğim | Uzaklık | Neden |
-|---|---|---|---|---|---|
-| 1 | Hamam_Giris | 180° (güney) | 15° | giriş + kubbe | Alınlıklı güney giriş (kapak fotoğrafıyla aynı) |
-| 2 | Merkez | 180° | 60° | bütün yapı | Kubbeler |
-| 3 | Merkez | 0° | 80° | bütün yapı | İki bölüm tepeden yan yana |
-| 4 | Merkez | 180° | 25° | bütün yapı | Çarşı girişleri tarafı |
-| 5 | — | (4'te kalır) |  |  | Kart iç mekânı gösterir |
-| 6 | Merkez | 0° (kuzey) | 35° | bütün yapı | Özgün girişin bulunduğu kuzey cephe |
-| 7 | Hamam_Sicaklik | 180° (güney) | 45° | orta | Fenerli kubbeler |
-| 8 | Merkez | 180° | 30° | bütün yapı | Kapanış, 1'e dönüş |
-
+| # | Hedef | Azimut | Eğim | Uzaklık |
+|---|---|---|---|---|
+| 1 | Hamam_Giris | 186° | 10° | 0.14 |
+| 2 | Merkez | 140° | 45° | 0.45 |
+| 3 | Merkez | 6° | 75° | 0.5 |
+| 4 | Hamam_Giris | 220° | 14° | 0.2 |
+| 5 | Hamam_Sicaklik | 186° | 40° | 0.3 |
+| 6 | Merkez | 6° | 28° | 0.5 |
+| 7 | Hamam_Sicaklik | 120° | 38° | 0.22 |
+| 8 | Hamam_Giris | 150° | 18° | 0.3 |
 ## Akar akışı
 
 Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.

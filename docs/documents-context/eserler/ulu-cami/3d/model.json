@@ -40,7 +40,7 @@
       "foto": "01",
       "azimut": 354,
       "egim": 45,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "not": "havadan, kuzey cephe ve iki minare"
     },
     {
@@ -48,22 +48,22 @@
       "hedef": "Tac_Kapi",
       "azimut": 354,
       "egim": 10,
-      "uzaklik": "yakın",
+      "uzaklik": "0.18",
       "not": "kuzeydeki taç kapı"
     },
     {
       "foto": "04",
       "azimut": 354,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden yirmi kubbe"
     },
     {
       "foto": "03",
       "hedef": "Ic_Sadirvan_Havuz",
       "azimut": 354,
-      "egim": 35,
-      "uzaklik": "orta",
+      "egim": 50,
+      "uzaklik": "0.32",
       "ic": true,
       "not": "içeride havuz ve selsebil"
     }

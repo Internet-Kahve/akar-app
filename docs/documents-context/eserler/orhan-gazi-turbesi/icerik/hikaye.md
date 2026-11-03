@@ -25,3 +25,18 @@ Rota eseri: 8 cümle (~1 dk). Her cümle tek bilgi, en fazla ~20 kelime.
 - **İç mekân:** 6–8. cümleler türbenin içini anlatır; 3D'de «İçini göster» açılır.
 - **Açılar** panelde, Hikâye adımında 3D önizlemeden kaydedilir (cümleyi seç → modeli döndür → «Açıyı ve vurguyu kaydet»).
 - **Rozet:** `gorevler.json`'da hikâye rozeti yok (hikâye yoktu). İstenirse `{"hikaye_bitti": true}` koşullu rozet eklenebilir (Talha).
+
+## Açı
+
+Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün model kadrajda, küçüldükçe yakın). 4 Kasım 2026: fotoğraflara ve tanıtım sayfasına göre yakın ve alçak açılar.
+
+| # | Hedef | Azimut | Eğim | Uzaklık |
+|---|---|---|---|---|
+| 1 | Merkez | 230° | 14° | 0.5 |
+| 2 | Merkez | 140° | 40° | 0.6 |
+| 3 | Merkez | 250° | 20° | 0.5 |
+| 4 | Merkez | 120° | 38° | 0.55 |
+| 5 | Kubbe | 200° | 34° | 0.3 |
+| 6 | Orta_Kubbe_Sutunlar | 182° | 60° | 0.2 |
+| 7 | Orhan_Gazi_Sandukasi | 182° | 52° | 0.16 |
+| 8 | Sandukalar | 140° | 55° | 0.22 |

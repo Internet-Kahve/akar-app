@@ -66,11 +66,13 @@ def book_license(inventory):
 DISTANCE = [('yakın', 0.42), ('orta', 0.62), ('çatı', 0.85)]
 
 def camera(angle):
-    words = angle['uzaklik'] or ''
+    words = str(angle['uzaklik'] or '')
+    # A number is the fraction itself (1 = the whole model fits), for angles closer than the words go.
+    number = re.search(r'\d+[.,]\d+', words)
     target = angle['hedef']
     return dict(target=None if target in (None, 'Merkez') else target, azimuthDeg=angle['azimut'],
                 elevationDeg=max(5, min(85, angle['egim'] if angle['egim'] is not None else 30)),
-                distance=next((f for w, f in DISTANCE if w in words), 0.95))
+                distance=float(number.group().replace(',', '.')) if number else next((f for w, f in DISTANCE if w in words), 0.95))
 
 for entry in editorial.eserleri_bul():
     folder = entry['id']

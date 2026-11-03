@@ -39,7 +39,7 @@
       "foto": "01",
       "azimut": 13,
       "egim": 45,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "not": "havadan; önde şadırvan ve son cemaat yeri"
     },
     {
@@ -47,22 +47,22 @@
       "hedef": "Cami_SonCemaat",
       "azimut": 13,
       "egim": 10,
-      "uzaklik": "yakın",
+      "uzaklik": "0.18",
       "not": "son cemaat yeri ve ikiz kemer"
     },
     {
       "foto": "04",
       "azimut": 13,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden kubbeler"
     },
     {
       "foto": "02",
       "hedef": "Ic_Mihrap",
       "azimut": 13,
-      "egim": 25,
-      "uzaklik": "orta",
+      "egim": 50,
+      "uzaklik": "0.32",
       "ic": true,
       "not": "içeride mihrap ve minber"
     }

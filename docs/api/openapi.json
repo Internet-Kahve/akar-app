@@ -25659,7 +25659,7 @@
                           },
                           "distance": {
                             "type": "number",
-                            "minimum": 0.1,
+                            "minimum": 0.05,
                             "maximum": 4
                           }
                         },
@@ -33548,7 +33548,7 @@
                             },
                             "distance": {
                               "type": "number",
-                              "minimum": 0.1,
+                              "minimum": 0.05,
                               "maximum": 4
                             },
                             "interior": {
@@ -38899,7 +38899,7 @@
                                 },
                                 "distance": {
                                   "type": "number",
-                                  "minimum": 0.1,
+                                  "minimum": 0.05,
                                   "maximum": 4
                                 }
                               },
@@ -44748,7 +44748,7 @@
                                 },
                                 "distance": {
                                   "type": "number",
-                                  "minimum": 0.1,
+                                  "minimum": 0.05,
                                   "maximum": 4
                                 }
                               },

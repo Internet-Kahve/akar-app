@@ -37,7 +37,7 @@
       "foto": "01",
       "azimut": 34,
       "egim": 50,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "tahmini": true,
       "not": "havadan; çekim yönü fotoğraftan kesin değil"
     },
@@ -45,7 +45,7 @@
       "foto": "03",
       "azimut": 4,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden on dört kubbe"
     },
     {
@@ -53,7 +53,7 @@
       "hedef": "Kubbeler",
       "azimut": 200,
       "egim": 35,
-      "uzaklik": "orta",
+      "uzaklik": "0.32",
       "tahmini": true,
       "not": "kubbeler; yön tahmini"
     },
@@ -61,8 +61,8 @@
       "foto": "02",
       "hedef": "Ic_Sokak",
       "azimut": 4,
-      "egim": 25,
-      "uzaklik": "orta",
+      "egim": 50,
+      "uzaklik": "0.32",
       "ic": true,
       "not": "iç sokak"
     }

@@ -35,22 +35,22 @@
       "foto": "01",
       "azimut": 182,
       "egim": 12,
-      "uzaklik": "orta",
+      "uzaklik": "0.32",
       "not": "girişin olduğu güney cephe, üç kemerli pencere"
     },
     {
       "foto": "04",
       "azimut": 182,
       "egim": 80,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "not": "Hisariçi, tepeden"
     },
     {
       "foto": "02",
       "hedef": "Orhan_Gazi_Sandukasi",
       "azimut": 182,
-      "egim": 35,
-      "uzaklik": "orta",
+      "egim": 50,
+      "uzaklik": "0.32",
       "ic": true,
       "not": "içeride sandukalar"
     }

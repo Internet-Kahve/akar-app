@@ -16,7 +16,7 @@
       "foto": "01",
       "azimut": 97,
       "egim": 45,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "tahmini": true,
       "not": "havadan, arkada Ulucami: doğudan sayıldı"
     },
@@ -25,7 +25,7 @@
       "hedef": "Han_Avlu",
       "azimut": 7,
       "egim": 50,
-      "uzaklik": "orta",
+      "uzaklik": "0.32",
       "not": "ağaçlı avlu"
     },
     {
@@ -33,7 +33,7 @@
       "hedef": "Sadirvan",
       "azimut": 187,
       "egim": 25,
-      "uzaklik": "yakın",
+      "uzaklik": "0.18",
       "tahmini": true,
       "not": "avlu şadırvanı; yön tahmini"
     },
@@ -42,7 +42,7 @@
       "hedef": "Avlu_Revaklari",
       "azimut": 97,
       "egim": 18,
-      "uzaklik": "yakın",
+      "uzaklik": "0.18",
       "tahmini": true,
       "not": "tonozlu revak; yön tahmini"
     }

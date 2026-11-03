@@ -16,14 +16,14 @@
       "hedef": "Hamam_Giris",
       "azimut": 186,
       "egim": 12,
-      "uzaklik": "orta",
+      "uzaklik": "0.32",
       "not": "güneydeki alınlıklı giriş"
     },
     {
       "foto": "04",
       "azimut": 186,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden iki büyük kubbe"
     },
     {
@@ -31,7 +31,7 @@
       "hedef": "Hamam_Sicaklik",
       "azimut": 186,
       "egim": 40,
-      "uzaklik": "orta",
+      "uzaklik": "0.32",
       "tahmini": true,
       "not": "kubbeler ve fenerler; yön tahmini"
     }

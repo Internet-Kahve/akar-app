@@ -29,7 +29,7 @@ export const CameraPoseInput = z
     target: text(200).nullable().default(null),
     azimuthDeg: z.number().min(-360).max(360),
     elevationDeg: z.number().min(-90).max(90),
-    distance: z.number().min(0.1).max(4),
+    distance: z.number().min(0.05).max(4),
   })
   .describe("Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)");
 export type CameraPoseInput = z.infer<typeof CameraPoseInput>;

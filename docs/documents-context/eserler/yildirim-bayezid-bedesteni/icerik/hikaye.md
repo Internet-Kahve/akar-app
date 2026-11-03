@@ -29,24 +29,23 @@ Hero eser: 11 cümle (~1 dk). Her cümle tek bilgi, en fazla ~20 kelime. Bedeste
 - **«İç mekân (3D)» sütunu ve iç parçalar (29 Ekim 2026, model v10):** iç mekân artık modelde (`3d/README.md` v10). Metni açıkça içeriden söz eden iki cümle «evet» oldu ve vurgusu iç parçaya bağlandı: 6 (`Kubbeler` → `Payeler`, «altı ayak»), 7 (boş → `Ic_Dukkanlar`, «içeride … otuz iki mahzen»). «evet» olan cümlede uygulama örtüyü kaldırır («İçini göster»; gruplar `../3d/model.json`). Yukarıdaki cümle 7–8 notundaki «iç mekân modelde yok» bilgisi v05–v09 içindir.
 - **Vurgu adları** `bedesten_v05.glb`'den (v06'da aynı, 22 Ekim 2026): `Kubbeler`, `Govde`, `Dukkanlar`. v03'teki `Ic_Bedesten_Sokagi` v04'ten beri yok (cümle 7'den çıkarıldı). Cümle 10'da `Kapilar` (dört giriş kapısı) yerine kuyumcu birimlerini gösteren `Dukkanlar` kullanıldı.
 
-## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
+## Açı
 
-Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model döndürülerek kaydediliyor (`FRONTEND_BACKEND_NOTLARI.md` §4). Aşağısı öneridir. Azimut: 0° = kuzeyden bakış, saat yönünde. Kaydedilmeyen cümle bir öncekinin açısında kalır.
+Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün model kadrajda, küçüldükçe yakın). 4 Kasım 2026: fotoğraflara ve tanıtım sayfasına göre yakın ve alçak açılar.
 
-| # | Hedef | Azimut | Eğim | Uzaklık | Neden |
-|---|---|---|---|---|---|
-| 1 | Merkez | 0° (kuzey) | 35° | bütün yapı | Uzun kuzey cephe ve kubbe sırası; kapak fotoğrafı da kuzeyden |
-| 2 | — | (1'de kalır) |  |  |  |
-| 3 | Kubbeler | 0° | 80° | bütün çatı | 14 kubbe sayılabilsin (tepeden fotoğrafla aynı) |
-| 4 | Merkez | 0° (kuzey) | 25° | bütün yapı | Kuzeyden güneye, Ulucami yönüne bakış (Ulucami ~140 m güneyde, OSM); kart Ulucami'yi gösterir |
-| 5 | Merkez | (4'te kalır) |  |  | Kart çarşı dokusunu gösterir |
-| 6 | Kubbeler | 0° | 80° | bütün çatı |  |
-| 7 | Merkez | 90° (doğu) | 45° | yakın | Doğu–batı eksenine uzunlamasına bakış (mahzenler bu yönde) |
-| 8–10 | — | (7'de kalır) |  |  | İç mekân kartları |
-| 11 | Merkez | 315° (kuzeybatı) | 35° | bütün yapı | Güneydoğuya, Koza Han yönüne bakış (Koza Han ~150 m güneydoğuda, OSM); kart Koza Han'ı gösterir |
-
-Yön kaynağı: `veri/bursa/osm_secilen.csv` (Bedesten 40.18517, 29.06205; Ulucami 40.18393, 29.06176). Eski tablodaki «Ulucami batıda» tahmini yanlıştı.
-
+| # | Hedef | Azimut | Eğim | Uzaklık |
+|---|---|---|---|---|
+| 1 | Merkez | 4° | 30° | 0.55 |
+| 2 | Merkez | 40° | 22° | 0.55 |
+| 3 | Kubbeler | 4° | 62° | 0.42 |
+| 4 | Govde | 320° | 20° | 0.55 |
+| 5 | Merkez | 120° | 25° | 0.62 |
+| 6 | Payeler | 4° | 45° | 0.3 |
+| 7 | Ic_Sokak | 90° | 30° | 0.2 |
+| 8 | Dukkanlar | 4° | 14° | 0.25 |
+| 9 | Kubbeler | 60° | 35° | 0.3 |
+| 10 | Dukkanlar | 300° | 14° | 0.22 |
+| 11 | Merkez | 315° | 35° | 0.8 |
 ## Akar akışı
 
 Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.
