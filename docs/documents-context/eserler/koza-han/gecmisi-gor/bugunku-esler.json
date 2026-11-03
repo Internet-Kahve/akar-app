@@ -1,0 +1,50 @@
+{
+  "_aciklama": "Eski fotoğrafların bugünkü eşleri. temsili: true olanlar yapay zekâ ile üretilmiş canlandırmadır, fotoğraf değildir.",
+  "esler": [
+    {
+      "fotoAtlasId": 49845,
+      "gorsel": "bugun/es-49845.webp",
+      "kucuk": "bugun/es-49845_k.webp",
+      "genislik": 1600,
+      "yukseklik": 1235,
+      "aciBenzerligi": "yakin",
+      "temsili": true,
+      "guven": "dusuk",
+      "aciNotu": "Yapay zekâ ile üretilmiş canlandırma; eski fotoğrafla birebir örtüşmez, güncel fotoğraflara göre çizildi.",
+      "kaynakSatiri": "Temsili canlandırma, yapay zekâ ile üretildi; gerçek fotoğraf değildir",
+      "lisans": "AKAR ekibi üretimi. Eski fotoğraf ve güncel fotoğraflar referans alındı.",
+      "ekleyen": "AKAR ekibi",
+      "eklendi": "2026-11-04"
+    },
+    {
+      "fotoAtlasId": 46272,
+      "gorsel": "bugun/es-46272.webp",
+      "kucuk": "bugun/es-46272_k.webp",
+      "genislik": 976,
+      "yukseklik": 1500,
+      "aciBenzerligi": "yakin",
+      "temsili": true,
+      "guven": "dusuk",
+      "aciNotu": "Yapay zekâ ile üretilmiş canlandırma; eski fotoğrafla birebir örtüşmez, güncel fotoğraflara göre çizildi.",
+      "kaynakSatiri": "Temsili canlandırma, yapay zekâ ile üretildi; gerçek fotoğraf değildir",
+      "lisans": "AKAR ekibi üretimi. Eski fotoğraf ve güncel fotoğraflar referans alındı.",
+      "ekleyen": "AKAR ekibi",
+      "eklendi": "2026-11-04"
+    },
+    {
+      "fotoAtlasId": 47676,
+      "gorsel": "bugun/es-47676.webp",
+      "kucuk": "bugun/es-47676_k.webp",
+      "genislik": 922,
+      "yukseklik": 1447,
+      "aciBenzerligi": "yakin",
+      "temsili": true,
+      "guven": "dusuk",
+      "aciNotu": "Yapay zekâ ile üretilmiş canlandırma; eski fotoğrafla birebir örtüşmez, güncel fotoğraflara göre çizildi.",
+      "kaynakSatiri": "Temsili canlandırma, yapay zekâ ile üretildi; gerçek fotoğraf değildir",
+      "lisans": "AKAR ekibi üretimi. Eski fotoğraf ve güncel fotoğraflar referans alındı.",
+      "ekleyen": "AKAR ekibi",
+      "eklendi": "2026-11-04"
+    }
+  ]
+}

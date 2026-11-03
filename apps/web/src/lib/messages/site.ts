@@ -203,6 +203,8 @@ export const tr = {
 
   // History
   "site.archiveName": "AKAR arşivi",
+  "site.imaginedName": "Temsili görsel",
+  "site.presentImagined": "Bugünkü görünüm",
   "site.compareSlider": "Eski ve bugünkü fotoğrafı karşılaştır",
   "site.oldPercent": "Eski %{pct}",
   "site.today": "Bugün",
@@ -617,6 +619,8 @@ export const en = {
 
   // History
   "site.archiveName": "AKAR archive",
+  "site.imaginedName": "Representative image",
+  "site.presentImagined": "Today\'s view",
   "site.compareSlider": "Compare the old and present-day photo",
   "site.oldPercent": "Old {pct}%",
   "site.today": "Today",

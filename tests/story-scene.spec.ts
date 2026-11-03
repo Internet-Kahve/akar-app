@@ -69,7 +69,7 @@ async function openStory(page: Page, modelServed?: Promise<void>) {
       camera: { ...camera, target: "Roof" },
     }),
     sentence(3, { showCard: true }),
-    sentence(4, { highlights: ["Roof"] }),
+    sentence(4, { highlights: ["Roof"], photoId: undefined }),
     // The last sentence, about the whole building: the story ends turning the model, as it began.
     sentence(5, {}),
   ];

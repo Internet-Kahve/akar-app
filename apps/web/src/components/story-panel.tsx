@@ -165,6 +165,7 @@ export function StoryPanel({
   useEffect(() => {
     if (!playing || hold) return;
     let stopped = false;
+    let retry: (() => void) | null = null;
     // No recording for this voice, or one that fails: the browser voice reads the sentence, never silence.
     const speak = () => {
       if (!("speechSynthesis" in window)) {
@@ -196,12 +197,19 @@ export function StoryPanel({
         if (!stopped) speak();
       };
       player.play().catch((e: unknown) => {
-        if (!stopped && !(e instanceof DOMException && e.name === "AbortError"))
-          speak();
+        if (stopped || (e instanceof DOMException && e.name === "AbortError")) return;
+        // The browser wants a touch before it plays sound: the recording waits for the next touch, never the machine voice.
+        if (e instanceof DOMException && e.name === "NotAllowedError") {
+          retry = () => {
+            if (!stopped) void player.play().catch(() => {});
+          };
+          window.addEventListener("pointerdown", retry, { once: true, capture: true });
+        } else speak();
       });
     } else speak();
     return () => {
       stopped = true;
+      if (retry) window.removeEventListener("pointerdown", retry, { capture: true });
       if (player) {
         player.onended = null;
         player.onerror = null;

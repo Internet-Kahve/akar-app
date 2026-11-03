@@ -19,7 +19,7 @@ export interface HistoryPair {
  */
 export function pairOf(site: Pick<HeritageSite, "sampleTraces">, image: HistoryImage, lang: Lang): HistoryPair | null {
   if (image.presentPhoto) {
-    return { photo: image.presentPhoto, by: translate(lang, "site.archiveName"), example: false, angleMatch: image.presentAngleMatch };
+    return { photo: image.presentPhoto, by: translate(lang, image.presentPhoto.trust === "representative" ? "site.imaginedName" : "site.archiveName"), example: false, angleMatch: image.presentAngleMatch };
   }
   let newest: SampleTrace | undefined;
   for (const trace of site.sampleTraces ?? []) {

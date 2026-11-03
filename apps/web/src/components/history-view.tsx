@@ -383,7 +383,7 @@ export function HistoryView({
       </div>
       <div className="gg-kaynak" lang={content}>
         {rest} · {shortLicense(image.photo.license)}
-        {pair && ` · ${t("site.presentPhoto")}: ${presentCredit(pair.photo.description)}`}
+        {pair && ` · ${t(pair.photo.trust === "representative" && !pair.example ? "site.presentImagined" : "site.presentPhoto")}: ${presentCredit(pair.photo.description)}`}
       </div>
     </div>
   );

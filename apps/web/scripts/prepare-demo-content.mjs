@@ -81,7 +81,7 @@ const sites = manifest.sites.map((s) => {
     historyImages: s.historyImages.map((h) => ({
       id: h.id, photo: photo({ ...h, title: h.caption, description: h.credit }), caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust,
       ...(h.viewpoint && { viewpoint: h.viewpoint }),
-      ...(h.present && { presentPhoto: credited(h.present, "verified"), presentAngleMatch: h.present.angleMatch }),
+      ...(h.present && { presentPhoto: credited(h.present, h.present.imagined ? "representative" : "verified"), presentAngleMatch: h.present.angleMatch }),
     })),
     ...(s.sampleTraces.length && {
       sampleTraces: s.sampleTraces.map((t) => ({ id: t.id, author: t.author, text: t.text, photo: credited(t, "representative"), addedOn: t.addedOn,
@@ -108,6 +108,42 @@ const sites = manifest.sites.map((s) => {
     ...(model && { model }),
   };
 });
+// The recorded voices live with the live catalog, not in the packages. They are matched by id and by the very wording, so
+// a sentence changed since it was recorded is read by the browser. Offline, or with another catalog, the demo has none.
+try {
+  const response = await fetch(`${process.env.AKAR_VOICES_API ?? "https://akar-api.vercel.app"}/v1/site-details`, { signal: AbortSignal.timeout(30000) });
+  const { items } = await response.json();
+  let matched = 0;
+  const voices = (from, media) =>
+    (from.narrations ?? []).flatMap((n) => {
+      const url = media.get(n.mediaId);
+      return url ? [{ variant: n.variant, lang: n.lang, voice: n.voice, url }] : [];
+    });
+  const attach = (ours, theirs, media, same) => {
+    const byId = new Map((theirs ?? []).map((x) => [x.id, x]));
+    for (const item of ours ?? []) {
+      const found = byId.get(item.id);
+      if (!found || !same(item, found)) continue;
+      const narrations = voices(found, media);
+      if (narrations.length) {
+        item.narrations = narrations;
+        matched++;
+      }
+    }
+  };
+  for (const live of items) {
+    const site = sites.find((s) => s.id === live.id);
+    if (!site) continue;
+    const media = new Map((live.media ?? []).map((m) => [m.id, m.url]));
+    attach(site.stories, live.stories, media, (a, b) => a.text === b.text);
+    attach(site.sections, live.sections, media, (a, b) => a.body === b.body);
+    attach(site.chapters, live.chapters, media, (a, b) => a.title === b.title);
+    attach(site.partCards, live.partCards, media, (a, b) => a.body === b.body);
+  }
+  console.log(`recorded voices: ${matched} texts`);
+} catch (error) {
+  console.warn(`recorded voices left out: ${error.message}`);
+}
 const routeDirectory = join(content, "veri/rota");
 const routes = existsSync(routeDirectory)
   ? editorialRoutes(readdirSync(routeDirectory).filter((file) => file.endsWith(".json")).sort().map((file) => JSON.parse(readFileSync(join(routeDirectory, file), "utf8"))), manifest)
