@@ -99,6 +99,7 @@ import { applyTheme, useTheme } from "../lib/theme";
 import { LangProvider, Localized } from "./i18n";
 import { VoiceProvider } from "./voice";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
+import { useNativeBack, useNativeRuntime } from "../lib/use-native";
 type View =
   | "map"
   | "sites"
@@ -364,6 +365,19 @@ export function AkarApp() {
     if (id) p.set("site", id);
     window.location.hash = p.toString();
   }, []);
+  useNativeRuntime(() => { if (ready) void refreshCatalog(); });
+  useNativeBack((canGoBack) => {
+    if (signIn !== null) setSignIn(null);
+    else if (overlay) setOverlay(null);
+    else if (pick) setPick(null);
+    else if (puzzle) setPuzzle(null);
+    else if (peekId) setPeekId(undefined);
+    else if (view !== "map") {
+      if (canGoBack) window.history.back();
+      else go("map");
+    } else return false;
+    return true;
+  });
   /** Runs a command; resolves to the error message, or `null` on success. */
   const run = useCallback(async (command: Command) => {
     try {

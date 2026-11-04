@@ -27,6 +27,8 @@ const Env = z.object({
     .string()
     .default("")
     .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean)),
+  // Add native clients without replacing an existing, possibly write-only CORS allowlist.
+  MOBILE_CLIENTS_ENABLED: z.enum(["0", "1"]).default("0"),
   /**
    * Reverse proxies in front of the API (hop count). 0: none, the socket address is the client.
    * Never trust more hops than exist: the client writes the left-most X-Forwarded-For entry.
@@ -120,7 +122,9 @@ export function productionIssues(config: Config): string[] {
   if (config.STORAGE_DRIVER !== "s3") issues.push("STORAGE_DRIVER must be s3 (the container disk is not kept across deploys)");
   if (config.CORS_ORIGINS.length === 0) issues.push("CORS_ORIGINS is required (the web app's origin)");
   for (const origin of config.CORS_ORIGINS) {
-    if (!URL.canParse(origin) || new URL(origin).origin !== origin) {
+    // WKWebView sends this literal Origin; URL.origin is "null" for custom schemes.
+    const capacitorOrigin = origin === "capacitor://localhost";
+    if (!capacitorOrigin && (!URL.canParse(origin) || new URL(origin).origin !== origin)) {
       issues.push(`CORS_ORIGINS entry "${origin}" must be an exact origin such as https://akar.vercel.app (no path, no trailing slash, no *)`);
     }
   }
@@ -131,6 +135,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const parsed = Env.safeParse(env);
   if (!parsed.success) {
     throw new Error(`Invalid environment:\n${z.prettifyError(parsed.error)}`);
+  }
+  if (parsed.data.MOBILE_CLIENTS_ENABLED === "1") {
+    parsed.data.CORS_ORIGINS = [...new Set([
+      ...parsed.data.CORS_ORIGINS,
+      "capacitor://localhost",
+      "https://localhost",
+    ])];
   }
   const issues = parsed.data.NODE_ENV === "production" ? productionIssues(parsed.data) : [];
   if (issues.length > 0) {

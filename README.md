@@ -66,6 +66,6 @@ Yerel web testleri Google Chrome kullanır; yönetim tablosunun WebKit regresyon
 - Kaynak/lisans metinleri ve yeniden aktarım yöntemi: [demo içerik rehberi](docs/content/DEMO-CONTENT.md). Yerel mock seed'i canlı katalog üzerine çalıştırma.
 - Orhan Gazi Türbesi'nin anlatımı henüz yoktur. Diğer eserler tarayıcının Türkçe sesli okumasını kullanır; profesyonel ses kaydı bulunmaz.
 - Rota çizgileri şematiktir; yürüyüş yol tarifi değildir. Modeller tarihsel rekonstrüksiyon olarak sunulmaz.
-- Native mobil uygulama henüz eklenmedi. Mobil web çalışır; gelecekteki React Native uygulaması ortak domain/API paketlerini kullanabilir, web bileşenleri doğrudan native'e taşınmaz.
+- iOS/Android için Capacitor wrapper başlangıcı `apps/mobile` içinde. Aynı arayüz cihaz içine paketlenir; katalog/giriş/medya mevcut API ve Supabase üzerinden gelir. Kurulum, canlı API CORS gereksinimi ve cihaz kabul listesi: [mobil rehber](docs/MOBILE.md). Mağaza sürümü henüz hazır değildir.
 
 `docs/documents-context` ekip tarafından tutulan içerik/tasarım kaynaklarıdır. Canlı dosyalar Storage'dan sunulur; kaynak arşivi derleme, biçimlendirme ve CI çalışma kapsamından ayrıdır. Git geçmişindeki eski büyük dosyaları baştan indirmemek için yeni klonda `git clone --filter=blob:none https://github.com/Internet-Kahve/akar-app.git` kullanılabilir; geçmiş korunur, gereken dosyalar indirilir.

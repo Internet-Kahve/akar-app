@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Image as ImageIcon, RotateCcw, Share2, X } from "lucide-react";
 import type { HistoryImage, HeritageSite } from "@akar/domain";
 import { useI18n } from "./i18n";
+import { useNativeBack } from "../lib/use-native";
+import { sharePhoto } from "../lib/share-photo";
 
 /**
  * Matches the old photograph with the live camera: the old one lies over the view, half see-through, and two
@@ -22,8 +24,11 @@ export function HistoryCamera({
   const i18n = useI18n(),
     { t } = i18n,
     siteName = i18n.text(site.name, site.nameEn);
+  useNativeBack(() => { onClose(); return true; }, 10);
   const [consent, setConsent] = useState(!image.viewpoint?.interior),
     [denied, setDenied] = useState(false),
+    [shareFailed, setShareFailed] = useState(false),
+    [sharing, setSharing] = useState(false),
     [shot, setShot] = useState(""),
     [fade, setFade] = useState(50),
     [compare, setCompare] = useState<"slider" | "side">("slider"),
@@ -31,27 +36,44 @@ export function HistoryCamera({
     [place, setPlace] = useState({ x: 0, y: 0, scale: 1 }),
     video = useRef<HTMLVideoElement>(null),
     stream = useRef<MediaStream | null>(null),
+    cameraRequest = useRef(0),
     pickFile = useRef<HTMLInputElement>(null),
     fingers = useRef(new Map<number, { x: number; y: number }>());
   const stopCamera = () => {
+    cameraRequest.current++;
     stream.current?.getTracks().forEach((t) => t.stop());
     stream.current = null;
   };
   const startCamera = async () => {
+    stopCamera();
+    const request = cameraRequest.current;
     setDenied(false);
     try {
-      stream.current = await navigator.mediaDevices.getUserMedia({
+      const media = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
         audio: false,
       });
-      if (video.current) video.current.srcObject = stream.current;
+      if (request !== cameraRequest.current) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream.current = media;
+      if (video.current) video.current.srcObject = media;
     } catch {
-      setDenied(true);
+      if (request === cameraRequest.current) setDenied(true);
     }
   };
   useEffect(() => {
     if (consent && !shot) void startCamera();
-    return stopCamera;
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") stopCamera();
+      else if (consent && !shot) void startCamera();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stopCamera();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [consent, shot]);
   const capture = () => {
     const v = video.current;
@@ -86,17 +108,14 @@ export function HistoryCamera({
     points.set(e.pointerId, now);
   };
   const share = async () => {
-    const blob = await (await fetch(shot)).blob();
-    const file = new File([blob], `${site.id}.jpg`, { type: "image/jpeg" });
     const text = `${siteName} · ${image.dateLabel}\n${image.photo.description}`;
-    if (navigator.canShare?.({ files: [file] }))
-      await navigator.share({ files: [file], text }).catch(() => {});
-    else {
-      const link = document.createElement("a");
-      link.href = shot;
-      link.download = file.name;
-      link.click();
-    }
+    setShareFailed(false);
+    setSharing(true);
+    try { await sharePhoto(shot, site.id, text); }
+    catch (error) {
+      const e = error as { name?: string; message?: string };
+      if (e.name !== "AbortError" && !/cancel/i.test(e.message ?? "")) setShareFailed(true);
+    } finally { setSharing(false); }
   };
   const title = `${siteName} · ${image.dateLabel}`;
   if (!consent)
@@ -163,7 +182,7 @@ export function HistoryCamera({
               {t("site.cameraSendTrace")}
             </button>
             <div>
-              <button className="btn secondary" onClick={() => void share()}>
+              <button className="btn secondary" disabled={sharing} onClick={() => void share()}>
                 <Share2 size={17} />
                 {t("site.cameraShare")}
               </button>
@@ -173,6 +192,7 @@ export function HistoryCamera({
               </button>
             </div>
             <small>{t("site.cameraShareNote")}</small>
+            {shareFailed && <p role="alert">{t("error.failed")}</p>}
           </div>
         </>
       ) : (

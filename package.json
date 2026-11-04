@@ -8,6 +8,12 @@
     "services/*"
   ],
   "scripts": {
+    "mobile:build": "node scripts/build-mobile.mjs",
+    "mobile:build:demo": "node scripts/build-mobile.mjs --demo",
+    "mobile:sync": "npm run mobile:build && npm run sync -w @akar/mobile",
+    "mobile:ios": "npm run ios -w @akar/mobile",
+    "mobile:android": "npm run android -w @akar/mobile",
+    "mobile:test": "npm run mobile:build:demo && playwright test -c playwright.mobile.config.ts",
     "dev": "npm run dev -w @akar/web",
     "dev:api": "bash services/api/scripts/web-api.sh",
     "dev:content": "node apps/web/scripts/prepare-demo-content.mjs && NEXT_PUBLIC_DEMO_CONTENT=1 npm run dev -w @akar/web",

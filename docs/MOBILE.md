@@ -1,0 +1,97 @@
+# AKAR mobil
+
+Mevcut Next.js arayüzü Capacitor 8 ile iOS ve Android içine statik olarak paketlenir. `server.url`, uzak sayfa yükleme veya ayrı bir React Native arayüzü kullanılmaz. Harita tile'ları, canlı katalog, medya ve hesap işlemleri internet gerektirir; tam çevrimdışı kullanım desteklenmez.
+
+## Yapı ve kurulum
+
+- `apps/web`: ortak arayüz ve cihaz köprüleri.
+- `apps/mobile`: Capacitor ayarı, Xcode/SPM ve Android/Gradle projeleri.
+- İlk uygulama kimliği: `com.tamerakdeniz.akar`. Mağaza kaydı açılmadan önce sahiplik/ekip ve kalıcı kimlik birlikte kesinleştirilmeli.
+- Asgari proje hedefleri iOS 15 ve Android API 24; derleme hedefi Android API 36. Bu alt sınırlar gerçek cihazlarda doğrulanmış destek beyanı değildir.
+- Node 24, Xcode 26+, Android Studio/SDK 36, JDK 21 gerekir. Sürümler kilit dosyasından kurulur: `npm ci`.
+
+Canlı sürüm:
+
+```sh
+cp apps/web/.env.mobile.example apps/web/.env.mobile.local
+# Canlı web ile aynı PUBLIC Supabase URL ve anon/publishable anahtarını doldur.
+npm run mobile:sync
+npm run mobile:ios
+npm run mobile:android
+```
+
+`.env.mobile.local` Git dışında kalır. Değerler derleme sırasında pakete gömülür; service-role veya sunucu sırrı kullanılmaz. Eksik ayarlar ve HTTP adresleri derlemeyi durdurur. Build çıktısı `apps/web/.next-mobile`; Next ara dosyaları `.next` içinde olduğundan normal web build ile aynı anda çalıştırma. `public/icerik` yerel içerik bağlantısı varsa paketlemeyi durdurur.
+
+İzole örnek verilerle cihaz denemesi:
+
+```sh
+npm run mobile:build:demo
+npm run sync -w @akar/mobile
+```
+
+Bu mod gerçek hesaba bağlanmaz. `mobile:test` de bu modu kullanır ve çıktı paketini değiştirir; canlı kurulumdan önce tekrar `mobile:sync` çalıştır.
+
+## Canlı API bağlantısı
+
+API'de `MOBILE_CLIENTS_ENABLED=1` ayarı, mevcut `CORS_ORIGINS` değerlerini koruyarak **iki tam origin** ekler:
+
+```text
+capacitor://localhost,https://localhost
+```
+
+İlki iOS, ikincisi Android içindir. `services/api/src/config.ts` yalnız `capacitor://localhost` özel şemasını kabul eder; wildcard veya keyfî custom origin kabul etmez. Kod düzeltmesi ve ortam ayarı API dağıtımında birlikte uygulanmalıdır. Mevcut web origin'lerini silme. Bayrak varsayılan olarak kapalıdır; geri okunamayan mevcut listeyi değiştirmeden açılabilir. Bu değişiklik istemciye yetki vermez; API'nin mevcut token/rol kontrolleri geçerlidir.
+
+4 Kasım 2026 tarihli ilk canlı `/ready` denemesinde bu iki origin için `Access-Control-Allow-Origin` dönmedi. Kullanıcı onayıyla canlı Production ortamına `MOBILE_CLIENTS_ENABLED=1` eklendi; kod yayını [PR #98](https://github.com/Internet-Kahve/akar-app/pull/98) ile izlenir. Gerçek OTP oturum testi cihaz kabulünün parçasıdır.
+
+## Cihaz davranışı
+
+- Konum, cihazda Capacitor Geolocation ile; tarayıcıda mevcut geolocation API ile istenir. İzin yalnız kullanıcı konum gerektiren işlemi başlatınca çıkar. Arka plan konumu kullanılmaz.
+- Tarihî fotoğraf kamerası canlı önizleme/üst üste görüntü için WebView `getUserMedia` kullanır. iOS ve Android kamera izinleri tanımlıdır. Ekran kapanırken geç tamamlanan izin isteğinin akışı durdurulur; uygulama gizlenince kamera bırakılır.
+- Fotoğraf paylaşımı cihazda önbellek dosyası ve işletim sistemi paylaşım menüsü kullanır. Android alıcısının dosyayı geç okuması ihtimali nedeniyle paylaşım dönüşünde dosya hemen silinmez; işletim sisteminin önbelleğindedir.
+- Android geri tuşu önce açık dialog'u, sonra kamera/uygulama katmanını kapatır; iç ekranda geçmişe veya haritaya döner. Haritada uygulamayı arka plana alır.
+- Ön plana dönüşte katalog yenilenir; sistem çubuklarının yazı rengi açık/koyu temayı izler. Mevcut safe-area CSS'i kullanılır.
+- iOS Filesystem gereksinimi için `PrivacyInfo.xcprivacy` kaynaklara eklenmiştir. Bu dosya mağaza gizlilik anketinin yerine geçmez.
+
+## Doğrulama
+
+```sh
+npm run typecheck
+npm test
+npm run typecheck -w @akar/api
+node --import tsx --test services/api/src/config.test.ts
+npm run build
+npm run test:e2e
+npm run mobile:test
+```
+
+`mobile:test`, Next sunucusu olmadan gerçek statik çıktıyı Chromium/Pixel ve WebKit/iPhone profilleriyle çalıştırır. Keşif, hikâye, anı, profil, arşiv, galeri ve duyarlı yerleşim akışlarını kapsar. Yerelde Chrome ve Playwright WebKit kurulu olmalı (`npx playwright install webkit`). Tarayıcı emülasyonu, yerel eklenti veya fiziksel cihaz doğrulaması değildir.
+
+Yerel derleme (önce `mobile:sync`):
+
+```sh
+cd apps/mobile/android
+ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew assembleDebug
+# Çıktı: app/build/outputs/apk/debug/app-debug.apk
+```
+
+```sh
+xcodebuild -project apps/mobile/ios/App/App.xcodeproj -scheme App \
+  -configuration Debug -sdk iphonesimulator \
+  -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath /tmp/akar-mobile-ios CODE_SIGNING_ALLOWED=NO build
+```
+
+## Telefon kabulü ve yayın öncesi kalanlar
+
+Gerçek iPhone ve Android'de aşağıdakiler tamamlanmadan "hatasız" veya mağazaya hazır denmez:
+
+1. Canlı katalog, e-posta OTP, uygulama kapanıp açılınca oturum, çıkış, rol sınırları.
+2. Konum izni verme/reddetme, yaklaşık konum, servis kapalı, ziyaret doğrulaması.
+3. Kamera izni, galeriden dosya, paylaşma/iptal, yükleme ve moderasyon; arka plana geçiş/dönüş.
+4. Harita ve GLB/WebGL düşük bellek davranışı; Türkçe/İngilizce sesli okuma ve mevcut ses kayıtları. Web Speech desteği cihazda ayrıca ölçülmeli.
+5. Çentik, sistem çubukları, klavye, yatay ekran, büyük yazı; Android geri tuşu ve iOS gezinme.
+6. İnternet kesilmesi, yeniden bağlanma, soğuk açılış ve güncelleme sonrası veri/oturum.
+7. Kalıcı uygulama kimliği, AKAR uygulama ikonu ve açılış görselleri (şimdilik platform şablonları), sürüm numaraları, imzalama ve mağaza kayıtları.
+8. TestFlight/Play internal test dağıtımı, gizlilik beyanları, hesap silme akışı ve mağaza incelemesi.
+
+Kaynaklar: [Capacitor ortam kurulumu](https://capacitorjs.com/docs/getting-started/environment-setup), [App API](https://capacitorjs.com/docs/apis/app), [Geolocation](https://capacitorjs.com/docs/apis/geolocation), [Filesystem](https://capacitorjs.com/docs/apis/filesystem), [Share](https://capacitorjs.com/docs/apis/share). Next statik export davranışı kurulu sürümün `node_modules/next/dist/docs/01-app/02-guides/static-exports.md` rehberine göre uygulanır.

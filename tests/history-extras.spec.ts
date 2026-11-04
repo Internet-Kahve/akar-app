@@ -84,6 +84,28 @@ async function openHistory(page: Page, longArchive = false) {
 const fits = (page: Page, selector: string) =>
   expect(page.locator(selector).first()).toHaveCSS("object-fit", "contain");
 
+test("closing the archive camera while permission is pending stops the late camera stream", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => new Promise((resolve) => {
+        document.documentElement.dataset.cameraPending = "true";
+        window.addEventListener("test:camera-permission", () => resolve({
+          getTracks: () => [{ stop: () => { document.documentElement.dataset.cameraStopped = "true"; } }],
+        }), { once: true });
+      }) },
+    });
+  });
+  const errors = await openHistory(page);
+  await page.getByRole("button", { name: "Sen de çek", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-camera-pending", "true");
+  await page.getByRole("button", { name: "Kamerayı kapat", exact: true }).click();
+  await expect(page.locator(".camera")).toHaveCount(0);
+  await page.evaluate(() => window.dispatchEvent(new Event("test:camera-permission")));
+  await expect(page.locator("html")).toHaveAttribute("data-camera-stopped", "true");
+  expect(errors).toEqual([]);
+});
+
 test("the archive's present-day pair is a slider, both photographs whole, with each credit line word for word and the near-angle note", async ({
   page,
 }) => {
