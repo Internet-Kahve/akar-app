@@ -1,6 +1,6 @@
 # AKAR · Klasör yapısı
 
-17 Ekim 2026, güncelleme 22 Ekim ve 2 Kasım 2026. Giriş: [README](README.md).
+17 Ekim 2026, güncelleme 22 Ekim, 2 Kasım ve 4 Kasım 2026. Giriş: [README](README.md).
 
 ```text
 documents-context/
@@ -11,17 +11,18 @@ documents-context/
 ├── ICERIK_YONTEMI.md         Eser içeriği (hikâye, fotoğraf, kaynak) kuralları
 ├── ICERIK_INGILIZCE.md        İngilizce içerik dosyalarının biçimi
 ├── ENTEGRASYON_29EKIM.md     Prototipten ürüne veri/şema kararları (BACKEND-DECISIONS bunlara atıf yapar)
-├── PROTOTIP_AKTARIM.md       Güncel çalışma notu ve sıradaki işler
+├── PROTOTIP_AKTARIM.md       Tarihli çalışma notu (1 Kasım)
+├── DEVIR_3KASIM.md           Son işin devir notu: performans, ipuçları, pişirme
+├── BIRLESTIRME_NOTU_MOBIL_OPTIMIZASYON.md  Birleştirme ve canlıya çıkış adımları
 ├── YAPILACAKLAR.md           Ekip düzeyinde açık işler
 ├── PROTOTIP_DERSLERI.md
-├── hackathon/                Yarışma PDF'leri ve rehber
+├── hackathon/                Yarışma PDF'leri ve rehber (Git dışında)
 ├── design/
 │   ├── README.md
 │   ├── ikonlar/
 │   ├── desenler/
-│   ├── harita/
-│   ├── ekranlar-15ekim/
-│   └── karsilastirma/
+│   ├── logo/
+│   └── harita/
 ├── eserler/
 │   ├── README.md
 │   ├── _kutuphane/           Ortak Blender yardımcıları ve yöntem
@@ -30,12 +31,14 @@ documents-context/
 │   ├── ayasofya/             Önceki pilot (sürüm klasörleri v20–v24; Git dışında)
 │   ├── aday-eserler/         Henüz işlenmemiş 30 aday eser (eser.md + ref; Git dışında)
 │   ├── _GENEL_SAHNE_STANDARDI.md  Renk, ışık, zemin kuralları
-│   └── <eser>/               eser.md, eser.json, notlar, icerik/, gecmisi-gor/, 3d/export (ref/, 3d/blend, build, kontrol Git dışında)
+│   └── <eser>/               eser.md, eser.json, notlar, icerik/, gecmisi-gor/, 3d/export (`model.json` adındaki GLB'ler ve `_sunum` sürümleri; ref/, 3d/blend, build, kontrol Git dışında)
 └── veri/
     ├── BENIOKU.md
     ├── kaynak_pdf/           Vakıf Katılım envanter PDF'leri (Git dışında; ekibe kısıtlı Drive'dan)
     ├── metin/
     ├── eserler_taslak.csv
+    ├── sehir/                Şehir kayıtları: kimlik, sahne, harita (uygulama okur)
+    ├── rota/                 Editoryal rotalar (uygulama okur)
     ├── bursa/                Ortak kaynaklar, kararlar, denetim ve şablonlar
     ├── bursa-foto/           Envanter fotoğrafları ve manifest (Git dışında)
     ├── fotoatlas/            Foto Atlas eski fotoğrafları, izinler, betikler (Git dışında; uygulama paketi eserler/<eser>/gecmisi-gor/)

@@ -1,4 +1,8 @@
-# Envanter verisinden çıkarılanlar (13 Ekim 2026, taslak)
+# Veri rehberi
+
+**Uygulamanın okudukları:** `sehir/<il>.json` (kimlik, sahne, harita), `rota/*.json` (editoryal rotalar), `bursa/eser-turleri.csv` ve `bursa/osm_secilen.csv` (API içe aktarma aracı).
+
+## Envanter verisinden çıkarılanlar (13 Ekim 2026, taslak)
 
 - `veri/kaynak_pdf/` (Vakıf Katılım kitapları) ve `veri/metin/` Git dışındadır; proje için izinli, ekibe kısıtlı Drive klasöründen verilir (22 Ekim 2026).
 - `veri/metin/*.txt`: her cildin düz metni (pdftotext). PDF'leri yeniden çevirmeye gerek yok.

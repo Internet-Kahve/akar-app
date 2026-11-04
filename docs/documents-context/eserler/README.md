@@ -19,6 +19,10 @@ Uygulamanın gece temasında eser, isteğe bağlı bir gece modeliyle görünür
 
 Kural: gece modeli gündüz modelinin **bütün parça adlarını** taşır. Hikâye vurguları, parça kartları, görevler ve «İçini göster» grupları gündüzün adlarıyla bir kez yazılır; gece dosyasında eksik bir ad olursa içe aktarma durur (fener, ışıklı pencere gibi fazladan parça serbest). Yerleşim (`yaw`, `kaydirma_m`, `ana_parca`) de ortaktır: iki dosyada model aynı yerde, aynı ölçekte durmalı. Panelden yükleme: Adım 1 → «Gece modeli»; parça adı farkı orada uyarı olarak görünür.
 
+## Pişmiş harita dosyaları (4 Kasım 2026)
+
+Harita, ışık ve gölgesi dokuya pişmiş ayrı GLB'leri kullanır: `model.json` içinde `glb_harita_pisik`, `glb_gece_harita_pisik` ve onay için `pisik_onay: true`. Yakınlaşma 17,5'te sunum dosyasına geçilir. Yedi eserin hepsi açık; ölçümler her eserin `3d/README.md` dosyasında, araçlar `_kutuphane/blend_hat/pisik*`. Güneş değişirse yeniden pişirilir.
+
 ## Yalnız fotoğraflı eserler (30 Ekim 2026; 3D yok)
 
 `eser.json` + `icerik/` (hikâye, envanter metni, fotoğraflar, görev); `3d/` klasörü ve `model.json` yok, uygulama Fotoğraf görünümüyle açar.
@@ -39,7 +43,7 @@ Kural: gece modeli gündüz modelinin **bütün parça adlarını** taşır. Hik
 
 ## Akar–hayrat bağı için eklenenler (19 Ekim 2026)
 
-- [Orhan Gazi Türbesi](orhan-gazi-turbesi/eser.md): 3D v02 hazır (plan dosyası tur sonunda silindi).
+- [Orhan Gazi Türbesi](orhan-gazi-turbesi/eser.md): 3D model hazır, güncel sürüm `3d/model.json` içinde.
 - [Yarhisar Orhan Gazi Çeşmesi](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/yarhisar-orhan-gazi-cesmesi/eser.md) (Yenişehir): ölçülü çizim ve plan var, `SONNET_REVIZYON_PLANI.md` (v01) var.
 - [Orhan Gazi İmareti](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/aday-eserler/orhan-gazi-imareti/eser.md): yıkık (1936); 3D yok, yalnız hikâye kartı.
 - [II. Bayezid Külliyesi, İstanbul](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/eserler/aday-eserler/istanbul-bayezid-kulliyesi/eser.md): Koza Han'ın gelirinin gittiği yer; 3D yok, yalnız hikâye kartı.
