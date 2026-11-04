@@ -134,3 +134,23 @@ Ham dosyalar → normalize edilmiş eser → kaynak kayıtları → hikâye böl
 6. Admin rolü, editör güncellemeleri, içerik sürümleri.
 
 Gerçek auth bağlanana kadar demo paneli erişilebilir kalır. Deploy edilecek gerçek uygulamada admin API'si sunucu rol kontrolü olmadan açılamaz. Aynı adaptör Expo'da kullanılabilir; yalnızca storage/session, dosya ve konum sağlayıcıları native karşılıklarla değişir.
+
+## 4 Kasım · Burak için notlar (mobil açı, profil, KVKK/lisans)
+
+Dal: `muhammedtalay/hikaye-mobil-cerceve`. Backend'i doğrudan değiştirmedik; bunlar API'yi ve içe aktarmayı ilgilendiren noktalar.
+
+1. **Hikâye ve fotoğraf açıları yeniden aktarılmalı.** Koza Han (10, 11), Orhan Bey Camii (6, 7 fotoğraf, 8), Ulucami (5, 8, 9 ve yeni 2. iç açı fotoğrafı), Hamam (4 ve fotoğraf 01), Bedesten (6, 7, 10, fotoğraf 02), Emir Hanı (revak) ve Koza Han fotoğraf 08 (köşk mescit, yeni) için açılar `hikaye.md` «Açı» tablolarında ve `3d/model.json` `foto_acilari` içinde güncellendi. Bedesten 10. cümlenin «İç mekân» sütunu «evet» oldu.
+   - §11.70 gereği içe aktarma, panelde kaydedilmiş cümle bakışını korur. Canlıda bu cümleler dosyadaki yeni açıyı almaz. Panelde açı kaydedilmediyse yeniden aktarmak yeter. Kaydedildiyse ya panelden elle düzeltilir ya da `--replace-story-views` kullanılır (önce `--apply` çıktısındaki `storyViewsKept` listesine bak).
+   - Fotoğraf açıları için panel açısı dosyanın önüne geçer.
+2. **Profil resmi (avatar) yalnız cihazda.** Altı figür (`apps/web/public/avatarlar/*.webp`), seçim `localStorage` `akar.avatar`. Sunucuya gitmez, hesapla taşınmaz. İstenirse `profil.avatarId` alanı + `PATCH` ucu gerekir; şimdilik yok.
+3. **KVKK ve Lisanslar artık uygulama içi pencere** (`apps/web/src/lib/legal-content.ts`). Eski `public/aydinlatma.html` ve `lisanslar.html` duruyor ama uygulama onlara bağlanmıyor.
+   - KVKK taslak: `[Veri sorumlusunun adı]`, `[adres]`, `[e-posta]`, `[Aktarımın hukuki dayanağı]`, `[Saklama süresi]` hâlâ boş; hukuki onay yok.
+   - Lisans listesine fotoğraf izni veren kurumlar eklendi (kaynak: `docs/documents-context/veri/fotoatlas/IZIN_DURUMU.md`). Kişi adı ve e-posta uygulamaya yazılmadı.
+   - **Deutsche Fotothek izni 8 Kasım 2026'da biter.** Finalden sonra `durum_guncelle.py` ile kayıtlar `kullanma` yapılmalı ve `legal-content.ts` içindeki satır kaldırılmalı.
+   - Dumbarton Oaks izin vermedi; British School at Athens ve Koç Üniversitesi Yayınları cevabı bekleniyor: listede yoklar.
+4. **iPhone/Safari 3D.** Safari çekirdek sayısını 4 gösterdiği için iPhone «zayıf cihaz» sayılıp antialiasing kapanıyordu (kenarlar basamaklı). `lib/device.ts` artık iPhone/iPad'i zayıf saymıyor, 3D'de 2× piksel. Teşhis için adrese `?akar-debug=gpu` eklenir (cihaz, GPU, derinlik bit sayısı, fps).
+5. **Gece iç mekân ışığı** artırıldı (`model-viewer.tsx`, gece 0.45 → 1.7); Orhan Camii mihrabı koyu kalıyordu.
+6. **Koza Han avlusu z-fighting.** Nedeni `Zemin_Kaide` zeminin 60 cm altına inen kalın bir kaide olması: zemin katmanı sıralaması bunu «taban» sayıp avlu katmanlarını (`Avlu_Zemin`, `Avlu_Halka`, `Avlu_Cim`, `Cevre_Doseme`) dışarıda bırakıyordu. `lib/ground-layers.ts` artık tabanı en alçak İNCE yüzeyden alıyor (test eklendi). Başka bir eserde zemin titremesi görülürse aynı yere bak.
+7. **Telefonda hikâye kartı** ekranın %22'si (`PHONE_CARD_SHARE`, `story-scene.ts`); kamera çerçevesi buna göre ayarlanıyor. Admin Hikâye adımında «Telefon önizlemesi» kutusu var (yalnız hikâye cümlesi açılarında).
+8. **Mobil üst çubuktan «Aa» kalktı**; kontrast ve yazı boyutu profil ayarlarında.
+9. **Dağıtım notu:** `NEXT_PUBLIC_DEMO_CONTENT=1` olmadan alınan derleme demo içeriği (gece modeli, eser metinleri) yüklemez; yerelde `npm run dev:content` ya da `prepare-demo-content.mjs` + bu değişkenle `build`.

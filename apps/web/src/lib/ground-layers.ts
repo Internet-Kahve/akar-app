@@ -6,18 +6,24 @@ import * as THREE from "three";
  * apart, so which one is drawn in front changes pixel by pixel as the camera turns and the texture flickers
  * (z-fighting). Draco also rounds heights to ~7 mm steps, so this is needed even when the model itself is right.
  *
- * No site-specific names: every mesh resting on the base (top under 40 cm above the model's lowest point) and thinner
+ * No site-specific names: every mesh resting on the base (top under 40 cm above the lowest thin surface) and thinner
  * than 35 cm is a ground layer. Layers are ranked by the area-weighted mean height of their upward faces, and each
  * higher layer is drawn a few depth steps nearer the camera with a polygon offset, so the order is the same from every
  * angle. The lowest layer is left alone.
  */
 export function groundLayerRanks(meshes: THREE.Mesh[]): Map<THREE.Mesh, number> {
   const box = new THREE.Box3();
+  // The base is the lowest THIN surface: a plinth that goes 60 cm under the ground (Koza Han's `Zemin_Kaide`) is not the
+  // ground, and measured from it no courtyard layer qualified, so they flickered against one another (4 Nov 2026).
   let base = Infinity;
+  let lowest = Infinity;
   for (const mesh of meshes) {
     box.setFromObject(mesh);
-    if (!box.isEmpty()) base = Math.min(base, box.min.y);
+    if (box.isEmpty()) continue;
+    lowest = Math.min(lowest, box.min.y);
+    if (box.max.y - box.min.y <= 0.35) base = Math.min(base, box.min.y);
   }
+  if (base === Infinity) base = lowest;
   const a = new THREE.Vector3(),
     b = new THREE.Vector3(),
     c = new THREE.Vector3(),
