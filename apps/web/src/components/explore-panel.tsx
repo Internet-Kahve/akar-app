@@ -38,8 +38,11 @@ export function MapChips({
   cities,
   onCity,
   onCities,
+  whole = false,
 }: {
   city: string;
+  /** The map looks at the whole country: the button shows it in red. */
+  whole?: boolean;
   cities: string[];
   onCity: (name: string) => void;
   onCities: () => void;
@@ -63,7 +66,7 @@ export function MapChips({
   return (
     <div className="map-chips" ref={root}>
       <button
-        className="chip city-only city-pick"
+        className={`chip city-only city-pick${whole ? " ulke" : ""}`}
         onClick={() => setOpen(!open)}
         title={t("header.cities")}
         aria-haspopup="menu"

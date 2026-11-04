@@ -98,6 +98,9 @@ Testlerin cihazında hepsi görülmüş sayılır (`playwright.config.ts`, stora
 - **Açılar:** `hikaye.md` «## Açı» tablosu ve `model.json` `foto_acilari` yenilendi; uzaklık sayı olabilir (panel en az 0,05). Fotoğraflarla birebir değil, göz kararı yakın. Panelden ince ayar yapılabilir.
 - **Geçmişi Gör:** 15 temsili görsel (`scripts/content/temsili_es_uret.mjs`), «Temsili görsel» etiketiyle. Canlıda görünmesi için `import-demo` ve `temsili` bilgisinin taşınması gerekir.
 - **Pişmiş Ulucami:** dördüncü denemede 16 karenin 6'sı ölçüyü geçti. Yakın zoomda sunum modeline geçildiği için dosya 17,5'e kadar kullanılır; 440 m'de fark küçük. `pisik_onay` satırı commit edilmedi, karar Muhammed'in.
+- **Tanıtım sayfası, ikinci tur:** Türkiye başlığı, şehir halkası ve şehir kartları (renkler `identity.accent`), Bursa deseni, gece fotoğrafı, TR/EN (`akar.dil`), gece teması (`akar.tema`), kaydırmalı Ulucami turu, gerçek kayıtlarla «İster dinle, ister oku».
+- **Harita:** şehir düğmesi masaüstünde de harita üstünde, açılır; bütün Türkiye'de kırmızı. Rota kapatma: rota sayfasında ✕, haritada «Rotayı kapat».
+- **Pişirme:** Ulucami onaylandı (`pisik_onay`). Kalan altı eser için istem: `PISIRME_ISTEMI_DIGER_ESERLER.md`.
 - **Canlıya aktarılacak alanlar (Burak):** `mapBaked`, `hideClosedInterior`, `temsili`, yeni açılar.
 
 ## Pişirme ölçümü (3 Kasım)

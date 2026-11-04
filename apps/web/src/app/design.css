@@ -4716,3 +4716,12 @@ body:has(.gg) { overflow-x: clip; }
 .route-off { position: absolute; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 12; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px 0 14px; border: 0; border-radius: 999px; background: var(--text); color: var(--surface); font: 600 14px/1 var(--font); white-space: nowrap; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22); }
 .route-off:not(:disabled):active { transform: translate(-50%, 1px); }
 @media (max-width: 899.98px) { .route-off { top: calc(112px + env(safe-area-inset-top, 0px)); bottom: auto; } }
+
+/* The city button over the map on every screen (4 Nov 2026): beside the panel's handle, opening its menu downward; red for the whole country. */
+@media (min-width: 900px) {
+  .map-chips { left: 34px; top: 16px; }
+  .map-chips .chip.city-only { display: inline-flex; }
+  .map-chips .city-menu { left: 34px; top: 60px; }
+}
+.chip.city-pick.ulke, .chip.city-pick.ulke:hover { background: #C8102E; color: #fff; border-color: #C8102E; }
+.chip.city-pick.ulke .city-motif { filter: brightness(0) invert(1); }

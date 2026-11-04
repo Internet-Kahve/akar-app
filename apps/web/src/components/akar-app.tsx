@@ -1149,7 +1149,7 @@ export function AkarApp() {
               <X size={15} />
             </button>
           )}
-          <button
+          {pageCity && <button
             className="city-chip"
             title={t("header.cities")}
             onClick={() => {
@@ -1158,8 +1158,8 @@ export function AkarApp() {
             }}
           >
             <i className="city-motif" aria-hidden="true" />
-            {pageCity ?? cityName}
-          </button>
+            {pageCity}
+          </button>}
         </div>
         {/* One switch: a press anywhere on it turns to the other language, and the thumb slides there. */}
         <div className="lang-switch" role="group" aria-label={t("lang.switch")} data-lang={lang}>
@@ -1323,7 +1323,7 @@ export function AkarApp() {
               className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""} ${crowded ? "controls-crowded" : ""}`}
             >
               {/* A started route stays on the map after its page: it needs its own way off (Muhammed, 4 Nov 2026). */}
-              {onMapView && !routeId && !routeDraft && !peekSite && state.routeIds.length > 0 && (
+              {onMapView && !wholeCountry && !routeId && !routeDraft && !peekSite && state.routeIds.length > 0 && (
                 <button className="route-off" onClick={closeRoute}>
                   <X size={16} />
                   {t("route.close")}
@@ -1740,6 +1740,7 @@ export function AkarApp() {
                       }
                     />
                     <MapChips
+                      whole={wholeCountry}
                       city={cityName}
                       cities={cityRecords.filter((c) => c.map).map((c) => c.name)}
                       onCity={(name) => setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "city", name }))}
