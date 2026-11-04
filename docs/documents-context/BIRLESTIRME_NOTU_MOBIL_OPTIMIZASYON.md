@@ -4,7 +4,7 @@
 
 ## Özet
 
-- `main` `4b3ce88` (eksik parça uyarısı) bu dala birleştirildi; `packages/domain/src/index.ts` ve testindeki çakışmalar çözüldü, iki tarafın eklemeleri de duruyor. PR'dan önce `git fetch` ile `main`'e yeniden bak.
+- `main` `b13bc4b`e kadar bu dala birleştirildi (eksik parça uyarısı, kullanım sayacı; `0035_usage_daily` göçü `main`'den geliyor); `packages/domain/src/index.ts` ve testindeki çakışmalar çözüldü, iki tarafın eklemeleri de duruyor. PR'dan önce `git fetch` ile `main`'e yeniden bak.
 - **Veritabanı göçü yok.** Şema bu dalda değişmedi; aşağıdaki canlı alanlar için göç gerekecek.
 - **Kırıcı API değişikliği yok.** Web, yeni alanlar gelmezse eski yolda çalışır: harita sunum dosyasını gösterir, iç mekân gizlenmez, «Temsili görsel» etiketi çıkmaz.
 - Yeni ortam değişkeni yok.
@@ -55,9 +55,10 @@ Bunlar bu dalda **yok**. Demo içerikte (`prepare-demo-content.mjs`) çalışıy
 3. **İngilizce içeriğin aktarımı.** `icerik/en/` artık `prepare-demo-content.py` tarafından okunuyor: `nameEn`, `descriptionEn`, hikâye `textEn`/`simpleEn`/`titleEn`, fotoğraf `titleEn`, parça kartı `titleEn`/`bodyEn`, «Eser hakkında» `titleEn`/`bodyEn`. `import-demo` bu alanları yazıyor mu, parça kartı ve bölüm için kontrol edin. `seed.ts` veritabanındaki İngilizceyi korur (`keptEnglish`): canlıda Gemini taslağı varsa dosyadaki çeviri onu ezmez, gerekirse taslakları silip aktarın ya da bir değiştirme seçeneği ekleyin.
 4. **İngilizce ses.** Yeni çeviriler için kayıt üretin (`narrations`, `lang=en`). Kayıt yoksa tarayıcı sesi okur. Metin değişince eski kayıtlar eşleşmez.
 5. **Fotoğraf alt metni.** `SitePhoto` içinde `altEn` yok; `en/fotograflar.md` alt metin sütunu dolu ama kullanılmıyor. İstenirse alan eklenir.
-6. **Görevlerin İngilizcesi.** Görev ve rozet alanları var (`titleEn`, `promptEn` …), `gorevler.json` için okuyucu yok.
-7. **Rota adları.** `veri/rota` için `nameEn` kontrol edilmeli.
-8. **KVKK ve lisanslar.** `docs/LISANSLAR.md` ve `lib/kvkk.ts` taslak; hizmet koşullarını teyit edin.
+6. **Görev, rozet ve rota İngilizcesi.** `icerik/en/gorevler.json` ve rota `ad_en` artık manifeste giriyor. `import-demo` ve `editorial-routes` dışındaki canlı rota aktarımının bu alanları yazdığını doğrulayın.
+7. **KVKK.** Web tarafı `DELETE /v1/me` komutunu ekledi (`delete-account`); canlı hesapta deneyin. `aydinlatma.html` taslak: veri sorumlusu, iletişim, saklama süresi, aktarım dayanağı boş. `kvkkConsent.textVersion` metin değişince güncellenmeli. Fotoğraf EXIF'i istemcide temizleniyor; API tarafında ek temizlik yok.
+8. **Lisanslar.** `docs/LISANSLAR.md` hizmet koşullarını teyit edin.
+9. **Kullanım sayacı (§11.72).** Web henüz olay göndermiyor.
 
 ## İngilizce içerik: gözden geçirilecek noktalar
 
@@ -83,13 +84,13 @@ Panelde açı ayarlama ve kaydetme bu dalın zorunlu şartı. Editör bir açıy
 - Dosyadaki yeni hikâye açıları için `--replace-story-views` gerekir. Bu seçenek paneldeki kayıtları da ezer. Önce canlıda elle kaydedilmiş açı var mı bakın; varsa korunacakları not alın. Kararı Muhammed ile verin.
 - Galeri fotoğrafı açıları (`site_media.camera`) da korunur ve bunun için `--replace-*` seçeneği yok. Yeni `foto_acilari` yalnız açısı boş fotoğraflara gelir; öbürleri için panelden kayıt ya da ek iş gerekir.
 
-**Bilinen risk**
+**Açı alanı: `exact`**
 
-Çarpışma denetimi panelden kaydedilen açıda da çalışır, çünkü dosya ile panel açısını ayırmaz. Kamerayı parça ile arasında bir engel kalacak yere koyan editör, yeniden açınca farklı bir konum görebilir. Bu durum kodu okuyarak bulundu, canlı denenmedi. Görülürse panelden gelen açıda denetimi kapatmak gerekir.
+Panelde kaydedilen açı `exact: true` taşır (`CameraPose`, `CameraPoseInput`, `CameraPoseDto`, `openapi.json`; jsonb, göç gerekmez). Duvar denetimi bu açıya uygulanmaz (`looksForFreeView`), panel önizlemesinde kaydırma kapalıdır. Dosyadan gelen açılarda denetim sürer. **Canlıdaki eski kayıtlarda bu alan yoktur**; o açılar panelden yeniden kaydedilene kadar duvar denetiminden geçer.
 
 **Elle kabul denemesi (otomatik testi yok)**
 
-Panelden hikâyeye kayıt akışını deneyen bir tarayıcı testi bu dalda yok. Birleştirip yayımladıktan sonra canlı panelde:
+`tests/panel-angle.spec.ts` kaydın hemen yazıldığını, birim testi `exact` kuralını dener; hikâyede aynı açının göründüğünü deneyen otomatik test yok. Birleştirip yayımladıktan sonra canlı panelde:
 
 1. Bir hikâye cümlesinde açıyı değiştirip «Açıyı ve vurguyu kaydet» de. Genel kaydet ya da yayınla düğmesine basma.
 2. Sayfayı yenile; panel aynı açıyı göstermeli.
