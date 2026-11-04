@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Square, Volume2, X } from "lucide-react";
 import type { PartCard, SiteSource } from "@akar/domain";
 import type { MessageKey } from "../lib/messages";
 import { cardSpeech } from "../lib/story-text";
-import { pickCardNarration } from "../lib/story-voice";
+import { pickTextNarration } from "../lib/story-voice";
 import { Localized, useI18n } from "./i18n";
 import { TrustTag } from "./side-sheet";
 import { useVoice } from "./voice";
@@ -24,7 +24,7 @@ function useCardVoice(card: PartCard) {
   const [playing, setPlaying] = useState(false),
     [error, setError] = useState<MessageKey | "">(""),
     recording = useRef<HTMLAudioElement | null>(null);
-  const clip = pickCardNarration(card, voice.lang, voice.gender);
+  const clip = pickTextNarration(card, voice.lang, voice.gender);
   useEffect(() => {
     if (!playing) return;
     let stopped = false;

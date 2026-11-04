@@ -85,9 +85,9 @@ test("discovery, story, memory moderation and persistence form one complete flow
   test.slow();
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("/");
+  await page.goto("/#view=map");
   // The page under the opening screen takes no input until the map is drawn (§11.49).
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Ulucami");
@@ -107,7 +107,6 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
   await expect(page.getByRole("button", { name: /^Ziyaretim/ })).toBeVisible();
   await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByLabel("Sade anlatım").check();
   for (let i = 0; i < 8; i++)
     await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
   await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
@@ -116,8 +115,9 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await finished.getByRole("button", { name: "Devam et" }).click();
   // «İz Bırak» opens from the living memory row's window.
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  await expect(page.getByText("İlk iz senin olsun.")).toBeVisible();
-  await page.getByRole("button", { name: /Bir anı bırak/ }).click();
+  // No trace yet: the wall opens with its invitation on a wide screen, the empty note on a phone.
+  await expect(page.getByText(/^(Senin de bir anın var mı\?|İlk iz senin olsun\.)$/).first()).toBeVisible();
+  await page.getByRole("button", { name: /İz Bırak/ }).first().click();
   await page
     .getByLabel("Anın", { exact: true })
     .fill("Avludaki ışığı ve sessizliği hatırlayacağım.");
@@ -126,7 +126,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await expect(page.getByText("Hikâyeye sen de katıldın.")).toBeVisible();
   await page.getByRole("button", { name: "Pencereyi kapat" }).click();
   // The visitor's own trace leads the living memory page while it waits for moderation.
-  await expect(page.locator(".hm-iz").first()).toContainText("İnceleniyor");
+  await expect(page.locator(":is(.hzd-iz, .hz-iz)").first()).toContainText("İnceleniyor");
   await openProfile(page);
   await expect(
     page.getByRole("button", { name: /Ulucami Hikâye tamamlandı/ }),
@@ -156,7 +156,7 @@ test("discovery, story, memory moderation and persistence form one complete flow
   // rather than «Kalıcı sil».
   await page.goto("/#view=detail&site=ulu-cami");
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
-  const trace = page.locator(".hm-iz").filter({ hasText: "Avludaki ışığı ve sessizliği hatırlayacağım." });
+  const trace = page.locator(":is(.hzd-iz, .hz-iz)").filter({ hasText: "Avludaki ışığı ve sessizliği hatırlayacağım." });
   await expect(trace.getByRole("button", { name: "Yayından kaldır" })).toBeVisible();
   await expect(trace.getByRole("button", { name: "Sil", exact: true })).toBeVisible();
   expect(errors).toEqual([]);
@@ -251,7 +251,7 @@ test("admin photo wizard publishes complete content and persists shared images",
   await page
     .getByRole("button", { name: "Demo Vakıf Kütüphanesi düzenle" })
     .click();
-  await page.getByRole("button", { name: "6 Yayın" }).click();
+  await page.getByRole("button", { name: "8 Yayın" }).click();
   await expect(page.getByText("Türkçe içerik yayın için hazır.")).toBeVisible();
   expect(
     await page.evaluate(
@@ -326,8 +326,8 @@ test("deferred features are hidden and the empty archive remains keyboard access
 test("responsive layouts do not overflow and Figma assets load locally", async ({
   page,
 }, info) => {
-  await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   // One heading above the list: the city line on a phone, the sentence (and «Tümünü gör») on a wide screen.
   await expect(
     page.locator(".explore-heading > h2:visible, .explore-heading > .explore-city:visible"),
@@ -373,21 +373,32 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
 
 test.describe("first visit", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
+  test("the bare address shows the introduction, whose «Haritayı aç» opens the map with its welcome card", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    await page.getByRole("link", { name: /Haritayı aç/ }).first().click();
+    await expect(page).toHaveURL(/\/#view=map$/);
+    await expect(page.getByRole("dialog", { name: "Şehrin hikâyesine karış." })).toBeVisible({ timeout: 12000 });
+    await page.goBack();
+    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+  });
   test("the welcome card opens once and Evden gez asks for no position", async ({
     page,
   }) => {
-    await page.goto("/");
+    await page.goto("/#view=map");
     const card = page.getByRole("dialog", {
       name: "Şehrin hikâyesine karış.",
     });
-    await expect(card).toBeVisible();
+    await expect(card).toBeVisible({ timeout: 12000 });
     await card.getByRole("button", { name: "Vakıf nedir? ›" }).click();
     await expect(page.getByRole("dialog", { name: "Vakıf nedir?" })).toBeVisible();
     await page.keyboard.press("Escape");
     await card.getByRole("button", { name: "Evden gez" }).click();
     await expect(card).toHaveCount(0);
     await page.reload();
-    await expect(page.locator(".opening")).toHaveCount(0);
+    await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
     await expect(page.locator(".welcome")).toHaveCount(0);
   });
 });
@@ -409,8 +420,8 @@ test("reading keeps the chosen sentence while the list follows it, and the visit
 test("a link to a site closes the short card and shows the site's panel", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page.locator(".explore-tabs").waitFor();
   await page.locator(".site-row-main").first().evaluate((el) => (el as HTMLElement).click());
   await expect(page.locator(".site-peek")).toBeVisible();
@@ -423,8 +434,8 @@ test("a link to a site closes the short card and shows the site's panel", async 
 test("a route shows only its stops on the map, as numbered stars", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await expect.poll(() => pinIds(page)).toHaveLength(6);
   await page.getByRole("tab", { name: "Rotalar" }).click();
   await page.locator(".route-card").first().click();
@@ -436,8 +447,8 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   expect(icons.every((icon) => icon.startsWith("stop-"))).toBe(true);
 });
 test("a trust tag tells where the statement comes from", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page.locator(".site-row-main").first().click();
   await page.locator(".site-peek .trust-tag").click();
   const sheet = page.getByRole("dialog", { name: "Bu bilgi nereden geliyor?" });
@@ -448,8 +459,8 @@ test("a trust tag tells where the statement comes from", async ({ page }) => {
 test("route search opens a usable route and selection persists", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page
     .getByRole("textbox", { name: "Eser, şehir veya rota ara" })
     .fill("Akar ve Hayrat");
@@ -494,7 +505,7 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
   await page.route("https://tiles.openfreemap.org/**", (route) =>
     route.abort(),
   );
-  await page.goto("/");
+  await page.goto("/#view=map");
   // MapLibre can emit load after error. The pins prove that load was handled: the map holds a pin
   // for every site. The fallback must still be present instead of disappearing during a click.
   await expect.poll(() => pinIds(page)).toHaveLength(6);
@@ -616,7 +627,7 @@ test("map pins stay on their sites through zoom and panel resize, and a click on
       },
     }),
   );
-  await page.goto("/");
+  await page.goto("/#view=map");
   await expect.poll(() => pinIds(page)).toHaveLength(6);
   // Ulucami in the middle of the map, so zoom and resize keep it on screen on a phone too.
   const zoom = await page.evaluate(async () => {
@@ -697,10 +708,11 @@ test("naming a city takes the map there, and a later refresh leaves it there", a
       const map = window.akarMap as unknown as CityMap;
       return map.isMoving() ? null : map.getCenter();
     });
-  await page.goto("/");
+  await page.goto("/#view=map");
   await expect
     .poll(() =>
       page.evaluate(() => !!(window.akarMap as unknown as CityMap)?.loaded()),
+      { timeout: 12000 },
     )
     .toBe(true);
   // Elsewhere on the map, as a visitor who has been to another city.
@@ -723,7 +735,7 @@ test("naming a city takes the map there, and a later refresh leaves it there", a
 test("the role chips leave out what the city has no site of, and the income category is «Ticari (akar)»", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/#view=map");
   const chips = page.locator(".map-chips .chip[aria-pressed]");
   await expect(chips).toHaveText(["Dinî", "Su", "Eğitim", "Ticari (akar)"]);
   // Without the fountain and the school the city has no water or education category.

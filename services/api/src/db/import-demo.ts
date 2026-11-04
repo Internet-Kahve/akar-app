@@ -4,7 +4,7 @@ import { extname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { and, eq, inArray, like, notInArray, sql } from "drizzle-orm";
-import { validateCityIdentity, validateCityMap, validateCityScene, validateSite, type CityRecord, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
+import { validateCityIdentity, validateCityMap, validateCityScene, validatePlacement, validateSite, type CityRecord, type HeritageSite, type HeritageRoute, type Trust } from "@akar/domain";
 import { slugify } from "../modules/catalog/service.ts";
 import { loadConfig } from "../config.ts";
 import type { Tx } from "../platform/idempotency.ts";
@@ -12,7 +12,7 @@ import { countTriangles, partNames, readGlbJson } from "../modules/media/glb.ts"
 import { storageFromConfig } from "../modules/media/storage-config.ts";
 import { createDb } from "./client.ts";
 import { loadCatalog } from "./seed.ts";
-import { type HistoryViewpoint, cities, historyAngleMatches, historyImages, media, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type HistoryAngleMatch, type QuizTaskDetails } from "./schema/index.ts";
+import { type HistoryViewpoint, cities, historyAngleMatches, historyImages, media, siteAboutChapters, siteBadges, siteMapPlacements, siteMedia, sitePartCardPhotos, sitePartCards, siteSampleTraces, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, type AboutReading, type FieldTaskDetails, type HistoryAngleMatch, type QuizTaskDetails } from "./schema/index.ts";
 
 /**
  * A photograph the visitor sees with its credit line and licence word for word (§11.47): the present-day pair of an
@@ -128,7 +128,7 @@ function validateDisplayOrder(site: ContentSite): void {
     throw new Error(`Site ${site.id}: displayOrder must be an integer of at least 1 or absent, got ${JSON.stringify(order)}`);
 }
 
-/** `partCardsKept` (sites whose part cards the panel owns and the import left alone, §11.52) is filled only by --apply: a dry run does not read the database. */
+/** `partCardsKept` / `tasksKept` / `aboutKept` / `storyViewsKept` (sites whose part cards / tasks and badges / chapters and paragraphs / story sentence 3D views the panel owns and the import left alone, §11.52, §11.67, §11.69, §11.70) are filled only by --apply: a dry run does not read the database. */
 export interface ImportReport {
   sites: number;
   objects: number;
@@ -137,12 +137,18 @@ export interface ImportReport {
   sampleTraces: number;
   applied: boolean;
   partCardsKept?: string[];
+  tasksKept?: string[];
+  aboutKept?: string[];
+  storyViewsKept?: string[];
 }
 
 /** The default is a local validation/size report. --apply explicitly enables Storage and DB writes. */
-export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env, options: { replacePartCards?: boolean } = {}): Promise<ImportReport> {
-  const { replacePartCards = false } = options;
+export async function importDemoContent(manifestFile: string, contentRoot: string, apply: boolean, env: NodeJS.ProcessEnv = process.env, options: { replacePartCards?: boolean; replaceTasks?: boolean; replaceAbout?: boolean; replaceStoryViews?: boolean } = {}): Promise<ImportReport> {
+  const { replacePartCards = false, replaceTasks: replaceAllTasks = false, replaceAbout = false, replaceStoryViews = false } = options;
   const partCardsKept: string[] = [];
+  const tasksKept: string[] = [];
+  const aboutKept: string[] = [];
+  const storyViewsKept: string[] = [];
   const manifest = JSON.parse(await readFile(manifestFile, "utf8")) as Manifest;
   if (manifest.version !== 1 || manifest.sites.length < 7) throw new Error("Expected a reviewed manifest of at least seven sites (version 1)");
   for (const city of manifest.cities) {
@@ -213,10 +219,15 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     });
     const missing = (site.model?.coverGroups ?? []).flat().filter((part) => !parts.includes(part));
     if (missing.length) throw new Error(`Cover group parts are not model parts: ${site.id} ${missing.join(", ")}`);
+    const notInterior = (site.model?.interiorParts ?? []).filter((part) => !parts.includes(part));
+    if (notInterior.length) throw new Error(`Interior parts are not model parts: ${site.id} ${notInterior.join(", ")}`);
+    if (site.model?.placement) validatePlacement(site.model.placement);
     const outside = site.chapters.flatMap((c) => [...c.reading.focusParts, ...(c.reading.camera?.target ? [c.reading.camera.target] : [])]).filter((part) => !parts.includes(part));
     if (outside.length) throw new Error(`Chapter parts are not model parts: ${site.id} ${[...new Set(outside)].join(", ")}`);
     const unknown = site.partCards.flatMap((c) => c.parts).filter((part) => !parts.includes(part));
     if (unknown.length) throw new Error(`Part card parts are not model parts: ${site.id} ${unknown.join(", ")}`);
+    const aimless = site.photos.flatMap((p) => (p.camera?.target && !parts.includes(p.camera.target) ? [`${p.id} ${p.camera.target}`] : []));
+    if (aimless.length) throw new Error(`Photo camera targets are not model parts: ${site.id} ${aimless.join(", ")}`);
     validateTasks(site, ids);
     validateHistoryExtras(site);
   }
@@ -241,7 +252,14 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
   try {
     await db.transaction(async (tx) => {
       const existing = new Set((await tx.select({ id: sites.id }).from(sites).where(inArray(sites.id, manifest.sites.map((s) => s.id)))).map((r) => r.id));
-      await loadCatalog(tx, { sites: manifest.sites.map(({ historyImages: _history, sampleTraces: _traces, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes });
+      // The panel owns the 3D view of a story sentence already in the database (camera, highlights, interior, card;
+      // §11.70); the sentence text still comes from the package. --replace-story-views restores the package's views.
+      await loadCatalog(
+        tx,
+        { sites: manifest.sites.map(({ historyImages: _history, sampleTraces: _traces, sections: _sections, partCards: _parts, chapters: _chapters, bookPhotos: _book, aboutCoverPhotoId: _about, tasks: _tasks, badges: _badges, ...site }) => site), routes: manifest.routes },
+        { keepStoryViews: !replaceStoryViews },
+      );
+      if (!replaceStoryViews) storyViewsKept.push(...manifest.sites.filter((s) => existing.has(s.id)).map((s) => s.id));
       // A present-day photograph or a sample's photograph is a `media` row of its own, credited as the file says.
       const upsertPhoto = async (p: CreditedPhoto, trust: Trust) => {
         const file = files.get(p.file)!;
@@ -250,7 +268,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       };
       for (const site of manifest.sites) {
         // The seed includes every story photo; only editorial gallery entries belong in site_media. A gallery photo's
-        // 3D angle is set in the panel, not in the package: a re-import keeps it.
+        // 3D angle set in the panel is kept by a re-import; the package's (model.json `foto_acilari`) fills the rest.
         const cameras = new Map(
           (await tx.select({ mediaId: siteMedia.mediaId, camera: siteMedia.camera }).from(siteMedia).where(eq(siteMedia.siteId, site.id)))
             .flatMap((l) => (l.camera ? [[l.mediaId, l.camera] as const] : [])),
@@ -259,7 +277,18 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         const gallery = site.photos.filter((p) => p.galleryPosition !== null).sort((a, b) => a.galleryPosition! - b.galleryPosition!);
         const modelIds = site.model ? [`${site.id}-model`] : [];
         await tx.insert(siteMedia).values(
-          [...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({ siteId: site.id, mediaId, position, camera: cameras.get(mediaId) ?? null })),
+          [...gallery.map((p) => p.id), ...modelIds].map((mediaId, position) => ({
+            siteId: site.id,
+            mediaId,
+            position,
+            camera: cameras.get(mediaId) ?? gallery.find((p) => p.id === mediaId)?.camera ?? null,
+          })),
+        );
+        // English texts are written in the panel or by a translation, not in the content package (§11.64): an import
+        // keeps them per id, like the story sentences' English (§11.62).
+        const captionsEn = new Map(
+          (await tx.select({ id: historyImages.id, captionEn: historyImages.captionEn, enStatus: historyImages.enStatus }).from(historyImages).where(eq(historyImages.siteId, site.id)))
+            .map(({ id, ...en }) => [id, en]),
         );
         await tx.delete(historyImages).where(eq(historyImages.siteId, site.id));
         for (const [position, h] of site.historyImages.entries()) {
@@ -270,7 +299,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           await tx.insert(media).values({ id: h.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
           if (h.present) await upsertPhoto(h.present, "verified");
           await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, presentMediaId: h.present?.id ?? null, presentAngleMatch: h.present?.angleMatch ?? null, viewpoint: h.viewpoint ?? null,
-            caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust });
+            caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust, ...captionsEn.get(h.id) });
         }
         // Samples replace the site's whole set; the archive photograph they point at was inserted just above.
         await tx.delete(siteSampleTraces).where(eq(siteSampleTraces.siteId, site.id));
@@ -284,15 +313,27 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             description: b.description, license: b.license, sourceId: b.sourceId, trust: b.trust, bytes: file.body.length };
           await tx.insert(media).values({ id: b.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
         }
-        // Paragraph photographs cascade with their paragraph, paragraphs with their chapter.
-        await tx.delete(siteSections).where(eq(siteSections.siteId, site.id));
-        await tx.delete(siteAboutChapters).where(eq(siteAboutChapters.siteId, site.id));
-        if (site.chapters.length) await tx.insert(siteAboutChapters).values(site.chapters.map((chapter, position) => ({ ...chapter, siteId: site.id, position })));
-        if (site.sections.length) {
-          await tx.insert(siteSections).values(site.sections.map(({ photos: _photos, ...section }, position) => ({ ...section, siteId: site.id, position })));
-          const placed = site.sections.flatMap((section) => section.photos.map((p, position) => ({ siteId: site.id, sectionId: section.id, position, mediaId: p.id, aspect: p.aspect, alt: p.alt })));
-          if (placed.length) await tx.insert(siteSectionPhotos).values(placed);
-        }
+        // The panel owns the chapters and paragraphs of a site that is already in the database (§11.69): only a new site
+        // gets the manifest's, unless the run says to replace them (--replace-about). Replacing keeps their English per id
+        // (§11.64); paragraph photographs cascade with their paragraph, paragraphs with their chapter.
+        if (replaceAbout || !existing.has(site.id)) {
+          const sectionsEn = new Map(
+            (await tx.select({ id: siteSections.id, titleEn: siteSections.titleEn, bodyEn: siteSections.bodyEn, enStatus: siteSections.enStatus }).from(siteSections).where(eq(siteSections.siteId, site.id)))
+              .map(({ id, ...en }) => [id, en]),
+          );
+          const chaptersEn = new Map(
+            (await tx.select({ id: siteAboutChapters.id, titleEn: siteAboutChapters.titleEn, readingEn: siteAboutChapters.readingEn, enStatus: siteAboutChapters.enStatus }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, site.id)))
+              .map(({ id, ...en }) => [id, en]),
+          );
+          await tx.delete(siteSections).where(eq(siteSections.siteId, site.id));
+          await tx.delete(siteAboutChapters).where(eq(siteAboutChapters.siteId, site.id));
+          if (site.chapters.length) await tx.insert(siteAboutChapters).values(site.chapters.map((chapter, position) => ({ ...chapter, siteId: site.id, position, ...chaptersEn.get(chapter.id) })));
+          if (site.sections.length) {
+            await tx.insert(siteSections).values(site.sections.map(({ photos: _photos, ...section }, position) => ({ ...section, siteId: site.id, position, ...sectionsEn.get(section.id) })));
+            const placed = site.sections.flatMap((section) => section.photos.map((p, position) => ({ siteId: site.id, sectionId: section.id, position, mediaId: p.id, aspect: p.aspect, alt: p.alt })));
+            if (placed.length) await tx.insert(siteSectionPhotos).values(placed);
+          }
+        } else aboutKept.push(site.id);
         await tx.update(sites).set({ aboutCoverMediaId: site.aboutCoverPhotoId }).where(eq(sites.id, site.id));
         // A night model from the package; without one the site keeps what the panel set (none by default).
         if (site.model?.nightFile) {
@@ -308,10 +349,24 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             triangles: triangles.get(nightModelId(site.id))!,
             parts: nightParts.get(site.id)!,
             coverGroups: site.model.coverGroups ?? [],
+            interiorParts: site.model.interiorParts ?? [],
             partsStatus: "done" as const,
           };
           await tx.insert(media).values({ id: nightModelId(site.id), ...row }).onConflictDoUpdate({ target: media.id, set: row });
           await tx.update(sites).set({ nightModelMediaId: nightModelId(site.id) }).where(eq(sites.id, site.id));
+        }
+        // The map placement belongs to the panel once it exists (§11.63): a site without one gets the package's (heading,
+        // base part, façade direction); a stored one keeps everything but the façade direction, which the package sets
+        // when it names one (`3d/model.json → on_yonu`) and leaves alone when it is silent.
+        const placement = site.model?.placement;
+        if (placement) {
+          const frontDeg = placement.frontDeg ?? null;
+          const row = { siteId: site.id, location: null, headingDeg: placement.headingDeg, frontDeg, scale: placement.scale, altitudeM: placement.altitudeM,
+            anchorNode: placement.anchorNode, hiddenPoints: [], keptPoints: [], updatedBy: "content-import" };
+          const insert = tx.insert(siteMapPlacements).values(row);
+          if (frontDeg === null) await insert.onConflictDoNothing();
+          else await insert.onConflictDoUpdate({ target: siteMapPlacements.siteId, set: { frontDeg, updatedBy: row.updatedBy, updatedAt: new Date() },
+            setWhere: sql`${siteMapPlacements.frontDeg} IS DISTINCT FROM ${frontDeg}` });
         }
         // The panel owns the part cards of a site that is already in the database (§11.52): only a new site gets the
         // manifest's cards, unless the run says to replace them. Photos cascade with their card.
@@ -322,7 +377,9 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             if (photoIds.length) await tx.insert(sitePartCardPhotos).values(photoIds.map((mediaId, i) => ({ cardId: card.id, position: i, mediaId })));
           }
         } else partCardsKept.push(site.id);
-        await replaceTasks(tx, site);
+        // Tasks, answer keys and badges are the panel's too (§11.67): same rule, --replace-tasks restores the manifest's.
+        if (replaceAllTasks || !existing.has(site.id)) await replaceTasks(tx, site);
+        else tasksKept.push(site.id);
         for (const id of [...site.photos.map((p) => p.id), ...modelIds]) {
           const file = files.get(mediaFiles.get(id)!)!;
           // Shared content-addressed files are seed-managed (storage_key stays null); deleting one site must not delete another's photo.
@@ -351,7 +408,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
       }
     });
   } finally { await pool.end(); }
-  return { ...report, partCardsKept };
+  return { ...report, partCardsKept, tasksKept, aboutKept, storyViewsKept };
 }
 
 /**
@@ -379,7 +436,7 @@ async function replaceTasks(tx: Tx, site: ContentSite): Promise<void> {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false }, "replace-part-cards": { type: "boolean", default: false } } });
-  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply] [--replace-part-cards]");
-  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply, process.env, { replacePartCards: values["replace-part-cards"] })));
+  const { values } = parseArgs({ options: { manifest: { type: "string" }, content: { type: "string" }, apply: { type: "boolean", default: false }, "replace-part-cards": { type: "boolean", default: false }, "replace-tasks": { type: "boolean", default: false }, "replace-about": { type: "boolean", default: false }, "replace-story-views": { type: "boolean", default: false } } });
+  if (!values.manifest || !values.content) throw new Error("Use --manifest <json> --content <docs/documents-context> [--apply] [--replace-part-cards] [--replace-tasks] [--replace-about] [--replace-story-views]");
+  console.log(JSON.stringify(await importDemoContent(values.manifest, values.content, values.apply, process.env, { replacePartCards: values["replace-part-cards"], replaceTasks: values["replace-tasks"], replaceAbout: values["replace-about"], replaceStoryViews: values["replace-story-views"] })));
 }

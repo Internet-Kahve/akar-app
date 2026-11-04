@@ -17,7 +17,9 @@ import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
 import { liftGroundLayers } from "../lib/ground-layers";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
-import { addSceneLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
+import { addModelLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
+import { spreadOrder, type PartPoint } from "../lib/part-order";
+import { companionPlace, flowArc, FLOW_COIN_MS, FLOW_DRAW_MS, textSprite, type FlowCompanion } from "../lib/flow-companion";
 import { currentTheme, subscribeTheme } from "../lib/theme";
 import {
   fitHalfAngle,
@@ -38,18 +40,36 @@ const LIFT_MS = 700;
 const LIFT_GAP = 0.35;
 /** "İçini göster" raises a low camera to this elevation so the inside is visible. */
 const INSIDE_ELEVATION = 58;
-/** Part glow: hover (mouse) and the open card's parts. */
-const GLOW = new THREE.Color(0xf2c230);
+/**
+ * Part glow: hover (mouse) and the open card's parts. Gold by day; blue by night, where the night files' lit windows
+ * and minarets are already gold and a gold glow did not stand out (Muhammed, 2 Nov 2026).
+ */
+const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) };
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
+/** Height the angle's photograph takes above the phone's site card (design.css: 10 + 190 + 34 + 10 + 40 px of buttons). */
+const VIEW_PHOTO_PHONE = 290;
+/** One breath of a highlighted part: fade and light again. */
+const BREATH_MS = 1600;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
 const TAP_SLOP = 6;
 const TAP_MS = 600;
 
 /** How long each tappable part lights up when the visitor asks to see them. */
-const PART_PULSE_MS = 700;
-/** How long «show the parts» stays lit after a tap. */
-const PARTS_PRESSED_MS = 650;
+const PART_PULSE_MS = 900;
+/** Overlap keeps a full pass under 3.5 seconds, even on models with many cards. */
+const PART_STAGGER_MS = 250;
+/** Frees a loaded model's geometry, materials and textures. */
+const disposeObject = (root: THREE.Object3D) =>
+  root.traverse((item) => {
+    if (!(item instanceof THREE.Mesh)) return;
+    item.geometry.dispose();
+    for (const material of Array.isArray(item.material) ? item.material : [item.material]) {
+      for (const value of Object.values(material)) if (value instanceof THREE.Texture) value.dispose();
+      material.dispose();
+    }
+  });
+
 /**
  * `pose` turns the camera to a story sentence's view (absent = keep the current view). Model axes:
  * x east, y up, z south; azimuth 0 = from the north, clockwise. `interior` (story) lifts the
@@ -83,6 +103,7 @@ export default function ModelViewer({
   views,
   onPoseChange,
   onInsideChange,
+  companion,
 }: {
   model: SiteModel;
   detail?: boolean;
@@ -113,6 +134,8 @@ export default function ModelViewer({
   onPoseChange?: (pose: CameraPose) => void;
   /** The visitor opened or closed the model with «İçini göster». */
   onInsideChange?: (open: boolean) => void;
+  /** A sentence about the waqf's income: the other building of the road beside this one, with the gold road. */
+  companion?: FlowCompanion;
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null);
@@ -120,6 +143,181 @@ export default function ModelViewer({
   const lift = useRef<((open: boolean, raise: boolean) => void) | null>(null);
   const [showingParts, setShowingParts] = useState(false);
   const select = useRef<((parts: string[]) => void) | null>(null);
+  const pulse = useRef<((levels: Map<string, number>) => void) | null>(null);
+  /** Centre of the given parts in the model's space (null when none is in the file): spreads the show-parts order. */
+  const centreOf = useRef<((parts: string[]) => PartPoint) | null>(null);
+  const pulseFrame = useRef(0);
+  /** The drawn model's stage, for what is added to it later (the income road's companion). */
+  const stage = useRef<{
+    scene: THREE.Scene;
+    camera: THREE.PerspectiveCamera;
+    controls: OrbitControls;
+    render: () => void;
+    decoder: DRACOLoader;
+    sphere: number;
+    ground: number;
+    height: number;
+  } | null>(null);
+  const [stageReady, setStageReady] = useState(0);
+  const frontRef = useRef(model.placement?.frontDeg);
+  frontRef.current = model.placement?.frontDeg;
+  useEffect(() => () => cancelAnimationFrame(pulseFrame.current), [model.src]);
+  // The income road (lib/flow-companion): the companion beside the site, the gold tube drawn from the one that earns
+  // to the one it keeps with coins along it, its label at the middle, and the camera stepped back to take both in.
+  // All of it goes, and the camera goes back, when the sentence changes.
+  const companionKey = companion ? JSON.stringify(companion) : "";
+  useEffect(() => {
+    const st = stage.current;
+    if (!st || !companionKey) return;
+    const road = JSON.parse(companionKey) as FlowCompanion;
+    const { scene, camera, controls, render } = st;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const group = new THREE.Group();
+    scene.add(group);
+    // Seen from the front, a little to the side (Muhammed, 2 Nov 2026): the façade's direction 35° to the left, from
+    // 28° up, whatever angle the visitor or the sentence before had left.
+    const az = THREE.MathUtils.degToRad((frontRef.current ?? 180) - 35);
+    const up = THREE.MathUtils.degToRad(28);
+    const fromFront = new THREE.Vector3(Math.sin(az) * Math.cos(up), Math.sin(up), -Math.cos(az) * Math.cos(up));
+    const look = fromFront.clone().negate();
+    look.y = 0;
+    look.normalize();
+    const right = new THREE.Vector3().crossVectors(look, new THREE.Vector3(0, 1, 0)).normalize();
+    const place = companionPlace(st.sphere, st.ground, right);
+    const holder = new THREE.Group();
+    holder.position.set(place.centre.x, st.ground, place.centre.z);
+    group.add(holder);
+    const owned: { dispose: () => void }[] = [];
+    let disposed = false,
+      frame = 0,
+      roadDrawn = false;
+    // The camera: back along its own direction until both stand in view, looking at their middle.
+    const before = { position: camera.position.clone(), target: controls.target.clone() };
+    // A little above the buildings' middle: the road arcs over them.
+    const goalTarget = new THREE.Vector3(place.middle.x, st.ground + st.height * 0.5, place.middle.z);
+    const fov = THREE.MathUtils.degToRad(camera.fov) / 2;
+    const away = fromFront.clone();
+    const goalPosition = goalTarget.clone().add(away.multiplyScalar((place.span / Math.sin(fov * Math.min(1, camera.aspect))) * 1.02));
+    const cameraStart = performance.now();
+    const drawRoad = (top: number) => {
+      if (disposed || roadDrawn) return;
+      roadDrawn = true;
+      const there = new THREE.Vector3(place.centre.x, top, place.centre.z);
+      const here = new THREE.Vector3(0, st.ground + st.height * 0.85, 0);
+      const curve = flowArc(road.incoming ? there : here, road.incoming ? here : there, st.sphere * 0.7);
+      const SEG = 64, RAD = 6;
+      const tube = new THREE.TubeGeometry(curve, SEG, st.sphere * 0.012, RAD, false);
+      const rim = new THREE.TubeGeometry(curve, SEG, st.sphere * 0.02, RAD, false);
+      const gold = new THREE.MeshBasicMaterial({ color: "#E3BC5E" });
+      const ink = new THREE.MeshBasicMaterial({ color: "#A8781F", side: THREE.BackSide });
+      const coinGeo = new THREE.SphereGeometry(st.sphere * 0.024, 10, 6);
+      const coinMat = new THREE.MeshBasicMaterial({ color: "#FFF1B8" });
+      const coins = [0, 1, 2].map(() => new THREE.Mesh(coinGeo, coinMat));
+      coins.forEach((c) => (c.visible = false));
+      const label = textSprite(road.label, st.sphere * 0.09);
+      label.position.copy(curve.getPoint(0.5)).add(new THREE.Vector3(0, st.sphere * 0.09, 0));
+      label.visible = false;
+      group.add(new THREE.Mesh(rim, ink), new THREE.Mesh(tube, gold), ...coins, label);
+      owned.push(tube, rim, gold, ink, coinGeo, coinMat, label.material.map!, label.material);
+      const start = performance.now();
+      const step = (now: number) => {
+        if (disposed) return;
+        const k = reduced ? 1 : Math.min(1, (now - start) / FLOW_DRAW_MS);
+        const n = Math.floor(k * SEG) * RAD * 6;
+        tube.setDrawRange(0, n);
+        rim.setDrawRange(0, n);
+        label.visible = k >= 0.5;
+        if (k >= 1 && !reduced)
+          coins.forEach((c, i) => {
+            c.visible = true;
+            c.position.copy(curve.getPoint(((now - start - FLOW_DRAW_MS) / FLOW_COIN_MS + i / 3) % 1));
+          });
+        render();
+        if (!reduced) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    };
+    const showPhoto = () => {
+      if (!road.photo) {
+        // A place outside the catalogue, with no photograph yet (Koza Han's income to Istanbul): its name stands at
+        // the road's end. The panel can give it a photograph.
+        const sign = textSprite(road.name, st.sphere * 0.1);
+        sign.position.y = place.sphere * 0.9;
+        holder.add(sign);
+        owned.push(sign.material.map!, sign.material);
+        return drawRoad(st.ground + place.sphere * 0.75);
+      }
+      new THREE.TextureLoader().load(
+        road.photo,
+        (texture) => {
+          if (disposed) return texture.dispose();
+          texture.colorSpace = THREE.SRGBColorSpace;
+          const image = texture.image as { width: number; height: number };
+          const h = place.sphere * 1.2;
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
+          sprite.scale.set((h * image.width) / image.height, h, 1);
+          sprite.position.y = h / 2;
+          holder.add(sprite);
+          owned.push(texture, sprite.material);
+          drawRoad(st.ground + h);
+        },
+        undefined,
+        () => drawRoad(st.ground + place.sphere),
+      );
+    };
+    if (road.src)
+      new GLTFLoader().setDRACOLoader(st.decoder).load(
+        road.src,
+        (gltf) => {
+          if (disposed) return disposeObject(gltf.scene);
+          const other = gltf.scene;
+          // With its presentation ground and trees, as it is shown on its own page; only the baked shadow goes.
+          other.traverse((item) => {
+            for (let node: THREE.Object3D | null = item; node && node !== other; node = node.parent)
+              if (/^Yer_Golgesi/.test(node.name)) item.visible = false;
+          });
+          const box = new THREE.Box3();
+          other.traverse((item) => {
+            if (item instanceof THREE.Mesh && item.visible) box.expandByObject(item);
+          });
+          if (box.isEmpty()) box.setFromObject(other);
+          const size = box.getSize(new THREE.Vector3()),
+            mid = box.getCenter(new THREE.Vector3());
+          const scale = place.sphere / (size.length() / 2 || 1);
+          other.scale.setScalar(scale);
+          other.position.set(-mid.x * scale, -box.min.y * scale, -mid.z * scale);
+          holder.add(other);
+          owned.push({ dispose: () => disposeObject(other) });
+          drawRoad(st.ground + size.y * scale);
+        },
+        undefined,
+        showPhoto,
+      );
+    else showPhoto();
+    // Camera: eased over 1.2 s (at once with reduced motion), the road appears as it goes.
+    const glide = (now: number) => {
+      if (disposed) return;
+      const t = reduced ? 1 : Math.min(1, (now - cameraStart) / 1200);
+      const k = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      camera.position.lerpVectors(before.position, goalPosition, k);
+      controls.target.lerpVectors(before.target, goalTarget, k);
+      controls.maxDistance = Math.max(controls.maxDistance, goalPosition.distanceTo(goalTarget) * 1.3);
+      controls.update();
+      render();
+      if (t < 1) requestAnimationFrame(glide);
+    };
+    requestAnimationFrame(glide);
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
+      scene.remove(group);
+      owned.forEach((o) => o.dispose());
+      camera.position.copy(before.position);
+      controls.target.copy(before.target);
+      controls.update();
+      render();
+    };
+  }, [companionKey, stageReady]);
   const spin = useRef<((on: boolean) => void) | null>(null);
   const reframe = useRef<(() => void) | null>(null);
   /** The pose the running tour started from; empty once it stopped. */
@@ -136,7 +334,12 @@ export default function ModelViewer({
   const tourRef = useRef(tour);
   tourRef.current = tour;
   const frameRef = useRef(frame);
-  frameRef.current = frame;
+  // On a phone the angle's photograph lies across the scene above the site card: while an angle is on, the model is
+  // framed in what is left above it.
+  const withPhoto = (f: SceneFrame): SceneFrame =>
+    typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? { ...f, bottom: f.bottom + VIEW_PHOTO_PHONE } : f;
+  const viewingRef = useRef(false);
+  frameRef.current = viewingRef.current ? withPhoto(frame) : frame;
   const poseRef = useRef(pose);
   poseRef.current = pose;
   const interiorRef = useRef(interior);
@@ -164,6 +367,9 @@ export default function ModelViewer({
   // The photograph whose view is shown (← →); null = the visitor's own view.
   const [viewIndex, setViewIndex] = useState<number | null>(null);
   const [viewLarge, setViewLarge] = useState(false);
+  /** Where the visitor dragged the angle's photograph, from its own place. */
+  const [photoShift, setPhotoShift] = useState({ x: 0, y: 0 });
+  const photoDrag = useRef<{ x: number; y: number; from: { x: number; y: number }; moved: boolean } | null>(null);
   const readPose = useRef<(() => CameraPose) | null>(null);
   // Where the visitor was before the first arrow: ✕ goes back there.
   const beforeViews = useRef<{ pose: CameraPose | null; inside: boolean } | null>(null);
@@ -183,23 +389,11 @@ export default function ModelViewer({
     let cancelLift = () => {};
     let detachPointer = () => {};
     let unfollowTheme = () => {};
-    const disposeObject = (root: THREE.Object3D) =>
-      root.traverse((item) => {
-        if (!(item instanceof THREE.Mesh)) return;
-        item.geometry.dispose();
-        for (const material of Array.isArray(item.material)
-          ? item.material
-          : [item.material]) {
-          for (const value of Object.values(material))
-            if (value instanceof THREE.Texture) value.dispose();
-          material.dispose();
-        }
-      });
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      if (detail) {
+      {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = DETAIL_LIGHT[currentTheme()].exposure;
         renderer.shadowMap.enabled = true;
@@ -211,14 +405,30 @@ export default function ModelViewer({
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(detail ? 38 : 40, 1, 0.01, 10000);
-      if (!detail) addSceneLights(scene, JSON.parse(lightKey));
       controls = new OrbitControls(camera, renderer.domElement);
-      controls.enablePan = false;
+      // As the prototype's viewer: left drag turns, right drag (two fingers) moves, the wheel (pinch) zooms; turning
+      // eases out after the hand lets go.
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.09;
       controls.maxPolarAngle = Math.PI * 0.49;
       const render = () => {
         if (!disposed) renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
+      // Damped turning goes on after the hand lets go: the controls are stepped each frame until they come to rest.
+      // At most two seconds: by then 0.91¹²⁰ of the motion is left, far below a pixel, though the controls still
+      // report a change on a large model.
+      let dampFrame = 0,
+        dampLeft = 0;
+      const damp = () => {
+        dampFrame = !disposed && dampLeft-- > 0 && controls!.update() ? requestAnimationFrame(damp) : 0;
+      };
+      controls.addEventListener("start", () => cancelAnimationFrame(dampFrame));
+      controls.addEventListener("end", () => {
+        cancelAnimationFrame(dampFrame);
+        dampLeft = 120;
+        dampFrame = requestAnimationFrame(damp);
+      });
       // Only a gesture ends a control: a camera moved by code (a sentence's pose) reports nothing.
       controls.addEventListener("end", () => {
         const pose = readPose.current?.();
@@ -315,7 +525,7 @@ export default function ModelViewer({
           object.rotation.y = -THREE.MathUtils.degToRad(heading);
           object.updateMatrixWorld(true);
           const box = new THREE.Box3();
-          if (detail) {
+          {
             object.traverse(item => {
               if (!(item instanceof THREE.Mesh)) return;
               item.castShadow = item.receiveShadow = true;
@@ -333,22 +543,9 @@ export default function ModelViewer({
           const size = box.getSize(new THREE.Vector3());
           if (detail) center.y = box.min.y + size.y * 0.25;
           object.position.sub(center);
-          if (detail) {
+          {
             const R = size.length() / 2 * 1.3;
-            const lit = DETAIL_LIGHT[currentTheme()];
-            scene.add(new THREE.HemisphereLight(lit.sky, lit.ground, lit.ambient));
-            const sun = new THREE.DirectionalLight(lit.colour, lit.sun);
-            const az = THREE.MathUtils.degToRad((model.placement?.frontDeg ?? 180) + 40);
-            const el = THREE.MathUtils.degToRad(50);
-            const target = new THREE.Vector3(0, size.y * 0.25, 0);
-            sun.position.set(Math.sin(az)*Math.cos(el), Math.sin(el), -Math.cos(az)*Math.cos(el)).multiplyScalar(R*2.5).add(target);
-            sun.target.position.copy(target);
-            sun.castShadow = true;
-            sun.shadow.mapSize.set(2048,2048);
-            sun.shadow.bias = -0.0004;
-            sun.shadow.normalBias = R / 2048;
-            Object.assign(sun.shadow.camera, { left:-R, right:R, top:R, bottom:-R, near:R*0.5, far:R*5 });
-            scene.add(sun, sun.target);
+            addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
             // A theme switch relights the open model in place, without reloading it.
             unfollowTheme = subscribeTheme((theme) => {
               setSceneLights(scene, DETAIL_LIGHT[theme]);
@@ -402,6 +599,11 @@ export default function ModelViewer({
           controls!.maxDistance = radius * 4;
           controls!.target.set(0, 0, 0);
           controls!.update();
+          stage.current = {
+            scene, camera, controls: controls!, render, decoder: decoder!, sphere,
+            ground: box.min.y - center.y, height: size.y,
+          };
+          setStageReady((n) => n + 1);
           // The part the camera last went to: a pose read back keeps it, as the camera turns around it.
           let aimedTarget: string | null = null;
           const fitDistance = () => {
@@ -487,18 +689,36 @@ export default function ModelViewer({
             });
             meshesOf.set(part, meshes);
           }
-          const baseEmissive = new WeakMap<THREE.Material, THREE.Color>();
+          /** Each material's own emissive (lit) or colour (unlit), before any glow. */
+          const baseColour = new WeakMap<THREE.Material, THREE.Color>();
           let hovered: string[] = [];
           let selected: string[] = [];
+          // Parts a sentence or a chapter is about: they breathe (fade and light again) instead of staying lit, so the
+          // eye goes to them without the model looking painted (Muhammed, 2 Nov 2026). A tapped part stays lit.
+          let highlighted: string[] = [];
+          let breath = 0,
+            breathFrame = 0;
+          let pulses = new Map<string, number>();
           // Applied to the meshes' current materials: "İçini göster" swaps in its own copies later.
+          // The night files are unlit (KHR_materials_unlit → MeshBasicMaterial): no emissive, so their colour takes
+          // the glow, or nothing lit up by night.
           const glow = () => {
+            const night = currentTheme() === "night";
+            // By night the glow is stronger: the unlit night colours are dark and a light blue at day strength is faint.
+            const tint = GLOW[night ? "night" : "day"];
             for (const [part, meshes] of meshesOf) {
-              const level = selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0;
+              const level = Math.max(
+                pulses.get(part) ?? 0,
+                highlighted.includes(part) ? breath : 0,
+                selected.includes(part) ? PICK_GLOW : hovered.includes(part) ? HOVER_GLOW : 0,
+              );
               for (const mesh of meshes)
                 for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
-                  if (!(m instanceof THREE.MeshStandardMaterial)) continue;
-                  if (!baseEmissive.has(m)) baseEmissive.set(m, m.emissive.clone());
-                  m.emissive.copy(baseEmissive.get(m)!).lerp(GLOW, level);
+                  const colour =
+                    m instanceof THREE.MeshStandardMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
+                  if (!colour) continue;
+                  if (!baseColour.has(m)) baseColour.set(m, colour.clone());
+                  colour.copy(baseColour.get(m)!).lerp(tint, night ? Math.min(0.85, level * 1.5) : level);
                 }
             }
             render();
@@ -591,15 +811,42 @@ export default function ModelViewer({
           canvas.addEventListener("pointermove", onMove);
           canvas.addEventListener("pointerleave", onLeave);
           detachPointer = () => {
+            cancelAnimationFrame(breathFrame);
             cancelAnimationFrame(hoverFrame);
             canvas.removeEventListener("pointerdown", onDown);
             canvas.removeEventListener("pointerup", onUp);
             canvas.removeEventListener("pointermove", onMove);
             canvas.removeEventListener("pointerleave", onLeave);
           };
+          pulse.current = (levels) => { pulses = levels; glow(); };
+          const centres = new Map<string, THREE.Vector3>();
+          for (const part of meshesOf.keys()) {
+            const node = root.getObjectByName(part);
+            if (node) centres.set(part, new THREE.Box3().setFromObject(node).getCenter(new THREE.Vector3()));
+          }
+          centreOf.current = (parts) => {
+            const found = parts.flatMap((part) => centres.get(part) ?? []);
+            if (!found.length) return null;
+            const sum = found.reduce((a, b) => a.clone().add(b), new THREE.Vector3()).divideScalar(found.length);
+            return { x: sum.x, y: sum.y, z: sum.z };
+          };
           select.current = (parts) => {
-            selected = parts;
-            glow();
+            selected = [];
+            highlighted = parts;
+            cancelAnimationFrame(breathFrame);
+            if (!parts.length || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              breath = parts.length ? PICK_GLOW : 0;
+              glow();
+              return;
+            }
+            const start = performance.now();
+            const step = (now: number) => {
+              // From a faint glow to full and back, once every BREATH_MS.
+              breath = PICK_GLOW * (0.15 + 0.85 * (0.5 - 0.5 * Math.cos(((now - start) / BREATH_MS) * 2 * Math.PI)));
+              glow();
+              breathFrame = requestAnimationFrame(step);
+            };
+            breathFrame = requestAnimationFrame(step);
           };
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>
@@ -739,12 +986,16 @@ export default function ModelViewer({
     return () => {
       disposed = true;
       aim.current = null;
+      stage.current = null;
       if (poseReader) poseReader.current = null;
       readPose.current = null;
       beforeViews.current = null;
       setViewIndex(null);
       lift.current = null;
       select.current = null;
+      pulse.current = null;
+      centreOf.current = null;
+      cancelAnimationFrame(pulseFrame.current);
       spin.current = null;
       reframe.current = null;
       setInside(null);
@@ -816,6 +1067,9 @@ export default function ModelViewer({
       lift.current?.(open, false);
       setInside(open);
     }
+    viewingRef.current = true;
+    frameRef.current = withPhoto(frame);
+    reframe.current?.();
     aim.current(view.camera);
     setViewIndex(index);
   };
@@ -825,14 +1079,18 @@ export default function ModelViewer({
       lift.current?.(before.inside, false);
       setInside(before.inside);
     }
+    viewingRef.current = false;
+    frameRef.current = frame;
+    reframe.current?.();
     if (before?.pose) aim.current?.(before.pose);
     beforeViews.current = null;
     setViewIndex(null);
     setViewLarge(false);
+    setPhotoShift({ x: 0, y: 0 });
   };
   return (
     <>
-      <div className="model-canvas" ref={host} />
+      <div className={`model-canvas${viewIndex !== null ? " viewing" : ""}`} ref={host} />
       {!!partCards?.length && !onPick && (
         <button
           className="model-show-parts"
@@ -840,54 +1098,89 @@ export default function ModelViewer({
           title={t("site.showParts")}
           aria-pressed={showingParts}
           onClick={() => {
+            cancelAnimationFrame(pulseFrame.current);
             setShowingParts(true);
-            setTimeout(() => setShowingParts(false), PARTS_PRESSED_MS);
-            partCards.forEach((card, i) =>
-              setTimeout(
-                () => select.current?.(card.parts),
-                i * PART_PULSE_MS,
-              ),
-            );
-            setTimeout(
-              () => select.current?.(highlightRef.current ?? []),
-              partCards.length * PART_PULSE_MS,
-            );
+            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const stagger = Math.min(PART_STAGGER_MS, 2600 / Math.max(1, partCards.length - 1));
+            const duration = reduced ? 1000 : PART_PULSE_MS + (partCards.length - 1) * stagger;
+            // Random, each card far from the one before (lib/part-order): neighbours lit in turn read as one part.
+            const order = spreadOrder(partCards.map((card) => centreOf.current?.(card.parts) ?? null));
+            const slot = new Map(order.map((card, at) => [card, at]));
+            const start = performance.now();
+            const animate = (now: number) => {
+              const elapsed = now - start;
+              const levels = new Map<string, number>();
+              partCards.forEach((card, index) => {
+                const progress = (elapsed - (slot.get(index) ?? index) * stagger) / PART_PULSE_MS;
+                const level = reduced ? PICK_GLOW : progress > 0 && progress < 1 ? PICK_GLOW * Math.sin(Math.PI * progress) : 0;
+                for (const part of card.parts) levels.set(part, Math.max(levels.get(part) ?? 0, level));
+              });
+              pulse.current?.(elapsed < duration ? levels : new Map());
+              if (elapsed < duration) pulseFrame.current = requestAnimationFrame(animate);
+              else setShowingParts(false);
+            };
+            pulseFrame.current = requestAnimationFrame(animate);
           }}
         >
           <MousePointerClick size={18} />
         </button>
       )}
+      {views?.length && viewIndex !== null && views[viewIndex] ? (
+        // The photograph of the angle (Muhammed, 2 Nov 2026): above the buttons on a wide screen, above the card on a
+        // phone; dragged where the visitor likes, larger at a tap, and its ✕ leaves the angles altogether.
+        <figure
+          className={`model-view-photo${viewLarge ? " large" : ""}`}
+          style={photoShift.x || photoShift.y ? { transform: `translate(${photoShift.x}px, ${photoShift.y}px)` } : undefined}
+          onPointerDown={(e) => {
+            if ((e.target as HTMLElement).closest(".mvp-close")) return;
+            photoDrag.current = { x: e.clientX, y: e.clientY, from: photoShift, moved: false };
+          }}
+          onPointerMove={(e) => {
+            const drag = photoDrag.current;
+            if (!drag) return;
+            const dx = e.clientX - drag.x,
+              dy = e.clientY - drag.y;
+            if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+            if (!drag.moved) {
+              drag.moved = true;
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }
+            setPhotoShift({ x: drag.from.x + dx, y: drag.from.y + dy });
+          }}
+          onPointerUp={(e) => {
+            const drag = photoDrag.current;
+            photoDrag.current = null;
+            if (drag && !drag.moved && !(e.target as HTMLElement).closest(".mvp-close")) setViewLarge(!viewLarge);
+          }}
+          onPointerCancel={() => (photoDrag.current = null)}
+        >
+          <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} draggable={false} />
+          <figcaption>
+            {views[viewIndex]!.title}
+            <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>
+          </figcaption>
+          <button className="mvp-close" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
+            <X size={16} />
+          </button>
+        </figure>
+      ) : null}
       {views?.length ? (
         <div className="model-views">
-          {viewIndex !== null && views[viewIndex] && (
-            // The photograph small beside the model it was matched to; a tap shows it larger.
-            <button
-              className={`model-view-photo${viewLarge ? " large" : ""}`}
-              onClick={() => setViewLarge(!viewLarge)}
-              aria-label={views[viewIndex]!.title || views[viewIndex]!.alt}
-            >
-              <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} />
-              <span>
-                {views[viewIndex]!.title}
-                <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>
-              </span>
-            </button>
-          )}
-          {viewIndex !== null && (
-            <button className="btn secondary model-view-btn" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
-              <X size={18} />
-            </button>
-          )}
           <button
-            className="btn secondary model-view-btn"
+            className={`btn secondary model-view-btn${viewIndex === null ? " idle" : ""}`}
             aria-label={t("site.viewPrev")}
             title={t("site.viewPrev")}
             onClick={() => showView(viewIndex === null ? views.length - 1 : (viewIndex - 1 + views.length) % views.length)}
           >
             <ChevronLeft size={18} />
           </button>
+          {viewIndex !== null && (
+            <button className="btn secondary model-view-btn" aria-label={t("site.viewsClose")} title={t("site.viewsClose")} onClick={leaveViews}>
+              <X size={18} />
+            </button>
+          )}
           <button
-            className="btn secondary model-view-btn"
+            className={`btn secondary model-view-btn${viewIndex === null ? " idle" : ""}`}
             aria-label={t("site.viewNext")}
             title={t("site.viewNext")}
             onClick={() => showView(viewIndex === null ? 0 : (viewIndex + 1) % views.length)}

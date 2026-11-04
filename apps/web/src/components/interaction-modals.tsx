@@ -19,12 +19,18 @@ import { Localized, useI18n } from "./i18n";
 export function MemoryModal({
   site,
   live,
+  initialPhoto,
+  sameAngle,
   onClose,
   onSubmit,
 }: {
   site: HeritageSite;
   /** Connected to the real API: the memory goes to moderation instead of the local demo. */
   live: boolean;
+  /** The camera's shot, ready in the form (See the Past → Çekildi → «İz Bırak olarak gönder»). */
+  initialPhoto?: string;
+  /** Shown on that photo: «1930'lar ile aynı açı». */
+  sameAngle?: string;
   onClose: () => void;
   /** Resolves to an error message, or `null` once the memory is saved. */
   onSubmit: (
@@ -34,7 +40,7 @@ export function MemoryModal({
 }) {
   const { t, text: pick } = useI18n();
   const [text, setText] = useState(""),
-    [photo, setPhoto] = useState<string>(),
+    [photo, setPhoto] = useState<string | undefined>(initialPhoto),
     [accepted, setAccepted] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -55,7 +61,7 @@ export function MemoryModal({
     reader.readAsDataURL(file);
   }
   return (
-    <Modal title={done ? t("memory.received") : t("site.leaveTrace")} onClose={onClose}>
+    <Modal title={done ? t("memory.received") : t("site.leaveTrace")} onClose={onClose} wide={!done} className="iz-form">
       {done ? (
         <div className="success-state">
           <CheckCircle2 size={52} />
@@ -100,6 +106,9 @@ export function MemoryModal({
           }}
         >
           <p className="muted">{t("memory.prompt", { name: pick(site.name, site.nameEn) })}</p>
+          {/* Two columns on a wide screen (prototype `.hzf-iki`): the photo large on the left, the words on the right. */}
+          <div className="hzf-iki">
+          <div className="hzf-foto-sutun">
           <label
             className={`upload ${photo ? "has-photo" : ""}`}
             onDragOver={(e) => e.preventDefault()}
@@ -109,7 +118,10 @@ export function MemoryModal({
             }}
           >
             {photo ? (
-              <img src={photo} alt={t("memory.previewAlt")} />
+              <>
+                <img src={photo} alt={t("memory.previewAlt")} />
+                {sameAngle && photo === initialPhoto && <Tag tone="gold">{sameAngle}</Tag>}
+              </>
             ) : (
               <>
                 <ImagePlus size={30} />
@@ -133,6 +145,8 @@ export function MemoryModal({
               {t("memory.removePhoto")}
             </button>
           )}
+          </div>
+          <div className="hzf-alanlar">
           <label className="field">
             {t("memory.yours")}
             <textarea
@@ -178,6 +192,8 @@ export function MemoryModal({
               {busy ? t("memory.saving") : t("memory.submit")}
               <ArrowRight size={16} />
             </button>
+          </div>
+          </div>
           </div>
         </form>
       )}

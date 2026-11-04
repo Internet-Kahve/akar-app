@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startTestApp, TEST_RECEIPT_SECRET } from "../test/harness.ts";
 import { deleteUnreferencedMedia } from "../modules/media/service.ts";
-import { siteBadges, sitePartCards, siteTaskAnswers, siteTasks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
+import { historyImages, siteAboutChapters, siteBadges, siteMapPlacements, sitePartCards, sites as sitesTable, siteSections, siteTaskAnswers, siteTasks, storyBlocks, userSiteBadges, userSiteTasks } from "./schema/index.ts";
 import { importDemoContent } from "./import-demo.ts";
 
 let ctx: Awaited<ReturnType<typeof startTestApp>>;
@@ -36,7 +36,9 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
       // Off the gallery: only the part card shows it.
       { id: `detail-${i}`, file: "photo.jpg", src: "", alt: "Kubbe", title: "Kubbe", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: null },
     ],
-    coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative" },
+    coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative", interiorParts: i === 0 ? ["kubbe_1"] : [],
+      // `3d/model.json`: yaw, ana_parca and (test-0 only) on_yonu.
+      placement: { lng: 29.06, lat: 40.18, headingDeg: 13, frontDeg: i === 0 ? 7 : null, scale: 1, altitudeM: 0, anchorNode: "kubbe_1", hiddenPoints: [], keptPoints: [] } as Record<string, unknown> },
     // The archive photograph has a present-day pair (the team's choice) credited as its file says.
     historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}`,
       present: { id: `present-${i}`, file: "present.webp", alt: "Bugünkü görünüm: Eski eser", credit: "Fotoğraf: Proje arşivi", license: "Proje için verildi; kullanılabilir.", angleMatch: "near" } as Record<string, unknown> | null }], sections: [
@@ -130,12 +132,39 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual(detail.photoIds, ["photo-0"], "present-day and sample photographs are not gallery photographs");
   assert.deepEqual(detail.media.find((m: { kind: string }) => m.kind === "model").parts, ["kubbe_1"]);
   assert.equal(detail.media.find((m: { kind: string }) => m.kind === "model").triangles, 0, "the model's triangles are counted from its file");
+  // `on_yonu` and `ic_parcalar` of the package reach the detail: the façade direction in the placement, the interior parts on the model.
+  assert.equal(detail.placement.frontDeg, 7);
+  assert.deepEqual([detail.placement.headingDeg, detail.placement.anchorNode], [13, "kubbe_1"]);
+  assert.deepEqual(detail.media.find((m: { kind: string }) => m.kind === "model").interiorParts, ["kubbe_1"]);
+  const quiet = (await ctx.app.inject({ url: "/v1/sites/test-1" })).json();
+  assert.equal(quiet.placement.frontDeg, null, "a package without on_yonu leaves the façade direction unknown");
+  assert.deepEqual(quiet.media.find((m: { kind: string }) => m.kind === "model").interiorParts, []);
   assert.deepEqual(detail.partCards.map((c: { parts: string[]; photoIds: string[] }) => [c.parts, c.photoIds]), [[["kubbe_1"], ["detail-0", "photo-0"]]]);
   assert.ok(detail.media.some((m: { id: string }) => m.id === "detail-0"), "a card's off-gallery photo resolves from the detail's media");
+  // English written since (translation, panel) is not in the package; a re-import keeps it per id (§11.64).
+  const db = ctx.app.deps.db;
+  const readingEn = { summary: ["Sourced sentence."], figures: [{ value: "1399", label: "opening year", evidence: "in 1399" }], quotes: [{ text: "Quote", by: null }], timeline: [{ year: "1399", evidence: "in 1399" }], terms: [{ word: "dome", definition: "Half-sphere roof" }] };
+  await db.update(siteAboutChapters).set({ titleEn: "History", readingEn, enStatus: "machine" }).where(eq(siteAboutChapters.id, "chapter-0"));
+  await db.update(siteSections).set({ titleEn: "History", bodyEn: "The mosque opened in 1399.", enStatus: "machine" }).where(eq(siteSections.id, "sec-0-1"));
+  await db.update(historyImages).set({ captionEn: "Old building", enStatus: "reviewed" }).where(eq(historyImages.id, "archive-0"));
+  await db.update(siteTasks).set({ titleEn: "Question", promptEn: "Which one?", detailsEn: { options: ["A", "B", "C"], hints: ["Hint 1", "Hint 2"], correctText: "B is right", wrongText: "Try again" }, enStatus: "machine" }).where(eq(siteTasks.id, "task-q-0"));
+  await db.update(siteBadges).set({ titleEn: "Gate", textEn: "Found it", enStatus: "machine" }).where(eq(siteBadges.id, "badge-f-0"));
+  await db.update(sitesTable).set({ nameEn: "Work 0", descriptionEn: "Sourced content" }).where(eq(sitesTable.id, "test-0"));
+  await importDemoContent(path, root, true, env);
+  const en = (await ctx.app.inject({ url: "/v1/sites/test-0" })).json();
+  assert.deepEqual([en.nameEn, en.descriptionEn], ["Work 0", "Sourced content"]);
+  assert.deepEqual([en.chapters[0].titleEn, en.chapters[0].readingEn, en.chapters[0].enStatus], ["History", readingEn, "machine"]);
+  assert.deepEqual([en.chapters[0].summary, en.chapters[0].camera?.target], [["Kaynaklı cümle."], "kubbe_1"], "the Turkish reading still comes from the package");
+  assert.deepEqual(en.sections.map((s: Record<string, unknown>) => [s.id, s.titleEn, s.bodyEn, s.enStatus]), [["sec-0-1", "History", "The mosque opened in 1399.", "machine"], ["sec-0-2", null, null, null]]);
+  assert.deepEqual([en.historyImages[0].captionEn, en.historyImages[0].enStatus], ["Old building", "reviewed"]);
+  const quizEn = en.tasks.find((t: { id: string }) => t.id === "task-q-0");
+  assert.deepEqual([quizEn.titleEn, quizEn.promptEn, quizEn.quiz.optionsEn, quizEn.quiz.hintsEn, quizEn.quiz.wrongTextEn], ["Question", "Which one?", ["A", "B", "C"], ["Hint 1", "Hint 2"], "Try again"]);
+  assert.ok(!JSON.stringify(en).includes("B is right"), "the English right-answer text stays behind the answer endpoint too");
+  assert.deepEqual(en.badges.filter((b: { titleEn: string | null }) => b.titleEn).map((b: Record<string, unknown>) => [b.id, b.titleEn, b.textEn]), [["badge-f-0", "Gate", "Found it"]]);
   // The reading layer comes back whole: chapters in order, paragraphs tied to them, book photographs in order (a gallery photo and a book-only one).
   assert.deepEqual(detail.chapters, [{ id: "chapter-0", title: "Tarihçe", kind: "history", summary: ["Kaynaklı cümle."], figures: [{ value: "1399", label: "açılış yılı", evidence: "1399 yılında" }],
     quotes: [{ text: "Alıntı", by: null }], timeline: [{ year: "1399", evidence: "1399 yılında" }], terms: [{ word: "kubbe", definition: "Yarım küre örtü" }],
-    camera: { target: "kubbe_1", azimuthDeg: 30, elevationDeg: 40, distance: 0.6 }, interior: true, focusParts: ["kubbe_1"] }]);
+    camera: { target: "kubbe_1", azimuthDeg: 30, elevationDeg: 40, distance: 0.6 }, interior: true, focusParts: ["kubbe_1"], titleEn: null, readingEn: null, enStatus: null, narrations: [] }]);
   assert.deepEqual(detail.sections.map((x: { id: string; chapterId: string | null; photos: unknown[] }) => [x.id, x.chapterId, x.photos]), [
     ["sec-0-1", "chapter-0", [{ mediaId: "photo-0", aspect: 1.5, alt: "Dış görünüş" }, { mediaId: "book-0", aspect: null, alt: "Kitap sayfası" }]],
     ["sec-0-2", null, []],
@@ -146,10 +175,10 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.equal(detail.media.find((m: { id: string }) => m.id === "book-0").description, "Kitaptan kesildi");
   // Tasks and badges come back in order; the public task carries no answer key and none of the after-the-answer texts.
   assert.deepEqual(detail.tasks, [
-    { id: "task-q-0", kind: "quiz", title: "Soru", prompt: "Hangisi?", photoId: "detail-0", part: "kubbe_1", source: "E cilt-1 PDF s.27", trust: "verified",
-      quiz: { options: ["A", "B", "C"], hints: ["İpucu 1", "İpucu 2"], wrongText: "Tekrar dene", fromHome: true } },
-    { id: "task-f-0", kind: "field", title: "Saha", prompt: "Kapıyı bul", photoId: null, part: null, source: null, trust: "verified",
-      field: { onSite: { text: "Önüne gel", radiusM: 80 }, fromHome: { text: "Kubbeye dokun", part: "kubbe_1" } } },
+    { id: "task-q-0", kind: "quiz", title: "Soru", prompt: "Hangisi?", titleEn: null, promptEn: null, photoId: "detail-0", part: "kubbe_1", source: "E cilt-1 PDF s.27", trust: "verified", enStatus: null,
+      quiz: { options: ["A", "B", "C"], optionsEn: null, hints: ["İpucu 1", "İpucu 2"], hintsEn: null, wrongText: "Tekrar dene", wrongTextEn: null, fromHome: true } },
+    { id: "task-f-0", kind: "field", title: "Saha", prompt: "Kapıyı bul", titleEn: null, promptEn: null, photoId: null, part: null, source: null, trust: "verified", enStatus: null,
+      field: { onSite: { text: "Önüne gel", textEn: null, radiusM: 80 }, fromHome: { text: "Kubbeye dokun", textEn: null, part: "kubbe_1" } } },
   ]);
   assert.deepEqual(detail.badges.map((b: { id: string; condition: string; taskId: string | null; onSiteLabel: boolean }) => [b.id, b.condition, b.taskId, b.onSiteLabel]),
     [["badge-s-0", "story", null, false], ["badge-f-0", "task", "task-f-0", true]]);
@@ -160,20 +189,19 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   const swept = await ctx.app.deps.db.transaction((tx) => deleteUnreferencedMedia(tx, ["book-0"]));
   assert.deepEqual(swept, [], "a photograph only a paragraph shows is in use");
   // A reimport keeps a player's progress for every task and badge that is still in the manifest, reorders freely, and drops only what vanished.
-  const db = ctx.app.deps.db;
   await db.insert(userSiteTasks).values([{ userId: "u1", taskId: "task-q-0", onSite: false }, { userId: "u1", taskId: "task-f-0", onSite: true }]);
   await db.insert(userSiteBadges).values([{ userId: "u1", badgeId: "badge-s-0" }, { userId: "u1", badgeId: "badge-f-0", onSite: true }]);
   sites[0]!.tasks.reverse();
   sites[0]!.badges.reverse();
   await writeFile(path, JSON.stringify(manifest));
-  await importDemoContent(path, root, true, env);
+  await importDemoContent(path, root, true, env, { replaceTasks: true });
   assert.deepEqual((await db.select({ id: siteTasks.id }).from(siteTasks).where(eq(siteTasks.siteId, "test-0")).orderBy(siteTasks.position)).map((t) => t.id), ["task-f-0", "task-q-0"]);
   assert.equal((await db.select().from(userSiteTasks)).length, 2, "reordering keeps the progress");
   assert.equal((await db.select().from(userSiteBadges)).length, 2);
   sites[0]!.tasks = sites[0]!.tasks.filter((t) => t.id !== "task-f-0");
   sites[0]!.badges = sites[0]!.badges.filter((b) => b.id !== "badge-f-0");
   await writeFile(path, JSON.stringify(manifest));
-  await importDemoContent(path, root, true, env);
+  await importDemoContent(path, root, true, env, { replaceTasks: true });
   assert.deepEqual((await db.select({ id: siteTasks.id }).from(siteTasks).where(eq(siteTasks.siteId, "test-0"))).map((t) => t.id), ["task-q-0"]);
   assert.deepEqual((await db.select({ id: siteBadges.id }).from(siteBadges).where(eq(siteBadges.siteId, "test-0"))).map((b) => b.id), ["badge-s-0"]);
   assert.deepEqual((await db.select({ id: userSiteTasks.taskId }).from(userSiteTasks)).map((t) => t.id), ["task-q-0"], "only the vanished task's progress goes");
@@ -227,6 +255,61 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Panelde düzeltildi"], []]);
   assert.deepEqual((await importDemoContent(path, root, true, env, { replacePartCards: true })).partCardsKept, []);
   assert.deepEqual([await titles("test-0"), await titles("test-1")], [["Kubbe"], ["Kubbe"]]);
+  // The panel owns tasks and badges of a site already in the database too (§11.67): a repeat import keeps its edits, --replace-tasks restores the manifest's.
+  const taskTitles = async (siteId: string) => (await db.select({ title: siteTasks.title }).from(siteTasks).where(eq(siteTasks.siteId, siteId)).orderBy(siteTasks.position)).map((t) => t.title);
+  await db.update(siteTasks).set({ title: "Panelde düzeltildi" }).where(eq(siteTasks.id, "task-q-0"));
+  await db.delete(siteTasks).where(eq(siteTasks.siteId, "test-1"));
+  await writeFile(path, JSON.stringify(manifest));
+  assert.equal((await importDemoContent(path, root, true, env)).tasksKept?.length, 7);
+  assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Panelde düzeltildi"], []]);
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceTasks: true })).tasksKept, []);
+  assert.deepEqual([await taskTitles("test-0"), await taskTitles("test-1")], [["Soru"], ["Soru", "Saha"]]);
+  // The panel owns the chapters and paragraphs of a site already in the database too (§11.69): a repeat import keeps its edits (and the English), --replace-about restores the manifest's.
+  const aboutOf = async (siteId: string) => ({
+    chapters: (await db.select({ id: siteAboutChapters.id, title: siteAboutChapters.title }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, siteId)).orderBy(siteAboutChapters.position)).map((c) => `${c.id}:${c.title}`),
+    sections: (await db.select({ id: siteSections.id, body: siteSections.body }).from(siteSections).where(eq(siteSections.siteId, siteId)).orderBy(siteSections.position)).map((s) => `${s.id}:${s.body}`),
+  });
+  await db.update(siteAboutChapters).set({ title: "Panelde düzeltildi" }).where(eq(siteAboutChapters.id, "chapter-0"));
+  await db.delete(siteSections).where(eq(siteSections.id, "sec-0-2"));
+  await db.delete(siteAboutChapters).where(eq(siteAboutChapters.siteId, "test-1"));
+  await writeFile(path, JSON.stringify(manifest));
+  assert.equal((await importDemoContent(path, root, true, env)).aboutKept?.length, 7);
+  assert.deepEqual(await aboutOf("test-0"), { chapters: ["chapter-0:Panelde düzeltildi"], sections: ["sec-0-1:Cami 1399 yılında açıldı."] });
+  assert.deepEqual((await aboutOf("test-1")).chapters, [], "a panel-emptied site stays empty");
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceAbout: true })).aboutKept, []);
+  assert.deepEqual(await aboutOf("test-0"), { chapters: ["chapter-0:Tarihçe"], sections: ["sec-0-1:Cami 1399 yılında açıldı.", "sec-0-2:Kubbeli."] });
+  assert.deepEqual((await aboutOf("test-1")).chapters, ["chapter-1:Tarihçe"]);
+  assert.equal((await db.select().from(siteAboutChapters).where(eq(siteAboutChapters.id, "chapter-0")))[0]!.titleEn, "History", "the English written since is kept per id on a replace");
+  // The panel owns a story sentence's 3D view (§11.70): a repeat import keeps camera, highlights, interior and card but takes
+  // the text from the package; --replace-story-views restores the package's views.
+  const packageCamera = { target: "kubbe_1", azimuthDeg: 10, elevationDeg: 20, distance: 1 };
+  (sites[0] as { stories: unknown[] }).stories = [{ id: "story-0-1", title: "Giriş", text: "Cami 1399'da açıldı.", simple: "Cami eski.", trust: "verified", photoId: "photo-0", sourceId: "source-0", highlights: [], camera: packageCamera }];
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  const panelCamera = { target: "kubbe_1", azimuthDeg: 90, elevationDeg: 30, distance: 0.5 };
+  await db.update(storyBlocks).set({ camera: panelCamera, highlights: ["kubbe_1"], interior: true, showCard: true }).where(eq(storyBlocks.id, "story-0-1"));
+  (sites[0] as { stories: Array<{ text: string }> }).stories[0]!.text = "Cami 1399 yılında açıldı.";
+  await writeFile(path, JSON.stringify(manifest));
+  const viewOf = async () => {
+    const [s] = await db.select().from(storyBlocks).where(eq(storyBlocks.id, "story-0-1"));
+    return { text: s!.text, camera: s!.camera, highlights: s!.highlights, interior: s!.interior, showCard: s!.showCard };
+  };
+  assert.ok((await importDemoContent(path, root, true, env)).storyViewsKept?.includes("test-0"));
+  assert.deepEqual(await viewOf(), { text: "Cami 1399 yılında açıldı.", camera: panelCamera, highlights: ["kubbe_1"], interior: true, showCard: true });
+  assert.deepEqual((await importDemoContent(path, root, true, env, { replaceStoryViews: true })).storyViewsKept, []);
+  assert.deepEqual(await viewOf(), { text: "Cami 1399 yılında açıldı.", camera: packageCamera, highlights: [], interior: false, showCard: null });
+  (sites[0] as { stories: unknown[] }).stories = [];
+  // A stored placement is the panel's: a re-import sets the façade direction only where the package names one and leaves the rest.
+  const placementOf = async (siteId: string) => (await db.select().from(siteMapPlacements).where(eq(siteMapPlacements.siteId, siteId)))[0]!;
+  await db.update(siteMapPlacements).set({ frontDeg: 99, headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-1"));
+  await db.update(siteMapPlacements).set({ headingDeg: 50 }).where(eq(siteMapPlacements.siteId, "test-0"));
+  (sites[0]!.model.placement as { frontDeg: number }).frontDeg = 9;
+  await writeFile(path, JSON.stringify(manifest));
+  await importDemoContent(path, root, true, env);
+  assert.deepEqual([(await placementOf("test-1")).frontDeg, (await placementOf("test-1")).headingDeg], [99, 50], "a silent package keeps the stored façade direction");
+  assert.deepEqual([(await placementOf("test-0")).frontDeg, (await placementOf("test-0")).headingDeg], [9, 50], "a package that names one sets it, the panel's heading stays");
+  (sites[0]!.model.placement as { frontDeg: number }).frontDeg = 7;
+  await db.update(siteMapPlacements).set({ headingDeg: 13 }).where(eq(siteMapPlacements.siteId, "test-0"));
   // Present-day photographs and samples: a missing credit line or licence, an unknown angle word, a date that is not a day, an archive
   // photograph of another site or an id another photograph already has stops the import before anything is written.
   const attempt = async (record: Record<string, unknown>, change: Record<string, unknown>, expected: RegExp) => {
@@ -274,6 +357,6 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   sites[0]!.name = "Must roll back";
   sites[6]!.sections = [{ id: "bad", kind: "history", title: "bad", body: "bad", sourceId: "missing", trust: "verified", chapterId: null, photos: [] }];
   await writeFile(path, JSON.stringify(manifest));
-  await assert.rejects(importDemoContent(path, root, true, env));
+  await assert.rejects(importDemoContent(path, root, true, env, { replaceAbout: true }));
   assert.equal((await ctx.app.inject({ url: "/v1/sites/test-0" })).json().name, "Eser 0");
 });

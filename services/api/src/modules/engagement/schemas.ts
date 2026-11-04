@@ -43,6 +43,14 @@ export const MyRouteResponse = z.object({
   siteIds: z.array(z.string()).describe("Rotadaki yayındaki eserler, rota sırasıyla"),
 });
 
+export const RouteNameBody = z.object({ name: z.string().trim().min(1).max(80) });
+export const PersonalRoute = z.object({
+  id: z.string(), name: z.string(), isDefault: z.boolean(), siteIds: z.array(z.string()),
+  createdAt: IsoTime, updatedAt: IsoTime,
+});
+export const PersonalRoutes = z.object({ items: z.array(PersonalRoute) });
+export const DeletedRoute = z.object({ deleted: z.literal(true) });
+
 // ── progress ─────────────────────────────────────────────────────────────────
 
 export const ProgressBody = z.object({

@@ -228,23 +228,47 @@ export interface SiteModelFile {
 /** The file a theme shows: the night file by night when the site has one, the day model otherwise. */
 export const modelFileFor = (model: SiteModel, theme: "day" | "night"): SiteModelFile =>
   theme === "night" && model.night ? model.night : model;
-/**
- * Part names the site's content uses that its night file lacks: story highlights and cameras, "Eser hakkında"
- * chapters, part cards, tasks and cover groups. They would not show by night. Only names in use are compared: a
- * file's part list may also carry mesh names, read differently by the server and by the editor.
- */
-export function nightPartsMissing(site: HeritageSite): string[] {
-  const night = site.model?.night;
-  if (!night?.parts.length) return [];
-  const used = new Set([
-    ...site.stories.flatMap((s) => [...(s.highlights ?? []), ...(s.camera?.target ? [s.camera.target] : [])]),
-    ...(site.chapters ?? []).flatMap((c) => [...c.focusParts, ...(c.camera?.target ? [c.camera.target] : [])]),
-    ...(site.partCards ?? []).flatMap((c) => c.parts),
-    ...(site.tasks ?? []).flatMap((t) => [...(t.part ? [t.part] : []), ...(t.field?.fromHome ? [t.field.fromHome.part] : [])]),
-    ...(site.model?.coverGroups ?? []).flat(),
-  ]);
-  return [...used].filter((part) => !night.parts.includes(part));
+/** A part name the site's content uses that a model file lacks, with the places that use it (editor labels). */
+export interface MissingPart {
+  part: string;
+  usedIn: string[];
 }
+/**
+ * Part names the site's content uses that `parts` lacks: story highlights and cameras, "Eser hakkında" chapters,
+ * part cards, tasks and cover groups. Only names in use are compared: a file's part list may also carry mesh
+ * names, read differently by the server and by the editor. An empty list (parts unknown) reports nothing.
+ */
+export function partsMissing(site: HeritageSite, parts: string[]): MissingPart[] {
+  if (!parts.length) return [];
+  const uses = new Map<string, string[]>();
+  const use = (part: string | null | undefined, place: string) => {
+    if (!part) return;
+    const list = uses.get(part) ?? [];
+    if (!list.includes(place)) list.push(place);
+    uses.set(part, list);
+  };
+  site.stories.forEach((s, i) => {
+    for (const p of s.highlights ?? []) use(p, `Hikâye cümlesi ${i + 1}`);
+    use(s.camera?.target, `Hikâye cümlesi ${i + 1}`);
+  });
+  (site.chapters ?? []).forEach((c, i) => {
+    for (const p of c.focusParts) use(p, `Eser hakkında bölüm ${i + 1}`);
+    use(c.camera?.target, `Eser hakkında bölüm ${i + 1}`);
+  });
+  (site.partCards ?? []).forEach((c, i) => {
+    for (const p of c.parts) use(p, `Parça kartı «${c.title || i + 1}»`);
+  });
+  (site.tasks ?? []).forEach((t, i) => {
+    use(t.part, `Görev ${i + 1}`);
+    use(t.field?.fromHome?.part, `Görev ${i + 1}`);
+  });
+  for (const p of (site.model?.coverGroups ?? []).flat()) use(p, "İçini göster");
+  const have = new Set(parts);
+  return [...uses].filter(([part]) => !have.has(part)).map(([part, usedIn]) => ({ part, usedIn }));
+}
+/** Part names the site's content uses that its night file lacks; they would not show by night. */
+export const nightPartsMissing = (site: HeritageSite): string[] =>
+  partsMissing(site, site.model?.night?.parts ?? []).map((m) => m.part);
 export interface SiteModel {
   name: string;
   bytes: number;
@@ -360,6 +384,7 @@ export interface HistoryImage {
   /** Set with `presentPhoto`; `near` makes the screen say the two were not taken from exactly the same point. */
   presentAngleMatch?: AngleMatch;
   caption: string;
+  captionEn?: string;
   dateLabel: string;
   sourceId: string;
   trust: Trust;
@@ -410,8 +435,12 @@ export interface SiteTask {
   id: string;
   kind: "quiz" | "field";
   title: string;
+  titleEn?: string;
   /** Quiz: the question; field: the task text. */
   prompt: string;
+  promptEn?: string;
+  /** Source of the English texts of the row (`titleEn`, `promptEn`, `quiz`/`field` English); only the editor's view carries it. */
+  enStatus?: TranslationStatus;
   /** One of the site's photographs. */
   photo?: SitePhoto;
   /** Model part the task is about. */
@@ -421,18 +450,30 @@ export interface SiteTask {
   trust: Trust;
   quiz?: {
     options: string[];
+    /** English options in the same order; absent = none written. */
+    optionsEn?: string[];
     /** Revealed one by one, on demand. */
     hints: string[];
+    hintsEn?: string[];
     /** Shown after a wrong answer (the player may try again). */
     wrongText: string;
+    wrongTextEn?: string;
     /** Whether the question can be answered without being at the site. */
     fromHome: boolean;
+    /** The answer key: index into `options`. Editor only: the public detail never carries it, nor the two texts below. */
+    correctIndex?: number;
+    /** Shown after a right answer. Editor only. */
+    correctText?: string;
+    correctTextEn?: string;
   };
   field?: {
     /** Done at the site: the visitor's position must be within `radiusM` of the site. */
-    onSite: { text: string; radiusM: number };
+    onSite: { text: string; textEn?: string; radiusM: number };
     /** Done from home: tapping `part` on the 3D model. `null` = on site only. */
-    fromHome: { text: string; part: string } | null;
+    fromHome: { text: string; textEn?: string; part: string } | null;
+    /** Shown when the task is done. Editor only. */
+    doneText?: string;
+    doneTextEn?: string;
   };
 }
 /** Badge of a site: earned by finishing the story or by one of the site's tasks. */
@@ -440,6 +481,10 @@ export interface SiteBadge {
   id: string;
   title: string;
   text: string;
+  titleEn?: string;
+  textEn?: string;
+  /** Source of `titleEn` and `textEn`; only the editor's view carries it. */
+  enStatus?: TranslationStatus;
   condition: "story" | "task";
   /** The task that earns it; `null` for a story badge. */
   taskId: string | null;
@@ -459,6 +504,7 @@ export interface AboutPhoto {
 export interface AboutChapter {
   id: string;
   title: string;
+  titleEn?: string;
   kind: "history" | "architecture" | "waqf";
   /** Sentences picked from the text, shown before it. */
   summary: string[];
@@ -474,7 +520,14 @@ export interface AboutChapter {
   interior: boolean;
   /** Model parts lit while this chapter is read; empty = the whole building. */
   focusParts: string[];
+  /** The English of the reading texts, item for item; absent = none written (the Turkish ones are shown). */
+  readingEn?: AboutReadingEn;
+  /** Source of `titleEn` and `readingEn` (`machine` = a draft nobody has saved yet); only the editor's view carries it. */
+  enStatus?: TranslationStatus;
+  /** AI voice-overs of the title (variant `text`); absent or empty = none (the reader falls back to the browser voice). */
+  narrations?: StoryNarration[];
 }
+export type AboutReadingEn = Pick<AboutChapter, "summary" | "figures" | "quotes" | "timeline" | "terms">;
 export interface HeritageSite {
   id: string;
   name: string;
@@ -527,13 +580,19 @@ export interface HeritageSite {
     id: string;
     kind: "history" | "architecture" | "waqf";
     title: string;
+    titleEn?: string;
+    /** Source of `titleEn` and `bodyEn`; only the editor's view carries it. */
+    enStatus?: TranslationStatus;
     body: string;
+    bodyEn?: string;
     trust: Trust;
     sourceId: string;
     /** `AboutChapter.id`, absent when the paragraph belongs to no chapter. */
     chapterId?: string;
     /** Book photographs shown after this paragraph, in order. */
     photos?: AboutPhoto[];
+    /** AI voice-overs of what the reader reads aloud (variant `text`); absent or empty = none. */
+    narrations?: StoryNarration[];
   }>;
 }
 export interface HeritageRoute {
@@ -566,7 +625,16 @@ export interface UserPreferences {
   voiceLang: "tr" | "en" | null;
   voiceGender: "female" | "male" | null;
 }
+export interface PersonalRoute {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  siteIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
 export interface Snapshot {
+  personalRoutes?: PersonalRoute[];
   version: 1;
   sites: HeritageSite[];
   /** The current user's own memories (every status). */
@@ -727,6 +795,8 @@ export function validateSite(site: HeritageSite) {
   if (site.status === "published" && !site.source.trim())
     throw new Error("Yayınlamak için kaynak bilgisi ekle.");
   validatePartCards(site);
+  validateTasks(site);
+  validateAbout(site);
 }
 /**
  * The API's refusals for part cards, so the demo client answers the same: a title, a part, only parts of the model (none
@@ -750,6 +820,102 @@ function validatePartCards(site: HeritageSite) {
   const sourceIds = new Set((site.sources ?? []).map((s) => s.id));
   if (cards.some((c) => c.sourceId && !sourceIds.has(c.sourceId)))
     throw new Error("Kart kaynağı eserin kaynakları arasında olmalı.");
+}
+/** Limits of "Eser hakkında" the API enforces too (`AboutBody`); the panel's counters and the demo client use them. */
+export const aboutLimits = { chapters: 40, paragraphs: 400, title: 200, body: 8000 } as const;
+/**
+ * The API's refusals for the "Eser hakkında" chapters and paragraphs, so the demo client answers the same: titles and
+ * texts, unique ids, a paragraph naming one of the site's chapters, no blank reading item, and an English reading that
+ * matches the Turkish one list for list with every item written.
+ */
+function validateAbout(site: HeritageSite) {
+  const chapters = site.chapters ?? [];
+  const sections = site.sections ?? [];
+  if (chapters.length > aboutLimits.chapters || sections.length > aboutLimits.paragraphs)
+    throw new Error(
+      `Eser hakkında en çok ${aboutLimits.chapters} bölüm ve ${aboutLimits.paragraphs} paragraf içerebilir.`,
+    );
+  if (new Set(chapters.map((c) => c.id)).size !== chapters.length)
+    throw new Error("Bölüm kimlikleri tekrar ediyor.");
+  if (new Set(sections.map((s) => s.id)).size !== sections.length)
+    throw new Error("Paragraf kimlikleri tekrar ediyor.");
+  if (chapters.some((c) => !c.title.trim())) throw new Error("Her bölümün başlığı olmalı.");
+  if (sections.some((s) => !s.title.trim() || !s.body.trim()))
+    throw new Error("Her paragrafın başlığı ve metni olmalı.");
+  if (
+    sections.some(
+      (s) =>
+        s.title.length > aboutLimits.title ||
+        s.body.length > aboutLimits.body ||
+        (s.bodyEn?.length ?? 0) > aboutLimits.body,
+    ) ||
+    chapters.some((c) => c.title.length > aboutLimits.title)
+  )
+    throw new Error(
+      `Başlıklar en çok ${aboutLimits.title}, paragraf metinleri en çok ${aboutLimits.body} karakter olabilir.`,
+    );
+  const chapterIds = new Set(chapters.map((c) => c.id));
+  if (sections.some((s) => s.chapterId && !chapterIds.has(s.chapterId)))
+    throw new Error("Paragraf, eserin bir bölümüne bağlı olmalı.");
+  for (const c of chapters) {
+    const blank = (list: string[]) => list.some((t) => !t.trim());
+    const reading = (r: AboutReadingEn) => [
+      r.summary,
+      r.figures.flatMap((f) => [f.value, f.label, f.evidence]),
+      r.quotes.map((q) => q.text),
+      r.timeline.flatMap((t) => [t.year, t.evidence]),
+      r.terms.flatMap((t) => [t.word, t.definition]),
+    ];
+    if (reading(c).some(blank))
+      throw new Error(`«${c.title}» bölümünün okuma metinlerinde boş alan var.`);
+    if (c.readingEn) {
+      const tr = [c.summary, c.figures, c.quotes, c.timeline, c.terms];
+      const en = [c.readingEn.summary, c.readingEn.figures, c.readingEn.quotes, c.readingEn.timeline, c.readingEn.terms];
+      if (en.some((list, i) => list.length !== tr[i]?.length) || reading(c.readingEn).some(blank))
+        throw new Error(
+          `«${c.title}» bölümünün İngilizce okuma metinleri Türkçesiyle aynı sayıda ve eksiksiz olmalı: hepsini yaz ya da hepsini boş bırak.`,
+        );
+    }
+  }
+}
+/**
+ * The API's refusals for tasks and badges, so the demo client answers the same: a title and a prompt, 2–6 options with the
+ * answer key (when the editor's view carries it) among them, unique ids, and a task badge naming one of the site's tasks.
+ * Not checked here: the answer key itself (a demo site's public tasks carry none) and the parts, which the API checks
+ * against the model (the demo sites' tasks name parts of models whose part names are not read).
+ */
+function validateTasks(site: HeritageSite) {
+  const tasks = site.tasks ?? [];
+  const badges = site.badges ?? [];
+  if (tasks.some((t) => !t.title.trim() || !t.prompt.trim()))
+    throw new Error("Her görevin başlığı ve metni olmalı.");
+  if (new Set(tasks.map((t) => t.id)).size !== tasks.length)
+    throw new Error("Görev kimlikleri tekrar ediyor.");
+  for (const t of tasks) {
+    // Only the kind in use counts: the editor keeps the other kind's details so a mistaken switch loses nothing.
+    const q = t.kind === "quiz" ? t.quiz : undefined;
+    if (q && (q.options.length < 2 || q.options.length > 6 || q.options.some((o) => !o.trim())))
+      throw new Error("Her sorunun 2–6 seçeneği olmalı, hiçbiri boş olmamalı.");
+    if (q?.correctIndex !== undefined && !(q.correctIndex >= 0 && q.correctIndex < q.options.length))
+      throw new Error("Doğru seçenek, seçeneklerden biri olmalı.");
+    if (t.kind === "field" && !t.field?.onSite.text.trim())
+      throw new Error("Saha görevinin yerinde yapılacak metni olmalı.");
+  }
+  if (new Set(badges.map((b) => b.id)).size !== badges.length)
+    throw new Error("Rozet kimlikleri tekrar ediyor.");
+  const taskIds = new Set(tasks.map((t) => t.id));
+  if (
+    badges.some(
+      (b) =>
+        !b.title.trim() ||
+        !b.text.trim() ||
+        (b.condition === "task") !== (b.taskId !== null) ||
+        (b.taskId !== null && !taskIds.has(b.taskId)),
+    )
+  )
+    throw new Error(
+      "Her rozetin başlığı ve metni olmalı; görev rozeti eserin bir görevine bağlı olmalı.",
+    );
 }
 /** Value ranges of a placement; the API refuses the same ones (`MapPlacementBody`). */
 export const placementLimits = {

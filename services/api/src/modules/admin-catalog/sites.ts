@@ -11,6 +11,7 @@ import {
 import { and, asc, desc, eq, inArray, ne, notInArray, or, sql, type SQL } from "drizzle-orm";
 import type { PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import type { Db } from "../../db/client.ts";
 import {
   cards,
@@ -33,9 +34,17 @@ import {
   siteTypes,
   sources,
   narrations,
+  siteBadges,
+  siteTaskAnswers,
+  siteTasks,
   storyBlocks,
   type CameraPose,
+  type FieldTaskDetails,
+  type FieldTaskTextsEn,
   type PhotoCamera,
+  type QuizTaskDetails,
+  type QuizTaskTextsEn,
+  type AboutReadingEn,
   type TranslationStatus,
 } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
@@ -61,7 +70,7 @@ import {
   type SectionPhotoRow,
 } from "../catalog/service.ts";
 import { loadSampleTraces, sampleTraceDto, type SampleTraceRow } from "../catalog/sample-traces.ts";
-import { badgeDto, loadBadges, loadTasks, taskDto, type BadgeRow, type TaskRow } from "../catalog/tasks.ts";
+import { badgeDto, loadBadges, loadTaskAnswers, loadTasks, taskDto, type BadgeRow, type TaskRow } from "../catalog/tasks.ts";
 import { CITIES } from "../ingest/cities.ts";
 import { deleteUnreferencedMedia } from "../media/service.ts";
 import { currentNarrations, loadNarrationRows, narrationsOfSubject, type NarrationRow } from "../narrations/read.ts";
@@ -72,6 +81,7 @@ import type {
   AdminListSitesInput,
   AdminSiteDetail,
   AdminSiteListItem,
+  AdminSiteTaskDto,
   CameraPoseInput,
   CreateCardInput,
   CreateSiteInput,
@@ -81,11 +91,12 @@ import type {
   ModelInput,
   NightModelInput,
   PartCardsInput,
-  SectionsInput,
+  AboutInput,
   SiteInfoInput,
   SiteMediaInput,
   SiteSourcesInput,
   StoriesInput,
+  TasksInput,
   UpdateCardInput,
 } from "./sites-schemas.ts";
 
@@ -271,6 +282,8 @@ export type SiteAggregate = {
   sectionPhotos: SectionPhotoRow[];
   tasks: TaskRow[];
   badges: BadgeRow[];
+  /** Answer keys of the quizzes (task id → correct option), shared by a page of sites. Staff-only. */
+  taskAnswers: ReadonlyMap<string, number>;
   /** Team-made İz Bırak samples (§11.47), ordered by position. */
   sampleTraces: SampleTraceRow[];
   /** `site_media` in display order. */
@@ -316,9 +329,10 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
   const chapterRows = await loadChapters(q, ids);
   const sectionPhotoRows = await loadSectionPhotos(q, ids);
   const taskRows = await loadTasks(q, ids);
+  const taskAnswers = await loadTaskAnswers(q, taskRows.map((t) => t.id));
   const badgeRows = await loadBadges(q, ids);
   const traceRows = await loadSampleTraces(q, ids);
-  const narrationList = currentNarrations(await loadNarrationRows(q, ids), storyRows, partCardRows);
+  const narrationList = currentNarrations(await loadNarrationRows(q, ids), { stories: storyRows, partCards: partCardRows, chapters: chapterRows, sections: sectionRows });
   const cardIds = distinct(storyRows.map((b) => b.cardId));
   const cardRows = cardIds.length ? await q.select().from(cards).where(inArray(cards.id, cardIds)) : [];
   const mediaIds = distinct([
@@ -377,6 +391,7 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
         chapters: chaptersOf.get(site.id) ?? [],
         sectionPhotos: sectionPhotosOf.get(site.id) ?? [],
         tasks: tasksOf.get(site.id) ?? [],
+        taskAnswers,
         badges: badgesOf.get(site.id) ?? [],
         sampleTraces: tracesOf.get(site.id) ?? [],
         mediaIds: (mediaOf.get(site.id) ?? []).map((l) => l.mediaId),
@@ -472,7 +487,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
   if (s.relatedSiteId) site.relatedSiteId = s.relatedSiteId;
   if (s.coverMediaId) site.coverPhotoId = s.coverMediaId;
   const model = modelOf(a);
-  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups };
+  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups, interiorParts: model.interiorParts };
   return site;
 }
 
@@ -523,6 +538,33 @@ function referencesOf(a: SiteAggregate): { mediaList: MediaRow[]; cardList: Card
     ]).map((id) => a.sources.get(id)),
   );
   return { mediaList, cardList, sourceList };
+}
+
+/**
+ * The editor's task: the public one (`taskDto`) plus the answer key and the texts the player only gets after answering.
+ * An English list that is empty reads as "none written", as the editor sends it.
+ */
+function adminTaskDto(t: TaskRow, correctIndex: number | null): AdminSiteTaskDto {
+  const { quiz, field, ...base } = taskDto(t);
+  if (t.kind === "quiz") {
+    const d = t.details as QuizTaskDetails;
+    const en = quizEnglishOf(t);
+    return {
+      ...base,
+      quiz: {
+        ...quiz!,
+        optionsEn: en?.options.length ? en.options : null,
+        hintsEn: en?.hints.length ? en.hints : null,
+        wrongTextEn: en?.wrongText || null,
+        correctIndex,
+        correctText: d.correctText,
+        correctTextEn: en?.correctText || null,
+      },
+    };
+  }
+  const d = t.details as FieldTaskDetails;
+  const en = fieldEnglishOf(t);
+  return { ...base, field: { ...field!, doneText: d.doneText, doneTextEn: en?.doneText || null } };
 }
 
 function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
@@ -595,14 +637,17 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       id: x.id,
       kind: x.kind,
       title: x.title,
+      titleEn: x.titleEn,
       body: x.body,
       bodyEn: x.bodyEn,
+      enStatus: x.enStatus,
       trust: x.trust,
       sourceId: x.sourceId,
       chapterId: x.chapterId,
       photos: photosOf.get(x.id) ?? [],
+      narrations: narrationsOfSubject(a.narrations, "about_section", s.id, x.id),
     })),
-    chapters: a.chapters.map(chapterDto),
+    chapters: a.chapters.map((c) => chapterDto(c, narrationsOfSubject(a.narrations, "about_chapter", s.id, c.id))),
     cards: cardList.map((c) => ({
       id: c.id,
       kind: c.kind,
@@ -620,6 +665,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       presentMediaId: h.presentMediaId,
       caption: h.caption,
       captionEn: h.captionEn,
+      enStatus: h.enStatus,
       dateLabel: h.dateLabel,
       sourceId: h.sourceId,
       trust: h.trust,
@@ -642,7 +688,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       trust: c.trust,
       narrations: narrationsOfSubject(a.narrations, "part_card", s.id, c.id),
     })),
-    tasks: a.tasks.map(taskDto),
+    tasks: a.tasks.map((t) => adminTaskDto(t, a.taskAnswers.get(t.id) ?? null)),
     badges: a.badges.map(badgeDto),
     placement: s.lng === null || s.lat === null ? null : publicPlacement(a.placement, { lng: s.lng, lat: s.lat }, modelOf(a) !== undefined),
     media: mediaList.map((m) => ({
@@ -660,6 +706,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       parts: m.parts,
       triangles: m.triangles,
       coverGroups: m.coverGroups,
+      interiorParts: m.interiorParts,
     })),
     sources: sourceList.map((r) => ({
       id: r.id,
@@ -1200,6 +1247,7 @@ const placementSnapshot = (p: PlacementRow | undefined) =>
     lng: p.lng,
     lat: p.lat,
     headingDeg: p.headingDeg,
+    frontDeg: p.frontDeg,
     scale: p.scale,
     altitudeM: p.altitudeM,
     anchorNode: p.anchorNode,
@@ -1231,6 +1279,7 @@ export async function setMapPlacement(tx: Tx, ctx: AuditCtx, id: string, input: 
   const values = {
     location: hasLocation ? ([input.lng!, input.lat!] as [number, number]) : null,
     headingDeg: input.headingDeg,
+    frontDeg: input.frontDeg ?? null,
     scale: input.scale,
     altitudeM: input.altitudeM,
     anchorNode: input.anchorNode ? input.anchorNode : null,
@@ -1432,51 +1481,126 @@ export function setStories(tx: Tx, ctx: AuditCtx, id: string, input: StoriesInpu
   );
 }
 
-/** "Eser hakkında" paragraphs (Tarihçe / Mimari / Vakıf ve akar), replaced in order. */
-export function setSections(tx: Tx, ctx: AuditCtx, id: string, input: SectionsInput): Promise<AdminSiteDetail> {
+/** An English reading as stored: every list empty = none written. */
+function readingEnOrNull(r: AboutReadingEn | null | undefined): AboutReadingEn | null {
+  return r && (r.summary.length || r.figures.length || r.quotes.length || r.timeline.length || r.terms.length) ? r : null;
+}
+
+/**
+ * "Eser hakkında" (§11.69): the reading chapters and the paragraphs under them, replaced whole and in order, plus the
+ * paragraphs that belong to no chapter (shown after the chapters). Rows are upserted by id and only the left-out ones are
+ * deleted, so a paragraph that is kept keeps its book photographs and its voice-over, a chapter its voice-over, whatever
+ * the editor changed or moved. A left-out paragraph takes its photographs and recordings along; so does a left-out chapter
+ * with the voice-over of its title (its paragraphs must be sent again under another chapter to stay). Chapter ids are global:
+ * one owned by another site is a 409 (paragraph ids are per site). The 3D view of a chapter (camera, interior, parts) is not
+ * in the body: a kept chapter keeps it, a new one has none. The English texts follow `rowEnglishStatus` (§11.64). The cover
+ * and the book photographs themselves are not edited here.
+ */
+export function setAbout(tx: Tx, ctx: AuditCtx, id: string, input: AboutInput): Promise<AdminSiteDetail> {
   return mutate(
     tx,
     ctx,
     id,
-    (a) => ({ sections: a.sections }),
+    (a) => ({ chapters: a.chapters, sections: a.sections }),
     async (before) => {
-      const rows = input.sections.map((s) => ({ ...s, id: s.id ?? newId("sec", s.title) }));
+      const oldChapters = new Map(before.chapters.map((c) => [c.id, c]));
+      const oldSections = new Map(before.sections.map((s) => [s.id, s]));
+      const chapterRows = input.chapters.map((c) => ({ ...c, id: c.id ?? newId("ch", c.title) }));
+      // Paragraph order: chapter by chapter, then the loose ones.
+      const sectionRows = [
+        ...chapterRows.flatMap((c, i) => c.sections.map((s, j) => ({ ...s, chapterId: c.id as string | null, path: `chapters.${i}.sections.${j}` }))),
+        ...input.looseSections.map((s, j) => ({ ...s, chapterId: null, path: `looseSections.${j}` })),
+      ].map((s) => ({ ...s, id: s.id ?? newId("sec", s.title) }));
       const errors = new FieldErrors();
-      checkUnique(errors, (i) => `sections.${i}.id`, rows.map((r) => r.id), "Aynı kimlik birden fazla bölümde kullanılmış.");
-      const sourceIds = await existingSourceIds(tx, distinct(rows.map((r) => r.sourceId)));
-      rows.forEach((r, i) => {
-        if (r.sourceId && !sourceIds.has(r.sourceId)) errors.add(`sections.${i}.sourceId`, "Kaynak bulunamadı.");
+      checkUnique(errors, (i) => `chapters.${i}.id`, chapterRows.map((c) => c.id), "Aynı kimlik birden fazla bölümde kullanılmış.");
+      const sectionIds = new Set<string>();
+      for (const s of sectionRows) {
+        if (sectionIds.has(s.id)) errors.add(`${s.path}.id`, "Aynı kimlik birden fazla paragrafta kullanılmış.");
+        sectionIds.add(s.id);
+      }
+      const sourceIds = await existingSourceIds(tx, distinct(sectionRows.map((s) => s.sourceId)));
+      for (const s of sectionRows) if (s.sourceId && !sourceIds.has(s.sourceId)) errors.add(`${s.path}.sourceId`, "Kaynak bulunamadı.");
+
+      const chapterEnglish = chapterRows.map((c, i) => {
+        const old = oldChapters.get(c.id);
+        const titleEn = keptText(c.titleEn, old?.titleEn);
+        const readingEn = readingEnOrNull(c.readingEn === undefined ? old?.readingEn : c.readingEn);
+        if (readingEn)
+          for (const key of ["summary", "figures", "quotes", "timeline", "terms"] as const)
+            if (readingEn[key].length !== c[key].length) errors.add(`chapters.${i}.readingEn.${key}`, "İngilizce liste Türkçe ile aynı uzunlukta olmalı.");
+        const status = rowEnglishStatus([titleEn, readingEn], old && { texts: [old.titleEn, readingEnOrNull(old.readingEn)], status: old.enStatus });
+        return { titleEn, readingEn, enStatus: status };
       });
       errors.throwIfAny();
 
-      // The rows are replaced, but what the import attached to them stays: a paragraph that keeps its id keeps its
-      // chapter and book photographs; a new one joins the chapter with the same title (null when there is none).
-      // Paragraphs left out lose their photographs with them (the foreign key cascades); chapters stay.
-      const chapters = await tx.select({ id: siteAboutChapters.id, title: siteAboutChapters.title }).from(siteAboutChapters).where(eq(siteAboutChapters.siteId, id)).orderBy(asc(siteAboutChapters.position));
-      const chapterOfTitle = new Map<string, string>();
-      for (const c of chapters) if (!chapterOfTitle.has(c.title)) chapterOfTitle.set(c.title, c.id);
-      const chapterOfSection = new Map(before.sections.map((x) => [x.id, x.chapterId]));
-      const photos = await tx.select().from(siteSectionPhotos).where(eq(siteSectionPhotos.siteId, id));
+      const taken = chapterRows.length
+        ? await tx.select({ id: siteAboutChapters.id }).from(siteAboutChapters).where(and(inArray(siteAboutChapters.id, chapterRows.map((c) => c.id)), ne(siteAboutChapters.siteId, id)))
+        : [];
+      if (taken.length) {
+        const owned = new Set(taken.map((t) => t.id));
+        const fieldErrors: Record<string, string[]> = {};
+        chapterRows.forEach((c, i) => {
+          if (owned.has(c.id)) fieldErrors[`chapters.${i}.id`] = ["Bu kimlik başka bir eserin bölümüne ait."];
+        });
+        throw new AppError(409, "CONFLICT", "Bölüm kimliği başka bir esere ait.", fieldErrors);
+      }
 
-      await tx.delete(siteSections).where(eq(siteSections.siteId, id));
-      if (rows.length) {
-        await tx.insert(siteSections).values(
-          rows.map((r, position) => ({
-            siteId: id,
-            id: r.id,
-            position,
-            chapterId: chapterOfSection.has(r.id) ? chapterOfSection.get(r.id)! : (chapterOfTitle.get(r.title) ?? null),
-            kind: r.kind,
-            title: r.title,
-            body: r.body,
-            bodyEn: r.bodyEn || null,
-            trust: r.trust,
-            sourceId: r.sourceId,
-          })),
-        );
-        const kept = new Set(rows.map((r) => r.id));
-        const restored = photos.filter((p) => kept.has(p.sectionId));
-        if (restored.length) await tx.insert(siteSectionPhotos).values(restored);
+      // Park the positions below zero: the (site, position) unique keys would refuse a reorder row by row.
+      await tx.update(siteAboutChapters).set({ position: sql`-${siteAboutChapters.position} - 1` }).where(eq(siteAboutChapters.siteId, id));
+      await tx.update(siteSections).set({ position: sql`-${siteSections.position} - 1` }).where(eq(siteSections.siteId, id));
+      for (const [position, c] of chapterRows.entries()) {
+        const old = oldChapters.get(c.id);
+        const row = {
+          siteId: id,
+          position,
+          title: c.title,
+          kind: c.kind,
+          reading: {
+            summary: c.summary,
+            figures: c.figures,
+            quotes: c.quotes,
+            timeline: c.timeline,
+            terms: c.terms,
+            camera: old?.reading.camera ?? null,
+            interior: old?.reading.interior ?? false,
+            focusParts: old?.reading.focusParts ?? [],
+          },
+          ...chapterEnglish[position]!,
+        };
+        await tx.insert(siteAboutChapters).values({ id: c.id, ...row }).onConflictDoUpdate({ target: siteAboutChapters.id, set: row });
+      }
+      for (const [position, s] of sectionRows.entries()) {
+        const old = oldSections.get(s.id);
+        const titleEn = keptText(s.titleEn, old?.titleEn);
+        const bodyEn = keptText(s.bodyEn, old?.bodyEn);
+        const row = {
+          siteId: id,
+          position,
+          chapterId: s.chapterId,
+          kind: s.kind,
+          title: s.title,
+          body: s.body,
+          titleEn,
+          bodyEn,
+          enStatus: rowEnglishStatus([titleEn, bodyEn], old && { texts: [old.titleEn, old.bodyEn], status: old.enStatus }),
+          trust: s.trust,
+          sourceId: s.sourceId,
+        };
+        await tx.insert(siteSections).values({ id: s.id, ...row }).onConflictDoUpdate({ target: [siteSections.siteId, siteSections.id], set: row });
+      }
+      // Left out. Paragraphs first: every kept one already points at its new chapter, so a chapter's delete cascades only
+      // to paragraphs the editor dropped. A paragraph's book photographs cascade with it.
+      const keptSections = sectionRows.map((s) => s.id);
+      const keptChapters = chapterRows.map((c) => c.id);
+      await tx.delete(siteSections).where(and(eq(siteSections.siteId, id), keptSections.length ? notInArray(siteSections.id, keptSections) : undefined));
+      await tx.delete(siteAboutChapters).where(and(eq(siteAboutChapters.siteId, id), keptChapters.length ? notInArray(siteAboutChapters.id, keptChapters) : undefined));
+      // Recordings of what was left out go with it, as in `setStories`.
+      for (const [subjectType, kept] of [["about_section", keptSections], ["about_chapter", keptChapters]] as const) {
+        const orphaned = await tx
+          .delete(narrations)
+          .where(and(eq(narrations.siteId, id), eq(narrations.subjectType, subjectType), kept.length ? notInArray(narrations.subjectId, kept) : undefined))
+          .returning({ mediaId: narrations.mediaId });
+        await deleteUnreferencedMedia(tx, orphaned.map((n) => n.mediaId));
       }
       return {};
     },
@@ -1509,6 +1633,7 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
       errors.throwIfAny();
 
       const mine = new Set(before.history.map((h) => h.id));
+      const oldCaption = new Map(before.history.map((h) => [h.id, { value: h.captionEn, status: h.enStatus }]));
       const foreign = rows.length
         ? await tx
             .select({ id: historyImages.id })
@@ -1532,12 +1657,14 @@ export function setHistoryImages(tx: Tx, ctx: AuditCtx, id: string, input: Histo
         .set({ position: sql`-(${historyImages.position} + 1)` })
         .where(eq(historyImages.siteId, id));
       for (const [position, r] of rows.entries()) {
+        const captionEn = englishState(r.captionEn || null, oldCaption.get(r.id));
         const values = {
           mediaId: r.mediaId,
           presentMediaId: r.presentMediaId,
           presentAngleMatch: r.presentMediaId ? r.presentAngleMatch : null,
           caption: r.caption,
-          captionEn: r.captionEn || null,
+          captionEn: captionEn.value,
+          enStatus: captionEn.status,
           dateLabel: r.dateLabel,
           sourceId: r.sourceId,
           trust: r.trust,
@@ -1627,6 +1754,153 @@ export function setPartCards(tx: Tx, ctx: AuditCtx, id: string, input: PartCards
         .where(and(eq(narrations.siteId, id), eq(narrations.subjectType, "part_card"), keptIds.length ? notInArray(narrations.subjectId, keptIds) : undefined))
         .returning({ mediaId: narrations.mediaId });
       await deleteUnreferencedMedia(tx, orphaned.map((n) => n.mediaId));
+      return {};
+    },
+  );
+}
+
+/** The English texts of a stored quiz / field task; null when the row is of the other kind or has none. */
+const quizEnglishOf = (t: TaskRow): QuizTaskTextsEn | null => (t.kind === "quiz" ? (t.detailsEn as QuizTaskTextsEn | null) : null);
+const fieldEnglishOf = (t: TaskRow): FieldTaskTextsEn | null => (t.kind === "field" ? (t.detailsEn as FieldTaskTextsEn | null) : null);
+
+/** An English text as stored: undefined keeps the old one, an empty one clears it. */
+function keptText(next: string | null | undefined, old: string | null | undefined): string | null {
+  return (next === undefined ? old : next) || null;
+}
+
+/** An English list as stored: undefined keeps the old one; a blank or empty one is "none". */
+function keptList(next: string[] | null | undefined, old: string[] | undefined): string[] | null {
+  const list = next === undefined ? old : next;
+  return list?.some((s) => s) ? list : null;
+}
+
+/**
+ * The status of a row's English texts when the row carries one status for several of them (tasks, badges, §11.64): none
+ * written = null; the same texts as stored keep the stored status (a machine draft stays `machine`); any text the editor
+ * changed or wrote makes the row `reviewed`.
+ */
+function rowEnglishStatus(texts: unknown[], old: { texts: unknown[]; status: TranslationStatus | null } | undefined): TranslationStatus | null {
+  if (texts.every((t) => t === null)) return null;
+  return old && isDeepStrictEqual(old.texts, texts) ? old.status : "reviewed";
+}
+
+/**
+ * Adım 6 (Görevler ve rozetler): tasks (quiz / field) with their answer keys, and badges, replaced whole and in order
+ * (§11.67). Rows are upserted by id and only the left-out ones are deleted, so a player's completions and earned badges
+ * stay for every task and badge that is still listed, whatever the editor changed (the answer key included); a removed
+ * one takes its player rows along (foreign keys cascade). Ids are global: one owned by another site is a 409. A badge
+ * names its task by id, so a task a badge needs must be sent with its `id`. Parts must be parts of the linked model, the
+ * photograph one the site lists. The English texts follow `rowEnglishStatus`; the answer key never leaves the staff views.
+ */
+export function setTasks(tx: Tx, ctx: AuditCtx, id: string, input: TasksInput): Promise<AdminSiteDetail> {
+  return mutate(
+    tx,
+    ctx,
+    id,
+    (a) => ({ tasks: a.tasks.map((t) => ({ ...t, correctIndex: a.taskAnswers.get(t.id) ?? null })), badges: a.badges }),
+    async (before) => {
+      const taskRows = input.tasks.map((t) => ({ ...t, id: t.id ?? newId("gr", t.title) }));
+      const badgeRows = input.badges.map((b) => ({ ...b, id: b.id ?? newId("rz", b.title) }));
+      const oldTasks = new Map(before.tasks.map((t) => [t.id, t]));
+      const oldBadges = new Map(before.badges.map((b) => [b.id, b]));
+      const errors = new FieldErrors();
+      checkUnique(errors, (i) => `tasks.${i}.id`, taskRows.map((r) => r.id), "Aynı kimlik birden fazla görevde kullanılmış.");
+      checkUnique(errors, (i) => `badges.${i}.id`, badgeRows.map((r) => r.id), "Aynı kimlik birden fazla rozette kullanılmış.");
+
+      const model = modelOf(before);
+      const parts = new Set(model?.parts);
+      const photoIds = new Set(referencesOf(before).mediaList.filter((m) => m.kind === "photo").map((m) => m.id));
+      const checkPart = (path: string, part: string) => {
+        if (!parts.has(part)) errors.add(path, model ? `Modelde olmayan parça: ${part}.` : "Eserin 3B modeli yok; parça seçmek için önce model bağla.");
+      };
+      const english = taskRows.map((t, i) => {
+        const old = oldTasks.get(t.id);
+        if (t.photoId && !photoIds.has(t.photoId)) errors.add(`tasks.${i}.photoId`, "Fotoğraf eserin fotoğrafları arasında değil.");
+        if (t.part) checkPart(`tasks.${i}.part`, t.part);
+        const titleEn = keptText(t.titleEn, old?.titleEn);
+        const promptEn = keptText(t.promptEn, old?.promptEn);
+        let detailsEn: QuizTaskTextsEn | FieldTaskTextsEn | null;
+        if (t.kind === "quiz") {
+          const { quiz: q } = t;
+          const was = old && quizEnglishOf(old);
+          const options = keptList(q.optionsEn, was?.options);
+          const hints = keptList(q.hintsEn, was?.hints);
+          if (options && options.length !== q.options.length) errors.add(`tasks.${i}.quiz.optionsEn`, "İngilizce liste Türkçe ile aynı uzunlukta olmalı.");
+          if (hints && hints.length !== q.hints.length) errors.add(`tasks.${i}.quiz.hintsEn`, "İngilizce liste Türkçe ile aynı uzunlukta olmalı.");
+          const correctText = keptText(q.correctTextEn, was?.correctText);
+          const wrongText = keptText(q.wrongTextEn, was?.wrongText);
+          detailsEn = options || hints || correctText || wrongText ? { options: options ?? [], hints: hints ?? [], correctText: correctText ?? "", wrongText: wrongText ?? "" } : null;
+        } else {
+          const { field: f } = t;
+          if (f.fromHome) checkPart(`tasks.${i}.field.fromHome.part`, f.fromHome.part);
+          const was = old && fieldEnglishOf(old);
+          const onSite = keptText(f.onSite.textEn, was?.onSite.text);
+          const fromHome = f.fromHome ? keptText(f.fromHome.textEn, was?.fromHome?.text) : null;
+          const doneText = keptText(f.doneTextEn, was?.doneText);
+          detailsEn = onSite || fromHome || doneText ? { onSite: { text: onSite ?? "" }, fromHome: f.fromHome ? { text: fromHome ?? "" } : null, doneText: doneText ?? "" } : null;
+        }
+        return { titleEn, promptEn, detailsEn, enStatus: rowEnglishStatus([titleEn, promptEn, detailsEn], old && { texts: [old.titleEn, old.promptEn, old.detailsEn], status: old.enStatus }) };
+      });
+      const taskIds = new Set(taskRows.map((t) => t.id));
+      const badgeEnglish = badgeRows.map((b, i) => {
+        if (b.taskId && !taskIds.has(b.taskId)) errors.add(`badges.${i}.taskId`, "Görev, aynı kayıttaki görevlerden biri olmalı (görev `id` ile gönderilmeli).");
+        const old = oldBadges.get(b.id);
+        const titleEn = keptText(b.titleEn, old?.titleEn);
+        const textEn = keptText(b.textEn, old?.textEn);
+        return { titleEn, textEn, enStatus: rowEnglishStatus([titleEn, textEn], old && { texts: [old.titleEn, old.textEn], status: old.enStatus }) };
+      });
+      errors.throwIfAny();
+
+      const takenTasks = taskRows.length ? await tx.select({ id: siteTasks.id }).from(siteTasks).where(and(inArray(siteTasks.id, taskRows.map((r) => r.id)), ne(siteTasks.siteId, id))) : [];
+      const takenBadges = badgeRows.length ? await tx.select({ id: siteBadges.id }).from(siteBadges).where(and(inArray(siteBadges.id, badgeRows.map((r) => r.id)), ne(siteBadges.siteId, id))) : [];
+      if (takenTasks.length || takenBadges.length) {
+        const ownedTasks = new Set(takenTasks.map((t) => t.id));
+        const ownedBadges = new Set(takenBadges.map((b) => b.id));
+        const fieldErrors: Record<string, string[]> = {};
+        taskRows.forEach((r, i) => {
+          if (ownedTasks.has(r.id)) fieldErrors[`tasks.${i}.id`] = ["Bu kimlik başka bir eserin görevine ait."];
+        });
+        badgeRows.forEach((r, i) => {
+          if (ownedBadges.has(r.id)) fieldErrors[`badges.${i}.id`] = ["Bu kimlik başka bir eserin rozetine ait."];
+        });
+        throw new AppError(409, "CONFLICT", "Görev ya da rozet kimliği başka bir esere ait.", fieldErrors);
+      }
+
+      // Park the positions below zero: the (site, position) unique keys would refuse a reorder row by row.
+      await tx.update(siteTasks).set({ position: sql`-${siteTasks.position} - 1` }).where(eq(siteTasks.siteId, id));
+      await tx.update(siteBadges).set({ position: sql`-${siteBadges.position} - 1` }).where(eq(siteBadges.siteId, id));
+      for (const [position, t] of taskRows.entries()) {
+        const details: QuizTaskDetails | FieldTaskDetails =
+          t.kind === "quiz"
+            ? { options: t.quiz.options, hints: t.quiz.hints, correctText: t.quiz.correctText, wrongText: t.quiz.wrongText, fromHome: t.quiz.fromHome }
+            : { onSite: { text: t.field.onSite.text, radiusM: t.field.onSite.radiusM }, fromHome: t.field.fromHome && { text: t.field.fromHome.text, part: t.field.fromHome.part }, doneText: t.field.doneText };
+        const row = {
+          siteId: id,
+          position,
+          kind: t.kind,
+          title: t.title,
+          prompt: t.prompt,
+          mediaId: t.photoId,
+          part: t.part,
+          source: t.source || null,
+          trust: t.trust,
+          details,
+          ...english[position]!,
+        };
+        await tx.insert(siteTasks).values({ id: t.id, ...row }).onConflictDoUpdate({ target: siteTasks.id, set: row });
+        if (t.kind === "quiz") {
+          await tx.insert(siteTaskAnswers).values({ taskId: t.id, correctIndex: t.quiz.correctIndex }).onConflictDoUpdate({ target: siteTaskAnswers.taskId, set: { correctIndex: t.quiz.correctIndex } });
+        } else await tx.delete(siteTaskAnswers).where(eq(siteTaskAnswers.taskId, t.id));
+      }
+      for (const [position, b] of badgeRows.entries()) {
+        const row = { siteId: id, position, title: b.title, text: b.text, condition: b.condition, taskId: b.taskId, onSiteLabel: b.onSiteLabel, ...badgeEnglish[position]! };
+        await tx.insert(siteBadges).values({ id: b.id, ...row }).onConflictDoUpdate({ target: siteBadges.id, set: row });
+      }
+      // Left out: their completions and earned badges cascade.
+      const keptTasks = taskRows.map((t) => t.id);
+      const keptBadges = badgeRows.map((b) => b.id);
+      await tx.delete(siteBadges).where(and(eq(siteBadges.siteId, id), keptBadges.length ? notInArray(siteBadges.id, keptBadges) : undefined));
+      await tx.delete(siteTasks).where(and(eq(siteTasks.siteId, id), keptTasks.length ? notInArray(siteTasks.id, keptTasks) : undefined));
       return {};
     },
   );

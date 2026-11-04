@@ -5,7 +5,7 @@ import { createSeed } from "../packages/api-client/src/seed";
 import { triangleGlb } from "./support/triangle-glb";
 
 /** The demo's own city record: the screens must say what it says, not what the code remembers. */
-const BURSA = { name: "Bursa", pattern: "/desenler/desen-bursa-sekiz-yildiz.svg", accent: "rgb(34, 86, 110)" };
+const BURSA = { name: "Bursa", pattern: "/desenler/desen-bursa-kesik-gecme.svg", accent: "rgb(34, 86, 110)" };
 
 /** A map style that is only a background: the map draws at once, offline. Held back until `release` when a test needs the opening screen. */
 async function holdMap(page: Page) {
@@ -22,7 +22,7 @@ async function holdMap(page: Page) {
 
 test("the opening screen names the default city and draws its pattern from the city record, and leaves when the map is drawn", async ({ page }) => {
   const release = await holdMap(page);
-  await page.goto("/");
+  await page.goto("/#view=map");
   const opening = page.locator(".opening");
   await expect(opening).toBeVisible();
   await expect(opening).toHaveAttribute("role", "status");
@@ -53,17 +53,20 @@ test("the opening screen names the default city and draws its pattern from the c
 
 test("the emblem is drawn stroke by stroke, and stands drawn when the visitor asks for less motion", async ({ page }) => {
   const release = await holdMap(page);
-  await page.goto("/");
+  await page.goto("/#view=map");
   const stroke = page.locator(".opening .emblem path");
   await expect(stroke).toHaveAttribute("pathLength", "1");
   await expect(stroke).toHaveCSS("animation-name", "emblem-draw");
   await expect(stroke).toHaveCSS("animation-duration", "2.6s");
   release();
-  await expect(page.locator(".opening")).toHaveCount(0);
+  // The map draws slowly in software rendering under a full run; the other opening checks wait as long.
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   const still = await holdMap(page);
-  await page.goto("/");
+  // The same address with only its #view: a full load, not a jump within the page.
+  await page.goto("about:blank");
+  await page.goto("/#view=map");
   const drawn = page.locator(".opening .emblem path");
   await expect(drawn).toHaveCSS("animation-name", "none");
   await expect(drawn).toHaveCSS("stroke-dashoffset", "0px");

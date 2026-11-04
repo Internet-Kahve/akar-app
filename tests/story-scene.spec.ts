@@ -70,6 +70,8 @@ async function openStory(page: Page, modelServed?: Promise<void>) {
     }),
     sentence(3, { showCard: true }),
     sentence(4, { highlights: ["Roof"] }),
+    // The last sentence, about the whole building: the story ends turning the model, as it began.
+    sentence(5, {}),
   ];
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -97,18 +99,20 @@ const next = (page: Page) =>
   page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
 const tour = (page: Page) => page.locator(".model-canvas");
 
-test("a sentence about the whole building turns the model, a highlighted one holds it, a touch stops it", async ({
+test("the model turns on the story's first and last sentences about the whole building, holds in between, and a touch stops it", async ({
   page,
 }) => {
   const errors = await openStory(page);
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
+  // A sentence in the middle holds the model, highlighted or not (Muhammed, 2 Nov).
   await next(page);
   await expect(page.locator(".current .story-text")).toContainText("Cümle 1");
-  await expect(tour(page)).toHaveAttribute("data-tour", "on");
+  await expect(tour(page)).toHaveAttribute("data-tour", "off");
   await next(page);
   await expect(page.locator(".current .story-text")).toContainText("Cümle 2");
   await expect(tour(page)).toHaveAttribute("data-tour", "off");
-  await next(page);
+  for (let i = 0; i < 3; i++) await next(page);
+  await expect(page.locator(".current .story-text")).toContainText("Cümle 5");
   await expect(tour(page)).toHaveAttribute("data-tour", "on");
   // Pressing the model stops the turn where the visitor took over.
   const canvas = page.locator(".model-canvas canvas");
@@ -180,4 +184,38 @@ test("the photo card stays clear of the model, is dragged away and opens the par
   await next(page);
   await expect(card).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test("the photo card's corner sizes it, the keyboard steps it, and both stay on this device", async ({ page }) => {
+  await openStory(page);
+  await next(page);
+  await next(page);
+  const card = page.locator(".story-photo-card");
+  const handle = card.getByRole("button", { name: /Kartın boyutu/ });
+  await expect(handle).toHaveAccessibleName("Kartın boyutu: yüzde 100");
+  const before = (await card.boundingBox())!;
+  const h = (await handle.boundingBox())!;
+  // Wide: dragged right, the card widens; a phone's strip at the bottom grows upward.
+  const wide = page.viewportSize()!.width >= 1000;
+  await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(h.x + h.width / 2 + (wide ? 96 : 0), h.y + h.height / 2 - (wide ? 0 : 29), { steps: 4 });
+  await page.mouse.up();
+  await expect(handle).toHaveAccessibleName("Kartın boyutu: yüzde 130");
+  const after = (await card.boundingBox())!;
+  expect(wide ? after.width : after.height).toBeGreaterThan((wide ? before.width : before.height) * 1.2);
+  // No dialog opened from the handle.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await handle.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(handle).toHaveAccessibleName("Kartın boyutu: yüzde 120");
+  // Kept for the next story on this device.
+  await page.reload();
+  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await next(page);
+  await next(page);
+  await expect(card.getByRole("button", { name: /Kartın boyutu/ })).toHaveAccessibleName("Kartın boyutu: yüzde 120");
+  // A double click puts it back.
+  await card.getByRole("button", { name: /Kartın boyutu/ }).dblclick();
+  await expect(card.getByRole("button", { name: /Kartın boyutu/ })).toHaveAccessibleName("Kartın boyutu: yüzde 100");
 });

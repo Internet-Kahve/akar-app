@@ -14,6 +14,7 @@ import {
   memoryPermissions,
   modelFileFor,
   nightPartsMissing,
+  partsMissing,
   type HeritageSite,
   type Memory,
 } from "./index";
@@ -155,6 +156,58 @@ test("photo publications require valid cover, licenses and cue references; draft
       }),
     /vurgu/,
   );
+});
+
+test("tasks and badges: options, answer key, unique ids and a task badge naming one of the site's tasks", () => {
+  const base = { ...createSeed().sites[0], editorVersion: 2 as const, status: "draft" as const, tasks: [], badges: [] };
+  const quiz = {
+    id: "q",
+    kind: "quiz" as const,
+    title: "Soru",
+    prompt: "Hangisi?",
+    trust: "verified" as const,
+    quiz: { options: ["A", "B"], hints: [], wrongText: "Yanlış", fromHome: false, correctIndex: 1, correctText: "Doğru" },
+  };
+  const badge = { id: "b", title: "Rozet", text: "Metin", condition: "task" as const, taskId: "q", onSiteLabel: false };
+  assert.doesNotThrow(() => validateSite({ ...base, tasks: [quiz], badges: [badge] }));
+  // A public quiz carries no answer key: not an error here.
+  const { correctIndex: _key, ...unkeyed } = quiz.quiz;
+  assert.doesNotThrow(() => validateSite({ ...base, tasks: [{ ...quiz, quiz: unkeyed }] }));
+  assert.throws(() => validateSite({ ...base, tasks: [{ ...quiz, quiz: { ...quiz.quiz, correctIndex: 2 } }] }), /Doğru seçenek/);
+  assert.throws(() => validateSite({ ...base, tasks: [{ ...quiz, quiz: { ...quiz.quiz, options: ["A"] } }] }), /2–6/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz, quiz] }), /tekrar/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz], badges: [{ ...badge, taskId: "missing" }] }), /rozet/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz], badges: [{ ...badge, condition: "story", taskId: "q" }] }), /rozet/);
+  assert.throws(() => validateSite({ ...base, tasks: [quiz], badges: [badge, badge] }), /Rozet kimlikleri/);
+});
+
+test("about chapters and paragraphs: titles and texts, unique ids, a paragraph in one of the chapters, no blank reading item, the English reading matches the Turkish one", () => {
+  const chapter = {
+    id: "c1",
+    title: "Tarihçe",
+    kind: "history" as const,
+    summary: ["Özet."],
+    figures: [{ value: "1491", label: "yıl", evidence: "1491'de" }],
+    quotes: [{ text: "Söz" }],
+    timeline: [],
+    terms: [],
+    interior: false,
+    focusParts: [],
+  };
+  const section = { id: "s1", kind: "history" as const, title: "Tarihçe", body: "Metin.", trust: "verified" as const, sourceId: "", chapterId: "c1" };
+  const base = { ...createSeed().sites[0], editorVersion: 2 as const, status: "draft" as const, chapters: [chapter], sections: [section] };
+  assert.doesNotThrow(() => validateSite(base));
+  assert.doesNotThrow(() => validateSite({ ...base, chapters: [], sections: [{ ...section, chapterId: undefined }] }));
+  assert.throws(() => validateSite({ ...base, chapters: [chapter, chapter] }), /Bölüm kimlikleri/);
+  assert.throws(() => validateSite({ ...base, sections: [section, section] }), /Paragraf kimlikleri/);
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, title: " " }] }), /başlığı olmalı/);
+  assert.throws(() => validateSite({ ...base, sections: [{ ...section, body: "" }] }), /paragrafın/);
+  assert.throws(() => validateSite({ ...base, sections: [{ ...section, chapterId: "yok" }] }), /bölümüne/);
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, summary: [""] }] }), /boş alan/);
+  const en = { summary: ["Summary."], figures: [{ value: "1491", label: "year", evidence: "in 1491" }], quotes: [{ text: "Word" }], timeline: [], terms: [] };
+  assert.doesNotThrow(() => validateSite({ ...base, chapters: [{ ...chapter, readingEn: en }] }));
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, readingEn: { ...en, quotes: [] } }] }), /aynı sayıda/);
+  assert.throws(() => validateSite({ ...base, chapters: [{ ...chapter, readingEn: { ...en, summary: [" "] } }] }), /eksiksiz/);
 });
 
 test("inventory imports never publish or overwrite duplicates and fail atomically", () => {
@@ -409,4 +462,23 @@ test("a night file is checked against the part names the content uses, not again
   };
   assert.deepEqual(nightPartsMissing(site), ["Minare"]);
   assert.deepEqual(nightPartsMissing({ ...site, model: { ...site.model!, night: { ...site.model!.night!, parts: [] } } }), []);
+});
+test("a replaced model reports each part the content still names, with every place using it; unknown parts report nothing", () => {
+  const seed = createSeed().sites[0];
+  const site: HeritageSite = {
+    ...seed,
+    stories: [
+      { ...seed.stories[0], highlights: ["Kubbe"], camera: { target: "Minare", azimuthDeg: 0, elevationDeg: 20, distance: 1 } },
+      { ...seed.stories[0], highlights: ["Minare"] },
+    ],
+    partCards: [{ id: "kart", parts: ["Minare"], title: "Minare", body: "", photos: [], trust: "verified" }],
+    tasks: [],
+    chapters: [],
+    model: { name: "Gündüz", bytes: 1, src: "/gunduz.glb", parts: ["Kubbe"], trust: "representative", coverGroups: [["Avlu"]] },
+  };
+  assert.deepEqual(partsMissing(site, ["Kubbe"]), [
+    { part: "Minare", usedIn: ["Hikâye cümlesi 1", "Hikâye cümlesi 2", "Parça kartı «Minare»"] },
+    { part: "Avlu", usedIn: ["İçini göster"] },
+  ]);
+  assert.deepEqual(partsMissing(site, []), []);
 });

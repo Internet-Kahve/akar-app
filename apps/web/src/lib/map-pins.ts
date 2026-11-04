@@ -105,7 +105,7 @@ export function pinFeatures(
   sites: HeritageSite[],
   routeIds: string[],
   selectedId?: string,
-  look: { finishedIds?: string[]; accent?: string; lang?: Lang } = {},
+  look: { finishedIds?: string[]; accent?: string; lang?: Lang; buildingRoute?: boolean } = {},
 ): PinCollection {
   return {
     type: "FeatureCollection",
@@ -122,6 +122,8 @@ export function pinFeatures(
           properties: {
             id: site.id,
             name: localize(look.lang ?? "tr", site.name, site.nameEn).text,
+            // Building a route: a pin not on it yet carries a «+» badge (pinLayers).
+            building: !!look.buildingRoute,
             kind: site.kind,
             stop,
             icon: pinImageId(site.kind, stop, finished, look.accent, selected),
@@ -141,6 +143,10 @@ export function pinFeatures(
  * the 12 px text and keep clear of the icon's own box: beside the pin on its left, else its right, at half
  * its height, else under the point, else above the pin.
  */
+/** The «+» badge of a pin while a route is being built, and its image (drawn in `addPinImages`). */
+export const PIN_PLUS_LAYER = "pin-plus";
+const PIN_PLUS_IMAGE = "pin-plus";
+
 export function pinLayers(labels: boolean): AddLayerObject[] {
   const icons: AddLayerObject = {
     id: PIN_LAYER,
@@ -174,6 +180,23 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
         UNRANKED + 1,
         ["get", "order"],
       ],
+    },
+  };
+  // Building a route: a gold «+» on the top right of each pin not on the route yet (a stop is its numbered star).
+  const adding = ["all", ["==", ["get", "building"], true], ["==", ["get", "stop"], 0]] as const;
+  const plusBadge: AddLayerObject = {
+    id: PIN_PLUS_LAYER,
+    type: "symbol",
+    source: PIN_SOURCE,
+    minzoom: CITY_MARKER_MAX_ZOOM,
+    filter: adding as never,
+    layout: {
+      "icon-image": PIN_PLUS_IMAGE,
+      "icon-anchor": "center",
+      // Placed as the pin is (upright, from its point): the badge sits on the arch's top right corner.
+      "icon-offset": [12, -34],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
     },
   };
   if (!labels) return [icons];
@@ -220,7 +243,7 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "text-halo-width": 2,
     },
   };
-  return [names, icons];
+  return [names, icons, plusBadge];
 }
 
 const symbols = new Map<string, Promise<HTMLImageElement>>();
@@ -392,6 +415,30 @@ async function addPinImages(
   pins: PinCollection,
   accent: string,
 ) {
+  if (!map.hasImage(PIN_PLUS_IMAGE)) {
+    // A gold disc with a white rim and a white «+», 20 px.
+    const size = 20 * PIXEL_RATIO,
+      canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const c = canvas.getContext("2d")!;
+    c.scale(PIXEL_RATIO, PIXEL_RATIO);
+    c.beginPath();
+    c.arc(10, 10, 9, 0, Math.PI * 2);
+    c.fillStyle = "#C9A13B";
+    c.fill();
+    c.lineWidth = 2;
+    c.strokeStyle = "#FFFFFF";
+    c.stroke();
+    c.beginPath();
+    c.moveTo(10, 5.5);
+    c.lineTo(10, 14.5);
+    c.moveTo(5.5, 10);
+    c.lineTo(14.5, 10);
+    c.lineWidth = 2.2;
+    c.lineCap = "round";
+    c.stroke();
+    map.addImage(PIN_PLUS_IMAGE, c.getImageData(0, 0, size, size), { pixelRatio: PIXEL_RATIO });
+  }
   const missing = new Map<string, PinProperties>();
   for (const { properties } of pins.features)
     if (!map.hasImage(properties.icon)) missing.set(properties.icon, properties);
@@ -439,7 +486,8 @@ export const pinLayersOn = (map: MapLibreMap) =>
 
 /** The site whose pin or label is at a screen point (pixels from the map's top left), or `null`. */
 export function pinAt(map: MapLibreMap, x: number, y: number): string | null {
-  const layers = pinLayersOn(map);
+  // A tap on a pin's «+» badge (building a route) is a tap on the pin.
+  const layers = [...pinLayersOn(map), ...[PIN_PLUS_LAYER].filter((id) => map.getLayer(id))];
   if (!layers.length) return null;
   const hit = map.queryRenderedFeatures(
     [

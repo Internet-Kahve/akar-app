@@ -3,7 +3,7 @@ import { check, index, pgTable, text, timestamp, unique } from "drizzle-orm/pg-c
 import { sites } from "./catalog.ts";
 import { media } from "./media.ts";
 
-export const narrationSubjectTypes = ["story_block", "part_card"] as const;
+export const narrationSubjectTypes = ["story_block", "part_card", "about_chapter", "about_section"] as const;
 export type NarrationSubjectType = (typeof narrationSubjectTypes)[number];
 export const narrationVariants = ["text", "simple"] as const;
 export const narrationLangs = ["tr", "en"] as const;
@@ -18,10 +18,10 @@ export type NarrationVoice = (typeof narrationVoices)[number];
 /**
  * One AI voice-over recording (decision §11.56): a text of a site (`subject`), read in a language and a
  * voice, stored as `media` of kind audio. The subject has no foreign key because it is one of several text types
- * (story sentences, part cards §11.59, later chapters…); the story and part card save paths remove the recordings of
- * the sentences and cards they delete. A part card has `text` recordings only: the voice reads its body. `text_hash` covers the
- * normalized text that was sent to the voice and the voice `model`: when the current text hashes differently the
- * recording is stale, is no longer served and is replaced on the next generation.
+ * (story sentences, part cards §11.59, «Eser hakkında» chapter titles and paragraphs §11.65); the save paths
+ * remove the recordings of the subjects they delete. Part cards, chapters and paragraphs have `text` recordings only.
+ * `text_hash` covers the normalized text that was sent to the voice and the voice `model`: when the current text
+ * hashes differently the recording is stale, is no longer served and is replaced on the next generation.
  */
 export const narrations = pgTable(
   "narrations",
@@ -44,7 +44,7 @@ export const narrations = pgTable(
   },
   (t) => [
     unique("narrations_subject_uq").on(t.siteId, t.subjectType, t.subjectId, t.variant, t.lang, t.voice),
-    check("narrations_subject_type_check", sql`${t.subjectType} in ('story_block', 'part_card')`),
+    check("narrations_subject_type_check", sql`${t.subjectType} in ('story_block', 'part_card', 'about_chapter', 'about_section')`),
     check("narrations_variant_check", sql`${t.variant} in ('text', 'simple')`),
     check("narrations_lang_check", sql`${t.lang} in ('tr', 'en')`),
     check("narrations_voice_check", sql`${t.voice} in ('female', 'male')`),

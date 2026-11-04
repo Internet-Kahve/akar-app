@@ -16,6 +16,8 @@ import {
   storyProgress,
   userBadges,
   userRouteStops,
+  userRoutes,
+  userRouteItems,
   userSiteBadges,
   userSiteTasks,
 } from "../../db/schema/index.ts";
@@ -155,6 +157,8 @@ export async function listSaved(db: Db, userId: string, page: Page): Promise<{ i
 
 /** "Rotam" in order; a stop whose site is no longer published is left out (its row stays). */
 export async function getMyRoute(db: Reader, userId: string): Promise<{ siteIds: string[] }> {
+  const [route] = await db.select().from(userRoutes).where(and(eq(userRoutes.userId, userId), eq(userRoutes.isDefault, true)));
+  if (route) return { siteIds: (await personalRoute(db, userId, route.id)).siteIds };
   const rows = await db
     .select({ siteId: userRouteStops.siteId })
     .from(userRouteStops)
@@ -174,7 +178,55 @@ export async function setMyRoute(tx: Tx, userId: string, siteIds: string[]): Pro
   await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`engagement.route:${userId}`}))`);
   await tx.delete(userRouteStops).where(eq(userRouteStops.userId, userId));
   if (siteIds.length) await tx.insert(userRouteStops).values(siteIds.map((siteId, position) => ({ userId, siteId, position })));
+  const [existing] = await tx.select().from(userRoutes).where(and(eq(userRoutes.userId, userId), eq(userRoutes.isDefault, true)));
+  const route = existing ?? (await tx.insert(userRoutes).values({ id: crypto.randomUUID(), userId, name: "Rotam", isDefault: true }).returning())[0]!;
+  await replaceRouteItems(tx, route.id, siteIds);
   return { siteIds };
+}
+
+async function replaceRouteItems(tx: Tx, routeId: string, siteIds: string[]) {
+  await tx.delete(userRouteItems).where(eq(userRouteItems.routeId, routeId));
+  if (siteIds.length) await tx.insert(userRouteItems).values(siteIds.map((siteId, position) => ({ routeId, siteId, position })));
+  await tx.update(userRoutes).set({ updatedAt: new Date() }).where(eq(userRoutes.id, routeId));
+}
+export async function personalRoute(db: Reader, userId: string, id: string) {
+  const [route] = await db.select().from(userRoutes).where(and(eq(userRoutes.id, id), eq(userRoutes.userId, userId)));
+  if (!route) throw notFound("Rota");
+  const items = await db.select({ siteId: userRouteItems.siteId }).from(userRouteItems)
+    .innerJoin(sites, and(eq(sites.id, userRouteItems.siteId), published))
+    .where(eq(userRouteItems.routeId, id)).orderBy(userRouteItems.position);
+  return { id, name: route.name, isDefault: route.isDefault, siteIds: items.map((item) => item.siteId), createdAt: route.createdAt.toISOString(), updatedAt: route.updatedAt.toISOString() };
+}
+export async function personalRoutes(db: Reader, userId: string) {
+  const routes = await db.select({ id: userRoutes.id }).from(userRoutes).where(eq(userRoutes.userId, userId)).orderBy(userRoutes.createdAt, userRoutes.id);
+  return { items: await Promise.all(routes.map(({ id }) => personalRoute(db, userId, id))) };
+}
+export async function createPersonalRoute(tx: Tx, userId: string, name: string) {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`engagement.route:${userId}`}))`);
+  const [existing] = await tx.select().from(userRoutes).where(and(eq(userRoutes.userId, userId), eq(userRoutes.isDefault, true)));
+  if (!existing) await setMyRoute(tx, userId, (await getMyRoute(tx, userId)).siteIds);
+  const id = crypto.randomUUID();
+  await tx.insert(userRoutes).values({ id, userId, name });
+  return personalRoute(tx, userId, id);
+}
+export function updatePersonalRoute(tx: Tx, userId: string, id: string, change: { remove: true }): Promise<{ deleted: true }>;
+export function updatePersonalRoute(tx: Tx, userId: string, id: string, change: { name?: string; siteIds?: string[] }): ReturnType<typeof personalRoute>;
+export async function updatePersonalRoute(tx: Tx, userId: string, id: string, change: { name?: string; siteIds?: string[]; remove?: boolean }) {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`engagement.route:${userId}`}))`);
+  const route = await personalRoute(tx, userId, id);
+  if (change.remove) {
+    await tx.delete(userRoutes).where(eq(userRoutes.id, id));
+    if (route.isDefault) await setMyRoute(tx, userId, []);
+    return { deleted: true as const };
+  }
+  if (change.name !== undefined) await tx.update(userRoutes).set({ name: change.name, updatedAt: new Date() }).where(eq(userRoutes.id, id));
+  if (change.siteIds !== undefined) {
+    const visible = await publishedSiteIds(tx, change.siteIds);
+    if (change.siteIds.some((siteId) => !visible.has(siteId))) throw notFound("Eser");
+    if (route.isDefault) await setMyRoute(tx, userId, change.siteIds);
+    else await replaceRouteItems(tx, id, change.siteIds);
+  }
+  return personalRoute(tx, userId, id);
 }
 
 // ── story progress ───────────────────────────────────────────────────────────
@@ -652,6 +704,7 @@ export async function getPassport(db: Db, userId: string): Promise<PassportRespo
 
 /** Account erasure (KVKK): deletes the user's points ledger, saves, Rotam, story/quiz progress, route badges, site task completions and site badges. */
 export async function eraseEngagement(tx: Tx, userId: string): Promise<void> {
+  await tx.delete(userRoutes).where(eq(userRoutes.userId, userId));
   await tx.delete(pointEvents).where(eq(pointEvents.userId, userId));
   await tx.delete(savedSites).where(eq(savedSites.userId, userId));
   await tx.delete(userRouteStops).where(eq(userRouteStops.userId, userId));

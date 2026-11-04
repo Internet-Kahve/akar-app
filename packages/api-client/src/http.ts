@@ -1,8 +1,10 @@
+import { localRoutes } from "./personal-routes";
 import {
   defaultMapSettings,
   validatePlacement,
   validateSite,
   type AboutChapter,
+  type AboutReadingEn,
   type AngleMatch,
   type SiteBadge,
   type CameraPose,
@@ -12,6 +14,7 @@ import {
   type Command,
   type HeritageRoute,
   type CityRecord,
+  type PersonalRoute,
   type HeritageSite,
   type MapPlacement,
   type MapSettings,
@@ -117,6 +120,7 @@ interface StoredReceipt {
   subjectId: string;
 }
 interface LocalState {
+  personalRoutes?: PersonalRoute[];
   deviceId: string;
   receipts: StoredReceipt[];
   saved: string[];
@@ -144,6 +148,8 @@ interface MediaDto {
   triangles?: number | null;
   /** "İçini göster" groups of a model; absent on older API versions. */
   coverGroups?: string[][];
+  /** Interior parts of a model (the map leaves them out); absent on older API versions. */
+  interiorParts?: string[];
 }
 interface SiteSummaryDto {
   id: string;
@@ -203,12 +209,18 @@ interface SiteDetailDto {
     kind: "history" | "architecture" | "waqf";
     title: string;
     body: string;
+    /** Absent on older API versions. */
+    titleEn?: string | null;
+    bodyEn?: string | null;
+    enStatus?: "machine" | "reviewed" | null;
     trust: Trust;
     sourceId: string | null;
     /** Absent on older API versions. */
     chapterId?: string | null;
     /** Book photographs after the paragraph; `mediaId` resolves in `media`. Absent on older API versions. */
     photos?: Array<{ mediaId: string; aspect: number | null; alt: string }>;
+    /** AI voice-overs of the paragraph; absent on older API versions. */
+    narrations?: Array<{ variant: "text" | "simple"; lang: "tr" | "en"; voice: "female" | "male"; mediaId: string }>;
   }>;
   /** Absent on older API versions. */
   aboutCoverMediaId?: string | null;
@@ -218,6 +230,12 @@ interface SiteDetailDto {
   chapters?: Array<{
     id: string;
     title: string;
+    /** Absent on older API versions. */
+    titleEn?: string | null;
+    readingEn?: Omit<AboutReadingEn, "quotes"> & { quotes: Array<{ text: string; by: string | null }> } | null;
+    enStatus?: "machine" | "reviewed" | null;
+    /** AI voice-overs of the title; absent on older API versions. */
+    narrations?: Array<{ variant: "text" | "simple"; lang: "tr" | "en"; voice: "female" | "male"; mediaId: string }>;
     kind: "history" | "architecture" | "waqf";
     summary: string[];
     figures: AboutChapter["figures"];
@@ -234,6 +252,9 @@ interface SiteDetailDto {
     mediaId: string;
     presentMediaId: string | null;
     caption?: string;
+    /** Absent on older API versions. */
+    captionEn?: string | null;
+    enStatus?: "machine" | "reviewed" | null;
     dateLabel?: string;
     sourceId?: string | null;
     trust?: Trust;
@@ -274,16 +295,33 @@ interface SiteDetailDto {
     kind: "quiz" | "field";
     title: string;
     prompt: string;
+    /** Absent on older API versions. */
+    titleEn?: string | null;
+    promptEn?: string | null;
+    enStatus?: "machine" | "reviewed" | null;
     /** A site photograph; resolves in `media`. */
     photoId: string | null;
     part: string | null;
     source: string | null;
     trust: Trust;
-    quiz?: NonNullable<SiteTask["quiz"]>;
-    field?: NonNullable<SiteTask["field"]>;
+    quiz?: Omit<NonNullable<SiteTask["quiz"]>, "optionsEn" | "hintsEn" | "wrongTextEn" | "correctIndex" | "correctText" | "correctTextEn"> & {
+      optionsEn?: string[] | null;
+      hintsEn?: string[] | null;
+      wrongTextEn?: string | null;
+      /** The editor's view only (`AdminSiteDetail`): the answer key and the texts shown after answering. */
+      correctIndex?: number | null;
+      correctText?: string;
+      correctTextEn?: string | null;
+    };
+    field?: {
+      onSite: { text: string; textEn?: string | null; radiusM: number };
+      fromHome: { text: string; textEn?: string | null; part: string } | null;
+      doneText?: string;
+      doneTextEn?: string | null;
+    };
   }>;
   /** Absent on older API versions. */
-  badges?: SiteBadge[];
+  badges?: RawBadge[];
   media: MediaDto[];
   /** Where the model stands on the map; `null` when not shown, absent on older API versions. */
   placement?: MapPlacement | null;
@@ -401,6 +439,20 @@ interface ReceiptsResponseDto {
 
 const present = <T>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined;
+/** A badge as the API sends it: English fields are `null` when not written. */
+type RawBadge = Omit<SiteBadge, "titleEn" | "textEn" | "enStatus"> & {
+  titleEn?: string | null;
+  textEn?: string | null;
+  enStatus?: "machine" | "reviewed" | null;
+};
+function mapBadge({ titleEn, textEn, enStatus, ...badge }: RawBadge): SiteBadge {
+  return {
+    ...badge,
+    ...(present(titleEn) && { titleEn }),
+    ...(present(textEn) && { textEn }),
+    ...(present(enStatus) && { enStatus }),
+  };
+}
 
 /** Public media DTO → domain photo. */
 const toPhoto = (m: MediaDto): SitePhoto => ({
@@ -500,7 +552,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
     photos,
     sources: d.sources,
     sections: (d.sections ?? []).map(
-      ({ chapterId, photos: aboutPhotos, ...section }) => {
+      ({ chapterId, photos: aboutPhotos, titleEn, bodyEn, enStatus, narrations, ...section }) => {
         const placed = (aboutPhotos ?? []).flatMap((p) => {
           const m = d.media.find((x) => x.id === p.mediaId && x.kind === "photo");
           return m
@@ -517,18 +569,31 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           ...section,
           sourceId: section.sourceId ?? "",
           ...(present(chapterId) && { chapterId }),
+          ...(present(titleEn) && { titleEn }),
+          ...(narrations?.length && { narrations: mapNarrations({ narrations }, d.media) }),
+          ...(present(bodyEn) && { bodyEn }),
+          ...(present(enStatus) && { enStatus }),
           ...(placed.length && { photos: placed }),
         };
       },
     ),
     ...(d.chapters?.length && {
-      chapters: d.chapters.map(({ camera, quotes, ...chapter }) => ({
+      chapters: d.chapters.map(({ camera, quotes, titleEn, readingEn, enStatus, narrations, ...chapter }) => ({
         ...chapter,
         quotes: quotes.map(({ text, by }) => ({
           text,
           ...(present(by) && { by }),
         })),
         ...(present(camera) && { camera }),
+        ...(present(titleEn) && { titleEn }),
+        ...(present(enStatus) && { enStatus }),
+        ...(narrations?.length && { narrations: mapNarrations({ narrations }, d.media) }),
+        ...(present(readingEn) && {
+          readingEn: {
+            ...readingEn,
+            quotes: readingEn.quotes.map(({ text, by }) => ({ text, ...(present(by) && { by }) })),
+          },
+        }),
       })),
     }),
     ...(aboutCover && { aboutCover: toPhoto(aboutCover) }),
@@ -548,6 +613,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           id: h.id ?? h.mediaId,
           photo: toPhoto(image),
           caption: h.caption ?? image.title,
+          ...(present(h.captionEn) && { captionEn: h.captionEn }),
           dateLabel: h.dateLabel ?? "Tarih bilinmiyor",
           sourceId: h.sourceId ?? image.sourceId ?? "",
           trust: h.trust ?? image.trust,
@@ -594,7 +660,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
       })),
     }),
     ...(d.tasks?.length && {
-      tasks: d.tasks.map(({ photoId, part, source, quiz, field, ...task }) => {
+      tasks: d.tasks.map(({ photoId, part, source, quiz, field, titleEn, promptEn, enStatus, ...task }) => {
         const m = photoId
           ? d.media.find((x) => x.id === photoId && x.kind === "photo")
           : undefined;
@@ -603,12 +669,33 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
           ...(m && { photo: toPhoto(m) }),
           ...(present(part) && { part }),
           ...(present(source) && { source }),
-          ...(quiz && { quiz }),
-          ...(field && { field }),
+          ...(present(titleEn) && { titleEn }),
+          ...(present(promptEn) && { promptEn }),
+          ...(present(enStatus) && { enStatus }),
+          ...(quiz && {
+            quiz: (({ optionsEn, hintsEn, wrongTextEn, correctIndex, correctTextEn, ...q }) => ({
+              ...q,
+              ...(present(optionsEn) && { optionsEn }),
+              ...(present(hintsEn) && { hintsEn }),
+              ...(present(wrongTextEn) && { wrongTextEn }),
+              ...(present(correctIndex) && { correctIndex }),
+              ...(present(correctTextEn) && { correctTextEn }),
+            }))(quiz),
+          }),
+          ...(field && {
+            field: {
+              onSite: (({ textEn, ...s }) => ({ ...s, ...(present(textEn) && { textEn }) }))(field.onSite),
+              fromHome:
+                field.fromHome &&
+                (({ textEn, ...h }) => ({ ...h, ...(present(textEn) && { textEn }) }))(field.fromHome),
+              ...(present(field.doneText) && { doneText: field.doneText }),
+              ...(present(field.doneTextEn) && { doneTextEn: field.doneTextEn }),
+            },
+          }),
         };
       }),
     }),
-    ...(d.badges?.length && { badges: d.badges }),
+    ...(d.badges?.length && { badges: d.badges.map(mapBadge) }),
     ...(d.editorVersion === 2 && { editorVersion: 2 as const }),
     ...(present(d.nameEn) && { nameEn: d.nameEn }),
     ...(present(d.descriptionEn) && { descriptionEn: d.descriptionEn }),
@@ -630,6 +717,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         trust: model.trust,
         triangles: model.triangles ?? null,
         ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
+        ...(model.interiorParts?.length && { interiorParts: model.interiorParts }),
         ...(night && {
           night: {
             name: night.title || night.id,
@@ -653,6 +741,7 @@ const mapAdminPlacement = (
   lng: p.lng ?? at[0],
   lat: p.lat ?? at[1],
   headingDeg: p.headingDeg,
+  frontDeg: p.frontDeg ?? null,
   scale: p.scale,
   altitudeM: p.altitudeM,
   anchorNode: p.anchorNode,
@@ -890,6 +979,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           receipts: Array.isArray(v.receipts) ? v.receipts : [],
           saved: Array.isArray(v.saved) ? v.saved : [],
           route: Array.isArray(v.route) ? v.route : [],
+          personalRoutes: Array.isArray(v.personalRoutes) ? v.personalRoutes : [],
         };
     } catch {
       /* Corrupt storage starts a fresh local state. */
@@ -1614,8 +1704,75 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     );
   }
 
+  /** What `PUT …/tasks` takes for one task; an empty English text is `null`, which clears it. */
+  function taskBody(t: SiteTask, mediaId: (id: string) => string) {
+    const list = (items: string[] | undefined) => (items?.some((s) => s) ? items : null);
+    const base = {
+      id: t.id,
+      title: t.title,
+      prompt: t.prompt,
+      titleEn: t.titleEn || null,
+      promptEn: t.promptEn || null,
+      photoId: t.photo ? mediaId(t.photo.id) : null,
+      part: t.part || null,
+      source: t.source || null,
+      trust: t.trust,
+    };
+    if (t.kind === "quiz") {
+      const q = t.quiz;
+      if (!q) throw new Error("Soru görevinin seçenekleri eksik.");
+      if (q.correctIndex === undefined)
+        throw new Error(`«${t.title}» sorusunun doğru seçeneğini işaretle.`);
+      return {
+        ...base,
+        kind: t.kind,
+        quiz: {
+          options: q.options,
+          optionsEn: list(q.optionsEn),
+          hints: q.hints,
+          hintsEn: list(q.hintsEn),
+          correctIndex: q.correctIndex,
+          correctText: q.correctText ?? "",
+          correctTextEn: q.correctTextEn || null,
+          wrongText: q.wrongText,
+          wrongTextEn: q.wrongTextEn || null,
+          fromHome: q.fromHome,
+        },
+      };
+    }
+    const f = t.field;
+    if (!f) throw new Error("Saha görevinin metni eksik.");
+    return {
+      ...base,
+      kind: t.kind,
+      field: {
+        onSite: { text: f.onSite.text, textEn: f.onSite.textEn || null, radiusM: f.onSite.radiusM },
+        fromHome: f.fromHome && {
+          text: f.fromHome.text,
+          textEn: f.fromHome.textEn || null,
+          part: f.fromHome.part,
+        },
+        doneText: f.doneText ?? "",
+        doneTextEn: f.doneTextEn || null,
+      },
+    };
+  }
+
+  function badgeBody(b: SiteBadge) {
+    return {
+      id: b.id,
+      title: b.title,
+      text: b.text,
+      titleEn: b.titleEn || null,
+      textEn: b.textEn || null,
+      condition: b.condition,
+      taskId: b.condition === "task" ? b.taskId : null,
+      onSiteLabel: b.onSiteLabel,
+    };
+  }
+
   /**
-   * Sources, photos, model, story and part cards of an editor save, through the wizard's step endpoints. Order
+   * Sources, photos, model, story, part cards and tasks of an editor save, through the wizard's step endpoints. Order
    * follows the references: sources before the photos and sentences citing them, files before the
    * lists naming them, the model (and its part names) before the highlights. Each step is skipped
    * when unchanged. A new file is a data URL: it is uploaded and its domain id mapped to the media id.
@@ -1638,6 +1795,10 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       !same(photos, cur.photos ?? []) || site.coverPhotoId !== cur.coverPhotoId;
     const storiesChanged = !same(site.stories, cur.stories);
     const partCardsChanged = !same(site.partCards ?? [], cur.partCards ?? []);
+    const tasksChanged =
+      !same(site.tasks ?? [], cur.tasks ?? []) || !same(site.badges ?? [], cur.badges ?? []);
+    const aboutChanged =
+      !same(site.chapters ?? [], cur.chapters ?? []) || !same(site.sections ?? [], cur.sections ?? []);
     if (
       !sourcesChanged &&
       !modelChanged &&
@@ -1645,7 +1806,9 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       !openingChanged &&
       !photosChanged &&
       !storiesChanged &&
-      !partCardsChanged
+      !partCardsChanged &&
+      !tasksChanged &&
+      !aboutChanged
     )
       return;
     // What the domain site does not carry: source locators, story cards and audio.
@@ -1704,7 +1867,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         });
         if (
           site.stories.some((s) => s.highlights?.length) ||
-          (partCardsChanged && site.partCards?.length)
+          ((partCardsChanged && site.partCards?.length) ||
+            (tasksChanged && site.tasks?.length))
         )
           await modelParts(path, id);
       } else if (linked && model.trust !== linked.trust) {
@@ -1814,6 +1978,53 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           })),
         },
       });
+
+    // After the cards, like them: tasks name model parts and gallery photos; a badge names a task of the same list.
+    const tasksRemapped = (site.tasks ?? []).some((t) => t.photo && uploaded.has(t.photo.id));
+    if (tasksChanged || tasksRemapped)
+      await call("PUT", `${path}/tasks`, {
+        body: {
+          tasks: (site.tasks ?? []).map((t) => taskBody(t, mediaId)),
+          badges: (site.badges ?? []).map(badgeBody),
+        },
+      });
+
+    // Last of all: the paragraphs cite the site's sources.
+    if (aboutChanged) {
+      const chapters = site.chapters ?? [];
+      const known = new Set(chapters.map((c) => c.id));
+      const paragraphs = site.sections ?? [];
+      const body = (s: NonNullable<HeritageSite["sections"]>[number]) => ({
+        id: s.id,
+        kind: s.kind,
+        title: s.title,
+        titleEn: s.titleEn || null,
+        body: s.body,
+        bodyEn: s.bodyEn || null,
+        trust: s.trust,
+        sourceId: s.sourceId || null,
+      });
+      await call("PUT", `${path}/about`, {
+        body: {
+          chapters: chapters.map((c) => ({
+            id: c.id,
+            title: c.title,
+            titleEn: c.titleEn || null,
+            kind: c.kind,
+            summary: c.summary,
+            figures: c.figures,
+            quotes: c.quotes.map((q) => ({ text: q.text, by: q.by || null })),
+            timeline: c.timeline,
+            terms: c.terms,
+            readingEn: c.readingEn
+              ? { ...c.readingEn, quotes: c.readingEn.quotes.map((q) => ({ text: q.text, by: q.by || null })) }
+              : null,
+            sections: paragraphs.filter((s) => s.chapterId === c.id).map(body),
+          })),
+          looseSections: paragraphs.filter((s) => !s.chapterId || !known.has(s.chapterId)).map(body),
+        },
+      });
+    }
   }
 
   async function updateRoutes(input: HeritageRoute[]) {
@@ -2066,6 +2277,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
               lng: p.lng,
               lat: p.lat,
               headingDeg: p.headingDeg,
+              frontDeg: p.frontDeg ?? null,
               scale: p.scale,
               altitudeM: p.altitudeM,
               anchorNode: p.anchorNode,
@@ -2126,7 +2338,36 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
   };
   const quizPath = (quizId: string) =>
     `/v1/quizzes/${encodeURIComponent(quizId)}`;
+  const guestRoutes = localRoutes(
+    () => local.personalRoutes ?? [], () => local.route,
+    (routes, ids) => { writeLocal({ ...local, personalRoutes: routes, route: ids }); if (user && !user.signedIn) user.routeIds = ids; },
+  );
+  const routePath = (id: string) => `/v1/me/routes/${encodeURIComponent(id)}`;
   return {
+    getPersonalRoutes: () => enqueue(async () => {
+      await build(false);
+      return user?.signedIn ? (await call<{ items: PersonalRoute[] }>("GET", "/v1/me/routes")).items : guestRoutes.getPersonalRoutes();
+    }),
+    createPersonalRoute: (name) => enqueue(async () => {
+      await build(false);
+      return user?.signedIn ? call<PersonalRoute>("POST", "/v1/me/routes", { body: { name } }) : guestRoutes.createPersonalRoute(name);
+    }),
+    renamePersonalRoute: (id, name) => enqueue(async () => {
+      await build(false);
+      return user?.signedIn ? call<PersonalRoute>("PATCH", routePath(id), { body: { name } }) : guestRoutes.renamePersonalRoute(id, name);
+    }),
+    deletePersonalRoute: (id) => enqueue(async () => {
+      await build(false);
+      if (user?.signedIn) { await call("DELETE", routePath(id)); user = undefined; }
+      else await guestRoutes.deletePersonalRoute(id);
+    }),
+    setPersonalRouteStops: (id, siteIds) => enqueue(async () => {
+      await build(false);
+      if (!user?.signedIn) return guestRoutes.setPersonalRouteStops(id, siteIds);
+      const route = await call<PersonalRoute>("PUT", `${routePath(id)}/stops`, { body: { siteIds } });
+      if (route.isDefault) user.routeIds = route.siteIds;
+      return route;
+    }),
     getSnapshot: () => enqueue(() => build(true)),
     refreshCatalog: () =>
       (refreshing ??= enqueue(async () => {
@@ -2306,12 +2547,14 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         };
       }),
     // Optional auth: a signed-in user's token earns badges, a guest plays without storing anything.
-    answerSiteTask: (taskId, choice) =>
-      call<SiteTaskAnswerResult>(
+    answerSiteTask: async (taskId, choice) => {
+      const res = await call<Omit<SiteTaskAnswerResult, "earnedBadges"> & { earnedBadges: RawBadge[] }>(
         "POST",
         `/v1/site-tasks/${encodeURIComponent(taskId)}/answer`,
         { body: { choice } },
-      ),
+      );
+      return { ...res, earnedBadges: res.earnedBadges.map(mapBadge) };
+    },
     completeSiteTask: async (taskId, input) => {
       const body =
         input.mode === "onSite"
@@ -2327,14 +2570,15 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       try {
         const done = await call<{
           doneText: string;
+          doneTextEn: string | null;
           onSite: boolean;
-          earnedBadges: SiteBadge[];
+          earnedBadges: RawBadge[];
         }>(
           "POST",
           `/v1/site-tasks/${encodeURIComponent(taskId)}/complete`,
           { body },
         );
-        return { done: true, ...done };
+        return { done: true, ...done, earnedBadges: done.earnedBadges.map(mapBadge) };
       } catch (e) {
         // Not a failed request: the visitor is too far away or tapped another part.
         if (

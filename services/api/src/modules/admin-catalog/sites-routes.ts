@@ -19,9 +19,10 @@ import {
   setNightModel,
   setPartCards,
   setPhotos,
-  setSections,
+  setAbout,
   setSources,
   setStories,
+  setTasks,
   unpublishSite,
   updateCard,
   updateSiteInfo,
@@ -43,11 +44,12 @@ import {
   ModelBody,
   NightModelBody,
   PartCardsBody,
-  SectionsBody,
+  AboutBody,
   SiteInfoBody,
   SiteMediaBody,
   SiteSourcesBody,
   StoriesBody,
+  TasksBody,
   UpdateCardBody,
 } from "./sites-schemas.ts";
 
@@ -261,18 +263,18 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.put(
-    "/v1/admin/sites/:id/sections",
+    "/v1/admin/sites/:id/about",
     {
       preHandler: editor,
       schema: {
         tags: sitesTag,
-        summary: "Eser hakkında bölümleri (Tarihçe, Mimari, Vakıf ve akar) sırasıyla değiştir",
+        summary: "Eser hakkında: bölümleri (başlık, okuma metinleri TR/EN) ve paragrafları sırasıyla değiştir; kimliği verilen satır ve kitap fotoğrafları korunur",
         params: IdParams,
-        body: SectionsBody,
+        body: AboutBody,
         response: { 200: AdminSiteDetail },
       },
     },
-    async (req) => write(req, 200, (tx, ctx) => setSections(tx, ctx, req.params.id, req.body)),
+    async (req) => write(req, 200, (tx, ctx) => setAbout(tx, ctx, req.params.id, req.body)),
   );
 
   app.put(
@@ -303,6 +305,22 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => write(req, 200, (tx, ctx) => setPartCards(tx, ctx, req.params.id, req.body)),
+  );
+
+  app.put(
+    "/v1/admin/sites/:id/tasks",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary:
+          "Görevleri ve rozetleri sırasıyla değiştir; verilen kimlikler korunur (oyuncuların tamamlamaları ve rozetleri kalır, cevap anahtarı değişse de), listede olmayan görev ve rozet oyuncu kayıtlarıyla silinir (parça ve fotoğraf eserin olmalı, rozetin görevi aynı gövdede olmalı)",
+        params: IdParams,
+        body: TasksBody,
+        response: { 200: AdminSiteDetail },
+      },
+    },
+    async (req) => write(req, 200, (tx, ctx) => setTasks(tx, ctx, req.params.id, req.body)),
   );
 
   app.post(

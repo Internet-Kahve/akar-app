@@ -101,9 +101,11 @@ test("chapter reading, book photos and the site gallery remain usable together",
   await reading
     .getByRole("button", { name: /^Geri: / })
     .click();
-  await expect(
-    page.getByRole("region", { name: "Eser fotoğraf galerisi" }),
-  ).toBeVisible();
+  const gallery = page.getByRole("region", { name: "Eser fotoğraf galerisi" });
+  await expect(gallery).toBeVisible();
+  await gallery.getByRole("button", { name: /Fotoğrafı büyüt/ }).click();
+  await expect(page.getByRole("dialog", { name: "Fotoğraf", exact: true })).toContainText("Kaynak arşivi izni");
+  await page.keyboard.press("Escape");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

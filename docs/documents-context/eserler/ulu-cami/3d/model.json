@@ -1,7 +1,7 @@
 {
   "_aciklama": "3D model ayarı (28 Ekim 2026). glb: export/ içindeki dosya adı (uzantısız; _sunum otomatik). yaw: Haritada kuzeye göre dönüş (derece). OSM yön açısı 90°'ye indirgendiği için 180° belirsizdir; Ulucami 22 Ekim'de 174 yapıldı. ana_parca: Haritada modeli konuma oturtmak için ortası alınan parça; avlu, şadırvan gibi ek yapılar kutuyu kaydırmaz. Boşsa bütün modelin kutusu kullanılır. kaydirma_m: 22 Ekim 2026: modelin ana gövdesi tepeden OSM bina sınırlarıyla karşılaştırılıp metre cinsinden kaydırıldı (doğu, kuzey). Pin de bu noktaya oturur. ortu_gruplari: «İçini göster» düğmesinde yukarıdan aşağı kalkan parça grupları; ilk grup önce kalkar, iniş tersten. Yoksa düğme görünmez. Kat kat açılan yapılarda her kat bir grup olur. ic_parcalar: yalnız sunum GLB'sinde olan iç mekân parçaları; harita GLB'sinde yok (29 Ekim 2026, eser başına iki model).",
   "glb": "ulu-cami_v32",
-  "glb_gece": "night/ulu-cami_v32_night",
+  "glb_gece": "night/ulu-cami_v32_night_v2",
   "yaw": 174,
   "on_yonu": 354,
   "_on_yonu_not": "Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönüne derece (dünya). Güneş her eserde bu cepheye ön sol çaprazdan vurur. Kaynak: Tac_Kapi (kuzey taçkapı).",
@@ -32,5 +32,39 @@
     "Muezzin_Mahfili",
     "Avizeler",
     "Kemer_Kalem_Isi"
+  ],
+  "_foto_acilari_not": "2 Kasım 2026: eser sayfasındaki ‹ İçini göster › oklarının açıları. foto: galeri fotoğrafının numarası (fotograflar.md); hedef/azimut/egim/uzaklik hikâye cümlesinin «Açı» sözcükleriyle aynı; ic: model açılır. tahmini: yön fotoğraftan kesin çıkmadı, panelden düzeltilecek (Muhammed). Panelde girilen açı bunun önüne geçer.",
+  "foto_acilari": [
+    {
+      "foto": "01",
+      "azimut": 354,
+      "egim": 45,
+      "uzaklik": "bütün yapı",
+      "not": "havadan, kuzey cephe ve iki minare"
+    },
+    {
+      "foto": "08",
+      "hedef": "Tac_Kapi",
+      "azimut": 354,
+      "egim": 10,
+      "uzaklik": "yakın",
+      "not": "kuzeydeki taç kapı"
+    },
+    {
+      "foto": "04",
+      "azimut": 354,
+      "egim": 82,
+      "uzaklik": "çatı",
+      "not": "tepeden yirmi kubbe"
+    },
+    {
+      "foto": "03",
+      "hedef": "Ic_Sadirvan_Havuz",
+      "azimut": 354,
+      "egim": 35,
+      "uzaklik": "orta",
+      "ic": true,
+      "not": "içeride havuz ve selsebil"
+    }
   ]
 }

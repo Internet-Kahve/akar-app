@@ -16,7 +16,7 @@ import type { SiteProgressResponse } from "./schemas.ts";
 type Method = "GET" | "POST";
 type Who = { as?: AuthUser; key?: string };
 type Answer = { correct: boolean; correctText: string | null; wrongText: string | null; earnedBadges: SiteBadgeDto[] };
-type Done = { doneText: string; onSite: boolean; earnedBadges: SiteBadgeDto[] };
+type Done = { doneText: string; doneTextEn: string | null; onSite: boolean; earnedBadges: SiteBadgeDto[] };
 
 const HAN: [number, number] = [29.06, 40.18];
 const FIFTY_FIVE_M: [number, number] = [29.06, 40.1805];
@@ -53,8 +53,11 @@ before(async () => {
   const field = (radiusM: number, fromHome: { text: string; part: string } | null) => ({ onSite: { text: "Kapının önüne gel", radiusM }, fromHome, doneText: "Üç kapıdan girilir." });
   const base = { prompt: "Soru?", mediaId: null, part: null, source: "E cilt-1 PDF s.27", trust: "verified" as const };
   await db.insert(siteTasks).values([
-    { ...base, id: "tq-1", siteId: "ulu-cami", position: 0, kind: "quiz", title: "Minberin sırrı", part: "Minber", details: quiz },
-    { ...base, id: "tf-1", siteId: "ulu-cami", position: 1, kind: "field", title: "Sahaflar Kapısı", details: field(80, { text: "Kapıya dokun", part: "Tac_Kapi" }) },
+    { ...base, id: "tq-1", siteId: "ulu-cami", position: 0, kind: "quiz", title: "Minberin sırrı", part: "Minber", details: quiz,
+      titleEn: "The minber's secret", promptEn: "Question?", enStatus: "machine",
+      detailsEn: { options: ["Tile", "Kündekâri", "Painting"], hints: ["First hint", "Second hint"], correctText: "Kündekâri: the pieces interlock.", wrongText: "Try again." } },
+    { ...base, id: "tf-1", siteId: "ulu-cami", position: 1, kind: "field", title: "Sahaflar Kapısı", details: field(80, { text: "Kapıya dokun", part: "Tac_Kapi" }),
+      detailsEn: { onSite: { text: "Come to the gate" }, fromHome: { text: "Touch the gate" }, doneText: "Three gates lead in." }, enStatus: "machine" },
     { ...base, id: "tf-2", siteId: "ulu-cami", position: 2, kind: "field", title: "Çeşme", details: field(50, null) },
     { ...base, id: "tq-draft", siteId: "taslak-cami", position: 0, kind: "quiz", title: "Taslak soru", details: quiz },
     { ...base, id: "tf-draft", siteId: "taslak-cami", position: 1, kind: "field", title: "Taslak saha", details: field(80, null) },
@@ -96,15 +99,15 @@ test("the site detail lists the tasks and badges in order, and nothing in it giv
   const detail = res.json<SiteDetail>();
   assert.deepEqual(detail.tasks.map((t) => [t.id, t.kind]), [["tq-1", "quiz"], ["tf-1", "field"], ["tf-2", "field"]]);
   assert.deepEqual(detail.tasks[0], {
-    id: "tq-1", kind: "quiz", title: "Minberin sırrı", prompt: "Soru?", photoId: null, part: "Minber", source: "E cilt-1 PDF s.27", trust: "verified",
-    quiz: { options: ["Çini", "Kündekâri", "Kalem işi"], hints: ["İlk ipucu", "İkinci ipucu"], wrongText: "Tekrar dene.", fromHome: true },
+    id: "tq-1", kind: "quiz", title: "Minberin sırrı", prompt: "Soru?", titleEn: "The minber's secret", promptEn: "Question?", photoId: null, part: "Minber", source: "E cilt-1 PDF s.27", trust: "verified", enStatus: "machine",
+    quiz: { options: ["Çini", "Kündekâri", "Kalem işi"], optionsEn: ["Tile", "Kündekâri", "Painting"], hints: ["İlk ipucu", "İkinci ipucu"], hintsEn: ["First hint", "Second hint"], wrongText: "Tekrar dene.", wrongTextEn: "Try again.", fromHome: true },
   });
-  assert.deepEqual(detail.tasks[1]!.field, { onSite: { text: "Kapının önüne gel", radiusM: 80 }, fromHome: { text: "Kapıya dokun", part: "Tac_Kapi" } });
+  assert.deepEqual(detail.tasks[1]!.field, { onSite: { text: "Kapının önüne gel", textEn: "Come to the gate", radiusM: 80 }, fromHome: { text: "Kapıya dokun", textEn: "Touch the gate", part: "Tac_Kapi" } });
   assert.equal(detail.tasks[2]!.field!.fromHome, null);
   assert.deepEqual(detail.badges.map((b) => [b.id, b.condition, b.taskId, b.onSiteLabel]), [
     ["b-story", "story", null, false], ["b-quiz", "task", "tq-1", false], ["b-field", "task", "tf-1", true],
   ]);
-  assert.ok(!/correctText|doneText|correctIndex|Kündekâri: parçalar|Üç kapıdan/.test(res.body), "no answer key and no after-the-answer text");
+  assert.ok(!/correctText|doneText|correctIndex|Kündekâri: parçalar|Üç kapıdan|the pieces interlock|Three gates/.test(res.body), "no answer key and no after-the-answer text, in either language");
   const list = (await send("GET", "/v1/site-details?limit=100")).json<{ items: SiteDetail[] }>();
   assert.deepEqual(list.items.find((s) => s.id === "ulu-cami")!.tasks, detail.tasks, "the list carries the same tasks");
   assert.deepEqual(list.items.find((s) => s.id === "bos-cami")!.tasks, []);
@@ -114,9 +117,9 @@ test("the site detail lists the tasks and badges in order, and nothing in it giv
 test("a guest's answer is checked and nothing is stored or earned", async () => {
   const wrong = await answer("tq-1", 0);
   assert.equal(wrong.statusCode, 200);
-  assert.deepEqual(wrong.json(), { correct: false, correctText: null, wrongText: "Tekrar dene.", earnedBadges: [] });
+  assert.deepEqual(wrong.json(), { correct: false, correctText: null, wrongText: "Tekrar dene.", correctTextEn: null, wrongTextEn: "Try again.", earnedBadges: [] });
   const right = await answer("tq-1", 1);
-  assert.deepEqual(right.json(), { correct: true, correctText: "Kündekâri: parçalar birbirine geçer.", wrongText: null, earnedBadges: [] });
+  assert.deepEqual(right.json(), { correct: true, correctText: "Kündekâri: parçalar birbirine geçer.", wrongText: null, correctTextEn: "Kündekâri: the pieces interlock.", wrongTextEn: null, earnedBadges: [] });
   assert.ok(!/correctIndex/.test(right.body));
   assert.equal((await app.deps.db.select().from(userSiteTasks)).length, 0);
   assert.equal((await app.deps.db.select().from(userSiteBadges)).length, 0);
@@ -124,13 +127,13 @@ test("a guest's answer is checked and nothing is stored or earned", async () => 
 
 test("a signed-in user's right answer is stored once and earns the task badge once; a wrong one stores nothing; no points", async () => {
   const u = user();
-  assert.deepEqual((await answer("tq-1", 2, { as: u })).json(), { correct: false, correctText: null, wrongText: "Tekrar dene.", earnedBadges: [] });
+  assert.deepEqual((await answer("tq-1", 2, { as: u })).json(), { correct: false, correctText: null, wrongText: "Tekrar dene.", correctTextEn: null, wrongTextEn: "Try again.", earnedBadges: [] });
   assert.deepEqual(await progress(u), { tasks: [], badges: [] });
 
   const first = (await answer("tq-1", 1, { as: u })).json<Answer>();
   assert.equal(first.correct, true);
   assert.deepEqual(first.earnedBadges.map((b) => b.id), ["b-quiz"]);
-  assert.deepEqual(first.earnedBadges[0], { id: "b-quiz", title: "Kündekâri", text: "Minberi öğrendin.", condition: "task", taskId: "tq-1", onSiteLabel: false });
+  assert.deepEqual(first.earnedBadges[0], { id: "b-quiz", title: "Kündekâri", text: "Minberi öğrendin.", titleEn: null, textEn: null, enStatus: null, condition: "task", taskId: "tq-1", onSiteLabel: false });
   const again = (await answer("tq-1", 1, { as: u })).json<Answer>();
   assert.deepEqual([again.correct, again.earnedBadges], [true, []], "the badge is new only once");
 
@@ -217,8 +220,9 @@ test("a guest finishes a field task the same way and gets nothing stored; bad re
   const stored = async () => (await app.deps.db.select().from(userSiteTasks)).length + (await app.deps.db.select().from(userSiteBadges)).length;
   const rowsBefore = await stored();
   const near = await complete("tf-1", { mode: "onSite", lat: HAN[1], lng: HAN[0], accuracyM: 5 });
-  assert.deepEqual(near.json(), { doneText: "Üç kapıdan girilir.", onSite: true, earnedBadges: [] });
-  assert.deepEqual((await complete("tf-1", { mode: "fromHome", part: "Tac_Kapi" })).json(), { doneText: "Üç kapıdan girilir.", onSite: false, earnedBadges: [] });
+  assert.deepEqual(near.json(), { doneText: "Üç kapıdan girilir.", doneTextEn: "Three gates lead in.", onSite: true, earnedBadges: [] });
+  assert.deepEqual((await complete("tf-2", { mode: "onSite", lat: HAN[1], lng: HAN[0], accuracyM: 5 })).json<Done>().doneTextEn, null, "no English, no English text");
+  assert.deepEqual((await complete("tf-1", { mode: "fromHome", part: "Tac_Kapi" })).json(), { doneText: "Üç kapıdan girilir.", doneTextEn: "Three gates lead in.", onSite: false, earnedBadges: [] });
   assert.equal(code(await complete("tf-1", { mode: "onSite", lat: ONE_ELEVEN_M[1], lng: ONE_ELEVEN_M[0] })), "TOO_FAR");
   assert.equal(code(await complete("tf-1", { mode: "fromHome", part: "Minber" })), "WRONG_PART");
   assert.equal(await stored(), rowsBefore, "a guest leaves no row");

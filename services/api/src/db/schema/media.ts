@@ -31,6 +31,8 @@ export const media = pgTable(
     parts: text("parts").array().notNull().default(sql`'{}'::text[]`),
     /** "İçini göster" (kind = model): part-name groups lifted top to bottom, first group first; empty = no button. */
     coverGroups: jsonb("cover_groups").$type<string[][]>().notNull().default(sql`'[]'::jsonb`),
+    /** Interior parts of the presentation file (kind = model): the map leaves them out; empty = only the scenery is left out. */
+    interiorParts: text("interior_parts").array().notNull().default(sql`'{}'::text[]`),
     /** Background GLB part extraction state (kind = model). */
     partsStatus: partsStatusEnum("parts_status").notNull().default("none"),
     /** Bucket-relative object key; null for external/seed URLs. */

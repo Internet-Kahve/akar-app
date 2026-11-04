@@ -737,3 +737,24 @@ test("the passport adds up from the ledger and lists only published content, whi
     await app.deps.db.update(siteTable).set({ status: "published" }).where(eq(siteTable.id, "han-e"));
   }
 });
+
+test("named routes isolate owners, preserve Rotam compatibility and reject invalid stops", async () => {
+  const owner = user(), other = user();
+  await send("PUT", "/v1/me/route", { as: owner }, { siteIds: ["han-b", "han-a"] });
+  const list = (await send("GET", "/v1/me/routes", { as: owner })).json<{ items: Array<{ id: string; isDefault: boolean; siteIds: string[] }> }>().items;
+  const initial = list.find((route) => route.isDefault)!;
+  assert.deepEqual(initial.siteIds, ["han-b", "han-a"]);
+  const created = await send("POST", "/v1/me/routes", { as: owner }, { name: "Second walk" });
+  assert.equal(created.statusCode, 200);
+  const id = created.json<{ id: string }>().id;
+  assert.equal((await send("PUT", `/v1/me/routes/${id}/stops`, { as: other }, { siteIds: ["han-c"] })).statusCode, 404);
+  assert.equal((await send("PUT", `/v1/me/routes/${id}/stops`, { as: owner }, { siteIds: ["han-c", "han-a"] })).statusCode, 200);
+  assert.equal((await send("PUT", `/v1/me/routes/${id}/stops`, { as: owner }, { siteIds: ["han-a", "han-a"] })).statusCode, 400);
+  assert.equal((await send("PUT", `/v1/me/routes/${id}/stops`, { as: owner }, { siteIds: ["taslak-han"] })).statusCode, 404);
+  assert.equal((await send("DELETE", `/v1/me/routes/${id}`, { as: other })).statusCode, 404);
+  await send("PUT", `/v1/me/routes/${initial.id}/stops`, { as: owner }, { siteIds: ["han-d"] });
+  assert.deepEqual((await send("GET", "/v1/me/route", { as: owner })).json(), { siteIds: ["han-d"] });
+  assert.equal((await send("DELETE", `/v1/me/routes/${initial.id}`, { as: owner })).statusCode, 200);
+  assert.deepEqual((await send("GET", "/v1/me/route", { as: owner })).json(), { siteIds: [] });
+  assert.equal((await send("DELETE", `/v1/me/routes/${id}`, { as: owner })).statusCode, 200);
+});

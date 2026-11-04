@@ -1,4 +1,5 @@
-import { bigserial, boolean, index, integer, pgTable, primaryKey, smallint, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { bigserial, boolean, index, integer, pgTable, primaryKey, smallint, text, timestamp, unique, uniqueIndex } from "drizzle-orm/pg-core";
 import { siteBadges, siteTasks, sites } from "./catalog.ts";
 import { catalogRoutes, quizzes } from "./routes.ts";
 import { timestamps } from "./shared.ts";
@@ -55,6 +56,23 @@ export const userRouteStops = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.siteId] })],
 );
+
+/** Named personal routes; the default route also serves the legacy endpoint. */
+export const userRoutes = pgTable("user_routes", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  ...timestamps,
+}, (t) => [
+  index("user_routes_owner_idx").on(t.userId),
+  uniqueIndex("user_routes_one_default").on(t.userId).where(sql`${t.isDefault}`),
+]).enableRLS();
+export const userRouteItems = pgTable("user_route_items", {
+  routeId: text("route_id").notNull().references(() => userRoutes.id, { onDelete: "cascade" }),
+  siteId: text("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
+  position: smallint("position").notNull(),
+}, (t) => [primaryKey({ columns: [t.routeId, t.siteId] }), unique("user_route_items_position_uq").on(t.routeId, t.position)]).enableRLS();
 
 /** Story reading progress ("Devam et · 5/9"): furthest block reached, completion time. */
 export const storyProgress = pgTable(

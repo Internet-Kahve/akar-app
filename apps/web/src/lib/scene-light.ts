@@ -76,6 +76,23 @@ export const DETAIL_LIGHT: Record<Theme, typeof MAP_NIGHT_LIGHT> = {
   day: { exposure: 1.05, sky: MAP_LIGHT.sky, ground: MAP_LIGHT.ground, ambient: 1.15, colour: MAP_LIGHT.colour, sun: 2.1, shadowOpacity: MAP_LIGHT.shadowOpacity },
   night: { ...MAP_NIGHT_LIGHT, exposure: 0.85, ambient: 0.9, sun: 1.2 },
 };
+/** Shared close-up lighting for the detail, reading and story stages. */
+export function addModelLights(scene: THREE.Scene, radius: number, frontDeg: number, theme: Theme) {
+  const light = DETAIL_LIGHT[theme];
+  scene.add(new THREE.HemisphereLight(light.sky, light.ground, light.ambient));
+  const sun = new THREE.DirectionalLight(light.colour, light.sun);
+  const azimuth = THREE.MathUtils.degToRad(frontDeg + 40);
+  const elevation = THREE.MathUtils.degToRad(50);
+  sun.position.set(Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation), -Math.cos(azimuth) * Math.cos(elevation)).multiplyScalar(radius * 2.5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = radius / 2048;
+  Object.assign(sun.shadow.camera, { left: -radius, right: radius, top: radius, bottom: -radius, near: radius * 0.5, far: radius * 5 });
+  sun.shadow.camera.updateProjectionMatrix();
+  scene.add(sun, sun.target);
+  return sun;
+}
 /** Sets the sky light and the shadow-casting sun in `scene` (and a shadow floor, if any) to `light`. */
 export function setSceneLights(scene: THREE.Scene, light: typeof MAP_NIGHT_LIGHT) {
   scene.traverse((node) => {

@@ -59,7 +59,6 @@ export function StoryPanel({
     [listOpen, setListOpen] = useState(!startListening),
     [playing, setPlaying] = useState(startListening),
     [rate, setRate] = useState(1),
-    [simple, setSimple] = useState(false),
     [error, setError] = useState<MessageKey | "">(""),
     list = useRef<HTMLOListElement>(null),
     // Only the visitor's own scrolling picks a sentence; a scroll that follows the sentence never does.
@@ -111,7 +110,7 @@ export function StoryPanel({
         setPlaying(false);
         return;
       }
-      const spoken = storyText(block, simple, voiceLang);
+      const spoken = storyText(block, false, voiceLang);
       const utterance = new SpeechSynthesisUtterance(spoken.text);
       utterance.lang = spoken.lang === "en" ? "en-US" : "tr-TR";
       utterance.rate = rate;
@@ -124,7 +123,7 @@ export function StoryPanel({
       };
       window.speechSynthesis.speak(utterance);
     };
-    const clip = pickNarration(block, voiceLang, voiceGender, simple);
+    const clip = pickNarration(block, voiceLang, voiceGender, false);
     const player = clip ? (recording.current ??= new Audio()) : null;
     if (clip && player) {
       player.src = clip.url;
@@ -148,7 +147,7 @@ export function StoryPanel({
       }
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     };
-  }, [playing, block, rate, index, voiceLang, voiceGender, simple]);
+  }, [playing, block, rate, index, voiceLang, voiceGender]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -174,8 +173,27 @@ export function StoryPanel({
     scrolledByHand.current = performance.now() + HAND_SCROLL_MS;
   };
   const clip = listen
-    ? pickNarration(block, voiceLang, voiceGender, simple)
+    ? pickNarration(block, voiceLang, voiceGender, false)
     : undefined;
+  const nextVoiceLang = voiceLang === "tr" ? "en" : "tr";
+  const languageAvailable = stories.some((story) => pickNarration(story, nextVoiceLang, voiceGender, false));
+  const voiceLabel = t(voiceGender === "female" ? "site.voiceFemale" : "site.voiceMale");
+  const voiceControls = (
+    <div className="story-voice-compact" role="group" aria-label={t("site.voiceLangLabel")}>
+      <button
+        className="story-lang"
+        aria-label={t("site.voiceLanguage", { lang: voiceLang.toUpperCase() })}
+        title={languageAvailable ? t("site.voiceLanguage", { lang: voiceLang.toUpperCase() }) : t("site.voiceUnavailable")}
+        disabled={!languageAvailable}
+        onClick={() => onVoice({ lang: nextVoiceLang })}
+      >{voiceLang.toUpperCase()}</button>
+      <button
+        aria-label={t("site.voiceSelected", { voice: voiceLabel })}
+        title={t("site.voiceSelected", { voice: voiceLabel })}
+        onClick={() => onVoice({ gender: voiceGender === "female" ? "male" : "female" })}
+      ><span aria-hidden="true">{voiceGender === "female" ? "♀" : "♂"}</span></button>
+    </div>
+  );
   const elapsed = stories
     .slice(0, index)
     .reduce((sum, s) => sum + sentenceSeconds(s.text), 0);
@@ -194,7 +212,7 @@ export function StoryPanel({
         ...(source.page && { detail: t("site.pageShort", { page: source.page }) }),
       }));
   const current = sourceOf(block)[0];
-  const shownNow = storyText(block, simple, lang);
+  const shownNow = storyText(block, false, lang);
   const player = (
     <div className="story-player">
       {wide ? (
@@ -251,6 +269,7 @@ export function StoryPanel({
         </button>
         <div className="story-card-top">
           {position}
+          {voiceControls}
           <TrustTag trust={block.trust} quote={block.text} sources={sourceOf(block)} />
         </div>
         <p className="story-card-text">
@@ -294,39 +313,9 @@ export function StoryPanel({
             {t("site.read")}
           </button>
         </div>
-        <span className="story-lang">{lang.toUpperCase()}</span>
+        {voiceControls}
         {position}
       </div>
-      <label className="switch-label story-simple">
-        <input type="checkbox" checked={simple} onChange={(e) => setSimple(e.target.checked)} />
-        {t("site.simpleMode")}
-      </label>
-      {listen && (
-        <div className="story-voice">
-          <div role="group" aria-label={t("site.voiceLangLabel")}>
-            {(["tr", "en"] as const).map((l) => (
-              <button
-                key={l}
-                aria-pressed={voiceLang === l}
-                onClick={() => onVoice({ lang: l })}
-              >
-                {t(l === "tr" ? "site.voiceLangTr" : "site.voiceLangEn")}
-              </button>
-            ))}
-          </div>
-          <div role="group" aria-label={t("site.voiceGenderLabel")}>
-            {(["female", "male"] as const).map((g) => (
-              <button
-                key={g}
-                aria-pressed={voiceGender === g}
-                onClick={() => onVoice({ gender: g })}
-              >
-                {t(g === "female" ? "site.voiceFemale" : "site.voiceMale")}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
       {listen && !clip && <p className="story-voice-note">{t("site.voiceBrowser")}</p>}
       {problem}
       <ol
@@ -356,7 +345,7 @@ export function StoryPanel({
         }}
       >
         {stories.map((s, i) => {
-          const shown = storyText(s, simple, lang);
+          const shown = storyText(s, false, lang);
           return (
             <li key={s.id} className={i === index ? "current" : ""}>
               <button

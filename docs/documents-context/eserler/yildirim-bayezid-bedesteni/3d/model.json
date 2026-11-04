@@ -29,5 +29,41 @@
     "Ic_Sokak",
     "Kitabe",
     "Sadirvan"
+  ],
+  "_foto_acilari_not": "2 Kasım 2026: eser sayfasındaki ‹ İçini göster › oklarının açıları. foto: galeri fotoğrafının numarası (fotograflar.md); hedef/azimut/egim/uzaklik hikâye cümlesinin «Açı» sözcükleriyle aynı; ic: model açılır. tahmini: yön fotoğraftan kesin çıkmadı, panelden düzeltilecek (Muhammed). Panelde girilen açı bunun önüne geçer.",
+  "foto_acilari": [
+    {
+      "foto": "01",
+      "azimut": 34,
+      "egim": 50,
+      "uzaklik": "bütün yapı",
+      "tahmini": true,
+      "not": "havadan; çekim yönü fotoğraftan kesin değil"
+    },
+    {
+      "foto": "03",
+      "azimut": 4,
+      "egim": 82,
+      "uzaklik": "çatı",
+      "not": "tepeden on dört kubbe"
+    },
+    {
+      "foto": "06",
+      "hedef": "Kubbeler",
+      "azimut": 200,
+      "egim": 35,
+      "uzaklik": "orta",
+      "tahmini": true,
+      "not": "kubbeler; yön tahmini"
+    },
+    {
+      "foto": "02",
+      "hedef": "Ic_Sokak",
+      "azimut": 4,
+      "egim": 25,
+      "uzaklik": "orta",
+      "ic": true,
+      "not": "iç sokak"
+    }
   ]
 }

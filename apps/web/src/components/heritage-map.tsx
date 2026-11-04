@@ -48,6 +48,8 @@ const sky = (theme: Theme) => ({
 });
 /** Keeps the short card clear of the top of the map and of the right edge. */
 const PEEK_WIDTH = 360;
+/** On a phone the short card covers the bottom of the map: the picked site stands this far above the bottom edge. */
+export const PEEK_INSET = 240;
 const PEEK_TOP = 80;
 /** Room kept between a pin and its short card, so the card never covers the site's model (about half a site wide). */
 const PEEK_CLEAR = 120;
@@ -107,14 +109,17 @@ export function HeritageMap({
   onOpen,
   onClear,
   routeIds,
+  buildingRoute = false,
   collapsed,
   mapSettings,
   focusCity,
   onFirstDraw,
+  onSettled,
   onCityInView,
   onLocate,
   flight,
   bottomInset = 0,
+  insetDragging = false,
   peek,
   finishedIds,
   routeColour = colors.cityBursa,
@@ -129,6 +134,7 @@ export function HeritageMap({
   /** A tap on the map itself, away from any site. */
   onClear?: () => void;
   routeIds: string[];
+  buildingRoute?: boolean;
   collapsed: boolean;
   /** Without settings the map draws no models (the route preview in the panel). */
   mapSettings?: MapSettings;
@@ -136,6 +142,8 @@ export function HeritageMap({
   focusCity?: string;
   /** Called once the map has been drawn for the first time, or has given up (then the schematic view takes over). */
   onFirstDraw?: () => void;
+  /** Called once the first view has fully come in (tiles, buildings and paint settled): a return to the map waits for it. */
+  onSettled?: () => void;
   /** The city nearest to the map's centre whenever the map comes to rest. */
   onCityInView?: (city: CityRecord) => void;
   /** The position button; the page decides what «near me» means. */
@@ -143,6 +151,8 @@ export function HeritageMap({
   flight?: MapFlight | undefined;
   /** Height of the sheet over the map on a phone: pins stay above it. */
   bottomInset?: number;
+  /** The sheet is under the visitor's finger: the map follows it at once instead of gliding. */
+  insetDragging?: boolean;
   /** The short card of the picked site; it follows the pin on a wide screen. */
   peek?: ReactNode;
   /** Sites whose story is finished: their pins carry a tick. */
@@ -162,6 +172,8 @@ export function HeritageMap({
     cityRef = useRef(onCityInView),
     selectedRef = useRef(selectedId),
     peekRef = useRef<HTMLDivElement>(null),
+    // The padding the map is moving to: a pick's glide and the sheet's inset must not undo each other.
+    padTarget = useRef(""),
     leaderRef = useRef<SVGPathElement>(null),
     // The card's last side and site: a change of either glides the card there instead of jumping.
     peekPlace = useRef<{ site: string; onLeft: boolean } | null>(null),
@@ -256,6 +268,8 @@ export function HeritageMap({
   };
   const drawnRef = useRef(onFirstDraw);
   drawnRef.current = onFirstDraw;
+  const settledRef = useRef(onSettled);
+  settledRef.current = onSettled;
   useEffect(() => {
     if (loaded || failed) drawnRef.current?.();
   }, [loaded, failed]);
@@ -279,6 +293,11 @@ export function HeritageMap({
             style: mapStyle(),
           });
           map.current = m;
+          // The credit stays one small «i» until it is tapped: MapLibre opens it on the first draw and on resizes.
+          const closeCredit = () =>
+            container.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
+          m.on("load", closeCredit);
+          m.on("resize", closeCredit);
           unfollow = followTheme(m, (theme) => {
             m.setSky(sky(theme));
             themePinLabels(m);
@@ -338,6 +357,16 @@ export function HeritageMap({
             m.setSky(sky(currentTheme()));
             mode();
             setLoaded(true);
+            // The models' layer repaints all the time, so the map is never «idle»: settled is when its tiles
+            // (buildings among them) have all come in, twice in a row a moment apart.
+            let calm = 0;
+            const watch = setInterval(() => {
+              if (disposed) return clearInterval(watch);
+              calm = m.areTilesLoaded() ? calm + 1 : 0;
+              if (calm < 2) return;
+              clearInterval(watch);
+              settledRef.current?.();
+            }, 200);
             reportCity();
             // A load event can follow a tile error; keep discovery available
             // through the schematic view for the lifetime of this map.
@@ -494,6 +523,7 @@ export function HeritageMap({
       pinFeatures(sites, routeIds, highlightId ?? selectedId, {
         ...(finishedIds && { finishedIds }),
         accent: routeColour,
+        buildingRoute,
         lang,
       }),
       () => cancelled,
@@ -504,7 +534,7 @@ export function HeritageMap({
     return () => {
       cancelled = true;
     };
-  }, [sites, selectedId, highlightId, routeIds, loaded, finishedIds, routeColour, lang]);
+  }, [sites, selectedId, highlightId, routeIds, loaded, finishedIds, routeColour, lang, buildingRoute]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);
@@ -517,28 +547,32 @@ export function HeritageMap({
     // shows blurred tiles.
     const here = m.getCenter();
     const far = Math.hypot(here.lng - site.coordinates[0], here.lat - site.coordinates[1]) > 0.5;
+    const padding = matchMedia(WIDE).matches
+      ? { right: PEEK_WIDTH + 20, top: 0, bottom: 0, left: 0 }
+      : { top: 110, bottom: PEEK_INSET, left: 0, right: 0 };
+    padTarget.current = JSON.stringify(padding);
     m.easeTo({
       center: site.coordinates,
       zoom: Math.max(m.getZoom(), SITE_ZOOM),
       duration: far ? 0 : SITE_EASE_MS,
-      padding: matchMedia(WIDE).matches
-        ? { right: PEEK_WIDTH + 20, top: 0, bottom: 0, left: 0 }
-        : { bottom: 240, top: 0, left: 0, right: 0 },
+      padding,
     });
   }, [selectedId, loaded]);
   useEffect(() => {
     placePeek();
   });
-  // On a phone the sheet covers the bottom of the map: the map's centre moves up with it.
+  // On a phone the sheet covers the bottom of the map: the map's centre moves up with it. It glides there (a card
+  // closing, a tab, a route) and follows the finger at once while the sheet is dragged.
   useEffect(() => {
-    if (!loaded || matchMedia(WIDE).matches) return;
-    map.current?.setPadding({
-      top: 110,
-      bottom: Math.min(bottomInset, innerHeight * 0.6),
-      left: 0,
-      right: 0,
-    });
-  }, [bottomInset, loaded]);
+    const m = map.current;
+    if (!loaded || !m || matchMedia(WIDE).matches) return;
+    const padding = { top: 110, bottom: Math.round(Math.min(bottomInset, innerHeight * 0.6)), left: 0, right: 0 };
+    const key = JSON.stringify(padding);
+    if (key === padTarget.current) return;
+    padTarget.current = key;
+    if (insetDragging || matchMedia("(prefers-reduced-motion: reduce)").matches) m.setPadding(padding);
+    else m.easeTo({ padding, duration: 280 });
+  }, [bottomInset, insetDragging, loaded]);
   useEffect(() => {
     const m = map.current;
     if (!flight || !loaded || !m) return;

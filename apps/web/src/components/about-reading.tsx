@@ -1,5 +1,7 @@
 "use client";
 import {
+  createContext,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -34,6 +36,7 @@ import { Modal, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import {
   STRIP_MAX,
+  aboutInLang,
   chapterBlocks,
   chapterPages,
   dominantTrust,
@@ -43,9 +46,13 @@ import {
   wordCount,
   type Block,
 } from "../lib/about-reading";
+import { pickTextNarration } from "../lib/story-voice";
+import { useVoice } from "./voice";
 
 type Section = NonNullable<HeritageSite["sections"]>[number];
 type Term = AboutChapter["terms"][number];
+/** `"tr"` while the English site shows the Turkish text (no English written); undefined = the text is in the site language. */
+const TextLang = createContext<"tr" | undefined>(undefined);
 
 /** Wide screens read with the 3D model beside the text; narrow ones never load it. */
 const WIDE = "(min-width: 1000px)";
@@ -112,9 +119,15 @@ export function AboutModal({
   onClose: () => void;
 } & AboutActions) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const about = useMemo(() => aboutInLang(site, lang), [site, lang]);
+  const content = lang === "en" && !about.english ? "tr" : undefined;
+  site = about.site;
   if (site.chapters?.length)
-    return <ReadingPage site={site} chapters={site.chapters} onClose={onClose} {...actions} />;
+    return (
+      <TextLang.Provider value={content}>
+        <ReadingPage site={site} chapters={site.chapters} onClose={onClose} {...actions} />
+      </TextLang.Provider>
+    );
   return (
     <Modal title={t("site.aboutTitle")} onClose={onClose}>
       <h3>
@@ -158,7 +171,7 @@ export function AboutModal({
   );
 }
 
-interface Shown {
+export interface Shown {
   src: string;
   alt: string;
   caption: string;
@@ -191,7 +204,7 @@ function Reading({
 } & AboutActions) {
   const i18n = useI18n();
   const { t, lang } = i18n;
-  const content = lang === "en" ? "tr" : undefined;
+  const content = useContext(TextLang);
   const wide = useWide();
   const cityScene = useCityScene(site.city);
   const identity = useCityIdentity(site.city);
@@ -213,6 +226,7 @@ function Reading({
     follow: boolean;
     total: number;
   } | null>(null);
+  const gender = useVoice().gender;
   const canSpeak = useSyncExternalStore(
     () => () => {},
     () => "speechSynthesis" in window,
@@ -236,6 +250,8 @@ function Reading({
   );
   const ids = new Set(chapters.map((c) => c.id));
   const loose = sections.filter((s) => !s.chapterId || !ids.has(s.chapterId));
+  // Recordings play without the browser voice: the listen buttons show when either can read.
+  const canListen = canSpeak || sections.some((s) => s.narrations?.length);
   const totalWords = wordCount(sections);
   const cover =
     site.aboutCover ??
@@ -347,14 +363,15 @@ function Reading({
         : { bottom: window.innerHeight - rect.top + 8 }),
     });
   };
-  const meta = [site.year, site.patron ?? site.architect, site.kind].filter(Boolean).join(" · ");
+  // An unknown architect is stored as «—»; the line leaves out what is not known, as the prototype's does.
+  const meta = [site.year, site.patron ?? site.architect, site.kind].filter((x) => x && x !== "—").join(" · ");
   const paragraphs = (chapter: number) => [
     ...(scroller.current?.querySelectorAll<HTMLElement>(
       `[data-chapter="${chapter}"] :is(.about-p, .about-inscription-meaning)`,
     ) ?? []),
   ];
   const listen = (chapter: number) => {
-    window.speechSynthesis.cancel();
+    if (canSpeak) window.speechSynthesis.cancel();
     setVoice({ chapter, paragraph: 0, playing: true, rate: voice?.rate ?? 1, follow: true, total: 0 });
   };
   // One effect owns the speech: any change of place, speed or state restarts it from that paragraph.
@@ -369,27 +386,63 @@ function Reading({
       );
       return;
     }
-    const id = grouped[voice.chapter]!.chapter.id;
-    setOpened((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+    const chapter = grouped[voice.chapter]!.chapter;
+    setOpened((prev) => (prev.has(chapter.id) ? prev : new Set(prev).add(chapter.id)));
     if (voice.total !== list.length) setVoice({ ...voice, total: list.length });
     const el = list[voice.paragraph]!;
     el.classList.add("about-reading-now");
     if (voice.follow) el.scrollIntoView({ block: "center", behavior: GLIDE() });
     let live = true;
+    const player = voice.playing ? new Audio() : null;
     if (voice.playing) {
-      const title = voice.paragraph === 0 ? `${grouped[voice.chapter]!.chapter.title}. ` : "";
-      const utterance = new SpeechSynthesisUtterance(title + (el.textContent ?? "").trim());
-      utterance.lang = "tr-TR";
-      utterance.rate = voice.rate;
-      utterance.onend = () => {
+      // The chapter title before its first paragraph, then the paragraph: each its recording in the visitor's
+      // voice (in the language of the text on screen), else the browser voice.
+      const speakLang = content ?? lang;
+      const section = sections.find((s) => s.id === el.dataset.section);
+      const parts = [
+        ...(voice.paragraph === 0 ? [{ text: chapter.title, clip: pickTextNarration(chapter, speakLang, gender) }] : []),
+        { text: (el.textContent ?? "").trim(), clip: section && pickTextNarration(section, speakLang, gender) },
+      ];
+      const next = () => {
         if (live) setVoice((v) => v && { ...v, paragraph: v.paragraph + 1 });
       };
-      window.speechSynthesis.speak(utterance);
+      const play = (index: number): void => {
+        if (!live) return;
+        const part = parts[index];
+        if (!part) return next();
+        const done = (): void => play(index + 1);
+        let fellBack = false;
+        // A recording that cannot play is read by the browser voice once (error and rejected play may both fire).
+        const speak = (): void => {
+          if (!live || fellBack) return;
+          fellBack = true;
+          if (!canSpeak || !part.text) return done();
+          const utterance = new SpeechSynthesisUtterance(part.text);
+          utterance.lang = speakLang === "tr" ? "tr-TR" : "en-US";
+          utterance.rate = voice.rate;
+          utterance.onend = done;
+          window.speechSynthesis.speak(utterance);
+        };
+        if (!part.clip || !player) return speak();
+        player.src = part.clip.url;
+        player.playbackRate = voice.rate;
+        player.onended = done;
+        player.onerror = speak;
+        player.play().catch((e: unknown) => {
+          if (!(e instanceof DOMException && e.name === "AbortError")) speak();
+        });
+      };
+      play(0);
     }
     return () => {
       live = false;
       el.classList.remove("about-reading-now");
-      window.speechSynthesis.cancel();
+      if (player) {
+        player.onended = null;
+        player.onerror = null;
+        player.pause();
+      }
+      if (canSpeak) window.speechSynthesis.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voice?.chapter, voice?.paragraph, voice?.playing, voice?.rate]);
@@ -473,7 +526,22 @@ function Reading({
   );
 
   return (
-    <div className="about-scroll" ref={scroller}>
+    <div
+      className={`about-scroll${voice ? " voicing" : ""}`}
+      ref={scroller}
+      // While reading aloud, a tap on a paragraph goes on from there: the voice and the highlight stay on what the
+      // visitor is looking at (Muhammed, 2 Nov 2026). A term or a link in it keeps its own tap.
+      onClick={(e) => {
+        if (!voice) return;
+        const target = e.target as HTMLElement;
+        if (target.closest("button, a")) return;
+        const paragraph = target.closest<HTMLElement>(".about-p, .about-inscription-meaning");
+        const chapter = Number(paragraph?.closest<HTMLElement>("[data-chapter]")?.dataset.chapter);
+        if (!paragraph || !Number.isInteger(chapter)) return;
+        const at = paragraphs(chapter).indexOf(paragraph);
+        if (at >= 0) setVoice({ ...voice, chapter, paragraph: at, playing: true, follow: true });
+      }}
+    >
       {!wide && nav}
       <header className="about-cover">
         {wide && (
@@ -487,7 +555,7 @@ function Reading({
             <img src={cover.src} alt={cover.alt} />
           </div>
         )}
-        <div className="about-cover-panel">
+        <div className={identity?.pattern ? "about-cover-panel desenli" : "about-cover-panel"}>
           {site.district && (
             <span className="about-district" lang={content}>
               {site.district}
@@ -498,9 +566,9 @@ function Reading({
           </h3>
           <span className="about-ornament" aria-hidden="true">
             <i />
-            <svg width="24" height="12" viewBox="0 0 24 12">
-              <path d="M0 6h7m10 0h7M12 1l4 5-4 5-4-5z" fill="none" stroke="currentColor" />
-              <circle cx="12" cy="6" r="1" fill="currentColor" />
+            <svg viewBox="0 0 28 12">
+              <path d="M14 1 18 6 14 11 10 6Z M2 6h7 M19 6h7" fill="none" stroke="currentColor" strokeWidth="1.4" />
+              <circle cx="14" cy="6" r="1.4" fill="currentColor" />
             </svg>
             <i />
           </span>
@@ -519,7 +587,7 @@ function Reading({
               </>
             )}
           </p>
-          {canSpeak && (
+          {canListen && (
             <button className="about-listen" onClick={() => listen(0)}>
               <Headphones size={18} />
               {t("site.aboutListen", { min: readingMinutes(totalWords) })}
@@ -545,7 +613,7 @@ function Reading({
               ] as string[]}
               open={opened.has(g.chapter.id)}
               onToggle={() => toggle(g.chapter.id)}
-              onListen={canSpeak ? () => listen(i) : undefined}
+              onListen={canListen ? () => listen(i) : undefined}
               onPhotos={(photos, index) => setLightbox({ photos: photos.map(toShown), index })}
               onTerm={showTerm}
             />
@@ -631,8 +699,14 @@ function Reading({
               <div className="about-player-buttons">
                 <button
                   aria-label={t("site.aboutPrevParagraph")}
+                  disabled={voice.chapter === 0 && voice.paragraph === 0}
                   onClick={() =>
-                    setVoice({ ...voice, follow: true, paragraph: Math.max(0, voice.paragraph - 1) })
+                    // At a chapter's start, back goes to the last paragraph of the chapter before (as forward goes on).
+                    setVoice(
+                      voice.paragraph > 0
+                        ? { ...voice, follow: true, paragraph: voice.paragraph - 1 }
+                        : { ...voice, follow: true, chapter: voice.chapter - 1, paragraph: Math.max(0, paragraphs(voice.chapter - 1).length - 1) },
+                    )
                   }
                 >
                   <SkipBack size={18} />
@@ -762,7 +836,7 @@ function ChapterView({
   onTerm: (term: Term, el: HTMLElement) => void;
 }) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const content = useContext(TextLang);
   const pages = chapterPages(sources);
   const [showSources, setShowSources] = useState(false);
   const minutes = readingMinutes(words);
@@ -919,7 +993,7 @@ function BlockView({
   onTerm: (term: Term, el: HTMLElement) => void;
 }) {
   const { t, lang } = useI18n();
-  const content = lang === "en" ? "tr" : undefined;
+  const content = useContext(TextLang);
   // The chapter's first photograph already opens the chapter.
   const photos = block.photos.filter((p) => p !== cover);
   return (
@@ -928,14 +1002,14 @@ function BlockView({
         <blockquote className="about-inscription about-reveal">
           <p className="about-inscription-text">{block.original}</p>
           {block.meaning.map((meaning) => (
-            <p className="about-inscription-meaning" key={meaning}>
+            <p className="about-inscription-meaning" key={meaning.sectionId} data-section={meaning.sectionId}>
               <span>{t("site.aboutMeaning")}</span>{" "}
-              <span lang={content}>{meaning}</span>
+              <span lang={content}>{meaning.text}</span>
             </p>
           ))}
         </blockquote>
       ) : (
-        <p className={`about-p${block.inSummary ? " in-summary" : ""}`} lang={content}>
+        <p className={`about-p${block.inSummary ? " in-summary" : ""}`} lang={content} data-section={block.id}>
           {splitTerms(block.text, terms).map((part, i) =>
             part.term ? (
               <button

@@ -215,6 +215,9 @@ export const MediaDto = z.object({
   coverGroups: z
     .array(z.array(z.string()))
     .describe("«İçini göster»: yukarıdan aşağı kalkan parça grupları, ilk grup önce kalkar; boş = düğme yok (yalnız kind=model)"),
+  interiorParts: z
+    .array(z.string())
+    .describe("Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"),
 });
 
 export const SourceDto = z.object({
@@ -239,6 +242,7 @@ export const ChapterDto = z
   .object({
     id: z.string(),
     title: z.string(),
+    titleEn: z.string().nullable().describe("Bölüm başlığının İngilizcesi; yoksa null"),
     kind: z.enum(sectionKinds),
     summary: z.array(z.string()).describe("Bölümün metninden seçilmiş özet cümleleri, kelimesi kelimesine"),
     figures: z
@@ -252,6 +256,18 @@ export const ChapterDto = z
     camera: CameraPoseDto.nullable().describe("Bölüm okunurken masaüstünde 3B modelin açısı; null = model olduğu gibi kalır"),
     interior: z.boolean().describe("Bölüm okunurken modelin örtü grupları kalkar"),
     focusParts: z.array(z.string()).describe("Bölüm okunurken vurgulanan model parçaları; boş = bütün yapı"),
+    readingEn: z
+      .object({
+        summary: z.array(z.string()),
+        figures: z.array(z.object({ value: z.string(), label: z.string(), evidence: z.string() })),
+        quotes: z.array(z.object({ text: z.string(), by: z.string().nullable() })),
+        timeline: z.array(z.object({ year: z.string(), evidence: z.string() })),
+        terms: z.array(z.object({ word: z.string(), definition: z.string() })),
+      })
+      .nullable()
+      .describe("summary, figures, quotes, timeline ve terms alanlarının İngilizcesi (aynı sıra, evidence İngilizce paragraf metninden); yoksa null"),
+    enStatus: z.enum(translationStatuses).nullable().describe("İngilizce metnin kaynağı: machine = çeviri, henüz editör kaydetmedi; reviewed = editör kaydetti; null = yok"),
+    narrations: z.array(NarrationDto).describe("Bölüm başlığının yapay zekâ seslendirmeleri (variant=text; güncel olanlar); ses dosyaları SiteDetail.media içinde"),
   })
   .describe("«Eser hakkında» okuma bölümü; metni SiteDetail.sections içinde chapterId ile ona bağlıdır");
 export type ChapterDto = z.infer<typeof ChapterDto>;
@@ -260,12 +276,17 @@ export const SectionDto = z.object({
   id: z.string(),
   kind: z.enum(sectionKinds),
   title: z.string(),
+  titleEn: z.string().nullable(),
   body: z.string(),
   bodyEn: z.string().nullable(),
+  enStatus: z.enum(translationStatuses).nullable().describe("titleEn/bodyEn kaynağı (ChapterDto.enStatus ile aynı anlam)"),
   trust: TrustSchema,
   sourceId: z.string().nullable(),
   chapterId: z.string().nullable().describe("Paragrafın ait olduğu okuma bölümü (SiteDetail.chapters); null = hiçbir bölüme bağlı değil"),
   photos: z.array(SectionPhotoDto).describe("Paragrafın arkasında gösterilen kitap fotoğrafları, sıralı; galeriye girmez"),
+  narrations: z
+    .array(NarrationDto)
+    .describe("Paragrafın yapay zekâ seslendirmeleri (variant=text; güncel olanlar). Kitabe paragrafında yalnız anlamı (Mealen:/Meaning: sonrası) okunur; anlamı olmayan kitabenin kaydı olmaz"),
 });
 
 export const CardDto = z.object({
@@ -286,6 +307,7 @@ export const HistoryImageDto = z.object({
   presentMediaId: z.string().nullable().describe("Aynı açıdan bugünün görüntüsü"),
   caption: z.string(),
   captionEn: z.string().nullable(),
+  enStatus: z.enum(translationStatuses).nullable().describe("captionEn kaynağı (ChapterDto.enStatus ile aynı anlam)"),
   dateLabel: z.string().describe("Kaynaktaki serbest tarih, örn. 1890'lar"),
   sourceId: z.string().nullable(),
   trust: TrustSchema,
@@ -341,6 +363,8 @@ export const SiteTaskDto = z
     kind: z.enum(siteTaskKinds).describe("quiz = soru, field = saha görevi"),
     title: z.string(),
     prompt: z.string().describe("Soru ya da görev metni"),
+    titleEn: z.string().nullable(),
+    promptEn: z.string().nullable(),
     photoId: z.string().nullable().describe("Görevin fotoğrafı: eserin fotoğraflarından biri (SiteDetail.photoIds / media); yoksa null"),
     part: z.string().nullable().describe("Görevin konusu olan model parça adı; yoksa null"),
     source: z.string().nullable().describe("Kaynak satırı (serbest metin, örn. «E cilt-1 PDF s.27»); yoksa null"),
@@ -348,19 +372,23 @@ export const SiteTaskDto = z
     quiz: z
       .object({
         options: z.array(z.string()).describe("Seçenekler (2–6), cevap anahtarı yok; /v1/site-tasks/:id/answer ile sunucuda denetlenir"),
+        optionsEn: z.array(z.string()).nullable().describe("Seçeneklerin İngilizcesi, aynı sırayla; yoksa null"),
         hints: z.array(z.string()).describe("İpuçları, sırayla istendikçe açılır"),
+        hintsEn: z.array(z.string()).nullable(),
         wrongText: z.string().describe("Yanlış cevapta gösterilen metin"),
+        wrongTextEn: z.string().nullable(),
         fromHome: z.boolean().describe("Evden çözülebilir mi"),
       })
       .optional()
       .describe("Yalnız kind = quiz. Doğru cevap metni (correctText) yoktur: yalnız doğru cevapta yanıtla gelir"),
     field: z
       .object({
-        onSite: z.object({ text: z.string(), radiusM: z.number().int().describe("Eserin noktasından en çok bu kadar metre uzakta (konum hassasiyeti payıyla)") }),
-        fromHome: z.object({ text: z.string(), part: z.string().describe("Dokunulacak model parça adı") }).nullable().describe("Evden karşılığı; yoksa null"),
+        onSite: z.object({ text: z.string(), textEn: z.string().nullable(), radiusM: z.number().int().describe("Eserin noktasından en çok bu kadar metre uzakta (konum hassasiyeti payıyla)") }),
+        fromHome: z.object({ text: z.string(), textEn: z.string().nullable(), part: z.string().describe("Dokunulacak model parça adı") }).nullable().describe("Evden karşılığı; yoksa null"),
       })
       .optional()
       .describe("Yalnız kind = field. Tamamlama metni (doneText) yoktur: yalnız tamamlanınca yanıtla gelir"),
+    enStatus: z.enum(translationStatuses).nullable().describe("İngilizce metinlerin kaynağı (ChapterDto.enStatus ile aynı anlam)"),
   })
   .describe("Eser görevi (soru ya da saha görevi). Puan, süre ve yanlış cevap cezası yoktur");
 export type SiteTaskDto = z.infer<typeof SiteTaskDto>;
@@ -370,6 +398,9 @@ export const SiteBadgeDto = z
     id: z.string(),
     title: z.string(),
     text: z.string(),
+    titleEn: z.string().nullable(),
+    textEn: z.string().nullable(),
+    enStatus: z.enum(translationStatuses).nullable(),
     condition: z.enum(siteBadgeConditions).describe("story = hikâyeyi bitirince, task = taskId görevini yapınca"),
     taskId: z.string().nullable().describe("condition = task ise görevin kimliği (SiteDetail.tasks), yoksa null"),
     onSiteLabel: z.boolean().describe("Yerinde (GPS ile) kazanılınca «Yerinde» etiketi gösterilir"),
@@ -383,6 +414,7 @@ export const MapPlacementDto = z.object({
   lng: z.number().describe("Modelin boylamı; yerleşimde konum verilmemişse eserin konumu"),
   lat: z.number().describe("Modelin enlemi; yerleşimde konum verilmemişse eserin konumu"),
   headingDeg: z.number().describe("Kuzeyden saat yönünde derece, 0 ≤ x < 360"),
+  frontDeg: z.number().nullable().describe("Ön cephenin (ana girişin) baktığı yön, kuzeyden saat yönünde derece, 0 ≤ x < 360; harita güneşi bu cepheye vurur. null = bilinmiyor (şehrin ışık yönü)"),
   scale: z.number().describe("0,1–10; 1 = model birimi bir metre"),
   altitudeM: z.number().describe("Modelin zemine oturmuş hâlinin üstüne eklenen yükseklik, metre (−50–200)"),
   anchorNode: z.string().nullable().describe("Taban noktasının hesaplandığı modeldeki parça adı; null = presentasyon parçaları dışındaki tüm parçalar"),

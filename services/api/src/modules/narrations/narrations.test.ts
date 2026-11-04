@@ -390,7 +390,7 @@ test("storyBlockId and partCardId together are a 400; an unknown card is a 404; 
   for (const path of ["narrations", "translate"]) {
     const both = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/${path}`, editor, { storyBlockId: "b1", partCardId: "pk4-1" });
     assert.equal(both.res.statusCode, 400, path);
-    assert.ok(both.body.error.fieldErrors["partCardId"], path);
+    assert.ok(both.body.error.fieldErrors["_"], path);
     const unknown = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/${path}`, editor, { partCardId: "yok" });
     assert.equal(unknown.res.statusCode, 404, path);
     assert.equal(unknown.body.error.message, "Parça kartı bulunamadı.");
@@ -419,4 +419,79 @@ test("removing a part card removes its recordings and their audio, and keeps the
   // Removing every card clears the rest.
   await call("PUT", `/v1/admin/sites/${id}/part-cards`, editor, { cards: [] });
   assert.equal((await rowsOf(id)).length, 0);
+});
+
+const readingLists = { summary: [], figures: [], quotes: [], timeline: [], terms: [] };
+const paragraph = (id: string | undefined, body: string, bodyEn: string) => ({ ...(id && { id }), kind: "history", title: "Tarihçe", body, bodyEn, trust: "verified" });
+const aboutBody = (chapter: string, sections: object[]) => ({ chapters: [{ id: chapter, title: "Tarihçe", titleEn: "History", kind: "history", ...readingLists, sections }], looseSections: [] });
+
+/** A draft site with a chapter «Tarihçe» holding a paragraph, an inscription with its meaning and one without. */
+async function newAboutSite(name: string): Promise<{ id: string; sections: string[]; chapter: string }> {
+  const id = await newSite(name, []);
+  const chapter = `chapter-${id}`;
+  const saved = await call<AdminSiteDetail>(
+    "PUT",
+    `/v1/admin/sites/${id}/about`,
+    editor,
+    aboutBody(chapter, [
+      paragraph(undefined, "Han 1491'de yapıldı.", "The inn was built in 1491."),
+      paragraph(undefined, "“Bismillâh” Mealen: Allah'ın adıyla.", "“Bismillâh” Meaning: In the name of God."),
+      paragraph(undefined, "“Yalnız yazı”", "“Only the wording”"),
+    ]),
+  );
+  assert.equal(saved.res.statusCode, 200, saved.res.body);
+  return { id, sections: saved.body.sections.map((s) => s.id), chapter };
+}
+
+test("«Eser hakkında» is voiced per chapter title and paragraph; an inscription reads only its meaning, and one without a meaning is not voiced", async () => {
+  const { id, sections, chapter } = await newAboutSite("Okunan Han");
+  tts.calls.length = 0;
+  const run = await narrate(id);
+  assert.equal(run.res.statusCode, 200, run.res.body);
+  assert.equal(run.body.generated, 12);
+  const spoken = new Set(tts.calls.map((c) => c.text));
+  assert.deepEqual([...spoken].sort(), ["Allah'ın adıyla.", "Han bin dört yüz doksan birde yapıldı.", "History", "In the name of God.", "Tarihçe", "The inn was built in 1491."].sort());
+  const rows = await rowsOf(id);
+  assert.deepEqual(new Set(rows.map((r) => `${r.subjectType}:${r.subjectId}`)), new Set([`about_chapter:${chapter}`, `about_section:${sections[0]}`, `about_section:${sections[1]}`]));
+
+  const detail = await call<{ sections: Array<{ id: string; narrations: unknown[] }>; chapters: Array<{ narrations: unknown[] }> }>("GET", `/v1/admin/sites/${id}`);
+  assert.deepEqual(detail.body.sections.map((s) => s.narrations.length), [4, 4, 0]);
+  assert.equal(detail.body.chapters[0]!.narrations.length, 4);
+
+  // One paragraph is a target of its own; a changed text replaces only its recordings.
+  await call("PUT", `/v1/admin/sites/${id}/about`, editor,
+    aboutBody(chapter, [
+      paragraph(sections[0], "Han 1492'de yapıldı.", "The inn was built in 1492."),
+      paragraph(sections[1], "“Bismillâh” Mealen: Allah'ın adıyla.", "“Bismillâh” Meaning: In the name of God."),
+      paragraph(sections[2], "“Yalnız yazı”", "“Only the wording”"),
+    ]),
+  );
+  const one = await narrate(id, { aboutSectionId: sections[0] });
+  assert.deepEqual(one.body, { generated: 4, skipped: 0, stale: 4 });
+  const unknown = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/narrations`, editor, { aboutChapterId: "yok" });
+  assert.equal(unknown.res.statusCode, 404);
+});
+
+test("removing a paragraph or a chapter removes its recordings and their audio; about texts are never machine translated", async () => {
+  const { id, sections, chapter } = await newAboutSite("Silinen Paragraf Hanı");
+  await narrate(id);
+  const gone = (await rowsOf(id)).filter((r) => r.subjectId === sections[1]).map((r) => r.mediaId);
+  assert.equal(gone.length, 4);
+  const saved = await call("PUT", `/v1/admin/sites/${id}/about`, editor,
+    aboutBody(chapter, [paragraph(sections[0], "Han 1491'de yapıldı.", "The inn was built in 1491.")]),
+  );
+  assert.equal(saved.res.statusCode, 200, saved.res.body);
+  assert.equal((await rowsOf(id)).filter((r) => r.subjectType === "about_section").length, 4);
+  assert.deepEqual(await app.deps.db.select({ id: media.id }).from(media).where(inArray(media.id, gone)), []);
+  // A chapter left out takes the recordings of its title (its paragraphs go with it unless sent again).
+  assert.equal((await rowsOf(id)).filter((r) => r.subjectType === "about_chapter").length, 4);
+  const emptied = await call("PUT", `/v1/admin/sites/${id}/about`, editor, { chapters: [], looseSections: [] });
+  assert.equal(emptied.res.statusCode, 200, emptied.res.body);
+  assert.equal((await rowsOf(id)).filter((r) => r.subjectType.startsWith("about_")).length, 0);
+  assert.equal((await rowsOf(id)).length, 0);
+
+  translator.calls.length = 0;
+  const translate = await call<ErrorBody>("POST", `/v1/admin/sites/${id}/translate`, editor, { aboutSectionId: sections[0] });
+  assert.equal(translate.res.statusCode, 400);
+  assert.equal(translator.calls.length, 0);
 });

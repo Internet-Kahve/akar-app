@@ -12,7 +12,7 @@ const config: NextConfig = {
   devIndicators: false,
   ...(!mobile && {
     async rewrites() {
-      return [{ source: "/tanitim", destination: "/tanitim/index.html" }];
+      return [{ source: "/tanitim", destination: "/tanitim/yeni/index.html" }];
     },
   }),
 };

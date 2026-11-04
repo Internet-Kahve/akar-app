@@ -1,4 +1,7 @@
 "use client";
+import { RouteBuilder, type RouteDraft } from "./route-builder";
+import type { PersonalRoute } from "@akar/domain";
+import { flushSync } from "react-dom";
 import {
   useCallback,
   useEffect,
@@ -14,6 +17,7 @@ import {
   Route,
   Headphones,
   ChevronLeft,
+  ChevronUp,
   X,
   Check,
   Users,
@@ -33,6 +37,7 @@ import {
   defaultMapSettings,
   filterSites,
   kindCategory,
+  modelFileFor,
   siteCategories,
   type Command,
   type HeritageSite,
@@ -44,7 +49,7 @@ import {
   type SiteCategory,
   type Snapshot,
 } from "@akar/domain";
-import { HeritageMap, type MapFlight } from "./heritage-map";
+import { HeritageMap, PEEK_INSET, type MapFlight } from "./heritage-map";
 import {
   ExplorePanel,
   MapChips,
@@ -60,13 +65,15 @@ import { WelcomeCard } from "./welcome-card";
 import { Cities } from "./city-scenes";
 import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Scene } from "./scene";
-import { HistoryView } from "./history-view";
+import { HistoryView, type MemoryDraft } from "./history-view";
+import { memoryTraces } from "../lib/memory-traces";
 import { LivingMemory } from "./living-memory";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { StoryPanel, StoryProgress } from "./story-panel";
-import { StoryFlowMap } from "./story-flow-map";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
+import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
+import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { SignInModal } from "./sign-in-modal";
@@ -79,14 +86,19 @@ import {
   type FieldTask,
 } from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
+import { badgeInLang } from "../lib/task-text";
 import { apiUrl, demoContentUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
 import {
   clampSheet,
+  mapSheetStops,
   settleSheet,
   SHEET_TAP_PX,
+  SITE_CARD_PEEK,
+  siteCardStops,
   toggleSheet,
+  type SheetStops,
 } from "../lib/bottom-sheet";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
@@ -118,8 +130,10 @@ type Overlay =
   | "about"
   | "reset"
   | null;
-/** Share of a phone's height the panel takes on a site's page; the scene stays above it. */
-const SITE_SHEET = 0.46;
+/** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
+const CONTROLS_ROOM = 110 + 194 + 32;
+/** How far a scroll on the closed site card raises it: enough for its content to scroll. */
+const CARD_SCROLL_RISE = 150;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
 const CATALOG_REFRESH_MS = 5 * 60_000;
 export function AkarApp() {
@@ -151,6 +165,10 @@ export function AkarApp() {
     [routeId, setRouteId] = useState<string>(),
     [collapsed, setCollapsed] = useState(false),
     [overlay, setOverlay] = useState<Overlay>(null),
+    // See the Past opened from another site's «Uzaktan görünüyor» row starts at that photograph.
+    [historyStart, setHistoryStart] = useState(0),
+    // İz Bırak opened from the camera starts with the shot and its «same angle» label.
+    [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null),
     [storyIndex, setStoryIndex] = useState(0),
     [listening, setListening] = useState(false),
     [toast, setToast] = useState(""),
@@ -161,6 +179,16 @@ export function AkarApp() {
     ),
     // `null` = closed; the string says why the dialog opened ("" = user asked).
     [signIn, setSignIn] = useState<string | null>(null);
+  const [routeDraft, setRouteDraft] = useState<RouteDraft | null>(null);
+  const [personalRoutes, setPersonalRoutes] = useState<PersonalRoute[]>([]);
+  const [routeBusy, setRouteBusy] = useState(false);
+  const [routeSite, setRouteSite] = useState<string>();
+  useEffect(() => {
+    if (!ready || tab !== "routes") return;
+    let active = true;
+    void client.current?.getPersonalRoutes().then((routes) => { if (active) setPersonalRoutes(routes); }).catch(() => {});
+    return () => { active = false; };
+  }, [ready, tab, account]);
   const [puzzle, setPuzzle] = useState<{ start: number; found?: FieldDone } | null>(null);
   const [pick, setPick] = useState<{ task: FieldTask; hint: string } | null>(
     null,
@@ -173,6 +201,8 @@ export function AkarApp() {
     [mapDrawn, setMapDrawn] = useState(false),
     [openingLate, setOpeningLate] = useState(false);
   const wide = useWide();
+  // The bottom sheet and the floating site card follow the CSS's phone layout (900 px), not `wide` (1000 px).
+  const phone = useMedia(PHONE_LAYOUT);
   const client = useRef<AkarClient | null>(null),
     loaded = useRef(false),
     consent = useRef<{ textVersion: string } | null>(null),
@@ -355,6 +385,7 @@ export function AkarApp() {
   }, []);
   const go = useCallback((next: View, id?: string) => {
     setView(next);
+    setHistoryStart(0);
     setCollapsed(false);
     if (id) setSiteId(id);
     setPeekId(undefined);
@@ -400,7 +431,7 @@ export function AkarApp() {
     (badges: SiteBadge[]) => {
       if (badges.length)
         setToast(
-          t("toast.newBadge", { titles: badges.map((b) => b.title).join(", ") }),
+          t("toast.newBadge", { titles: badges.map((b) => badgeInLang(b, langRef.current).badge.title).join(", ") }),
         );
       void refreshProgress();
     },
@@ -530,6 +561,18 @@ export function AkarApp() {
     (s) => s.id === siteId && s.status === "published",
   );
   const memoryCount = site ? approvedMemories(state, site.id).length : 0;
+  // The site's gallery ends with its visitors' photographs (Yaşayan hafıza), as the prototype's.
+  const visitorPhotos = site
+    ? memoryTraces({
+        sample: site.sampleTraces ?? [],
+        own: state.memories.filter((m) => m.siteId === site.id),
+        approved: approvedMemories(state, site.id),
+      }).flatMap((trace) =>
+        trace.photo
+          ? [{ id: trace.id, src: trace.photo, alt: trace.alt || t("memories.photoAlt"), author: trace.author, state: trace.state }]
+          : [],
+      )
+    : [];
   // Back from a site's page to the map, by any way (its back button, the browser's, a link): the map shows that site,
   // wherever the map was before (a site of Hatay opened from the list must not come back to Bursa).
   const lastView = useRef(view);
@@ -547,16 +590,23 @@ export function AkarApp() {
     return stories.length ? { ...site, stories } : undefined;
   }, [site, routeId]);
   const storyBlock = view === "story" ? storySite?.stories[storyIndex] : undefined;
-  const flowEnds = useMemo(() => {
-    const flow = storyBlock?.flow;
-    if (!flow) return null;
-    const at = (id: string | null) =>
-      state.sites.find((s) => s.id === id)?.coordinates;
-    const from = at(flow.fromSiteId),
-      to = flow.toPoint ?? at(flow.toSiteId);
-    const fromName = state.sites.find((s) => s.id === flow.fromSiteId)?.name;
-    return from && to && fromName ? { from, to, fromName } : null;
-  }, [storyBlock, state.sites]);
+  // A sentence about the income road: the other building of the road comes beside the site in its own scene
+  // (its model in the page's theme, else its cover photograph; a place outside the catalogue by its name alone).
+  const flowCompanion = useMemo((): FlowCompanion | undefined => {
+    const road = storyBlock?.flow;
+    if (!road || !site) return undefined;
+    const otherId = road.fromSiteId === site.id ? road.toSiteId : road.fromSiteId;
+    const other = state.sites.find((s) => s.id === otherId);
+    const cover = other && ([...(other.storyPhotos ?? []), ...(other.photos ?? [])].find((p) => p.id === other.coverPhotoId) ?? other.photos?.[0]);
+    const name = other?.name ?? road.toName;
+    return {
+      ...(other?.model && { src: modelFileFor(other.model, theme).src }),
+      ...(cover && { photo: cover.src }),
+      name,
+      label: road.label || name,
+      incoming: road.fromSiteId !== site.id,
+    };
+  }, [storyBlock, site, state.sites, theme]);
   const filtered = useMemo(
     () =>
       filterSites(state.sites, query).filter((s) =>
@@ -602,6 +652,23 @@ export function AkarApp() {
   const isDetail = ["detail", "story"].includes(view),
     showMap = !["profile", "admin", "history", "memories"].includes(view),
     showRoutes = tab === "routes" && !query;
+  // Back to the map from a site (or the profile, the panel…): the map is built anew, and until its first view has
+  // come in its buildings and models stand flat or missing. The opening screen covers that, as at the start.
+  const onMapView = showMap && !isDetail;
+  const [mapReturn, setMapReturn] = useState(false),
+    [mapSettled, setMapSettled] = useState(false),
+    [returnLate, setReturnLate] = useState(false);
+  const wasOnMap = useRef(onMapView);
+  useEffect(() => {
+    const back = onMapView && !wasOnMap.current && !opening;
+    wasOnMap.current = onMapView;
+    if (!back) return;
+    setMapReturn(true);
+    setMapSettled(false);
+    setReturnLate(false);
+    const timer = setTimeout(() => setReturnLate(true), OPENING_MAX_MS);
+    return () => clearTimeout(timer);
+  }, [onMapView, opening]);
   // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
   // to wait for, as soon as the page can show something.
   const openingDone =
@@ -611,9 +678,24 @@ export function AkarApp() {
     (ready && !(showMap && !isDetail));
   // A link straight to a site of another city opens on that city, not on the default one.
   const openingCity = cityRecords.find((c) => c.name === pageCity) ?? cityRecords.find((c) => c.isDefault);
+  /**
+   * On a phone the sheet and the short card are one surface (prototype `yuzeyGecis`): when one gives way to the other
+   * it turns into it. A card that stays open for another site changes in place.
+   */
+  function changePeek(id: string | undefined) {
+    const update = () => setPeekId(id);
+    if (wide || !peekId === !id || matchMedia("(prefers-reduced-motion: reduce)").matches || !document.startViewTransition)
+      return update();
+    const root = document.documentElement;
+    root.classList.add("vt-yuzey");
+    const turn = document.startViewTransition(() => flushSync(update));
+    turn.ready.catch(() => {});
+    turn.updateCallbackDone.catch(() => {});
+    void turn.finished.catch(() => {}).finally(() => root.classList.remove("vt-yuzey"));
+  }
   /** A pick on the map or in the list: the map goes there and the short card opens. */
   function pickSite(id: string) {
-    setPeekId(id);
+    changePeek(id);
   }
   function selectSite(id: string) {
     setStoryIndex(0);
@@ -684,7 +766,53 @@ export function AkarApp() {
         })
         .catch(() => {});
   }
+  async function openRouteBuilder(siteId?: string) {
+    try {
+      const routes = await client.current!.getPersonalRoutes();
+      setPersonalRoutes(routes);
+      setRouteSite(siteId);
+      const target = siteId ? routes.find((route) => route.isDefault) : undefined;
+      setRouteDraft({ id: target?.id ?? "", name: target?.name ?? t("route.new"), siteIds: target ? [...new Set([...target.siteIds, siteId!])] : siteId ? [siteId] : [] });
+      setRouteId(undefined);
+      setTab("sites");
+      changePeek(undefined);
+    } catch { setToast(t("route.failed")); }
+  }
+  async function saveRouteDraft() {
+    if (!routeDraft || routeBusy) return;
+    setRouteBusy(true);
+    try {
+      const api = client.current!;
+      let route = routeDraft.id ? personalRoutes.find((route) => route.id === routeDraft.id)! : await api.createPersonalRoute(routeDraft.name);
+      setRouteDraft({ ...routeDraft, id: route.id });
+      setPersonalRoutes((routes) => [...routes.filter((item) => item.id !== route.id), route]);
+      if (route.name !== routeDraft.name.trim()) route = await api.renamePersonalRoute(route.id, routeDraft.name);
+      if (route.isDefault) {
+        if (!await commit({ type: "set-route", siteIds: routeDraft.siteIds })) return;
+      } else await api.setPersonalRouteStops(route.id, routeDraft.siteIds);
+      setPersonalRoutes(await api.getPersonalRoutes());
+      setState(await api.getSnapshot());
+      setRouteDraft(null);
+      setToast(t("route.saved"));
+    } catch { setToast(t("route.failed")); }
+    finally { setRouteBusy(false); }
+  }
+  async function deleteRouteDraft() {
+    if (!routeDraft?.id || routeBusy) return;
+    setRouteBusy(true);
+    try {
+      await client.current!.deletePersonalRoute(routeDraft.id);
+      setPersonalRoutes(await client.current!.getPersonalRoutes());
+      setState(await client.current!.getSnapshot());
+      setRouteDraft(null);
+    } catch { setToast(t("route.failed")); }
+    finally { setRouteBusy(false); }
+  }
   async function toggleRoute(id: string) {
+    if (routeDraft) {
+      if (!routeBusy) setRouteDraft({ ...routeDraft, siteIds: routeDraft.siteIds.includes(id) ? routeDraft.siteIds.filter((item) => item !== id) : [...routeDraft.siteIds, id].slice(0, 100) });
+      return;
+    }
     const target = published.find((s) => s.id === id);
     const name = target
       ? text(target.name, target.nameEn)
@@ -731,7 +859,8 @@ export function AkarApp() {
       ready &&
       showMap &&
       !isDetail &&
-      !window.location.hash.slice(1) &&
+      // The bare map: «Haritayı aç» on the introduction comes here as #view=map.
+      ["", "view=map"].includes(window.location.hash.slice(1)) &&
       !readPreference("akar.karsilama")
     )
       setWelcome(true);
@@ -754,17 +883,151 @@ export function AkarApp() {
         )
       : 128;
   };
+  /**
+   * A site's card on a phone (prototype `#eser-alt`, the `mobile/` screenshots): a floating card. Closed, it shows
+   * the name, «Kısa hikâye» and Dinle | Oku, and 44 px of what follows, fading out; it opens to all its content, at
+   * most 75 % of the screen. The same drag as the map's sheet moves it.
+   */
+  const siteCard = view === "detail" && phone;
+  const cardLowest = () => {
+    const panel = sheet.current;
+    // Dinle | Oku closes the top part; a site without a story ends it with its notice.
+    const top =
+      panel?.querySelector<HTMLElement>(".detail-panel .ikili") ??
+      panel?.querySelector<HTMLElement>(".detail-panel .hikaye-blok > :first-child");
+    if (!panel || !top) return 194;
+    const bottomPad = parseFloat(getComputedStyle(panel).paddingBottom) || 0;
+    return Math.round(top.getBoundingClientRect().bottom - panel.getBoundingClientRect().top + panel.scrollTop + bottomPad + SITE_CARD_PEEK);
+  };
+  const cardContent = () => {
+    const panel = sheet.current;
+    const body = panel?.querySelector<HTMLElement>(".detail-panel");
+    if (!panel || !body) return 0;
+    return body.offsetTop + body.scrollHeight + (parseFloat(getComputedStyle(panel).paddingBottom) || 0);
+  };
+  const sheetStops = (): SheetStops =>
+    siteCard
+      ? siteCardStops(cardLowest(), cardContent(), innerHeight)
+      : mapSheetStops(sheetLowest(), innerHeight);
+  // The card's top part, measured once laid out: the model is framed above it, and it is where the card closes.
+  const [cardClosed, setCardClosed] = useState(0);
+  const cardClosedRef = useRef(0);
+  cardClosedRef.current = cardClosed;
+  // Fully open, the card shows its end and fades no more.
+  const sheetStopsHighest =
+    siteCard && typeof innerHeight === "number" && sheet.current
+      ? siteCardStops(cardClosed, cardContent(), innerHeight).highest
+      : Infinity;
   useEffect(() => {
     if (!ready || wide) return;
-    setSheetHeight(
-      isDetail ? Math.round(innerHeight * SITE_SHEET) : sheetLowest(),
-    );
-  }, [ready, isDetail, wide]);
+    if (!siteCard) {
+      if (!isDetail) setSheetHeight(sheetLowest());
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      const lowest = cardLowest();
+      setCardClosed(lowest);
+      setSheetHeight(lowest);
+      sheet.current?.scrollTo({ top: 0 });
+    });
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, isDetail, siteCard, wide, siteId]);
+  // The card's lower edge: its content fades out there (prototype `eaSis`, `--g`), not under a white cover.
+  const fadeCard = useCallback(() => {
+    const panel = sheet.current;
+    const body = panel?.querySelector<HTMLElement>(".detail-panel");
+    if (!panel || !body) return;
+    const visible = panel.clientHeight + panel.scrollTop - body.offsetTop - (parseFloat(getComputedStyle(panel).paddingBottom) || 0);
+    body.style.setProperty("--g", `${Math.round(visible)}px`);
+  }, []);
+  useEffect(() => {
+    if (!siteCard) return;
+    // The height moves over 280 ms: follow it.
+    const start = performance.now();
+    let frame = requestAnimationFrame(function step() {
+      fadeCard();
+      if (performance.now() - start < 340) frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [sheetHeight, siteCard, fadeCard]);
+  // Fonts and photographs arrive after the first measure and move the content: the fading edge and the closed
+  // height follow (the fade sometimes sat above the card's foot until the card was touched).
+  useEffect(() => {
+    const panel = sheet.current,
+      body = panel?.querySelector<HTMLElement>(".detail-panel");
+    if (!siteCard || !panel || !body) return;
+    const observer = new ResizeObserver(() => {
+      fadeCard();
+      const before = cardClosedRef.current,
+        lowest = cardLowest();
+      if (!before || Math.abs(before - lowest) <= 1) return;
+      cardClosedRef.current = lowest;
+      setCardClosed(lowest);
+      // A closed card stays closed at its new height; one the visitor moved stays where it is.
+      setSheetHeight((h) => (Math.abs(h - before) <= 2 ? lowest : h));
+    });
+    observer.observe(panel);
+    observer.observe(body);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteCard, siteId, fadeCard]);
+  // Scrolling the closed card's content (wheel down, or a finger pushing it up) raises the card to where it scrolls,
+  // smoothly, instead of doing nothing until its handle is pulled.
+  const cardTouch = useRef<number | null>(null);
+  const openCardForScroll = () => {
+    if (sheetHeight > cardClosed + 8) return;
+    // Only a little: enough for the content to scroll (Muhammed, 2 Nov 2026), not all the way up.
+    setSheetHeight(Math.min(sheetStops().highest, cardClosed + CARD_SCROLL_RISE));
+    setCardRising(true);
+  };
+  // That rise glides a little slower and softer than a drag's settle.
+  const [cardRising, setCardRising] = useState(false);
+  useEffect(() => {
+    if (!cardRising) return;
+    const timer = setTimeout(() => setCardRising(false), 520);
+    return () => clearTimeout(timer);
+  }, [cardRising]);
+  // A route opens the sheet at 58 % and gives the earlier height back when it closes; a tab keeps the height
+  // (the prototype's `altH`): Eserler | Rotalar must not drop the sheet the visitor pulled up.
+  const heightBeforeRoute = useRef<number | null>(null);
   useEffect(() => {
     if (!ready || wide || isDetail) return;
-    setSheetHeight(routeId ? Math.round(innerHeight * 0.58) : sheetLowest());
-    if (routeId) sheet.current?.scrollTo({ top: 0 });
-  }, [ready, wide, isDetail, routeId, tab]);
+    if (routeId) {
+      heightBeforeRoute.current ??= sheetHeight;
+      setSheetHeight(Math.round(innerHeight * 0.58));
+      sheet.current?.scrollTo({ top: 0 });
+    } else if (heightBeforeRoute.current !== null) {
+      setSheetHeight(heightBeforeRoute.current);
+      heightBeforeRoute.current = null;
+    }
+    // Only a route opening or closing moves the sheet; its own height is read, not followed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, wide, isDetail, routeId]);
+  // Building Rotam on a phone: the sheet rises so the stops and Kaydet are in reach; it drops back when done.
+  const building = !!routeDraft;
+  useEffect(() => {
+    if (!ready || wide || isDetail) return;
+    if (building) setSheetHeight((h) => Math.max(h, Math.round(innerHeight * 0.62)));
+    else setSheetHeight(sheetLowest());
+    sheet.current?.scrollTo({ top: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [building]);
+  // At its lowest stop the sheet keeps showing the new tab's heading line, whose height may differ.
+  const lowestShown = useRef(0);
+  useEffect(() => {
+    if (!ready || wide || isDetail || routeId) return;
+    const frame = requestAnimationFrame(() => {
+      const lowest = sheetLowest();
+      setSheetHeight((h) => (h <= Math.max(lowestShown.current, lowest) + 4 ? lowest : h));
+      lowestShown.current = lowest;
+    });
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+  // On a phone a sheet pulled high leaves the map's controls no room under the chips: they fade out until it is lower.
+  const crowded =
+    !wide && !isDetail && !peekSite && typeof innerHeight === "number" && sheetHeight + CONTROLS_ROOM > innerHeight;
   const shell = (
     <div
       className="app-shell"
@@ -959,22 +1222,31 @@ export function AkarApp() {
               key={site.id}
               site={site}
               sites={published}
+              start={historyStart}
               onBack={() => go("detail", site.id)}
-              onMemory={() => setOverlay("memory")}
-              onSite={selectSite}
+              onMemory={(draft) => {
+                setMemoryDraft(draft ?? null);
+                setOverlay("memory");
+              }}
+              onSite={(id, index) => {
+                go("history", id);
+                setHistoryStart(index);
+              }}
             />
           )}
           {view === "memories" && site && (
             <LivingMemory
               key={site.id}
               site={site}
+              sites={published}
               state={state}
               role={role}
               commit={commit}
               onBack={() => go("detail", site.id)}
               onAdd={() => setOverlay("memory")}
               onHistory={() => go("history", site.id)}
-              onAbout={() => setOverlay("about")}
+              onListen={() => openStory(true, 0, site.id)}
+              onSite={(id, memory) => go(memory ? "memories" : "detail", id)}
             />
           )}
           {showMap && (
@@ -983,10 +1255,13 @@ export function AkarApp() {
               tabIndex={-1}
               style={
                 sheetHeight
-                  ? ({ "--sheet-h": `${sheetHeight}px` } as CSSProperties)
+                  ? ({
+                      "--sheet-h": `${sheetHeight}px`,
+                      ...(cardClosed && { "--card-closed": `${cardClosed}px` }),
+                    } as CSSProperties)
                   : undefined
               }
-              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""}`}
+              className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""} ${crowded ? "controls-crowded" : ""}`}
             >
               {routeId && showRoutes && !isDetail && (
                 <button className="round-btn route-mobile-back" aria-label={t("route.all")} onClick={() => setRouteId(undefined)}>
@@ -995,22 +1270,46 @@ export function AkarApp() {
               )}
               <aside
                 ref={sheet}
-                className={`side-panel${sheetDragging ? " dragging" : ""}`}
+                className={`side-panel${sheetDragging ? " dragging" : ""}${cardRising ? " rising" : ""}${siteCard && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
+                onScroll={siteCard ? fadeCard : undefined}
+                onWheel={siteCard ? (e) => { if (e.deltaY > 4) openCardForScroll(); } : undefined}
+                onTouchStart={
+                  siteCard
+                    ? (e) => {
+                        const onHandle = (e.target as HTMLElement).closest(".sheet-grip, .panel-baslik");
+                        cardTouch.current = onHandle ? null : e.touches[0]!.clientY;
+                      }
+                    : undefined
+                }
+                onTouchMove={
+                  siteCard
+                    ? (e) => {
+                        const start = cardTouch.current;
+                        if (start === null || start - e.touches[0]!.clientY < 12) return;
+                        cardTouch.current = null;
+                        openCardForScroll();
+                      }
+                    : undefined
+                }
                 aria-label={t("app.panelAria")}
                 hidden={collapsed}
                 onPointerDown={(e) => {
                   const target = (e.target as HTMLElement).closest(
                     isDetail
-                      ? ".sheet-grip"
+                      ? ".sheet-grip, .detail-panel .panel-baslik"
                       : ".sheet-grip, .explore-tabs, .explore-heading",
                   );
                   if (!target) return;
+                  const handle = target.classList.contains("sheet-grip");
                   sheetDrag.current = {
                     y: e.clientY,
                     height: sheetHeight,
-                    handle: target.classList.contains("sheet-grip"),
+                    handle,
                     moved: false,
                   };
+                  // The handle is the sheet's top edge: the first move upward already leaves the sheet, so it holds
+                  // the pointer at once (it has no buttons inside whose clicks this would take).
+                  if (handle) e.currentTarget.setPointerCapture(e.pointerId);
                 }}
                 onPointerMove={(e) => {
                   const drag = sheetDrag.current;
@@ -1022,11 +1321,7 @@ export function AkarApp() {
                     setSheetDragging(true);
                   }
                   setSheetHeight(
-                    clampSheet(
-                      drag.height + drag.y - e.clientY,
-                      sheetLowest(),
-                      innerHeight,
-                    ),
+                    clampSheet(drag.height + drag.y - e.clientY, sheetStops()),
                   );
                 }}
                 onPointerUp={(e) => {
@@ -1034,24 +1329,36 @@ export function AkarApp() {
                   sheetDrag.current = null;
                   if (!drag) return;
                   setSheetDragging(false);
-                  const lowest = sheetLowest();
+                  const stops = sheetStops();
                   if (drag.moved)
                     setSheetHeight(
-                      settleSheet(
-                        drag.height + drag.y - e.clientY,
-                        lowest,
-                        innerHeight,
-                      ),
+                      settleSheet(drag.height + drag.y - e.clientY, stops),
                     );
                   else if (drag.handle)
-                    setSheetHeight(toggleSheet(drag.height, lowest, innerHeight));
+                    setSheetHeight(toggleSheet(drag.height, stops));
                 }}
                 onPointerCancel={() => {
                   sheetDrag.current = null;
                   setSheetDragging(false);
                 }}
               >
-                <div className="sheet-grip" aria-hidden="true" />
+                {siteCard ? (
+                  // The card's handle: a tap, Enter or Space opens it all the way or closes it; the arrow says which.
+                  <button
+                    type="button"
+                    className="sheet-grip card-grip"
+                    aria-expanded={sheetHeight > cardClosed + 8}
+                    aria-label={t(sheetHeight > cardClosed + 8 ? "site.cardClose" : "site.cardOpen")}
+                    onClick={(e) => {
+                      // A pointer's tap is handled on pointer up (with the drag); only the keyboard's click is left here.
+                      if (e.detail === 0) setSheetHeight((h) => toggleSheet(h, sheetStops()));
+                    }}
+                  >
+                    <ChevronUp size={14} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <div className="sheet-grip" aria-hidden="true" />
+                )}
                 {isDetail && site ? (
                   view === "story" && storySite ? (
                     <StoryPanel
@@ -1094,8 +1401,17 @@ export function AkarApp() {
                       {t("common.backToExplore")}
                     </button>
                   </div>
+                ) : routeDraft && view === "map" ? (
+                  // Rotam is built in the panel (the map beside it shows the route as it grows).
+                  <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />
                 ) : (
                   <div className="discovery-panel">
+                    {showRoutes && !routeId && personalRoutes.length > 0 && <section className="personal-route-list" aria-label={t("route.mine")}>
+                      <h3>{t("route.mine")}</h3>
+                      {personalRoutes.map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
+                        setRouteDraft({ ...personal, siteIds: [...personal.siteIds] }); setRouteSite(undefined); setTab("sites"); setRouteId(undefined);
+                      }}>{personal.name} · {personal.siteIds.length}</button>)}
+                    </section>}
                     {routeId && showRoutes ? (
                       <RoutePreview
                         route={route}
@@ -1132,7 +1448,7 @@ export function AkarApp() {
                         allSites={published}
                         live={live}
                         query={query}
-                        routeIds={state.routeIds}
+                        routeIds={routeDraft?.siteIds ?? state.routeIds}
                         visitedIds={state.visitedIds}
                         selectedId={peekId}
                         onHover={setHoverId}
@@ -1143,10 +1459,7 @@ export function AkarApp() {
                           setTab("routes");
                           setRouteId(id);
                         }}
-                        onCustomRoute={() => {
-                          setTab("routes");
-                          setRouteId("custom");
-                        }}
+                        onCustomRoute={() => void openRouteBuilder()}
                         onCities={() =>
                           setFlight((f) => ({
                             key: (f?.key ?? 0) + 1,
@@ -1163,6 +1476,15 @@ export function AkarApp() {
                 )}
               </aside>
               <div className="main-stage">
+              {view === "detail" && site && (
+                // The phone's way back over the photographs or the model (prototype `.gorus-ust .geri`); the wide
+                // screen has the panel's own «‹ Harita».
+                <button className="detail-mobile-back" onClick={() => go("map")}>
+                  <ChevronLeft size={16} />
+                  {t("app.map")}
+                </button>
+              )}
+
                 <button
                   className="panel-toggle"
                   aria-label={collapsed ? t("app.panelOpen") : t("app.panelClose")}
@@ -1175,6 +1497,9 @@ export function AkarApp() {
                   <Scene
                     key={`${site.id}-${view}`}
                     context={view === "story" ? "story" : "detail"}
+                    companion={flowCompanion}
+                    // Phone: the scene fills the screen behind the floating card; the model stays above it closed.
+                    frameBottom={siteCard && cardClosed ? cardClosed + 12 : 0}
                     site={site}
                     live={live}
                     photoId={
@@ -1182,8 +1507,9 @@ export function AkarApp() {
                         ? storyBlock?.photoId
                         : undefined
                     }
+                    // The income road's sentence: the companion takes the camera back to show both buildings.
                     pose={
-                      view === "story"
+                      view === "story" && !flowCompanion
                         ? storySite?.stories
                             .slice(0, storyIndex + 1)
                             .findLast((s) => s.camera)?.camera
@@ -1205,14 +1531,21 @@ export function AkarApp() {
                     flow={
                       !live &&
                       view === "story" &&
-                      storyBlock?.id === "akar" &&
-                      !flowEnds
+                      storyBlock?.id === "akar"
                     }
                     onHotspot={(id) => {
                       const index = site.stories.findIndex((s) => s.id === id);
                       if (index >= 0) openStory(false, index);
                       else setOverlay("about");
                     }}
+                    turn={
+                      !flowCompanion &&
+                      (view !== "story" ||
+                        storyIndex === 0 ||
+                        storyIndex === (storySite?.stories.length ?? 1) - 1)
+                    }
+                    visitors={view === "detail" ? visitorPhotos : []}
+                    onAddPhoto={() => setOverlay("memory")}
                     onPick={pick ? pickPart : undefined}
                   />
                 ) : (
@@ -1225,16 +1558,19 @@ export function AkarApp() {
                       {...(lookCity?.identity && {
                         routeColour: lookCity.identity.accent,
                       })}
-                      onSelect={pickSite}
+                      onSelect={routeDraft ? (id) => void toggleRoute(id) : pickSite}
+                      buildingRoute={!!routeDraft}
                       onOpen={selectSite}
-                      onClear={() => setPeekId(undefined)}
+                      onClear={() => changePeek(undefined)}
                       onFirstDraw={() => setMapDrawn(true)}
+                      onSettled={() => setMapSettled(true)}
                       onCityInView={setCityInView}
                       onLocate={chooseNear}
                       flight={flight}
-                      bottomInset={peekSite ? 0 : sheetHeight}
+                      bottomInset={peekSite ? PEEK_INSET : sheetHeight}
+                      insetDragging={sheetDragging}
                       routeIds={
-                        routeId ? routeSites.map((s) => s.id) : state.routeIds
+                        routeDraft?.siteIds ?? (routeId ? routeSites.map((s) => s.id) : state.routeIds)
                       }
                       collapsed={collapsed}
                       mapSettings={mapSettings}
@@ -1264,8 +1600,8 @@ export function AkarApp() {
                             onRead={() => openStory(false, 0, peekSite.id)}
                             onTasks={() => selectSite(peekSite.id)}
                             onNext={pickSite}
-                            onRoute={() => void toggleRoute(peekSite.id)}
-                            onClose={() => setPeekId(undefined)}
+                            onRoute={() => void (state.routeIds.includes(peekSite.id) ? toggleRoute(peekSite.id) : openRouteBuilder(peekSite.id))}
+                            onClose={() => changePeek(undefined)}
                           />
                         )
                       }
@@ -1308,15 +1644,6 @@ export function AkarApp() {
                     onIndex={setStoryIndex}
                   />
                 )}
-                {view === "story" && storyBlock?.flow && flowEnds && (
-                  <StoryFlowMap
-                    key={storyBlock.id}
-                    flow={storyBlock.flow}
-                    fromName={flowEnds.fromName}
-                    from={flowEnds.from}
-                    to={flowEnds.to}
-                  />
-                )}
                 {pick && (
                   <TaskPickBar
                     task={pick.task}
@@ -1354,7 +1681,12 @@ export function AkarApp() {
         <MemoryModal
           site={site}
           live={live}
-          onClose={() => setOverlay(null)}
+          initialPhoto={memoryDraft?.photo}
+          sameAngle={memoryDraft?.sameAngle}
+          onClose={() => {
+            setOverlay(null);
+            setMemoryDraft(null);
+          }}
           onSubmit={async (memory, accepted) => {
             consent.current = accepted;
             try {
@@ -1550,6 +1882,14 @@ export function AkarApp() {
           />
         )}
       </SourceSheetProvider>
+      {mapReturn && !opening && (
+        <OpeningScreen
+          cityName={openingCity?.name}
+          identity={openingCity?.identity ?? null}
+          done={mapSettled || returnLate || !onMapView}
+          onGone={() => setMapReturn(false)}
+        />
+      )}
       {opening && (
         <OpeningScreen
           cityName={openingCity?.name}

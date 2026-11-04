@@ -1,7 +1,9 @@
+import { localRoutes } from "./personal-routes";
 import {
   reduceSnapshot,
   defaultMapSettings,
   type CityRecord,
+  type PersonalRoute,
   type Command,
   type MapPlacement,
   type MapSettings,
@@ -67,6 +69,9 @@ export interface SiteTaskAnswerResult {
   correctText: string | null;
   /** Only when wrong. */
   wrongText: string | null;
+  /** English of `correctText` / `wrongText`; absent or null = none written. */
+  correctTextEn?: string | null;
+  wrongTextEn?: string | null;
   /** Badges this answer earned; always empty for a guest. */
   earnedBadges: SiteBadge[];
 }
@@ -79,6 +84,8 @@ export type SiteTaskCompletion =
   | {
       done: true;
       doneText: string;
+      /** Absent or null = no English written. */
+      doneTextEn?: string | null;
       onSite: boolean;
       earnedBadges: SiteBadge[];
     }
@@ -157,6 +164,11 @@ export interface TranslationRun {
   snapshot: Snapshot;
 }
 export interface AkarClient {
+  getPersonalRoutes(): Promise<PersonalRoute[]>;
+  createPersonalRoute(name: string): Promise<PersonalRoute>;
+  renamePersonalRoute(id: string, name: string): Promise<PersonalRoute>;
+  deletePersonalRoute(id: string): Promise<void>;
+  setPersonalRouteStops(id: string, siteIds: string[]): Promise<PersonalRoute>;
   getSnapshot(): Promise<Snapshot>;
   /**
    * Re-reads the published catalog (sites, models and their placements, routes, feed) and returns the
@@ -186,8 +198,9 @@ export interface AkarClient {
   ): Promise<{ site: HeritageSite; snapshot: Snapshot }>;
   /**
    * `POST /v1/admin/sites/:id/narrations`, editor and admin: records the missing and outdated voice-overs of the
-   * saved story texts and part card texts, the whole site or one `target` (a sentence or a card). The server
-   * answers 503 without a voice service key and 429 past its daily limit. The demo records nothing.
+   * saved story texts, part card texts and «Eser hakkında» chapter titles and paragraphs, the whole site or one
+   * `target` (a sentence or a card). The server answers 503 without a voice service key and 429 past its daily
+   * limit. The demo records nothing.
    */
   narrateSite(siteId: string, target?: JobTarget): Promise<NarrationRun>;
   /**
@@ -483,7 +496,14 @@ export function createMockClient(
     voiceLang: null,
     voiceGender: null,
   };
+  const personal = localRoutes(
+    () => state.personalRoutes ?? [],
+    () => state.routeIds,
+    (routes, ids) => { persist({ ...state, personalRoutes: routes, routeIds: ids }); },
+    () => state.sites.filter((site) => site.status !== "draft").map((site) => site.id),
+  );
   return {
+    ...personal,
     async getSnapshot() {
       await content;
       return structuredClone(state);

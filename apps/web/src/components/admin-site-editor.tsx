@@ -18,6 +18,8 @@ import {
   kindLabels,
   trustLabels,
   nightPartsMissing,
+  partsMissing,
+  type MissingPart,
   publicationIssues,
   type HeritageSite,
   type SiteModel,
@@ -31,6 +33,8 @@ import { ApiError, routes, type AkarClient, type JobTarget } from "@akar/api-cli
 import { Modal, Notice, Tag } from "./ui";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
+import { TasksStep } from "./admin-site-tasks";
+import { AboutStep } from "./admin-site-about";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
 import { AdminModelPreview, poseSummary } from "./admin-model-preview";
 import { prepareModel } from "../lib/editor-media";
@@ -41,6 +45,8 @@ const steps = [
   "Kaynaklar",
   "Hikâye",
   "Parça kartları",
+  "Görevler ve rozetler",
+  "Eser hakkında",
   "Yayın",
 ];
 function prepareSite(site: HeritageSite): HeritageSite {
@@ -214,6 +220,8 @@ export function SiteEditor({
     }));
   }
   const issues = publicationIssues(draft);
+  // Checked on every render: a model swap shows at once which content points at parts the new file lacks.
+  const modelMissing = draft.model ? partsMissing(draft, draft.model.parts) : [];
   const photos = draft.photos ?? [],
     sources = draft.sources ?? [];
   const allPhotos = [
@@ -456,6 +464,7 @@ export function SiteEditor({
                       ))}
                     </ul>
                   </details>
+                  <MissingParts missing={modelMissing} />
                   <NightModel
                     site={{ ...draft, model: draft.model }}
                     busy={busy}
@@ -940,6 +949,11 @@ export function SiteEditor({
                       {s.interior ? " · iç mekân" : ""}
                     </p>
                   )}
+                  {(s.routeOnly || s.flow) && (
+                    <p className="muted cue-angle">
+                      {[s.routeOnly && "Yalnız rotada", s.flow && "Akar akışı var"].filter(Boolean).join(" · ")}
+                    </p>
+                  )}
                   <details className="editor-details">
                     <summary>Dil, güven ve ek alanlar</summary>
                     <label className="field">
@@ -984,6 +998,20 @@ export function SiteEditor({
                         }
                       />
                     </label>
+                    <label className="check-row">
+                      <input
+                        type="checkbox"
+                        checked={s.routeOnly ?? false}
+                        onChange={(e) =>
+                          storyField(s.id, { routeOnly: e.target.checked || undefined })
+                        }
+                      />
+                      Yalnız rotada
+                    </label>
+                    <small className="muted">
+                      Eser bir rotadan açıldığında okunur (sonraki durağa
+                      bağlayan cümle); haritadan açılınca atlanır.
+                    </small>
                     {draft.model && (
                       <>
                         <label className="check-row">
@@ -1032,6 +1060,29 @@ export function SiteEditor({
             />
           )}
           {step === 5 && (
+            <TasksStep
+              tasks={draft.tasks ?? []}
+              badges={draft.badges ?? []}
+              modelParts={draft.model?.parts}
+              photos={photos}
+              onChange={(tasks, badges) => {
+                field("tasks", tasks);
+                field("badges", badges);
+              }}
+            />
+          )}
+          {step === 6 && (
+            <AboutStep
+              chapters={draft.chapters ?? []}
+              sections={draft.sections ?? []}
+              sources={sources}
+              onChange={(chapters, sections) => {
+                field("chapters", chapters);
+                field("sections", sections);
+              }}
+            />
+          )}
+          {step === 7 && (
             <div className="editor-step-content">
               <h2>Yayın kontrolü</h2>
               <div className="publish-checks" role="status">
@@ -1046,6 +1097,13 @@ export function SiteEditor({
                   <p className="editor-saved">
                     <Check size={18} />
                     Türkçe içerik yayın için hazır.
+                  </p>
+                )}
+                {modelMissing.length > 0 && (
+                  <p>
+                    <CircleAlert size={17} />
+                    3D modelde içeriğin kullandığı {modelMissing.length} parça
+                    yok; ayrıntı «3D model» adımında. Yayını engellemez.
                   </p>
                 )}
                 <p>
@@ -1439,6 +1497,23 @@ function NightModel({
         </Notice>
       )}
     </section>
+  );
+}
+/** Adım 1: content that names parts the day model lacks; these highlights, cards and tasks find nothing to show. */
+function MissingParts({ missing }: { missing: MissingPart[] }) {
+  if (!missing.length) return null;
+  return (
+    <Notice>
+      Modelde içeriğin kullandığı şu parçalar yok; ilgili yerleri yeni
+      parça adlarıyla güncelle:
+      <ul>
+        {missing.map((m) => (
+          <li key={m.part}>
+            <strong>{m.part}</strong>: {m.usedIn.join(", ")}
+          </li>
+        ))}
+      </ul>
+    </Notice>
   );
 }
 function PhotoPreview({

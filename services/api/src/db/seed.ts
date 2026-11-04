@@ -36,8 +36,14 @@ function photoMime(photo: SitePhoto): string {
  * Upserts domain sites and catalog routes. Idempotent: entities are keyed by their domain ids and
  * ordered children (stories, stops, links) are replaced, so a second run changes nothing.
  * Existing `created_at`/`updated_at` are left alone; this is a content loader, not an editor.
+ * `keepStoryViews`: a sentence already in the database keeps its 3D view (camera, highlights, interior, card),
+ * which the panel owns (§11.70); its text still comes from the input.
  */
-export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; routes: HeritageRoute[] }): Promise<void> {
+export async function loadCatalog(
+  db: Db | Tx,
+  input: { sites: HeritageSite[]; routes: HeritageRoute[] },
+  options: { keepStoryViews?: boolean } = {},
+): Promise<void> {
   for (const site of input.sites) validateSite(site);
 
   await db.transaction(async (tx) => {
@@ -88,6 +94,7 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
                 bytes: site.model.bytes,
                 parts: site.model.parts,
                 coverGroups: site.model.coverGroups ?? [],
+                interiorParts: site.model.interiorParts ?? [],
               },
             ]
           : []),
@@ -125,10 +132,30 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
         searchText: siteSearchText(site),
         sortName: siteSortName(site.name),
       };
-      await tx.insert(sites).values({ id: site.id, ...row }).onConflictDoUpdate({ target: sites.id, set: row });
+      // A name or description written in English since (panel, translation; §11.64) wins over the package's.
+      await tx
+        .insert(sites)
+        .values({ id: site.id, ...row })
+        .onConflictDoUpdate({
+          target: sites.id,
+          set: { ...row, nameEn: sql`coalesce(nullif(btrim(${sites.nameEn}), ''), excluded.name_en)`, descriptionEn: sql`coalesce(nullif(btrim(${sites.descriptionEn}), ''), excluded.description_en)` },
+        });
 
       await tx.delete(siteSources).where(eq(siteSources.siteId, site.id));
       await tx.delete(siteMedia).where(eq(siteMedia.siteId, site.id));
+      // English texts are written in the panel (or by its translation), not in the content package: an import keeps
+      // them, and with them the English voice-overs, which only play while their text is unchanged.
+      const stored = new Map(
+        (
+          await tx
+            .select({
+              id: storyBlocks.id, textEn: storyBlocks.textEn, textEnStatus: storyBlocks.textEnStatus, simpleEn: storyBlocks.simpleEn, simpleEnStatus: storyBlocks.simpleEnStatus,
+              camera: storyBlocks.camera, highlights: storyBlocks.highlights, interior: storyBlocks.interior, showCard: storyBlocks.showCard,
+            })
+            .from(storyBlocks)
+            .where(eq(storyBlocks.siteId, site.id))
+        ).map((b) => [b.id, b]),
+      );
       await tx.delete(storyBlocks).where(eq(storyBlocks.siteId, site.id));
       if (site.sources?.length) {
         await tx.insert(siteSources).values(site.sources.map((s, position) => ({ siteId: site.id, sourceId: s.id, position })));
@@ -138,22 +165,27 @@ export async function loadCatalog(db: Db | Tx, input: { sites: HeritageSite[]; r
       }
       if (site.stories.length) {
         await tx.insert(storyBlocks).values(
-          site.stories.map((b, position) => ({
-            siteId: site.id,
-            id: b.id,
-            position,
-            title: b.title,
-            text: b.text,
-            textEn: b.textEn ?? null,
-            simple: b.simple,
-            trust: b.trust,
-            photoId: b.photoId ?? null,
-            sourceId: b.sourceId ?? null,
-            showCard: b.showCard ?? null,
-            highlights: b.highlights ?? [],
-            camera: b.camera ?? null,
-            interior: b.interior ?? false,
-          })),
+          site.stories.map((b, position) => {
+            const old = stored.get(b.id);
+            const view = options.keepStoryViews && old
+              ? { showCard: old.showCard, highlights: old.highlights, camera: old.camera, interior: old.interior }
+              : { showCard: b.showCard ?? null, highlights: b.highlights ?? [], camera: b.camera ?? null, interior: b.interior ?? false };
+            return {
+              siteId: site.id,
+              id: b.id,
+              position,
+              title: b.title,
+              text: b.text,
+              ...keptEnglish(old, b.textEn),
+              simple: b.simple,
+              trust: b.trust,
+              photoId: b.photoId ?? null,
+              sourceId: b.sourceId ?? null,
+              ...view,
+              routeOnly: b.routeOnly ?? false,
+              flow: b.flow ?? null,
+            };
+          }),
         );
       }
     }
@@ -197,4 +229,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   } finally {
     await pool.end();
   }
+}
+
+type StoryEnglish = { textEn: string | null; textEnStatus: "machine" | "reviewed" | null; simpleEn: string | null; simpleEnStatus: "machine" | "reviewed" | null };
+
+/** The block's English after an import: what the database holds wins; the package's `textEn` only fills an empty one. */
+function keptEnglish(existing: StoryEnglish | undefined, packageText: string | undefined): StoryEnglish {
+  if (existing?.textEn) return existing;
+  return { textEn: packageText ?? null, textEnStatus: null, simpleEn: existing?.simpleEn ?? null, simpleEnStatus: existing?.simpleEnStatus ?? null };
 }

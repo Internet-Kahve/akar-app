@@ -17,5 +17,41 @@
   "ic_parcalar": [
     "Revak_Tonozlari",
     "Revak_Doseme"
+  ],
+  "_foto_acilari_not": "2 Kasım 2026: eser sayfasındaki ‹ İçini göster › oklarının açıları. foto: galeri fotoğrafının numarası (fotograflar.md); hedef/azimut/egim/uzaklik hikâye cümlesinin «Açı» sözcükleriyle aynı; ic: model açılır. tahmini: yön fotoğraftan kesin çıkmadı, panelden düzeltilecek (Muhammed). Panelde girilen açı bunun önüne geçer.",
+  "foto_acilari": [
+    {
+      "foto": "01",
+      "hedef": "Portal",
+      "azimut": 4,
+      "egim": 12,
+      "uzaklik": "orta",
+      "not": "«KOZA HAN» yazılı kuzey cephe ve portal"
+    },
+    {
+      "foto": "04",
+      "azimut": 4,
+      "egim": 82,
+      "uzaklik": "çatı",
+      "not": "tepeden kare han ve avlu"
+    },
+    {
+      "foto": "03",
+      "hedef": "Mescit",
+      "azimut": 4,
+      "egim": 30,
+      "uzaklik": "yakın",
+      "tahmini": true,
+      "not": "avludaki köşk mescit; yön tahmini"
+    },
+    {
+      "foto": "02",
+      "hedef": "Avlu_Zemin",
+      "azimut": 184,
+      "egim": 40,
+      "uzaklik": "orta",
+      "tahmini": true,
+      "not": "çınarlı avlu; yön tahmini"
+    }
   ]
 }
