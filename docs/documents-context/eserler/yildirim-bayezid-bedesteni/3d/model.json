@@ -59,11 +59,12 @@
     },
     {
       "foto": "02",
-      "azimut": 270,
-      "egim": 25,
-      "uzaklik": "0.25",
+      "hedef": "Ic_Sokak",
+      "azimut": 90,
+      "egim": 22,
+      "uzaklik": "0.2",
       "ic": true,
-      "not": "iç sokak: mahzenler sıra sıra görünür (4 Kasım 2026, telefonda denendi; modelin merkezinden bakılır, zemine yakın açılar sütunun içine giriyordu)"
+      "not": "iç sokak: mahzenler sıra sıra görünür (4 Kasım 2026, telefonda denendi; zemine yakın açılar sütunun içine giriyordu)"
     }
   ],
   "pisik_onay": true,
