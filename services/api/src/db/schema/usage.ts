@@ -12,7 +12,7 @@ export const usageDaily = pgTable(
   "usage_daily",
   {
     day: date("day").notNull(),
-    /** See `USAGE_EVENTS` in modules/usage/events.ts. */
+    /** See `USAGE_EVENTS` in @akar/domain. */
     event: text("event").notNull(),
     siteId: text("site_id").notNull().default(""),
     /** Event detail: route id, sentence index, part card id, task id, narration language, sign-in kind. */

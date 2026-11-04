@@ -97,6 +97,7 @@ export default function ModelViewer({
   partCards = [],
   onPick,
   sources = [],
+  siteId,
   onProgress,
   onSettled,
   poseReader,
@@ -117,6 +118,8 @@ export default function ModelViewer({
   partCards?: PartCard[];
   onPick?: (part: string) => void;
   sources?: SiteSource[];
+  /** The site this model belongs to: its part cards and their voice are counted for it (§11.72); absent in the admin preview. */
+  siteId?: string | undefined;
   onProgress?: (progress: DownloadProgress) => void;
   onSettled?: (outcome: "ready" | "failed") => void;
   /**
@@ -1201,6 +1204,7 @@ export default function ModelViewer({
         <PartCardDialog
           card={picked.card}
           sources={sources}
+          siteId={siteId}
           onClose={() => {
             select.current?.(highlightRef.current ?? []);
             setPicked(null);

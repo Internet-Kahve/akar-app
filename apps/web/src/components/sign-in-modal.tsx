@@ -5,6 +5,31 @@ import type { AuthError } from "@supabase/supabase-js";
 import { getSupabase } from "../lib/supabase";
 import { Modal, Notice } from "./ui";
 import { useI18n } from "./i18n";
+import { track } from "../lib/usage";
+
+/** Set just before the page leaves for Google; the page that comes back reads it once to count the sign-in. */
+const GOOGLE_KEY = "akar.google-giris";
+/** The Google round trip (consent screen included) is not older than this when it counts. */
+const GOOGLE_MAX_MS = 10 * 60_000;
+
+/** Counts a sign-in that came back from Google, once; `false` when this session did not just leave for Google. */
+export function takeGoogleSignIn(): boolean {
+  try {
+    const started = Number(sessionStorage.getItem(GOOGLE_KEY));
+    sessionStorage.removeItem(GOOGLE_KEY);
+    return started > 0 && Date.now() - started < GOOGLE_MAX_MS;
+  } catch {
+    return false;
+  }
+}
+
+/** A sign-in made here (not through Google) is counted at once; a Google round trip left unfinished must not count it again. */
+function countSignIn(kind: "new" | "returning") {
+  try {
+    sessionStorage.removeItem(GOOGLE_KEY);
+  } catch {}
+  track("account.sign_in", undefined, kind);
+}
 
 /**
  * password: e-mail + password sign-in (default).
@@ -61,7 +86,10 @@ export function SignInModal({
 
   async function google() {
     if (!supabase) return;
-    // The page comes back with the session in the URL; the Supabase client reads it on load.
+    // The page leaves for Google and comes back signed in: the return counts the sign-in (`takeGoogleSignIn`).
+    try {
+      sessionStorage.setItem(GOOGLE_KEY, String(Date.now()));
+    } catch {}
     await run(
       () =>
         supabase.auth.signInWithOAuth({
@@ -90,7 +118,10 @@ export function SignInModal({
     }
     setBusy(false);
     if (failure) setError(messageFor(failure, t("signin.wrongPassword")));
-    else onSignedIn();
+    else {
+      countSignIn("returning");
+      onSignedIn();
+    }
   }
   async function signUp() {
     if (!supabase) return;
@@ -99,8 +130,10 @@ export function SignInModal({
     const { data, error: failure } = await supabase.auth.signUp({ email: address, password });
     setBusy(false);
     if (failure) setError(messageFor(failure, t("signin.signupFailed")));
-    else if (data.session) onSignedIn();
-    else setStage("verify");
+    else if (data.session) {
+      countSignIn("new");
+      onSignedIn();
+    } else setStage("verify");
   }
   async function sendCode() {
     if (!supabase) return;
@@ -122,9 +155,14 @@ export function SignInModal({
     );
     if (failure) return;
     if (mode === "code") {
+      // The code has signed the visitor in; the new password that follows is not a second sign-in.
+      countSignIn("returning");
       setPassword("");
       setStage("newPassword");
-    } else onSignedIn();
+    } else {
+      countSignIn(mode === "signup" ? "new" : "returning");
+      onSignedIn();
+    }
   }
   async function savePassword() {
     if (!supabase) return;

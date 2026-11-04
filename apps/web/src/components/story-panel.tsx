@@ -12,6 +12,8 @@ import {
 import type { HeritageSite, StoryBlock } from "@akar/domain";
 import { sentenceSeconds, storySeconds, clock } from "../lib/story-time";
 import { writePreference } from "../lib/preferences";
+import { track } from "../lib/usage";
+import { useCountOpen } from "../lib/use-count-open";
 import { useWide } from "./about-reading";
 import { PART_VOICE_EVENT } from "./part-card";
 import { SourceLink, TrustTag } from "./side-sheet";
@@ -75,11 +77,23 @@ export function StoryPanel({
     if (next < stories.length) onIndex(Math.max(0, next));
     else if (!finished.current) {
       finished.current = true;
+      track("story.complete", site.id);
       onComplete();
     }
   }
   const advance = useRef(go);
   advance.current = go;
+  // Usage (§11.72): the story opened, each sentence that becomes the current one, and a listening that starts.
+  useCountOpen(site.id, (id) => track("story.start", id));
+  useCountOpen(String(index), (n) => track("story.sentence", site.id, Number(n)));
+  const countedVoice = useRef<Lang | null>(null);
+  useEffect(() => {
+    if (!playing) countedVoice.current = null;
+    else if (countedVoice.current !== voiceLang) {
+      countedVoice.current = voiceLang;
+      track("narration.play", site.id, voiceLang);
+    }
+  }, [playing, voiceLang, site.id]);
   useEffect(() => {
     writePreference(`akar.ilerleme.${site.id}`, String(index));
     if (pickedByScroll.current) {

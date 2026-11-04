@@ -7,6 +7,8 @@ import { cardSpeech } from "../lib/story-text";
 import { pickTextNarration } from "../lib/story-voice";
 import { Localized, useI18n } from "./i18n";
 import { TrustTag } from "./side-sheet";
+import { track } from "../lib/usage";
+import { useCountOpen } from "../lib/use-count-open";
 import { useVoice } from "./voice";
 
 /** A model node name as a visitor reads it ("Tac_Kapi" → "Tac Kapi"). */
@@ -19,7 +21,7 @@ export const PART_VOICE_EVENT = "akar:part-voice";
  * Plays the card's text in the visitor's voice: the recording when there is one, else the browser voice (never
  * silence). Stops when the card closes or the voice changes.
  */
-function useCardVoice(card: PartCard) {
+function useCardVoice(card: PartCard, siteId: string | undefined) {
   const voice = useVoice();
   const [playing, setPlaying] = useState(false),
     [error, setError] = useState<MessageKey | "">(""),
@@ -76,6 +78,7 @@ function useCardVoice(card: PartCard) {
       if (!playing) {
         if ("speechSynthesis" in window) window.speechSynthesis.cancel();
         window.dispatchEvent(new Event(PART_VOICE_EVENT));
+        if (siteId) track("narration.play", siteId, voice.lang);
       }
       setPlaying((p) => !p);
     },
@@ -86,10 +89,13 @@ function useCardVoice(card: PartCard) {
 export function PartCardDialog({
   card,
   sources,
+  siteId,
   onClose,
 }: {
   card: PartCard;
   sources: SiteSource[];
+  /** The site of the card, for usage counts (§11.72); absent in the admin preview. */
+  siteId?: string | undefined;
   onClose: () => void;
 }) {
   const { t, lang } = useI18n();
@@ -98,7 +104,8 @@ export function PartCardDialog({
     strip = useRef<HTMLDivElement>(null),
     titleId = useId();
   const [shown, setShown] = useState(0);
-  const listen = useCardVoice(card);
+  const listen = useCardVoice(card, siteId);
+  useCountOpen(siteId && card.id, () => track("part_card.open", siteId, card.id));
   const source = sources.find((s) => s.id === card.sourceId);
   const count = card.photos.length;
   useEffect(() => {

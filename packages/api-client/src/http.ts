@@ -1,6 +1,7 @@
 import { localRoutes } from "./personal-routes";
 import {
   defaultMapSettings,
+  MAX_EVENTS_PER_BATCH,
   validatePlacement,
   validateSite,
   type AboutChapter,
@@ -44,8 +45,14 @@ import type {
   PlayableQuiz,
   QuizAnswerResult,
   StorageAdapter,
+  SiteUsageStats,
+  UsageEvent,
+  UsageStats,
 } from "./index";
 import { demoRegion } from "./seed";
+
+/** Queued usage events wait at most this long before they are sent (§11.72). */
+const USAGE_FLUSH_MS = 10_000;
 
 /** Error body of the API (`CONTRACTS.md` §3) or a transport failure (`status` 0, `code` `NETWORK_ERROR`). */
 export class ApiError extends Error {
@@ -1015,6 +1022,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       query?: Record<string, string | number>;
       body?: unknown;
       cache?: RequestCache;
+      keepalive?: boolean;
     } = {},
   ): Promise<Response> {
     const auth = await token();
@@ -1032,6 +1040,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         method,
         headers,
         ...(init.cache && { cache: init.cache }),
+        ...(init.keepalive && { keepalive: true }),
         ...(init.body !== undefined && { body: JSON.stringify(init.body) }),
       });
     } catch {
@@ -1074,6 +1083,20 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       cursor = page.nextCursor;
     } while (cursor);
     return out;
+  };
+
+  // ── usage events (§11.72): batched, fire and forget ───────────────────────
+  let usageQueue: UsageEvent[] = [];
+  let usageTimer: ReturnType<typeof setTimeout> | undefined;
+  const flushUsage = () => {
+    clearTimeout(usageTimer);
+    usageTimer = undefined;
+    while (usageQueue.length) {
+      const events = usageQueue.slice(0, MAX_EVENTS_PER_BATCH);
+      usageQueue = usageQueue.slice(MAX_EVENTS_PER_BATCH);
+      // Counting must never disturb the visitor: a failed send drops its events.
+      send("POST", "/v1/events", { body: { events }, keepalive: true }).catch(() => {});
+    }
   };
 
   // ── catalog (site and route data, shared across dispatches) ────────────────
@@ -2613,5 +2636,19 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       ),
     getAdminHealth: () =>
       call<AdminHealth>("GET", "/v1/admin/health", { cache: "no-store" }),
+    track: (event) => {
+      usageQueue.push(event);
+      if (usageQueue.length >= MAX_EVENTS_PER_BATCH) flushUsage();
+      else usageTimer ??= setTimeout(flushUsage, USAGE_FLUSH_MS);
+    },
+    flushUsage,
+    getUsageStats: (range) =>
+      call<UsageStats>("GET", "/v1/admin/stats", { query: { ...range }, cache: "no-store" }),
+    getSiteUsageStats: (siteId, range) =>
+      call<SiteUsageStats>(
+        "GET",
+        `/v1/admin/stats/sites/${encodeURIComponent(siteId)}`,
+        { query: { ...range }, cache: "no-store" },
+      ),
   };
 }
