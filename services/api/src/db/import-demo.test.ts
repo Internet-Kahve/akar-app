@@ -37,11 +37,15 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
       { id: `detail-${i}`, file: "photo.jpg", src: "", alt: "Kubbe", title: "Kubbe", titleEn: "", description: "", license: "Proje izni", trust: "verified", sourceId: `source-${i}`, galleryPosition: null },
     ],
     coverPhotoId: `photo-${i}`, model: { file: "model.glb", src: "", name: "Model", bytes: 0, parts: [], trust: "representative", interiorParts: i === 0 ? ["kubbe_1"] : [],
+      // test-0 only: `ic_gizle` and an approved baked map file (`pisik_onay`, `glb_harita_pisik`).
+      ...(i === 0 && { hideClosedInterior: true, mapBakedFile: "model.glb" }) as { hideClosedInterior?: boolean; mapBakedFile?: string },
       // `3d/model.json`: yaw, ana_parca and (test-0 only) on_yonu.
       placement: { lng: 29.06, lat: 40.18, headingDeg: 13, frontDeg: i === 0 ? 7 : null, scale: 1, altitudeM: 0, anchorNode: "kubbe_1", hiddenPoints: [], keptPoints: [] } as Record<string, unknown> },
     // The archive photograph has a present-day pair (the team's choice) credited as its file says.
     historyImages: [{ id: `archive-${i}`, file: "photo.jpg", caption: "Eski eser", dateLabel: "1900", alt: "Eski görünüş", license: "CC BY-NC-ND", credit: "Fotoğrafçı · Arşiv", trust: "verified", sourceId: `source-${i}`,
-      present: { id: `present-${i}`, file: "present.webp", alt: "Bugünkü görünüm: Eski eser", credit: "Fotoğraf: Proje arşivi", license: "Proje için verildi; kullanılabilir.", angleMatch: "near" } as Record<string, unknown> | null }], sections: [
+      present: { id: `present-${i}`, file: "present.webp", alt: "Bugünkü görünüm: Eski eser", credit: "Fotoğraf: Proje arşivi", license: "Proje için verildi; kullanılabilir.", angleMatch: "near",
+        // test-1's is a generated image (`temsili`), never shown as a verified photograph.
+        ...(i === 1 && { imagined: true }) } as Record<string, unknown> | null }], sections: [
       { id: `sec-${i}-1`, kind: "history", title: "Tarihçe", body: "Cami 1399 yılında açıldı.", trust: "verified", sourceId: `source-${i}`, chapterId: `chapter-${i}`,
         photos: [{ id: `photo-${i}`, aspect: 1.5, alt: "Dış görünüş" }, { id: `book-${i}`, aspect: null, alt: "Kitap sayfası" }] },
       { id: `sec-${i}-2`, kind: "architecture", title: "Mimari", body: "Kubbeli.", trust: "verified", sourceId: `source-${i}`, chapterId: null, photos: [] },
@@ -139,6 +143,11 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   const quiet = (await ctx.app.inject({ url: "/v1/sites/test-1" })).json();
   assert.equal(quiet.placement.frontDeg, null, "a package without on_yonu leaves the façade direction unknown");
   assert.deepEqual(quiet.media.find((m: { kind: string }) => m.kind === "model").interiorParts, []);
+  // `ic_gizle` and the baked map file reach the detail; the baked file is a model of its own, after the day model.
+  const model0 = detail.media.find((m: { kind: string }) => m.kind === "model");
+  assert.deepEqual([model0.id, model0.hideClosedInterior, detail.mapBakedModelId, detail.mapBakedNightModelId], ["test-0-model", true, "test-0-model-harita", null]);
+  assert.deepEqual([quiet.media.find((m: { kind: string }) => m.kind === "model").hideClosedInterior, quiet.mapBakedModelId], [false, null]);
+  assert.equal(quiet.media.find((m: { id: string }) => m.id === "present-1").trust, "representative", "a generated present-day image is representative, not verified");
   assert.deepEqual(detail.partCards.map((c: { parts: string[]; photoIds: string[] }) => [c.parts, c.photoIds]), [[["kubbe_1"], ["detail-0", "photo-0"]]]);
   assert.ok(detail.media.some((m: { id: string }) => m.id === "detail-0"), "a card's off-gallery photo resolves from the detail's media");
   // English written since (translation, panel) is not in the package; a re-import keeps it per id (§11.64).
@@ -221,11 +230,13 @@ test("content import deduplicates bytes, retains credits, repeats safely and rol
   // A reimport brings the samples and the present-day pair to the manifest: a vanished sample is gone, a vanished pair clears its angle word.
   sites[0]!.sampleTraces.pop();
   sites[0]!.historyImages[0]!.present = null;
+  delete sites[0]!.model.mapBakedFile;
   await writeFile(path, JSON.stringify(manifest));
   await importDemoContent(path, root, true, env);
   const slim = (await ctx.app.inject({ url: "/v1/sites/test-0" })).json();
   assert.deepEqual([slim.historyImages[0].presentMediaId, slim.historyImages[0].presentAngleMatch], [null, null]);
   assert.deepEqual(slim.sampleTraces.map((t: { id: string; historyImageId: string | null }) => [t.id, t.historyImageId]), [["iz-0-1", "archive-0"]]);
+  assert.equal(slim.mapBakedModelId, null, "a baked file the package no longer names is cleared");
   sites[1]!.tasks[1]!.details = { onSite: { text: "Önüne gel", radiusM: 80 }, fromHome: { text: "Dokun", part: "yok" }, doneText: "Bulundu" };
   await writeFile(path, JSON.stringify(manifest));
   await assert.rejects(importDemoContent(path, root, false, {}), /Task part is not a model part: test-1 task-f-1 yok/);

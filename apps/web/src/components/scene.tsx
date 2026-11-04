@@ -476,7 +476,8 @@ export function Scene({
       </>
     );
   // A site with no gallery photograph, not yet answered: the question on the stage's plain ground, no 3D loading.
-  if (ask && mode === "photo" && site.model && !flow)
+  // A task waiting for a tap on a part needs the model: no question then.
+  if (ask && mode === "photo" && site.model && !flow && !onPick)
     return (
       <div className="scene media-scene detail-scene">
         <ViewChoice onPick={setMode} />
@@ -518,6 +519,7 @@ export function Scene({
             partCards={site.partCards}
             onPick={onPick}
             sources={site.sources}
+            siteId={site.id}
             onPhotos={photos.length ? () => setMode("photo") : undefined}
           />
           <div className="model-label">

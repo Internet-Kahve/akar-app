@@ -14,6 +14,7 @@ import {
   Shield,
   RotateCcw,
   Map as MapIcon,
+  BarChart3,
 } from "lucide-react";
 import {
   memoryPermissions,
@@ -40,6 +41,7 @@ const ImportAdmin = dynamic(() => import("./admin-collections").then((m) => m.Im
 const AdminMembers = dynamic(() => import("./admin-members").then((m) => m.AdminMembers), { ssr: false });
 const AdminHealthAlert = dynamic(() => import("./admin-health").then((m) => m.AdminHealthAlert), { ssr: false });
 const AdminMapSettings = dynamic(() => import("./admin-map-settings").then((m) => m.AdminMapSettings), { ssr: false });
+const AdminStats = dynamic(() => import("./admin-stats").then((m) => m.AdminStats), { ssr: false });
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -300,6 +302,8 @@ export function Admin({
   live,
   mapSettings,
   saveMapSettings,
+  loadStats,
+  loadSiteStats,
 }: {
   state: Snapshot;
   commit: Commit;
@@ -317,6 +321,8 @@ export function Admin({
   live: boolean;
   mapSettings: MapSettings;
   saveMapSettings: (settings: MapSettings) => Promise<MapSettings>;
+  loadStats: AkarClient["getUsageStats"];
+  loadSiteStats: AkarClient["getSiteUsageStats"];
 }) {
   const canEdit = role === "editor" || role === "admin";
   const [page, setPage] = useState<ModerationPage>({
@@ -338,6 +344,7 @@ export function Admin({
       | "import"
       | "members"
       | "map"
+      | "stats"
     >(canEdit ? "sites" : "memories"),
     [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
       "pending",
@@ -513,6 +520,16 @@ export function Admin({
             Harita ayarları
           </button>
         )}
+        {role === "admin" && (
+          <button
+            disabled={!!editing}
+            className={tab === "stats" ? "active" : ""}
+            onClick={() => setTab("stats")}
+          >
+            <BarChart3 size={18} />
+            İstatistikler
+          </button>
+        )}
         {!live && canEdit && (
           <button
             disabled={!!editing}
@@ -569,6 +586,12 @@ export function Admin({
           <AdminMapSettings
             settings={mapSettings}
             onSave={saveMapSettings}
+            live={live}
+          />
+        ) : tab === "stats" && role === "admin" ? (
+          <AdminStats
+            loadStats={loadStats}
+            loadSiteStats={loadSiteStats}
             live={live}
           />
         ) : tab === "routes" ? (

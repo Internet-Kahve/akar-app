@@ -206,6 +206,8 @@ const siteSelection = {
   coverMediaId: sites.coverMediaId,
   aboutCoverMediaId: sites.aboutCoverMediaId,
   nightModelMediaId: sites.nightModelMediaId,
+  mapBakedMediaId: sites.mapBakedMediaId,
+  mapBakedNightMediaId: sites.mapBakedNightMediaId,
   openingCamera: sites.openingCamera,
   lng: sql<number | null>`ST_X(${sites.location})`,
   lat: sql<number | null>`ST_Y(${sites.location})`,
@@ -255,6 +257,8 @@ export type SiteRow = Pick<
   | "coverMediaId"
   | "aboutCoverMediaId"
   | "nightModelMediaId"
+  | "mapBakedMediaId"
+  | "mapBakedNightMediaId"
   | "openingCamera"
   | "locationSource"
   | "dedupeKey"
@@ -340,6 +344,8 @@ async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate
     ...siteRows.map((s) => s.coverMediaId),
     ...siteRows.map((s) => s.aboutCoverMediaId),
     ...siteRows.map((s) => s.nightModelMediaId),
+    ...siteRows.map((s) => s.mapBakedMediaId),
+    ...siteRows.map((s) => s.mapBakedNightMediaId),
     ...storyRows.map((b) => b.photoId),
     ...narrationList.map((n) => n.mediaId),
     ...cardRows.map((c) => c.mediaId),
@@ -487,7 +493,7 @@ function toDomainSite(a: SiteAggregate): HeritageSite {
   if (s.relatedSiteId) site.relatedSiteId = s.relatedSiteId;
   if (s.coverMediaId) site.coverPhotoId = s.coverMediaId;
   const model = modelOf(a);
-  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups, interiorParts: model.interiorParts };
+  if (model) site.model = { name: model.title, bytes: model.bytes ?? 0, src: model.url, parts: model.parts, trust: model.trust, coverGroups: model.coverGroups, interiorParts: model.interiorParts, hideClosedInterior: model.hideClosedInterior };
   return site;
 }
 
@@ -514,6 +520,8 @@ function referencesOf(a: SiteAggregate): { mediaList: MediaRow[]; cardList: Card
       s.aboutCoverMediaId,
       // After the linked media, so the day model stays the first model of the list (SiteDetail.nightModelId).
       s.nightModelMediaId,
+      s.mapBakedMediaId,
+      s.mapBakedNightMediaId,
       ...a.stories.map((b) => b.photoId),
       ...a.narrations.map((n) => n.mediaId),
       ...distinct(a.stories.map((b) => b.cardId)).flatMap((cardId) => a.cards.get(cardId)?.mediaId ?? []),
@@ -610,6 +618,8 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
     coverMediaId: s.coverMediaId,
     aboutCoverMediaId: s.aboutCoverMediaId,
     nightModelId: s.nightModelMediaId,
+    mapBakedModelId: s.mapBakedMediaId,
+    mapBakedNightModelId: s.mapBakedNightMediaId,
     openingCamera: s.openingCamera,
     updatedAt: s.updatedAt.toISOString(),
     stories: a.stories.map((b) => ({
@@ -707,6 +717,7 @@ function toAdminDetail(a: SiteAggregate): AdminSiteDetail {
       triangles: m.triangles,
       coverGroups: m.coverGroups,
       interiorParts: m.interiorParts,
+      hideClosedInterior: m.hideClosedInterior,
     })),
     sources: sourceList.map((r) => ({
       id: r.id,
@@ -1016,9 +1027,9 @@ async function mutate(
   return toAdminDetail(after);
 }
 
-/** Zod's optional `label` reads `undefined`; the stored pose only carries the key when set. */
-function toPose({ label, ...pose }: CameraPoseInput): CameraPose {
-  return label === undefined ? pose : { label, ...pose };
+/** Zod's optional `label`/`exact` read `undefined`; the stored pose only carries a key when set. */
+function toPose({ label, exact, ...pose }: CameraPoseInput): CameraPose {
+  return { ...(label === undefined ? {} : { label }), ...(exact === undefined ? {} : { exact }), ...pose };
 }
 
 /** Creates a draft (editor v2, Tier 1 unless told otherwise); 409 when the city already has the same name and district. */
@@ -1210,8 +1221,10 @@ export function setModel(tx: Tx, ctx: AuditCtx, id: string, input: ModelInput): 
       await rewriteSiteMedia(tx, id, before, { model: input.mediaId });
       return {
         openingCamera: input.mediaId !== null && input.openingCamera ? toPose(input.openingCamera) : null,
-        // The night model is a variant of the day one: it goes with it.
-        ...(input.mediaId === null && { nightModelMediaId: null }),
+        // The night model is a variant of the day one: it goes with it. A baked map file shows the model it was baked
+        // from, so another model clears it (§11.73).
+        ...(input.mediaId !== (modelOf(before)?.id ?? null) && { mapBakedMediaId: null }),
+        ...(input.mediaId === null && { nightModelMediaId: null, mapBakedNightMediaId: null }),
       };
     },
   );
@@ -1227,7 +1240,7 @@ export function setNightModel(tx: Tx, ctx: AuditCtx, id: string, input: NightMod
     tx,
     ctx,
     id,
-    (a) => ({ nightModelMediaId: a.site.nightModelMediaId }),
+    (a) => ({ nightModelMediaId: a.site.nightModelMediaId, mapBakedNightMediaId: a.site.mapBakedNightMediaId }),
     async (before) => {
       const errors = new FieldErrors();
       if (input.mediaId !== null) {
@@ -1236,7 +1249,7 @@ export function setNightModel(tx: Tx, ctx: AuditCtx, id: string, input: NightMod
         checkMedia(errors, "mediaId", input.mediaId, await mediaKindsOf(tx, [input.mediaId]), "model");
       }
       errors.throwIfAny();
-      return { nightModelMediaId: input.mediaId };
+      return { nightModelMediaId: input.mediaId, ...(input.mediaId !== before.site.nightModelMediaId && { mapBakedNightMediaId: null }) };
     },
   );
 }

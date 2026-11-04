@@ -93,7 +93,8 @@ for entry in editorial.eserleri_bul():
     photo_rows = editorial.tablo(editorial.oku(root / 'eserler' / folder / 'icerik/fotograflar.md'), 'Dosya')
     photo_en = [dict(dosya=editorial.ham(h[0])) for h in photo_rows if h and editorial.ham(h[0])]
     story_items, card_items, headings = editorial.hikaye_oku(folder), editorial.parcalar_oku(folder), editorial.hakkinda_oku(folder)
-    editorial.en_oku(folder, story_items, card_items, photo_en, headings)
+    if hasattr(editorial, 'en_oku'):
+        editorial.en_oku(folder, story_items, card_items, photo_en, headings)
     photo_en = {f['dosya']: f for f in photo_en}
     photos = []
     for h in photo_rows:
@@ -270,6 +271,15 @@ for entry in editorial.eserleri_bul():
     # Night theme model (1 Nov 2026): `glb_gece` names its export like `glb`; the presentation file is the one used.
     if model and model_info.get('glb_gece'):
         model['nightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece"]}_sunum.glb'
+    # «İç mekânı gizle» (ic_gizle, 4 Nov 2026): only for buildings closed all round, set per site after looking at it.
+    if model and model_info.get('ic_gizle'):
+        model['hideClosedInterior'] = True
+    # The map's baked files (glb_harita_pisik, glb_gece_harita_pisik, 4 Nov 2026), only once approved (pisik_onay); the
+    # night one only beside a night model, as the map draws it in place of that.
+    if model and model_info.get('pisik_onay') and model_info.get('glb_harita_pisik'):
+        model['mapBakedFile'] = f'eserler/{folder}/3d/export/{model_info["glb_harita_pisik"]}.glb'
+        if model.get('nightFile') and model_info.get('glb_gece_harita_pisik'):
+            model['mapBakedNightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece_harita_pisik"]}.glb'
     # Gallery photographs' 3D views (model.json `foto_acilari`, 2 Nov 2026): the site page's ‹ › arrows beside
     # «İçini göster» go through them. Each names a gallery photograph by its number and gives the "Açı" words of a
     # story sentence (hedef, azimut, egim, uzaklik); `ic` opens the model for it. A view set in the panel wins.
