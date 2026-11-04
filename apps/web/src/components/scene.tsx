@@ -513,7 +513,7 @@ export function Scene({
             tour={context === "story" && !onPick && !highlights?.length && turn}
             // The sentence's parts breathe in the model (they were never handed to it).
             highlight={context === "story" && !onPick ? highlights : undefined}
-            frame={frameBottom ? { left: 0, bottom: frameBottom } : card && !cardPlace ? storyCardFrame(wide, cardScale) : NO_FRAME}
+            frame={frameBottom ? { left: 0, bottom: frameBottom } : card && !cardPlace ? storyCardFrame(wide, cardScale, typeof window === "undefined" ? 0 : window.innerHeight) : NO_FRAME}
             companion={companion}
             partCards={site.partCards}
             onPick={onPick}

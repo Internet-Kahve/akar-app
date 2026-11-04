@@ -5,6 +5,7 @@ import type { CameraPose, HeritageSite, PartCard, PhotoCamera, SitePhoto, StoryB
 import { sceneOf } from "../lib/scene-light";
 import { useCityIdentity, useCityScenes } from "./city-scenes";
 import { ModelStage } from "./model-stage";
+import { PHONE_CARD_EDGE, PHONE_CARD_SHARE, PHONE_PREVIEW, storyCardFrame } from "../lib/story-scene";
 
 /** The prototype's distance words (§11.39) against the distance at which the whole model fits. */
 const DISTANCES: Array<[number, string]> = [
@@ -172,6 +173,9 @@ export function AdminModelPreview({
     if (pose) change(apply, before, pose, `${label}: ${poseSummary(pose)}`);
   };
   const own = story?.camera;
+  // The phone's view: a narrow stage and, on a sentence that shows its photograph, the card's place reserved.
+  const [phone, setPhone] = useState(false);
+  const phoneCard = phone && !!sentence && !!story?.showCard;
   const photoMode = !story && onPhotoCamera && tab === "photos";
   return (
     <div className="admin-model-preview">
@@ -185,8 +189,12 @@ export function AdminModelPreview({
           </button>
         </div>
       )}
-      <div className="admin-model-stage">
+      <label className="admin-phone-toggle">
+        <input type="checkbox" checked={phone} onChange={(e) => setPhone(e.target.checked)} /> Telefon önizlemesi (ziyaretçi telefonda böyle görür)
+      </label>
+      <div className={`admin-model-stage${phone ? " phone" : ""}`}>
       <ModelStage
+        {...(phoneCard && { frame: storyCardFrame(false, 1, PHONE_PREVIEW.screenHeight) })}
         model={model}
         name={site.name}
         scene={sceneOf(site, scenes)}
@@ -229,6 +237,14 @@ export function AdminModelPreview({
                 ...(shown.interior !== undefined && { interior: shown.interior }),
               })}
       />
+      {phoneCard && (
+        <div
+          className="admin-phone-card"
+          style={{ height: Math.round(PHONE_PREVIEW.screenHeight * PHONE_CARD_SHARE), bottom: PHONE_CARD_EDGE }}
+        >
+          Fotoğraf kartı burada durur
+        </div>
+      )}
       {photoMode && photo && overlay > 0 && (
         // The photograph over the model: turn the model until the two line up, then save.
         <img className="admin-photo-overlay" src={photo.src} alt="" style={{ opacity: overlay / 100 }} />

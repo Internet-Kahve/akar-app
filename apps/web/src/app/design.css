@@ -4261,7 +4261,7 @@ body:has(.view-choice) .coach-tip.above-site-card { display: none; }
    stage, the screen's width, a large photograph beside its title; the model is framed above it (akar-app
    STORY_PHOTO_CARD_PHONE). Not moved or resized there: one place, nothing to manage. */
 @media (max-width: 899.98px) {
-  /* Muhammed, 4 Nov 2026: the model above, under it the photograph the screen's width, about 30% of the screen, to compare
+  /* Muhammed, 4 Nov 2026: the model above, under it the photograph the screen's width, about 22% of the screen (PHONE_CARD_SHARE in story-scene.ts), to compare
      them; its words small, on it. The sheet below keeps to little meanwhile (`.fotolu`), and when the photograph goes
      it is as the visitor left it. */
   .story-photo-card,
@@ -4271,7 +4271,7 @@ body:has(.view-choice) .coach-tip.above-site-card { display: none; }
     top: auto !important;
     bottom: 8px !important;
     width: auto !important;
-    height: 30dvh;
+    height: 22dvh;
     display: block;
     border-radius: 16px;
     overflow: hidden;
@@ -4295,7 +4295,7 @@ body:has(.view-choice) .coach-tip.above-site-card { display: none; }
   .story-photo-card small { display: none; }
   .story-photo-size { display: none; }
   .media-scene:has(.story-photo-card) .model-inside,
-  .media-scene:has(.story-photo-card) .model-part-name { bottom: calc(30dvh + 20px); }
+  .media-scene:has(.story-photo-card) .model-part-name { bottom: calc(22dvh + 20px); }
   .story-panel.kart.fotolu { padding-bottom: 8px; }
   .story-panel.kart.fotolu .story-card-text { margin: 0 0 2px; font: 500 15px/20px var(--font); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
   .story-panel.kart.fotolu .story-card-body > :not(.story-card-text, .kaynak-mini) { display: none; }
