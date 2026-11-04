@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { sized } from "../lib/image-size";
 import { CameraOff, Image as ImageIcon, Info, RotateCw, Share2, X } from "lucide-react";
 import type { HistoryImage, HeritageSite } from "@akar/domain";
 import { useI18n } from "./i18n";
@@ -281,7 +282,7 @@ export function HistoryCamera({
         <span>{t("site.cameraToday")}</span>
       </div>
       <div className="kam-alt">
-        <img className="kam-kucuk" src={image.photo.src} alt="" />
+        <img className="kam-kucuk" src={sized(image.photo.src, 96)} alt="" decoding="async" />
         <button className="kam-deklansor" aria-label={t("site.cameraShutter")} onClick={take}>
           <i />
         </button>

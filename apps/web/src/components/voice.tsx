@@ -8,7 +8,7 @@ export interface Voice {
   gender: VoiceGender;
 }
 
-const VoiceContext = createContext<Voice>({ lang: "tr", gender: "female" });
+const VoiceContext = createContext<Voice>({ lang: "tr", gender: "male" });
 
 /** The voice the visitor listens to (story player, part cards): the effective language and gender of the recordings. */
 export const VoiceProvider = VoiceContext.Provider;

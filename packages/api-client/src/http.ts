@@ -1,6 +1,7 @@
 import { localRoutes } from "./personal-routes";
 import {
   defaultMapSettings,
+  MAX_EVENTS_PER_BATCH,
   validatePlacement,
   validateSite,
   type AboutChapter,
@@ -44,8 +45,14 @@ import type {
   PlayableQuiz,
   QuizAnswerResult,
   StorageAdapter,
+  SiteUsageStats,
+  UsageEvent,
+  UsageStats,
 } from "./index";
 import { demoRegion } from "./seed";
+
+/** Queued usage events wait at most this long before they are sent (§11.72). */
+const USAGE_FLUSH_MS = 10_000;
 
 /** Error body of the API (`CONTRACTS.md` §3) or a transport failure (`status` 0, `code` `NETWORK_ERROR`). */
 export class ApiError extends Error {
@@ -150,6 +157,8 @@ interface MediaDto {
   coverGroups?: string[][];
   /** Interior parts of a model (the map leaves them out); absent on older API versions. */
   interiorParts?: string[];
+  /** The site page hides the interior while the cover is closed; absent on older API versions. */
+  hideClosedInterior?: boolean;
 }
 interface SiteSummaryDto {
   id: string;
@@ -226,6 +235,9 @@ interface SiteDetailDto {
   aboutCoverMediaId?: string | null;
   /** The night theme's model in `media`; null or absent (older API versions) = none. */
   nightModelId?: string | null;
+  /** The map's baked files in `media` (day, night); null or absent (older API versions) = none. */
+  mapBakedModelId?: string | null;
+  mapBakedNightModelId?: string | null;
   /** Absent on older API versions. */
   chapters?: Array<{
     id: string;
@@ -528,11 +540,16 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
   const aboutCover = d.aboutCoverMediaId
     ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
     : undefined;
-  // The day model is the first model that is not the night one (the server lists it first).
-  const model = d.media.find((m) => m.kind === "model" && m.id !== d.nightModelId);
+  // The day model is the first model that is not the night one or a baked map file (the server lists it first).
+  const variants = new Set([d.nightModelId, d.mapBakedModelId, d.mapBakedNightModelId].filter(present));
+  const model = d.media.find((m) => m.kind === "model" && !variants.has(m.id));
+  const modelUrl = (id: string | null | undefined) =>
+    id ? d.media.find((m) => m.id === id && m.kind === "model")?.url : undefined;
   const night = d.nightModelId
     ? d.media.find((m) => m.id === d.nightModelId && m.kind === "model")
     : undefined;
+  const bakedDay = modelUrl(d.mapBakedModelId);
+  const bakedNight = modelUrl(d.mapBakedNightModelId);
   return {
     id: d.id,
     name: d.name,
@@ -718,6 +735,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         triangles: model.triangles ?? null,
         ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
         ...(model.interiorParts?.length && { interiorParts: model.interiorParts }),
+        ...(model.hideClosedInterior && { hideClosedInterior: true }),
         ...(night && {
           night: {
             name: night.title || night.id,
@@ -726,6 +744,9 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
             parts: night.parts,
             triangles: night.triangles ?? null,
           },
+        }),
+        ...((bakedDay || bakedNight) && {
+          mapBaked: { ...(bakedDay && { day: bakedDay }), ...(bakedNight && { night: bakedNight }) },
         }),
         placement: d.placement ?? null,
       },
@@ -1015,6 +1036,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       query?: Record<string, string | number>;
       body?: unknown;
       cache?: RequestCache;
+      keepalive?: boolean;
     } = {},
   ): Promise<Response> {
     const auth = await token();
@@ -1032,6 +1054,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         method,
         headers,
         ...(init.cache && { cache: init.cache }),
+        ...(init.keepalive && { keepalive: true }),
         ...(init.body !== undefined && { body: JSON.stringify(init.body) }),
       });
     } catch {
@@ -1074,6 +1097,20 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       cursor = page.nextCursor;
     } while (cursor);
     return out;
+  };
+
+  // ── usage events (§11.72): batched, fire and forget ───────────────────────
+  let usageQueue: UsageEvent[] = [];
+  let usageTimer: ReturnType<typeof setTimeout> | undefined;
+  const flushUsage = () => {
+    clearTimeout(usageTimer);
+    usageTimer = undefined;
+    while (usageQueue.length) {
+      const events = usageQueue.slice(0, MAX_EVENTS_PER_BATCH);
+      usageQueue = usageQueue.slice(MAX_EVENTS_PER_BATCH);
+      // Counting must never disturb the visitor: a failed send drops its events.
+      send("POST", "/v1/events", { body: { events }, keepalive: true }).catch(() => {});
+    }
   };
 
   // ── catalog (site and route data, shared across dispatches) ────────────────
@@ -2253,6 +2290,9 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         // The decision may add a memory to the public feed or take one out of it.
         await refreshFeed();
         return true;
+      case "delete-account":
+        await call("DELETE", "/v1/me");
+        return true;
       case "delete-memory":
       case "admin-delete-memory":
         await call(
@@ -2613,5 +2653,19 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       ),
     getAdminHealth: () =>
       call<AdminHealth>("GET", "/v1/admin/health", { cache: "no-store" }),
+    track: (event) => {
+      usageQueue.push(event);
+      if (usageQueue.length >= MAX_EVENTS_PER_BATCH) flushUsage();
+      else usageTimer ??= setTimeout(flushUsage, USAGE_FLUSH_MS);
+    },
+    flushUsage,
+    getUsageStats: (range) =>
+      call<UsageStats>("GET", "/v1/admin/stats", { query: { ...range }, cache: "no-store" }),
+    getSiteUsageStats: (siteId, range) =>
+      call<SiteUsageStats>(
+        "GET",
+        `/v1/admin/stats/sites/${encodeURIComponent(siteId)}`,
+        { query: { ...range }, cache: "no-store" },
+      ),
   };
 }

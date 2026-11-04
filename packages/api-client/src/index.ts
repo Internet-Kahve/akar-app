@@ -17,6 +17,7 @@ import {
   type SiteTask,
   type PartCard,
   type StoryBlock,
+  type UsageEventName,
 } from "@akar/domain";
 import {
   createSeed,
@@ -122,6 +123,36 @@ export interface AdminHealth {
     level: "ok" | "warn" | "critical";
     byKind: { photo: number; model: number; audio: number };
   };
+}
+/** One usage event (§11.72): `siteId` for site events, `ref` for the detail its kind takes (`USAGE_EVENTS`). */
+export interface UsageEvent {
+  event: UsageEventName;
+  siteId?: string;
+  ref?: string;
+}
+/** Guest / signed-in count of one event. */
+export interface UsageCount {
+  event: UsageEventName;
+  guest: number;
+  signedIn: number;
+}
+/** Istanbul days `YYYY-MM-DD`, both ends included. */
+export interface UsageRange {
+  from: string;
+  to: string;
+}
+/** `GET /v1/admin/stats`: totals, daily series, site and route tables of a period. */
+export interface UsageStats extends UsageRange {
+  totals: UsageCount[];
+  daily: Array<UsageCount & { day: string }>;
+  sites: Array<{ siteId: string; name: string | null; counts: UsageCount[] }>;
+  routes: Array<{ routeId: string; name: string | null; guest: number; signedIn: number }>;
+}
+/** `GET /v1/admin/stats/sites/:id`: one site's events by detail (sentence index, part card, task, language). */
+export interface SiteUsageStats extends UsageRange {
+  siteId: string;
+  name: string | null;
+  rows: Array<UsageCount & { ref: string; label: string | null }>;
 }
 /** Hours after which a pending memory counts as stale (`PENDING_STALE_HOURS` server-side). */
 const PENDING_STALE_HOURS = 48;
@@ -229,6 +260,17 @@ export interface AkarClient {
   getSiteProgress(): Promise<SiteProgress>;
   /** Moderator and admin only; the server answers 403 for other roles. */
   getAdminHealth(): Promise<AdminHealth>;
+  /**
+   * Counts a usage event (§11.72). Never throws and never waits: events are batched and sent later; a failed
+   * send drops them. The demo counts nothing.
+   */
+  track(event: UsageEvent): void;
+  /** Sends the queued events now, with `keepalive` so it survives the page closing. */
+  flushUsage(): void;
+  /** Admin only. The demo answers empty tables. */
+  getUsageStats(range: UsageRange): Promise<UsageStats>;
+  /** Admin only. */
+  getSiteUsageStats(siteId: string, range: UsageRange): Promise<SiteUsageStats>;
   getMembers(query: string, page: number): Promise<MemberPage>;
   setMemberRole(
     userId: string,
@@ -388,6 +430,14 @@ export function createMockClient(
   let cities = demoCities;
   let taskKeys = demoSiteTaskKeys;
   let fresh = createSeed;
+  const panelKey = `${key}-panel`;
+  const panelEdits = (): Record<string, HeritageSite> => {
+    try {
+      return JSON.parse(storage?.getItem(panelKey) ?? "{}") as Record<string, HeritageSite>;
+    } catch {
+      return {};
+    }
+  };
   const content = contentUrl
     ? fetch(contentUrl)
         .then((r) => {
@@ -400,7 +450,8 @@ export function createMockClient(
             sites: structuredClone(c.sites),
             catalogRoutes: structuredClone(c.routes),
           });
-          state = { ...state, sites: c.sites, catalogRoutes: c.routes };
+          // What the panel saved in this browser stands over the file: the demo has no database to keep it.
+          state = { ...state, sites: c.sites.map((s) => panelEdits()[s.id] ?? s), catalogRoutes: c.routes };
           cities = c.cities;
           taskKeys = c.taskKeys;
         })
@@ -570,6 +621,13 @@ export function createMockClient(
     },
     async saveSite(site) {
       const snapshot = persist(reduceSnapshot(state, { type: "site", site }));
+      if (contentUrl) {
+        try {
+          storage?.setItem(panelKey, JSON.stringify({ ...panelEdits(), [site.id]: snapshot.sites.find((s) => s.id === site.id) }));
+        } catch {
+          // Too large for this browser: it still holds until the page is opened again.
+        }
+      }
       return { site: snapshot.sites.find((s) => s.id === site.id)!, snapshot };
     },
     async narrateSite(siteId, target) {
@@ -714,12 +772,12 @@ export function createMockClient(
         return {
           correct: false,
           correctText: null,
-          wrongText: task.quiz.wrongText,
+          wrongText: task.quiz.wrongText, ...(task.quiz.wrongTextEn && { wrongTextEn: task.quiz.wrongTextEn }),
           earnedBadges: [],
         };
       return {
         correct: true,
-        correctText: key.correctText,
+        correctText: key.correctText, ...(key.correctTextEn && { correctTextEn: key.correctTextEn }),
         wrongText: null,
         earnedBadges: finishTask(site, task, false),
       };
@@ -746,7 +804,7 @@ export function createMockClient(
       const onSite = input.mode === "onSite";
       return {
         done: true,
-        doneText: key.doneText,
+        doneText: key.doneText, ...(key.doneTextEn && { doneTextEn: key.doneTextEn }),
         onSite,
         earnedBadges: finishTask(site, task, onSite),
       };
@@ -790,6 +848,19 @@ export function createMockClient(
           oldestPendingSince: stale[0] ?? null,
           thresholdHours: PENDING_STALE_HOURS,
         },
+      };
+    },
+    track() {},
+    flushUsage() {},
+    async getUsageStats(range) {
+      return { ...range, totals: [], daily: [], sites: [], routes: [] };
+    },
+    async getSiteUsageStats(siteId, range) {
+      return {
+        ...range,
+        siteId,
+        name: state.sites.find((s) => s.id === siteId)?.name ?? null,
+        rows: [],
       };
     },
   };

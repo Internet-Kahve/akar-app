@@ -18,18 +18,19 @@ test.beforeEach(async ({ page }) => {
   await expect(grip(page)).toBeVisible();
 });
 
-test("the card floats closed, showing the name and Dinle | Oku", async ({ page }) => {
+test("the card lies closed along the screen's foot, the name and «Hikâyeyi başlat»", async ({ page }) => {
   const c = await box(page, ".workspace.on-site .side-panel");
   const viewport = page.viewportSize()!;
-  // 12 px inside the screen's edges.
-  expect(Math.round(c.x)).toBe(12);
-  expect(Math.round(viewport.width - c.x - c.width)).toBe(12);
-  expect(Math.round(viewport.height - c.y - c.height)).toBe(12);
+  // The screen's width, on its foot (3 Nov 2026).
+  expect(Math.round(c.x)).toBe(0);
+  expect(Math.round(c.width)).toBe(viewport.width);
+  expect(Math.round(viewport.height - c.y - c.height)).toBe(0);
   await expect(grip(page)).toHaveAttribute("aria-expanded", "false");
   await expect(card(page).getByRole("heading", { name: "Ulucami" })).toBeInViewport();
-  const listen = await box(page, ".detail-panel .ikili");
-  expect(listen.y + listen.height).toBeLessThan(c.y + c.height);
-  // Closed, Keşfet is below the card's edge.
+  const start = await box(page, ".detail-panel .hikaye-basla");
+  expect(start.y + start.height).toBeLessThan(c.y + c.height);
+  // One way into the story; nothing fades below it.
+  await expect(page.locator(".detail-panel .ikili")).toBeHidden();
   await expect(card(page).getByRole("button", { name: /Geçmişi Gör/ })).not.toBeInViewport();
 });
 
@@ -50,16 +51,29 @@ test("the handle opens the card all the way and closes it, by tap and by keyboar
   await expect(grip(page)).toHaveAttribute("aria-expanded", "false");
 });
 
-test("dragging the handle leaves the card where it is let go", async ({ page }) => {
+test("let go half way, the card goes to its nearest stop, never left cut in the middle", async ({ page }) => {
   const g = await box(page, ".card-grip");
-  const before = (await box(page, ".workspace.on-site .side-panel")).height;
-  await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
-  await page.mouse.down();
-  for (let i = 1; i <= 10; i++) await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2 - i * 20);
-  await page.mouse.up();
-  const after = (await box(page, ".workspace.on-site .side-panel")).height;
-  expect(after).toBeGreaterThan(before + 150);
-  expect(after).toBeLessThan(before + 250);
+  const closed = (await box(page, ".workspace.on-site .side-panel")).height;
+  const drag = async (dy: number) => {
+    const at = await box(page, ".card-grip");
+    await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
+    await page.mouse.down();
+    for (let i = 1; i <= 10; i++) {
+      await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2 - (dy * i) / 10, { steps: 1 });
+      // Test a deliberate drag, not a fast flick whose velocity differs between browser engines.
+      await page.waitForTimeout(40);
+    }
+    await page.mouse.up();
+  };
+  // A short pull: back to closed (3 Nov 2026: «yarım duruyor; kendiliğinden yerine dönsün»).
+  await drag(60);
+  await expect.poll(async () => Math.round((await box(page, ".workspace.on-site .side-panel")).height)).toBe(Math.round(closed));
+  // A long pull: all the way open.
+  await drag(Math.round(page.viewportSize()!.height * 0.5));
+  await expect(grip(page)).toHaveAttribute("aria-expanded", "true");
+  const open = (await box(page, ".workspace.on-site .side-panel")).height;
+  expect(open).toBeGreaterThan(closed + 200);
+  void g;
 });
 
 test("«3D model · Temsili» and «İçini göster» ride on the card's top edge", async ({ page }) => {
@@ -77,7 +91,8 @@ test("«3D model · Temsili» and «İçini göster» ride on the card's top edg
   expect(Math.abs((await gap()) - closedGap)).toBeLessThanOrEqual(2);
 });
 
-test("scrolling the closed card's content raises it a little, enough to scroll, not all the way", async ({ page }) => {
+test("scrolling the closed card's content raises it a little, enough to scroll, not all the way", async ({ page, browserName, isMobile }) => {
+  test.skip(browserName === "webkit" && isMobile, "Playwright mobile WebKit does not implement mouse.wheel");
   const c = await box(page, ".workspace.on-site .side-panel");
   await page.mouse.move(c.x + c.width / 2, c.y + c.height - 30);
   await page.mouse.wheel(0, 120);

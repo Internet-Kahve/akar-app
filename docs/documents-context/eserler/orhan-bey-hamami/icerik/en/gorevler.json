@@ -1,0 +1,37 @@
+{
+ "obh-soru-aynali": {
+  "baslik": "The bath's name today",
+  "soru": "By what name is Orhan Bey Bath known today?",
+  "secenekler": [
+   "Old Aynalı Bazaar",
+   "Bedesten",
+   "Covered Bazaar",
+   "Emir Han"
+  ],
+  "ipuclari": [
+   "Look at the writing above the entrance in the photograph.",
+   "Its name contains the word \"Aynalı\" (mirrored)."
+  ],
+  "dogru_metin": "Before the 1958 Bazaar fire, the bath's men's section was known as the Aynalı Bazaar; the building is now known as the Old Aynalı Bazaar.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "obh-saha-giris": {
+  "baslik": "Aynalı Bazaar entrance",
+  "gorev": "Find one of the entrances marked \"Eski Aynalı Çarşı\".",
+  "yerinde": "Go up to the entrance and tap \"I'm here\".",
+  "evden": "Tap the bath's entrance in the 3D model.",
+  "tamam_metin": "The building has three entrances: north, south and west. According to the inventory the northern one is original and the others were opened later."
+ },
+ "obh-hikaye": {
+  "ad": "You listened to Orhan Bey Bath",
+  "metin": "You listened to or read the story of Orhan Bey Bath to the end."
+ },
+ "obh-aynali": {
+  "ad": "Aynalı Bazaar",
+  "metin": "You learned the name by which the bath is known as a bazaar today."
+ },
+ "obh-uc-giris": {
+  "ad": "Three entrances",
+  "metin": "You found the entrance of the Old Aynalı Bazaar."
+ }
+}

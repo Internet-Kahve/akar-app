@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { sources } from "./catalog.ts";
 import { mediaKindEnum, timestamps, trustEnum } from "./shared.ts";
 
@@ -33,6 +33,8 @@ export const media = pgTable(
     coverGroups: jsonb("cover_groups").$type<string[][]>().notNull().default(sql`'[]'::jsonb`),
     /** Interior parts of the presentation file (kind = model): the map leaves them out; empty = only the scenery is left out. */
     interiorParts: text("interior_parts").array().notNull().default(sql`'{}'::text[]`),
+    /** Site page (kind = model): the interior parts are left undrawn while the cover is closed; only for buildings closed all round. */
+    hideClosedInterior: boolean("hide_closed_interior").notNull().default(false),
     /** Background GLB part extraction state (kind = model). */
     partsStatus: partsStatusEnum("parts_status").notNull().default("none"),
     /** Bucket-relative object key; null for external/seed URLs. */

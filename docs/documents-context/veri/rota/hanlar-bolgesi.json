@@ -3,10 +3,12 @@
   "id": "hanlar-bolgesi",
   "sehir": "bursa",
   "ad": "Hanlar Bölgesi Vakıf Yürüyüşü",
+  "ad_en": "Hans District Waqf Walk",
   "zorluk": "Kolay",
   "sure": "~10 dk",
   "mesafe": "0,5 km",
   "aciklama": "Ulucami’den Bedesten’e, Koza Hanı’na ve Orhan Bey Camii’ne: Bursa’nın vakıf çarşısı.",
+  "aciklama_en": "From Ulucami to the Bedesten, Koza Han and Orhan Bey Mosque: the waqf bazaar of Bursa.",
   "duraklar": [
     "ulu-cami",
     "yildirim-bayezid-bedesteni",

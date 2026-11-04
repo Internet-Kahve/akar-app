@@ -1,0 +1,33 @@
+{
+ "ogt-soru-nilufer": {
+  "baslik": "The cenotaphs in the tomb",
+  "soru": "Whose cenotaph also stands in the Tomb of Orhan Gazi, beside his own?",
+  "secenekler": [
+   "Nilüfer Hatun",
+   "Osman Gazi",
+   "Şeyh Edebali",
+   "Ertuğrul Gazi"
+  ],
+  "ipuclari": [
+   "Read the plaque in front of the cenotaph in the photograph.",
+   "Orhan Gazi's wife."
+  ],
+  "dogru_metin": "Besides Orhan Gazi's, the tomb has twenty cenotaphs; those of his wife Nilüfer Hatun, his son Şehzade Kasım, Fatma Sultan, Şehzade Abdullah and Şehzade Korkut have been identified.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "ogt-saha-kubbe": {
+  "baslik": "The single-domed tomb",
+  "gorev": "In Hisariçi, find the square, single-domed tomb beside the Tomb of Osman Gazi.",
+  "yerinde": "Go outside the tomb, in front of its entrance façade, and tap \"I'm here\".",
+  "evden": "Tap the tomb's dome in the 3D model.",
+  "tamam_metin": "According to the judges' registers the old tomb was covered by several domes; the building rebuilt after the 1855 earthquake has one."
+ },
+ "ogt-nilufer": {
+  "ad": "Nilüfer Hatun",
+  "metin": "You learned about one of those buried beside Orhan Gazi."
+ },
+ "ogt-tek-kubbe": {
+  "ad": "Single dome",
+  "metin": "You found the Tomb of Orhan Gazi in Hisariçi."
+ }
+}

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { sized } from "../lib/image-size";
 import { Box, Check, ChevronLeft, MapPin, X } from "lucide-react";
 import type { AkarClient, SiteProgress } from "@akar/api-client";
 import type { HeritageSite, SiteBadge, SiteTask } from "@akar/domain";
@@ -9,6 +10,7 @@ import { Localized, useI18n } from "./i18n";
 import { Notice, Tag } from "./ui";
 import { isFieldTask, isQuizTask, type FieldDone } from "./site-tasks";
 import { answerText, badgeInLang, taskInLang } from "../lib/task-text";
+import { track } from "../lib/usage";
 
 const STAR = Array.from({ length: 16 }, (_, i) => {
   const r = i % 2 ? 11.2 : 15,
@@ -155,6 +157,7 @@ export function SitePuzzle({
           onSite: false,
           badges: result.earnedBadges,
         });
+        if (!progress.tasks.some((p) => p.taskId === task.id)) track("task.complete", site.id, task.id);
         onDone(result.earnedBadges);
       } else {
         const opened = hints < quiz.hints.length;
@@ -196,6 +199,7 @@ export function SitePuzzle({
           onSite: result.onSite,
           badges: result.earnedBadges,
         });
+        if (!progress.tasks.some((p) => p.taskId === task.id)) track("task.complete", site.id, task.id);
         onDone(result.earnedBadges);
       } else onToast(t(canPick ? "site.notNearCanPick" : "site.notNear"));
     } catch (e) {
@@ -214,7 +218,7 @@ export function SitePuzzle({
   }
   const photo = task.photo && (
     <figure className="gv-gorsel">
-      <img src={task.photo.src} alt={task.photo.alt} />
+      <img src={sized(task.photo.src, 560)} alt={task.photo.alt} decoding="async" />
       <figcaption lang={content}>
         <Localized tr={task.photo.title} en={task.photo.titleEn} />
       </figcaption>
@@ -324,7 +328,7 @@ export function SitePuzzle({
             </h2>
             <p lang={outcome.english ? undefined : tr}>{outcome.text}</p>
             <div className="gv-cipler">
-              <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>
+              {task.trust !== "verified" && <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>}
               {task.source && (
                 <span className="gv-kaynak">
                   {t("site.sourceLabel")} <span lang={content}>{task.source}</span>

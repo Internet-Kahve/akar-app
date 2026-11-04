@@ -66,11 +66,13 @@ def book_license(inventory):
 DISTANCE = [('yakın', 0.42), ('orta', 0.62), ('çatı', 0.85)]
 
 def camera(angle):
-    words = angle['uzaklik'] or ''
+    words = str(angle['uzaklik'] or '')
+    # A number is the fraction itself (1 = the whole model fits), for angles closer than the words go.
+    number = re.search(r'\d+[.,]\d+', words)
     target = angle['hedef']
     return dict(target=None if target in (None, 'Merkez') else target, azimuthDeg=angle['azimut'],
                 elevationDeg=max(5, min(85, angle['egim'] if angle['egim'] is not None else 30)),
-                distance=next((f for w, f in DISTANCE if w in words), 0.95))
+                distance=float(number.group().replace(',', '.')) if number else next((f for w, f in DISTANCE if w in words), 0.95))
 
 for entry in editorial.eserleri_bul():
     folder = entry['id']
@@ -87,8 +89,15 @@ for entry in editorial.eserleri_bul():
         sources.append(dict(id=key, title=title, kind=kind, url=url, author=author,
                             year='', page='', trust=credibility))
         return key
+    # English (ICERIK_INGILIZCE.md): icerik/en/ beside the Turkish files; what is missing stays Turkish.
+    photo_rows = editorial.tablo(editorial.oku(root / 'eserler' / folder / 'icerik/fotograflar.md'), 'Dosya')
+    photo_en = [dict(dosya=editorial.ham(h[0])) for h in photo_rows if h and editorial.ham(h[0])]
+    story_items, card_items, headings = editorial.hikaye_oku(folder), editorial.parcalar_oku(folder), editorial.hakkinda_oku(folder)
+    if hasattr(editorial, 'en_oku'):
+        editorial.en_oku(folder, story_items, card_items, photo_en, headings)
+    photo_en = {f['dosya']: f for f in photo_en}
     photos = []
-    for h in editorial.tablo(editorial.oku(root / 'eserler' / folder / 'icerik/fotograflar.md'), 'Dosya'):
+    for h in photo_rows:
         if len(h) < 9:
             raise ValueError('Incomplete photograph metadata: ' + folder)
         filename = editorial.ham(h[0])
@@ -96,13 +105,13 @@ for entry in editorial.eserleri_bul():
         if not (root / rel).is_file() or not h[7].strip():
             raise ValueError('Missing image/license: ' + rel)
         photos.append(dict(id=f'{sid}-photo-{Path(filename).stem.split("_")[0]}', file=rel, src='', alt=h[5],
-                           title=h[3], titleEn='', description=h[4], license=h[7], trust=trust(h[8]),
+                           title=h[3], titleEn=photo_en.get(filename, {}).get('baslik_en', ''), description=h[4], license=h[7], trust=trust(h[8]),
                            sourceId=source(editorial.kaynak_bicim(h[6])),
                            galleryPosition=int(h[2]) if h[2].isdigit() else None))
     # Keyed by the path under icerik/foto/: a photo-only site's gallery is its kitap/ crops.
     by_name = {p['file'].split('/icerik/foto/', 1)[1]: p for p in photos}
     stories = []
-    for item in editorial.hikaye_oku(folder):
+    for item in story_items:
         photo = by_name.get(item['foto'])
         if not photo:
             raise ValueError(f'Missing story photograph: {folder} {item["foto"]}')
@@ -110,12 +119,12 @@ for entry in editorial.eserleri_bul():
                             simple=item['metin'], trust=trust(item['guven']), photoId=photo['id'],
                             sourceId=source(item['kaynak']), showCard=item['kart'], highlights=item['vurgu'],
                             interior=item['ic'], routeOnly=bool(item.get('rota')), flow=flow(item.get('akis')),
+                            **({'textEn': item['metin_en'], 'simpleEn': item['metin_en'], 'titleEn': photo['titleEn']} if item.get('metin_en') else {}),
                             **({'camera': camera(item['aci'])} if item['aci'] else {})))
     # "Eser hakkında": one chapter per heading of eser-hakkinda.md and its paragraphs, as in the prototype (a site
     # without eser-hakkinda-okuma.md still gets the reading page, with its plain text); the reading layer of
     # eser-hakkinda-okuma.md (verbatim-checked by okuma_oku, which warns and drops what the book text lacks) and the
     # book photographs of kitap-fotograflari.md.
-    headings = editorial.hakkinda_oku(folder)
     terms = editorial.okuma_oku(folder, headings)
     sections, chapters, pages = [], [], []
     for section in headings:
@@ -126,7 +135,7 @@ for entry in editorial.eserleri_bul():
         view = reading['ucd']
         parts = [x for x in view['parcalar'] if x != 'Merkez'] if view else []
         text = ' '.join(p['metin'] for p in section['paragraflar'])
-        chapters.append(dict(id=chapter_id, title=name, kind=kind, reading=dict(
+        chapters.append(dict(id=chapter_id, title=name, **({'titleEn': section['baslik_en']} if section.get('baslik_en') else {}), kind=kind, reading=dict(
             summary=reading['ozet'],
             figures=[dict(value=r['deger'], label=r['etiket'], evidence=r['kanit']) for r in reading['rakam']],
             quotes=[dict(text=q['metin'], by=q['kim'] or None) for q in reading['alinti']],
@@ -136,7 +145,8 @@ for entry in editorial.eserleri_bul():
             interior=bool(view and view['ici']), focusParts=parts)))
         for p in section['paragraflar']:
             sections.append(dict(id=f'{sid}-section-{len(sections)+1}', kind=kind, title=name, chapterId=chapter_id,
-                                 body=p['metin'], trust=trust(p['guven']), sourceId=source(p['kaynak']), photos=[]))
+                                 body=p['metin'], **({'bodyEn': p['metin_en']} if p.get('metin_en') else {}), **({'titleEn': section['baslik_en']} if section.get('baslik_en') else {}),
+                                 trust=trust(p['guven']), sourceId=source(p['kaynak']), photos=[]))
             pages.append(p['_sayfa'])
     # Book photographs (kitap-fotograflari.md): each goes after the last paragraph that starts on or before its page,
     # as in the prototype's kitap_fotolari; the paragraphs outside the photographed pages do not take any. A photograph
@@ -171,12 +181,12 @@ for entry in editorial.eserleri_bul():
     if cover_name and cover_name not in by_name:
         raise ValueError(f'Missing about cover photograph: {folder} {cover_name}')
     part_cards = []
-    for card in editorial.parcalar_oku(folder):
+    for card in card_items:
         missing = [f for f in card['fotolar'] if f not in by_name]
         if missing:
             raise ValueError(f'Missing part card photograph: {folder} {", ".join(missing)}')
         part_cards.append(dict(id=f'{sid}-part-{len(part_cards)+1}', parts=card['adlar'], title=card['baslik'],
-                               body=card['metin'], photoIds=[by_name[f]['id'] for f in card['fotolar']],
+                               body=card['metin'], **({'titleEn': card['baslik_en']} if card.get('baslik_en') else {}), **({'bodyEn': card['metin_en']} if card.get('metin_en') else {}), photoIds=[by_name[f]['id'] for f in card['fotolar']],
                                trust=trust(card['guven']), sourceId=source(card['kaynak'])))
     # Site tasks and badges (§11.44): icerik/gorevler.json where the site has one. The photograph is a gallery photograph
     # named in fotograflar.md (like a story's); the model part names are checked against the model by the importer.
@@ -184,6 +194,8 @@ for entry in editorial.eserleri_bul():
     tasks_path = root / 'eserler' / folder / 'icerik/gorevler.json'
     if tasks_path.is_file():
         data = json.loads(tasks_path.read_text())
+        en_path = root / 'eserler' / folder / 'icerik/en/gorevler.json'
+        task_en = json.loads(en_path.read_text()) if en_path.is_file() else {}
         for g in data['gorevler']:
             where = f'{folder} {g.get("id")}'
             photo_name = g.get('gorsel')
@@ -191,19 +203,23 @@ for entry in editorial.eserleri_bul():
                 raise ValueError(f'Missing task photograph: {where} {photo_name}')
             common = dict(id=g['id'], title=g['baslik'], photoId=by_name[photo_name]['id'] if photo_name else None,
                           source=g.get('kaynak') or None, trust=trust(g['guven']))
+            en = task_en.get(g['id'], {})
+            if en:
+                common.update(titleEn=en['baslik'], promptEn=en.get('soru') or en['gorev'])
             if g['tur'] == 'soru':
                 options = g['secenekler']
                 if not 2 <= len(options) <= 6 or not isinstance(g['dogru'], int) or not 0 <= g['dogru'] < len(options):
                     raise ValueError(f'Bad options or answer: {where}')
                 tasks.append(dict(common, kind='quiz', prompt=g['soru'], part=g.get('parca') or None, correctIndex=g['dogru'],
                                   details=dict(options=options, hints=g.get('ipuclari') or [], correctText=g['dogru_metin'],
-                                               wrongText=g['yanlis_metin'], fromHome=bool(g.get('evden_cozulur')))))
+                                               wrongText=g['yanlis_metin'], fromHome=bool(g.get('evden_cozulur')),
+                                               **({'optionsEn': en['secenekler'], 'hintsEn': en['ipuclari'], 'correctTextEn': en['dogru_metin'], 'wrongTextEn': en['yanlis_metin']} if en else {}))))
             elif g['tur'] == 'saha':
                 home = g.get('evden')
                 tasks.append(dict(common, kind='field', prompt=g['gorev'], part=None, correctIndex=None,
-                                  details=dict(onSite=dict(text=g['yerinde']['yap'], radiusM=int(g['yerinde']['konum_yaricap_m'])),
-                                               fromHome=dict(text=home['yap'], part=home['parca']) if home else None,
-                                               doneText=g['tamam_metin'])))
+                                  details=dict(onSite=dict(text=g['yerinde']['yap'], radiusM=int(g['yerinde']['konum_yaricap_m']), **({'textEn': en['yerinde']} if en else {})),
+                                               fromHome=dict(text=home['yap'], part=home['parca'], **({'textEn': en['evden']} if en else {})) if home else None,
+                                               doneText=g['tamam_metin'], **({'doneTextEn': en['tamam_metin']} if en else {}))))
             else:
                 raise ValueError(f'Unknown task type: {where} {g["tur"]}')
         task_ids = {t['id'] for t in tasks}
@@ -217,7 +233,9 @@ for entry in editorial.eserleri_bul():
                 kind, task_id = 'task', condition['gorev']
             else:
                 raise ValueError(f'Badge condition names no task: {folder} {b["id"]}')
+            badge_en = task_en.get(b['id'], {})
             badges.append(dict(id=b['id'], title=b['ad'], text=b['metin'], condition=kind, taskId=task_id,
+                               **({'titleEn': badge_en['ad'], 'textEn': badge_en['metin']} if badge_en else {}),
                                onSiteLabel=bool(b.get('yerinde_etiketi'))))
     history = []
     # A photo-only site may have no archive package; the viewer then says there is no old image yet.
@@ -253,6 +271,15 @@ for entry in editorial.eserleri_bul():
     # Night theme model (1 Nov 2026): `glb_gece` names its export like `glb`; the presentation file is the one used.
     if model and model_info.get('glb_gece'):
         model['nightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece"]}_sunum.glb'
+    # «İç mekânı gizle» (ic_gizle, 4 Nov 2026): only for buildings closed all round, set per site after looking at it.
+    if model and model_info.get('ic_gizle'):
+        model['hideClosedInterior'] = True
+    # The map's baked files (glb_harita_pisik, glb_gece_harita_pisik, 4 Nov 2026), only once approved (pisik_onay); the
+    # night one only beside a night model, as the map draws it in place of that.
+    if model and model_info.get('pisik_onay') and model_info.get('glb_harita_pisik'):
+        model['mapBakedFile'] = f'eserler/{folder}/3d/export/{model_info["glb_harita_pisik"]}.glb'
+        if model.get('nightFile') and model_info.get('glb_gece_harita_pisik'):
+            model['mapBakedNightFile'] = f'eserler/{folder}/3d/export/{model_info["glb_gece_harita_pisik"]}.glb'
     # Gallery photographs' 3D views (model.json `foto_acilari`, 2 Nov 2026): the site page's ‹ › arrows beside
     # «İçini göster» go through them. Each names a gallery photograph by its number and gives the "Açı" words of a
     # story sentence (hedef, azimut, egim, uzaklik); `ic` opens the model for it. A view set in the panel wins.
@@ -270,7 +297,7 @@ for entry in editorial.eserleri_bul():
     if display_order is not None and (isinstance(display_order, bool) or not isinstance(display_order, int) or display_order < 1):
         raise ValueError(f'sira must be an integer of at least 1: {folder} {display_order!r}')
     gallery = sorted((p for p in photos if p['galleryPosition'] is not None), key=lambda p:p['galleryPosition'])
-    result['sites'].append(dict(id=sid, name=entry['ad'], city=entry['il'],
+    result['sites'].append(dict(id=sid, name=entry['ad'], **({'nameEn': entry['ad_en']} if entry.get('ad_en') else {}), **({'descriptionEn': entry['kisa_en']} if entry.get('kisa_en') else {}), city=entry['il'],
         district=entry['ilce'], year=entry['yil'], architect='—',
         patron=entry['yaptiran'], kind=KINDS[entry['tur']], coordinates=coords, minutes=max(1,round(sum(len(s['text'].split()) for s in stories)/130)) if stories else 0,
         displayOrder=display_order,

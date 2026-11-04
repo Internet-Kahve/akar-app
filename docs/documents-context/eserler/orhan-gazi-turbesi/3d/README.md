@@ -2,6 +2,23 @@
 
 Güncel sürüm **v06** (29 Ekim 2026; iç mekân, aşağıda). Önceki not: güncel sürüm **v02** (21 Ekim 2026; v01 blend, GLB ve kontrol dosyaları **silindi**). Bu klasörde yalnızca son sürüm tutulur; sürümler aşağıdaki tabloda kayıtlıdır, kararlar ve kanıtlar `../orhan-gazi-turbesi_notlar.md` §1 ve `kontrol/v01/kontrol_ozeti.md` içinde.
 
+## Pişirilmiş harita sürümü (4 Kasım 2026)
+
+Gündüz `export/orhan-gazi-turbesi_v06_harita_pisik.glb`, gece `export/night/orhan-gazi-turbesi_v06_night_harita_pisik.glb`. Bina `Harita_Pisik`, zemin gölgesi `Harita_Golge`; ikisi de `KHR_materials_unlit`. `pisik_onay` yok; onay Muhammed’in. Yöntem Ulucami’ninkidir (`ulu-cami/3d/README.md`): Cycles ara pişirmesi, görünürlüğe göre UV, atlas mevcut harita dosyasından uygulamanın ışığıyla yansıtılır (2048 px). Güneş yerel 220° (on_yonu 182 + 40 − yaw 2), 50°.
+
+Ölçüm (`_kutuphane/blend_hat/pisik_olcum.mjs → genelOlc`): mevcut `orhan-gazi-turbesi_v06.glb` / `night/orhan-gazi-turbesi_v06_night.glb` ile 780 × 1688, 36,87°, eğim 60°, 440 m; bina merkezine 8 yön, bütün bina maskesi. Görüntüler `kontrol/v06_pisik/uygulama/<etiket>/` (mevcut | pişmiş | fark), tablolar `kontrol/v06_pisik/rapor.json → uygulama_olcum`. Teslim `son` etiketidir.
+
+| 440 m | Medyan | p10 | p90 | Renk sapması | KB | Sınır KB | Sonuç |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gündüz | 1.017 | 0.968 | 1.132 | %1.15 | 243.1 | 340.7 | kaldı |
+| Gece | 1.004 | 0.979 | 1.043 | %0.33 | 199.4 | 234.7 | geçti |
+
+220 m (yalnız rapor): gündüz 1.01 / 0.98 / 1.123 / %0.56; gece 1.003 / 0.979 / 1.042 / %0.11. Yapısal doğrulama: düğümler, kutu, iki ışıksız malzeme, üçgen geçti.
+
+**Kaldı: gündüz renk sapması %1,15 (sınır %0,5).** Gece geçti. Neden: kubbe tepesi ve kurşun çatıdaki güneş parlaması mevcut modelde bakış yönüyle yer değiştirir (küçük, kubbeli yapıda her yönden bir parlama lekesi görünür); ışıksız dokuda sabit kalır. Deneme 1'de güneşe karşı (yerel 45°) %5,2, diğer yönler %0,6–1,2. Denemeler (bakış ağırlığı): 1 güneş arkada %1,50; 2 eşit %1,31; 3 güneşe karşı %1,15 (teslim; medyan 1,017, p90 1,132). Sınır gevşetilmedi.
+
+Üretim (repo kökünden, `GT_DIR` glTF Transform + draco3dgltf + sharp kurulumu): `blender -b --python-exit-code 1 --python docs/documents-context/eserler/orhan-gazi-turbesi/3d/build/pisir_harita.py -- hepsi`; yalnız yansıtma ve ölçüm: `node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/orhan-gazi-turbesi/3d v06 --yansit-uygulama [--agirlik=gunes|esit|karsi] --uygulama son`.
+
 ## Güncel sürüm: v06 (29 Ekim 2026) · iç mekân («İçini göster» + ayrıntı; iç parçalar yalnız sunumda)
 
 Betik `build/build_v06.py` → `build/doku_ic_v06.py` (atlas) → `build/build_v06_ic.py` (Blender, v05 blend'ini açar, dokunmaz) → `_kutuphane/blend_hat/uret.py`. **İki dosya:** sunum GLB'si dış + iç; harita GLB'si yalnız dış (`model.json → ic_parcalar`). **Kalkan gruplar** (`ortu_gruplari`): `Kubbe` + `Ic_Kubbe` → `Dehliz`. Kontrol `kontrol/v06/` (`icini_goster.png`, `ic_detay.png`, `ic_kaynak.png`, `dis_esitlik.png`, `tiklama_haritasi.png`, `doku_ic_atlas.png`, `parca_dogrulama.json`, `ic_rapor.json`, `blend_rapor.json`).

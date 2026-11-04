@@ -1,0 +1,276 @@
+<!doctype html>
+<!-- AKAR · pişirilmiş harita kontrol görüntüsü (3 Kasım 2026). pisik_gorsel.mjs açar; uygulamanın harita ışığıyla aynı kurulum
+     (apps/web/src/lib/scene-light.ts MAP_LIGHT / MAP_NIGHT_LIGHT, ACES, gölge zemini). Pişmiş model ışıksız çizilir, ışık eklenmez. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}</style>
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script></head>
+<body><script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+const IS = window.lights;
+const dr = new DRACOLoader().setDecoderPath('/three/examples/jsm/libs/draco/gltf/');
+const ld = new GLTFLoader().setDRACOLoader(dr);
+const cache = new Map();
+const yukle = u => { if (!cache.has(u)) cache.set(u,new Promise((ok, no) => ld.load(u, g => ok(g.scene), undefined, no))); return cache.get(u); };
+const W = 900, H = 700;
+const display = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+const sample = new THREE.WebGLRenderer({antialias:false,preserveDrawingBuffer:true});
+for (const r of [display,sample]) { r.setSize(W, H); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap;
+r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; } document.body.appendChild(display.domElement);
+const onbellek = {};
+// taban: ana parçanın yatay ortası, en alt nokta y = 0 (model-anchor.ts modelBase gibi); Harita_Golge tabana katılmaz
+function taban(m, ana) {
+  m.updateMatrixWorld(true); const parts = new THREE.Box3();
+  m.traverse(o => { if (o.isMesh && o.name !== 'Harita_Golge') parts.expandByObject(o); });
+  const a = ana && m.getObjectByName(ana); const c = (a ? new THREE.Box3().setFromObject(a) : parts).getCenter(new THREE.Vector3());
+  return { ofset: new THREE.Vector3(-c.x, -parts.min.y, -c.z), boy: parts.getSize(new THREE.Vector3()) };
+}
+window.ciz = async ({ dosya, ref, pisik, tema, kamAz, gunesAz, ana, kamEgim = 45, yakin = false, iskeletsiz = false, ornek = false, uv = false, maske = false }) => {
+  const r = ornek || uv ? sample : display;
+  r.setSize(ornek || uv ? 1600 : W, ornek || uv ? 1244 : H);
+  const L = IS[tema]; r.toneMappingExposure = L.exposure; r.toneMapping = (maske || uv || ornek) ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(maske ? 0x000000 : (tema === 'gece' ? 0x1d2533 : 0xe9e5dc));
+  const m = (await yukle(dosya)).clone(true);
+  if (maske) {
+    m.traverse(o => {
+      if (!o.isMesh) return;
+      o.visible = o.name !== 'Harita_Golge';
+      const text = o.material.name.startsWith('Mahya_Yazi');
+      const b = new THREE.MeshBasicMaterial({color:0xffffff, map:text ? o.material.map : null, transparent:text, side:o.material.side});
+      b.onBeforeCompile = shader => {
+        shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n diffuseColor.rgb=vec3(1.0);');
+      };
+      o.material = b;
+    });
+    pisik = true;
+  }
+  const R = onbellek[ref] ??= taban(await yukle(ref), ana);
+  m.position.copy(R.ofset);
+  if (dosya.endsWith('_sunum.glb')) {
+    const centre = o => new THREE.Box3().setFromObject(o.getObjectByName(ana)).getCenter(new THREE.Vector3());
+    const delta = centre(await yukle(ref)).sub(centre(await yukle(dosya)));
+    m.position.add(delta);
+    m.traverse(o => { if (/^(Zemin|Cevre|Olcek)/.test(o.name)) o.visible = false; });
+  }
+  if (uv) {
+    sc.background.setHex(0xffffff);
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: 'varying vec2 coords; void main(){coords=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader: 'varying vec2 coords; void main(){vec2 p=floor(clamp(coords,0.,0.999999)*2048.); gl_FragColor=vec4(floor(p/8.),mod(p.x,8.)+8.*mod(p.y,8.),255.)/255.;}'
+    });
+    m.traverse(o => { if(o.isMesh) { o.material=mat; o.visible=o.name!=="Harita_Golge" && !(iskeletsiz && o.name==="Sadirvan_Iskeleti"); }});
+  } sc.add(m);
+  const yari = R.boy.length() * 0.65;
+  const d = (az, el) => { const a = THREE.MathUtils.degToRad(az), e = THREE.MathUtils.degToRad(el); return new THREE.Vector3(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)); };
+  const merkez = new THREE.Vector3(0, R.boy.y * 0.35, 0);
+  if (!pisik) {
+    m.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+    sc.add(new THREE.HemisphereLight(L.sky, L.ground, L.ambient));
+    const s = new THREE.DirectionalLight(L.colour, L.sun); s.castShadow = true; s.shadow.mapSize.set(2048, 2048); s.shadow.bias = -0.0004;
+    s.position.copy(d(gunesAz, IS.gunduz.elevationDeg).multiplyScalar(yari * 2.5)).add(merkez); s.target.position.copy(merkez); s.shadow.normalBias = yari / 2048;
+    Object.assign(s.shadow.camera, { left: -yari, right: yari, top: yari, bottom: -yari, near: yari * 0.5, far: yari * 5 }); s.shadow.camera.updateProjectionMatrix();
+    sc.add(s, s.target);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(yari * 4, yari * 4), new THREE.ShadowMaterial({ opacity: L.shadowOpacity }));
+    f.rotation.x = -Math.PI / 2; f.position.y = 0.02; f.receiveShadow = true; sc.add(f);
+  }
+  if (yakin) {
+    const dome = m.getObjectByName('Sadirvan_Kubbe');
+    m.updateMatrixWorld(true); new THREE.Box3().setFromObject(dome).getCenter(merkez);
+  }
+  const k = new THREE.OrthographicCamera(-yari * 0.82 * W / H, yari * 0.82 * W / H, yari * 0.82, -yari * 0.82, 0.1, yari * 20);
+  if (yakin) { k.zoom = 6; k.updateProjectionMatrix(); }
+  k.position.copy(d(kamAz, kamEgim).multiplyScalar(yari * 5)).add(merkez); k.lookAt(merkez);
+  r.render(sc, k);
+  sc.traverse(o => { if (o.shadow) o.shadow.dispose(); });
+  return r.domElement.toDataURL('image/png');
+};
+// 4 Kasım 2026: uygulamanın telefondaki harita görünümü (apps/web/src/lib/map-models.ts + scene-light.ts addMapLights/aimMapSun).
+// MapLibre tuvali kenar yumuşatmasız (canvasContextAttributes verilmiyor), piksel oranı 2: 390 × 844 CSS = 780 × 1688.
+// Işıklı dosya: yarımküre + güneş, 1024 gölge haritası, yarıçap = kutu köşegeni × 0,65, ShadowMaterial zemin. Bütün malzemeleri
+// ışıksız dosya (gece modeli, pişmiş dosya) isBaked: gölgesiz. Kamera: dikey 36,87° (MapLibre), eğim 60°, hedefe uzaklık metre.
+// maske: {dugum:[ad], malzeme?:[ad]} → seçilen parçalar beyaz, kalan bina siyah (örter), Harita_Golge yok.
+const app = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+app.setPixelRatio(1); app.shadowMap.enabled = true; app.shadowMap.type = THREE.PCFShadowMap; app.outputColorSpace = THREE.SRGBColorSpace;
+// map-models.ts load + place: ışıklı dosyada yarımküre, güneş (aimMapSun), gölge zemini; kutu bütün modelin
+function haritaIsigi(sc, m, L, gunesAz, golgePx) {
+  m.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+  const kutu = new THREE.Box3().setFromObject(m), centre = kutu.getCenter(new THREE.Vector3());
+  const radius = Math.max(4, kutu.getSize(new THREE.Vector3()).length() * 0.65);
+  sc.add(new THREE.HemisphereLight(L.sky, L.ground, L.ambient));
+  const s = new THREE.DirectionalLight(L.colour, L.sun); s.castShadow = true; s.shadow.mapSize.set(golgePx, golgePx); s.shadow.bias = -0.0004;
+  const a = THREE.MathUtils.degToRad(gunesAz), e = THREE.MathUtils.degToRad(IS.gunduz.elevationDeg);
+  s.position.set(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)).multiplyScalar(radius * 2.5).add(centre);
+  s.target.position.copy(centre); s.shadow.normalBias = radius / golgePx;
+  Object.assign(s.shadow.camera, { left: -radius, right: radius, top: radius, bottom: -radius, near: radius * 0.5, far: radius * 5 }); s.shadow.camera.updateProjectionMatrix();
+  sc.add(s, s.target);
+  // scene-light.ts shadowFloor: derinlik yazmaz, polygonOffset 2 / 8 (yoksa avlu döşemesinin üstüne çizilip gölgeyi iki kat koyulaştırır)
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: L.shadowOpacity, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 8 }));
+  f.rotation.x = -Math.PI / 2; f.scale.set(radius * 2, radius * 2, 1); f.position.set(centre.x, 0.02, centre.z); f.receiveShadow = true; f.renderOrder = -1; sc.add(f);
+}
+window.uygulama = async ({ dosya, ref, tema, hedef, kamAz, egim = 60, uzaklik = 440, gunesAz, ana, maske = null, W = 780, H = 1688, fov = 36.87, golgePx = 1024, doku = null, dokuUrl = null }) => {
+  app.setSize(W, H);
+  const L = IS[tema]; app.toneMappingExposure = L.exposure; app.toneMapping = maske ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(maske ? 0x000000 : (tema === 'gece' ? 0x1d2533 : 0xe9e5dc));
+  const m = (await yukle(dosya)).clone(true);
+  const R = onbellek[ref] ??= taban(await yukle(ref), ana);
+  m.position.copy(R.ofset);
+  if (dosya.endsWith('_sunum.glb')) {   // ciz() ile aynı: ana parça ortası haritadakine oturur, çevre gizli
+    const centre = o => new THREE.Box3().setFromObject(o.getObjectByName(ana)).getCenter(new THREE.Vector3());
+    m.position.add(centre(await yukle(ref)).sub(centre(await yukle(dosya))));
+    m.traverse(o => { if (/^(Zemin|Cevre|Olcek)/.test(o.name)) o.visible = false; });
+  }
+  sc.add(m); m.updateMatrixWorld(true);
+  // deneme: doku='mipsiz' pişmiş atlasta mip süzmesini kapatır, 'yakin' en yakın texel (taşma nedenini ayırmak için)
+  if (doku) m.traverse(o => { const t = o.isMesh && o.material.map; if (!t || o.material.name !== 'Harita_Pisik') return; o.material = o.material.clone(); const u = t.clone();
+    const F = { yakin: [THREE.NearestFilter, THREE.NearestFilter, false], mipsiz: [THREE.LinearFilter, THREE.LinearFilter, false], yakin_mip: [THREE.NearestMipmapNearestFilter, THREE.NearestFilter, true], dogrusal_mip_yakin: [THREE.LinearMipmapNearestFilter, THREE.LinearFilter, true], yakin_mip_dogrusal: [THREE.NearestMipmapLinearFilter, THREE.NearestFilter, true] }[doku];
+    u.minFilter = F[0]; u.magFilter = F[1]; u.generateMipmaps = F[2]; u.needsUpdate = true; o.material.map = u; });
+  if (dokuUrl) { const t = await new THREE.TextureLoader().loadAsync(dokuUrl); t.flipY = false; t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;   // tanı: atlas yerine verilen doku
+    m.traverse(o => { if (o.isMesh && o.material.name === 'Harita_Pisik') { o.material = o.material.clone(); o.material.map = t; o.material.alphaTest = 0; o.material.toneMapped = false; } }); }
+  // map-models.ts settleBakedShadow: pişmiş zemin gölgesi haritanın üstünde, binanın altında (polygonOffset 2 / 8, renderOrder −1)
+  m.traverse(o => { if (o.isMesh && /^Harita_Golge/.test(o.material?.name ?? '')) { o.material.polygonOffset = true; o.material.polygonOffsetFactor = 2; o.material.polygonOffsetUnits = 8; o.renderOrder = -1; } });
+  let isiksiz = true; m.traverse(o => { if (o.isMesh && !o.material.isMeshBasicMaterial) isiksiz = false; });
+  if (maske) {
+    const secili = o => { if (maske.dugum[0] === '*') return true; let n = o; while (n && n !== m && !maske.dugum.includes(n.name)) n = n.parent; return n && n !== m && (!maske.malzeme || maske.malzeme.includes(o.material.name.replace(/\.\d{3}$/, '')) || maske.malzeme.includes(o.material.name)); };
+    m.traverse(o => { if (!o.isMesh) return; o.visible = o.name !== 'Harita_Golge' && o.material.name !== 'Harita_Golge';
+      o.material = new THREE.MeshBasicMaterial({ color: secili(o) ? 0xffffff : 0x000000, side: o.material.side }); });
+  } else if (!isiksiz) haritaIsigi(sc, m, L, gunesAz, golgePx);
+  const t = new THREE.Vector3(...hedef).add(R.ofset);
+  const az = THREE.MathUtils.degToRad(kamAz), el = THREE.MathUtils.degToRad(90 - egim);
+  const k = new THREE.PerspectiveCamera(fov, W / H, 1, 5000);
+  k.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).multiplyScalar(uzaklik).add(t); k.lookAt(t);
+  app.render(sc, k);
+  sc.traverse(o => { if (o.shadow) o.shadow.dispose(); });
+  const p = t.clone().project(k);
+  return { png: app.domElement.toDataURL('image/png'), x: (p.x + 1) / 2 * W, y: (1 - p.y) / 2 * H };
+};
+// 4 Kasım 2026, dördüncü deneme: atlas mevcut harita dosyasından yansıtılır (pisik_yansit.mjs yansitUygulama).
+// Her bakış ortografik, döşemeli; piksel texelden çok küçük (pikselM), texel = kendisine düşen piksellerin ağırlıklı ortalaması
+// (kutu süzgeci, doğrusal ışınım, ton eşlemesi öncesi). UV geçişi pişmiş dosyanın geometrisiyle (cam ve kafes opak), renk geçişi
+// mevcut dosyayla, uygulamanın ışığıyla (gündüz: 1024 gölge haritası; gece: ışıksız dosya). Ağırlık = bakış ağırlığı × (n·v)^usDik.
+// Komşusu boş ya da 2 texelden uzak olan piksel (siluet, örtüşme sınırı) alınmaz. Harita_Golge ve Mahya iki geçişte de gizli.
+// Dönüş: rgb (sRGB, örneklenmiş texeller), bayrak (255 örneklendi, 128 korunur: Mahya, 64 ada içinde ama örnek yok, 0 boş) PNG.
+window.yansitAtlas = async ({ mevcut, pismis, ref, ana, tema, gunesAz, bakislar, pikselM = 0.016, dosemePx = 2048, golgePx = 1024, atla = [], usDik = 2, mahyaRenk = false, komsuEn = 4 }) => {   // komsuEn: tutarlı olması gereken komşu sayısı (4 Kasım: ince şeritler için 3)
+  const N = 2048, T = dosemePx, L = IS[tema];
+  const r = sample; r.setSize(T, T); r.setPixelRatio(1);
+  const rtU = new THREE.WebGLRenderTarget(T, T, { type: THREE.FloatType, depthBuffer: true });
+  const rtR = new THREE.WebGLRenderTarget(T, T, { type: THREE.FloatType, depthBuffer: true });
+  const R = onbellek[ref] ??= taban(await yukle(ref), ana);
+  const mahyami = o => /^Mahya/.test(o.name) || (o.parent && /^Mahya/.test(o.parent.name));
+  const gizli = o => o.name === 'Harita_Golge' || o.material?.name === 'Harita_Golge' || (!mahyaRenk && mahyami(o)) || atla.includes(o.name);
+  // renk sahnesi
+  const scR = new THREE.Scene(); const mR = (await yukle(mevcut)).clone(true); mR.position.copy(R.ofset); scR.add(mR); mR.updateMatrixWorld(true);
+  let isiksiz = true; mR.traverse(o => { if (o.isMesh) { if (!o.material.isMeshBasicMaterial) isiksiz = false; if (gizli(o)) o.visible = false; } });
+  if (!isiksiz) haritaIsigi(scR, mR, L, gunesAz, golgePx);
+  // UV sahnesi: texel kimliği (x, y), yüzün bakışa dikliği
+  const scU = new THREE.Scene(); const mU = (await yukle(pismis)).clone(true); mU.position.copy(R.ofset); scU.add(mU);
+  const uvMat = side => new THREE.ShaderMaterial({ side, glslVersion: THREE.GLSL3,
+    vertexShader: 'out vec2 vU; out vec3 vP; void main(){ vU = uv; vec4 p = modelViewMatrix * vec4(position, 1.); vP = p.xyz; gl_Position = projectionMatrix * p; }',
+    fragmentShader: 'in vec2 vU; in vec3 vP; out vec4 c; void main(){ vec3 n = normalize(cross(dFdx(vP), dFdy(vP))); c = vec4(floor(clamp(vU, 0., .999999) * 2048.), abs(n.z), 1.); }' });
+  const mats = {}; mU.traverse(o => { if (!o.isMesh) return; o.visible = !gizli(o); o.material = mats[o.material.side] ??= uvMat(o.material.side); });
+  // ada doluluğu: UV uzayında çizim (texel merkezi kapsanan texeller)
+  const rtA = new THREE.WebGLRenderTarget(N, N, { type: THREE.FloatType }); r.setSize(N, N);
+  const occMat = new THREE.ShaderMaterial({ side: THREE.DoubleSide, glslVersion: THREE.GLSL3, vertexShader: 'void main(){ gl_Position = vec4(uv * 2. - 1., 0., 1.); }', fragmentShader: 'out vec4 c; void main(){ c = vec4(1.); }' });
+  // Mahya (ve atla) texelleri 0,5: önceki atlastan aynen kalır; Harita_Golge çizilmez
+  const occKoru = new THREE.ShaderMaterial({ side: THREE.DoubleSide, glslVersion: THREE.GLSL3, vertexShader: 'void main(){ gl_Position = vec4(uv * 2. - 1., 0., 1.); }', fragmentShader: 'out vec4 c; void main(){ c = vec4(.5); }' });
+  const scA = new THREE.Scene(); const mA = (await yukle(pismis)).clone(true);
+  mA.traverse(o => { if (!o.isMesh) return; const golge = o.name === 'Harita_Golge' || o.material?.name === 'Harita_Golge'; o.visible = !golge; o.material = gizli(o) || mahyami(o) ? occKoru : occMat; o.frustumCulled = false; }); scA.add(mA);
+  occMat.depthTest = occKoru.depthTest = false; occKoru.transparent = false; scA.traverse(o => { if (o.isMesh && o.material === occKoru) o.renderOrder = 1; });
+  r.setRenderTarget(rtA); r.setClearColor(0x000000, 0); r.clear(); r.render(scA, new THREE.Camera());
+  const occ = new Float32Array(4 * N * N); r.readRenderTargetPixels(rtA, 0, 0, N, N, occ); rtA.dispose();
+  r.setSize(T, T);
+  // bakışlar
+  const sum = new Float32Array(3 * N * N), w = new Float32Array(N * N);
+  const kutu = new THREE.Box3(); mU.traverse(o => { if (o.isMesh && o.visible) kutu.expandByObject(o); });
+  const kose = []; for (const x of [kutu.min.x, kutu.max.x]) for (const y of [kutu.min.y, kutu.max.y]) for (const z of [kutu.min.z, kutu.max.z]) kose.push(new THREE.Vector3(x, y, z));
+  const merkez = kutu.getCenter(new THREE.Vector3()), uzak = kutu.getSize(new THREE.Vector3()).length() * 2;
+  const U = new Float32Array(4 * T * T), C = new Float32Array(4 * T * T); let doseme = 0, alinan = 0;
+  for (const [az, el, bw] of bakislar) {
+    const a = THREE.MathUtils.degToRad(az), e = THREE.MathUtils.degToRad(el);
+    const d = new THREE.Vector3(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e));
+    const k = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 2 * uzak); k.position.copy(merkez).addScaledVector(d, uzak); k.up.set(0, 1, 0);
+    if (el > 85) k.up.set(0, 0, -1); k.lookAt(merkez); k.updateMatrixWorld(true);
+    const inv = k.matrixWorldInverse; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const p of kose) { const q = p.clone().applyMatrix4(inv); x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y); }
+    const D = T * pikselM, nx = Math.ceil((x1 - x0) / D), ny = Math.ceil((y1 - y0) / D);
+    for (let ty = 0; ty < ny; ty++) for (let tx = 0; tx < nx; tx++) {
+      Object.assign(k, { left: x0 + tx * D, right: x0 + (tx + 1) * D, bottom: y0 + ty * D, top: y0 + (ty + 1) * D }); k.updateProjectionMatrix();
+      r.setRenderTarget(rtU); r.setClearColor(0x000000, 0); r.clear(); r.render(scU, k); r.readRenderTargetPixels(rtU, 0, 0, T, T, U);
+      let bos = true; for (let i = 3; i < U.length; i += 4 * 97) if (U[i] > 0.5) { bos = false; break; }
+      if (bos) { for (let i = 3; i < U.length; i += 4) if (U[i] > 0.5) { bos = false; break; } }
+      if (bos) continue;
+      r.setRenderTarget(rtR); r.setClearColor(0x000000, 0); r.clear(); r.render(scR, k); r.readRenderTargetPixels(rtR, 0, 0, T, T, C); doseme++;
+      for (let y = 1; y < T - 1; y++) for (let x = 1; x < T - 1; x++) {
+        const i = 4 * (y * T + x); if (U[i + 3] < 0.5 || U[i + 2] < 0.2) continue;
+        let iyi = 0;
+        for (const j of [i - 4, i + 4, i - 4 * T, i + 4 * T]) if (U[j + 3] >= 0.5 && Math.abs(U[j] - U[i]) + Math.abs(U[j + 1] - U[i + 1]) <= 2) iyi++;
+        if (iyi < komsuEn) continue;
+        const t = U[i + 1] * N + U[i], ww = bw * U[i + 2] ** usDik;
+        w[t] += ww; sum[3 * t] += ww * C[i]; sum[3 * t + 1] += ww * C[i + 1]; sum[3 * t + 2] += ww * C[i + 2]; alinan++;
+      }
+    }
+  }
+  r.setRenderTarget(null); rtU.dispose(); rtR.dispose(); scR.traverse(o => { if (o.shadow) o.shadow.dispose(); });
+  // çıktı
+  const cv = document.createElement('canvas'); cv.width = cv.height = N; const g = cv.getContext('2d');
+  const rgb = g.createImageData(N, N), bay = g.createImageData(N, N);
+  const srgb = x => { x = Math.min(1, Math.max(0, x)); return Math.round(255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055)); };
+  let ornek = 0, adaBos = 0;
+  for (let t = 0; t < N * N; t++) {
+    const f = t, o = 4 * t; bay.data[o + 3] = rgb.data[o + 3] = 255;
+    if (occ[4 * f + 3] > 0.25 && occ[4 * f + 3] < 0.75) {   // koru (Mahya): örneği varsa rengi 160 bayrağıyla verilir
+      if (w[t] > 0) { for (let c = 0; c < 3; c++) rgb.data[o + c] = srgb(sum[3 * t + c] / w[t]); bay.data[o] = bay.data[o + 1] = bay.data[o + 2] = 160; }
+      else bay.data[o] = bay.data[o + 1] = bay.data[o + 2] = 128; }
+    else if (w[t] > 0) { for (let c = 0; c < 3; c++) rgb.data[o + c] = srgb(sum[3 * t + c] / w[t]); bay.data[o] = bay.data[o + 1] = bay.data[o + 2] = 255; ornek++; }
+    else if (occ[4 * f + 3] > 0.5) { bay.data[o] = bay.data[o + 1] = bay.data[o + 2] = 64; adaBos++; }
+  }
+  g.putImageData(rgb, 0, 0); const rgbPng = cv.toDataURL('image/png'); g.putImageData(bay, 0, 0); const bayPng = cv.toDataURL('image/png');
+  return { rgb: rgbPng, bayrak: bayPng, doseme, alinan_piksel: alinan, orneklenen_texel: ornek, ada_ornek_yok: adaBos };
+};
+// Mahya (gece): mevcut dosyada ışıksız, kendi dokusu (yazı, alfa) ve tel rengiyle çizilir. Pişmiş Mahya köşeleri konumla mevcuttakilere
+// eşlenir (en yakın köşe, ≤ 5 cm), yeni UV uzayında eski UV'den doku okunur (three sRGB dokuyu GPU'da doğrusala çevirir); 16 alt-piksel kaydırmalı geçişin ortalaması (alfa ağırlıklı renk, ortalama alfa).
+window.mahyaAktar = async ({ mevcut, pismis, kaynak = null }) => {   // kaynak: başka bir pişmiş dosyanın mahyası (atlas renk + alfa)
+  if (kaynak) mevcut = kaynak;
+  const N = 2048, bul = (root) => { const l = []; root.traverse(o => { if (o.isMesh) { let n = o; while (n && !/^Mahya/.test(n.name)) n = n.parent; if (n) l.push(o); } }); return l; };
+  const eski = bul(await yukle(mevcut)), yeni = bul(await yukle(pismis));
+  const anah = (p) => p.map(v => Math.round(v * 500)).join(',');
+  const tablo = new Map();
+  for (const o of eski) { const g = o.geometry, P = g.attributes.position, Uv = g.attributes.uv; o.updateMatrixWorld(true);
+    const yazi = kaynak || /^Mahya_Yazi/.test(o.material.name), v = new THREE.Vector3();
+    for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); tablo.set(tablo.size, [Uv ? Uv.getX(i) : 0, Uv ? Uv.getY(i) : 0, yazi ? 1 : 0, v.x, v.y, v.z]); } }
+  const liste = [...tablo.values()]; let enUzak = 0;
+  const yakin = (x, y, z) => { let b = null, bd = 0.05 ** 2; for (const t of liste) { const d = (t[3] - x) ** 2 + (t[4] - y) ** 2 + (t[5] - z) ** 2; if (d < bd) { bd = d; b = t; } } if (b) enUzak = Math.max(enUzak, Math.sqrt(bd)); return b; };
+  const yazim = kaynak ? eski[0].material : eski.find(o => /^Mahya_Yazi/.test(o.material.name))?.material, telm = eski.find(o => !/^Mahya_Yazi/.test(o.material.name))?.material;
+  const r = sample; r.setSize(N, N);
+  const rt = new THREE.WebGLRenderTarget(N, N, { type: THREE.FloatType }); const sc = new THREE.Scene(); let eslesmeyen = 0, kose = 0;
+  const jit = { value: new THREE.Vector2() };
+  for (const o of yeni) { const g = o.geometry.clone(), P = g.attributes.position; o.updateMatrixWorld(true); const v = new THREE.Vector3();
+    const eu = new Float32Array(2 * P.count), tur = new Float32Array(P.count);
+    for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); const t = yakin(v.x, v.y, v.z); kose++;
+      if (!t) { eslesmeyen++; tur[i] = -1; continue; } eu[2 * i] = t[0]; eu[2 * i + 1] = t[1]; tur[i] = t[2]; }
+    g.setAttribute('eskiUv', new THREE.BufferAttribute(eu, 2)); g.setAttribute('tur', new THREE.BufferAttribute(tur, 1));
+    const m = new THREE.ShaderMaterial({ side: THREE.DoubleSide, glslVersion: THREE.GLSL3, depthTest: false, transparent: false,
+      uniforms: { map: { value: yazim.map }, yf: { value: new THREE.Vector4(...yazim.color.toArray(), yazim.opacity) }, tf: { value: new THREE.Vector4(...(telm ? telm.color.toArray() : [0, 0, 0]), 1) }, jit },
+      vertexShader: 'in vec2 eskiUv; in float tur; out vec2 vE; out float vT; uniform vec2 jit; void main(){ vE = eskiUv; vT = tur; gl_Position = vec4(uv * 2. - 1. + jit, 0., 1.); }',
+      fragmentShader: 'in vec2 vE; in float vT; out vec4 c; uniform sampler2D map; uniform vec4 yf, tf; void main(){ if (vT < -.5) discard; if (vT > .5) { vec4 t = texture(map, vE); vec3 l = t.rgb; c = vec4(yf.rgb * l * t.a * yf.a, t.a * yf.a); } else c = vec4(tf.rgb, 1.); }' });
+    const me = new THREE.Mesh(g, m); me.frustumCulled = false; sc.add(me); }
+  const top = new Float32Array(4 * N * N), buf = new Float32Array(4 * N * N); const K = 4;
+  for (let a = 0; a < K; a++) for (let b = 0; b < K; b++) {
+    jit.value.set(((a + 0.5) / K - 0.5) * 2 / N, ((b + 0.5) / K - 0.5) * 2 / N);
+    r.setRenderTarget(rt); r.setClearColor(0x000000, 0); r.clear(); r.render(sc, new THREE.Camera()); r.readRenderTargetPixels(rt, 0, 0, N, N, buf);
+    for (let i = 0; i < buf.length; i++) top[i] += buf[i] / (K * K);
+  }
+  r.setRenderTarget(null); rt.dispose();
+  const cv = document.createElement('canvas'); cv.width = cv.height = N; const gx = cv.getContext('2d'); const rgb = gx.createImageData(N, N), al = gx.createImageData(N, N);
+  const srgb = x => { x = Math.min(1, Math.max(0, x)); return Math.round(255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055)); };
+  let dolu = 0;
+  for (let t = 0; t < N * N; t++) { const o = 4 * t, A = top[o + 3]; rgb.data[o + 3] = al.data[o + 3] = 255;
+    if (A > 1e-4) { dolu++; for (let c = 0; c < 3; c++) rgb.data[o + c] = srgb(top[o + c] / A); al.data[o] = al.data[o + 1] = al.data[o + 2] = Math.round(255 * Math.min(1, A)); } }
+  gx.putImageData(rgb, 0, 0); const r1 = cv.toDataURL('image/png'); gx.putImageData(al, 0, 0); const r2 = cv.toDataURL('image/png');
+  return { rgb: r1, alfa: r2, texel: dolu, kose, eslesmeyen, en_uzak_m: +enUzak.toFixed(4) };
+};
+// Ölçüm hedefi: bütün modelin (Harita_Golge hariç) kutu ortası, yüksekliğin %35'i; glTF yerel koordinatı (uygulama() ofseti kendisi ekler)
+window.kutu = async ({ ref }) => { const m = await yukle(ref); m.updateMatrixWorld(true); const b = new THREE.Box3();
+  m.traverse(o => { if (o.isMesh && o.name !== 'Harita_Golge') b.expandByObject(o); }); const c = b.getCenter(new THREE.Vector3());
+  return [c.x, b.min.y + 0.35 * (b.max.y - b.min.y), c.z]; };
+window.hazir = true;
+</script></body></html>

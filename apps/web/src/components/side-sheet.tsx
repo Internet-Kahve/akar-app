@@ -44,6 +44,9 @@ export function TrustTag({
 }: SourceDetail) {
   const open = useContext(SheetContext);
   const { t } = useI18n();
+  // «Doğrulanmış» is what a visitor expects of everything here: said on every sentence it was only noise
+  // (Muhammed, 3 Nov 2026). Only what calls for care keeps its tag: an inference, a representative model.
+  if (trust === "verified") return null;
   return (
     <button
       type="button"
@@ -66,8 +69,25 @@ export function SourceLink({
   trust,
   quote,
   sources,
-}: SourceDetail & { label: ReactNode }) {
+  mini = false,
+}: SourceDetail & {
+  label: ReactNode;
+  /** A very small «Kaynak» button in its place (a phone's story card); `label` stays what a screen reader hears. */
+  mini?: boolean;
+}) {
   const open = useContext(SheetContext);
+  const { t } = useI18n();
+  if (mini)
+    return (
+      <button
+        type="button"
+        className="kaynak-mini"
+        aria-label={typeof label === "string" ? label : t("site.sourceShort")}
+        onClick={() => open({ trust, ...(quote && { quote }), ...(sources && { sources }) })}
+      >
+        {t("site.sourceShort")}
+      </button>
+    );
   return (
     <button
       type="button"

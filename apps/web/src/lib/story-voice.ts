@@ -2,7 +2,7 @@ import type { StoryBlock, StoryNarration, UserPreferences } from "@akar/domain";
 import { isLang, type Lang } from "./i18n";
 import { readPreference, writePreference } from "./preferences";
 
-/** Voice of the story player: its language and gender; `null` = not chosen (language then follows the site, gender is female). */
+/** Voice of the story player: its language and gender; `null` = not chosen (language then follows the site, gender is male). */
 export type VoiceGender = "female" | "male";
 export interface VoiceChoice {
   lang: Lang | null;

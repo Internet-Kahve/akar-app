@@ -3,7 +3,7 @@ import test from "node:test";
 import { defaultCityScene } from "@akar/domain";
 import type { Map as MapLibreMap, MercatorCoordinate } from "maplibre-gl";
 import { BoxGeometry, Group, Mesh } from "three";
-import { MapModelLayer, type MapModelSite } from "./map-models";
+import { closeUpAt, MapModelLayer, type MapModelSite } from "./map-models";
 import { defaultPlacement } from "./placement";
 import { footprintRing } from "./osm-buildings";
 
@@ -65,4 +65,11 @@ test("a model finishing its download uses the latest placement and building over
   } finally {
     layer.onRemove(map);
   }
+});
+
+test("close up the lit file comes at 17.5 and goes below 17, with no flicker between", () => {
+  assert.equal(closeUpAt(17.4, false), false);
+  assert.equal(closeUpAt(17.5, false), true);
+  assert.equal(closeUpAt(17.2, true), true);
+  assert.equal(closeUpAt(16.9, true), false);
 });

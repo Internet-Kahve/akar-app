@@ -1,15 +1,16 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Footprints,
-  House,
-  MapPin,
-  Navigation,
   Plus,
   Route,
+  X,
 } from "lucide-react";
 import {
   kindCategory,
@@ -27,98 +28,82 @@ import { Localized, useI18n } from "./i18n";
 export type ExploreTab = "sites" | "routes";
 export type PlaceMode = "home" | "near";
 
-/** Dropdown of the place mode and the role filters over the map. */
+/** Over the map: the city, a button that opens the list of cities (3 Nov 2026: role chips and «Evden gez» gone). */
+/**
+ * The city over the map; its ▾ opens the other cities, and a pick takes the map there at once (Muhammed, 3 Nov 2026:
+ * «diğer şehirlere ışınlanılsın»). The last line shows the whole country.
+ */
 export function MapChips({
-  mode,
   city,
-  categories,
-  active,
-  onMode,
-  onToggle,
+  cities,
+  onCity,
   onCities,
+  whole = false,
 }: {
-  mode: PlaceMode;
   city: string;
-  categories: SiteCategory[];
-  active: Set<SiteCategory>;
-  onMode: (mode: PlaceMode) => void;
-  onToggle: (category: SiteCategory) => void;
+  /** The map looks at the whole country: the button shows it in red. */
+  whole?: boolean;
+  cities: string[];
+  onCity: (name: string) => void;
   onCities: () => void;
 }) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false),
-    box = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const away = (e: PointerEvent) => {
-      if (!box.current?.contains(e.target as Node)) setOpen(false);
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
     };
-    const escape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", away);
-    document.addEventListener("keydown", escape);
+    const key = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("pointerdown", away, true);
+    window.addEventListener("keydown", key);
     return () => {
-      document.removeEventListener("pointerdown", away);
-      document.removeEventListener("keydown", escape);
+      window.removeEventListener("pointerdown", away, true);
+      window.removeEventListener("keydown", key);
     };
   }, [open]);
-  const option = (
-    value: PlaceMode,
-    Icon: typeof House,
-    title: string,
-    text: string,
-  ) => (
-    <button
-      role="menuitemradio"
-      aria-checked={mode === value}
-      onClick={() => {
-        setOpen(false);
-        onMode(value);
-      }}
-    >
-      <Icon size={18} />
-      <span>
-        <b>{title}</b>
-        <small>{text}</small>
-      </span>
-      {mode === value && <Check size={16} />}
-    </button>
-  );
   return (
-    <div className="map-chips" ref={box}>
-      <button className="chip city-only" onClick={onCities} title={t("header.cities")}>
-        <i className="city-motif" aria-hidden="true" />
-        {city}
-      </button>
+    <div className="map-chips" ref={root}>
       <button
-        className="chip dark"
+        className={`chip city-only city-pick${whole ? " ulke" : ""}`}
+        onClick={() => setOpen(!open)}
+        title={t("header.cities")}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen(!open)}
       >
-        {mode === "near" ? <Navigation size={14} /> : <House size={14} />}
-        {mode === "near" ? t("place.nearChip") : t("place.home")}
-        <ChevronDown size={14} />
+        <i className="city-motif" aria-hidden="true" />
+        {city}
+        <ChevronDown size={15} aria-hidden="true" className={open ? "turned" : undefined} />
       </button>
       {open && (
-        <div className="place-menu" role="menu">
-          {option("near", MapPin, t("place.near"), t("place.nearHint"))}
-          {option("home", House, t("place.home"), t("place.homeHint", { city, cityFrom: cityCase(city, true) }))}
+        <div className="city-menu" role="menu" aria-label={t("header.cities")}>
+          {cities.map((name) => (
+            <button
+              key={name}
+              role="menuitemradio"
+              aria-checked={name === city}
+              onClick={() => {
+                setOpen(false);
+                if (name !== city) onCity(name);
+              }}
+            >
+              <span>{name}</span>
+              {name === city && <Check size={16} aria-hidden="true" />}
+            </button>
+          ))}
+          <button
+            role="menuitem"
+            className="city-menu-all"
+            onClick={() => {
+              setOpen(false);
+              onCities();
+            }}
+          >
+            {t("map.wholeCountry")}
+          </button>
         </div>
       )}
-      {categories.map((category) => (
-        <button
-          key={category}
-          className="chip"
-          aria-pressed={active.has(category)}
-          title={t(`categoryHint.${category}`)}
-          onClick={() => onToggle(category)}
-        >
-          <i className={`dot ${category}`} />
-          {t(`category.${category}`)}
-        </button>
-      ))}
     </div>
   );
 }
@@ -144,6 +129,7 @@ function SiteRow({
   showModelTag,
   onPick,
   onRoute,
+  onOpen,
   onHover,
 }: {
   routeIndex: number;
@@ -153,6 +139,8 @@ function SiteRow({
   showModelTag: boolean;
   onPick: () => void;
   onRoute: () => void;
+  /** Goes straight to the site's page; without it (a route being built) the row's button adds the site instead. */
+  onOpen?: () => void;
   onHover: (id: string | undefined) => void;
 }) {
   const { t, text } = useI18n();
@@ -173,14 +161,20 @@ function SiteRow({
           {showModelTag && site.model && <em>3D</em>}
         </span>
       </button>
-      <button
-        className="site-row-add"
-        aria-pressed={routeIndex > 0}
-        aria-label={t("explore.addSite", { name: text(site.name, site.nameEn) })}
-        onClick={onRoute}
-      >
-        {routeIndex > 0 ? <span>★{routeIndex}</span> : <Plus size={16} />}
-      </button>
+      {onOpen ? (
+        <button className="site-row-add" aria-label={t("explore.openSite", { name: text(site.name, site.nameEn) })} onClick={onOpen}>
+          <ChevronRight size={18} />
+        </button>
+      ) : (
+        <button
+          className="site-row-add"
+          aria-pressed={routeIndex > 0}
+          aria-label={t("explore.addSite", { name: text(site.name, site.nameEn) })}
+          onClick={onRoute}
+        >
+          {routeIndex > 0 ? <span>★{routeIndex}</span> : <Plus size={16} />}
+        </button>
+      )}
     </li>
   );
 }
@@ -203,9 +197,14 @@ export function ExplorePanel({
   onPick,
   onRoute,
   onOpenRoute,
+  onOpen,
   onCustomRoute,
   onCities,
   onClearFilters,
+  categories,
+  categoryCount,
+  activeCategory,
+  onCategory,
 }: {
   tab: ExploreTab;
   onTab: (tab: ExploreTab) => void;
@@ -225,9 +224,17 @@ export function ExplorePanel({
   onPick: (id: string) => void;
   onRoute: (id: string) => void;
   onOpenRoute: (id: string) => void;
+  /** Straight to a site's page from the list; left out while a route is being built. */
+  onOpen?: (id: string) => void;
   onCustomRoute: () => void;
   onCities: () => void;
   onClearFilters: () => void;
+  /** The kinds of site in this list, with how many of each, whatever is chosen now. */
+  categories: readonly SiteCategory[];
+  categoryCount: (category: SiteCategory | null) => number;
+  /** The kind the list and the map are narrowed to; `null` for all. */
+  activeCategory: SiteCategory | null;
+  onCategory: (category: SiteCategory | null) => void;
 }) {
   const { t } = useI18n();
   const shown = routes.filter((r) =>
@@ -263,6 +270,11 @@ export function ExplorePanel({
       {tab === "routes" ? (
         <>
           <div className="explore-heading">
+            {/* A phone has no tabs (3 Nov 2026): back to the sites from here. */}
+            <button className="narrow-only explore-back" onClick={() => onTab("sites")}>
+              <ChevronLeft size={16} />
+              {t("explore.tabSites")}
+            </button>
             <h2>{heading("routes")}</h2>
           </div>
           <div className="route-cards">
@@ -276,27 +288,34 @@ export function ExplorePanel({
                   key={r.id}
                   onClick={() => onOpenRoute(r.id)}
                 >
-                  <SiteArtwork
-                    site={allSites.find((s) => r.siteIds.includes(s.id))}
-                    live={live}
-                  />
-                  <span>
+                  <span className="route-card-text">
                     <strong><Localized tr={r.name} en={r.nameEn} /></strong>
                     <small>
                       {t("explore.routeLine", { count: r.siteIds.length, minutes: r.minutes, distance: r.distance })}
                     </small>
-                    <em className={stops ? "going" : ""}>
-                      {stops
-                        ? t("common.continueProgress", { done: stops, total: r.siteIds.length })
-                        : t("explore.notStarted")}
-                    </em>
+                    {stops > 0 && (
+                      <em className="going">{t("common.continueProgress", { done: stops, total: r.siteIds.length })}</em>
+                    )}
                   </span>
+                  {/* Its stops, a few small photographs side by side: what the walk passes by. */}
+                  <span className="route-card-stops" aria-hidden="true">
+                    {r.siteIds.slice(0, 4).map((id) => (
+                      <SiteArtwork key={id} site={allSites.find((s) => s.id === id)} live={live} />
+                    ))}
+                  </span>
+                  <ChevronRight size={18} className="route-card-go" />
                 </button>
               );
             })}
           </div>
-          <button className="custom-route" onClick={onCustomRoute}>
-            <Route size={20} />
+          {/* A new route (Muhammed, 3 Nov 2026: «rezalet, değiştirelim»): a clear card, a small walk drawn on it. */}
+          <button className="custom-route yeni" onClick={onCustomRoute}>
+            <svg className="cr-art" viewBox="0 0 64 44" aria-hidden="true">
+              <path d="M8 34 C 20 34, 18 12, 32 14 S 46 30, 56 10" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
+              <circle cx="8" cy="34" r="4.5" />
+              <circle cx="32" cy="14" r="4.5" />
+              <circle cx="56" cy="10" r="4.5" className="cr-new" />
+            </svg>
             <span>
               <strong>{t("explore.custom")}</strong>
               <small>
@@ -305,7 +324,7 @@ export function ExplorePanel({
                   : t("explore.customEmpty")}
               </small>
             </span>
-            <Plus size={18} />
+            <span className="cr-plus" aria-hidden="true"><Plus size={20} strokeWidth={2.4} /></span>
           </button>
         </>
       ) : (
@@ -324,7 +343,32 @@ export function ExplorePanel({
                 suffix: mode === "near" ? t("explore.nearSuffix") : "",
               })}
             </button>
+            {/* A phone has no tabs (3 Nov 2026): the city's routes are one tap away. */}
+            {routes.length > 0 && (
+              <button className="narrow-only explore-routes" onClick={() => onTab("routes")}>
+                <Route size={15} />
+                {t("explore.tabRoutes")}
+                <ChevronRight size={15} />
+              </button>
+            )}
           </div>
+          {categories.length > 1 && (
+            <div className="kind-filter" role="group" aria-label={t("explore.filterLabel")}>
+              <button aria-pressed={!activeCategory} onClick={() => onCategory(null)}>
+                {t("explore.filterAll")} <small>{categoryCount(null)}</small>
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  aria-pressed={activeCategory === c}
+                  onClick={() => onCategory(activeCategory === c ? null : c)}
+                >
+                  <i className={`dot ${c}`} />
+                  {t(`category.${c}`)} <small>{categoryCount(c)}</small>
+                </button>
+              ))}
+            </div>
+          )}
           {query &&
             shown.map((r) => (
               <button
@@ -351,6 +395,7 @@ export function ExplorePanel({
                 showModelTag={someModelMissing}
                 onPick={() => onPick(site.id)}
                 onRoute={() => onRoute(site.id)}
+                onOpen={onOpen ? () => onOpen(site.id) : undefined}
                 onHover={onHover}
               />
             ))}
@@ -380,6 +425,7 @@ export function RoutePreview({
   live,
   visitedIds,
   onBack,
+  onClose,
   onSite,
   onStart,
 }: {
@@ -389,6 +435,8 @@ export function RoutePreview({
   live: boolean;
   visitedIds: string[];
   onBack: () => void;
+  /** Takes the route off the map altogether. */
+  onClose: () => void;
   onSite: (id: string) => void;
   onStart: () => void;
 }) {
@@ -397,6 +445,9 @@ export function RoutePreview({
   const done = sites.filter((s) => visitedIds.includes(s.id)).length;
   return (
     <div className="route-page">
+      <button className="route-close" aria-label={t("route.close")} title={t("route.close")} onClick={onClose}>
+        <X size={18} />
+      </button>
       <Back onClick={onBack}>{t("route.all")}</Back>
       <div className="route-cover">
         <SiteArtwork site={sites[0]} live={live} />

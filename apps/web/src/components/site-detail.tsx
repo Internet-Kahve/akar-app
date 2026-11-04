@@ -8,10 +8,11 @@ import {
   ChevronRight,
   Headphones,
   History,
-  MapPin,
   MessageCircle,
+  Play,
   Puzzle,
 } from "lucide-react";
+import { sized } from "../lib/image-size";
 import type { HeritageSite } from "@akar/domain";
 import type { SiteProgress } from "@akar/api-client";
 import { readingMinutes, wordCount } from "../lib/about-reading";
@@ -38,7 +39,6 @@ export function SiteDetail({
   site,
   saved,
   read,
-  visited,
   progress,
   memoryCount,
   onBack,
@@ -48,14 +48,12 @@ export function SiteDetail({
   onHistory,
   onMemories,
   onPuzzle,
-  onVisit,
   nextStop,
   onNextStop,
 }: {
   site: HeritageSite;
   saved: boolean;
   read: boolean;
-  visited: boolean;
   progress: SiteProgress;
   memoryCount: number;
   onBack: () => void;
@@ -65,8 +63,6 @@ export function SiteDetail({
   onHistory: () => void;
   onMemories: () => void;
   onPuzzle: () => void;
-  /** «Yanındayım»: the server checks the visitor's location before the visit counts. */
-  onVisit: () => void;
   /** On a route: the stop after this one (the prototype's «Sonraki durak»). */
   nextStop?: HeritageSite;
   onNextStop?: (id: string) => void;
@@ -132,7 +128,7 @@ export function SiteDetail({
         <div className="eb-govde">
           {cover && (
             <div className="eb-foto">
-              <img src={cover.src} alt="" />
+              <img src={sized(cover.src, 96)} alt="" decoding="async" />
             </div>
           )}
           <div>
@@ -166,6 +162,11 @@ export function SiteDetail({
             {t("site.shortStoryMeta", { minutes: site.minutes })}
             <Depth minutes={site.minutes} />
           </div>
+          {/* A phone (3 Nov 2026): one way in; the story's own sound button reads it aloud. */}
+          <button className={`hikaye-basla${read ? " bitti" : ""}`} onClick={() => onStory()}>
+            <Play size={18} fill="currentColor" />
+            {t(read ? "site.storyAgain" : "site.storyStart")}
+          </button>
           <div className="ikili" role="group" aria-label={t("site.shortStory")}>
             <button
               className={`ik-sol${read ? " bitti" : ""}`}
@@ -201,8 +202,8 @@ export function SiteDetail({
           <span className="ky-ik">
             {oldest ? (
               <span className="ky-foto">
-                <img src={oldest.photo.src} alt="" />
-                {cover && <img className="bugun" src={cover.src} alt="" />}
+                <img src={sized(oldest.photo.src, 64)} alt="" loading="lazy" decoding="async" />
+                {cover && <img className="bugun" src={sized(cover.src, 64)} alt="" loading="lazy" decoding="async" />}
               </span>
             ) : (
               <span className="ky-daire">
@@ -275,18 +276,6 @@ export function SiteDetail({
                   ? t("site.puzzleRowAll", { count: tasks.length })
                   : t("site.puzzleRow", { count: tasks.length, done })}
             </small>
-          </span>
-          <ChevronRight className="ky-ok" size={18} />
-        </button>
-        <button className="ky" onClick={onVisit}>
-          <span className="ky-ik">
-            <span className="ky-daire">
-              {visited ? <Check size={22} /> : <MapPin size={22} />}
-            </span>
-          </span>
-          <span className="ky-yazi">
-            <b>{visited ? t("site.visited") : t("site.imHere")}</b>
-            <small>{visited ? t("site.visitRowDone") : t("site.visitRow")}</small>
           </span>
           <ChevronRight className="ky-ok" size={18} />
         </button>

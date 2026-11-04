@@ -1,0 +1,37 @@
+{
+ "obc-soru-alci-mihrap": {
+  "baslik": "The mihrab's material",
+  "soru": "What material is the mihrab of Orhan Bey Mosque, a model for later sultans' mosques in Bursa, worked in?",
+  "secenekler": [
+   "Plaster",
+   "Tile",
+   "Wood",
+   "Marble"
+  ],
+  "ipuclari": [
+   "Look at the gilded, finely carved decoration of the mihrab in the photograph.",
+   "This material is also used in wall rendering."
+  ],
+  "dogru_metin": "The mihrab is considered one of the finest examples of advanced plasterwork; its gilded hood of seven tiers of muqarnas is decorated with rumi and palmette motifs and lotus flowers.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "obc-saha-ikiz-kemer": {
+  "baslik": "Twin arches",
+  "gorev": "Find the twin arches on the sides of the late-comers' portico.",
+  "yerinde": "Go to the side of the portico, find the twin arches on their capitals and tap \"I'm here\".",
+  "evden": "Tap the late-comers' portico in the 3D model.",
+  "tamam_metin": "The sides of the portico are not blind: each opens outward through two pointed arches on reused composite capitals."
+ },
+ "obc-hikaye": {
+  "ad": "You listened to Orhan Bey Mosque",
+  "metin": "You listened to or read the story of Orhan Bey Mosque to the end."
+ },
+ "obc-alci-mihrap": {
+  "ad": "Plaster mihrab",
+  "metin": "You learned about the plaster mihrab that became a model for Bursa's mosques."
+ },
+ "obc-ikiz-kemer": {
+  "ad": "Twin arches",
+  "metin": "You found the portico's twin arches opening outward."
+ }
+}

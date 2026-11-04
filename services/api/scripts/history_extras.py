@@ -53,7 +53,7 @@ def read_extras(folder: Path, rel: str, site_id: str, history: dict) -> tuple:
         if entry['present'] is not None:
             raise ValueError(f'Two present-day pairs for one archive photograph: {where}')
         entry['present'] = dict(id=f'{site_id}-present-{atlas_id}', alt=f'Bugünkü görünüm: {entry["caption"]}',
-                                angleMatch=_angle(pair, where), **_photo(folder, rel, pair, where))
+                                angleMatch=_angle(pair, where), imagined=pair.get('temsili') is True, **_photo(folder, rel, pair, where))
     traces, skipped = [], 0
     for record in _list(folder / 'izler.json', 'izler'):
         if record.get('ornek') is not True or record.get('durum') != 'onaylandi':

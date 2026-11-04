@@ -16,7 +16,7 @@
       "foto": "01",
       "azimut": 97,
       "egim": 45,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "tahmini": true,
       "not": "havadan, arkada Ulucami: doğudan sayıldı"
     },
@@ -24,16 +24,16 @@
       "foto": "04",
       "hedef": "Han_Avlu",
       "azimut": 7,
-      "egim": 50,
-      "uzaklik": "orta",
+      "egim": 14,
+      "uzaklik": "0.14",
       "not": "ağaçlı avlu"
     },
     {
       "foto": "02",
       "hedef": "Sadirvan",
       "azimut": 187,
-      "egim": 25,
-      "uzaklik": "yakın",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "avlu şadırvanı; yön tahmini"
     },
@@ -41,10 +41,14 @@
       "foto": "03",
       "hedef": "Avlu_Revaklari",
       "azimut": 97,
-      "egim": 18,
-      "uzaklik": "yakın",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "tonozlu revak; yön tahmini"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "emir-hani_v08_harita_pisik",
+  "glb_gece_harita_pisik": "night/emir-hani_v08_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 40°, 50°; Ulucami yöntemi; kabul kaldı (gündüz renk sapması); ölçüm README'de ve kontrol/v08_pisik/rapor.json içinde. Onay Muhammed'in."
 }

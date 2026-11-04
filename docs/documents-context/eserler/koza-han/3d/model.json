@@ -25,22 +25,22 @@
       "hedef": "Portal",
       "azimut": 4,
       "egim": 12,
-      "uzaklik": "orta",
+      "uzaklik": "0.14",
       "not": "«KOZA HAN» yazılı kuzey cephe ve portal"
     },
     {
       "foto": "04",
       "azimut": 4,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden kare han ve avlu"
     },
     {
       "foto": "03",
       "hedef": "Mescit",
       "azimut": 4,
-      "egim": 30,
-      "uzaklik": "yakın",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "avludaki köşk mescit; yön tahmini"
     },
@@ -48,10 +48,14 @@
       "foto": "02",
       "hedef": "Avlu_Zemin",
       "azimut": 184,
-      "egim": 40,
-      "uzaklik": "orta",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "çınarlı avlu; yön tahmini"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "koza-han_v18_harita_pisik",
+  "glb_gece_harita_pisik": "night/koza-han_v18_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 40°, 50°; Ulucami yöntemi; kabul kaldı (gündüz renk sapması, kutu); ölçüm README'de ve kontrol/v18_pisik/rapor.json içinde. Onay Muhammed'in."
 }

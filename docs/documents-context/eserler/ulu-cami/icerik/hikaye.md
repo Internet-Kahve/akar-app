@@ -36,27 +36,24 @@ Hero eser: 12 cümle (~1,5–2 dk). Her cümle tek bilgi, en fazla ~20 kelime.
   - "Ortadaki şadırvanın kubbesi açıktır": cümle 6 ve 7 olarak kaynağıyla bölündü.
 - **Vurgu adları** doğrudan `3d/export/ulu-cami_v22.glb` içindeki nesne adlarından alındı; üçü de (`Tac_Kapi`, `Kubbeler_19`, `Sadirvan_Kubbe`) güncel `ulu-cami_v26.glb`'de var (22 Ekim 2026) (`eser.md` tablosundaki `Kubbeler` modelde `Kubbeler_19` olarak geçiyor; açık orta kubbe ayrı nesne: `Sadirvan_Kubbe`). 28 Ekim 2026 (model v27): iç mekân artık modelde; 5, 7, 8, 9. cümlelerin vurgusu iç parçalara bağlandı (`Payeler`, `Ic_Sadirvan_Havuz`, `Levhalar`, `Minber`) ve «İç mekân (3D)» sütunu «evet» oldu. Cümle 10 (arsa) için anlamlı bir parça olmadığından vurgu boş.
 
-## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
+## Açı
 
-Görev dosyasında `hikaye.md` tablosunda Açı sütunu yok; açı panelde model döndürülerek kaydediliyor (`FRONTEND_BACKEND_NOTLARI.md` §4). Aşağısı Muhammed'e kolaylık olsun diye öneridir. Azimut: 0° = kuzeyden bakış, saat yönünde. Kaydedilmeyen cümle bir öncekinin açısında kalır.
+Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün model kadrajda, küçüldükçe yakın). 4 Kasım 2026: fotoğraflara ve tanıtım sayfasına göre yakın ve alçak açılar.
 
-| # | Hedef | Azimut | Eğim | Uzaklık | Neden |
-|---|---|---|---|---|---|
-| 1 | Merkez | 0° (kuzey) | 30° | bütün yapı + minareler kadrajda | Kapak fotoğrafıyla aynı yön |
-| 2 | — | (1'de kalır) | | | |
-| 3 | — | (1'de kalır) | | | Genel görünüm: yapı döner (mimarın belli bir parçası yok) |
-| 4 | Kubbeler_19 | 0° | 70° | bütün çatı | Yirmi kubbenin sayılabildiği tepeden görünüş |
-| 5 | Payeler | 20° | 55° | orta | İçini göster: kubbeler kalkar, on iki paye ve kemerler görünür |
-| 6 | Sadirvan_Kubbe | 0° | 80° | orta kubbe ve çevresindeki 8 kubbe | Açık kubbe öne çıksın |
-| 7 | Ic_Sadirvan_Havuz | 20° | 65° | orta | İçeriden havuz; kart havuzun fotoğrafını gösterir |
-| 8 | Payeler | 200° | 40° | orta | İçeriden payelerdeki levhalar; kart «vav» harfini gösterir |
-| 9 | Minber | 0° | 45° | orta | Kuzeyden kıble duvarına bakış; minber ve mihrap |
-| 10 | Merkez | 135° (güneydoğu) | 35° | bütün yapı | Arsa / vakıf: yapının tamamı |
-| 11 | Merkez | 10° (kuzey) | 35° | bütün yapı | Bedesten'e bakan kuzey cephe; kart Bedesten'i gösterir |
-| 12 | Merkez | (11'de kalır) | | | Kapanış; Bedesten'e bakan kuzey cephe, kart Bedesten'i gösterir |
-
-Yönler OSM merkezlerinden (`veri/bursa/osm_secilen.csv`, 20 Ekim 2026): Bedesten, Ulucami'nin yaklaşık 140 m kuzeyinde (biraz doğuya kayık); Koza Han yaklaşık 160 m doğu-kuzeydoğusunda. Eski tablodaki «Bedesten doğuda» tahmini yanlıştı. Hikâye metninde yön bilgisi verilmez.
-
+| # | Hedef | Azimut | Eğim | Uzaklık |
+|---|---|---|---|---|
+| 1 | Merkez | 354° | 22° | 0.62 |
+| 2 | Merkez | 30° | 26° | 0.62 |
+| 3 | Tac_Kapi | 354° | 10° | 0.14 |
+| 4 | Kubbeler_19 | 354° | 78° | 0.55 |
+| 5 | Ic_Sadirvan_Havuz | 354° | 10° | 0.2 |
+| 6 | Sadirvan_Kubbe | 20° | 40° | 0.16 |
+| 7 | Ic_Sadirvan_Havuz | 0° | 11° | 0.1 |
+| 8 | Mihrap | 354° | 8° | 0.13 |
+| 9 | Minber | 25° | 9° | 0.16 |
+| 10 | Kubbeler_19 | 135° | 18° | 0.3 |
+| 11 | Merkez | 10° | 35° | 0.95 |
+| 12 | Merkez | 10° | 35° | 0.95 |
 ## Akar akışı
 
 Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.

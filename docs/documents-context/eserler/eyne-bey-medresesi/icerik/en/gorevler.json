@@ -1,0 +1,26 @@
+{
+ "ebm-soru-kutuphane": {
+  "baslik": "The madrasa today",
+  "soru": "What is the İnebey Madrasa used as today?",
+  "secenekler": [
+   "Manuscript library",
+   "Canning factory",
+   "Bath",
+   "Mosque"
+  ],
+  "ipuclari": [
+   "Remember the story's last sentence: what moved here from Orhan Mosque in 1969?",
+   "It has to do with books."
+  ],
+  "dogru_metin": "In 1969 the manuscripts and printed works of the library in Orhan Mosque moved to the madrasa; the building is now the Bursa İnebey Manuscript Library. The canning factory was its use until 1962.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "ebm-hikaye": {
+  "ad": "You listened to the İnebey Madrasa",
+  "metin": "You listened to or read the story of the İnebey Madrasa to the end."
+ },
+ "ebm-kutuphane": {
+  "ad": "Manuscripts",
+  "metin": "You learned that the madrasa is now a manuscript library."
+ }
+}

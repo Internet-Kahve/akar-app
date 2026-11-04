@@ -228,6 +228,17 @@ export interface SiteModelFile {
 /** The file a theme shows: the night file by night when the site has one, the day model otherwise. */
 export const modelFileFor = (model: SiteModel, theme: "day" | "night"): SiteModelFile =>
   theme === "night" && model.night ? model.night : model;
+/**
+ * The file the map draws: the baked one for the theme when the site has it (light and shadow in its textures, so the
+ * phone computes neither), otherwise what the site's own page shows.
+ */
+export const mapModelSrc = (model: SiteModel, theme: "day" | "night"): string =>
+  (theme === "night" && model.night ? model.mapBaked?.night : model.mapBaked?.day) ?? modelFileFor(model, theme).src;
+/** The lit file the map shows close up in place of a baked one; nothing where the map draws the lit file anyway. */
+export const mapCloseSrc = (model: SiteModel, theme: "day" | "night"): string | undefined => {
+  const lit = modelFileFor(model, theme).src;
+  return mapModelSrc(model, theme) === lit ? undefined : lit;
+};
 /** A part name the site's content uses that a model file lacks, with the places that use it (editor labels). */
 export interface MissingPart {
   part: string;
@@ -285,10 +296,17 @@ export interface SiteModel {
    */
   interiorParts?: string[];
   /**
+   * The site's page leaves the interior undrawn while the cover is closed. Only for buildings closed all round: through
+   * an open arcade or a window seen up close the interior shows, so this is set per site after looking at it.
+   */
+  hideClosedInterior?: boolean;
+  /**
    * The night theme's file of the same model (`SiteDetail.nightModelId`, `3d/model.json → glb_gece`); absent = the day
    * file at night too. It carries the day file's part names, so placement, highlights, cards and cover groups hold.
    */
   night?: SiteModelFile;
+  /** The map's baked files, day and night, where they exist and are approved; the site's page never uses them. */
+  mapBaked?: { day?: string; night?: string };
   /** `null` or absent when the model is not placed on the map or its placement is hidden. */
   placement?: MapPlacement | null;
 }
@@ -302,6 +320,8 @@ export interface CameraPose {
   azimuthDeg: number;
   elevationDeg: number;
   distance: number;
+  /** Set by the panel: the editor placed this camera by hand, so it stands exactly there, walls or not. */
+  exact?: boolean;
 }
 /**
  * The 3D view a gallery photograph was taken from, on this site's model (the 3D view's ← → arrows): a camera pose and
@@ -665,6 +685,8 @@ export type Command =
   | { type: "set-route"; siteIds: string[] }
   | { type: "memory"; memory: Memory }
   | { type: "delete-memory"; id: string }
+  /** KVKK: `DELETE /v1/me`; the account and everything it wrote go for good. Signed-in only. */
+  | { type: "delete-account" }
   | { type: "admin-delete-memory"; id: string }
   | {
       type: "moderate";
@@ -1158,6 +1180,9 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
       else delete memory.photo;
       break;
     }
+    case "delete-account":
+      // Signed-in only: the demo has no account to delete.
+      break;
     case "delete-memory":
     case "admin-delete-memory": {
       // The demo has one local list, so the author's and the admin's delete are the same.
@@ -1198,3 +1223,34 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
   }
   return next;
 }
+
+/**
+ * Usage events the apps may count (§11.72). `site`: the event needs a site id; `ref`: what its detail is.
+ * A new event is one line here plus the call in the web app; no migration.
+ */
+export type UsageRefKind = "none" | "route" | "sentence" | "partCard" | "task" | "lang" | "signIn";
+
+export const USAGE_EVENTS = {
+  "app.open": { site: false, ref: "none", label: "Uygulama açılışı" },
+  "search": { site: false, ref: "none", label: "Arama" },
+  "site.view": { site: true, ref: "none", label: "Eser görüntüleme" },
+  "story.start": { site: true, ref: "none", label: "Hikâye başlatma" },
+  "story.sentence": { site: true, ref: "sentence", label: "Hikâye cümlesine ulaşma" },
+  "story.complete": { site: true, ref: "none", label: "Hikâye bitirme" },
+  "narration.play": { site: true, ref: "lang", label: "Seslendirme dinleme" },
+  "about.open": { site: true, ref: "none", label: "«Eser hakkında» açma" },
+  "history.open": { site: true, ref: "none", label: "«Geçmişi gör» açma" },
+  "part_card.open": { site: true, ref: "partCard", label: "Parça kartı açma" },
+  "task.complete": { site: true, ref: "task", label: "Görev tamamlama" },
+  "my_route.add": { site: true, ref: "none", label: "Rotama ekleme" },
+  "route.open": { site: false, ref: "route", label: "Rota açma" },
+  "account.sign_in": { site: false, ref: "signIn", label: "Giriş" },
+} as const satisfies Record<string, { site: boolean; ref: UsageRefKind; label: string }>;
+
+export type UsageEventName = keyof typeof USAGE_EVENTS;
+export const usageEventNames = Object.keys(USAGE_EVENTS) as [UsageEventName, ...UsageEventName[]];
+
+/** Highest story sentence index the API counts (0-based). */
+export const MAX_SENTENCE_INDEX = 499;
+/** Events per `POST /v1/events` request. */
+export const MAX_EVENTS_PER_BATCH = 50;

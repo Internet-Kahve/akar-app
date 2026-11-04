@@ -86,6 +86,9 @@ export function ViewpointMap({
           fadeDuration: 0,
           pitchWithRotate: false,
           dragRotate: false,
+          // On a phone one finger scrolls the page past the map (it filled the screen and held the page there); two move it.
+          cooperativeGestures: !matchMedia("(min-width: 900px)").matches,
+          locale: { "CooperativeGesturesHandler.MobileHelpText": t("gg.mapTwoFingers"), "CooperativeGesturesHandler.WindowsHelpText": t("gg.mapTwoFingers"), "CooperativeGesturesHandler.MacHelpText": t("gg.mapTwoFingers") },
         });
         unfollow = followTheme(m);
         map.current = m;

@@ -1180,115 +1180,6 @@ h1,
   display: block;
 }
 
-/* welcome */
-.welcome {
-  width: min(520px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  padding: 0;
-  border: 0;
-  border-radius: 24px;
-  overflow: auto;
-  background: var(--glass-solid);
-  color: var(--text);
-  box-shadow: 0 16px 48px rgba(20, 27, 43, 0.3);
-}
-.welcome::backdrop {
-  background: var(--overlay);
-}
-.welcome section {
-  padding: 20px 24px 16px;
-}
-.welcome-band {
-  position: relative;
-  height: 88px;
-  margin-bottom: 16px;
-  overflow: hidden;
-  border-radius: 12px;
-  background: var(--city-accent, var(--primary));
-}
-.welcome-band::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--sehir-acik);
-  opacity: 0.55;
-  -webkit-mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / calc(72px * var(--sehir-desen-olcek, 1)) auto repeat;
-  mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / calc(72px * var(--sehir-desen-olcek, 1)) auto repeat;
-}
-.welcome-photo {
-  display: none;
-}
-.welcome-logo {
-  display: block;
-  width: auto;
-  height: 22px;
-  margin-bottom: 12px;
-  filter: brightness(0) opacity(0.86);
-}
-.welcome-kicker {
-  margin: 0;
-  font-size: 11px;
-  line-height: 16px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-.welcome h2 {
-  margin: 6px 0 4px;
-  font-family: var(--font-display);
-  font-size: 34px;
-  line-height: 40px;
-  letter-spacing: 0;
-}
-.welcome-lead {
-  margin: 0;
-  color: var(--text-muted);
-}
-.welcome ul {
-  display: grid;
-  gap: 12px;
-  margin: 0 0 20px;
-  padding: 0;
-  list-style: none;
-}
-.welcome li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.welcome li > span {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  flex: none;
-  border-radius: 50%;
-  background: var(--primary-light);
-}
-.welcome li b,
-.welcome li small {
-  display: block;
-}
-.welcome li small {
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 18px;
-}
-.welcome-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.welcome-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 10px;
-  color: var(--text-muted);
-}
-
 /* phone */
 @media (max-width: 899.98px) {
   html:has(.workspace),
@@ -1499,75 +1390,7 @@ h1,
     border-radius: 3px;
     background: var(--border);
   }
-  .welcome {
-    width: 100%;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    border-radius: 0;
-    background: var(--ground);
-  }
-  .welcome section {
-    position: relative;
-    isolation: isolate;
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(12px + env(safe-area-inset-bottom, 0px));
-  }
-  .welcome-band {
-    display: none;
-  }
-  /* The phone's full-screen welcome lies on the city's faint pattern (prototype `.karsilama.desenli-zemin`, 8 %). */
-  .welcome section::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background: var(--sehir-aksan);
-    opacity: 0.08;
-    -webkit-mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / calc(96px * var(--sehir-desen-olcek, 1)) auto repeat;
-    mask: var(--sehir-desen, linear-gradient(transparent, transparent)) 0 0 / calc(96px * var(--sehir-desen-olcek, 1)) auto repeat;
-  }
-  [data-theme="night"] .welcome section::before {
-    background: var(--sehir-acik);
-    opacity: 0.06;
-  }
-  .welcome-photo {
-    display: block;
-    flex: 1 1 auto;
-    min-height: 140px;
-    max-height: 34dvh;
-    margin-bottom: 18px;
-    overflow: hidden;
-    border-radius: 20px;
-  }
-  .welcome-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .welcome-logo {
-    margin: 0 auto 12px;
-  }
-  .welcome-kicker,
-  .welcome h2,
-  .welcome-lead {
-    text-align: center;
-  }
-  .welcome h2 {
-    font-size: 31px;
-    line-height: 36px;
-  }
-  .welcome-actions {
-    margin-top: auto;
-    grid-template-columns: 1fr;
-  }
-  .welcome-foot {
-    flex-direction: column;
-    gap: 0;
-  }
+
 }
 @media (prefers-reduced-motion: reduce) {
   .explore-tabs::before,
@@ -1800,24 +1623,6 @@ h1,
   height: 100%;
   object-fit: contain;
 }
-.story-photo-main.fill {
-  object-fit: cover;
-}
-.story-photo-fill {
-  position: absolute;
-  right: 24px;
-  top: 76px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  background: var(--glass-solid);
-  font-size: 13px;
-  font-weight: 600;
-  transition: opacity 200ms;
-}
 .story-photo-credit {
   position: absolute;
   left: 16px;
@@ -1829,10 +1634,6 @@ h1,
   line-height: 16px;
   text-shadow: 0 1px 4px #000;
   transition: opacity 200ms;
-}
-.story-photo.quiet .story-photo-fill,
-.story-photo.quiet .story-photo-credit {
-  opacity: 0;
 }
 .scene-media-switch {
   position: absolute;
@@ -2802,7 +2603,7 @@ h1,
   .model-view-photo { right: auto; left: 16px; bottom: calc(12px + 40px + 12px); width: 168px; }
   .model-view-photo.large { width: min(300px, 80vw); }
   .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo {
-    bottom: calc(var(--sheet-h, 194px) + 12px + 16px + 40px + 12px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 16px + 40px + 12px + env(safe-area-inset-bottom, 0px));
     transition: width 240ms var(--ease), bottom 280ms var(--ease);
   }
 }
@@ -3155,6 +2956,9 @@ dialog.gv-perde::backdrop { background: transparent; }
 .story-card-top { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
 .story-card-top .sayac { padding: 2px 10px; border-radius: 999px; background: var(--primary-light); color: var(--primary); font: 600 12px/18px var(--font); }
 .story-card-text { margin: 12px 0 6px; font: 600 20px/28px var(--font); }
+/* Source on a phone's story card (§5.1.3): very small, its touch reaches further than it shows. */
+.kaynak-mini { position: relative; display: inline-block; padding: 0 7px; border: 1px solid var(--border); border-radius: 999px; background: none; color: var(--text-muted); font: 500 10px/15px var(--font); }
+.kaynak-mini::after { content: ""; position: absolute; inset: -11px -8px; }
 .kaynak-link { display: block; padding: 0; background: none; border: 0; color: var(--text-muted); font: 400 13px/18px var(--font); text-align: left; }
 .story-stage-close { position: absolute; left: 16px; top: calc(22px + env(safe-area-inset-top, 0px)); z-index: 6; width: 40px; height: 40px; padding: 0; background: rgba(255, 255, 255, .56); -webkit-backdrop-filter: blur(22px) saturate(1.7); backdrop-filter: blur(22px) saturate(1.7); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .72), inset 0 1px 0 rgba(255, 255, 255, .9), 0 10px 34px rgba(18, 38, 46, .14); }
 .main-stage:has(.story-photo) .story-stage-close { background: rgba(20, 27, 43, .55); color: #fff; }
@@ -3185,7 +2989,6 @@ dialog.gv-perde::backdrop { background: transparent; }
 }
 
 /* Story photo, as the prototype: round fill button beside the view switch, trust and credit along the foot */
-.story-photo-fill { right: 16px; top: 22px; width: 40px; height: 40px; padding: 0; justify-content: center; background: rgba(20, 27, 43, .55); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
 .scene-media-switch.on-photo { right: 64px; top: 22px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
 .scene-media-switch.on-photo .btn.secondary { color: rgba(255, 255, 255, .86); }
 .scene-media-switch.on-photo .btn.secondary[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
@@ -3193,7 +2996,7 @@ dialog.gv-perde::backdrop { background: transparent; }
 .story-photo-foot .tag.trust-tag { flex: none; transform: scale(.85); transform-origin: left bottom; opacity: .9; }
 .story-photo-foot .story-photo-credit { position: static; min-width: 0; text-align: right; font-size: 11px; line-height: 15px; }
 .story-photo.quiet .story-photo-foot { opacity: 0; }
-@media (max-width: 899.98px) { .story-photo-fill { top: 22px; right: 16px; } .story-photo-foot .story-photo-credit { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } }
+@media (max-width: 899.98px) { .story-photo-foot .story-photo-credit { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } }
 
 /* 3D part card, as the prototype (app.css «parca-kart»; buzlu tema) */
 dialog.parca-kart-arka { position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(20, 27, 43, .45); }
@@ -3400,7 +3203,7 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 .gg-foto .bulanik { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(28px) brightness(.85); transform: scale(1.15); }
 .gg-foto .ana { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity var(--sure-3); }
 .gg-eski-kat, .gg-bugun-kat { position: absolute; inset: 0; }
-.gg-foto.esli { touch-action: none; cursor: ew-resize; }
+.gg-foto.esli { touch-action: pan-y; cursor: ew-resize; }
 .gg-foto.esli img { -webkit-user-drag: none; user-select: none; }
 .gg-foto.esli .gg-eski-kat { clip-path: inset(0 calc(100% - var(--ayrim)) 0 0); }
 .gg-foto .b-bulanik { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(28px) brightness(.85); transform: scale(1.15); }
@@ -3485,8 +3288,12 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
 .gg-not { margin: auto 0 0; padding-top: 16px; color: var(--text-muted); font-size: 12px; line-height: 16px; }
 .gg-d .gg-bos { height: min(560px, calc(100vh - 230px)); }
 .gg-akis .gg-kaydir { bottom: 0; padding-bottom: calc(24px + var(--sab)); }
+/* A column, so the photograph's margin below (it keeps the page's length as it gets smaller) adds up and does not collapse. */
+.gg-akis .gg-kaydir { display: flex; flex-direction: column; }
+.gg-akis .gg-kaydir > * { flex: none; }
 .gg-akis .gg-foto { position: sticky; top: 0; z-index: 3; box-shadow: 0 -20px 0 0 var(--bg), 0 10px 24px rgba(20, 27, 43, .18); }
-.gg-akis .gg-foto.kucuk { height: 200px; }
+/* Smaller with the scroll, one pixel for one, down to 200 px; the margin keeps the page's length, so nothing moves under the finger. */
+.gg-akis .gg-foto { --gg-kuculme: min(var(--gg-kaydir, 0px), max(0px, var(--gg-h) - 200px)); height: calc(var(--gg-h) - var(--gg-kuculme)); margin-bottom: var(--gg-kuculme); }
 .gg-akis .gg-yer { margin-top: 20px; }
 .gg-akis .gg-yer .gg-harita-kap { height: 280px; flex: none; margin-top: 12px; min-height: 0; }
 .gg-akis .gg-lejant { margin-top: 8px; }
@@ -3971,12 +3778,12 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .detail-panel .detail-summary { order: 7; margin: 0 0 4px; }
   /* «3D model · Temsili» 10 px and «İçini göster» 4 px above the card, moving with it (prototype `temsiliKonum`). */
   .workspace.on-site:has(.detail-panel) .detail-scene .model-label {
-    bottom: calc(var(--sheet-h, 194px) + 22px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 10px + env(safe-area-inset-bottom, 0px));
     transition: bottom 280ms var(--ease);
   }
   .workspace.on-site:has(.detail-panel) .detail-scene > .model-viewer > .model-inside,
   .workspace.on-site:has(.detail-panel) .detail-scene .model-views {
-    bottom: calc(var(--sheet-h, 194px) + 16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 4px + env(safe-area-inset-bottom, 0px));
     transition: bottom 280ms var(--ease);
   }
   .workspace:has(.side-panel.dragging) .detail-scene :is(.model-label, .model-inside, .model-views) { transition: none; }
@@ -4028,13 +3835,896 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
     left: 12px;
     right: 12px;
     width: auto;
-    bottom: calc(var(--sheet-h, 194px) + 12px + 10px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 10px + env(safe-area-inset-bottom, 0px));
   }
   .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo img { height: 190px; aspect-ratio: auto; }
   .workspace.on-site:has(.detail-panel) .detail-scene:has(.model-view-photo) .model-views {
-    bottom: calc(var(--sheet-h, 194px) + 12px + 10px + 190px + 34px + 10px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--sheet-h, 194px) + 10px + 190px + 34px + 10px + env(safe-area-inset-bottom, 0px));
   }
 }
 @media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
   .workspace.on-site .side-panel.rising { transition: none; }
 }
+
+/* ---------------- Phones draw no frosted glass (Muhammed, 3 Nov 2026: «cam kısmı sadece masaüstünde kalır»).
+   A blur behind every glass surface is worked out again on every frame the map or the model moves under it, the
+   heaviest thing a phone's GPU did here. On a phone the same surfaces are the theme's nearly opaque «solid glass»;
+   wide screens keep the frost. */
+@media (max-width: 899.98px) {
+  :root,
+  :root[data-theme="night"] {
+    --glass: var(--glass-solid);
+    --glass-blur: none;
+  }
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* ---------------- The story on a phone (Muhammed, 3 Nov 2026; `mobile-revize/`, second round): the photograph or
+   model above, taking the taps (left third back, elsewhere on); below, one sheet the screen's width: the sentence,
+   a faint source, and a foot of three: ☰ the list, the round sound button in the middle, the count. ▾ folds it.
+   The ☰ list is the same sheet, taller: the sentences, and the same foot. The scene ends where the sheet begins
+   (--story-card-h, measured by story-panel). */
+@media (max-width: 899.98px) {
+  .workspace.on-site:has(.story-panel:is(.kart, .liste)) .main-stage {
+    top: 0;
+    height: auto;
+    bottom: var(--story-card-h, 180px);
+  }
+  .workspace.on-site:has(.story-panel:is(.kart, .liste)) .side-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: auto;
+    max-height: 46dvh;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
+    background: var(--surface);
+  }
+  .workspace.on-site:has(.story-panel.liste) .side-panel { max-height: 52dvh; }
+  .story-panel:is(.kart, .liste) {
+    height: auto;
+    margin: 0;
+    padding: 0 20px calc(12px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .story-panel.liste { max-height: 52dvh; }
+  .story-fold {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 26px;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+  }
+  .story-card-body { padding: 2px 0 4px; }
+  .story-panel.kart .story-card-text { margin: 0 0 8px; font: 600 19px/27px var(--font); color: var(--text); }
+  .story-card-body .kaynak-link { color: var(--text-muted); font-size: 12px; }
+  .story-card-foot {
+    display: grid;
+    grid-template-columns: 44px 1fr auto 1fr 44px;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .story-step {
+    justify-self: center;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--text);
+  }
+  .story-step:disabled { opacity: 0.3; }
+  .story-step:active { background: var(--primary-light); }
+  /* The ☰ sheet's settings, one row of small chips. */
+  .story-settings { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 8px; }
+  .story-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: 600 13px var(--font);
+    font-variant-numeric: tabular-nums;
+  }
+  .story-chip.on { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+  .story-sound {
+    justify-self: center;
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+    box-shadow: 0 6px 16px rgba(20, 27, 43, 0.22);
+    transition: transform 160ms var(--ease), background 160ms var(--ease);
+  }
+  .story-sound:active { transform: scale(0.94); }
+  .story-sound.on { background: var(--gold, #c9a24a); color: #1b1407; }
+  .story-all,
+  .story-foot-side {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--text);
+  }
+  .story-card-foot .story-count {
+    justify-self: end;
+    min-width: 0;
+    color: var(--text-muted);
+    font: 600 13px/1 var(--font);
+    font-variant-numeric: tabular-nums;
+  }
+  .story-panel.kart.folded .story-card-foot { margin-top: 0; }
+  /* The ☰ list */
+  .story-list-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 6px; }
+  .story-list-head b { font: 600 16px/22px var(--font); }
+  .story-list-close {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--text);
+  }
+  .story-panel.liste .story-list { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -20px; padding: 0 8px; }
+  .story-panel.liste .story-list li { margin: 0; padding: 0; border: 0; min-height: 0; background: none; }
+  .story-panel.liste .story-list li::before { display: none; }
+  .story-panel.liste .story-list li button {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 14px;
+    background: none;
+    text-align: left;
+    color: var(--text-muted);
+  }
+  .story-panel.liste .story-list li.current button { background: var(--primary-light); color: var(--text); }
+  .story-panel.liste .story-list li button > span { font: 600 13px/22px var(--font); font-variant-numeric: tabular-nums; }
+  .story-panel.liste .story-list .story-text { margin: 0; font: 500 15px/22px var(--font); }
+}
+
+/* ---------------- The phone's short card (3 Nov 2026): which site it is, nothing more. A small photograph, the name,
+   one line; pulled up or tapped it opens the site's page (as a story opens), pulled down it closes. */
+@media (max-width: 899.98px) {
+  .site-peek.compact {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 14px 14px;
+    cursor: pointer;
+  }
+  .site-peek.compact .peek-up {
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-muted);
+    animation: peek-up 1.6s ease-in-out 0.6s 3;
+  }
+  @keyframes peek-up { 50% { transform: translate(-50%, -3px); } }
+  .site-peek.compact .peek-photo { width: 64px; height: 64px; border-radius: 14px; overflow: hidden; }
+  .site-peek.compact .peek-photo :is(img, svg) { width: 100%; height: 100%; object-fit: cover; }
+  .site-peek.compact .peek-name { min-width: 0; }
+  .site-peek.compact h3 { margin: 0; font: 600 21px/25px var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .site-peek.compact .peek-meta { margin: 3px 0 0; color: var(--text-muted); font-size: 13px; }
+  .site-peek.compact .peek-go {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--on-primary);
+  }
+  .site-peek.compact .peek-close { top: 6px; right: 6px; width: 28px; height: 28px; }
+}
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
+  .site-peek.compact .peek-up { animation: none; }
+}
+
+/* ---------------- Routes, plainer (3 Nov 2026): the walk's name and length, and its stops as a row of small
+   photographs; «Başlanmadı» is gone, a started walk shows how far it got. */
+.route-cards .route-card {
+  grid-template-columns: minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  border-radius: 18px;
+}
+.route-card-text { min-width: 0; }
+.route-card strong { font-size: 17px; line-height: 22px; }
+.route-card small { margin-top: 2px; font-size: 13px; }
+.route-card-stops { display: flex; }
+.route-card-stops > * {
+  width: 34px !important;
+  height: 34px !important;
+  margin-left: -10px;
+  border: 2px solid var(--surface);
+  border-radius: 50% !important;
+  object-fit: cover;
+  overflow: hidden;
+}
+.route-card-stops > *:first-child { margin-left: 0; }
+.route-card-go { color: var(--text-muted); }
+/* A phone: no Eserler | Rotalar switch; «Rotalar ›» beside the count, «‹ Eserler» back. */
+@media (max-width: 899.98px) {
+  .explore-tabs { display: none; }
+  .explore-heading:has(.explore-routes, .explore-back) { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .explore-routes,
+  .explore-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 34px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font: 600 13px var(--font);
+    white-space: nowrap;
+  }
+  .explore-back { padding-left: 8px; order: -1; }
+  .explore-heading:has(.explore-back) h2 { flex: 1; margin: 0; font-size: 16px; }
+}
+
+/* ---------------- First-time hints (coach-tip.tsx, second round, 3 Nov 2026): a finger doing what to do above an
+   opaque pill of a few words. No button: the first touch anywhere puts it away; it takes no touch itself. */
+.coach-tip {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: coach-in 320ms var(--ease) both;
+}
+.coach-tip p {
+  margin: 0;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #141b2b;
+  color: #fff;
+  font: 600 14px/18px var(--font);
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.coach-finger {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  color: #141b2b;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+}
+.coach-finger svg { position: relative; z-index: 1; }
+.coach-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  opacity: 0;
+}
+/* tap: the finger presses, a ring spreads */
+.coach-tip.tap .coach-finger { animation: coach-press 1.4s ease-in-out infinite; }
+.coach-tip.tap .coach-ring { animation: coach-ripple 1.4s ease-out infinite; }
+/* swipe up / down: the finger travels and comes back */
+.coach-tip.swipe-up .coach-finger { animation: coach-up 1.6s var(--ease) infinite; }
+.coach-tip.swipe-down .coach-finger { animation: coach-down 1.6s var(--ease) infinite; }
+/* taps on the right: the finger presses on the right, then on the left, faint */
+.coach-tip.tap-sides .coach-finger { animation: coach-sides 2.4s ease-in-out infinite; }
+.coach-tip.tap-sides .coach-ring { animation: coach-ripple 1.2s ease-out infinite; }
+@keyframes coach-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+@keyframes coach-press { 0%, 60%, 100% { transform: scale(1); } 30% { transform: scale(0.86); } }
+@keyframes coach-ripple { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
+@keyframes coach-up { 0% { transform: translateY(26px); opacity: 0; } 20% { opacity: 1; } 70% { transform: translateY(-26px); opacity: 1; } 100% { transform: translateY(-26px); opacity: 0; } }
+@keyframes coach-down { 0% { transform: translateY(-26px); opacity: 0; } 20% { opacity: 1; } 70% { transform: translateY(26px); opacity: 1; } 100% { transform: translateY(26px); opacity: 0; } }
+@keyframes coach-sides { 0%, 45% { transform: translateX(70px) scale(1); } 20% { transform: translateX(70px) scale(0.86); } 55%, 100% { transform: translateX(-70px) scale(1); opacity: 0.5; } 75% { transform: translateX(-70px) scale(0.86); } }
+.coach-tip.map { top: 42%; }
+.coach-tip.stage { top: 34%; }
+.coach-tip.above-card { bottom: calc(var(--peek-h, 120px) + 28px + env(safe-area-inset-bottom, 0px)); }
+.coach-tip.above-card .coach-finger { order: 0; }
+.coach-tip.above-site-card { bottom: calc(var(--sheet-h, 194px) + 24px + env(safe-area-inset-bottom, 0px)); }
+/* The photo-or-3D question first; its hint after the answer. */
+body:has(.view-choice) .coach-tip.above-site-card { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .coach-tip,
+  .coach-tip .coach-finger,
+  .coach-tip .coach-ring { animation: none; }
+}
+.view-choice {
+  position: absolute;
+  z-index: 12;
+  left: 16px;
+  right: 16px;
+  top: calc(80px + env(safe-area-inset-top, 0px));
+  padding: 16px 14px 14px;
+  border-radius: 22px;
+  background: var(--glass-solid);
+  box-shadow: var(--glass-edge), 0 18px 40px rgba(20, 27, 43, 0.22);
+  text-align: center;
+  animation: vc-in 520ms cubic-bezier(.22, 1, .36, 1) 650ms both;
+}
+.view-choice .vc-title { margin: 0; font: 600 17px/22px var(--font); }
+.view-choice .vc-sub { margin: 4px 0 12px; color: var(--text-muted); font: 400 13px/18px var(--font); }
+.vc-options { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.vc-or { color: var(--text-muted); font: 500 12px var(--font); }
+.view-choice button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 14px 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--text);
+  animation: vc-pop 420ms cubic-bezier(.34, 1.56, .64, 1) both;
+  transition: transform 160ms var(--ease), border-color 160ms var(--ease);
+}
+.view-choice .vc-photo { animation-delay: 900ms; }
+.view-choice .vc-model { animation-delay: 1050ms; }
+.view-choice button:active { transform: scale(0.96); border-color: var(--primary); }
+.view-choice button b { margin-top: 6px; font: 600 15px var(--font); }
+.view-choice button small { color: var(--text-muted); font-size: 12px; }
+/* The two small moving pictures: photographs sliding over each other; the model turning. */
+.vc-art { position: relative; display: grid; place-items: center; width: 52px; height: 40px; color: var(--primary); }
+.vc-photo .vc-art i {
+  position: absolute;
+  width: 30px;
+  height: 24px;
+  border: 2px solid var(--surface);
+  border-radius: 6px;
+  background: linear-gradient(160deg, #9fb7c9 0 45%, #c9a46a 45% 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  animation: vc-shuffle 3s ease-in-out infinite;
+}
+.vc-photo .vc-art i:nth-child(1) { transform: translate(-9px, 3px) rotate(-10deg); animation-delay: 0s; }
+.vc-photo .vc-art i:nth-child(2) { transform: translate(0, 0) rotate(2deg); animation-delay: 1s; }
+.vc-photo .vc-art i:nth-child(3) { transform: translate(9px, -3px) rotate(12deg); animation-delay: 2s; }
+.vc-model .vc-art svg { animation: vc-turn 3.2s ease-in-out infinite; }
+@keyframes vc-in { from { opacity: 0; transform: translateY(-14px) scale(0.98); } }
+@keyframes vc-pop { from { opacity: 0; transform: translateY(8px) scale(0.92); } }
+@keyframes vc-shuffle { 0%, 100% { z-index: 1; } 33% { z-index: 3; translate: 0 -4px; } 66% { z-index: 2; } }
+@keyframes vc-turn { 0%, 100% { transform: rotateY(0deg) rotate(0deg); } 50% { transform: rotateY(180deg) rotate(-8deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .view-choice,
+  .view-choice button,
+  .vc-art i,
+  .vc-art svg { animation: none !important; }
+}
+
+
+/* ---------------- Zoom with the fingers (3 Nov 2026): the photograph in the viewer takes the pinch, the page does
+   not. The app's pages do not zoom on a phone; the map and the 3D zoom themselves. */
+.about-lightbox { overflow: hidden; }
+.about-lightbox .zoom-photo {
+  position: relative;
+  z-index: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transform-origin: center;
+  transition: transform 220ms var(--ease);
+  will-change: transform;
+}
+.about-lightbox p { position: relative; z-index: 1; }
+.about-lightbox button { z-index: 1; }
+@media (max-width: 899.98px) {
+  html:has(.workspace) { touch-action: pan-x pan-y; }
+}
+
+/* The map kept behind a site's page (akar-app `map-keep`): laid out as before, not drawn over the site, no taps. */
+.map-keep { display: contents; }
+.map-keep.parked { visibility: hidden; }
+
+/* ---------------- A story's photograph card on a phone (3 Nov 2026, `mobile-revize/2.jpg`): along the foot of the
+   stage, the screen's width, a large photograph beside its title; the model is framed above it (akar-app
+   STORY_PHOTO_CARD_PHONE). Not moved or resized there: one place, nothing to manage. */
+@media (max-width: 899.98px) {
+  /* Muhammed, 4 Nov 2026: the model above, under it the photograph the screen's width, about 30% of the screen, to compare
+     them; its words small, on it. The sheet below keeps to little meanwhile (`.fotolu`), and when the photograph goes
+     it is as the visitor left it. */
+  .story-photo-card,
+  .story-photo-card.placed {
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: 8px !important;
+    width: auto !important;
+    height: 30dvh;
+    display: block;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #1d2124;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .story-photo-card .story-photo-open { position: relative; display: block; width: 100%; height: 100%; padding: 0; }
+  .story-photo-card img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .story-photo-card > button > span {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    max-width: calc(100% - 16px);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+  }
+  .story-photo-card strong { display: block; overflow: hidden; color: inherit; font-size: 11px; font-weight: 500; line-height: 16px; white-space: nowrap; text-overflow: ellipsis; }
+  .story-photo-card small { display: none; }
+  .story-photo-size { display: none; }
+  .media-scene:has(.story-photo-card) .model-inside,
+  .media-scene:has(.story-photo-card) .model-part-name { bottom: calc(30dvh + 20px); }
+  .story-panel.kart.fotolu { padding-bottom: 8px; }
+  .story-panel.kart.fotolu .story-card-text { margin: 0 0 2px; font: 500 15px/20px var(--font); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .story-panel.kart.fotolu .story-card-body > :not(.story-card-text, .kaynak-mini) { display: none; }
+  .story-panel.kart.fotolu .story-fold { height: 18px; }
+}
+/* The ☰ list takes the foot of the stage: the story's photograph card stands aside meanwhile. */
+@media (max-width: 899.98px) {
+  .workspace:has(.story-panel.liste) .story-photo-card { display: none; }
+}
+
+/* ---------------- The phone's site card, second round (3 Nov 2026, `mobile-revize/4.jpg`): the screen's width, solid,
+   nothing fading. Closed: the name, «Kısa hikâye · 1 dk» and one button, «Hikâyeyi başlat» (Dinle | Oku went: the
+   story's sound button reads it aloud). Pulled up: «Eser hakkında» as a plain row, then Keşfet. */
+@media (max-width: 899.98px) {
+  .workspace.on-site:has(.detail-panel) .side-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(var(--sheet-h, 194px) + env(safe-area-inset-bottom, 0px));
+    padding: 0 20px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-radius: 24px 24px 0 0;
+    background: var(--surface);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
+  }
+  .workspace.on-site .side-panel:not(.full) .detail-panel { -webkit-mask-image: none; mask-image: none; }
+}
+/* A photograph not come in yet is a soft tile, not a white hole. */
+.galeri figure .scene-photo { background: color-mix(in srgb, var(--text) 8%, var(--surface)); }
+
+/* ---------------- The city button's menu (explore-panel MapChips, 3 Nov 2026): the cities under the button, the one
+   in view ticked; «Bütün Türkiye» last. */
+.city-pick svg { transition: transform 200ms var(--ease); }
+.city-pick svg.turned { transform: rotate(180deg); }
+.city-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  min-width: 200px;
+  display: grid;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(20, 27, 43, 0.22);
+  transform-origin: top left;
+  animation: city-menu-in 180ms var(--ease) both;
+}
+.city-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text);
+  font: 600 15px var(--font);
+  text-align: left;
+}
+.city-menu button:hover,
+.city-menu button:focus-visible { background: var(--primary-light); }
+.city-menu button[aria-checked="true"] { color: var(--primary); }
+.city-menu .city-menu-all { margin-top: 4px; border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; color: var(--text-muted); font-weight: 500; }
+@keyframes city-menu-in { from { opacity: 0; transform: scale(0.96) translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .city-menu { animation: none; } }
+/* Only the city button is left over the map: no scrolling row, so its menu is not clipped. */
+@media (max-width: 899.98px) {
+  .map-chips { overflow: visible; }
+  .city-menu { left: 16px; }
+}
+
+/* «Hikâyeyi başlat» everywhere (Muhammed, 3 Nov 2026: «bu sadelik masaüstünde de olsun»): one way into the story,
+   Dinle | Oku gone; the story's sound button reads it aloud. «Eser hakkında» keeps the city's colour and motif. */
+.detail-panel .ikili { display: none; }
+.hikaye-basla {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font: 600 16px var(--font);
+}
+.hikaye-basla:active { transform: scale(0.985); }
+.hikaye-basla.bitti { background: var(--primary-light); color: var(--primary); }
+/* The story's photograph takes the pinch (ZoomPhoto); zoomed, a tap moves it instead of the story. */
+.story-photo .zoom-photo {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transform-origin: center;
+  transition: transform 220ms var(--ease);
+}
+.story-photo { overflow: hidden; }
+
+/* ---------------- Routes, the new route card (3 Nov 2026, `mobile/Pasted 6.37.24`): a solid card in the city's
+   colour with a small dotted walk whose last stop pulses, the words, and a round «+». */
+.custom-route.yeni {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 14px 14px 16px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--sehir-aksan, var(--primary));
+  color: #fff;
+  text-align: left;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--sehir-aksan, var(--primary)) 30%, transparent);
+  transition: transform 160ms var(--ease);
+}
+.custom-route.yeni:active { transform: scale(0.985); }
+.custom-route.yeni strong { display: block; color: #fff; font: 600 17px/22px var(--font); }
+.custom-route.yeni small { display: block; margin-top: 2px; color: rgba(255, 255, 255, 0.8); font-size: 13px; line-height: 18px; }
+.cr-art { width: 64px; height: 44px; color: rgba(255, 255, 255, 0.7); }
+.cr-art circle { fill: #fff; }
+.cr-art .cr-new { fill: var(--gold, #c9a24a); transform-origin: 56px 10px; animation: cr-pulse 1.8s ease-in-out infinite; }
+.cr-plus { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--sehir-aksan, var(--primary)); }
+@keyframes cr-pulse { 50% { transform: scale(1.35); } }
+
+/* The route builder with no stop yet: a finger taps a pin's «+», as on the map, beside two lines. */
+.rb-coach {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--primary-light);
+}
+.rb-coach-art { position: relative; width: 76px; height: 64px; }
+.rb-coach-pin {
+  position: absolute;
+  left: 10px;
+  top: 6px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  background: var(--sehir-aksan, var(--primary));
+  color: #fff;
+}
+.rb-coach-pin > svg { transform: rotate(45deg); }
+.rb-coach-plus {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--gold, #c9a24a);
+  color: #1b1407;
+  transform: rotate(45deg);
+  animation: rb-plus 1.6s ease-in-out infinite;
+}
+.rb-coach-finger {
+  position: absolute;
+  left: 38px;
+  top: 20px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: #141b2b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: rb-tap 1.6s ease-in-out infinite;
+}
+.rb-coach-text b { display: block; font: 600 15px/20px var(--font); color: var(--text); }
+.rb-coach-text small { display: block; margin-top: 3px; color: var(--text-muted); font-size: 13px; line-height: 18px; }
+@keyframes rb-tap { 0%, 100% { transform: translate(8px, 10px); } 40%, 55% { transform: translate(0, 0) scale(0.9); } }
+@keyframes rb-plus { 40%, 55% { transform: rotate(45deg) scale(1.3); } }
+@media (prefers-reduced-motion: reduce) {
+  .cr-art .cr-new,
+  .rb-coach-plus,
+  .rb-coach-finger { animation: none; }
+}
+
+/* ---------------- An angle's photograph on a phone (3 Nov 2026, `mobile/Pasted 8.57.54`): the site card goes down to
+   the screen's foot (its handle and name left), the photograph takes the lower half; ✕ brings the card back up. */
+@media (max-width: 899.98px) {
+  .workspace.on-site:has(.detail-panel) .side-panel { transition: height 280ms var(--ease), transform 380ms cubic-bezier(.22, 1, .36, 1); }
+  .workspace.on-site:has(.detail-panel) .side-panel.rising { transition: height 480ms cubic-bezier(.22, 1, .36, 1), transform 380ms cubic-bezier(.22, 1, .36, 1); }
+  .workspace.on-site:has(.detail-panel) .side-panel.dragging { transition: none; }
+  .workspace.on-site:has(.detail-panel):has(.model-view-photo) .side-panel {
+    transform: translateY(calc(var(--sheet-h, 194px) - 64px));
+  }
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo,
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo.large {
+    bottom: calc(64px + 10px + env(safe-area-inset-bottom, 0px));
+  }
+  .workspace.on-site:has(.detail-panel) .detail-scene .model-view-photo img { height: 46dvh; }
+  .workspace.on-site:has(.detail-panel) .detail-scene:has(.model-view-photo) .model-views {
+    bottom: calc(64px + 10px + 46dvh + 34px + 10px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 899.98px) and (prefers-reduced-motion: reduce) {
+  .workspace.on-site:has(.detail-panel) .side-panel { transition: none; }
+}
+
+/* Wide screens: «Hikâyeyi başlat» on the map's card; the story's bar with the round sound button in its middle. */
+.site-peek .peek-actions .peek-start { flex: 1; margin-top: 0; height: 48px; }
+.story-bar { display: flex; align-items: center; gap: 10px; }
+.story-bar-sound { flex: 1; display: flex; justify-content: center; }
+.story-bar-sound .story-sound {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 6px 16px rgba(20, 27, 43, 0.2);
+}
+.story-bar-sound .story-sound.on { background: var(--gold, #c9a24a); color: #1b1407; }
+
+/* ---------------- Loading, turning not blinking (3 Nov 2026): the emblem draws itself once, then turns slowly in its
+   place, a thin arc running round it; nothing fades out and back. */
+.emblem { overflow: visible; }
+.emblem path { animation: emblem-draw-once 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.emblem .emblem-turn { transform-origin: 0 0; transform-box: view-box; animation: emblem-turn 9s linear 1.2s infinite; }
+.emblem .emblem-ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.18 0.82;
+  opacity: 0.55;
+  transform-origin: 0 0;
+  transform-box: view-box;
+  animation: emblem-ring 1.4s linear infinite;
+}
+@keyframes emblem-draw-once { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes emblem-turn { to { transform: rotate(360deg); } }
+@keyframes emblem-ring { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .emblem path { animation: none; stroke-dashoffset: 0; }
+  .emblem .emblem-turn,
+  .emblem .emblem-ring { animation: none; }
+}
+
+/* A model coming in on the map (map-models `rings`): a small turning arc in the city's colour at its point. */
+.model-ring {
+  position: absolute;
+  left: -22px;
+  top: -22px;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+  z-index: 2;
+}
+.model-ring::before,
+.model-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.model-ring::before { border: 3px solid color-mix(in srgb, var(--sehir-aksan, #22566e) 22%, transparent); }
+.model-ring::after {
+  border: 3px solid transparent;
+  border-top-color: var(--sehir-aksan, #22566e);
+  border-right-color: var(--sehir-aksan, #22566e);
+  animation: model-ring 0.9s linear infinite;
+}
+.model-ring.gone { opacity: 0; transition: opacity 260ms ease; }
+@keyframes model-ring { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .model-ring::after { animation-duration: 2.4s; } }
+
+/* ---------------- Spotlight (coach-tip.tsx, 3 Nov 2026): the screen dark but for what a hint is about; an arrow
+   bouncing under what to press. It takes no touch. */
+.spotlight { position: fixed; inset: 0; z-index: 39; pointer-events: none; animation: spot-in 360ms var(--ease) both; }
+.spotlight svg { position: absolute; inset: 0; }
+.spotlight path { fill: rgba(8, 12, 22, 0.62); }
+.spotlight-arrow {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  border-radius: 50%;
+  background: #fff;
+  color: #141b2b;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  animation: spot-arrow 1.1s ease-in-out infinite;
+}
+@keyframes spot-in { from { opacity: 0; } }
+@keyframes spot-arrow { 50% { transform: translateY(8px); } }
+/* Placed by the lit element (CoachTip `under-spot`): just under it, or over it when there is no room below. */
+.coach-tip.under-spot { top: 40%; }
+/* A turn: the finger drags to the right across the model, and comes back. */
+.coach-tip.turn .coach-finger { animation: coach-turn 2s ease-in-out infinite; }
+@keyframes coach-turn { 0%, 100% { transform: translateX(-46px); } 15% { transform: translateX(-46px) scale(0.9); } 65% { transform: translateX(46px) scale(0.9); } 80% { transform: translateX(46px); } }
+/* A click (wide screens): the cursor presses, a ring spreads. */
+.coach-tip.click .coach-finger { animation: coach-press 1.4s ease-in-out infinite; }
+.coach-tip.click .coach-ring { animation: coach-ripple 1.4s ease-out infinite; }
+/* While the story's hint shows, its card plays a make-believe step on, in time with the finger's tap on the right
+   (3 Nov 2026: «ilk başta fake bir sağa geçiş olsun»); the visitor's first tap does not skip a sentence. */
+body[data-coach="hikaye"] .story-card-body { animation: demo-next 2.4s ease-in-out infinite; }
+@keyframes demo-next {
+  0%, 18% { transform: none; opacity: 1; }
+  26% { transform: translateX(-24px); opacity: 0; }
+  34% { transform: translateX(24px); opacity: 0; }
+  44%, 100% { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spotlight, .spotlight-arrow, .coach-tip.turn .coach-finger { animation: none; }
+  body[data-coach="hikaye"] .story-card-body { animation: none; }
+}
+/* The question stands a little lower, so the arrow pointing up at the switch has its room. */
+.view-choice { top: calc(124px + env(safe-area-inset-top, 0px)); z-index: 41; }
+body:has(.view-choice) .galeri-arac .scene-media-switch { position: relative; z-index: 41; }
+
+/* ---------------- Geçmişi Gör on a phone (3 Nov 2026, `mobile/Pasted 9.48–9.49`): the photograph's frame keeps one
+   height whatever the photograph (it fits inside, its own blur fills the rest), so the page does not grow and shrink
+   from one photograph to the next; and the page never moves sideways (the comparison's handle is dragged, not it). */
+.gg-m .gg-foto { --gg-h: min(42vh, 380px); transition: none; }
+.gg-m:not(.gg-akis) .gg-foto { height: var(--gg-h); }
+body:has(.gg) { overflow-x: clip; }
+.gg, .gg-m { overflow-x: clip; max-width: 100vw; }
+.gg-m { touch-action: pan-y; }
+.gg-foto.esli,
+.gg-foto.esli * { touch-action: pan-y; }
+
+/* ---------------- The story on a wide screen (3 Nov 2026, `mobile/Pasted 10.23.58`): the bar only ✕ and the count;
+   below, ‹ [sound] › in the middle, clear and large, the clock on the left, the speed and the voice on the right. */
+.story-bar-gap { flex: 1; }
+.story-player { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.story-player .story-transport { display: flex; align-items: center; gap: 14px; }
+.story-player-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.story-step-wide {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(20, 27, 43, 0.08);
+}
+.story-step-wide:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.story-step-wide:disabled { opacity: 0.35; }
+.story-player .story-sound {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 6px 16px rgba(20, 27, 43, 0.2);
+}
+.story-player .story-sound.on { background: var(--gold, #c9a24a); color: #1b1407; }
+.story-player .story-voice-compact { display: flex; gap: 4px; }
+/* A hint's ✕ (3 Nov 2026): a small round button on the pill's corner; the only part of a hint that takes a touch. */
+.coach-tip { grid-template-areas: "finger" "text"; }
+.coach-tip .coach-finger { grid-area: finger; }
+.coach-tip p { grid-area: text; padding-right: 34px; }
+.coach-close {
+  grid-area: text;
+  justify-self: end;
+  align-self: center;
+  margin-right: 6px;
+  pointer-events: auto;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+/* ---------------- See the Past on a phone, lighter (Muhammed, 4 Nov 2026: «çok yazı var», «diğer görseller gözükmüyor»):
+   the photograph smaller, the other photographs straight under it, the words few and small. */
+@media (max-width: 899.98px) {
+  .gg-m .gg-yakin { margin-top: 4px; font-size: 11px; line-height: 14px; }
+  .gg-m #gg-bilgi { margin-top: 12px; }
+  .gg-m .gg-ad { font-size: 16px; line-height: 21px; }
+  .gg-m .gg-meta { font-size: 12px; line-height: 16px; }
+  .gg-m .gg-kaynak { margin-top: 2px; font-size: 10px; line-height: 13px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .gg-m .gg-bugun { margin-top: 8px; padding: 8px 10px; column-gap: 8px; row-gap: 6px; border-radius: 12px; }
+  .gg-m .gg-bugun .gb-ik { width: 26px; height: 26px; }
+  .gg-m .gg-bugun b { font-size: 13px; line-height: 18px; }
+  .gg-m .gg-bugun small { display: none; }
+  .gg-m .gg-bugun .btn { min-height: 38px; font-size: 14px; }
+  .gg-m .gg-nereye { left: auto; right: 12px; transform: none; height: 36px; font-size: 13px; }
+  .gg .gg-m .gg-nereye:not(:disabled):active, .gg-m.gg .gg-nereye:not(:disabled):active { transform: translateY(1px); }
+  .gg-m .gg-baslik::after { content: ""; display: block; width: 28px; height: 2px; margin: 3px auto 0; border-radius: 2px; background: var(--gold); }
+}
+.spotlight.clear path { fill: transparent; }
+
+/* A route's own way off (4 Nov 2026): on its page, and on the map once it has been started. */
+.route-page { position: relative; }
+.route-close { position: absolute; top: 0; right: 0; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--line, rgba(0, 0, 0, 0.1)); border-radius: 50%; background: var(--surface); color: var(--text); cursor: pointer; }
+.route-off { position: absolute; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 12; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px 0 14px; border: 0; border-radius: 999px; background: var(--text); color: var(--surface); font: 600 14px/1 var(--font); white-space: nowrap; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22); }
+.route-off:not(:disabled):active { transform: translate(-50%, 1px); }
+@media (max-width: 899.98px) { .route-off { top: calc(112px + env(safe-area-inset-top, 0px)); bottom: auto; } }
+
+/* The city button over the map on every screen (4 Nov 2026): beside the panel's handle, opening its menu downward; red for the whole country. */
+@media (min-width: 900px) {
+  .map-chips { left: 34px; top: 16px; }
+  .map-chips .chip.city-only { display: inline-flex; }
+  .map-chips .city-menu { left: 34px; top: 60px; }
+}
+.chip.city-pick.ulke, .chip.city-pick.ulke:hover { background: #C8102E; color: #fff; border-color: #C8102E; }
+.chip.city-pick.ulke .city-motif { filter: brightness(0) invert(1); }

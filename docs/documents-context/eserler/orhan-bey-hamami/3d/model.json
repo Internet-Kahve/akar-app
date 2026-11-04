@@ -16,24 +16,28 @@
       "hedef": "Hamam_Giris",
       "azimut": 186,
       "egim": 12,
-      "uzaklik": "orta",
+      "uzaklik": "0.14",
       "not": "güneydeki alınlıklı giriş"
     },
     {
       "foto": "04",
       "azimut": 186,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden iki büyük kubbe"
     },
     {
       "foto": "05",
       "hedef": "Hamam_Sicaklik",
       "azimut": 186,
-      "egim": 40,
-      "uzaklik": "orta",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "kubbeler ve fenerler; yön tahmini"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "orhan-bey-hamami_v08_harita_pisik",
+  "glb_gece_harita_pisik": "night/orhan-bey-hamami_v08_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 220°, 50°; Ulucami yöntemi; kabul geçti (gündüz ve gece); ölçüm README'de ve kontrol/v08_pisik/rapor.json içinde. Onay Muhammed'in."
 }

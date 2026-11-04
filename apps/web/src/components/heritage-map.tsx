@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { mapPixelRatio } from "../lib/device";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
@@ -14,6 +15,10 @@ import type {
   Marker as MarkerType,
 } from "maplibre-gl";
 import type { MapModels } from "../lib/map-models";
+
+// The map's library (~800 KB) starts downloading as soon as this module is read, alongside the rest of the app,
+// instead of when the map first mounts.
+if (typeof window !== "undefined") void import("maplibre-gl");
 import { followTheme, MAP_SKY, mapStyle } from "../lib/map-theme";
 import { currentTheme, type Theme } from "../lib/theme";
 import {
@@ -63,14 +68,28 @@ const SITE_EASE_MS = 700;
 const SITE_ZOOM = 17;
 /** Angled view the map opens with; the tilt button toggles between this and 0 (top view). Same as the prototype. */
 const TILT_PITCH = 55;
+/**
+ * A phone (Muhammed, 3 Nov 2026: «yakınlaşınca 3D, uzaklaşınca 2D»): near enough for the models the map tilts into
+ * 3D, out of that it lies flat with its photograph pins; a lower tilt there, as a tilted view loads tiles to the
+ * horizon. The flat earth only: no globe, which a phone draws slowly.
+ */
+const PHONE_TILT_PITCH = 45;
+const phoneMap = () => typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches;
+const tiltPitch = () => (phoneMap() ? PHONE_TILT_PITCH : TILT_PITCH);
 /** The opening view turns a little west of north, as the prototype opens (models and labels read better). */
 const OPENING_BEARING = -12;
 /** Where the globe flies out to: Türkiye whole on the screen. */
 const COUNTRY = {
   center: [34.5, 39.2] as [number, number],
-  zoom: 3.6,
-  zoomWide: 4.6,
+  zoom: 4.4,
+  zoomWide: 6,
 };
+/**
+ * Only Türkiye (Muhammed, 3 Nov 2026: «tüm dünya gözüküyor, gerek yok»): the map does not leave the country and its
+ * neighbours' edges, and does not zoom out past the whole country. Fewer far-away tiles, nothing to get lost in.
+ */
+const TURKEY_BOUNDS: [[number, number], [number, number]] = [[20, 32], [50, 46]];
+const MIN_ZOOM = 4;
 /** The city's opening view (desktop zoom on a wide screen). */
 function cityView(city: CityRecord) {
   const map = city.map!;
@@ -100,8 +119,11 @@ export type MapFlight =
   | { key: number; to: "point"; point: LngLat }
   /** Back from a site's page: the map stays as it was when the site is in view, and goes there when it is not. */
   | { key: number; to: "site"; point: LngLat }
-  | { key: number; to: "route"; points: LngLat[] };
+  | { key: number; to: "route"; points: LngLat[] }
+  /** A city picked from the city button's menu (3 Nov 2026): straight there, «ışınlanır». */
+  | { key: number; to: "city"; name: string };
 export function HeritageMap({
+  resting = false,
   sites,
   selectedId,
   highlightId,
@@ -116,6 +138,7 @@ export function HeritageMap({
   onFirstDraw,
   onSettled,
   onCityInView,
+  onWholeCountry,
   onLocate,
   flight,
   bottomInset = 0,
@@ -124,6 +147,8 @@ export function HeritageMap({
   finishedIds,
   routeColour = colors.cityBursa,
 }: {
+  /** Hidden behind a site's page, kept for the way back: no model downloads meanwhile. */
+  resting?: boolean;
   sites: HeritageSite[];
   selectedId?: string | undefined;
   /** A site the list points at (a row under the pointer): its pin shows as selected, the camera stays. */
@@ -146,6 +171,8 @@ export function HeritageMap({
   onSettled?: () => void;
   /** The city nearest to the map's centre whenever the map comes to rest. */
   onCityInView?: (city: CityRecord) => void;
+  /** Zoomed out past the cities (true), or back at one (false). */
+  onWholeCountry?: (whole: boolean) => void;
   /** The position button; the page decides what «near me» means. */
   onLocate?: () => void;
   flight?: MapFlight | undefined;
@@ -170,6 +197,7 @@ export function HeritageMap({
     selectRef = useRef(onSelect),
     clearRef = useRef(onClear),
     cityRef = useRef(onCityInView),
+    countryRef = useRef(onWholeCountry),
     selectedRef = useRef(selectedId),
     peekRef = useRef<HTMLDivElement>(null),
     // The padding the map is moving to: a pick's glide and the sheet's inset must not undo each other.
@@ -185,7 +213,8 @@ export function HeritageMap({
     openRef = useRef(onOpen),
     // Set once the visitor moves the map: a late city record must not pull the map back.
     moved = useRef(false),
-    latest = useRef({ sites, mapSettings, scenes, cities });
+    latest = useRef({ sites, mapSettings, scenes, cities }),
+    restingRef = useRef(resting);
   const [loaded, setLoaded] = useState(false),
     [failed, setFailed] = useState(false),
     [cityMode, setCityMode] = useState<
@@ -196,8 +225,13 @@ export function HeritageMap({
   openRef.current = onOpen;
   clearRef.current = onClear;
   cityRef.current = onCityInView;
+  countryRef.current = onWholeCountry;
   selectedRef.current = selectedId;
   latest.current = { sites, mapSettings, scenes, cities };
+  restingRef.current = resting;
+  useEffect(() => {
+    models.current?.setResting(resting);
+  }, [resting]);
   /**
    * Puts the short card `PEEK_CLEAR` to the right of its pin, level with it, and draws the thin line from the card to the
    * pin. Where the right side has no room the card goes as far to the pin's left, so the site stays in view.
@@ -284,11 +318,16 @@ export function HeritageMap({
           const m = new lib.Map({
             container: container.current,
             ...openingView(latest.current.cities),
-            pitch: TILT_PITCH,
+            pitch: tiltPitch(),
             bearing: OPENING_BEARING,
-            minZoom: 1.2,
+            minZoom: MIN_ZOOM,
+            maxBounds: TURKEY_BOUNDS,
+            renderWorldCopies: false,
             maxZoom: 19.5,
             maxPitch: 65,
+            // Phones report up to 3.5 pixels per CSS pixel; the map with its buildings and models draws at most 2
+            // (1.5 on a modest phone): the difference is hard to see and the GPU's work drops by half or more.
+            pixelRatio: mapPixelRatio(),
             attributionControl: { compact: true },
             style: mapStyle(),
           });
@@ -341,6 +380,7 @@ export function HeritageMap({
           // Far out only dots stay for the cities without sites, so the labels do not pile up.
           const mode = () => {
             const z = m.getZoom();
+            countryRef.current?.(z < CITY_MARKER_MAX_ZOOM);
             setCityMode(
               z >= CITY_MARKER_MAX_ZOOM
                 ? ""
@@ -353,7 +393,21 @@ export function HeritageMap({
           m.on("load", () => {
             if (disposed) return;
             // Globe view (§11.45): far out the earth is round, near a city MapLibre turns flat by itself.
-            m.setProjection({ type: "globe" });
+            if (!phoneMap()) m.setProjection({ type: "globe" });
+            // A phone tilts into 3D where the models show and lies flat out of it, when the zoom crosses that line
+            // (a press on 2D / 3D in between is kept).
+            if (phoneMap()) {
+              const near = () => m.getZoom() >= (latest.current.mapSettings?.modelMinZoom ?? 16) - 0.25;
+              let wasNear = near();
+              m.on("zoomend", () => {
+                const now = near();
+                if (now === wasNear) return;
+                wasNear = now;
+                const tilted = m.getPitch() > 5;
+                if (now && !tilted) m.easeTo({ pitch: PHONE_TILT_PITCH, duration: 450 });
+                else if (!now && tilted) m.easeTo({ pitch: 0, bearing: 0, duration: 450 });
+              });
+            }
             m.setSky(sky(currentTheme()));
             mode();
             setLoaded(true);
@@ -366,17 +420,24 @@ export function HeritageMap({
               if (calm < 2) return;
               clearInterval(watch);
               settledRef.current?.();
+              addModels();
             }, 200);
+            // The models (several MB) wait for the base map: it shows first, then they come. At most 4 s.
+            setTimeout(() => addModels(), 4000);
             reportCity();
             // A load event can follow a tile error; keep discovery available
             // through the schematic view for the lifetime of this map.
             // Models and the OSM building layer are an addition: whatever
             // goes wrong there leaves the pins and the base map as they are.
-            if (!latest.current.mapSettings) return;
+            let modelsAdded = false;
+            function addModels() {
+              if (modelsAdded || disposed || !latest.current.mapSettings) return;
+              modelsAdded = true;
             import("../lib/map-models")
               .then(({ createMapModels }) => {
                 if (disposed) return;
                 models.current = createMapModels(m, lib.MercatorCoordinate);
+                models.current.setResting(restingRef.current);
                 if (latest.current.mapSettings)
                   models.current.update(
                     latest.current.sites,
@@ -385,6 +446,7 @@ export function HeritageMap({
                   );
               })
               .catch(() => {});
+            }
           });
           m.on("error", () => {
             if (!disposed) setFailed(true);
@@ -419,7 +481,7 @@ export function HeritageMap({
     moved.current = true;
     m.flyTo({
       ...cityView(city),
-      pitch: m.getPitch() > 5 ? TILT_PITCH : 0,
+      pitch: m.getPitch() > 5 ? tiltPitch() : 0,
       bearing: 0,
       duration: 2600,
       essential: true,
@@ -465,7 +527,7 @@ export function HeritageMap({
             setNotice("");
             m.flyTo({
               ...cityView(city),
-              pitch: m.getPitch() > 5 ? TILT_PITCH : 0,
+              pitch: m.getPitch() > 5 ? tiltPitch() : 0,
               bearing: 0,
               duration: 2600,
               essential: true,
@@ -525,6 +587,7 @@ export function HeritageMap({
         accent: routeColour,
         buildingRoute,
         lang,
+        photos: true,
       }),
       () => cancelled,
       routeColour,
@@ -580,6 +643,20 @@ export function HeritageMap({
     const flat = { left: 0, right: 0, top: 0, bottom: 0 };
     if (flight.to === "point")
       m.easeTo({ center: flight.point, zoom: 16.5, duration: 900 });
+    else if (flight.to === "city") {
+      const city = latest.current.cities.find((c) => c.name === flight.name && c.map);
+      if (!city) return;
+      // A short fly, as a jump: far enough to feel the move, quick enough not to wait.
+      m.flyTo({
+        ...cityView(city),
+        pitch: tiltPitch(),
+        bearing: 0,
+        padding: flat,
+        duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1400,
+        curve: 1.8,
+        essential: true,
+      });
+    }
     else if (flight.to === "site") {
       if (m.getBounds().contains(flight.point)) return;
       const here = m.getCenter();
@@ -616,7 +693,7 @@ export function HeritageMap({
     else if (flight.to === "home")
       m.easeTo({
         ...openingView(latest.current.cities),
-        pitch: TILT_PITCH,
+        pitch: tiltPitch(),
         bearing: 0,
         padding: flat,
         duration: 900,
@@ -679,7 +756,7 @@ export function HeritageMap({
       <MapControls
         map={loaded ? map.current : null}
         ready={loaded}
-        tiltPitch={TILT_PITCH}
+        tiltPitch={tiltPitch()}
         onMove={() => {
           moved.current = true;
         }}

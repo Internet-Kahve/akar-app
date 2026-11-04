@@ -24,6 +24,7 @@
       "Cati"
     ]
   ],
+  "ic_gizle": true,
   "ic_parcalar": [
     "Levhalar",
     "Mihrap",
@@ -39,7 +40,7 @@
       "foto": "01",
       "azimut": 354,
       "egim": 45,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "not": "havadan, kuzey cephe ve iki minare"
     },
     {
@@ -47,24 +48,28 @@
       "hedef": "Tac_Kapi",
       "azimut": 354,
       "egim": 10,
-      "uzaklik": "yakın",
+      "uzaklik": "0.14",
       "not": "kuzeydeki taç kapı"
     },
     {
       "foto": "04",
       "azimut": 354,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden yirmi kubbe"
     },
     {
       "foto": "03",
       "hedef": "Ic_Sadirvan_Havuz",
       "azimut": 354,
-      "egim": 35,
-      "uzaklik": "orta",
+      "egim": 12,
+      "uzaklik": "0.12",
       "ic": true,
       "not": "içeride havuz ve selsebil"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "ulu-cami_v32_harita_pisik",
+  "glb_gece_harita_pisik": "night/ulu-cami_v32_night_v2_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 220°, 50° (dünya 34°); atlas mevcut harita dosyasından yansıtıldı; ölçüm ve ışık değerleri README'de."
 }

@@ -2,6 +2,12 @@
 
 Mevcut Next.js arayüzü Capacitor 8 ile iOS ve Android içine statik olarak paketlenir. `server.url`, uzak sayfa yükleme veya ayrı bir React Native arayüzü kullanılmaz. Harita tile'ları, canlı katalog, medya ve hesap işlemleri internet gerektirir; tam çevrimdışı kullanım desteklenmez.
 
+## 1.1.0 · derleme 2
+
+4 Kasım 2026 tarihli mobil güncelleme, `origin/main` üzerindeki `c3382c0` sürümünü içerir: daha hafif harita/3D çizimi, hazır ışıklandırmalı harita modelleri, telefon kartları ve hikâye akışları, erişilebilirlik ayarları ve güncel içerik desteği. Android `versionCode` ve iOS `CURRENT_PROJECT_VERSION` 2, iki platformun görünen sürümü 1.1.0'dır. Uygulama kimliği ve Android debug imzası korunduğundan önceki telefon kurulumu veri silmeden güncellenebilir.
+
+Mobil paket Next sunucusu çalıştırmadığı için katalog fotoğrafları `https://akar.tamerakdeniz.com/_next/image` üzerinden küçültülür; yerel blob/data görselleri bu sunucuya gönderilmez. Harita fotoğraf pinleri, canvas için gereken pikselleri Capacitor HTTP ile küçük görseller olarak okur. Bu kullanım tüm ağ isteklerini değiştirmez. Diğer API çağrıları mevcut CORS ve kimlik doğrulama yolunu kullanır. Haritaya geri dönüş mobilde tanıtım sayfasına yönlendirmez ve sayfayı yeniden yüklemez.
+
 ## Yapı ve kurulum
 
 - `apps/web`: ortak arayüz ve cihaz köprüleri.

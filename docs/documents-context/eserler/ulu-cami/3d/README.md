@@ -1,5 +1,85 @@
 # Ulu Cami: 3D üretim klasörü
 
+## Pişirilmiş harita sürümü (4 Kasım 2026, dördüncü deneme)
+
+Gündüz dosyası `export/ulu-cami_v32_harita_pisik.glb` (702 016 bayt), gece dosyası `export/night/ulu-cami_v32_night_v2_harita_pisik.glb` (862 744 bayt). İki dosyada da bina `Harita_Pisik`, zemin gölgesi `Harita_Golge` malzemesini kullanır. Her ikisi de `KHR_materials_unlit` taşır. Uygulama yakınlaşma 17,5 ve üstünde mevcut dosyaya geçer, 17'nin altında pişmiş dosyaya döner. **Kabul ölçütleri tutmadı (aşağıda). Görsel onay Muhammed’e aittir.**
+
+**Işık ve gölge.** Değişmedi. Araçlar ışığı `apps/web/src/lib/scene-light.ts` içindeki `MAP_LIGHT` ve `MAP_NIGHT_LIGHT` tanımlarından okur. Güneşin dünya azimutu 34°, modelin yerel azimutu 220° (354 + 40 − 174), yüksekliği 50°. `ORTAM_YUMUSAT`, `PARLAMA`, `AY_KATKI`, `Harita_Golge` yönü, düğüm adları ve opak şadırvan camı da değişmedi. Atlas 2048 piksel.
+
+| | Güneş / ay gücü | Yarımküre gücü | ACES pozlaması | Zemin gölgesi opaklığı |
+|---|---:|---:|---:|---:|
+| Gündüz | 2,10 | 1,15 | 1,05 | 0,30 |
+| Gece | 0,85 | 0,95 | 0,90 | 0,38 |
+
+**Ölçüm (`_kutuphane/blend_hat/pisik_olcum.mjs`).** Mevcut model, haritanın bugün çizdiği `export/ulu-cami_v32.glb` dosyasıdır; gece için `night/ulu-cami_v32_night_v2.glb` kullanılır. Uygulamanın kurulumu aynen taklit edilir: kenar yumuşatma kapalı, gündüz 1024 px gölge haritası, ışıksız gece dosyası gölgesiz. Kamera telefonun görünümüdür: 780 × 1688 px, perspektif, dikey açı 36,87°, eğim 60°. Ölçüm 440 m (yakınlaşma 17,4) ve 220 m uzaklıkta yapılır. Sekiz detay karesi vardır; her biri hedefin çevresindeki 22 m'lik kesittir. Ölçüm yalnız o karenin parçalarında yapılır:
+
+- **keskinlik:** pişmiş ve mevcut görüntülerin Sobel enerjisi oranı
+- **SSIM:** parlaklık kanalında, 11 px Gauss penceresiyle
+- **parlaklık:** piksel başına oranın medyanı
+- **renk sapması:** pişmiş rengin, mevcutun 5 × 5 komşuluğundaki Lab kutusunun dışında kalan piksel payı; pay L için ±10, a/b için ±8
+
+Çıktılar `kontrol/v32_pisik/uygulama/<etiket>/` klasörüne yazılır: `uclu_*` dosyaları mevcut | pişmiş | fark karşılaştırmalarıdır, `sayfa_*` dosyaları ise tema ve uzaklık başına özet sayfalardır. Tablolar `kontrol/v32_pisik/rapor.json → uygulama_olcum.<etiket>` alanındadır. Tutulan etiketler şunlardır: `0_baslangic` (deneme 3), `1_leke_tasma_son`, `2_kafes_son` (geri alınan madde 2), `son` (teslim edilen dosyalar). `tani_*` etiketleri neden tespitinin kanıtıdır.
+
+```sh
+GT_DIR=<kurulum> node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/ulu-cami/3d v32 --uygulama <etiket> [--gun=<3d'ye göre yol> --gece=<yol>]
+```
+
+**Leke ve taşmanın nedeni (madde 1).** Kırmızımsı ve kahverengi saçaklar, merdiven rıhtlarındaki şeritler ve mukarnastaki benekler atlas texellerinin kendisindeydi. Mip süzmesi kapatılınca sapma değişmedi: alt pencerede %18,8, taç kapıda %4,1. UV örtüşmesi yoktu; adalar en az 4 px aralıklıydı. Kaynak Cycles ara pişirmesiydi, çünkü dar girinti ve basamak aralarında tam ışın gölgesi taş rengini koyulaştırıyordu. Eski yansıtma bu texelleri düzeltmiyordu. Görüntüler atlasla yaklaşık 1:1 yoğunlukta çiziliyordu ve komşu-piksel süzgeci 1–3 px'lik ince şeritleri siluet sayıp eliyordu. Sunum dosyası neden değildi: uygulama kamerasından harita dosyasıyla SSIM 0,95–1,00, sapma %0 ölçüldü (`tani_sunum_mi`).
+
+**Yeni yansıtma (`pisik_gorsel.html → yansitAtlas`, `pisik_yansit.mjs → yansitUygulama`).** Atlas mevcut harita dosyasından, uygulamanın ışığıyla yansıtılır. Kullanılan 29 bakış şunlardır:
+
+- 12 bakış 30° yükseklikte (uygulama eğimi)
+- 8 bakış 12° yükseklikte
+- 8 bakış 55° yükseklikte
+- 1 bakış tepeden
+
+Her bakış ortografiktir, 1,6 cm/px'lik 2048 px döşemelere bölünür; toplam 215 döşeme çizilir. Texel, kendisine düşen piksellerin doğrusal ortalamasıdır. Ağırlık (n·v)² ile çarpılır. Güneşi arkasına alan bakışlar önde tutulur: ağırlık 0,25 + 0,75·cos Δaz ile çarpılır. Bunun nedeni uygulamanın güneşi ön cepheye bakanın arkasından vurdurmasıdır. Ada içinde örneği olmayan texel en çok 16 adımda komşu örnekten doldurulur. Ada dışı piramit taşırmasıyla doldurulur. Mahya texelleri ve alfası deneme 3'teki gibi kalır; gece maske eşiği 0,2'dir. WebP kalitesi 92'dir.
+
+**Teslim tablosu (`son`, 440 m; geçen ✓).** Sütunlar: SSIM / keskinlik / parlaklık / renk sapması.
+
+| Kare | Gündüz | Gece |
+|---|---|---|
+| kurşun kubbe | 0,904 / 0,85 / 1,047 / %0,04 | ✓ 0,908 / 1,54 / 1,008 / %0,13 |
+| şadırvan kubbesi | 0,718 / 0,54 / 1,056 / %0,52 | 0,886 / 0,94 / 1,001 / %6,92 |
+| kasnak pencereleri | 0,612 / 0,36 / 1,085 / %1,26 | 0,957 / 1,10 / 0,975 / %0,75 |
+| üst cephe pencereleri | 0,920 / 0,46 / 1,054 / %0,00 | ✓ 0,958 / 1,23 / 1,010 / %0,36 |
+| alt pencere parmaklıkları | ✓ 0,966 / 0,94 / 1,008 / %0,00 | ✓ 0,928 / 0,93 / 0,994 / %0,00 |
+| cephe taş örgüsü | 0,942 / 0,77 / 0,999 / %0,04 | 0,940 / 0,87 / 1,000 / %0,82 |
+| taç kapı | ✓ 0,955 / 0,88 / 1,000 / %0,10 | 0,914 / 0,95 / 1,002 / %0,64 |
+| alem ve şerefe | ✓ 0,902 / 0,99 / 1,000 / %0,14 | 0,932 / 0,94 / 1,004 / %0,73 |
+
+16 karenin 6'sı geçiyor; başlangıçta 1'i geçiyordu. **Kasnak gece başlangıçta geçiyordu (%0,25), madde 1 sonrası geçmiyor (%0,75).** Yalnız kasnak pencerelerini geri almak bunu düzeltmedi. Bütün gece dosyasını geri almak ise kurşun kubbe, üst cephe ve alt pencere gece karelerini kaybettirir. Karar Muhammed'indir. 220 m değerleri `rapor.json`'dadır.
+
+Genel ölçütler (440 m, tam çerçeve, bütün bina):
+
+| | Medyan | p10 | p90 | %25’ten koyu |
+|---|---:|---:|---:|---:|
+| Gündüz | 1,017 | 0,979 | 1,077 | %0,34 |
+| Gece | 1,003 | 0,953 | 1,065 | %1,46 |
+
+Yapısal doğrulama geçti: düğümler aynı, yalnız `Harita_Golge` eklendi, kutu farkı 2,4 mm, 2/2 ışıksız malzeme var. Üçgen sayısı gündüz 90 256, gece 90 420. Boyut sınırı gündüz 1100 KB, gece 1300 KB.
+
+**Madde 2 (kafes) geri alındı.** Görünürlük, 29 bakış yönünden ışın atılarak hesaplandı. Görünür yüzey yalnız 18 704 m²; 36 093 m² hiçbir yönden görünmüyor (iç mekân, cephe arkası, kafes arkası cam). Görünmeyen yüzlere 0,03 ölçek verilince kafes 2,56 cm/px'e indi (gece 2,36), diğer görünür yüzler yaklaşık 10 cm/px'te kaldı. Örneklenen texel sayısı 0,83 M'den 1,64 M'ye çıktı. Cephe taş gece karesi geçti. Ancak yeni UV düzeni mahyayı yeniden örnekledi ve kurşun kubbe gece karesi bozuldu: SSIM 0,908 → 0,873. Dört yol denendi: eşik (0,2 / 0,27 / 0,35 / 0,45 / 0,5), dokudan aktarım, hale yansıtması ve deneme 3 mahyası. Hiçbiri kareyi geri getirmedi. Dosyalar, blend'ler ve günlük `yedek/pisik_deneme4_madde2_kafes/` altındadır. `build/pisir_harita.py` bu düzeni üretir: `KAFES_CM`, `GIZLI_UV_OLCEK`.
+
+**Neden tutmuyor, atlasın gerçek sınırı.** 440 m'de telefon pikseli 17,3 cm'dir, dik cephede yaklaşık 20 cm. Atlas görünür yüzlerde yaklaşık 9–10 cm/px'tir, yani ekran çözünürlüğünün üstündedir. Madde 2'de örneklenen texeller iki katına çıktı ve kafes 2,6 cm/px'e indi, ama aşağıdaki kareler değişmedi:
+
+- **Şadırvan (gündüz ve gece):** Mevcut camda %40 saydamlık var; iç mekân ve kasnak paralaksla görünüyor. Opak tek dokuda bu yalnız bir yönden doğru olabilir.
+- **Kurşun kubbe ve üst cephe (gündüz parlaklığı +%5):** Güneş parlaması görünüşe bağlı ve ışıksız dokuda sabit.
+- **Kasnak ve üst cephe kafesleri (gündüz keskinlik 0,36–0,46):** Mevcutta alfa maskeli kafes en-yakın mip süzmesiyle çiziliyor. 440 m'de delikler kırık, örtüşmeli bir desen oluşturuyor; doğru süzülmüş atlas bu kenar enerjisini üretmez. Atlas süzmesi de denendi (NEAREST_MIPMAP_NEAREST, LINEAR_MIPMAP_NEAREST); değişmedi.
+- **Cephe taşı (gündüz keskinlik 0,77):** Mevcuttaki NEAREST süzmeli taş dokusu daha sert görünüyor.
+- **Gece renk sapmaları (%0,6–0,8):** Taç kapı, alem ve kasnak karelerinde ince parlak çizgilerde ve mahya kenarında görülüyor.
+
+Gereken piksel sayısı: 220 m'de bile ekran çözünürlüğüne yaklaşmak için 18 704 m² yaklaşık 4 cm/px ister. %59 dolulukla bu yaklaşık 20 M texel eder, oysa 2048² 4,2 M texeldir. 4096² atlas 4,3 cm/px verir. Bu ölçüm karelerinin sorunu çözünürlük değil, görünüşe bağlılık ve mevcut modelin süzme biçimidir.
+
+**Üretim.** Teslim dosyaları deneme 3 dosyalarından türetildi: `yedek/pisik_deneme3_2026-11-04/` (UV düzeni, Cycles tabanı ve mahya). Önce bu dosyalar `export/` altına kopyalanır, sonra repo kökünden şu komut çalıştırılır:
+
+```sh
+GT_DIR=<gltf-transform + draco3dgltf + sharp> node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/ulu-cami/3d v32 --yansit-uygulama --uygulama son
+GT_DIR=<...> node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_dogrula.mjs docs/documents-context/eserler/ulu-cami/3d v32
+```
+
+Sonuç belirlenimcidir. SHA-256 değerleri: gündüz `8948931c…cb66a`, gece `01e51ac6…50c9d`. Tam pişirme (`blender -b --python-exit-code 1 --python docs/documents-context/eserler/ulu-cami/3d/build/pisir_harita.py -- hepsi`) madde 2 düzenini üretir. Bu pişirme `blend/*_harita_pisik_cycles.glb` dosyasını yazar ve yansıtmayı o dosyadan başlatır. Gece mahyası için `--mahya-kaynak=mevcut` gerekir.
+
 Güncel sürüm **v32** (29 Ekim 2026; kubbe ve çatıda kurşun ek dokusu, Bedesten gibi; aşağıda). Önceki: **v31** (29 Ekim 2026; levhalar fotoğraftan çeşitlendi, yalnız sunumda). Daha önce: **v30** (29 Ekim 2026; iç mekân ayrıntısı yalnız sunumda). Önceki not: güncel sürüm **v27** (27 Ekim 2026; v26 + iç mekân: boş gövde, payeler, kemerler, mihrap, minber, yazısız levhalar; «Kubbeleri kaldır» için). **v26 dosyaları silinmedi:** `design/test-redmi9t/` (v1 prototipi) hâlâ v26'yı açıyor; v1 bırakılınca silinebilir. Bu klasörde normalde yalnızca son sürüm tutulur; önceki sürümler aşağıdaki tabloda kayıtlıdır. Kaynaklar `../ref/` altında, model kararları `../ulu-cami_notlar.md` içinde.
 
 ## İçerik

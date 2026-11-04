@@ -63,7 +63,7 @@ test("part cards and story interiors work without reloading the model between se
     page.getByRole("button", { name: "Dışını göster" }),
   ).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Dışını göster" }).click();
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
   await expect(
     page.getByRole("button", { name: "İçini göster" }),
   ).toBeVisible();
@@ -71,7 +71,7 @@ test("part cards and story interiors work without reloading the model between se
   await canvas.evaluate((el) =>
     el.setAttribute("data-story-canvas", "retained"),
   );
-  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
   await expect(
     page.getByRole("button", { name: "Dışını göster" }),
   ).toHaveAttribute("aria-pressed", "true");

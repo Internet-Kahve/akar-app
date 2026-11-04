@@ -52,11 +52,12 @@ const trace = (extra: Record<string, unknown> = {}) => ({
 test("a present-day pair is matched to its archive photograph by Foto Atlas id and keeps its credit line and licence word for word", async () => {
   const out = await read({ pairs: [pair()], images: ["bugun/es-1.webp"] });
   assert.deepEqual(out.history["1"]!.present, {
-    id: "site-present-1", alt: "Bugünkü görünüm: Eski bir", angleMatch: "near", file: "eserler/x/gecmisi-gor/bugun/es-1.webp", credit: CREDIT, license: LICENSE,
+    id: "site-present-1", alt: "Bugünkü görünüm: Eski bir", angleMatch: "near", imagined: false, file: "eserler/x/gecmisi-gor/bugun/es-1.webp", credit: CREDIT, license: LICENSE,
   });
   assert.equal(out.history["2"]!.present, null, "an archive photograph without a pair stays without one");
   assert.deepEqual(out.traces, []);
   assert.equal((await read({ pairs: [pair({ aciBenzerligi: "ayni" })], images: ["bugun/es-1.webp"] })).history["1"]!.present!.angleMatch, "same");
+  assert.equal((await read({ pairs: [pair({ temsili: true })], images: ["bugun/es-1.webp"] })).history["1"]!.present!.imagined, true, "a generated present-day image says so");
 });
 
 test("only approved team samples are read; a real contribution or a pending one is skipped and counted", async () => {

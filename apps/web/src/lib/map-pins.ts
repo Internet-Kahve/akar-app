@@ -12,6 +12,7 @@ import type {
   Map as MapLibreMap,
 } from "maplibre-gl";
 import { localize, type Lang } from "./i18n";
+import { sized } from "./image-size";
 import { currentTheme, type Theme } from "./theme";
 
 /**
@@ -58,6 +59,9 @@ const PIXEL_RATIO = 2;
 const PIN_WIDTH = 32;
 const PIN_HEIGHT = 38.4;
 const STAR_SIZE = 36;
+/** The photograph pin (`photoPinImage`): a 40 px round photograph on a point. */
+const PHOTO_PIN_WIDTH = 40;
+const PHOTO_PIN_HEIGHT = 48;
 /** A tap lands this many pixels around a pin, as the old marker's hit area did. */
 const HIT_PADDING = 4;
 
@@ -76,6 +80,8 @@ export interface PinProperties {
   selected: boolean;
   /** Image id of the name drawn in the display serif (`labelImageId`); empty until it is drawn, the glyph text stands in. */
   label: string;
+  /** The site's cover photograph, small (`look.photos`); the pin shows it inside the arch. Empty: the kind's symbol. */
+  photo: string;
 }
 export type PinCollection = GeoJSON.FeatureCollection<
   GeoJSON.Point,
@@ -105,7 +111,7 @@ export function pinFeatures(
   sites: HeritageSite[],
   routeIds: string[],
   selectedId?: string,
-  look: { finishedIds?: string[]; accent?: string; lang?: Lang; buildingRoute?: boolean } = {},
+  look: { finishedIds?: string[]; accent?: string; lang?: Lang; buildingRoute?: boolean; photos?: boolean } = {},
 ): PinCollection {
   return {
     type: "FeatureCollection",
@@ -116,6 +122,12 @@ export function pinFeatures(
         const stop = routeIds.indexOf(site.id) + 1;
         const finished = look.finishedIds?.includes(site.id) ?? false;
         const selected = site.id === selectedId;
+        // A pin with the site's own photograph says which site it is (Muhammed, 3 Nov 2026: «pinler anlaşılmıyor»).
+        const cover = look.photos
+          ? (site.photos?.find((p) => p.id === site.coverPhotoId) ?? site.photos?.[0])?.src
+          : undefined;
+        const photo = (cover && sized(cover, 40)) || "";
+        const plain = pinImageId(site.kind, stop, finished, look.accent, selected);
         return {
           type: "Feature",
           geometry: { type: "Point", coordinates: site.coordinates },
@@ -126,11 +138,12 @@ export function pinFeatures(
             building: !!look.buildingRoute,
             kind: site.kind,
             stop,
-            icon: pinImageId(site.kind, stop, finished, look.accent, selected),
+            icon: photo && !stop ? `photo-${site.id}${plain.slice(`pin-${site.kind}`.length)}` : plain,
             finished,
             order: site.displayOrder ?? UNRANKED,
             selected,
             label: "",
+            photo: stop ? "" : photo,
           },
         };
       }),
@@ -224,14 +237,15 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "text-size": 12,
       "text-line-height": 1.333,
       "text-variable-anchor-offset": [
+        // Clear of the photograph pin's 44 × 53 px box (photoPinImage), at its round's middle.
         "left",
-        [1.7, -1.6],
+        [2.2, -2.3],
         "right",
-        [-1.7, -1.6],
+        [-2.2, -2.3],
         "top",
         [0, 0.4],
         "bottom",
-        [0, -3.8],
+        [0, -4.8],
       ],
       "text-justify": "auto",
       "text-optional": true,
@@ -349,6 +363,83 @@ async function pinImage(kind: SiteKind, finished: boolean, selected = false) {
 }
 
 /**
+ * The pin with the site's photograph inside the arch, framed in its kind's colour. A photograph that does not load
+ * leaves the kind's symbol pin.
+ */
+async function photoPinImage(kind: SiteKind, src: string, finished: boolean, selected: boolean) {
+  // The live optimiser does not send canvas CORS headers. In a native WebView,
+  // read just this small, public thumbnail through the device HTTP bridge.
+  const imageOrigin = process.env.NEXT_PUBLIC_IMAGE_ORIGIN;
+  if (imageOrigin && src.startsWith(`${imageOrigin}/_next/image?`)) {
+    const { Capacitor, CapacitorHttp } = await import("@capacitor/core");
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const response = await CapacitorHttp.get({ url: src, responseType: "blob", connectTimeout: 8000, readTimeout: 8000 });
+        const type = Object.entries(response.headers).find(([key]) => key.toLowerCase() === "content-type")?.[1]?.split(";")[0];
+        if (response.status !== 200 || typeof response.data !== "string" || !type || !/^image\/(jpeg|png|webp|avif)$/.test(type))
+          return pinImage(kind, finished, selected);
+        src = `data:${type};base64,${response.data.replace(/\s/g, "")}`;
+      } catch {
+        return pinImage(kind, finished, selected);
+      }
+    }
+  }
+  const photo = await new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.decoding = "async";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+  if (!photo) return pinImage(kind, finished, selected);
+  // A round photograph in a ring of the kind's colour, on a short point: larger than the symbol pin, so the
+  // photograph can be told apart on a phone.
+  const W = PHOTO_PIN_WIDTH;
+  const H = PHOTO_PIN_HEIGHT;
+  const r = W / 2 - 2;
+  const cx = W / 2;
+  const cy = r + 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(W * PIXEL_RATIO);
+  canvas.height = Math.ceil(H * PIXEL_RATIO);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
+  const shape = new Path2D();
+  shape.arc(cx, cy, r, Math.PI * 0.62, Math.PI * 2.38);
+  shape.lineTo(cx, H - 1.5);
+  shape.closePath();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.28)";
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetY = 1;
+  ctx.fillStyle = ROLE_COLOURS[kindCategory[kind]];
+  ctx.fill(shape);
+  ctx.shadowColor = "transparent";
+  ctx.lineWidth = selected ? 3 : 1.5;
+  ctx.strokeStyle = selected ? colors.gold : "#FFFFFF";
+  ctx.stroke(shape);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 3, 0, Math.PI * 2);
+  ctx.clip();
+  const side = (r - 3) * 2;
+  const k = Math.max(side / photo.naturalWidth, side / photo.naturalHeight);
+  const w = photo.naturalWidth * k;
+  const h = photo.naturalHeight * k;
+  ctx.drawImage(photo, cx - w / 2, cy - h / 2, w, h);
+  ctx.restore();
+  if (finished) {
+    ctx.translate(W - PIN_WIDTH + 1, -1);
+    drawTick(ctx);
+  }
+  try {
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  } catch {
+    return pinImage(kind, finished, selected);
+  }
+}
+
+/**
  * Site names in the app's display serif (Cormorant Garamond, as the prototype draws them): the glyph server
  * has no serif, so each name is drawn once on a canvas, ink with a white halo, and shown as an image inside the
  * label, which keeps the map's own label placement and collision.
@@ -449,7 +540,9 @@ async function addPinImages(
           id,
           p.stop
             ? stopImage(p.stop, accent)
-            : await pinImage(p.kind, p.finished, p.selected),
+            : p.photo
+              ? await photoPinImage(p.kind, p.photo, p.finished, p.selected)
+              : await pinImage(p.kind, p.finished, p.selected),
         ] as const,
     ),
   );

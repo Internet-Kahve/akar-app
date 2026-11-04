@@ -95,6 +95,7 @@ export async function loadCatalog(
                 parts: site.model.parts,
                 coverGroups: site.model.coverGroups ?? [],
                 interiorParts: site.model.interiorParts ?? [],
+                hideClosedInterior: site.model.hideClosedInterior ?? false,
               },
             ]
           : []),

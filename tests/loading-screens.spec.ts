@@ -51,13 +51,16 @@ test("the opening screen names the default city and draws its pattern from the c
   await expect(page.locator(".map-canvas canvas")).toBeVisible();
 });
 
-test("the emblem is drawn stroke by stroke, and stands drawn when the visitor asks for less motion", async ({ page }) => {
+test("the emblem is drawn once and turns, and stands drawn when the visitor asks for less motion", async ({ page }) => {
   const release = await holdMap(page);
   await page.goto("/#view=map");
   const stroke = page.locator(".opening .emblem path");
   await expect(stroke).toHaveAttribute("pathLength", "1");
-  await expect(stroke).toHaveCSS("animation-name", "emblem-draw");
-  await expect(stroke).toHaveCSS("animation-duration", "2.6s");
+  // Drawn once, then turning in place with a ring running round it (3 Nov 2026: «yanıp sönmesin, dönsün»).
+  await expect(stroke).toHaveCSS("animation-name", "emblem-draw-once");
+  await expect(stroke).toHaveCSS("animation-duration", "1.4s");
+  await expect(page.locator(".opening .emblem .emblem-turn")).toHaveCSS("animation-name", "emblem-turn");
+  await expect(page.locator(".opening .emblem .emblem-ring")).toHaveCSS("animation-name", "emblem-ring");
   release();
   // The map draws slowly in software rendering under a full run; the other opening checks wait as long.
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
@@ -157,7 +160,7 @@ test("the 3D card tells the percentage and the megabytes of the download itself,
     await expect(page.locator(".model-viewer")).toHaveCSS("background-image", /linear-gradient/);
 
     // The panel beside the scene works while the model comes: «Oku» opens the story.
-    await page.getByRole("button", { name: "Oku", exact: true }).click();
+    await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
     await expect(page).toHaveURL(/view=story/);
     const storyCard = page.locator(".model-loading");
     await expect(storyCard.locator(".model-loading-title")).toHaveText("3D model yükleniyor · %62");

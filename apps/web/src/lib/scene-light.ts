@@ -37,10 +37,10 @@ export function addSceneLights(scene: THREE.Scene, light: SceneLight) {
 }
 
 /**
- * The map's light, the prototype's (30 Oct 2026): ACES tone mapping, a warm sky light and one sun that casts real
- * shadows. The sun stands in front of the site's main façade (`frontDeg`), `acrossDeg` to the left of a visitor
- * facing it, so every site shows its lit front; high and soft so light façades do not burn out close up. Without a
- * façade direction the sun comes from the city's `azimuthDeg`.
+ * The map's light: ACES tone mapping, a warm sky light and one sun that casts real shadows. The sun stands where it
+ * stands on the site's own page (Muhammed, 3 Nov 2026: «mapste de sunum kısmındaki güneş yönü gölgesi»), `acrossDeg`
+ * from the main façade (`frontDeg`) and `elevationDeg` high, as strong by day. Without a façade direction it comes
+ * from the city's `azimuthDeg`. A baked map file carries this same sun: change it here, bake again.
  */
 export const MAP_LIGHT = {
   exposure: 1.05,
@@ -48,9 +48,9 @@ export const MAP_LIGHT = {
   ground: 0x8c948f,
   ambient: 1.15,
   colour: 0xfff4e0,
-  sun: 1.5,
-  elevationDeg: 62,
-  acrossDeg: 20,
+  sun: 2.1,
+  elevationDeg: 50,
+  acrossDeg: 40,
   shadowMapSize: 1024,
   /** Opacity of the cast shadow on the map's ground. */
   shadowOpacity: 0.3,
@@ -69,11 +69,11 @@ export const MAP_NIGHT_LIGHT = {
   shadowOpacity: 0.38,
 };
 /**
- * The site viewer's light (detail view): the map's sky with a stronger sun, as the model is seen close up. By night
+ * The site viewer's light (detail view): the map's sky and sun. By night
  * the map's moonlight, a little brighter, so the presentation disc and light stone stay soft blue, not white.
  */
 export const DETAIL_LIGHT: Record<Theme, typeof MAP_NIGHT_LIGHT> = {
-  day: { exposure: 1.05, sky: MAP_LIGHT.sky, ground: MAP_LIGHT.ground, ambient: 1.15, colour: MAP_LIGHT.colour, sun: 2.1, shadowOpacity: MAP_LIGHT.shadowOpacity },
+  day: { exposure: 1.05, sky: MAP_LIGHT.sky, ground: MAP_LIGHT.ground, ambient: MAP_LIGHT.ambient, colour: MAP_LIGHT.colour, sun: MAP_LIGHT.sun, shadowOpacity: MAP_LIGHT.shadowOpacity },
   night: { ...MAP_NIGHT_LIGHT, exposure: 0.85, ambient: 0.9, sun: 1.2 },
 };
 /** Shared close-up lighting for the detail, reading and story stages. */
@@ -81,8 +81,8 @@ export function addModelLights(scene: THREE.Scene, radius: number, frontDeg: num
   const light = DETAIL_LIGHT[theme];
   scene.add(new THREE.HemisphereLight(light.sky, light.ground, light.ambient));
   const sun = new THREE.DirectionalLight(light.colour, light.sun);
-  const azimuth = THREE.MathUtils.degToRad(frontDeg + 40);
-  const elevation = THREE.MathUtils.degToRad(50);
+  const azimuth = THREE.MathUtils.degToRad(frontDeg + MAP_LIGHT.acrossDeg);
+  const elevation = THREE.MathUtils.degToRad(MAP_LIGHT.elevationDeg);
   sun.position.set(Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation), -Math.cos(azimuth) * Math.cos(elevation)).multiplyScalar(radius * 2.5);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -145,7 +145,7 @@ export function aimMapSun(
     .add(centre);
   sun.target.position.copy(centre);
   sun.target.updateMatrixWorld();
-  sun.shadow.normalBias = radius / MAP_LIGHT.shadowMapSize;
+  sun.shadow.normalBias = radius / sun.shadow.mapSize.x;
   Object.assign(sun.shadow.camera, {
     left: -radius,
     right: radius,

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { requireRole } from "../../platform/auth.ts";
-import { MAX_EVENTS_PER_BATCH } from "./events.ts";
+import { MAX_EVENTS_PER_BATCH } from "@akar/domain";
 import { SiteStatsResponse, StatsQuery, StatsResponse, UsageAccepted, UsageBatch } from "./schemas.ts";
 import { getSiteStats, getStats, recordUsage, statsRange } from "./service.ts";
 

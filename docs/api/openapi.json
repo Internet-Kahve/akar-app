@@ -719,6 +719,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -744,6 +758,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -847,6 +865,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -1360,6 +1382,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -1731,6 +1757,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -2477,6 +2507,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -2589,6 +2623,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -2606,7 +2644,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -2701,6 +2740,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -3026,6 +3067,20 @@
                               "null"
                             ]
                           },
+                          "mapBakedModelId": {
+                            "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedNightModelId": {
+                            "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "openingCamera": {
                             "anyOf": [
                               {
@@ -3051,6 +3106,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -3154,6 +3213,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -3667,6 +3730,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -4038,6 +4105,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -4784,6 +4855,10 @@
                                       "type": "number",
                                       "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                     },
+                                    "exact": {
+                                      "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                      "type": "boolean"
+                                    },
                                     "interior": {
                                       "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                       "type": "boolean"
@@ -4896,6 +4971,10 @@
                                     "type": "string"
                                   },
                                   "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                                },
+                                "hideClosedInterior": {
+                                  "type": "boolean",
+                                  "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -4913,7 +4992,8 @@
                                 "parts",
                                 "triangles",
                                 "coverGroups",
-                                "interiorParts"
+                                "interiorParts",
+                                "hideClosedInterior"
                               ],
                               "additionalProperties": false
                             },
@@ -5008,6 +5088,8 @@
                           "coverMediaId",
                           "aboutCoverMediaId",
                           "nightModelId",
+                          "mapBakedModelId",
+                          "mapBakedNightModelId",
                           "openingCamera",
                           "updatedAt",
                           "stories",
@@ -6871,6 +6953,20 @@
                               "null"
                             ]
                           },
+                          "mapBakedModelId": {
+                            "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedNightModelId": {
+                            "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "openingCamera": {
                             "anyOf": [
                               {
@@ -6896,6 +6992,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -6999,6 +7099,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -7512,6 +7616,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -7883,6 +7991,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -8629,6 +8741,10 @@
                                       "type": "number",
                                       "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                     },
+                                    "exact": {
+                                      "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                      "type": "boolean"
+                                    },
                                     "interior": {
                                       "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                       "type": "boolean"
@@ -8741,6 +8857,10 @@
                                     "type": "string"
                                   },
                                   "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                                },
+                                "hideClosedInterior": {
+                                  "type": "boolean",
+                                  "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -8758,7 +8878,8 @@
                                 "parts",
                                 "triangles",
                                 "coverGroups",
-                                "interiorParts"
+                                "interiorParts",
+                                "hideClosedInterior"
                               ],
                               "additionalProperties": false
                             },
@@ -8853,6 +8974,8 @@
                           "coverMediaId",
                           "aboutCoverMediaId",
                           "nightModelId",
+                          "mapBakedModelId",
+                          "mapBakedNightModelId",
                           "openingCamera",
                           "updatedAt",
                           "stories",
@@ -10720,6 +10843,10 @@
                       },
                       "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                     },
+                    "hideClosedInterior": {
+                      "type": "boolean",
+                      "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -10773,6 +10900,7 @@
                     "triangles",
                     "coverGroups",
                     "interiorParts",
+                    "hideClosedInterior",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -10876,6 +11004,10 @@
                       },
                       "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                     },
+                    "hideClosedInterior": {
+                      "type": "boolean",
+                      "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -10929,6 +11061,7 @@
                     "triangles",
                     "coverGroups",
                     "interiorParts",
+                    "hideClosedInterior",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -11475,6 +11608,10 @@
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                          },
                           "bytes": {
                             "anyOf": [
                               {
@@ -11528,6 +11665,7 @@
                           "triangles",
                           "coverGroups",
                           "interiorParts",
+                          "hideClosedInterior",
                           "bytes",
                           "partsStatus",
                           "uploadedBy",
@@ -11878,6 +12016,10 @@
                       },
                       "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                     },
+                    "hideClosedInterior": {
+                      "type": "boolean",
+                      "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -11931,6 +12073,7 @@
                     "triangles",
                     "coverGroups",
                     "interiorParts",
+                    "hideClosedInterior",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -12922,6 +13065,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -12947,6 +13104,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -13050,6 +13211,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -13563,6 +13728,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -13934,6 +14103,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -14717,6 +14890,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -14829,6 +15006,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -14846,7 +15027,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -15127,6 +15309,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -15512,6 +15696,20 @@
                               "null"
                             ]
                           },
+                          "mapBakedModelId": {
+                            "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedNightModelId": {
+                            "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "openingCamera": {
                             "anyOf": [
                               {
@@ -15537,6 +15735,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -15640,6 +15842,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -16153,6 +16359,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -16524,6 +16734,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -17307,6 +17521,10 @@
                                       "type": "number",
                                       "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                                     },
+                                    "exact": {
+                                      "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                      "type": "boolean"
+                                    },
                                     "interior": {
                                       "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                       "type": "boolean"
@@ -17419,6 +17637,10 @@
                                     "type": "string"
                                   },
                                   "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                                },
+                                "hideClosedInterior": {
+                                  "type": "boolean",
+                                  "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -17436,7 +17658,8 @@
                                 "parts",
                                 "triangles",
                                 "coverGroups",
-                                "interiorParts"
+                                "interiorParts",
+                                "hideClosedInterior"
                               ],
                               "additionalProperties": false
                             },
@@ -17717,6 +17940,8 @@
                           "coverMediaId",
                           "aboutCoverMediaId",
                           "nightModelId",
+                          "mapBakedModelId",
+                          "mapBakedNightModelId",
                           "openingCamera",
                           "updatedAt",
                           "stories",
@@ -18066,6 +18291,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -18091,6 +18330,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -18194,6 +18437,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -18707,6 +18954,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -19078,6 +19329,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -19861,6 +20116,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -19973,6 +20232,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -19990,7 +20253,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -20271,6 +20535,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -20786,6 +21052,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -20811,6 +21091,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -20914,6 +21198,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -21427,6 +21715,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -21798,6 +22090,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -22581,6 +22877,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -22693,6 +22993,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -22710,7 +23014,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -22991,6 +23296,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -23360,6 +23667,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -23385,6 +23706,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -23488,6 +23813,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -24001,6 +24330,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -24372,6 +24705,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -25155,6 +25492,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -25267,6 +25608,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -25284,7 +25629,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -25565,6 +25911,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -25659,8 +26007,12 @@
                           },
                           "distance": {
                             "type": "number",
-                            "minimum": 0.1,
+                            "minimum": 0.05,
                             "maximum": 4
+                          },
+                          "exact": {
+                            "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -25979,6 +26331,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -26004,6 +26370,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -26107,6 +26477,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -26620,6 +26994,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -26991,6 +27369,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -27774,6 +28156,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -27886,6 +28272,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -27903,7 +28293,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -28184,6 +28575,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -28548,6 +28941,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -28573,6 +28980,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -28676,6 +29087,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -29189,6 +29604,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -29560,6 +29979,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -30343,6 +30766,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -30455,6 +30882,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -30472,7 +30903,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -30753,6 +31185,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -31230,6 +31664,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -31255,6 +31703,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -31358,6 +31810,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -31871,6 +32327,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -32242,6 +32702,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -33025,6 +33489,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -33137,6 +33605,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -33154,7 +33626,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -33435,6 +33908,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -33548,8 +34023,12 @@
                             },
                             "distance": {
                               "type": "number",
-                              "minimum": 0.1,
+                              "minimum": 0.05,
                               "maximum": 4
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             },
                             "interior": {
                               "description": "true = bu açıda model açılır, içeriden çekilmiş fotoğraf",
@@ -33873,6 +34352,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -33898,6 +34391,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -34001,6 +34498,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -34514,6 +35015,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -34885,6 +35390,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -35668,6 +36177,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -35780,6 +36293,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -35797,7 +36314,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -36078,6 +36596,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -36505,6 +37025,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -36530,6 +37064,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -36633,6 +37171,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -37146,6 +37688,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -37517,6 +38063,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -38300,6 +38850,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -38412,6 +38966,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -38429,7 +38987,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -38710,6 +39269,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -38899,8 +39460,12 @@
                                 },
                                 "distance": {
                                   "type": "number",
-                                  "minimum": 0.1,
+                                  "minimum": 0.05,
                                   "maximum": 4
+                                },
+                                "exact": {
+                                  "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -39337,6 +39902,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -39362,6 +39941,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -39465,6 +40048,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -39978,6 +40565,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -40349,6 +40940,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -41132,6 +41727,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -41244,6 +41843,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -41261,7 +41864,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -41542,6 +42146,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -42369,6 +42975,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -42394,6 +43014,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -42497,6 +43121,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -43010,6 +43638,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -43381,6 +44013,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -44164,6 +44800,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -44276,6 +44916,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -44293,7 +44937,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -44574,6 +45219,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -44748,8 +45395,12 @@
                                 },
                                 "distance": {
                                   "type": "number",
-                                  "minimum": 0.1,
+                                  "minimum": 0.05,
                                   "maximum": 4
+                                },
+                                "exact": {
+                                  "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -45076,6 +45727,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -45101,6 +45766,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -45204,6 +45873,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -45717,6 +46390,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -46088,6 +46765,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -46871,6 +47552,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -46983,6 +47668,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -47000,7 +47689,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -47281,6 +47971,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -47733,6 +48425,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -47758,6 +48464,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -47861,6 +48571,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -48374,6 +49088,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -48745,6 +49463,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -49528,6 +50250,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -49640,6 +50366,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -49657,7 +50387,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -49938,6 +50669,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -50807,6 +51540,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -50832,6 +51579,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -50935,6 +51686,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -51448,6 +52203,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -51819,6 +52578,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -52602,6 +53365,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -52714,6 +53481,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -52731,7 +53502,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -53012,6 +53784,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -53347,6 +54121,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -53372,6 +54160,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -53475,6 +54267,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -53988,6 +54784,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -54359,6 +55159,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -55142,6 +55946,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -55254,6 +56062,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -55271,7 +56083,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -55552,6 +56365,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -55887,6 +56702,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -55912,6 +56741,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -56015,6 +56848,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -56528,6 +57365,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -56899,6 +57740,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -57682,6 +58527,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -57794,6 +58643,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -57811,7 +58664,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -58092,6 +58946,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",

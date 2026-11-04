@@ -50,6 +50,7 @@ import {
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap, PEEK_INSET, type MapFlight } from "./heritage-map";
+import { AccessMenu } from "./access-menu";
 import {
   ExplorePanel,
   MapChips,
@@ -61,22 +62,24 @@ import {
 import { SiteDetail } from "./site-detail";
 import { SitePeek } from "./site-peek";
 import { SourceSheetProvider, WaqfSheet } from "./side-sheet";
-import { WelcomeCard } from "./welcome-card";
 import { Cities } from "./city-scenes";
 import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Scene } from "./scene";
 import { HistoryView, type MemoryDraft } from "./history-view";
 import { memoryTraces } from "../lib/memory-traces";
+import { flushUsageOnHide, setUsageClient, track } from "../lib/usage";
+import { useCountOpen } from "../lib/use-count-open";
 import { LivingMemory } from "./living-memory";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
-import { StoryPanel, StoryProgress } from "./story-panel";
+import { STORY_STEP_EVENT, StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
 import { AboutModal, useWide } from "./about-reading";
 import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
+import { TipRow, type TipProps } from "./coach-tip";
 import type { FlowCompanion } from "../lib/flow-companion";
-import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
+import { MemoryModal, QuizModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
-import { SignInModal } from "./sign-in-modal";
+import { SignInModal, takeGoogleSignIn } from "./sign-in-modal";
 import { Modal, Notice } from "./ui";
 import {
   isFieldTask,
@@ -132,6 +135,12 @@ type Overlay =
   | null;
 /** Height the phone's map controls need above the sheet: chips (110), the controls (194) and their margins. */
 const CONTROLS_ROOM = 110 + 194 + 32;
+/** The height of a story's photograph on a phone (design.css `.story-photo-card`: 30% of the screen, the stage's foot). */
+const storyPhotoPhoneHeight = () => (typeof window === "undefined" ? 0 : Math.round(window.innerHeight * 0.3));
+/** A sheet left between its stops this long, untouched, goes to the nearest one. */
+const SHEET_IDLE_MS = 1800;
+/** Pulled this far below its closed height, the site's card goes back to the map. */
+const CARD_CLOSE_PULL = 70;
 /** How far a scroll on the closed site card raises it: enough for its content to scroll. */
 const CARD_SCROLL_RISE = 150;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
@@ -156,7 +165,6 @@ export function AkarApp() {
     [flight, setFlight] = useState<MapFlight>(),
     [lang, setLang] = useState<Lang>("tr"),
     [voice, setVoice] = useState<VoiceChoice>({ lang: null, gender: null }),
-    [welcome, setWelcome] = useState(false),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
@@ -315,6 +323,8 @@ export function AkarApp() {
             }),
         })
       : createMockClient(storage, demoContentUrl);
+    setUsageClient(client.current);
+    const stopUsageFlush = flushUsageOnHide();
     void load();
     // The opening screen names the default city and draws its pattern: its record is read beside the catalog, not after it.
     void client.current.getCities().then(setCityRecords, () => {});
@@ -355,12 +365,21 @@ export function AkarApp() {
       if (p.get("site")) setSiteId(p.get("site")!);
     };
     readLocation();
-    window.addEventListener("hashchange", readLocation);
+    // Back to the bare address (the browser's back from the map to the introduction): the introduction is another
+    // page, so load it (layout INTRO_BOOT), as the introduction reloads into the app on a link to a view.
+    const followHash = () => {
+      if (process.env.NEXT_PUBLIC_MOBILE_BUILD !== "1" && location.pathname === "/" && !/(^|[#&])view=/.test(location.hash)) location.reload();
+      else readLocation();
+    };
+    window.addEventListener("hashchange", followHash);
     return () => {
-      window.removeEventListener("hashchange", readLocation);
+      window.removeEventListener("hashchange", followHash);
       subscription?.unsubscribe();
+      stopUsageFlush();
     };
   }, [load, t]);
+  // Once per page load; the client effect above re-runs on a language change.
+  useEffect(() => track("app.open"), []);
   useEffect(() => {
     if (!ready) return;
     const timer = setInterval(() => void refreshCatalog(), CATALOG_REFRESH_MS);
@@ -459,6 +478,7 @@ export function AkarApp() {
           start: Math.max(0, (site?.tasks ?? []).findIndex((x) => x.id === current.task.id)),
           found: result,
         });
+        if (site && !progress.tasks.some((p) => p.taskId === current.task.id)) track("task.complete", site.id, current.task.id);
         taskFinished(result.earnedBadges);
       } else
         setPick({
@@ -546,6 +566,17 @@ export function AkarApp() {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
   }, []);
+  const loadStats = useCallback<AkarClient["getUsageStats"]>(async (range) => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    return client.current.getUsageStats(range);
+  }, []);
+  const loadSiteStats = useCallback<AkarClient["getSiteUsageStats"]>(
+    async (siteId, range) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.getSiteUsageStats(siteId, range);
+    },
+    [],
+  );
   /** Admin panel: the saved values become this tab's map settings at once. */
   const saveMapSettings = useCallback(async (next: MapSettings) => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
@@ -624,16 +655,46 @@ export function AkarApp() {
   const cities = [...new Set(published.map((s) => s.city))];
   const defaultCity = cityRecords.find((c) => c.isDefault);
   const activeCity = cityInView ?? defaultCity ?? null;
-  const cityName = activeCity?.name ?? cities[0] ?? "Bursa";
+  // Zoomed out to the country the map looks at no one city: the button and the list say so.
+  const [wholeCountry, setWholeCountry] = useState(false);
+  const cityName = wholeCountry ? t("map.country") : (activeCity?.name ?? cities[0] ?? "Bursa");
   // The list shows the city the map looks at; a search reaches every city.
   const listed = useMemo(() => {
     const here = query
       ? filtered
-      : filtered.filter((s) => !s.city || s.city === cityName);
+      : wholeCountry
+        ? filtered
+        : filtered.filter((s) => !s.city || s.city === cityName);
     return nearPoint ? nearestFirst(here, nearPoint) : byDisplayOrder(here);
-  }, [filtered, query, cityName, nearPoint]);
+  }, [filtered, query, cityName, nearPoint, wholeCountry]);
   const chipCategories = useMemo(() => categoriesOf(published), [published]);
+  // The same list before the kind is chosen: what the kind filter counts.
+  const beforeKind = useMemo(() => {
+    const all = filterSites(state.sites, query);
+    return query || wholeCountry ? all : all.filter((s) => !s.city || s.city === cityName);
+  }, [state.sites, query, cityName, wholeCountry]);
+  const listCategories = useMemo(() => categoriesOf(beforeKind), [beforeKind]);
+  const activeCategory = roles.size === 1 ? [...roles][0]! : null;
   const peekSite = published.find((s) => s.id === peekId);
+  // Usage counts (§11.72), once per opening. A site counts when its card or one of its pages (detail, story, history,
+  // memories) comes up, and again only after it was left; the page of the same site after its card is not a second view.
+  useCountOpen(
+    !ready ? undefined : ["detail", "story", "history", "memories"].includes(view) ? site?.id : view === "map" ? peekSite?.id : undefined,
+    (id) => track("site.view", id),
+  );
+  useCountOpen(ready && view === "history" ? site?.id : undefined, (id) => track("history.open", id));
+  useCountOpen(ready && overlay === "about" ? site?.id : undefined, (id) => track("about.open", id));
+  // The search filters as it is typed: a query of 2+ characters that stays a second counts once.
+  useEffect(() => {
+    if (query.trim().length < 2) return;
+    const settled = setTimeout(() => track("search"), 1000);
+    return () => clearTimeout(settled);
+  }, [query]);
+  // Google sends the page away and back: the sign-in is counted when the session arrives and the visitor had just left for Google.
+  const accountKey = account?.id;
+  useEffect(() => {
+    if (accountKey && takeGoogleSignIn()) track("account.sign_in", undefined, "returning");
+  }, [accountKey]);
   // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
   // name, colour and emblem are that city's, whatever city the map was last left in.
   const pageCity = ["detail", "story", "history", "memories"].includes(view) ? site?.city : undefined;
@@ -658,17 +719,42 @@ export function AkarApp() {
   const [mapReturn, setMapReturn] = useState(false),
     [mapSettled, setMapSettled] = useState(false),
     [returnLate, setReturnLate] = useState(false);
-  const wasOnMap = useRef(onMapView);
+  const wasOnMap = useRef(showMap);
+  const stageTap = useRef<{ x: number; y: number; at: number } | null>(null);
+  // Geçmişi Gör, part by part (3 Nov 2026): the old photograph, the comparison, «Bugününü sen çek», the strip,
+  // «Nereden çekildi?». A part not on this page (no comparison here) comes another time.
+  // Each screen's own list: the wide screen has no «take today's» (the phone's camera), so it never hears of it.
+  const historyTips = (touch: boolean): TipProps[] => [
+    { id: `${touch ? "" : "masa."}g.foto`, text: t(touch ? "tip.histPhoto" : "tip.histPhotoWide"), place: "under-spot", gesture: touch ? "tap-sides" : "click", spot: ".gg-foto" },
+    { id: `${touch ? "" : "masa."}g.kiyas`, text: t("tip.histCompare"), place: "under-spot", gesture: "turn", spot: ".gg-foto.esli", needs: ".gg-foto.esli .gg-k-tutamak", pressSpot: true, swallow: true },
+    ...(touch ? [{ id: "g.bugun", text: t("tip.histToday"), place: "under-spot", gesture: "tap", spot: ".gg-bugun", needs: ".gg-bugun", pressSpot: true, swallow: true } as const] : []),
+    { id: `${touch ? "" : "masa."}g.serit`, text: t("tip.histStrip"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-serit", needs: ".gg-serit", pressSpot: true, swallow: true },
+    { id: `${touch ? "" : "masa."}g.nereden`, text: t("tip.histWhere"), place: "under-spot", gesture: touch ? "tap" : "click", spot: ".gg-nereye", needs: ".gg-nereye", pressSpot: true, swallow: true },
+  ];
+  const storyModel = view === "story" && !!storySite?.model && readPreference("akar.gorunum") !== "photo";
+  // While the story's first-time hints are still to be seen, it waits to speak.
+  // The row is over (each hint seen, or passed over for now): the story speaks.
+  const [storyTipsOver, setStoryTipsOver] = useState(false);
   useEffect(() => {
-    const back = onMapView && !wasOnMap.current && !opening;
-    wasOnMap.current = onMapView;
+    if (view !== "story") setStoryTipsOver(false);
+  }, [view]);
+  const storyHold =
+    view === "story" &&
+    !storyTipsOver &&
+    (phone ? ["hikaye", storyModel ? "cevir" : "yakinlas"] : ["masa.hikaye", ...(storyModel ? ["masa.cevir"] : [])]).some(
+      (id) => !readPreference(`akar.ipucu.${id}`),
+    );
+  useEffect(() => {
+    // Back from a site the map was kept (`map-keep`): only a map built anew needs the cover.
+    const back = showMap && onMapView && !wasOnMap.current && !opening;
+    wasOnMap.current = showMap;
     if (!back) return;
     setMapReturn(true);
     setMapSettled(false);
     setReturnLate(false);
     const timer = setTimeout(() => setReturnLate(true), OPENING_MAX_MS);
     return () => clearTimeout(timer);
-  }, [onMapView, opening]);
+  }, [showMap, onMapView, opening]);
   // The opening screen goes once the map is drawn; with no map to wait for (a site, the profile, the panel) or no data
   // to wait for, as soon as the page can show something.
   const openingDone =
@@ -701,7 +787,13 @@ export function AkarApp() {
     setStoryIndex(0);
     go("detail", id);
   }
+  function closeRoute() {
+    setRouteId(undefined);
+    if (state.routeIds.length) void commit({ type: "set-route", siteIds: [] });
+  }
   function openStory(listen = false, index?: number, id = siteId) {
+    // Whoever has started a story needs no hint to start one.
+    writePreference("akar.ipucu.masa.detay", "1");
     const kept = Number(readPreference(`akar.ilerleme.${id}`));
     setStoryIndex(index ?? (Number.isInteger(kept) ? kept : 0));
     setListening(listen);
@@ -740,10 +832,6 @@ export function AkarApp() {
         chooseHome(false);
       },
     );
-  }
-  function closeWelcome() {
-    writePreference("akar.karsilama", "1");
-    setWelcome(false);
   }
   function changeLanguage(next: Lang) {
     setLang(next);
@@ -786,12 +874,14 @@ export function AkarApp() {
       let route = routeDraft.id ? personalRoutes.find((route) => route.id === routeDraft.id)! : await api.createPersonalRoute(routeDraft.name);
       setRouteDraft({ ...routeDraft, id: route.id });
       setPersonalRoutes((routes) => [...routes.filter((item) => item.id !== route.id), route]);
+      const before = new Set(route.siteIds);
       if (route.name !== routeDraft.name.trim()) route = await api.renamePersonalRoute(route.id, routeDraft.name);
       if (route.isDefault) {
         if (!await commit({ type: "set-route", siteIds: routeDraft.siteIds })) return;
       } else await api.setPersonalRouteStops(route.id, routeDraft.siteIds);
       setPersonalRoutes(await api.getPersonalRoutes());
       setState(await api.getSnapshot());
+      for (const id of routeDraft.siteIds) if (!before.has(id)) track("my_route.add", id);
       setRouteDraft(null);
       setToast(t("route.saved"));
     } catch { setToast(t("route.failed")); }
@@ -818,8 +908,10 @@ export function AkarApp() {
       ? text(target.name, target.nameEn)
       : t("profile.siteFallback");
     const inRoute = state.routeIds.includes(id);
-    if (await commit({ type: "route", siteId: id }))
+    if (await commit({ type: "route", siteId: id })) {
+      if (!inRoute) track("my_route.add", id);
       setToast(t(inRoute ? "toast.routeRemoved" : "toast.routeAdded", { name }));
+    }
   }
   function togglePanel() {
     const next = !collapsed;
@@ -852,25 +944,19 @@ export function AkarApp() {
     if (view === "routes" || view === "sites")
       setTab(view === "routes" ? "routes" : "sites");
   }, [view]);
-  // First visit on the map only: someone arriving by a shared link is not stopped.
-  useEffect(() => {
-    if (
-      !opening &&
-      ready &&
-      showMap &&
-      !isDetail &&
-      // The bare map: «Haritayı aç» on the introduction comes here as #view=map.
-      ["", "view=map"].includes(window.location.hash.slice(1)) &&
-      !readPreference("akar.karsilama")
-    )
-      setWelcome(true);
-  }, [opening, ready, showMap, isDetail]);
   // The sheet's lowest stop shows the handle, the tabs and the heading line.
   const sheet = useRef<HTMLElement>(null),
     sheetDrag = useRef<{
       y: number;
       height: number;
       handle: boolean;
+      /** The last two moves, for the speed at the end (a flick). */
+      lastY?: number;
+      lastAt?: number;
+      speed?: number;
+      /** The height followed by the finger, written straight to the page (no render per move). */
+      live?: number;
+      frame?: number;
       moved: boolean;
     } | null>(null);
   const sheetLowest = () => {
@@ -892,6 +978,12 @@ export function AkarApp() {
   const cardLowest = () => {
     const panel = sheet.current;
     // Dinle | Oku closes the top part; a site without a story ends it with its notice.
+    // A phone's card closes right under «Hikâyeyi başlat», nothing half shown below it (3 Nov 2026).
+    const start = panel?.querySelector<HTMLElement>(".detail-panel .hikaye-basla");
+    if (panel && start && start.offsetParent) {
+      const bottomPad = parseFloat(getComputedStyle(panel).paddingBottom) || 0;
+      return Math.round(start.getBoundingClientRect().bottom - panel.getBoundingClientRect().top + panel.scrollTop + bottomPad + 14);
+    }
     const top =
       panel?.querySelector<HTMLElement>(".detail-panel .ikili") ??
       panel?.querySelector<HTMLElement>(".detail-panel .hikaye-blok > :first-child");
@@ -913,11 +1005,14 @@ export function AkarApp() {
   const [cardClosed, setCardClosed] = useState(0);
   const cardClosedRef = useRef(0);
   cardClosedRef.current = cardClosed;
-  // Fully open, the card shows its end and fades no more.
-  const sheetStopsHighest =
-    siteCard && typeof innerHeight === "number" && sheet.current
-      ? siteCardStops(cardClosed, cardContent(), innerHeight).highest
-      : Infinity;
+  // Fully open, the card shows its end and fades no more. Measured when the card's height changes, not on every
+  // render: reading layout while rendering forced the browser to lay the page out again each time.
+  const [cardFull, setCardFull] = useState(false);
+  useEffect(() => {
+    if (!siteCard || !sheet.current) return setCardFull(false);
+    setCardFull(sheetHeight >= siteCardStops(cardClosed, cardContent(), innerHeight).highest - 8);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteCard, sheetHeight, cardClosed]);
   useEffect(() => {
     if (!ready || wide) return;
     if (!siteCard) {
@@ -983,6 +1078,34 @@ export function AkarApp() {
   };
   // That rise glides a little slower and softer than a drag's settle.
   const [cardRising, setCardRising] = useState(false);
+  // A sheet left between its stops (a scroll's rise, a resize) goes, after a moment with no touch and its content at
+  // the top, to its nearest stop, gliding (Muhammed, 3 Nov 2026: «yarım duruyor; kendiliğinden yerine dönsün»).
+  useEffect(() => {
+    if (wide || sheetDragging) return;
+    const panel = sheet.current;
+    let timer = 0;
+    const later = () => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (sheetDrag.current || (panel && panel.scrollTop > 4)) return;
+        const stops = sheetStops();
+        const goal = settleSheet(sheetHeight, stops);
+        if (Math.abs(goal - sheetHeight) > 6) {
+          setCardRising(true);
+          setSheetHeight(goal);
+        }
+      }, SHEET_IDLE_MS);
+    };
+    later();
+    panel?.addEventListener("scroll", later, { passive: true });
+    panel?.addEventListener("pointerdown", later);
+    return () => {
+      clearTimeout(timer);
+      panel?.removeEventListener("scroll", later);
+      panel?.removeEventListener("pointerdown", later);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheetHeight, sheetDragging, wide, view]);
   useEffect(() => {
     if (!cardRising) return;
     const timer = setTimeout(() => setCardRising(false), 520);
@@ -1090,7 +1213,7 @@ export function AkarApp() {
               <X size={15} />
             </button>
           )}
-          <button
+          {pageCity && <button
             className="city-chip"
             title={t("header.cities")}
             onClick={() => {
@@ -1099,8 +1222,8 @@ export function AkarApp() {
             }}
           >
             <i className="city-motif" aria-hidden="true" />
-            {pageCity ?? cityName}
-          </button>
+            {pageCity}
+          </button>}
         </div>
         {/* One switch: a press anywhere on it turns to the other language, and the thumb slides there. */}
         <div className="lang-switch" role="group" aria-label={t("lang.switch")} data-lang={lang}>
@@ -1115,6 +1238,7 @@ export function AkarApp() {
             </button>
           ))}
         </div>
+        <AccessMenu />
         <button
           className="theme-switch"
           aria-label={t(theme === "night" ? "theme.toDay" : "theme.toNight")}
@@ -1169,6 +1293,14 @@ export function AkarApp() {
                       email: account?.email ?? null,
                       onSignIn: () => setSignIn(""),
                       onSignOut: signOut,
+                      onDelete: async () => {
+                        const done = await commit({ type: "delete-account" });
+                        if (done) {
+                          void getSupabase()?.auth.signOut({ scope: "local" });
+                          setToast(t("toast.accountDeleted"));
+                        }
+                        return done;
+                      },
                     }
                   : undefined
               }
@@ -1214,6 +1346,8 @@ export function AkarApp() {
               live={live}
               mapSettings={mapSettings}
               saveMapSettings={saveMapSettings}
+              loadStats={loadStats}
+              loadSiteStats={loadSiteStats}
             />
             </LangProvider>
           )}
@@ -1263,6 +1397,13 @@ export function AkarApp() {
               }
               className={`workspace ${collapsed ? "panel-collapsed" : ""} ${isDetail ? "on-site" : "on-map"} ${peekSite && !isDetail ? "peeking" : ""} ${crowded ? "controls-crowded" : ""}`}
             >
+              {/* A started route stays on the map after its page: it needs its own way off (Muhammed, 4 Nov 2026). */}
+              {onMapView && !wholeCountry && !routeId && !routeDraft && !peekSite && state.routeIds.length > 0 && (
+                <button className="route-off" onClick={closeRoute}>
+                  <X size={16} />
+                  {t("route.close")}
+                </button>
+              )}
               {routeId && showRoutes && !isDetail && (
                 <button className="round-btn route-mobile-back" aria-label={t("route.all")} onClick={() => setRouteId(undefined)}>
                   <ChevronLeft size={20} />
@@ -1270,7 +1411,7 @@ export function AkarApp() {
               )}
               <aside
                 ref={sheet}
-                className={`side-panel${sheetDragging ? " dragging" : ""}${cardRising ? " rising" : ""}${siteCard && sheetHeight >= sheetStopsHighest - 8 ? " full" : ""}`}
+                className={`side-panel${sheetDragging ? " dragging" : ""}${cardRising ? " rising" : ""}${cardFull ? " full" : ""}`}
                 onScroll={siteCard ? fadeCard : undefined}
                 onWheel={siteCard ? (e) => { if (e.deltaY > 4) openCardForScroll(); } : undefined}
                 onTouchStart={
@@ -1320,26 +1461,55 @@ export function AkarApp() {
                     e.currentTarget.setPointerCapture(e.pointerId);
                     setSheetDragging(true);
                   }
-                  setSheetHeight(
-                    clampSheet(drag.height + drag.y - e.clientY, sheetStops()),
-                  );
+                  const wanted = drag.height + drag.y - e.clientY;
+                  const stops = sheetStops();
+                  // Smooth on a phone (3 Nov 2026: «çekerken kasıyor»): the finger moves the sheet by its CSS height
+                  // alone, once a frame; the app renders again only when it is let go.
+                  drag.live = clampSheet(wanted, stops);
+                  const space = e.currentTarget.closest<HTMLElement>(".workspace");
+                  if (space && !drag.frame)
+                    drag.frame = requestAnimationFrame(() => {
+                      drag.frame = 0;
+                      if (drag.live !== undefined) space.style.setProperty("--sheet-h", `${drag.live}px`);
+                    });
+                  if (drag.lastY !== undefined && drag.lastAt !== undefined && e.timeStamp > drag.lastAt)
+                    drag.speed = (drag.lastY - e.clientY) / (e.timeStamp - drag.lastAt);
+                  drag.lastY = e.clientY;
+                  drag.lastAt = e.timeStamp;
+                  // A site's card pulled below its closed height follows the finger down: let go far enough, back to
+                  // the map (as a story closes).
+                  if (siteCard)
+                    e.currentTarget.style.transform =
+                      wanted < stops.lowest ? `translateY(${Math.round((stops.lowest - wanted) * 0.8)}px)` : "";
                 }}
                 onPointerUp={(e) => {
                   const drag = sheetDrag.current;
                   sheetDrag.current = null;
                   if (!drag) return;
                   setSheetDragging(false);
+                  if (drag.frame) cancelAnimationFrame(drag.frame);
                   const stops = sheetStops();
-                  if (drag.moved)
-                    setSheetHeight(
-                      settleSheet(drag.height + drag.y - e.clientY, stops),
-                    );
+                  e.currentTarget.style.transform = "";
+                  if (siteCard && drag.moved && drag.height + drag.y - e.clientY < stops.lowest - CARD_CLOSE_PULL) {
+                    go("map");
+                    return;
+                  }
+                  if (drag.moved) {
+                    const goal = settleSheet(drag.height + drag.y - e.clientY, stops, drag.speed ?? 0);
+                    // Written to the page too: back where it started, the state does not change and would not.
+                    e.currentTarget.closest<HTMLElement>(".workspace")?.style.setProperty("--sheet-h", `${goal}px`);
+                    setSheetHeight(goal);
+                  }
                   else if (drag.handle)
                     setSheetHeight(toggleSheet(drag.height, stops));
                 }}
-                onPointerCancel={() => {
+                onPointerCancel={(e) => {
+                  const drag = sheetDrag.current;
                   sheetDrag.current = null;
                   setSheetDragging(false);
+                  e.currentTarget.style.transform = "";
+                  if (drag?.frame) cancelAnimationFrame(drag.frame);
+                  if (drag?.live !== undefined) setSheetHeight(settleSheet(drag.live, sheetStops()));
                 }}
               >
                 {siteCard ? (
@@ -1369,8 +1539,9 @@ export function AkarApp() {
                       startListening={listening}
                       lang={lang}
                       voiceLang={voice.lang ?? lang}
-                      voiceGender={voice.gender ?? "female"}
+                      voiceGender={voice.gender ?? "male"}
                       onVoice={changeVoice}
+                      hold={storyHold}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         if (await commit({ type: "read", siteId: site.id })) {
@@ -1387,11 +1558,11 @@ export function AkarApp() {
                     />
                   ) : (
                     <div className="detail-panel">
-                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} visited={state.visitedIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
+                      <SiteDetail site={site} saved={state.savedIds.includes(site.id)} read={state.readIds.includes(site.id)} progress={progress} memoryCount={memoryCount}
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
-                        onVisit={() => setOverlay("visit")} nextStop={nextStop} onNextStop={selectSite} />
+                        nextStop={nextStop} onNextStop={selectSite} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1406,9 +1577,10 @@ export function AkarApp() {
                   <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />
                 ) : (
                   <div className="discovery-panel">
-                    {showRoutes && !routeId && personalRoutes.length > 0 && <section className="personal-route-list" aria-label={t("route.mine")}>
+                    {/* The visitor's own routes; an empty one (no stops yet) says nothing worth a line. */}
+                    {showRoutes && !routeId && personalRoutes.some((p) => p.siteIds.length) && <section className="personal-route-list" aria-label={t("route.mine")}>
                       <h3>{t("route.mine")}</h3>
-                      {personalRoutes.map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
+                      {personalRoutes.filter((p) => p.siteIds.length).map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
                         setRouteDraft({ ...personal, siteIds: [...personal.siteIds] }); setRouteSite(undefined); setTab("sites"); setRouteId(undefined);
                       }}>{personal.name} · {personal.siteIds.length}</button>)}
                     </section>}
@@ -1420,6 +1592,7 @@ export function AkarApp() {
                         live={live}
                         visitedIds={state.visitedIds}
                         onBack={() => setRouteId(undefined)}
+                        onClose={closeRoute}
                         onSite={selectSite}
                         onStart={async () => {
                           const ids = routeSites.map((s) => s.id);
@@ -1439,6 +1612,8 @@ export function AkarApp() {
                           setTab(next);
                           setRouteId(undefined);
                           if (next === "routes") setQuery("");
+                          // A phone opens its sheet on the routes, so they and «Yeni rota oluştur» are in sight.
+                          if (next === "routes" && phone) setSheetHeight(Math.max(sheetHeight, sheetStops().open));
                         }}
                         mode={place}
                         city={cityName}
@@ -1454,7 +1629,9 @@ export function AkarApp() {
                         onHover={setHoverId}
                         onPick={pickSite}
                         onRoute={(id) => void toggleRoute(id)}
+                        onOpen={routeDraft ? undefined : (id) => go("detail", id)}
                         onOpenRoute={(id) => {
+                          track("route.open", undefined, id);
                           setQuery("");
                           setTab("routes");
                           setRouteId(id);
@@ -1470,12 +1647,36 @@ export function AkarApp() {
                           setQuery("");
                           setRoles(new Set(siteCategories));
                         }}
+                        categories={listCategories}
+                        categoryCount={(c) =>
+                          c ? beforeKind.filter((s) => kindCategory[s.kind] === c).length : beforeKind.length
+                        }
+                        activeCategory={activeCategory}
+                        onCategory={(c) => setRoles(new Set(c ? [c] : siteCategories))}
                       />
                     )}
                   </div>
                 )}
               </aside>
-              <div className="main-stage">
+              <div
+                className="main-stage"
+                // A phone's story moves on a tap on its photograph or model, as an Instagram story does: the left third
+                // goes back, the rest on. A drag (turning the model) or a press on a button is not a tap.
+                onPointerDown={(e) => {
+                  stageTap.current = phone && view === "story" ? { x: e.clientX, y: e.clientY, at: e.timeStamp } : null;
+                }}
+                onPointerUp={(e) => {
+                  const tap = stageTap.current;
+                  stageTap.current = null;
+                  if (!tap || Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 10 || e.timeStamp - tap.at > 400) return;
+                  if ((e.target as HTMLElement).closest("button, a, input, dialog, .story-photo-card, .model-view-photo, .story-progress, [data-zoomed]"))
+                    return;
+                  const box = e.currentTarget.getBoundingClientRect();
+                  window.dispatchEvent(
+                    new CustomEvent(STORY_STEP_EVENT, { detail: e.clientX < box.left + box.width / 3 ? -1 : 1 }),
+                  );
+                }}
+              >
               {view === "detail" && site && (
                 // The phone's way back over the photographs or the model (prototype `.gorus-ust .geri`); the wide
                 // screen has the panel's own «‹ Harita».
@@ -1493,13 +1694,20 @@ export function AkarApp() {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                {isDetail && site ? (
+                {isDetail && site && (
                   <Scene
                     key={`${site.id}-${view}`}
                     context={view === "story" ? "story" : "detail"}
                     companion={flowCompanion}
                     // Phone: the scene fills the screen behind the floating card; the model stays above it closed.
-                    frameBottom={siteCard && cardClosed ? cardClosed + 12 : 0}
+                    frameBottom={
+                      siteCard && cardClosed
+                        ? cardClosed + 12
+                        : // A story's photograph card lies along the stage's foot on a phone: the model is framed above it.
+                          phone && view === "story" && storyBlock?.photoId
+                          ? storyPhotoPhoneHeight() + 24
+                          : 0
+                    }
                     site={site}
                     live={live}
                     photoId={
@@ -1520,8 +1728,9 @@ export function AkarApp() {
                         ? (storyBlock?.interior ?? false)
                         : undefined
                     }
+                    // Every sentence with a photograph shows it (Muhammed, 4 Nov 2026: «ilk cümlelerin fotoğrafları olmuyor»).
                     photoCard={
-                      view === "story" && storyBlock?.showCard
+                      view === "story" && !!storyBlock?.photoId
                     }
                     highlights={
                       view === "story"
@@ -1542,15 +1751,20 @@ export function AkarApp() {
                       !flowCompanion &&
                       (view !== "story" ||
                         storyIndex === 0 ||
-                        storyIndex === (storySite?.stories.length ?? 1) - 1)
+                        storyIndex === (storySite?.stories.length ?? 1) - 1 ||
+                        // With no photograph to look at, the model never stands still.
+                        !storyBlock?.photoId)
                     }
                     visitors={view === "detail" ? visitorPhotos : []}
                     onAddPhoto={() => setOverlay("memory")}
                     onPick={pick ? pickPart : undefined}
                   />
-                ) : (
-                  <>
+                )}
+                {/* The map stays behind a site's page (hidden, still), so back from the site it is there at once, not
+                    built anew (Muhammed, 3 Nov 2026: «geri butonuna basıyorum zar yükleniyor»). */}
+                <div className={`map-keep${isDetail && site ? " parked" : ""}`} inert={isDetail && !!site}>
                     <HeritageMap
+                      resting={isDetail && !!site}
                       sites={routeId && routeSites.length ? routeSites : filtered}
                       selectedId={peekId}
                       highlightId={hoverId}
@@ -1565,6 +1779,7 @@ export function AkarApp() {
                       onFirstDraw={() => setMapDrawn(true)}
                       onSettled={() => setMapSettled(true)}
                       onCityInView={setCityInView}
+                      onWholeCountry={setWholeCountry}
                       onLocate={chooseNear}
                       flight={flight}
                       bottomInset={peekSite ? PEEK_INSET : sheetHeight}
@@ -1607,18 +1822,10 @@ export function AkarApp() {
                       }
                     />
                     <MapChips
-                      mode={place}
+                      whole={wholeCountry}
                       city={cityName}
-                      categories={chipCategories}
-                      active={roles}
-                      onMode={(mode) =>
-                        mode === "near" ? chooseNear() : chooseHome()
-                      }
-                      onToggle={(category) =>
-                        setRoles((current) =>
-                          toggleCategory(current, category, siteCategories),
-                        )
-                      }
+                      cities={cityRecords.filter((c) => c.map).map((c) => c.name)}
+                      onCity={(name) => setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "city", name }))}
                       onCities={() =>
                         setFlight((f) => ({
                           key: (f?.key ?? 0) + 1,
@@ -1626,8 +1833,7 @@ export function AkarApp() {
                         }))
                       }
                     />
-                  </>
-                )}
+                </div>
                 {view === "story" && storySite && !wide && (
                   <button
                     className="round-btn story-stage-close"
@@ -1703,15 +1909,6 @@ export function AkarApp() {
           client={client.current}
           onClose={() => setOverlay(null)}
           onSnapshot={setState}
-        />
-      )}
-      {overlay === "visit" && site && (
-        <VisitModal
-          live={live}
-          site={site}
-          visited={state.visitedIds.includes(site.id)}
-          onClose={() => setOverlay(null)}
-          onVisit={() => commit({ type: "visit", siteId: site.id })}
         />
       )}
       {overlay === "about" && site && (
@@ -1811,7 +2008,7 @@ export function AkarApp() {
   );
   return (
     <LangProvider lang={lang}>
-    <VoiceProvider value={{ lang: voice.lang ?? lang, gender: voice.gender ?? "female" }}>
+    <VoiceProvider value={{ lang: voice.lang ?? lang, gender: voice.gender ?? "male" }}>
     <Cities.Provider value={cityRecords}>
       <SourceSheetProvider
         fallback={defaultCity?.inventory?.name ?? ""}
@@ -1820,22 +2017,6 @@ export function AkarApp() {
         }
       >
         {shell}
-        {welcome && (
-          <WelcomeCard
-            site={byDisplayOrder(published)[0]}
-            style={cityLook}
-            onHome={() => {
-              closeWelcome();
-              chooseHome(false);
-            }}
-            onNear={() => {
-              closeWelcome();
-              chooseNear();
-            }}
-            onWaqf={() => setWaqf(true)}
-            onDismiss={closeWelcome}
-          />
-        )}
         {completion && site && (
           <CompletionCard
             site={site}
@@ -1875,13 +2056,80 @@ export function AkarApp() {
             inventory={defaultCity?.inventory?.name ?? ""}
             onSite={(id) => {
               setWaqf(false);
-              closeWelcome();
               selectSite(id);
             }}
             onClose={() => setWaqf(false)}
           />
         )}
       </SourceSheetProvider>
+      {/* First-time hints (3 Nov 2026): a finger (a cursor on a wide screen) doing what to do and a few words, once
+          each, in rows; most darken the screen but for what they are about. Phone and wide screen each their own. */}
+      {!opening && !mapReturn && !completion && !overlay && !puzzle && signIn === null && (phone ? (
+        view === "map" && !peekSite && !routeDraft ? (
+          <TipRow key="t-harita" tips={[{ id: "harita", text: t("tip.map"), place: "map", gesture: "tap" }]} />
+        ) : view === "map" && peekSite ? (
+          <TipRow key="t-kart" tips={[{ id: "kart", text: t("tip.peek"), place: "above-card", gesture: "swipe-up", spot: ".site-peek" }]} />
+        ) : siteCard ? (
+          <TipRow
+            key="t-detay"
+            wait={3500}
+            tips={[
+              { id: "d.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "tap", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch.kayan", doneBy: ".scene-media-switch", pressSpot: true, swallow: true },
+              { id: "d.parca", text: t("tip.parts"), place: "under-spot", gesture: "tap", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", when: ".detail-scene .model-canvas[data-drawn] ~ .model-show-parts", doneBy: ".model-show-parts", swallow: true, pressSpot: true },
+              { id: "d.parcaya", text: t("tip.aPart"), place: "stage", gesture: "tap", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', follows: true, swallow: true, pressSpot: true },
+              // Going back is told once the visitor has done something here: a part looked at, a story heard.
+              ...(state.readIds.length || readPreference("akar.ipucu.d.parcaya")
+                ? [{ id: "detay", text: t("tip.detail"), place: "above-site-card", gesture: "swipe-down", spot: ".workspace.on-site .side-panel" } as const]
+                : []),
+            ]}
+          />
+        ) : view === "story" ? (
+          <TipRow
+            key="t-hikaye"
+            max={2}
+            onDone={() => setStoryTipsOver(true)}
+            // The story's own two, in this order (Muhammed, 3 Nov 2026: «sırası önemli»): the tap on the right
+            // first, then turning the model (or, on a photograph, the pinch). The parts are the site page's.
+            tips={[
+              { id: "hikaye", text: t("tip.story"), place: "stage", gesture: "tap-sides", swallow: true },
+              storyModel
+                ? { id: "cevir", text: t("tip.turn"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas[data-drawn]", waitMs: 8000, swallow: true }
+                : { id: "yakinlas", text: t("tip.pinch"), place: "stage", gesture: "tap", spot: ".main-stage .story-photo", needs: ".main-stage .story-photo .zoom-photo", swallow: true },
+            ]}
+          />
+        ) : view === "history" ? (
+          <TipRow key="t-gecmis" tips={historyTips(true)} />
+        ) : null
+      ) : (
+        view === "map" && !peekSite && !routeDraft ? (
+          <TipRow key="m-harita" tips={[{ id: "masa.harita", text: t("tip.mapWide"), place: "map", gesture: "click" }]} />
+        ) : view === "detail" ? (
+          <TipRow
+            key="m-detay"
+            wait={3500}
+            tips={[
+              { id: "masa.detay", text: t("tip.detailWide"), place: "under-spot", gesture: "click", spot: ".detail-panel .hikaye-basla" },
+              { id: "masa.foto", text: t("tip.switchWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", arrowTo: ".detail-scene .scene-media-switch, .galeri-arac .scene-media-switch", needs: ".scene-media-switch", doneBy: ".scene-media-switch", pressSpot: true, swallow: true },
+              { id: "masa.parca", text: t("tip.partsWide"), place: "under-spot", gesture: "click", spot: ".detail-scene .model-show-parts", arrowTo: ".detail-scene .model-show-parts", when: ".detail-scene .model-canvas[data-drawn] ~ .model-show-parts", doneBy: ".model-show-parts", swallow: true, pressSpot: true },
+              { id: "masa.parcaya", text: t("tip.aPartWide"), place: "stage", gesture: "click", spot: ".detail-scene .model-canvas", when: '.detail-scene .model-show-parts[aria-pressed="true"]', follows: true, swallow: true, pressSpot: true },
+            ]}
+          />
+        ) : view === "story" ? (
+          <TipRow
+            key="m-hikaye"
+            max={2}
+            onDone={() => setStoryTipsOver(true)}
+            tips={[
+              { id: "masa.hikaye", text: t("tip.storyWide"), place: "under-spot", gesture: "click", spot: ".story-panel .story-transport", swallow: true },
+              ...(storyModel
+                ? [{ id: "masa.cevir", text: t("tip.turnWide"), place: "stage", gesture: "turn", spot: ".main-stage .model-canvas", needs: ".main-stage .model-canvas[data-drawn]", waitMs: 8000, swallow: true } as const]
+                : []),
+            ]}
+          />
+        ) : view === "history" ? (
+          <TipRow key="m-gecmis" tips={historyTips(false)} />
+        ) : null
+      ))}
       {mapReturn && !opening && (
         <OpeningScreen
           cityName={openingCity?.name}

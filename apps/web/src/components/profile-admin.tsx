@@ -1,4 +1,5 @@
 "use client";
+import { AccessControls } from "./access-menu";
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
@@ -13,6 +14,7 @@ import {
   Shield,
   RotateCcw,
   Map as MapIcon,
+  BarChart3,
 } from "lucide-react";
 import {
   memoryPermissions,
@@ -27,12 +29,19 @@ import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@aka
 import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import { badgeInLang, taskInLang } from "../lib/task-text";
-import { SiteEditor } from "./admin-site-editor";
-import { RouteAdmin, PhotoAdmin, ImportAdmin } from "./admin-collections";
-import { MemoryActions } from "./memory-actions";
-import { AdminMembers } from "./admin-members";
-import { AdminHealthAlert } from "./admin-health";
-import { AdminMapSettings } from "./admin-map-settings";
+import { ConfirmDialog, MemoryActions } from "./memory-actions";
+import dynamic from "next/dynamic";
+
+// The content studio is for the team only: its screens come in their own chunks when an admin opens them, not with
+// every visitor's first download (3 Nov 2026; ~186 KB of source the map never used).
+const SiteEditor = dynamic(() => import("./admin-site-editor").then((m) => m.SiteEditor), { ssr: false });
+const RouteAdmin = dynamic(() => import("./admin-collections").then((m) => m.RouteAdmin), { ssr: false });
+const PhotoAdmin = dynamic(() => import("./admin-collections").then((m) => m.PhotoAdmin), { ssr: false });
+const ImportAdmin = dynamic(() => import("./admin-collections").then((m) => m.ImportAdmin), { ssr: false });
+const AdminMembers = dynamic(() => import("./admin-members").then((m) => m.AdminMembers), { ssr: false });
+const AdminHealthAlert = dynamic(() => import("./admin-health").then((m) => m.AdminHealthAlert), { ssr: false });
+const AdminMapSettings = dynamic(() => import("./admin-map-settings").then((m) => m.AdminMapSettings), { ssr: false });
+const AdminStats = dynamic(() => import("./admin-stats").then((m) => m.AdminStats), { ssr: false });
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -60,20 +69,11 @@ export function Profile({
   onExperimentalChange: (enabled: boolean) => void;
   commit: Commit;
   /** Present only when connected to the real API; `email` is `null` for a guest. */
-  auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void };
+  auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void; onDelete: () => Promise<boolean> };
 }) {
   const { lang, t } = useI18n();
+  const [erasing, setErasing] = useState(false);
   const tr = lang === "en" ? "tr" : undefined;
-  const [contrast, setContrast] = useState(
-      () =>
-        typeof document !== "undefined" &&
-        document.documentElement.dataset.contrast === "high",
-    ),
-    [large, setLarge] = useState(
-      () =>
-        typeof document !== "undefined" &&
-        document.documentElement.dataset.textSize === "large",
-    );
   const firstSite = state.sites.find((s) => s.status === "published");
   const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
     (site.badges ?? []).map((badge) => ({
@@ -103,6 +103,19 @@ export function Profile({
                   <button className="text-btn" onClick={auth.onSignOut}>
                     {t("profile.signOut")}
                   </button>
+                  <button className="text-btn danger" onClick={() => setErasing(true)}>
+                    {t("profile.deleteAccount")}
+                  </button>
+                  {erasing && (
+                    <ConfirmDialog
+                      title={t("profile.deleteTitle")}
+                      confirm={t("profile.deleteConfirm")}
+                      onClose={() => setErasing(false)}
+                      onConfirm={auth.onDelete}
+                    >
+                      <p>{t("profile.deleteText")}</p>
+                    </ConfirmDialog>
+                  )}
                 </>
               ) : (
                 <>
@@ -140,32 +153,9 @@ export function Profile({
                 </p>
               </>
             )}
-            <label>
-              {t("profile.contrast")}
-              <input
-                type="checkbox"
-                checked={contrast}
-                onChange={(e) => {
-                  setContrast(e.target.checked);
-                  document.documentElement.dataset.contrast = e.target.checked
-                    ? "high"
-                    : "normal";
-                }}
-              />
-            </label>
-            <label>
-              {t("profile.largeText")}
-              <input
-                type="checkbox"
-                checked={large}
-                onChange={(e) => {
-                  setLarge(e.target.checked);
-                  document.documentElement.dataset.textSize = e.target.checked
-                    ? "large"
-                    : "normal";
-                }}
-              />
-            </label>
+            <AccessControls />
+            <a className="text-btn" href="/aydinlatma.html">{t("profile.notice")}</a>
+            <a className="text-btn" href="/lisanslar.html">{t("profile.licenses")}</a>
             {canManage && (
               <button className="text-btn" onClick={onAdmin}>
                 <Shield size={16} />
@@ -312,6 +302,8 @@ export function Admin({
   live,
   mapSettings,
   saveMapSettings,
+  loadStats,
+  loadSiteStats,
 }: {
   state: Snapshot;
   commit: Commit;
@@ -329,6 +321,8 @@ export function Admin({
   live: boolean;
   mapSettings: MapSettings;
   saveMapSettings: (settings: MapSettings) => Promise<MapSettings>;
+  loadStats: AkarClient["getUsageStats"];
+  loadSiteStats: AkarClient["getSiteUsageStats"];
 }) {
   const canEdit = role === "editor" || role === "admin";
   const [page, setPage] = useState<ModerationPage>({
@@ -350,6 +344,7 @@ export function Admin({
       | "import"
       | "members"
       | "map"
+      | "stats"
     >(canEdit ? "sites" : "memories"),
     [filter, setFilter] = useState<"pending" | "approved" | "rejected">(
       "pending",
@@ -525,6 +520,16 @@ export function Admin({
             Harita ayarları
           </button>
         )}
+        {role === "admin" && (
+          <button
+            disabled={!!editing}
+            className={tab === "stats" ? "active" : ""}
+            onClick={() => setTab("stats")}
+          >
+            <BarChart3 size={18} />
+            İstatistikler
+          </button>
+        )}
         {!live && canEdit && (
           <button
             disabled={!!editing}
@@ -581,6 +586,12 @@ export function Admin({
           <AdminMapSettings
             settings={mapSettings}
             onSave={saveMapSettings}
+            live={live}
+          />
+        ) : tab === "stats" && role === "admin" ? (
+          <AdminStats
+            loadStats={loadStats}
+            loadSiteStats={loadSiteStats}
             live={live}
           />
         ) : tab === "routes" ? (
