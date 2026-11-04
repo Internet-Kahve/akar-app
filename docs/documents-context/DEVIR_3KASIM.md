@@ -2,9 +2,7 @@
 
 **Dal:** `muhammedtalay/mobil-optimizasyon` (main `2be3e8d`'den). **Push edilmedi**; Muhammed onaylayınca atılacak.
 **Tanıtım sayfasına dokunulmadı** (`public/tanitim/`).
-Ayrıntılı geçmiş:
-- `OPTIMIZASYON_3KASIM.md`: performans ölçümleri;
-- `MOBIL_SADELIK_3KASIM.md`: ilk sadelik listesi (9 madde, hepsi bitti).
+Ayrıntılı geçmiş Git'te: `OPTIMIZASYON_3KASIM.md` (performans ölçümleri) ve `MOBIL_SADELIK_3KASIM.md` (ilk sadelik listesi, hepsi bitti) 4 Kasım temizliğinde kaldırıldı.
 
 ## Telefonda deneme
 
@@ -99,8 +97,9 @@ Testlerin cihazında hepsi görülmüş sayılır (`playwright.config.ts`, stora
 - **Geçmişi Gör:** 15 temsili görsel (`scripts/content/temsili_es_uret.mjs`), «Temsili görsel» etiketiyle. Canlıda görünmesi için `import-demo` ve `temsili` bilgisinin taşınması gerekir.
 - **Pişmiş Ulucami:** dördüncü denemede 16 karenin 6'sı ölçüyü geçti. Yakın zoomda sunum modeline geçildiği için dosya 17,5'e kadar kullanılır; 440 m'de fark küçük. `pisik_onay` satırı commit edilmedi, karar Muhammed'in.
 - **Tanıtım sayfası, ikinci tur:** Türkiye başlığı, şehir halkası ve şehir kartları (renkler `identity.accent`), Bursa deseni, gece fotoğrafı, TR/EN (`akar.dil`), gece teması (`akar.tema`), kaydırmalı Ulucami turu, gerçek kayıtlarla «İster dinle, ister oku».
+- **Tanıtım girişi, sade hali:** zemin gündüz beyaz, gece siyah; solda yazı, sağ üstte motifli şehir etiketleri, sağ altta dünyanın üst yayı, Türkiye sarı sınırla. Fotoğraf, halka ve desen girişten kalktı. Görseller `medya/dunya-gun.webp` ve `dunya-gece.webp`, uygulamanın kendi harita stillerinden çizildi.
 - **Harita:** şehir düğmesi masaüstünde de harita üstünde, açılır; bütün Türkiye'de kırmızı. Rota kapatma: rota sayfasında ✕, haritada «Rotayı kapat».
-- **Pişirme:** Ulucami ve kalan altı eser Muhammed'in onayıyla açık (`pisik_onay`), harita yedi modelde de pişmiş dosyayı yüklüyor. Ölçüde iki temada yalnız Orhan Bey Hamamı geçti. Bedesten, Emir Han, Koza Han ve Orhan Gazi Türbesi gündüz güneş parlamasında (renk sapması %0,68–1,15, sınır %0,5), Orhan Bey Camii gece şebeke ve korkuluk saydamlığında (%0,87) kaldı; Koza Han'ın kutusu 3,6 cm farklı (sınır 1 cm). Sınırlar gevşetilmedi, uzak görünümdeki bu fark bilerek kabul edildi. Ölçümler: her eserin `3d/kontrol/<sürüm>_pisik/rapor.json`. Araç düzeltmesinden önce ölçülen Ulucami yeniden ölçülmedi. İstem: `PISIRME_ISTEMI_DIGER_ESERLER.md`.
+- **Pişirme:** Ulucami ve kalan altı eser Muhammed'in onayıyla açık (`pisik_onay`), harita yedi modelde de pişmiş dosyayı yüklüyor. Ölçüde iki temada yalnız Orhan Bey Hamamı geçti. Bedesten, Emir Han, Koza Han ve Orhan Gazi Türbesi gündüz güneş parlamasında (renk sapması %0,68–1,15, sınır %0,5), Orhan Bey Camii gece şebeke ve korkuluk saydamlığında (%0,87) kaldı; Koza Han'ın kutusu 3,6 cm farklı (sınır 1 cm). Sınırlar gevşetilmedi, uzak görünümdeki bu fark bilerek kabul edildi. Ölçümler: her eserin `3d/kontrol/<sürüm>_pisik/rapor.json`. Araç düzeltmesinden önce ölçülen Ulucami yeniden ölçülmedi. Pişirme istemleri Git geçmişinde.
 - **Canlıya aktarılacak alanlar (Burak):** `mapBaked`, `hideClosedInterior`, `temsili`, yeni açılar.
 
 ## Pişirme ölçümü (3 Kasım)

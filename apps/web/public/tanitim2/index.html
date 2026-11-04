@@ -11,7 +11,6 @@
 <link rel="apple-touch-icon" href="/logo/apple-touch-icon.png">
 <script>try{if(localStorage.getItem("akar.tema")==="night")document.documentElement.dataset.theme="night"}catch(e){}</script>
 <link rel="preload" href="/tanitim2/yazi/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" as="image" href="/tanitim2/medya/kapak-1600.webp" imagesrcset="/tanitim2/medya/kapak-800.webp 800w, /tanitim2/medya/kapak-1600.webp 1600w" imagesizes="100vw" fetchpriority="high">
 <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
 <script>try{if(location.pathname==="/tanitim"){history.replaceState(history.state,"","/"+location.hash);addEventListener("hashchange",function(){if(/(^|[#&])view=/.test(location.hash))location.reload()})}}catch(e){}</script>
 <script type="importmap">{"imports":{"three":"/tanitim/yeni/three/three.module.js","three/addons/":"/tanitim/yeni/three/addons/"}}</script>
@@ -37,15 +36,9 @@ a{color:inherit}
 .nav .btn{min-height:42px;padding:0 18px;font-size:15px}
 .giris{padding:clamp(40px,7vw,88px) 0 0}
 h1{max-width:17ch;font-size:clamp(40px,6.4vw,84px);line-height:1.02}
-.suslu{display:flex;align-items:center;gap:10px;width:min(240px,60%);margin-top:18px;color:#C9A13B}
-.suslu i{flex:1;height:1px;background:currentColor;opacity:.8}
-.suslu b{width:24px;height:24px;flex:none;background:currentColor;-webkit-mask:url(/desenler/amblem-akar-yildiz.svg) center/contain no-repeat;mask:url(/desenler/amblem-akar-yildiz.svg) center/contain no-repeat}
 .giris .alt{margin-top:14px;max-width:46ch;font-size:clamp(18px,1.8vw,21px);color:var(--soluk)}
 .giris .btn{margin-top:28px}
-.kapak{margin:clamp(32px,5vw,56px) 0 0}
-.kapak img{width:100%;aspect-ratio:2/1;object-fit:cover;background:#cfd3d1}
 figcaption,.not{font-size:13px;line-height:1.5;color:var(--soluk)}
-.kapak figcaption{width:min(var(--en),100% - 2*var(--kenar));margin:10px auto 0}
 .bolum{padding:clamp(64px,9vw,120px) 0;border-top:1px solid var(--cizgi)}
 .giris + .bolum{border-top:0}
 h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08}
@@ -99,25 +92,31 @@ h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08}
 h1 em{font-style:normal;color:#C9A13B}
 .giris-alt{display:flex;flex-wrap:wrap;align-items:center;gap:18px 28px;margin-top:26px}
 .giris-alt .btn{margin:0}
-.sehirler{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}
-.sehirler li{display:flex;align-items:center;gap:7px;height:38px;padding:0 13px 0 8px;border-radius:999px;background:var(--c);color:#fff;font-size:14px;font-weight:600}
-.sehirler li i{width:24px;height:24px;background:#fff;-webkit-mask:var(--a) center/contain no-repeat;mask:var(--a) center/contain no-repeat}
-.sehirler small{font-size:12px;font-weight:400;opacity:.85}
-.sehirler .yakin{padding-left:13px;background:transparent;box-shadow:inset 0 0 0 1px currentColor;color:inherit;opacity:.75}
-.kapak-gece{display:none}
-[data-theme=night] .kapak-gun{display:none}
-[data-theme=night] .kapak-gece{display:block}
+.sehirler{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px;margin:0;padding:0;list-style:none}
+.sehirler li{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;align-items:center;color:var(--murekkep);animation:suz 5.5s ease-in-out infinite alternate}
+.sehirler li:nth-child(2){animation-delay:-1.6s}
+.sehirler li:nth-child(3){animation-delay:-3.1s}
+.sehirler li:nth-child(4){animation-delay:-4.4s}
+.sehirler i{grid-row:1/3;display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--c);box-shadow:0 5px 16px rgba(18,30,38,.22)}
+.sehirler i::before{content:"";width:74%;height:74%;background:#fff;-webkit-mask:var(--a) center/contain no-repeat;mask:var(--a) center/contain no-repeat;animation:motif-don 26s linear infinite}
+.sehirler li:nth-child(even) i::before{animation-direction:reverse}
+.sehirler span{align-self:end;font-size:17px;font-weight:700;line-height:1.15}
+.sehirler small{align-self:start;font-size:13px;font-weight:400;line-height:1.3;color:var(--soluk)}
+.sehirler .yakin i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--soluk)}
+.sehirler .yakin i::before{background:var(--soluk)}
+@keyframes motif-don{to{transform:rotate(360deg)}}
+@keyframes suz{from{transform:translateY(-4px)}to{transform:translateY(4px)}}
 .giris{overflow-x:clip}
-.halka{position:relative;width:min(300px,78vw);aspect-ratio:1;margin:30px auto 0;color:#C9A13B;--r:calc(min(300px,78vw)*.41)}
-.halka-yazi{position:absolute;inset:0;animation:don 70s linear infinite}
-.halka-yazi text{fill:currentColor;font:600 15px/1 inherit;font-family:inherit;letter-spacing:.2em}
-.halka-don{position:absolute;inset:0;animation:don 42s linear infinite}
-.halka-don i{position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;margin:-9% 0 0 -9%;border-radius:50%;background:var(--c);box-shadow:0 4px 14px rgba(0,0,0,.28);transform:rotate(var(--aci)) translateY(calc(var(--r,150px)*-1)) rotate(calc(var(--aci)*-1))}
-.halka-don b{display:block;width:100%;height:100%;background:#fff;-webkit-mask:var(--a) center/66% no-repeat;mask:var(--a) center/66% no-repeat;animation:don 42s linear infinite reverse}
-.kure{position:absolute;inset:17%;border-radius:50%;filter:drop-shadow(0 10px 26px rgba(0,0,0,.4))}
-.kure img{width:100%;height:100%;border-radius:50%}
-@keyframes don{to{transform:rotate(360deg)}}
-@keyframes yakin{from{transform:scale(1)}to{transform:scale(1.07)}}
+/* Giriş: solda yazı (gündüz beyaz, gece siyah), sağda siyah gökte dünya. */
+.giris{background:#fff}
+[data-theme=night] .giris,[data-theme=night] .nav{background:#000}
+.sag{margin-top:26px;min-width:0}
+.sag .sehirler{width:min(var(--en),100% - 2*var(--kenar));margin-inline:auto}
+.dunya{position:relative;margin:6px 0 0;height:62vw;overflow:hidden}
+.dunya img{position:absolute;right:0;bottom:0;width:200%;max-width:none;height:auto}
+.d-gece{display:none}
+[data-theme=night] .d-gun{display:none}
+[data-theme=night] .d-gece{display:block}
 .sehir-kart{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
 .sehir-kart a{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:280px;padding:22px;border-radius:20px;overflow:hidden;background:var(--k);color:#fff;text-decoration:none;isolation:isolate;transition:transform .25s var(--egri)}
 .sehir-kart a:hover{transform:translateY(-4px)}
@@ -130,8 +129,7 @@ h1 em{font-style:normal;color:#C9A13B}
 [data-theme=night] .btn{background:var(--bursa);color:#fff}
 [data-theme=night] .btn:hover{background:#3693B9}
 [data-theme=night] .giris .btn{background:var(--bursa);color:#fff}
-[data-theme=night] .giris .suslu{color:#E0BC58}
-@media (prefers-reduced-motion:reduce){.halka-yazi,.halka-don,.halka-don b,.sehir-kart .m,.sehir-kart a::before,.kapak img{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.sehirler li,.sehirler i::before,.sehir-kart .m,.sehir-kart a::before{animation:none!important}}
 .tur{position:relative;height:640vh;border-top:1px solid var(--cizgi)}
 .tur-yapiskan{position:sticky;top:65px;height:calc(100vh - 65px);height:calc(100svh - 65px);overflow:hidden}
 .tur .model-kutu{position:absolute;inset:0;margin:0;aspect-ratio:auto;border-radius:0;box-shadow:none;cursor:default;touch-action:auto;background:#dfe4e4}
@@ -174,7 +172,6 @@ h1 em{font-style:normal;color:#C9A13B}
 footer{padding:20px 0;font-size:13px;color:var(--soluk)}
 @media (max-width:560px){.nav-sag .btn{display:none}}
 @media (max-width:900px){
-  .kapak img{aspect-ratio:3/2}
   .ekranlar{display:flex;gap:14px;margin-inline:calc(-1*var(--kenar));padding-inline:var(--kenar);overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .ekranlar::-webkit-scrollbar{display:none}
   .ekranlar li{flex:0 0 66vw;max-width:280px;scroll-snap-align:center}
@@ -185,19 +182,23 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
 @media (max-width:900px),(pointer:coarse){.qr-kutu{display:none}}
 /* Geniş ekran: aynı içerik, daha geniş bir sahne. Giriş ekranı dolduran fotoğraf, ekranlar ve kıyas daha ferah. */
 @media (min-width:1000px){
-  .giris{position:relative;display:grid;min-height:min(calc(100vh - 65px),860px);padding:0;color:#fff;overflow:hidden}
-  .giris>.ic,.giris .kapak{grid-area:1/1}
-  .giris>.ic{position:relative;z-index:1;align-self:end;width:auto;margin-inline:clamp(28px,4vw,72px) auto;max-width:900px;padding-bottom:clamp(56px,8vh,96px)}
-  .giris .alt{color:rgba(255,255,255,.88)}
-  .giris .btn{background:#fff;color:#161C20}
-  .giris .btn:hover{background:#dfe8ee}
-  .kapak{position:relative;margin:0;height:100%}
-  .kapak img{position:absolute;inset:0;height:100%;aspect-ratio:auto}
-  .kapak::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(6,10,14,.9) 0%,rgba(6,10,14,.62) 40%,rgba(6,10,14,.08) 74%),linear-gradient(to right,rgba(6,10,14,.86) 0%,rgba(6,10,14,.66) 34%,rgba(6,10,14,.12) 62%,rgba(6,10,14,0) 74%)}
-  .kapak::before{content:"";position:absolute;z-index:1;left:0;bottom:0;width:58%;height:60%;background:#A4D8E0;opacity:.2;-webkit-mask:url(/desenler/desen-bursa-kesik-gecme.svg) left bottom/190px,linear-gradient(to top right,#000 8%,transparent 68%);-webkit-mask-composite:source-in;mask:url(/desenler/desen-bursa-kesik-gecme.svg) left bottom/190px,linear-gradient(to top right,#000 8%,transparent 68%);mask-composite:intersect;pointer-events:none}
-  .kapak img{animation:yakin 30s ease-in-out infinite alternate}
-  .halka{position:absolute;z-index:2;right:clamp(28px,5vw,96px);top:50%;margin-top:calc(clamp(300px,33vw,480px)/-2)!important;width:clamp(300px,33vw,480px);margin:0;--r:clamp(132px,14.3vw,208px);color:#F0D27A;grid-area:1/1}
-  .kapak figcaption{position:absolute;z-index:1;right:var(--kenar);bottom:18px;width:auto;margin:0;color:rgba(255,255,255,.72)}
+  .giris{position:relative;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);min-height:min(calc(100vh - 65px),860px);padding:0;overflow:hidden}
+  .giris>.ic{position:relative;z-index:1;align-self:center;width:auto;margin:0;padding:48px 16px 48px clamp(28px,6vw,110px);min-width:0}
+  .sag{margin:0;min-width:0}
+  .sag .sehirler{position:relative;z-index:1;display:flex;justify-content:space-between;gap:10px;width:auto;margin:clamp(56px,13vh,120px) 0 0;padding:0 clamp(20px,3vw,48px) 0 0}
+  /* Noktalı yay: madalyonlar dünyanın üstünde, onun yayını izler. */
+  .sag .sehirler::before{content:"";position:absolute;z-index:-1;left:-4%;right:0;top:30px;height:300px;border-top:2px dotted #C9A13B;border-radius:50%;opacity:.8;-webkit-mask:linear-gradient(to right,transparent 2%,#000 16%,#000 84%,transparent 98%);mask:linear-gradient(to right,transparent 2%,#000 16%,#000 84%,transparent 98%)}
+  /* Yay yazının arkasından geçer, üstünden değil. */
+  .sag .sehirler span,.sag .sehirler small{justify-self:start;padding:0 6px;margin-left:-6px;background:#fff}
+  [data-theme=night] .sag .sehirler span,[data-theme=night] .sag .sehirler small{background:#000}
+  .sag .sehirler li{margin-top:var(--y,0)}
+  .sag .sehirler li:nth-child(1){--y:30px}
+  .sag .sehirler li:nth-child(2){--y:0px}
+  .sag .sehirler li:nth-child(3){--y:0px}
+  .sag .sehirler li:nth-child(4){--y:30px}
+  .sehirler i{width:60px;height:60px}
+  .dunya{position:absolute;inset:0;height:auto;margin:0}
+  .dunya img{inset:0;width:100%;height:100%;object-fit:cover;object-position:100% 100%}
   .ekranlar{grid-template-columns:repeat(3,minmax(0,320px));justify-content:space-between;row-gap:64px;margin-top:56px}
   .ekranlar img{box-shadow:0 18px 44px rgba(18,30,38,.14)}
   .kiyas{max-height:680px;margin-left:auto;width:min(100%,540px);box-shadow:0 18px 44px rgba(18,30,38,.14)}
@@ -224,32 +225,23 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
 <section class="giris">
   <div class="ic">
     <h1>Türkiye'nin vakıf eserlerini <em>haritada</em> keşfet.</h1>
-    <div class="suslu" aria-hidden="true"><i></i><b></b><i></i></div>
     <p class="alt">Haritada bir esere dokun. Hikâyesini dinle, 3D modelini gez, eski fotoğrafıyla bugününü karşılaştır.</p>
     <div class="giris-alt">
     <a class="btn" href="/#view=map">Haritayı aç <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </div>
+  <div class="sag">
     <ul class="sehirler">
       <li style="--c:var(--bursa);--a:url(/tanitim2/medya/amblem-bursa.svg)"><i></i><span>Bursa</span><small>9 eser</small></li>
       <li style="--c:var(--konya);--a:url(/tanitim2/medya/amblem-konya.svg)"><i></i><span>Konya</span><small>1 eser</small></li>
       <li style="--c:var(--hatay);--a:url(/tanitim2/medya/amblem-hatay.svg)"><i></i><span>Hatay</span><small>1 eser</small></li>
-      <li class="yakin"><span>Kütahya</span><small>yakında</small></li>
+      <li class="yakin" style="--a:url(/desenler/amblem-akar-yildiz.svg)"><i></i><span>Kütahya</span><small>yakında</small></li>
     </ul>
-    </div>
+    <figure class="dunya">
+      <img class="d-gun" src="/tanitim2/medya/dunya-gun.webp" width="2000" height="1104" alt="Dünya küresi; Türkiye sarı sınır çizgisiyle işaretli" fetchpriority="high" decoding="async">
+      <img class="d-gece" src="/tanitim2/medya/dunya-gece.webp" width="2000" height="1104" alt="Dünya küresi; Türkiye sarı sınır çizgisiyle işaretli" loading="lazy" decoding="async">
+    </figure>
   </div>
-  <div class="halka" aria-hidden="true">
-    <svg class="halka-yazi" viewBox="0 0 400 400"><defs><path id="hy" d="M200,200 m-172,0 a172,172 0 1,1 344,0 a172,172 0 1,1 -344,0"/></defs><circle cx="200" cy="200" r="150" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 7"/><text><textPath href="#hy" textLength="1060">BURSA · KONYA · HATAY · KÜTAHYA · BURSA · KONYA · HATAY · KÜTAHYA ·</textPath></text></svg>
-    <div class="halka-don">
-      <i style="--aci:0deg;--c:var(--bursa);--a:url(/tanitim2/medya/amblem-bursa.svg)"><b></b></i>
-      <i style="--aci:120deg;--c:var(--konya);--a:url(/tanitim2/medya/amblem-konya.svg)"><b></b></i>
-      <i style="--aci:240deg;--c:var(--hatay);--a:url(/tanitim2/medya/amblem-hatay.svg)"><b></b></i>
-    </div>
-    <div class="kure"><img src="/tanitim2/medya/kure.webp" alt="" width="900" height="900" decoding="async"></div>
-  </div>
-  <figure class="kapak">
-    <img class="kapak-gece" src="/tanitim2/medya/kapak-gece.webp" alt="Bursa Ulucami, gece, havadan" width="1600" height="900" loading="lazy" decoding="async">
-    <img class="kapak-gun" src="/tanitim2/medya/kapak-1600.webp" srcset="/tanitim2/medya/kapak-800.webp 800w, /tanitim2/medya/kapak-1600.webp 1600w" sizes="100vw" width="1600" height="800" alt="Bursa Ulucami ve iki minaresi, havadan" fetchpriority="high" decoding="async">
-    <figcaption>Ulucami, Bursa. Fotoğraf: Bursa Vakıf Eserleri Envanteri arşivi</figcaption>
-  </figure>
 </section>
 
 <section class="bolum" id="uygulama"><div class="ic">
@@ -393,7 +385,7 @@ var EN={
 "İster dinle, ister oku":"Listen or read, as you like","Her eser cümle cümle anlatılır; her cümlenin fotoğrafı ve kaynağı vardır. Dene:":"Every site is told sentence by sentence, each with its photograph and source. Try it:","Dinle":"Listen","Oku":"Read","Yeniden dışarıda":"Outside again","Çatı yerine oturur, arka taraftan son bir bakış. Sıradaki eserler haritada.":"The roof settles back; one last look from behind. The next sites are on the map.","Her şehrin kendi rengi ve deseni var":"Every city has its own colour and pattern","Harita bir şehre inince uygulama o şehrin rengine ve motifine geçer.":"When the map comes down on a city, the app takes on that city's colour and motif.","9 eser, 7 tanesinde 3D model":"9 sites, 7 with a 3D model","Karatay Medresesi":"Karatay Madrasa","Habib-i Neccar Camii":"Habib-i Neccar Mosque","Haritada gör.":"See it on the map.","Ulucami'den başla, hikâyesi birkaç dakika.":"Start at Ulucami; its story takes a few minutes.","Telefonunda aç":"Open on your phone",
 "AKAR · Fotoğraflar ve bilgiler: Vakıf Katılım vakıf eserleri envanteri":"AKAR · Photographs and content: Vakıf Katılım's inventory of foundation works"
 };
-var ATTR={"Gece teması":"Night theme","Anlatım biçimi":"How to take the story","Önceki cümle":"Previous sentence","Sonraki cümle":"Next sentence","Sesi başlat":"Play the voice","Ulucami'nin 3D modeli":"3D model of Ulucami","Eski ve bugünkü fotoğrafı karşılaştır":"Compare the old and present photographs","Bursa Ulucami ve iki minaresi, havadan":"Bursa Ulucami and its two minarets, from the air"};
+var ATTR={"Dünya küresi; Türkiye sarı sınır çizgisiyle işaretli":"The globe, with Türkiye outlined in yellow","Gece teması":"Night theme","Anlatım biçimi":"How to take the story","Önceki cümle":"Previous sentence","Sonraki cümle":"Next sentence","Sesi başlat":"Play the voice","Ulucami'nin 3D modeli":"3D model of Ulucami","Eski ve bugünkü fotoğrafı karşılaştır":"Compare the old and present photographs","Bursa Ulucami ve iki minaresi, havadan":"Bursa Ulucami and its two minarets, from the air"};
 var ilk=new Map(),attrIlk=[];
 var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),d;
 while(d=w.nextNode()){var k=d.nodeValue,t=k.trim();if(t&&EN[k]!==undefined)ilk.set(d,{tr:k,en:EN[k]});else if(t&&EN[t]!==undefined)ilk.set(d,{tr:k,en:k.replace(t,EN[t])});}
