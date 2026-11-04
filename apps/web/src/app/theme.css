@@ -318,12 +318,13 @@
   .lang-switch {
     position: relative;
     flex: none;
-    display: grid;
-    place-items: center;
+    display: block;
     width: 32px;
     height: 32px;
     padding: 0;
+    border: 0;
     border-radius: 50%;
+    background: none;
   }
   .lang-switch::before {
     display: none;
@@ -335,8 +336,14 @@
     padding: 0;
     border-radius: 50%;
     background: var(--glass);
+    box-shadow: var(--glass-edge), var(--glass-shadow);
     color: var(--text);
     font: 700 12px/1 var(--font);
+  }
+  .lang-switch [aria-pressed="true"] {
+    position: relative;
+    display: block;
+    color: var(--text);
   }
   .lang-switch button[aria-pressed="false"] {
     position: absolute;
