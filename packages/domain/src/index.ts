@@ -239,23 +239,47 @@ export const mapCloseSrc = (model: SiteModel, theme: "day" | "night"): string | 
   const lit = modelFileFor(model, theme).src;
   return mapModelSrc(model, theme) === lit ? undefined : lit;
 };
-/**
- * Part names the site's content uses that its night file lacks: story highlights and cameras, "Eser hakkında"
- * chapters, part cards, tasks and cover groups. They would not show by night. Only names in use are compared: a
- * file's part list may also carry mesh names, read differently by the server and by the editor.
- */
-export function nightPartsMissing(site: HeritageSite): string[] {
-  const night = site.model?.night;
-  if (!night?.parts.length) return [];
-  const used = new Set([
-    ...site.stories.flatMap((s) => [...(s.highlights ?? []), ...(s.camera?.target ? [s.camera.target] : [])]),
-    ...(site.chapters ?? []).flatMap((c) => [...c.focusParts, ...(c.camera?.target ? [c.camera.target] : [])]),
-    ...(site.partCards ?? []).flatMap((c) => c.parts),
-    ...(site.tasks ?? []).flatMap((t) => [...(t.part ? [t.part] : []), ...(t.field?.fromHome ? [t.field.fromHome.part] : [])]),
-    ...(site.model?.coverGroups ?? []).flat(),
-  ]);
-  return [...used].filter((part) => !night.parts.includes(part));
+/** A part name the site's content uses that a model file lacks, with the places that use it (editor labels). */
+export interface MissingPart {
+  part: string;
+  usedIn: string[];
 }
+/**
+ * Part names the site's content uses that `parts` lacks: story highlights and cameras, "Eser hakkında" chapters,
+ * part cards, tasks and cover groups. Only names in use are compared: a file's part list may also carry mesh
+ * names, read differently by the server and by the editor. An empty list (parts unknown) reports nothing.
+ */
+export function partsMissing(site: HeritageSite, parts: string[]): MissingPart[] {
+  if (!parts.length) return [];
+  const uses = new Map<string, string[]>();
+  const use = (part: string | null | undefined, place: string) => {
+    if (!part) return;
+    const list = uses.get(part) ?? [];
+    if (!list.includes(place)) list.push(place);
+    uses.set(part, list);
+  };
+  site.stories.forEach((s, i) => {
+    for (const p of s.highlights ?? []) use(p, `Hikâye cümlesi ${i + 1}`);
+    use(s.camera?.target, `Hikâye cümlesi ${i + 1}`);
+  });
+  (site.chapters ?? []).forEach((c, i) => {
+    for (const p of c.focusParts) use(p, `Eser hakkında bölüm ${i + 1}`);
+    use(c.camera?.target, `Eser hakkında bölüm ${i + 1}`);
+  });
+  (site.partCards ?? []).forEach((c, i) => {
+    for (const p of c.parts) use(p, `Parça kartı «${c.title || i + 1}»`);
+  });
+  (site.tasks ?? []).forEach((t, i) => {
+    use(t.part, `Görev ${i + 1}`);
+    use(t.field?.fromHome?.part, `Görev ${i + 1}`);
+  });
+  for (const p of (site.model?.coverGroups ?? []).flat()) use(p, "İçini göster");
+  const have = new Set(parts);
+  return [...uses].filter(([part]) => !have.has(part)).map(([part, usedIn]) => ({ part, usedIn }));
+}
+/** Part names the site's content uses that its night file lacks; they would not show by night. */
+export const nightPartsMissing = (site: HeritageSite): string[] =>
+  partsMissing(site, site.model?.night?.parts ?? []).map((m) => m.part);
 export interface SiteModel {
   name: string;
   bytes: number;

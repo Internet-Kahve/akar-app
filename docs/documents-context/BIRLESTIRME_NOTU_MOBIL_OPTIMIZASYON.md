@@ -4,7 +4,7 @@
 
 ## Özet
 
-- Dal `main` `6813cf5` üzerine kurulu. Yazıldığı anda bilinen `main`'de ondan yeni commit yoktu; birleştirmeden önce `git fetch` ile yeniden bak.
+- `main` `4b3ce88` (eksik parça uyarısı) bu dala birleştirildi; `packages/domain/src/index.ts` ve testindeki çakışmalar çözüldü, iki tarafın eklemeleri de duruyor. PR'dan önce `git fetch` ile `main`'e yeniden bak.
 - **Veritabanı göçü yok.** Şema bu dalda değişmedi; aşağıdaki canlı alanlar için göç gerekecek.
 - **Kırıcı API değişikliği yok.** Web, yeni alanlar gelmezse eski yolda çalışır: harita sunum dosyasını gösterir, iç mekân gizlenmez, «Temsili görsel» etiketi çıkmaz.
 - Yeni ortam değişkeni yok.
@@ -78,5 +78,5 @@ Silinen web bileşeni: `welcome-card.tsx`. `main`'de ona dokunan yeni iş varsa 
 ## Test durumu
 
 - Tam tarayıcı testi `3bffaf2`'de: 149 geçti, 27 atlandı.
-- Son üç commit'te tip kontrolü ve 208 birim testi geçti; tarayıcıda harita, akış, ipucu, şehir menüsü, tanıtım ve hikâye testleri geçti.
+- Birleştirmeden sonra tip kontrolü ve 209 birim testi geçti; önceki commit'lerde tarayıcıda harita, akış, ipucu, şehir menüsü, tanıtım ve hikâye testleri geçti.
 - API testleri ve gerçek telefon denemesi yapılmadı.
