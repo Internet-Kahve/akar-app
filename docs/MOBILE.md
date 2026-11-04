@@ -73,7 +73,7 @@ npm run mobile:test
 - Statik mobil pakette Chromium ve WebKit ile 22 test geçti; geç tamamlanan kamera izninden sonra akışın durdurulması dahil.
 - Web E2E çalışmasında 131 test geçti, 6 test atlandı. Kamera testinin masaüstü profilindeki tek hatası, testin telefon genişliğini açıkça seçmesiyle düzeltildi; ilgili test iki profilde yeniden çalıştırıldı ve geçti. Tam paket bu düzeltmeden sonra yeniden çalıştırılmadı.
 - Son canlı ayarlarla `mobile:sync` tamamlandı. iOS Simulator derlemesi başarılı; uygulama iPhone 17 Pro / iOS 26.5 simülatörüne kuruldu ve başlatıldı. Canlı katalog/giriş akışı simülatör arayüzünde ve fiziksel cihazda henüz doğrulanmadı.
-- Android Gradle 8.14.3 indirildi; ancak bu ortamda resmi Google Maven adresleri Android Gradle Plugin 8.13.0 ve Google Services 4.4.4 için HTTP 404 döndürdü. `assembleDebug` bağımlılık çözümlemesinde durdu; APK üretilmedi. Depo erişimi düzeldikten sonra derleme ve cihaz testleri tekrarlanmalı.
+- Android ana Google Maven adresinde alınan HTTP 404, Google'ın alternatif dağıtım adresiyle aşıldı. Bağımlılık sürümleri değiştirilmeden `assembleDebug` başarılı oldu (215 görev); canlı ayarlarla debug APK üretildi. Kullanılan isteğe bağlı init dosyası ve USB kurulum komutları aşağıdadır.
 
 Yerel derleme (önce `mobile:sync`):
 
@@ -82,6 +82,16 @@ cd apps/mobile/android
 ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew assembleDebug
 # Çıktı: app/build/outputs/apk/debug/app-debug.apk
 ```
+
+Google Maven ana adresi bu ağda 404 döndürürse aynı sürümleri Google'ın alternatif dağıtım adresinden indirmek için isteğe bağlı init dosyasını kullan:
+
+```sh
+# apps/mobile/android içinde:
+ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew \
+  --init-script ../../../scripts/android-google-maven.init.gradle assembleDebug
+```
+
+USB hata ayıklama açık ve bilgisayar yetkilendirilmiş telefon için `adb devices -l` çıktısından cihaz kimliğini seç. Ardından `adb -s <cihaz-kimliği> install -r app/build/outputs/apk/debug/app-debug.apk` ile kur; `adb -s <cihaz-kimliği> shell am start -n com.tamerakdeniz.akar/.MainActivity` ile aç. Telefonun kurulum onayını kabul et. `-r` mevcut uygulama verilerini koruyarak günceller; imza uyuşmazlığında verileri silerek kaldırma işlemini otomatik yapma.
 
 ```sh
 xcodebuild -project apps/mobile/ios/App/App.xcodeproj -scheme App \

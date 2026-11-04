@@ -1,0 +1,14 @@
+// Optional local fallback when dl.google.com returns 404 on this network.
+// Uses Google's distribution endpoint; does not change dependency versions.
+gradle.beforeProject { project ->
+    def useGoogleDistribution = { repository ->
+        if (repository instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository) {
+            def endpoint = repository.url.toString()
+            if (endpoint.startsWith('https://dl.google.com/dl/android/maven2') || endpoint.startsWith('https://maven.google.com')) {
+                repository.setUrl('https://redirector.gvt1.com/edgedl/android/maven2/')
+            }
+        }
+    }
+    project.buildscript.repositories.all(useGoogleDistribution)
+    project.repositories.all(useGoogleDistribution)
+}
