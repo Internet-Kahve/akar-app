@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { modelPixelRatio, modestDevice } from "../lib/device";
+import { mountGpuDebug } from "../lib/gpu-debug";
 import { sized } from "../lib/image-size";
 import type {
   CameraPose,
@@ -408,6 +409,8 @@ export default function ModelViewer({
     let cancelLift = () => {};
     let detachPointer = () => {};
     let unfollowTheme = () => {};
+    let unmountDebug = () => {};
+    let shadowSize: number | null = null;
     try {
       // A modest phone: fewer pixels, no antialiasing, a smaller shadow map.
       const modest = modestDevice();
@@ -429,6 +432,8 @@ export default function ModelViewer({
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(detail ? 38 : 40, 1, 0.01, 10000);
+      // `?debug=gpu`: the device and context facts over the viewer, for reports from phones we do not have.
+      unmountDebug = mountGpuDebug(element, renderer, camera, () => shadowSize);
       controls = new OrbitControls(camera, renderer.domElement);
       // As the prototype's viewer: left drag turns, right drag (two fingers) moves, the wheel (pinch) zooms; turning
       // eases out after the hand lets go.
@@ -595,6 +600,7 @@ export default function ModelViewer({
           {
             const R = size.length() / 2 * 1.3;
             const sun = addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
+            shadowSize = modest ? 1024 : sun.shadow.mapSize.x;
             if (modest) {
               sun.shadow.mapSize.set(1024, 1024);
               sun.shadow.normalBias = R / 1024;
@@ -1168,6 +1174,7 @@ export default function ModelViewer({
       cancelLift();
       detachPointer();
       unfollowTheme();
+      unmountDebug();
       observer?.disconnect();
       controls?.dispose();
       decoder?.dispose();
