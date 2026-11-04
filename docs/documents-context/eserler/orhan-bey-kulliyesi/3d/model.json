@@ -61,10 +61,10 @@
       "foto": "02",
       "hedef": "Ic_Mihrap",
       "azimut": 13,
-      "egim": 12,
-      "uzaklik": "0.12",
+      "egim": 8,
+      "uzaklik": "0.14",
       "ic": true,
-      "not": "içeride mihrap ve minber"
+      "not": "içeride mihrap ve yan pencereler, yukarıdan değil göz hizasından (4 Kasım 2026, telefonda denendi)"
     }
   ],
   "pisik_onay": true,
