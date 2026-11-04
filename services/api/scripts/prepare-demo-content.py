@@ -93,7 +93,8 @@ for entry in editorial.eserleri_bul():
     photo_rows = editorial.tablo(editorial.oku(root / 'eserler' / folder / 'icerik/fotograflar.md'), 'Dosya')
     photo_en = [dict(dosya=editorial.ham(h[0])) for h in photo_rows if h and editorial.ham(h[0])]
     story_items, card_items, headings = editorial.hikaye_oku(folder), editorial.parcalar_oku(folder), editorial.hakkinda_oku(folder)
-    editorial.en_oku(folder, story_items, card_items, photo_en, headings)
+    if hasattr(editorial, 'en_oku'):
+        editorial.en_oku(folder, story_items, card_items, photo_en, headings)
     photo_en = {f['dosya']: f for f in photo_en}
     photos = []
     for h in photo_rows:

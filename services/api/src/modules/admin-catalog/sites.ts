@@ -1016,9 +1016,9 @@ async function mutate(
   return toAdminDetail(after);
 }
 
-/** Zod's optional `label` reads `undefined`; the stored pose only carries the key when set. */
-function toPose({ label, ...pose }: CameraPoseInput): CameraPose {
-  return label === undefined ? pose : { label, ...pose };
+/** Zod's optional `label`/`exact` read `undefined`; the stored pose only carries a key when set. */
+function toPose({ label, exact, ...pose }: CameraPoseInput): CameraPose {
+  return { ...(label === undefined ? {} : { label }), ...(exact === undefined ? {} : { exact }), ...pose };
 }
 
 /** Creates a draft (editor v2, Tier 1 unless told otherwise); 409 when the city already has the same name and district. */

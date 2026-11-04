@@ -360,36 +360,6 @@ for (const role of ["editor", "moderator", "admin"] as const) {
   });
 }
 
-// «Yanındayım» was taken out of the app (Muhammed, 3 Nov 2026); the API's visit check stays, without a button to try it.
-test.skip("live visits require location and only display success after server verification", async ({ page, context }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "geolocation", { configurable: true, value: {
-      getCurrentPosition: (_success: unknown, failure: (error: { code: number }) => void) => failure({ code: 1 }),
-    } });
-  });
-  await page.goto("/#view=map");
-  await openSite(page, MEMORY_SITE.name);
-  await page.getByRole("button", { name: /^Yanındayım/ }).click();
-  const dialog = page.getByRole("dialog", { name: "Yanındayım", exact: true });
-  await expect(dialog.getByText(/Konum izni vererek/)).toBeVisible();
-  await expect(dialog.getByText(/Simülasyon/)).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
-  await expect(page.locator(".toast.fault")).toContainText("konum izni vermelisin");
-  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toHaveCount(0);
-  // Restore the real browser geolocation provider; the local API decides proximity.
-  await page.evaluate(() => { Reflect.deleteProperty(navigator, "geolocation"); });
-  await context.grantPermissions(["geolocation"]);
-  await context.setGeolocation({ latitude: 41, longitude: 29, accuracy: 10 });
-  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
-  await expect(page.locator(".toast.fault")).toContainText("esere yaklaşmalısın");
-  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toHaveCount(0);
-  const site = await (await fetch(`${API}/v1/sites/${MEMORY_SITE.id}`)).json();
-  await context.setGeolocation({ latitude: site.coordinates[1], longitude: site.coordinates[0], accuracy: 10 });
-  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
-  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toBeVisible();
-});
-
-
 test("live photo metadata editing preserves imported licenses and excludes unsupported file replacement", async ({ page }, testInfo) => {
   const email = `e2e-photo-editor-${randomUUID().slice(0, 8)}@akar.test`;
   tokenFor(email, "editor");
