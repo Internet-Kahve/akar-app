@@ -35,6 +35,7 @@ import { catalogRouteRoutes } from "./modules/routes/routes.ts";
 import { settingsRoutes } from "./modules/settings/routes.ts";
 import { siteTaskRoutes } from "./modules/site-tasks/routes.ts";
 import { narrationRoutes } from "./modules/narrations/routes.ts";
+import { usageRoutes } from "./modules/usage/routes.ts";
 
 /**
  * Runtime dependencies. Optional services are null when not configured; a module that needs one
@@ -79,6 +80,7 @@ const MODULES: ModulePlugin[] = [
   siteTaskRoutes,
   settingsRoutes,
   narrationRoutes,
+  usageRoutes,
 ];
 
 /**
