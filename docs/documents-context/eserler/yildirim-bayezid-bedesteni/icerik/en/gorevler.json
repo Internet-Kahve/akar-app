@@ -1,0 +1,37 @@
+{
+ "bed-soru-kubbe": {
+  "baslik": "How many domes?",
+  "soru": "How many domes cover the Bedesten?",
+  "secenekler": [
+   "14",
+   "20",
+   "6",
+   "32"
+  ],
+  "ipuclari": [
+   "Count the domes in two rows in the photograph taken from above.",
+   "Each row has seven domes."
+  ],
+  "dogru_metin": "Fourteen domes on six piers cover the Bedesten's central space of 15.00 × 56.50 metres.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "bed-saha-kapi": {
+  "baslik": "One of four gates",
+  "gorev": "Find one of the Bedesten's four gates.",
+  "yerinde": "Go up to one of the Bedesten's gates and tap \"I'm here\".",
+  "evden": "Tap the Bedesten's gates in the 3D model.",
+  "tamam_metin": "The Bedesten is entered through gates on its four façades; each opens into a domed entrance space."
+ },
+ "bed-hikaye": {
+  "ad": "You listened to the Bedesten",
+  "metin": "You listened to or read the story of the Bedesten to the end."
+ },
+ "bed-on-dort-kubbe": {
+  "ad": "Fourteen domes",
+  "metin": "You counted the domes covering the Bedesten."
+ },
+ "bed-dort-kapi": {
+  "ad": "Four gates",
+  "metin": "You found one of the Bedesten's gates."
+ }
+}

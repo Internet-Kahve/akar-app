@@ -60,7 +60,9 @@ const sites = manifest.sites.map((s) => {
         anchorNode: info.ana_parca || null, hiddenPoints: [], keptPoints: [] },
     };
   }
-  for (const t of s.tasks) taskKeys[t.id] = t.kind === "quiz" ? { correctIndex: t.correctIndex, correctText: t.details.correctText } : { doneText: t.details.doneText };
+  for (const t of s.tasks) taskKeys[t.id] = t.kind === "quiz"
+    ? { correctIndex: t.correctIndex, correctText: t.details.correctText, ...(t.details.correctTextEn && { correctTextEn: t.details.correctTextEn }) }
+    : { doneText: t.details.doneText, ...(t.details.doneTextEn && { doneTextEn: t.details.doneTextEn }) };
   return {
     id: s.id, name: s.name, ...(s.nameEn && { nameEn: s.nameEn }), ...(s.descriptionEn && { descriptionEn: s.descriptionEn }), city: s.city, district: s.district ?? "", year: s.year, architect: s.architect, kind: s.kind, coordinates: s.coordinates,
     minutes: s.minutes, description: s.description, status: "published", source: s.source, tier: s.tier,
@@ -92,10 +94,10 @@ const sites = manifest.sites.map((s) => {
     }),
     ...(s.tasks.length && {
       tasks: s.tasks.map((t) => ({
-        id: t.id, kind: t.kind, title: t.title, prompt: t.prompt, trust: t.trust,
+        id: t.id, kind: t.kind, title: t.title, prompt: t.prompt, trust: t.trust, ...(t.titleEn && { titleEn: t.titleEn, promptEn: t.promptEn }),
         ...(t.photoId && { photo: media.get(t.photoId) }), ...(t.part && { part: t.part }), ...(t.source && { source: t.source }),
         ...(t.kind === "quiz"
-          ? { quiz: { options: t.details.options, hints: t.details.hints, wrongText: t.details.wrongText, fromHome: t.details.fromHome } }
+          ? { quiz: { options: t.details.options, hints: t.details.hints, wrongText: t.details.wrongText, fromHome: t.details.fromHome, ...(t.details.optionsEn && { optionsEn: t.details.optionsEn, hintsEn: t.details.hintsEn, wrongTextEn: t.details.wrongTextEn }) } }
           : { field: { onSite: t.details.onSite, fromHome: t.details.fromHome } }),
       })),
     }),

@@ -1,0 +1,37 @@
+{
+ "koza-soru-kosk-mescit": {
+  "baslik": "The small building in the courtyard",
+  "soru": "What is the small mosque rising on arches in the middle of Koza Han's courtyard called?",
+  "secenekler": [
+   "Kiosk mosque",
+   "Zawiya",
+   "Hospice",
+   "Madrasa"
+  ],
+  "ipuclari": [
+   "The building in the photograph does not stand on the ground; it rises on arches like a kiosk.",
+   "The answer contains the word \"kiosk\"."
+  ],
+  "dogru_metin": "A kiosk mosque is a free-standing mosque rising on arches in the middle of a han courtyard. Koza Han's is among the rare kiosk mosques in Bursa to survive in original form.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "koza-saha-merdiven": {
+  "baslik": "The mosque's stair",
+  "gorev": "Find the marble stair of the kiosk mosque and count its steps.",
+  "yerinde": "Go to the foot of the mosque's stair and tap \"I'm here\".",
+  "evden": "Tap the kiosk mosque in the 3D model.",
+  "tamam_metin": "The mosque is reached by a marble stair of fourteen steps; its balustrades are also marble, with geometric grilles."
+ },
+ "koza-hikaye": {
+  "ad": "You listened to Koza Han",
+  "metin": "You listened to or read the story of Koza Han to the end."
+ },
+ "koza-kosk-mescit": {
+  "ad": "Kiosk mosque",
+  "metin": "You learned about the mosque rising on arches in the han courtyard."
+ },
+ "koza-on-dort-basamak": {
+  "ad": "Fourteen steps",
+  "metin": "You found the marble stair of the kiosk mosque."
+ }
+}

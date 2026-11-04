@@ -1,0 +1,26 @@
+{
+ "kar-soru-cini": {
+  "baslik": "The dome's decoration",
+  "soru": "What is the main material decorating the dome and interior of the Karatay Madrasa?",
+  "secenekler": [
+   "Tile",
+   "Painted plaster",
+   "Carved wood",
+   "Stained glass"
+  ],
+  "ipuclari": [
+   "Look at the turquoise and navy patterns in the photograph.",
+   "The building is now a museum named after this material."
+  ],
+  "dogru_metin": "The interior uses mosaic, openwork and plate tile. The building has been the Museum of Tile Works since 1955.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "kar-hikaye": {
+  "ad": "You listened to the Karatay Madrasa",
+  "metin": "You listened to or read the story of the Karatay Madrasa to the end."
+ },
+ "kar-cini": {
+  "ad": "Seljuk tiles",
+  "metin": "You recognised the tiles of the Karatay Madrasa."
+ }
+}
