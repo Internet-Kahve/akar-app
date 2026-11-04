@@ -22,6 +22,7 @@ Her modül `src/modules/<modül>/` altında yaşar: `routes.ts` (Fastify eklenti
 | site-tasks | `modules/site-tasks/` | `schema/engagement.ts` (`user_site_tasks`, `user_site_badges`) | eser görevi ve rozeti uçları (§11.44); `site_tasks`, `site_task_answers`, `site_badges` tabloları `schema/catalog.ts` içindedir (içe aktarma yazar, catalog okur); hikâye rozetini engagement `completeStory` bu modülün `awardStoryBadges` fonksiyonunu çağırarak verir, hesap silmede kullanıcı satırlarını `eraseEngagement` siler |
 | admin-health | `modules/admin-health/` | yok | yok; `memories` ve `media` tablolarını yalnız okur |
 | settings | `modules/settings/` | `schema/settings.ts` | `map_settings` (tek satır) |
+| usage | `modules/usage/` | `schema/usage.ts` | `usage_daily` (§11.72) |
 
 Kurallar:
 
@@ -263,3 +264,10 @@ Ayrıntı ve gerekçe: [docs/MAP-MODELS-PLAN.md](../../docs/MAP-MODELS-PLAN.md),
 Eski `GET/PUT /v1/me/route` aynı `{ siteIds }` sözleşmesiyle varsayılan rotayı okur/yazar. Varsayılan rotanın silinmesi boş bir varsayılan oluşturur; diğer rotalara dokunmaz. `DELETE /v1/me` rota üst kayıtlarını ve cascade ile tüm duraklarını siler.
 
 Migration `0031_personal_routes`, eski `user_route_stops` satırlarını `default:<user_id>` rotasına konumlarını koruyarak kopyalar. Eski tablo korunur ve varsayılan rota yazmalarında eşzamanlı güncellenir. Misafir HTTP istemcisi ve demo istemcisi adlı rotaları cihazda saklar. Mevcut oturum açma aktarımı varsayılan rotayı taşır; cihazdaki diğer adlı rotalar cihazda korunur.
+
+## 15. Kullanım istatistikleri (§11.72)
+
+- **Tablo** `usage_daily` (RLS açık, yazma sahibi `usage` modülü, migration `0035_usage_daily`): `day` (İstanbul günü), `event`, `site_id`, `ref` (yoksa boş metin), `guest`, `count`. Yalnız günlük sayaç: kullanıcı kimliği, IP, cihaz kimliği ya da saat saklanmaz. Yabancı anahtar yok; silinen eserin sayıları kalır, adı `null` döner. Sayaç küçük olduğundan silme işi yok.
+- **Olay listesi** `modules/usage/events.ts` (`USAGE_EVENTS`): her olayın eser isteyip istemediği ve `ref` türü. Yeni olay = bu listeye bir satır + web çağrısı; göç gerekmez.
+- **Yazma:** `POST /v1/events` `{ events: [{ event, siteId?, ref? }] }` (en fazla 50; dakikada 60 istek) → `{ accepted }`. Oturum yoksa misafir sayılır. Kuralı tutmayan ya da bilinmeyen esere, rotaya, o eserin parça kartına ya da görevine ait olay hata vermeden atlanır.
+- **Okuma (yalnız admin):** `GET /v1/admin/stats?from&to` → `totals`, `daily`, `sites` (görüntülemeye göre), `routes`; `GET /v1/admin/stats/sites/:id?from&to` → olay + `ref` satırları (cümle bırakma eğrisi, parça kartı ve görev başlığıyla). Dönem iki uç dahil, varsayılan son 30 gün, en fazla 366 gün.

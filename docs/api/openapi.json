@@ -66554,6 +66554,504 @@
           }
         }
       }
+    },
+    "/v1/events": {
+      "post": {
+        "summary": "Kullanım olaylarını say",
+        "tags": [
+          "usage"
+        ],
+        "description": "Misafir ve giriş yapmış kullanıcı gönderir (oturum varsa yalnız \"giriş yapmış\" diye sayılır). En fazla 50 olay. Yalnız günlük sayaç artar: kimlik, IP, cihaz ya da saat saklanmaz. Kuralı tutmayan, bilinmeyen esere, rotaya, parça kartına ya da göreve ait olaylar sayılmadan atlanır (hata dönmez).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "events": {
+                    "minItems": 1,
+                    "maxItems": 50,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "event": {
+                          "type": "string",
+                          "enum": [
+                            "app.open",
+                            "search",
+                            "site.view",
+                            "story.start",
+                            "story.sentence",
+                            "story.complete",
+                            "narration.play",
+                            "about.open",
+                            "history.open",
+                            "part_card.open",
+                            "task.complete",
+                            "my_route.add",
+                            "route.open",
+                            "account.sign_in"
+                          ],
+                          "description": "Olay adı; liste ve kuralları `USAGE_EVENTS` (§11.72)"
+                        },
+                        "siteId": {
+                          "description": "Eser olaylarında zorunlu, diğerlerinde verilmez",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120,
+                          "pattern": "^[A-Za-z0-9_.:-]+$"
+                        },
+                        "ref": {
+                          "description": "Olayın ayrıntısı: `story.sentence` 0 tabanlı cümle sırası, `narration.play` `tr`/`en`, `part_card.open` parça kartı kimliği, `task.complete` görev kimliği, `route.open` rota kimliği, `account.sign_in` `new`/`returning`; diğerlerinde verilmez",
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        }
+                      },
+                      "required": [
+                        "event"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "events"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accepted": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "description": "Sayılan olay sayısı; kuralı tutmayan ya da bilinmeyen esere/rotaya ait olaylar sayılmaz"
+                    }
+                  },
+                  "required": [
+                    "accepted"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/stats": {
+      "get": {
+        "summary": "Kullanım istatistikleri: toplamlar, günlük seri, eser ve rota tabloları",
+        "tags": [
+          "usage"
+        ],
+        "description": "Yalnız admin. Dönem İstanbul günleriyle, iki uç dahil; varsayılan son 30 gün, en fazla 366 gün.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "İlk gün (dahil, İstanbul saati); verilmezse `to`'dan 29 gün önce"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Son gün (dahil); verilmezse bugün"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "to": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "totals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "event": {
+                            "type": "string",
+                            "enum": [
+                              "app.open",
+                              "search",
+                              "site.view",
+                              "story.start",
+                              "story.sentence",
+                              "story.complete",
+                              "narration.play",
+                              "about.open",
+                              "history.open",
+                              "part_card.open",
+                              "task.complete",
+                              "my_route.add",
+                              "route.open",
+                              "account.sign_in"
+                            ]
+                          },
+                          "guest": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "signedIn": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "event",
+                          "guest",
+                          "signedIn"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Dönemdeki her olayın misafir/giriş yapmış toplamı; sayısı 0 olan olay listede yoktur"
+                    },
+                    "daily": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "event": {
+                            "type": "string",
+                            "enum": [
+                              "app.open",
+                              "search",
+                              "site.view",
+                              "story.start",
+                              "story.sentence",
+                              "story.complete",
+                              "narration.play",
+                              "about.open",
+                              "history.open",
+                              "part_card.open",
+                              "task.complete",
+                              "my_route.add",
+                              "route.open",
+                              "account.sign_in"
+                            ]
+                          },
+                          "guest": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "signedIn": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "day": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          }
+                        },
+                        "required": [
+                          "event",
+                          "guest",
+                          "signedIn",
+                          "day"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Gün ve olaya göre sayılar, güne göre sıralı"
+                    },
+                    "sites": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "siteId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Eser adı; eser silinmişse null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "counts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "event": {
+                                  "type": "string",
+                                  "enum": [
+                                    "app.open",
+                                    "search",
+                                    "site.view",
+                                    "story.start",
+                                    "story.sentence",
+                                    "story.complete",
+                                    "narration.play",
+                                    "about.open",
+                                    "history.open",
+                                    "part_card.open",
+                                    "task.complete",
+                                    "my_route.add",
+                                    "route.open",
+                                    "account.sign_in"
+                                  ]
+                                },
+                                "guest": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "signedIn": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "event",
+                                "guest",
+                                "signedIn"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "siteId",
+                          "name",
+                          "counts"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Eser olaylarının eser başına toplamı, görüntülemeye göre çoktan aza"
+                    },
+                    "routes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "routeId": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "guest": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "signedIn": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "routeId",
+                          "name",
+                          "guest",
+                          "signedIn"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "`route.open` rota başına, çoktan aza"
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to",
+                    "totals",
+                    "daily",
+                    "sites",
+                    "routes"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/stats/sites/{id}": {
+      "get": {
+        "summary": "Bir eserin kullanım ayrıntısı: cümle bırakma eğrisi, parça kartları, görevler, seslendirme dili",
+        "tags": [
+          "usage"
+        ],
+        "description": "Yalnız admin. Eser yoksa ve dönemde sayacı da yoksa 404.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "description": "İlk gün (dahil, İstanbul saati); verilmezse `to`'dan 29 gün önce"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "description": "Son gün (dahil); verilmezse bugün"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "from": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "to": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "siteId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "event": {
+                            "type": "string",
+                            "enum": [
+                              "app.open",
+                              "search",
+                              "site.view",
+                              "story.start",
+                              "story.sentence",
+                              "story.complete",
+                              "narration.play",
+                              "about.open",
+                              "history.open",
+                              "part_card.open",
+                              "task.complete",
+                              "my_route.add",
+                              "route.open",
+                              "account.sign_in"
+                            ]
+                          },
+                          "guest": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "signedIn": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "ref": {
+                            "type": "string",
+                            "description": "Olay ayrıntısı; yoksa boş metin"
+                          },
+                          "label": {
+                            "description": "Parça kartı ya da görev başlığı; diğerlerinde null",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "event",
+                          "guest",
+                          "signedIn",
+                          "ref",
+                          "label"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Bu eserin olayları ayrıntıya göre: hikâye cümlesi sırası (bırakma eğrisi), parça kartı, görev, seslendirme dili"
+                    }
+                  },
+                  "required": [
+                    "from",
+                    "to",
+                    "siteId",
+                    "name",
+                    "rows"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "servers": [
