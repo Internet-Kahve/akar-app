@@ -2083,6 +2083,8 @@ export function AkarApp() {
                 : { id: "yakinlas", text: t("tip.pinch"), place: "stage", gesture: "tap", spot: ".main-stage .story-photo", needs: ".main-stage .story-photo .zoom-photo", swallow: true },
             ]}
           />
+        ) : view === "profile" ? (
+          <TipRow key="t-profil" tips={[{ id: "profil.avatar", text: t("tip.avatar"), place: "under-spot", gesture: "tap", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }]} />
         ) : view === "history" ? (
           <TipRow key="t-gecmis" tips={historyTips(true)} />
         ) : null
@@ -2112,6 +2114,8 @@ export function AkarApp() {
                 : []),
             ]}
           />
+        ) : view === "profile" ? (
+          <TipRow key="m-profil" tips={[{ id: "masa.profil.avatar", text: t("tip.avatarWide"), place: "under-spot", gesture: "click", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }]} />
         ) : view === "history" ? (
           <TipRow key="m-gecmis" tips={historyTips(false)} />
         ) : null
