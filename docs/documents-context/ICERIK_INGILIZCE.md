@@ -1,6 +1,6 @@
 # AKAR · İngilizce içerik: dosya biçimi ve uygulamaya bağlanması (29 Ekim 2026)
 
-**Durum:** Altyapı hazır, çeviri yok. Dil seçici (TR \| EN) bütün içeriği bu dosyalardan okur. Çevirisi olan metin İngilizce, olmayan Türkçe görünür. EN seçiliyken eksik varsa kullanıcıya bir kez söylenir.
+**Durum (4 Kasım 2026):** 11 eserin adı, tanıtımı, hikâyesi, parça kartları, fotoğraf başlıkları ve «Eser hakkında» metni çevrildi (`icerik/en/`); `prepare-demo-content.py` okuyor. Çeviriler yapay zekâ desteğiyle yapıldı, kitabın paralel İngilizce metniyle karşılaştırılmadı; insan gözden geçirmesi bekliyor. Görevler ve rota adları çevrilmedi. Dil seçici (TR \| EN) bütün içeriği bu dosyalardan okur. Çevirisi olan metin İngilizce, olmayan Türkçe görünür. EN seçiliyken eksik varsa kullanıcıya bir kez söylenir.
 
 **Kim için:** çevirmen (içerik ekibi) ve ürün ekibi (Tamer, Burak).
 

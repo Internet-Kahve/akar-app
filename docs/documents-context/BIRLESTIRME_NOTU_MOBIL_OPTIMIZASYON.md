@@ -59,6 +59,13 @@ Bunlar bu dalda **yok**. Demo içerikte (`prepare-demo-content.mjs`) çalışıy
 7. **Rota adları.** `veri/rota` için `nameEn` kontrol edilmeli.
 8. **KVKK ve lisanslar.** `docs/LISANSLAR.md` ve `lib/kvkk.ts` taslak; hizmet koşullarını teyit edin.
 
+## İngilizce içerik: gözden geçirilecek noktalar
+
+Çeviri kitabın İngilizce metniyle karşılaştırılmadı. Türkçe kaynakta rastlanan ve çeviriye taşınan iki sorun:
+
+- `orhan-bey-kulliyesi/icerik/eser-hakkinda.md`, «Onarımlar ve bugün»: «1863-186» eksik yazılmış; çeviride «the 1860s» denildi. Kitaptan doğrulanmalı.
+- `orhan-bey-hamami/icerik/eser-hakkinda.md`, «Tarihçe»: Koza Han için 1505 yazıyor, Koza Han metni 1491 diyor. Çeviri kitabı izliyor.
+
 ## Açılar ve panel: mutlaka çalışmalı
 
 Panelde açı ayarlama ve kaydetme bu dalın zorunlu şartı. Editör bir açıyı kaydettiyse hikâye açıldığında aynı açı görünmeli ve aktarma onu ezmemeli.
