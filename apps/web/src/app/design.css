@@ -4728,3 +4728,25 @@ body:has(.gg) { overflow-x: clip; }
 }
 .chip.city-pick.ulke, .chip.city-pick.ulke:hover { background: #C8102E; color: #fff; border-color: #C8102E; }
 .chip.city-pick.ulke .city-motif { filter: brightness(0) invert(1); }
+
+/* ---------------- The privacy notice and the licence list, in a dialog (4 Nov 2026): the app's own colours. */
+.legal-dialog .legal-body { max-height: min(70dvh, 640px); overflow-y: auto; padding-right: 4px; color: var(--text); font: 400 15px/1.6 var(--font); }
+.legal-dialog .legal-body h3 { margin: 22px 0 6px; font: 650 17px/1.3 var(--font); color: var(--text); }
+.legal-dialog .legal-body h3:first-child { margin-top: 0; }
+.legal-dialog .legal-body p { margin: 6px 0; }
+.legal-dialog .legal-body ul { margin: 6px 0; padding-left: 20px; }
+.legal-dialog .legal-body li { margin: 4px 0; }
+.legal-dialog .legal-draft { padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--primary-light); color: var(--text); }
+.legal-dialog .legal-table-wrap { margin: 8px 0; overflow-x: auto; }
+.legal-dialog table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.legal-dialog th, .legal-dialog td { padding: 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.legal-dialog th { background: var(--primary-light); color: var(--text); font-weight: 600; }
+.legal-dialog td { color: var(--text-muted); }
+@media (max-width: 899.98px) {
+  .legal-dialog table, .legal-dialog tbody, .legal-dialog tr, .legal-dialog td { display: block; width: 100%; }
+  .legal-dialog thead { display: none; }
+  .legal-dialog tr { margin: 0 0 10px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .legal-dialog td { border: 0; border-bottom: 1px solid var(--border); }
+  .legal-dialog td:last-child { border-bottom: 0; }
+  .legal-dialog td::before { content: attr(data-label); display: block; color: var(--text); font-weight: 600; font-size: 12px; }
+}

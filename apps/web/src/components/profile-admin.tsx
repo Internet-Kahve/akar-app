@@ -1,4 +1,5 @@
 "use client";
+import { LegalDialog, type LegalKind } from "./legal-dialog";
 import { AccessControls } from "./access-menu";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -73,6 +74,7 @@ export function Profile({
 }) {
   const { lang, t } = useI18n();
   const [erasing, setErasing] = useState(false);
+  const [legal, setLegal] = useState<LegalKind | null>(null);
   const tr = lang === "en" ? "tr" : undefined;
   const firstSite = state.sites.find((s) => s.status === "published");
   const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
@@ -154,8 +156,9 @@ export function Profile({
               </>
             )}
             <AccessControls />
-            <a className="text-btn" href="/aydinlatma.html">{t("profile.notice")}</a>
-            <a className="text-btn" href="/lisanslar.html">{t("profile.licenses")}</a>
+            <button className="text-btn" onClick={() => setLegal("kvkk")}>{t("profile.notice")}</button>
+            <button className="text-btn" onClick={() => setLegal("licenses")}>{t("profile.licenses")}</button>
+            {legal && <LegalDialog kind={legal} onClose={() => setLegal(null)} />}
             {canManage && (
               <button className="text-btn" onClick={onAdmin}>
                 <Shield size={16} />
