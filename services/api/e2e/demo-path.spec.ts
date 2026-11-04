@@ -526,6 +526,7 @@ test("an admin finds a newly registered member, grants admin access and revokes 
 
 test("the site language follows the account: an empty account takes the device's, the account's wins over the device later", async ({
   browser,
+  isMobile,
 }) => {
   const email = `e2e-lang-${randomUUID().slice(0, 8)}@akar.test`;
   const preferences = async () =>
@@ -542,7 +543,8 @@ test("the site language follows the account: an empty account takes the device's
     // 2. Switching while signed in saves the account too.
     await page.goto("/#view=map");
     await expect(page.locator(".opening")).toHaveCount(0);
-    await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: "EN" }).click();
+    // A phone shows only the current language: one press on it turns to the other.
+    await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: isMobile ? "TR" : "EN" }).click();
     await expect.poll(async () => (await preferences()).siteLang).toBe("en");
 
     // 3. The device says Turkish again (as another device would): the signed-in load brings the account's English.
