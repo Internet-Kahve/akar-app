@@ -86,3 +86,7 @@ Yalnız fotoğraflı dört eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Ka
 ## 2 Kasım 2026 temizliği
 
 Biten iş emirleri (`promptlar/`), eski 3D revizyon planları (`eserler/*/SONNET_REVIZYON_PLANI.md`), `icerik/_eski/` taslakları, `eserler/ulu-cami/3d/kart_onerisi_v30.md`, prototipin tarihli kaydı (`design/PROTOTIP_KAYDI.md`), `PROTOTIP_URUN_FARKI.md` (yerine `PROTOTIP_AKTARIM.md` §2) ve çalışma günlüğü `yaptiklarim-2.md` çalışma ağacından kaldırıldı; hepsi Git geçmişinde (commit `f7df24c` ve öncesi). Eski belgelerdeki bu dosyalara bağlantılar tarihsel kayıttır.
+
+## 4 Kasım 2026 temizliği
+
+Kullanılmayan eski GLB sürümleri ile biten iş notları (`IS_PLANI_2KASIM.md`, `MOBIL_SADELIK_3KASIM.md`, `OPTIMIZASYON_3KASIM.md`, `PISIRME_ISTEMI_*.md`) çalışma ağacından kaldırıldı; hepsi Git geçmişinde. Her eserde yalnız `model.json` içinde adı geçen GLB'ler ve onların `_sunum` sürümleri kalır.
