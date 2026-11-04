@@ -219,6 +219,9 @@ export const MediaDto = z.object({
   interiorParts: z
     .array(z.string())
     .describe("Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"),
+  hideClosedInterior: z
+    .boolean()
+    .describe("Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"),
 });
 
 export const SourceDto = z.object({
@@ -442,6 +445,16 @@ export const SiteDetail = SiteSummary.extend({
     .describe(
       "Gece temasında gösterilen 3B modelin medya kimliği (SiteDetail.media, kind=model); null = gece de gündüz modeli. Gündüz modeli listedeki ilk kind=model kaydıdır; gece modeli parça adlarını, yerleşimi ve «İçini göster» gruplarını gündüz modeliyle paylaşır",
     ),
+  mapBakedModelId: z
+    .string()
+    .nullable()
+    .describe(
+      "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+    ),
+  mapBakedNightModelId: z
+    .string()
+    .nullable()
+    .describe("Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz"),
   openingCamera: CameraPoseDto.nullable().describe("3B hikâyenin açılış açısı"),
   updatedAt: z.iso.datetime(),
   stories: z.array(StoryBlockDto),

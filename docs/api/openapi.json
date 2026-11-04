@@ -719,6 +719,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -2609,6 +2623,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -2626,7 +2644,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -2721,6 +2740,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -3041,6 +3062,20 @@
                           },
                           "nightModelId": {
                             "description": "Gece temasında gösterilen 3B modelin medya kimliği (SiteDetail.media, kind=model); null = gece de gündüz modeli. Gündüz modeli listedeki ilk kind=model kaydıdır; gece modeli parça adlarını, yerleşimi ve «İçini göster» gruplarını gündüz modeliyle paylaşır",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedModelId": {
+                            "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedNightModelId": {
+                            "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
                             "type": [
                               "string",
                               "null"
@@ -4936,6 +4971,10 @@
                                     "type": "string"
                                   },
                                   "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                                },
+                                "hideClosedInterior": {
+                                  "type": "boolean",
+                                  "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -4953,7 +4992,8 @@
                                 "parts",
                                 "triangles",
                                 "coverGroups",
-                                "interiorParts"
+                                "interiorParts",
+                                "hideClosedInterior"
                               ],
                               "additionalProperties": false
                             },
@@ -5048,6 +5088,8 @@
                           "coverMediaId",
                           "aboutCoverMediaId",
                           "nightModelId",
+                          "mapBakedModelId",
+                          "mapBakedNightModelId",
                           "openingCamera",
                           "updatedAt",
                           "stories",
@@ -6911,6 +6953,20 @@
                               "null"
                             ]
                           },
+                          "mapBakedModelId": {
+                            "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedNightModelId": {
+                            "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "openingCamera": {
                             "anyOf": [
                               {
@@ -8801,6 +8857,10 @@
                                     "type": "string"
                                   },
                                   "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                                },
+                                "hideClosedInterior": {
+                                  "type": "boolean",
+                                  "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -8818,7 +8878,8 @@
                                 "parts",
                                 "triangles",
                                 "coverGroups",
-                                "interiorParts"
+                                "interiorParts",
+                                "hideClosedInterior"
                               ],
                               "additionalProperties": false
                             },
@@ -8913,6 +8974,8 @@
                           "coverMediaId",
                           "aboutCoverMediaId",
                           "nightModelId",
+                          "mapBakedModelId",
+                          "mapBakedNightModelId",
                           "openingCamera",
                           "updatedAt",
                           "stories",
@@ -10780,6 +10843,10 @@
                       },
                       "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                     },
+                    "hideClosedInterior": {
+                      "type": "boolean",
+                      "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -10833,6 +10900,7 @@
                     "triangles",
                     "coverGroups",
                     "interiorParts",
+                    "hideClosedInterior",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -10936,6 +11004,10 @@
                       },
                       "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                     },
+                    "hideClosedInterior": {
+                      "type": "boolean",
+                      "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -10989,6 +11061,7 @@
                     "triangles",
                     "coverGroups",
                     "interiorParts",
+                    "hideClosedInterior",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -11535,6 +11608,10 @@
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                           },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                          },
                           "bytes": {
                             "anyOf": [
                               {
@@ -11588,6 +11665,7 @@
                           "triangles",
                           "coverGroups",
                           "interiorParts",
+                          "hideClosedInterior",
                           "bytes",
                           "partsStatus",
                           "uploadedBy",
@@ -11938,6 +12016,10 @@
                       },
                       "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
                     },
+                    "hideClosedInterior": {
+                      "type": "boolean",
+                      "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
+                    },
                     "bytes": {
                       "anyOf": [
                         {
@@ -11991,6 +12073,7 @@
                     "triangles",
                     "coverGroups",
                     "interiorParts",
+                    "hideClosedInterior",
                     "bytes",
                     "partsStatus",
                     "uploadedBy",
@@ -12977,6 +13060,20 @@
                     },
                     "nightModelId": {
                       "description": "Gece temasında gösterilen 3B modelin medya kimliği (SiteDetail.media, kind=model); null = gece de gündüz modeli. Gündüz modeli listedeki ilk kind=model kaydıdır; gece modeli parça adlarını, yerleşimi ve «İçini göster» gruplarını gündüz modeliyle paylaşır",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
                       "type": [
                         "string",
                         "null"
@@ -14909,6 +15006,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -14926,7 +15027,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -15207,6 +15309,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -15587,6 +15691,20 @@
                           },
                           "nightModelId": {
                             "description": "Gece temasında gösterilen 3B modelin medya kimliği (SiteDetail.media, kind=model); null = gece de gündüz modeli. Gündüz modeli listedeki ilk kind=model kaydıdır; gece modeli parça adlarını, yerleşimi ve «İçini göster» gruplarını gündüz modeliyle paylaşır",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedModelId": {
+                            "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "mapBakedNightModelId": {
+                            "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
                             "type": [
                               "string",
                               "null"
@@ -17519,6 +17637,10 @@
                                     "type": "string"
                                   },
                                   "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                                },
+                                "hideClosedInterior": {
+                                  "type": "boolean",
+                                  "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                                 }
                               },
                               "required": [
@@ -17536,7 +17658,8 @@
                                 "parts",
                                 "triangles",
                                 "coverGroups",
-                                "interiorParts"
+                                "interiorParts",
+                                "hideClosedInterior"
                               ],
                               "additionalProperties": false
                             },
@@ -17817,6 +17940,8 @@
                           "coverMediaId",
                           "aboutCoverMediaId",
                           "nightModelId",
+                          "mapBakedModelId",
+                          "mapBakedNightModelId",
                           "openingCamera",
                           "updatedAt",
                           "stories",
@@ -18161,6 +18286,20 @@
                     },
                     "nightModelId": {
                       "description": "Gece temasında gösterilen 3B modelin medya kimliği (SiteDetail.media, kind=model); null = gece de gündüz modeli. Gündüz modeli listedeki ilk kind=model kaydıdır; gece modeli parça adlarını, yerleşimi ve «İçini göster» gruplarını gündüz modeliyle paylaşır",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
                       "type": [
                         "string",
                         "null"
@@ -20093,6 +20232,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -20110,7 +20253,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -20391,6 +20535,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -20906,6 +21052,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -22833,6 +22993,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -22850,7 +23014,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -23131,6 +23296,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -23500,6 +23667,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -25427,6 +25608,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -25444,7 +25629,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -25725,6 +25911,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -26143,6 +26331,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -28070,6 +28272,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -28087,7 +28293,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -28368,6 +28575,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -28732,6 +28941,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -30659,6 +30882,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -30676,7 +30903,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -30957,6 +31185,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -31434,6 +31664,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -33361,6 +33605,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -33378,7 +33626,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -33659,6 +33908,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -34101,6 +34352,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -36028,6 +36293,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -36045,7 +36314,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -36326,6 +36596,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -36753,6 +37025,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -38680,6 +38966,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -38697,7 +38987,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -38978,6 +39269,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -39609,6 +39902,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -41536,6 +41843,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -41553,7 +41864,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -41834,6 +42146,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -42661,6 +42975,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -44588,6 +44916,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -44605,7 +44937,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -44886,6 +45219,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -45392,6 +45727,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -47319,6 +47668,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -47336,7 +47689,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -47617,6 +47971,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -48069,6 +48425,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -49996,6 +50366,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -50013,7 +50387,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -50294,6 +50669,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -51163,6 +51540,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -53090,6 +53481,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -53107,7 +53502,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -53388,6 +53784,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -53723,6 +54121,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -55650,6 +56062,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -55667,7 +56083,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -55948,6 +56365,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
@@ -56283,6 +56702,20 @@
                         "null"
                       ]
                     },
+                    "mapBakedModelId": {
+                      "description": "Haritanın gündüz çizdiği pişmiş dosya (SiteDetail.media, kind=model; ışık ve gölge dokuda); null = harita gündüz modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mapBakedNightModelId": {
+                      "description": "Haritanın gece çizdiği pişmiş dosya (gece modelinden); null = harita gece temasının modelini çizer. Eser sayfası kullanmaz",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "openingCamera": {
                       "anyOf": [
                         {
@@ -58210,6 +58643,10 @@
                               "type": "string"
                             },
                             "description": "Sunum dosyasında yalnız iç mekânı oluşturan parçalar; harita bunları çizmez. Boş = yalnız zemin ve çevre parçaları çizilmez (yalnız kind=model)"
+                          },
+                          "hideClosedInterior": {
+                            "type": "boolean",
+                            "description": "Eser sayfası örtü kapalıyken iç mekân parçalarını (interiorParts) çizmez; yalnız her yanı kapalı yapılarda true (yalnız kind=model)"
                           }
                         },
                         "required": [
@@ -58227,7 +58664,8 @@
                           "parts",
                           "triangles",
                           "coverGroups",
-                          "interiorParts"
+                          "interiorParts",
+                          "hideClosedInterior"
                         ],
                         "additionalProperties": false
                       },
@@ -58508,6 +58946,8 @@
                     "coverMediaId",
                     "aboutCoverMediaId",
                     "nightModelId",
+                    "mapBakedModelId",
+                    "mapBakedNightModelId",
                     "openingCamera",
                     "updatedAt",
                     "stories",
