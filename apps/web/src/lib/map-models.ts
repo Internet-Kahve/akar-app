@@ -416,7 +416,11 @@ export class MapModelLayer implements CustomLayerInterface {
     // MapLibre narrows the depth range of a 3D custom layer, and three.js writes shadow maps as hardware depth, which
     // takes that range on: drawn inside it a shadow map shades every roof of its own model. So the shadow maps are
     // drawn off screen on the full range, and the map's range is given back for the models themselves.
-    const dirty = [...this.loaded.values()].filter((e) => e.shadowDirty);
+    const stale = [...this.loaded.values()].filter((e) => e.shadowDirty);
+    for (const entry of stale) entry.shadowDirty = false;
+    // A baked model has no shadow map: asked for one, three.js would leave `needsUpdate` set, and the next lit model drawn
+    // for the screen would draw its shadow map there, inside the narrow range, dark for good (4 Nov 2026: «kapkara»).
+    const dirty = stale.filter((e) => !e.baked);
     if (dirty.length) {
       const range = gl.getParameter(gl.DEPTH_RANGE) as Float32Array;
       gl.depthRange(0, 1);
@@ -425,7 +429,6 @@ export class MapModelLayer implements CustomLayerInterface {
         aim(entry);
         renderer.shadowMap.needsUpdate = true;
         renderer.render(entry.scene, this.camera);
-        entry.shadowDirty = false;
       }
       renderer.setRenderTarget(null);
       gl.depthRange(range[0]!, range[1]!);
