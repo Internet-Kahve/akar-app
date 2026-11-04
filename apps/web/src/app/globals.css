@@ -3619,6 +3619,104 @@ td small {
   font-weight: 400;
 }
 
+/* Usage statistics (admin) */
+.admin-stats > p {
+  max-width: 75ch;
+}
+.admin-stats h2 {
+  margin: 32px 0 12px;
+}
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.stats-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.stats-card strong {
+  font-size: 26px;
+}
+.stats-split {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.stats-metric {
+  max-width: 320px;
+}
+.stats-chart {
+  margin: 12px 0 0;
+}
+.stats-chart svg {
+  display: block;
+  width: 100%;
+  height: 160px;
+  border-bottom: 1px solid var(--border);
+}
+.stats-chart .guest,
+.stats-legend .guest {
+  fill: var(--text-muted);
+  background: var(--text-muted);
+}
+.stats-chart .member,
+.stats-legend .member {
+  fill: var(--gold);
+  background: var(--gold);
+}
+.stats-chart figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.stats-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 4px 0 10px;
+  border-radius: 2px;
+}
+.stats-table th button,
+.stats-table td button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.stats-table td button {
+  text-decoration: underline;
+}
+.stats-table td:not(:first-child),
+.stats-table th:not(:first-child) {
+  text-align: right;
+}
+.stats-funnel {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  list-style: none;
+}
+.stats-funnel li {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px;
+  align-items: center;
+  gap: 12px;
+}
+.stats-funnel meter {
+  width: 100%;
+}
+
 /* Member administration */
 .admin-members > p {
   max-width: 75ch;

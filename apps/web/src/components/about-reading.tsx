@@ -768,6 +768,7 @@ function Reading({
                   highlight={current.chapter.focusParts}
                   partCards={site.partCards}
                   sources={site.sources}
+                  siteId={site.id}
                 />
               ) : (
                 sidePhoto && <img src={sidePhoto.src} alt={sidePhoto.alt} />

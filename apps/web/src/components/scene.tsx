@@ -518,6 +518,7 @@ export function Scene({
             partCards={site.partCards}
             onPick={onPick}
             sources={site.sources}
+            siteId={site.id}
             onPhotos={photos.length ? () => setMode("photo") : undefined}
           />
           <div className="model-label">

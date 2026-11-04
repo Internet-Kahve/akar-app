@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_EVENTS_PER_BATCH, usageEventNames } from "./events.ts";
+import { MAX_EVENTS_PER_BATCH, usageEventNames } from "@akar/domain";
 
 const Id = z.string().min(1).max(120).regex(/^[A-Za-z0-9_.:-]+$/);
 

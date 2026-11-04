@@ -3588,3 +3588,34 @@ test("part card English, its status and its voice-overs map from the API; a save
     ],
   );
 });
+
+test("usage events go out in batches of at most 50 with keepalive; a failed send is dropped without an error", async () => {
+  const sent: Array<{ init: RequestInit; events: unknown[] }> = [];
+  let fail = false;
+  const client = createHttpClient({
+    baseUrl: "https://api.test",
+    storage: storage(),
+    fetch: async (url, init) => {
+      assert.equal(String(url), "https://api.test/v1/events");
+      if (fail) throw new TypeError("offline");
+      sent.push({ init: init!, events: JSON.parse(String(init!.body)).events });
+      return new Response(JSON.stringify({ accepted: 0 }), { status: 200 });
+    },
+  });
+  for (let i = 0; i < 51; i++) client.track({ event: "story.sentence", siteId: "s", ref: String(i) });
+  // The 50th event sends a full batch at once; the 51st waits for the timer or a flush.
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(sent.map((s) => s.events.length), [50]);
+  client.flushUsage();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(sent.map((s) => s.events.length), [50, 1]);
+  assert.ok(sent.every((s) => s.init.keepalive === true && s.init.method === "POST"));
+  assert.deepEqual(sent[1]!.events, [{ event: "story.sentence", siteId: "s", ref: "50" }]);
+
+  fail = true;
+  client.track({ event: "app.open" });
+  client.flushUsage();
+  await new Promise((r) => setTimeout(r, 0));
+  client.flushUsage();
+  assert.equal(sent.length, 2);
+});
