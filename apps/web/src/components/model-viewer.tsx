@@ -29,6 +29,7 @@ import {
   NO_FRAME,
   tourCarriesOn,
   type SceneFrame,
+  looksForFreeView,
 } from "../lib/story-scene";
 import {
   forgetDownload,
@@ -431,6 +432,8 @@ export default function ModelViewer({
       controls.enableDamping = true;
       controls.dampingFactor = 0.09;
       controls.maxPolarAngle = Math.PI * 0.49;
+      // The panel saves a pose around a part: a moved centre could not be saved, and the story would look elsewhere.
+      if (poseReader) controls.enablePan = false;
       // Until the model's shaders are compiled in the background (below), nothing draws: a draw would compile them
       // on the spot, which held the page for 1.7–3.3 s on a slow phone.
       let compiling = false;
@@ -711,7 +714,7 @@ export default function ModelViewer({
             let free = d;
             // A close pose on a part looks for a free view: its own side first, then round the part and a little higher,
             // and stands in front of what is in the way. A camera sent inside looks inside, not at the back of a wall.
-            if (part && next.distance < CLOSE_POSE) {
+            if (part && looksForFreeView(next, CLOSE_POSE)) {
               free = -1;
               search: for (const up of [0, 12, 26])
                 for (const turn of [0, 45, -45, 90, -90, 135, -135, 180]) {

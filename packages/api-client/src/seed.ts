@@ -385,7 +385,7 @@ const ulucamiBadges: SiteBadge[] = [
 /** Mock only: answer key of the question and the texts shown once a task is done. Never part of a site. */
 export const demoSiteTaskKeys: Record<
   string,
-  { correctIndex: number; correctText: string } | { doneText: string }
+  { correctIndex: number; correctText: string; correctTextEn?: string } | { doneText: string; doneTextEn?: string }
 > = {
   "ulu-soru-kundekari": {
     correctIndex: 0,

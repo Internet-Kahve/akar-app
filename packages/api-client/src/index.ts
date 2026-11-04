@@ -730,12 +730,12 @@ export function createMockClient(
         return {
           correct: false,
           correctText: null,
-          wrongText: task.quiz.wrongText,
+          wrongText: task.quiz.wrongText, ...(task.quiz.wrongTextEn && { wrongTextEn: task.quiz.wrongTextEn }),
           earnedBadges: [],
         };
       return {
         correct: true,
-        correctText: key.correctText,
+        correctText: key.correctText, ...(key.correctTextEn && { correctTextEn: key.correctTextEn }),
         wrongText: null,
         earnedBadges: finishTask(site, task, false),
       };
@@ -762,7 +762,7 @@ export function createMockClient(
       const onSite = input.mode === "onSite";
       return {
         done: true,
-        doneText: key.doneText,
+        doneText: key.doneText, ...(key.doneTextEn && { doneTextEn: key.doneTextEn }),
         onSite,
         earnedBadges: finishTask(site, task, onSite),
       };

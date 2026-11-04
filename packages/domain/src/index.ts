@@ -320,6 +320,8 @@ export interface CameraPose {
   azimuthDeg: number;
   elevationDeg: number;
   distance: number;
+  /** Set by the panel: the editor placed this camera by hand, so it stands exactly there, walls or not. */
+  exact?: boolean;
 }
 /**
  * The 3D view a gallery photograph was taken from, on this site's model (the 3D view's ← → arrows): a camera pose and
@@ -683,6 +685,8 @@ export type Command =
   | { type: "set-route"; siteIds: string[] }
   | { type: "memory"; memory: Memory }
   | { type: "delete-memory"; id: string }
+  /** KVKK: `DELETE /v1/me`; the account and everything it wrote go for good. Signed-in only. */
+  | { type: "delete-account" }
   | { type: "admin-delete-memory"; id: string }
   | {
       type: "moderate";
@@ -1176,6 +1180,9 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
       else delete memory.photo;
       break;
     }
+    case "delete-account":
+      // Signed-in only: the demo has no account to delete.
+      break;
     case "delete-memory":
     case "admin-delete-memory": {
       // The demo has one local list, so the author's and the admin's delete are the same.

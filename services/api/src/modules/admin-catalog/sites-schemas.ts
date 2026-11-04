@@ -30,6 +30,7 @@ export const CameraPoseInput = z
     azimuthDeg: z.number().min(-360).max(360),
     elevationDeg: z.number().min(-90).max(90),
     distance: z.number().min(0.05).max(4),
+    exact: z.boolean().optional().describe("Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez"),
   })
   .describe("Kamera açısı: hedef parça (null = modelin ortası), azimut ve yükseklik derece, uzaklık modele göre (1 = bütün model kadrajda)");
 export type CameraPoseInput = z.infer<typeof CameraPoseInput>;

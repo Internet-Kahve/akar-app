@@ -112,6 +112,7 @@ export const CameraPoseDto = z
     azimuthDeg: z.number().describe("0 = kuzeyden bakış, saat yönünde"),
     elevationDeg: z.number(),
     distance: z.number().describe("Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"),
+    exact: z.boolean().optional().describe("Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez"),
   })
   .describe("Kamera açısı: hedef parça, azimut ve yükseklik derece, modele göre uzaklık");
 

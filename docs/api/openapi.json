@@ -744,6 +744,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -847,6 +851,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -1360,6 +1368,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -1731,6 +1743,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -2477,6 +2493,10 @@
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
                               },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
+                              },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
                                 "type": "boolean"
@@ -3051,6 +3071,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -3154,6 +3178,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -3667,6 +3695,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -4038,6 +4070,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -4783,6 +4819,10 @@
                                     "distance": {
                                       "type": "number",
                                       "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                    },
+                                    "exact": {
+                                      "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                      "type": "boolean"
                                     },
                                     "interior": {
                                       "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -6896,6 +6936,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -6999,6 +7043,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -7512,6 +7560,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -7883,6 +7935,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -8628,6 +8684,10 @@
                                     "distance": {
                                       "type": "number",
                                       "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                    },
+                                    "exact": {
+                                      "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                      "type": "boolean"
                                     },
                                     "interior": {
                                       "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -12947,6 +13007,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -13050,6 +13114,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -13563,6 +13631,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -13934,6 +14006,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -14716,6 +14792,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -15537,6 +15617,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -15640,6 +15724,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -16153,6 +16241,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -16524,6 +16616,10 @@
                                         "distance": {
                                           "type": "number",
                                           "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                        },
+                                        "exact": {
+                                          "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                          "type": "boolean"
                                         }
                                       },
                                       "required": [
@@ -17306,6 +17402,10 @@
                                     "distance": {
                                       "type": "number",
                                       "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                    },
+                                    "exact": {
+                                      "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                      "type": "boolean"
                                     },
                                     "interior": {
                                       "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -18091,6 +18191,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -18194,6 +18298,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -18707,6 +18815,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -19078,6 +19190,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -19860,6 +19976,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -20811,6 +20931,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -20914,6 +21038,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -21427,6 +21555,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -21798,6 +21930,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -22580,6 +22716,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -23385,6 +23525,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -23488,6 +23632,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -24001,6 +24149,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -24372,6 +24524,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -25154,6 +25310,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -25661,6 +25821,10 @@
                             "type": "number",
                             "minimum": 0.05,
                             "maximum": 4
+                          },
+                          "exact": {
+                            "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -26004,6 +26168,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -26107,6 +26275,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -26620,6 +26792,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -26991,6 +27167,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -27773,6 +27953,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -28573,6 +28757,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -28676,6 +28864,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -29189,6 +29381,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -29560,6 +29756,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -30342,6 +30542,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -31255,6 +31459,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -31358,6 +31566,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -31871,6 +32083,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -32242,6 +32458,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -33024,6 +33244,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -33551,6 +33775,10 @@
                               "minimum": 0.05,
                               "maximum": 4
                             },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
+                            },
                             "interior": {
                               "description": "true = bu açıda model açılır, içeriden çekilmiş fotoğraf",
                               "type": "boolean"
@@ -33898,6 +34126,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -34001,6 +34233,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -34514,6 +34750,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -34885,6 +35125,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -35667,6 +35911,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -36530,6 +36778,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -36633,6 +36885,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -37146,6 +37402,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -37517,6 +37777,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -38299,6 +38563,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -38901,6 +39169,10 @@
                                   "type": "number",
                                   "minimum": 0.05,
                                   "maximum": 4
+                                },
+                                "exact": {
+                                  "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -39362,6 +39634,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -39465,6 +39741,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -39978,6 +40258,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -40349,6 +40633,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -41131,6 +41419,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -42394,6 +42686,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -42497,6 +42793,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -43010,6 +43310,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -43381,6 +43685,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -44163,6 +44471,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -44750,6 +45062,10 @@
                                   "type": "number",
                                   "minimum": 0.05,
                                   "maximum": 4
+                                },
+                                "exact": {
+                                  "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                  "type": "boolean"
                                 }
                               },
                               "required": [
@@ -45101,6 +45417,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -45204,6 +45524,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -45717,6 +46041,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -46088,6 +46416,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -46870,6 +47202,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -47758,6 +48094,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -47861,6 +48201,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -48374,6 +48718,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -48745,6 +49093,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -49527,6 +49879,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -50832,6 +51188,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -50935,6 +51295,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -51448,6 +51812,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -51819,6 +52187,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -52601,6 +52973,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -53372,6 +53748,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -53475,6 +53855,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -53988,6 +54372,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -54359,6 +54747,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -55141,6 +55533,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",
@@ -55912,6 +56308,10 @@
                             "distance": {
                               "type": "number",
                               "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                            },
+                            "exact": {
+                              "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                              "type": "boolean"
                             }
                           },
                           "required": [
@@ -56015,6 +56415,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -56528,6 +56932,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -56899,6 +57307,10 @@
                                   "distance": {
                                     "type": "number",
                                     "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                                  },
+                                  "exact": {
+                                    "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -57681,6 +58093,10 @@
                               "distance": {
                                 "type": "number",
                                 "description": "Modele göre uzaklık: 1 = bütün model kadrajda, 0,5 = yarı uzaklık"
+                              },
+                              "exact": {
+                                "description": "Panelde elle kondu: kamera tam oraya gelir, önünde duvar olsa da yer değiştirmez",
+                                "type": "boolean"
                               },
                               "interior": {
                                 "description": "true = bu açıda model açılır («İçini göster»), içeriden çekilmiş fotoğraf",

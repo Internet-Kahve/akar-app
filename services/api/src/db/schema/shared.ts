@@ -30,7 +30,7 @@ export const point4326 = customType<{ data: [number, number]; driverData: string
  * Saved 3D camera pose ("Açı"): azimuth/elevation in degrees around `target` (a model part name; null = model
  * centre), `distance` relative to the model: 1 = the distance at which the whole model fits the view.
  */
-export type CameraPose = { label?: string; target: string | null; azimuthDeg: number; elevationDeg: number; distance: number };
+export type CameraPose = { label?: string; exact?: boolean; target: string | null; azimuthDeg: number; elevationDeg: number; distance: number };
 /** The 3D view a gallery photograph was taken from (`site_media.camera`); `interior` opens the model for it. */
 export type PhotoCamera = CameraPose & { interior?: boolean };
 

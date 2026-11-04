@@ -2253,6 +2253,9 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         // The decision may add a memory to the public feed or take one out of it.
         await refreshFeed();
         return true;
+      case "delete-account":
+        await call("DELETE", "/v1/me");
+        return true;
       case "delete-memory":
       case "admin-delete-memory":
         await call(

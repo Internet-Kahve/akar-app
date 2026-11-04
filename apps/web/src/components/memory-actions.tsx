@@ -42,7 +42,7 @@ function timeAgo(iso: string) {
     : "az önce";
 }
 
-function ConfirmDialog({
+export function ConfirmDialog({
   title,
   confirm,
   onClose,

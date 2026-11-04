@@ -28,7 +28,7 @@ import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@aka
 import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 import { badgeInLang, taskInLang } from "../lib/task-text";
-import { MemoryActions } from "./memory-actions";
+import { ConfirmDialog, MemoryActions } from "./memory-actions";
 import dynamic from "next/dynamic";
 
 // The content studio is for the team only: its screens come in their own chunks when an admin opens them, not with
@@ -67,9 +67,10 @@ export function Profile({
   onExperimentalChange: (enabled: boolean) => void;
   commit: Commit;
   /** Present only when connected to the real API; `email` is `null` for a guest. */
-  auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void };
+  auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void; onDelete: () => Promise<boolean> };
 }) {
   const { lang, t } = useI18n();
+  const [erasing, setErasing] = useState(false);
   const tr = lang === "en" ? "tr" : undefined;
   const firstSite = state.sites.find((s) => s.status === "published");
   const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
@@ -100,6 +101,19 @@ export function Profile({
                   <button className="text-btn" onClick={auth.onSignOut}>
                     {t("profile.signOut")}
                   </button>
+                  <button className="text-btn danger" onClick={() => setErasing(true)}>
+                    {t("profile.deleteAccount")}
+                  </button>
+                  {erasing && (
+                    <ConfirmDialog
+                      title={t("profile.deleteTitle")}
+                      confirm={t("profile.deleteConfirm")}
+                      onClose={() => setErasing(false)}
+                      onConfirm={auth.onDelete}
+                    >
+                      <p>{t("profile.deleteText")}</p>
+                    </ConfirmDialog>
+                  )}
                 </>
               ) : (
                 <>
@@ -138,6 +152,7 @@ export function Profile({
               </>
             )}
             <AccessControls />
+            <a className="text-btn" href="/aydinlatma.html">{t("profile.notice")}</a>
             <a className="text-btn" href="/lisanslar.html">{t("profile.licenses")}</a>
             {canManage && (
               <button className="text-btn" onClick={onAdmin}>

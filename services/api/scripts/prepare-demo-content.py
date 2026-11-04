@@ -193,6 +193,8 @@ for entry in editorial.eserleri_bul():
     tasks_path = root / 'eserler' / folder / 'icerik/gorevler.json'
     if tasks_path.is_file():
         data = json.loads(tasks_path.read_text())
+        en_path = root / 'eserler' / folder / 'icerik/en/gorevler.json'
+        task_en = json.loads(en_path.read_text()) if en_path.is_file() else {}
         for g in data['gorevler']:
             where = f'{folder} {g.get("id")}'
             photo_name = g.get('gorsel')
@@ -200,19 +202,23 @@ for entry in editorial.eserleri_bul():
                 raise ValueError(f'Missing task photograph: {where} {photo_name}')
             common = dict(id=g['id'], title=g['baslik'], photoId=by_name[photo_name]['id'] if photo_name else None,
                           source=g.get('kaynak') or None, trust=trust(g['guven']))
+            en = task_en.get(g['id'], {})
+            if en:
+                common.update(titleEn=en['baslik'], promptEn=en.get('soru') or en['gorev'])
             if g['tur'] == 'soru':
                 options = g['secenekler']
                 if not 2 <= len(options) <= 6 or not isinstance(g['dogru'], int) or not 0 <= g['dogru'] < len(options):
                     raise ValueError(f'Bad options or answer: {where}')
                 tasks.append(dict(common, kind='quiz', prompt=g['soru'], part=g.get('parca') or None, correctIndex=g['dogru'],
                                   details=dict(options=options, hints=g.get('ipuclari') or [], correctText=g['dogru_metin'],
-                                               wrongText=g['yanlis_metin'], fromHome=bool(g.get('evden_cozulur')))))
+                                               wrongText=g['yanlis_metin'], fromHome=bool(g.get('evden_cozulur')),
+                                               **({'optionsEn': en['secenekler'], 'hintsEn': en['ipuclari'], 'correctTextEn': en['dogru_metin'], 'wrongTextEn': en['yanlis_metin']} if en else {}))))
             elif g['tur'] == 'saha':
                 home = g.get('evden')
                 tasks.append(dict(common, kind='field', prompt=g['gorev'], part=None, correctIndex=None,
-                                  details=dict(onSite=dict(text=g['yerinde']['yap'], radiusM=int(g['yerinde']['konum_yaricap_m'])),
-                                               fromHome=dict(text=home['yap'], part=home['parca']) if home else None,
-                                               doneText=g['tamam_metin'])))
+                                  details=dict(onSite=dict(text=g['yerinde']['yap'], radiusM=int(g['yerinde']['konum_yaricap_m']), **({'textEn': en['yerinde']} if en else {})),
+                                               fromHome=dict(text=home['yap'], part=home['parca'], **({'textEn': en['evden']} if en else {})) if home else None,
+                                               doneText=g['tamam_metin'], **({'doneTextEn': en['tamam_metin']} if en else {}))))
             else:
                 raise ValueError(f'Unknown task type: {where} {g["tur"]}')
         task_ids = {t['id'] for t in tasks}
@@ -226,7 +232,9 @@ for entry in editorial.eserleri_bul():
                 kind, task_id = 'task', condition['gorev']
             else:
                 raise ValueError(f'Badge condition names no task: {folder} {b["id"]}')
+            badge_en = task_en.get(b['id'], {})
             badges.append(dict(id=b['id'], title=b['ad'], text=b['metin'], condition=kind, taskId=task_id,
+                               **({'titleEn': badge_en['ad'], 'textEn': badge_en['metin']} if badge_en else {}),
                                onSiteLabel=bool(b.get('yerinde_etiketi'))))
     history = []
     # A photo-only site may have no archive package; the viewer then says there is no old image yet.

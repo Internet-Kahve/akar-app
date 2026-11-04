@@ -1237,6 +1237,14 @@ export function AkarApp() {
                       email: account?.email ?? null,
                       onSignIn: () => setSignIn(""),
                       onSignOut: signOut,
+                      onDelete: async () => {
+                        const done = await commit({ type: "delete-account" });
+                        if (done) {
+                          void getSupabase()?.auth.signOut({ scope: "local" });
+                          setToast(t("toast.accountDeleted"));
+                        }
+                        return done;
+                      },
                     }
                   : undefined
               }
