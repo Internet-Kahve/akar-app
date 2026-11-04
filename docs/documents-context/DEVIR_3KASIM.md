@@ -1,7 +1,6 @@
 # Devir notu: 3 Kasım 2026 (mobil sadelik ve performans)
 
-**Dal:** `muhammedtalay/mobil-optimizasyon` (main `2be3e8d`'den). **Push edilmedi**; Muhammed onaylayınca atılacak.
-**Tanıtım sayfasına dokunulmadı** (`public/tanitim/`).
+**Dal:** `muhammedtalay/mobil-optimizasyon`. Birleştirirken: [BIRLESTIRME_NOTU_MOBIL_OPTIMIZASYON.md](BIRLESTIRME_NOTU_MOBIL_OPTIMIZASYON.md).
 Ayrıntılı geçmiş Git'te: `OPTIMIZASYON_3KASIM.md` (performans ölçümleri) ve `MOBIL_SADELIK_3KASIM.md` (ilk sadelik listesi, hepsi bitti) 4 Kasım temizliğinde kaldırıldı.
 
 ## Telefonda deneme
@@ -76,7 +75,7 @@ Ayrıntılı geçmiş Git'te: `OPTIMIZASYON_3KASIM.md` (performans ölçümleri)
 
 **Senaryo kuralları (4 Kasım):** Rozet kartı, bulmaca, üst katman ya da giriş açıkken ipucu çıkmaz; kapanınca kısa aradan sonra gelir. Hikâyeyi başlatan birine «Hikâyeyi başlat» ipucu çıkmaz (`openStory`). Düğmeye kendi basan kişiye o düğmenin ipucu çıkmaz (`doneBy`). 3D ipuçları model gerçekten çizilince gelir (`.model-canvas[data-drawn]`, `when`). Masaüstünde «Bugününü sen çek» yok. Telefonda da fotoğraf/3D düğmesi ipucu var (`d.foto`).
 
-Her ipucu bir kez gösterilir; cihazda `akar.ipucu.<id>` olarak saklanır. Bir ziyarette en çok 2 ipucu çıkar, kalanı sonraki ziyarete kalır; aralarında 0,5 sn ara vardır. «Şimdi bir parçaya dokun» yalnız parça düğmesine basılınca gelir (`when`) ve sayıya girmez. Bir ipucu açıkken ilk dokunuş yalnız onu kapatır (`swallow`); gösterdiği düğmeye basmak çalışır (`pressSpot`). Hedefi ekranda olmayan ipucu hiç görünmeden atlanır, hedef çıkınca gösterilir (`TipRow`). Hepsinde × var.
+Her ipucu bir kez gösterilir; cihazda `akar.ipucu.<id>` olarak saklanır. Bir ziyarette ekran başına bir ipucu çıkar (`TIPS_PER_VISIT`), kalanı sonraki ziyarete kalır. «Şimdi bir parçaya dokun» yalnız parça düğmesine basılınca gelir (`when`) ve sayıya girmez. Bir ipucu açıkken ilk dokunuş yalnız onu kapatır (`swallow`); gösterdiği düğmeye basmak çalışır (`pressSpot`). Hedefi ekranda olmayan ipucu hiç görünmeden atlanır, hedef çıkınca gösterilir (`TipRow`). Hepsinde × var.
 
 | Ekran | Telefon | Masaüstü |
 |---|---|---|
