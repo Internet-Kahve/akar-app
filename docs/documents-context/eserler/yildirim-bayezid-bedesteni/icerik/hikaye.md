@@ -44,7 +44,7 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 7 | Ic_Sokak | 90° | 22° | 0.2 |
 | 8 | Dukkanlar | 4° | 14° | 0.25 |
 | 9 | Kubbeler | 60° | 35° | 0.3 |
-| 10 | Ic_Sokak | 270° | 22° | 0.2 |
+| 10 | Ic_Sokak | 270° | 5° | 0.09 |
 | 11 | Merkez | 315° | 35° | 0.8 |
 ## Akar akışı
 
