@@ -52,8 +52,8 @@
       "foto": "06",
       "hedef": "Kubbeler",
       "azimut": 200,
-      "egim": 35,
-      "uzaklik": "0.32",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "kubbeler; yön tahmini"
     },
@@ -61,8 +61,8 @@
       "foto": "02",
       "hedef": "Ic_Sokak",
       "azimut": 4,
-      "egim": 50,
-      "uzaklik": "0.32",
+      "egim": 12,
+      "uzaklik": "0.12",
       "ic": true,
       "not": "iç sokak"
     }

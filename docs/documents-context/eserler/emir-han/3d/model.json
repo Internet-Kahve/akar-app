@@ -24,16 +24,16 @@
       "foto": "04",
       "hedef": "Han_Avlu",
       "azimut": 7,
-      "egim": 50,
-      "uzaklik": "0.32",
+      "egim": 14,
+      "uzaklik": "0.14",
       "not": "ağaçlı avlu"
     },
     {
       "foto": "02",
       "hedef": "Sadirvan",
       "azimut": 187,
-      "egim": 25,
-      "uzaklik": "0.18",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "avlu şadırvanı; yön tahmini"
     },
@@ -41,8 +41,8 @@
       "foto": "03",
       "hedef": "Avlu_Revaklari",
       "azimut": 97,
-      "egim": 18,
-      "uzaklik": "0.18",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "tonozlu revak; yön tahmini"
     }

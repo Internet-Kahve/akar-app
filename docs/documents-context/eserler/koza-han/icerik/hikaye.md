@@ -42,13 +42,13 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 2 | Govde_Dis | 4° | 70° | 0.6 |
 | 3 | Govde_Dis | 180° | 16° | 0.55 |
 | 4 | Portal | 4° | 8° | 0.13 |
-| 5 | Avlu_Revak | 30° | 45° | 0.32 |
-| 6 | Mescit | 300° | 18° | 0.12 |
-| 7 | Mescit | 300° | 12° | 0.08 |
-| 8 | Mescit | 340° | 14° | 0.1 |
+| 5 | Avlu_Revak | 30° | 14° | 0.2 |
+| 6 | Mescit | 300° | 10° | 0.1 |
+| 7 | Mescit | 300° | 8° | 0.07 |
+| 8 | Mescit | 340° | 10° | 0.09 |
 | 9 | Ic_Koza | 90° | 40° | 0.4 |
-| 10 | Avlu_Revak | 300° | 28° | 0.2 |
-| 11 | Avlu_Zemin | 20° | 50° | 0.25 |
+| 10 | Avlu_Revak | 300° | 10° | 0.12 |
+| 11 | Avlu_Zemin | 20° | 12° | 0.14 |
 | 12 | Merkez | 270° | 28° | 0.7 |
 ## Akar akışı
 

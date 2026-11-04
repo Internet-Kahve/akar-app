@@ -30,10 +30,10 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | # | Hedef | Azimut | Eğim | Uzaklık |
 |---|---|---|---|---|
 | 1 | Emir_Hani | 45° | 30° | 0.5 |
-| 2 | Han_Avlu | 7° | 55° | 0.3 |
-| 3 | Han_Avlu | 60° | 45° | 0.25 |
-| 4 | Sadirvan | 7° | 50° | 0.2 |
-| 5 | Avlu_Revaklari | 90° | 40° | 0.2 |
-| 6 | Avlu_Revaklari | 200° | 38° | 0.2 |
+| 2 | Han_Avlu | 7° | 14° | 0.14 |
+| 3 | Han_Avlu | 60° | 12° | 0.13 |
+| 4 | Sadirvan | 7° | 12° | 0.08 |
+| 5 | Avlu_Revaklari | 90° | 10° | 0.1 |
+| 6 | Avlu_Revaklari | 200° | 10° | 0.1 |
 | 7 | Merkez | 187° | 30° | 0.55 |
-| 8 | Sadirvan | 120° | 52° | 0.16 |
+| 8 | Sadirvan | 120° | 12° | 0.08 |

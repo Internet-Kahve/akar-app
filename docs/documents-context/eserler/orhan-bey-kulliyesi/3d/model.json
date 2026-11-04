@@ -47,7 +47,7 @@
       "hedef": "Cami_SonCemaat",
       "azimut": 13,
       "egim": 10,
-      "uzaklik": "0.18",
+      "uzaklik": "0.14",
       "not": "son cemaat yeri ve ikiz kemer"
     },
     {
@@ -61,8 +61,8 @@
       "foto": "02",
       "hedef": "Ic_Mihrap",
       "azimut": 13,
-      "egim": 50,
-      "uzaklik": "0.32",
+      "egim": 12,
+      "uzaklik": "0.12",
       "ic": true,
       "not": "içeride mihrap ve minber"
     }

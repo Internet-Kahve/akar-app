@@ -25,7 +25,7 @@
       "hedef": "Portal",
       "azimut": 4,
       "egim": 12,
-      "uzaklik": "0.32",
+      "uzaklik": "0.14",
       "not": "«KOZA HAN» yazılı kuzey cephe ve portal"
     },
     {
@@ -39,8 +39,8 @@
       "foto": "03",
       "hedef": "Mescit",
       "azimut": 4,
-      "egim": 30,
-      "uzaklik": "0.18",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "avludaki köşk mescit; yön tahmini"
     },
@@ -48,8 +48,8 @@
       "foto": "02",
       "hedef": "Avlu_Zemin",
       "azimut": 184,
-      "egim": 40,
-      "uzaklik": "0.32",
+      "egim": 14,
+      "uzaklik": "0.14",
       "tahmini": true,
       "not": "çınarlı avlu; yön tahmini"
     }

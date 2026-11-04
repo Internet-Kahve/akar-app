@@ -114,7 +114,8 @@ h1 em{font-style:normal;color:#C9A13B}
 .halka-don{position:absolute;inset:0;animation:don 42s linear infinite}
 .halka-don i{position:absolute;left:50%;top:50%;width:18%;aspect-ratio:1;margin:-9% 0 0 -9%;border-radius:50%;background:var(--c);box-shadow:0 4px 14px rgba(0,0,0,.28);transform:rotate(var(--aci)) translateY(calc(var(--r,150px)*-1)) rotate(calc(var(--aci)*-1))}
 .halka-don b{display:block;width:100%;height:100%;background:#fff;-webkit-mask:var(--a) center/66% no-repeat;mask:var(--a) center/66% no-repeat;animation:don 42s linear infinite reverse}
-.halka-model{position:absolute;left:12%;top:18%;width:76%;height:auto;filter:drop-shadow(0 12px 18px rgba(0,0,0,.28))}
+.kure{position:absolute;inset:17%;border-radius:50%;filter:drop-shadow(0 10px 26px rgba(0,0,0,.4))}
+.kure img{width:100%;height:100%;border-radius:50%}
 @keyframes don{to{transform:rotate(360deg)}}
 @keyframes yakin{from{transform:scale(1)}to{transform:scale(1.07)}}
 .sehir-kart{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
@@ -186,17 +187,16 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
 @media (min-width:1000px){
   .giris{position:relative;display:grid;min-height:min(calc(100vh - 65px),860px);padding:0;color:#fff;overflow:hidden}
   .giris>.ic,.giris .kapak{grid-area:1/1}
-  .giris>.ic{position:relative;z-index:1;align-self:end;padding-bottom:clamp(56px,8vh,96px)}
+  .giris>.ic{position:relative;z-index:1;align-self:end;width:auto;margin-inline:clamp(28px,4vw,72px) auto;max-width:900px;padding-bottom:clamp(56px,8vh,96px)}
   .giris .alt{color:rgba(255,255,255,.88)}
   .giris .btn{background:#fff;color:#161C20}
   .giris .btn:hover{background:#dfe8ee}
   .kapak{position:relative;margin:0;height:100%}
   .kapak img{position:absolute;inset:0;height:100%;aspect-ratio:auto}
-  .kapak::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(6,10,14,.9) 0%,rgba(6,10,14,.62) 40%,rgba(6,10,14,.08) 74%),linear-gradient(to right,rgba(6,10,14,.55),rgba(6,10,14,0) 62%)}
+  .kapak::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(6,10,14,.9) 0%,rgba(6,10,14,.62) 40%,rgba(6,10,14,.08) 74%),linear-gradient(to right,rgba(6,10,14,.86) 0%,rgba(6,10,14,.66) 34%,rgba(6,10,14,.12) 62%,rgba(6,10,14,0) 74%)}
   .kapak::before{content:"";position:absolute;z-index:1;left:0;bottom:0;width:58%;height:60%;background:#A4D8E0;opacity:.2;-webkit-mask:url(/desenler/desen-bursa-kesik-gecme.svg) left bottom/190px,linear-gradient(to top right,#000 8%,transparent 68%);-webkit-mask-composite:source-in;mask:url(/desenler/desen-bursa-kesik-gecme.svg) left bottom/190px,linear-gradient(to top right,#000 8%,transparent 68%);mask-composite:intersect;pointer-events:none}
   .kapak img{animation:yakin 30s ease-in-out infinite alternate}
-  .halka{position:absolute;z-index:2;right:max(var(--kenar),calc((100% - var(--en))/2));top:32px;width:clamp(280px,29vw,410px);margin:0;--r:clamp(120px,12.5vw,178px);color:#F0D27A;grid-area:1/1}
-  .halka::before{content:"";position:absolute;inset:7%;border-radius:50%;background:radial-gradient(closest-side,rgba(6,10,14,.62),rgba(6,10,14,.2) 80%,transparent)}
+  .halka{position:absolute;z-index:2;right:clamp(28px,5vw,96px);top:50%;margin-top:calc(clamp(300px,33vw,480px)/-2)!important;width:clamp(300px,33vw,480px);margin:0;--r:clamp(132px,14.3vw,208px);color:#F0D27A;grid-area:1/1}
   .kapak figcaption{position:absolute;z-index:1;right:var(--kenar);bottom:18px;width:auto;margin:0;color:rgba(255,255,255,.72)}
   .ekranlar{grid-template-columns:repeat(3,minmax(0,320px));justify-content:space-between;row-gap:64px;margin-top:56px}
   .ekranlar img{box-shadow:0 18px 44px rgba(18,30,38,.14)}
@@ -243,7 +243,7 @@ footer{padding:20px 0;font-size:13px;color:var(--soluk)}
       <i style="--aci:120deg;--c:var(--konya);--a:url(/tanitim2/medya/amblem-konya.svg)"><b></b></i>
       <i style="--aci:240deg;--c:var(--hatay);--a:url(/tanitim2/medya/amblem-hatay.svg)"><b></b></i>
     </div>
-    <img class="halka-model" src="/tanitim2/medya/model-ulucami.webp" alt="" width="720" height="500" decoding="async">
+    <div class="kure"><img src="/tanitim2/medya/kure.webp" alt="" width="900" height="900" decoding="async"></div>
   </div>
   <figure class="kapak">
     <img class="kapak-gece" src="/tanitim2/medya/kapak-gece.webp" alt="Bursa Ulucami, gece, havadan" width="1600" height="900" loading="lazy" decoding="async">

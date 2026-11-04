@@ -37,6 +37,6 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 3 | Merkez | 250° | 20° | 0.5 |
 | 4 | Merkez | 120° | 38° | 0.55 |
 | 5 | Kubbe | 200° | 34° | 0.3 |
-| 6 | Orta_Kubbe_Sutunlar | 182° | 60° | 0.2 |
-| 7 | Orhan_Gazi_Sandukasi | 182° | 52° | 0.16 |
-| 8 | Sandukalar | 140° | 55° | 0.22 |
+| 6 | Orta_Kubbe_Sutunlar | 182° | 12° | 0.1 |
+| 7 | Orhan_Gazi_Sandukasi | 182° | 14° | 0.09 |
+| 8 | Sandukalar | 140° | 14° | 0.1 |

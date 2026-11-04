@@ -46,10 +46,10 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 2 | Merkez | 30° | 26° | 0.62 |
 | 3 | Tac_Kapi | 354° | 10° | 0.14 |
 | 4 | Kubbeler_19 | 354° | 78° | 0.55 |
-| 5 | Ic_Sadirvan_Havuz | 354° | 50° | 0.3 |
+| 5 | Ic_Sadirvan_Havuz | 354° | 10° | 0.2 |
 | 6 | Sadirvan_Kubbe | 20° | 40° | 0.16 |
-| 7 | Ic_Sadirvan_Havuz | 20° | 55° | 0.14 |
-| 8 | Mihrap | 354° | 40° | 0.2 |
+| 7 | Ic_Sadirvan_Havuz | 20° | 18° | 0.1 |
+| 8 | Mihrap | 354° | 8° | 0.13 |
 | 9 | Minber | 25° | 9° | 0.16 |
 | 10 | Kubbeler_19 | 135° | 18° | 0.3 |
 | 11 | Merkez | 10° | 35° | 0.95 |

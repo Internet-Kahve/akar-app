@@ -49,8 +49,8 @@
       "foto": "02",
       "hedef": "Orhan_Gazi_Sandukasi",
       "azimut": 182,
-      "egim": 50,
-      "uzaklik": "0.32",
+      "egim": 12,
+      "uzaklik": "0.12",
       "ic": true,
       "not": "içeride sandukalar"
     }

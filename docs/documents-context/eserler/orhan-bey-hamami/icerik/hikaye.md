@@ -32,14 +32,14 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 
 | # | Hedef | Azimut | Eğim | Uzaklık |
 |---|---|---|---|---|
-| 1 | Hamam_Giris | 186° | 10° | 0.14 |
+| 1 | Hamam_Giris | 186° | 8° | 0.12 |
 | 2 | Merkez | 140° | 45° | 0.45 |
 | 3 | Merkez | 6° | 75° | 0.5 |
-| 4 | Hamam_Giris | 220° | 14° | 0.2 |
-| 5 | Hamam_Sicaklik | 186° | 40° | 0.3 |
+| 4 | Hamam_Giris | 220° | 10° | 0.14 |
+| 5 | Hamam_Sicaklik | 186° | 30° | 0.22 |
 | 6 | Merkez | 6° | 28° | 0.5 |
-| 7 | Hamam_Sicaklik | 120° | 38° | 0.22 |
-| 8 | Hamam_Giris | 150° | 18° | 0.3 |
+| 7 | Hamam_Sicaklik | 120° | 28° | 0.16 |
+| 8 | Hamam_Giris | 150° | 12° | 0.2 |
 ## Akar akışı
 
 Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.

@@ -42,7 +42,7 @@ const TWEEN_MS = 900;
 const LIFT_MS = 700;
 const LIFT_GAP = 0.35;
 /** "İçini göster" raises a low camera to this elevation so the inside is visible. */
-const INSIDE_ELEVATION = 58;
+const INSIDE_ELEVATION = 30;
 /** A pose closer than this (of the distance where the whole model fits) has the trees stand aside. */
 const CLOSE_POSE = 0.4;
 /**
@@ -443,10 +443,14 @@ export default function ModelViewer({
       // Closed cover: the interior is not drawn (`lib/interior`); set once the model is here.
       let syncInterior = () => {};
       let syncTrees = () => {};
+      // Open, the interior gets its own light: under the sun's shadow and a sky light it stayed nearly black.
+      let inner: THREE.DirectionalLight | null = null;
+      let innerWanted = () => false;
       const render = () => {
         if (disposed || compiling) return;
         syncInterior();
         syncTrees();
+        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 0.8 : 1.2) : 0;
         if (shadowsStale) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
@@ -667,6 +671,25 @@ export default function ModelViewer({
               };
             };
           if (poseReader) poseReader.current = readPose.current;
+          const lifted = new Set((JSON.parse(groupsKey) as string[][]).flat());
+          const look = new THREE.Raycaster();
+          /** How far from `from` along `way` the camera can stand, up to `wanted`, with a free view of `from`. */
+          const clearDistance = (from: THREE.Vector3, way: THREE.Vector3, wanted: number, own: THREE.Object3D | null) => {
+            look.set(from, way);
+            look.far = wanted;
+            const open = interiorRef.current || coverWanted();
+            for (const hit of look.intersectObject(root, true)) {
+              let skip = false;
+              for (let n: THREE.Object3D | null = hit.object; n && n !== root; n = n.parent)
+                if (n === own || !n.visible || (open && lifted.has(n.name)) || /^(Cevre|Avlu)_Agac|^Olcek_|^Yer_Golgesi/.test(n.name)) {
+                  skip = true;
+                  break;
+                }
+              if (skip || hit.distance < sphere * 0.01) continue;
+              return Math.max(hit.distance * 0.85, sphere * 0.04);
+            }
+            return wanted;
+          };
           aim.current = (next) => {
             aimedTarget = next.target;
             closePose = next.distance < CLOSE_POSE;
@@ -674,7 +697,7 @@ export default function ModelViewer({
             const fit = fitDistance();
             controls!.maxDistance = Math.max(radius * 4, fit * 1.6);
             // A close pose comes as close as it says, as the story needs to look inside (the hand's limit goes with it).
-            controls!.minDistance = Math.min(radius * 0.35, fit * next.distance * 0.8);
+            controls!.minDistance = Math.min(radius * 0.35, sphere * 0.03);
             const part = next.target ? root.getObjectByName(next.target) : undefined;
             const goal = part
               ? new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3())
@@ -682,13 +705,26 @@ export default function ModelViewer({
             const az = THREE.MathUtils.degToRad(next.azimuthDeg);
             const el = THREE.MathUtils.degToRad(Math.max(5, Math.min(85, next.elevationDeg)));
             const d = fit * next.distance;
-            const to = goal.clone().add(
-              new THREE.Vector3(
-                Math.sin(az) * Math.cos(el) * d,
-                Math.sin(el) * d,
-                -Math.cos(az) * Math.cos(el) * d,
-              ),
-            );
+            const wayAt = (azimuth: number, elevation: number) =>
+              new THREE.Vector3(Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation), -Math.cos(azimuth) * Math.cos(elevation));
+            let way = wayAt(az, el);
+            let free = d;
+            // A close pose on a part looks for a free view: its own side first, then round the part and a little higher,
+            // and stands in front of what is in the way. A camera sent inside looks inside, not at the back of a wall.
+            if (part && next.distance < CLOSE_POSE) {
+              free = -1;
+              search: for (const up of [0, 12, 26])
+                for (const turn of [0, 45, -45, 90, -90, 135, -135, 180]) {
+                  const candidate = wayAt(az + THREE.MathUtils.degToRad(turn), Math.min(THREE.MathUtils.degToRad(70), el + THREE.MathUtils.degToRad(up)));
+                  const room = clearDistance(goal, candidate, d, part);
+                  if (room > free) {
+                    free = room;
+                    way = candidate;
+                  }
+                  if (room >= d * 0.7) break search;
+                }
+            }
+            const to = goal.clone().addScaledVector(way, free);
             cancelAnimationFrame(frame);
             stopTurn();
             if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -766,7 +802,9 @@ export default function ModelViewer({
                     m instanceof THREE.MeshStandardMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
                   if (!colour) continue;
                   if (!baseColour.has(m)) baseColour.set(m, colour.clone());
-                  colour.copy(baseColour.get(m)!).lerp(tint, night ? Math.min(0.85, level * 1.5) : level);
+                  // Close up the part fills the frame: a touch of light is enough.
+                  const amount = night ? Math.min(0.85, level * 1.5) : level;
+                  colour.copy(baseColour.get(m)!).lerp(tint, closePose ? amount * 0.35 : amount);
                 }
             }
             render();
@@ -994,18 +1032,28 @@ export default function ModelViewer({
               const elevation = THREE.MathUtils.radToDeg(
                 Math.asin(offset.y / (offset.length() || 1)),
               );
-              if (open && raise && elevation < 45)
+              if (open && raise)
                 aim.current?.({
                   target: null,
                   azimuthDeg: THREE.MathUtils.radToDeg(Math.atan2(offset.x, -offset.z)),
                   elevationDeg: INSIDE_ELEVATION,
-                  distance: 0.6,
+                  distance: 0.34,
                 });
             };
             const open = interiorRef.current ?? false;
             if (open) lift.current(true, false);
             setInside(open);
           }
+          inner = new THREE.DirectionalLight(0xfff1dc, 0);
+          inner.position.set(0.15, 1, 0.25);
+          scene.add(inner, inner.target);
+          const lit = new THREE.HemisphereLight(0xfff4e6, 0xcdbda3, 0);
+          scene.add(lit);
+          innerWanted = () => {
+            const on = coverWanted() || !!coverOpen?.();
+            lit.intensity = on ? (currentTheme() === "night" ? 0.45 : 0.7) : 0;
+            return on;
+          };
           // Open, or with the camera sent close, the trees stand aside: it must not meet one on the way.
           const trees: THREE.Object3D[] = [];
           root.traverse((node) => {
