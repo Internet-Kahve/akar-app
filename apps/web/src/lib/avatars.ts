@@ -12,13 +12,14 @@ export type AvatarFigure = {
   colour: string;
 };
 
+/* Women and men alternate, so the picker's grid (three across) does not leave the women in one row. */
 export const AVATARS: AvatarFigure[] = [
+  { id: "kosem-sultan", name: "Kösem Sultan", nameEn: "Kösem Sultan", colour: "#3f8a64" },
   { id: "evliya-celebi", name: "Evliya Çelebi", nameEn: "Evliya Çelebi", colour: "#2f7f86" },
   { id: "fatih", name: "Fatih Sultan Mehmed", nameEn: "Mehmed the Conqueror", colour: "#a23b3b" },
   { id: "mimar-sinan", name: "Mimar Sinan", nameEn: "Architect Sinan", colour: "#4a6fa5" },
-  { id: "hezarfen", name: "Hezarfen Ahmed Çelebi", nameEn: "Hezarfen Ahmed Çelebi", colour: "#d08a2e" },
-  { id: "kosem-sultan", name: "Kösem Sultan", nameEn: "Kösem Sultan", colour: "#3f8a64" },
   { id: "mihrimah-sultan", name: "Mihrimah Sultan", nameEn: "Mihrimah Sultan", colour: "#b85c7a" },
+  { id: "hezarfen", name: "Hezarfen Ahmed Çelebi", nameEn: "Hezarfen Ahmed Çelebi", colour: "#d08a2e" },
 ];
 
 export const AVATAR_KEY = "akar.avatar";
