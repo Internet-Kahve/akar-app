@@ -12,7 +12,7 @@
 4. [Birleştirme notu](BIRLESTIRME_NOTU_MOBIL_OPTIMIZASYON.md) ve [devir notu](DEVIR_3KASIM.md): son iş, canlıya çıkarken yapılacaklar. Ekip düzeyindeki açık işler: [Yapılacaklar](YAPILACAKLAR.md).
 5. Hackathon: `hackathon/` klasörü (başvuru, şartname, envanter bilgi notu) Git dışındadır, yerelde ya da ekip arşivinde bulunur. [Rehberin Git arşivi](https://github.com/Internet-Kahve/akar-app/blob/1e618ae135192d882a395ec41049b0b91badf03c/docs/documents-context/hackathon/README.md).
 
-Tarihli çalışma notları: [Prototip aktarımı](PROTOTIP_AKTARIM.md) (1 Kasım), [Entegrasyon](ENTEGRASYON_29EKIM.md) (`BACKEND-DECISIONS` atıf yapar), [Prototip dersleri](PROTOTIP_DERSLERI.md).
+Tarihli çalışma notları: [Entegrasyon](ENTEGRASYON_29EKIM.md) (`BACKEND-DECISIONS` atıf yapar), [Prototip dersleri](PROTOTIP_DERSLERI.md).
 
 ## Hangi dosya nerede?
 

@@ -11,7 +11,6 @@ documents-context/
 ├── ICERIK_YONTEMI.md         Eser içeriği (hikâye, fotoğraf, kaynak) kuralları
 ├── ICERIK_INGILIZCE.md        İngilizce içerik dosyalarının biçimi
 ├── ENTEGRASYON_29EKIM.md     Prototipten ürüne veri/şema kararları (BACKEND-DECISIONS bunlara atıf yapar)
-├── PROTOTIP_AKTARIM.md       Tarihli çalışma notu (1 Kasım)
 ├── DEVIR_3KASIM.md           Son işin devir notu: performans, ipuçları, pişirme
 ├── BIRLESTIRME_NOTU_MOBIL_OPTIMIZASYON.md  Birleştirme ve canlıya çıkış adımları
 ├── YAPILACAKLAR.md           Ekip düzeyinde açık işler
@@ -42,7 +41,6 @@ documents-context/
     ├── bursa/                Ortak kaynaklar, kararlar, denetim ve şablonlar
     ├── bursa-foto/           Envanter fotoğrafları ve manifest (Git dışında)
     ├── fotoatlas/            Foto Atlas eski fotoğrafları, izinler, betikler (Git dışında; uygulama paketi eserler/<eser>/gecmisi-gor/)
-    ├── panorama-test/        Panorama denemesi ve atıf
     └── vakıf-eserleri-envanteri/  Büyük yerel kaynak arşivi (Git dışında)
 ```
 
@@ -83,13 +81,12 @@ Yalnız fotoğraflı dört eserde (İnebey Medresesi, Alaaddin Bey Çeşmesi, Ka
 | `kitap-fotograflari.md` + `foto/kitap/` | Envanter kitabındaki fotoğraflar ve yerleri | evet |
 | `parcalar.md` | 3D parça kartları | evet |
 | `gorevler.json` | Bulmaca, saha görevi, rozetler | evet |
-| `eser-hakkinda-ozet.md` | Önceki özet metin ve kaynak notları | hayır |
 | `en/` | İngilizce karşılıklar (`ICERIK_INGILIZCE.md`) | evet (varsa) |
 
 ## 2 Kasım 2026 temizliği
 
-Biten iş emirleri (`promptlar/`), eski 3D revizyon planları (`eserler/*/SONNET_REVIZYON_PLANI.md`), `icerik/_eski/` taslakları, `eserler/ulu-cami/3d/kart_onerisi_v30.md`, prototipin tarihli kaydı (`design/PROTOTIP_KAYDI.md`), `PROTOTIP_URUN_FARKI.md` (yerine `PROTOTIP_AKTARIM.md` §2) ve çalışma günlüğü `yaptiklarim-2.md` çalışma ağacından kaldırıldı; hepsi Git geçmişinde (commit `f7df24c` ve öncesi). Eski belgelerdeki bu dosyalara bağlantılar tarihsel kayıttır.
+Biten iş emirleri (`promptlar/`), eski 3D revizyon planları (`eserler/*/SONNET_REVIZYON_PLANI.md`), `icerik/_eski/` taslakları, `eserler/ulu-cami/3d/kart_onerisi_v30.md`, prototipin tarihli kaydı (`design/PROTOTIP_KAYDI.md`), `PROTOTIP_URUN_FARKI.md` (`PROTOTIP_AKTARIM.md` §2 de Git geçmişinde) ve çalışma günlüğü `yaptiklarim-2.md` çalışma ağacından kaldırıldı; hepsi Git geçmişinde (commit `f7df24c` ve öncesi). Eski belgelerdeki bu dosyalara bağlantılar tarihsel kayıttır.
 
 ## 4 Kasım 2026 temizliği
 
-Kullanılmayan eski GLB sürümleri ile biten iş notları (`IS_PLANI_2KASIM.md`, `MOBIL_SADELIK_3KASIM.md`, `OPTIMIZASYON_3KASIM.md`, `PISIRME_ISTEMI_*.md`) çalışma ağacından kaldırıldı; hepsi Git geçmişinde. Her eserde yalnız `model.json` içinde adı geçen GLB'ler ve onların `_sunum` sürümleri kalır.
+Kullanılmayan eski GLB sürümleri ile biten iş notları (`IS_PLANI_2KASIM.md`, `MOBIL_SADELIK_3KASIM.md`, `OPTIMIZASYON_3KASIM.md`, `PISIRME_ISTEMI_*.md`, `PROTOTIP_AKTARIM.md`), 14–15 Ekim denetim raporları (`veri/bursa/denetim/`), eski kararlar ve 3D aday listesi, `eser-hakkinda-ozet.md` dosyaları ve eski istemler çalışma ağacından kaldırıldı; hepsi Git geçmişinde. Her eserde yalnız `model.json` içinde adı geçen GLB'ler ve onların `_sunum` sürümleri kalır.
