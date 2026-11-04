@@ -8,6 +8,17 @@ Mevcut Next.js arayüzü Capacitor 8 ile iOS ve Android içine statik olarak pak
 
 Mobil paket Next sunucusu çalıştırmadığı için katalog fotoğrafları `https://akar.tamerakdeniz.com/_next/image` üzerinden küçültülür; yerel blob/data görselleri bu sunucuya gönderilmez. Harita fotoğraf pinleri, canvas için gereken pikselleri Capacitor HTTP ile küçük görseller olarak okur. Bu kullanım tüm ağ isteklerini değiştirmez. Diğer API çağrıları mevcut CORS ve kimlik doğrulama yolunu kullanır. Haritaya geri dönüş mobilde tanıtım sayfasına yönlendirmez ve sayfayı yeniden yüklemez.
 
+Bu sürümün doğrulaması:
+
+- Web/API tip kontrolleri, 216 birim testi ve web üretim derlemesi geçti.
+- Statik mobil testlerde 43 test geçti, 3 test atlandı; sürükleme testinin iki tarayıcıdaki başarısızlığı sentetik hareket hızından kaynaklandı. Girdi düzeltildikten sonra iki test de ayrı çalışmada geçti (toplam 45 doğrulanmış test). WebKit mobil profilinde fare tekerleği desteklenmediğinden yalnız o test atlanır.
+- Tam web E2E çalışmasında 152 test geçti, 33 test atlandı. Model hazır olmadan etkileşime geçen tek ipucu testi hazır olma koşuluyla düzeltildi ve ayrı çalışmada geçti (toplam 153 doğrulanmış test). Tam paketler bu test düzeltmelerinden sonra baştan çalıştırılmadı.
+- Canlı ayarlarla Android debug APK ve iOS Simulator derlemesi başarılı. Android 16 / 2311DRK48G telefona önceki sürümün üzerine `--no-streaming -r` ile kuruldu; cihaz `versionName=1.1.0`, `versionCode=2` döndürdü.
+- Gerçek Android WebView'inde canlı katalog 200 ve 11 eser döndürdü; 128 px fotoğraf ve native HTTP üzerinden fotoğraf pininin canvas okuması başarılı, görünen 10 görselde kırık görsel yok. Gerçek ekran görüntüsünde harita, 3D modeller ve fotoğraflı pinler doğrulandı. İlk açılış kaydında erken bir Capacitor `triggerEvent` hatası görüldü; uygulama açıldı ve bu kontroller geçti, uzun süreli arka plan/izin testleri ayrıca yapılmalı.
+- iPhone 17 Pro / iOS 26.5 simülatörüne 1.1.0 (2) kuruldu ve başlatıldı; canlı harita, 3D modeller ve fotoğraf pinleri görsel olarak doğrulandı. Fiziksel iPhone ve TestFlight dağıtımı yapılmadı.
+
+Android test paketi: `apps/mobile/android/app/build/outputs/apk/debug/akar-1.1.0-build2.apk` (kaynak birleşimi `f709fe3`). SHA-256: `ba9e8e357fc3f537a2a743edcf4da1af4d8619fc8278c54c5180c1ad047206ef`. Bu debug paketi mağaza yayını değildir.
+
 ## Yapı ve kurulum
 
 - `apps/web`: ortak arayüz ve cihaz köprüleri.
