@@ -39,8 +39,10 @@ await sy.goto(`http://127.0.0.1:${port}/pisik_gorsel.html`); await sy.waitForFun
 const gun = `/m/${MJ.glb}.glb`, gec = `/m/${MJ.glb_gece}.glb`;
 const arg = k => process.argv.find(a => a.startsWith(`--${k}=`))?.split('=')[1];
 if (process.argv.includes('--yansit-uygulama')) {   // 4 Kasım 2026: pişmiş dosyaların atlası mevcut harita dosyasından (yerinde)
-  const {yansitUygulama, bakislar} = await import('./pisik_yansit.mjs'); const BAKISLAR = bakislar(az);
-  const sinir = {gunduz: 1100000, gece: 1300000}, sonuc = {};
+  const {yansitUygulama, bakislar} = await import('./pisik_yansit.mjs'); const BAKISLAR = bakislar(az, arg('agirlik') ?? 'gunes');
+  // boyut sınırı: Ulucami 1100 / 1300 KB (4 Kasım), diğer eserler mevcut harita dosyasının 1,3 katı (PISIRME_ISTEMI_DIGER_ESERLER.md)
+  const ulu = path.basename(path.dirname(path.resolve(U))) === 'ulu-cami', boy = f => fs.statSync(path.join(U, 'export', f.slice(3))).size;
+  const sinir = ulu ? {gunduz: 1100000, gece: 1300000} : {gunduz: Math.floor(1.3 * boy(gun)), gece: Math.floor(1.3 * boy(gec))}, sonuc = {};
   for (const [tema, mevcut] of [['gunduz', gun], ['gece', gec]]) {
     const pismis = mevcut.replace('.glb', '_harita_pisik.glb');
     // her zaman salt Cycles dosyasından başla (pisik.py blend/<glb>_harita_pisik_cycles.glb yazar)
@@ -51,7 +53,7 @@ if (process.argv.includes('--yansit-uygulama')) {   // 4 Kasım 2026: pişmiş d
     const mahyaKaynak = arg('mahya-kaynak') ?? 'yok';
     const mahya = tema === 'gece' && mahyaKaynak !== 'yok' ? await sy.evaluate(c => window.mahyaAktar(c), {mevcut, pismis, kaynak: mahyaKaynak === 'mevcut' ? null : `/u/${mahyaKaynak}`}) : null;
     sonuc[tema] = await yansitUygulama({file: path.join(U, 'export', pismis.slice(3)), sharp, limit: sinir[tema], mahya,
-      render: () => sy.evaluate(c => window.yansitAtlas(c), {mevcut, pismis, ref: gun, ana: MJ.ana_parca, tema, gunesAz: az, bakislar: BAKISLAR, usDik: +(arg('usdik') ?? 2), mahyaRenk: tema === 'gece' && arg('mahya-kaynak') === 'mevcut',
+      render: () => sy.evaluate(c => window.yansitAtlas(c), {mevcut, pismis, ref: gun, ana: MJ.ana_parca, tema, gunesAz: az, bakislar: BAKISLAR, usDik: +(arg('usdik') ?? 2), pikselM: +(arg('piksel-m') ?? 0.016), komsuEn: +(arg('komsu') ?? 4), mahyaRenk: tema === 'gece' && arg('mahya-kaynak') === 'mevcut',
         // --gece-atla=<düğüm,...>: o parçalar yansıtılmaz, önceki atlasta kalır (4 Kasım: Kasnak_Pencereleri denendi, kasnak gece karesini düzeltmedi)
         atla: tema === 'gece' ? (arg('gece-atla') ?? '').split(',').filter(Boolean) : []})});
     await sy.reload(); await sy.waitForFunction('window.hazir === true');
@@ -63,14 +65,18 @@ if (process.argv.includes('--yansit-uygulama')) {   // 4 Kasım 2026: pişmiş d
 }
 if (process.argv.includes('--uygulama')) {
   const etiket = process.argv[process.argv.indexOf('--uygulama') + 1];
-  const { uygulamaOlc } = await import('./pisik_olcum.mjs');
+  const { uygulamaOlc, genelOlc } = await import('./pisik_olcum.mjs');
   const dosyalar = { gunduz: { mevcut: gun, pismis: arg('gun') ? `/u/${arg('gun')}` : gun.replace('.glb', '_harita_pisik.glb') },
     gece: { mevcut: gec, pismis: arg('gece') ? `/u/${arg('gece')}` : gec.replace('.glb', '_harita_pisik.glb') } };
-  const sonuc = await uygulamaOlc({ ciz: c => sy.evaluate(c => window.uygulama(c), c), sharp, K, etiket, dosyalar, ref: gun, ana: MJ.ana_parca, gunesAz: az, doku: arg('doku') ?? null });
+  // Ulucami: sekiz detay karesi (pisik_olcum KARELER); diğer eserler ya da --genel: bina merkezine 8 yön, bütün bina
+  const genelMi = process.argv.includes('--genel') || path.basename(path.dirname(path.resolve(U))) !== 'ulu-cami';
+  const ciz = c => sy.evaluate(c => window.uygulama(c), c);
+  const sonuc = genelMi ? await genelOlc({ ciz, kutu: () => sy.evaluate(c => window.kutu(c), { ref: gun }), sharp, K, etiket, dosyalar, ref: gun, ana: MJ.ana_parca || null, gunesAz: az, doku: arg('doku') ?? null })
+    : await uygulamaOlc({ ciz, sharp, K, etiket, dosyalar, ref: gun, ana: MJ.ana_parca, gunesAz: az, doku: arg('doku') ?? null });
   sonuc.hata = hata;
   const rp = path.join(K, 'rapor.json'); const rapor = fs.existsSync(rp) ? JSON.parse(fs.readFileSync(rp, 'utf8')) : {};
   (rapor.uygulama_olcum ??= {})[etiket] = sonuc; fs.writeFileSync(rp, JSON.stringify(rapor, null, 1));
-  console.log('UYGULAMA', etiket, `${sonuc.gecen_440}/${sonuc.kare_440}`, JSON.stringify(sonuc.genel), hata.length ? 'HATA ' + hata.join(' | ') : '');
+  console.log('UYGULAMA', etiket, genelMi ? 'genel' : `${sonuc.gecen_440}/${sonuc.kare_440}`, JSON.stringify(sonuc.genel), hata.length ? 'HATA ' + hata.join(' | ') : '');
   await tarayici.close(); sv.close(); process.exit(0);
 }
 const raporYolu=path.join(K,'rapor.json');

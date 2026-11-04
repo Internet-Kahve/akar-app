@@ -54,5 +54,9 @@
       "ic": true,
       "not": "içeride sandukalar"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "orhan-gazi-turbesi_v06_harita_pisik",
+  "glb_gece_harita_pisik": "night/orhan-gazi-turbesi_v06_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 220°, 50°; Ulucami yöntemi; kabul kaldı (gündüz renk sapması); ölçüm README'de ve kontrol/v06_pisik/rapor.json içinde. Onay Muhammed'in."
 }

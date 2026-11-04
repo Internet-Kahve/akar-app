@@ -103,10 +103,11 @@ function haritaIsigi(sc, m, L, gunesAz, golgePx) {
   s.target.position.copy(centre); s.shadow.normalBias = radius / golgePx;
   Object.assign(s.shadow.camera, { left: -radius, right: radius, top: radius, bottom: -radius, near: radius * 0.5, far: radius * 5 }); s.shadow.camera.updateProjectionMatrix();
   sc.add(s, s.target);
-  const f = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: L.shadowOpacity, depthWrite: false }));
-  f.rotation.x = -Math.PI / 2; f.scale.set(radius * 2, radius * 2, 1); f.position.set(centre.x, 0.02, centre.z); f.receiveShadow = true; sc.add(f);
+  // scene-light.ts shadowFloor: derinlik yazmaz, polygonOffset 2 / 8 (yoksa avlu döşemesinin üstüne çizilip gölgeyi iki kat koyulaştırır)
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: L.shadowOpacity, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 8 }));
+  f.rotation.x = -Math.PI / 2; f.scale.set(radius * 2, radius * 2, 1); f.position.set(centre.x, 0.02, centre.z); f.receiveShadow = true; f.renderOrder = -1; sc.add(f);
 }
-window.uygulama = async ({ dosya, ref, tema, hedef, kamAz, egim = 60, uzaklik = 440, gunesAz, ana, maske = null, W = 780, H = 1688, fov = 36.87, golgePx = 1024, doku = null }) => {
+window.uygulama = async ({ dosya, ref, tema, hedef, kamAz, egim = 60, uzaklik = 440, gunesAz, ana, maske = null, W = 780, H = 1688, fov = 36.87, golgePx = 1024, doku = null, dokuUrl = null }) => {
   app.setSize(W, H);
   const L = IS[tema]; app.toneMappingExposure = L.exposure; app.toneMapping = maske ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
   const sc = new THREE.Scene(); sc.background = new THREE.Color(maske ? 0x000000 : (tema === 'gece' ? 0x1d2533 : 0xe9e5dc));
@@ -123,6 +124,10 @@ window.uygulama = async ({ dosya, ref, tema, hedef, kamAz, egim = 60, uzaklik = 
   if (doku) m.traverse(o => { const t = o.isMesh && o.material.map; if (!t || o.material.name !== 'Harita_Pisik') return; o.material = o.material.clone(); const u = t.clone();
     const F = { yakin: [THREE.NearestFilter, THREE.NearestFilter, false], mipsiz: [THREE.LinearFilter, THREE.LinearFilter, false], yakin_mip: [THREE.NearestMipmapNearestFilter, THREE.NearestFilter, true], dogrusal_mip_yakin: [THREE.LinearMipmapNearestFilter, THREE.LinearFilter, true], yakin_mip_dogrusal: [THREE.NearestMipmapLinearFilter, THREE.NearestFilter, true] }[doku];
     u.minFilter = F[0]; u.magFilter = F[1]; u.generateMipmaps = F[2]; u.needsUpdate = true; o.material.map = u; });
+  if (dokuUrl) { const t = await new THREE.TextureLoader().loadAsync(dokuUrl); t.flipY = false; t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;   // tanı: atlas yerine verilen doku
+    m.traverse(o => { if (o.isMesh && o.material.name === 'Harita_Pisik') { o.material = o.material.clone(); o.material.map = t; o.material.alphaTest = 0; o.material.toneMapped = false; } }); }
+  // map-models.ts settleBakedShadow: pişmiş zemin gölgesi haritanın üstünde, binanın altında (polygonOffset 2 / 8, renderOrder −1)
+  m.traverse(o => { if (o.isMesh && /^Harita_Golge/.test(o.material?.name ?? '')) { o.material.polygonOffset = true; o.material.polygonOffsetFactor = 2; o.material.polygonOffsetUnits = 8; o.renderOrder = -1; } });
   let isiksiz = true; m.traverse(o => { if (o.isMesh && !o.material.isMeshBasicMaterial) isiksiz = false; });
   if (maske) {
     const secili = o => { if (maske.dugum[0] === '*') return true; let n = o; while (n && n !== m && !maske.dugum.includes(n.name)) n = n.parent; return n && n !== m && (!maske.malzeme || maske.malzeme.includes(o.material.name.replace(/\.\d{3}$/, '')) || maske.malzeme.includes(o.material.name)); };
@@ -144,7 +149,7 @@ window.uygulama = async ({ dosya, ref, tema, hedef, kamAz, egim = 60, uzaklik = 
 // mevcut dosyayla, uygulamanın ışığıyla (gündüz: 1024 gölge haritası; gece: ışıksız dosya). Ağırlık = bakış ağırlığı × (n·v)^usDik.
 // Komşusu boş ya da 2 texelden uzak olan piksel (siluet, örtüşme sınırı) alınmaz. Harita_Golge ve Mahya iki geçişte de gizli.
 // Dönüş: rgb (sRGB, örneklenmiş texeller), bayrak (255 örneklendi, 128 korunur: Mahya, 64 ada içinde ama örnek yok, 0 boş) PNG.
-window.yansitAtlas = async ({ mevcut, pismis, ref, ana, tema, gunesAz, bakislar, pikselM = 0.016, dosemePx = 2048, golgePx = 1024, atla = [], usDik = 2, mahyaRenk = false }) => {
+window.yansitAtlas = async ({ mevcut, pismis, ref, ana, tema, gunesAz, bakislar, pikselM = 0.016, dosemePx = 2048, golgePx = 1024, atla = [], usDik = 2, mahyaRenk = false, komsuEn = 4 }) => {   // komsuEn: tutarlı olması gereken komşu sayısı (4 Kasım: ince şeritler için 3)
   const N = 2048, T = dosemePx, L = IS[tema];
   const r = sample; r.setSize(T, T); r.setPixelRatio(1);
   const rtU = new THREE.WebGLRenderTarget(T, T, { type: THREE.FloatType, depthBuffer: true });
@@ -196,9 +201,9 @@ window.yansitAtlas = async ({ mevcut, pismis, ref, ana, tema, gunesAz, bakislar,
       r.setRenderTarget(rtR); r.setClearColor(0x000000, 0); r.clear(); r.render(scR, k); r.readRenderTargetPixels(rtR, 0, 0, T, T, C); doseme++;
       for (let y = 1; y < T - 1; y++) for (let x = 1; x < T - 1; x++) {
         const i = 4 * (y * T + x); if (U[i + 3] < 0.5 || U[i + 2] < 0.2) continue;
-        let iyi = true;
-        for (const j of [i - 4, i + 4, i - 4 * T, i + 4 * T]) if (U[j + 3] < 0.5 || Math.abs(U[j] - U[i]) + Math.abs(U[j + 1] - U[i + 1]) > 2) { iyi = false; break; }
-        if (!iyi) continue;
+        let iyi = 0;
+        for (const j of [i - 4, i + 4, i - 4 * T, i + 4 * T]) if (U[j + 3] >= 0.5 && Math.abs(U[j] - U[i]) + Math.abs(U[j + 1] - U[i + 1]) <= 2) iyi++;
+        if (iyi < komsuEn) continue;
         const t = U[i + 1] * N + U[i], ww = bw * U[i + 2] ** usDik;
         w[t] += ww; sum[3 * t] += ww * C[i]; sum[3 * t + 1] += ww * C[i + 1]; sum[3 * t + 2] += ww * C[i + 2]; alinan++;
       }
@@ -263,5 +268,9 @@ window.mahyaAktar = async ({ mevcut, pismis, kaynak = null }) => {   // kaynak: 
   gx.putImageData(rgb, 0, 0); const r1 = cv.toDataURL('image/png'); gx.putImageData(al, 0, 0); const r2 = cv.toDataURL('image/png');
   return { rgb: r1, alfa: r2, texel: dolu, kose, eslesmeyen, en_uzak_m: +enUzak.toFixed(4) };
 };
+// Ölçüm hedefi: bütün modelin (Harita_Golge hariç) kutu ortası, yüksekliğin %35'i; glTF yerel koordinatı (uygulama() ofseti kendisi ekler)
+window.kutu = async ({ ref }) => { const m = await yukle(ref); m.updateMatrixWorld(true); const b = new THREE.Box3();
+  m.traverse(o => { if (o.isMesh && o.name !== 'Harita_Golge') b.expandByObject(o); }); const c = b.getCenter(new THREE.Vector3());
+  return [c.x, b.min.y + 0.35 * (b.max.y - b.min.y), c.z]; };
 window.hazir = true;
 </script></body></html>

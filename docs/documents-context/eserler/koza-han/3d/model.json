@@ -53,5 +53,9 @@
       "tahmini": true,
       "not": "çınarlı avlu; yön tahmini"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "koza-han_v18_harita_pisik",
+  "glb_gece_harita_pisik": "night/koza-han_v18_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 40°, 50°; Ulucami yöntemi; kabul kaldı (gündüz renk sapması, kutu); ölçüm README'de ve kontrol/v18_pisik/rapor.json içinde. Onay Muhammed'in."
 }

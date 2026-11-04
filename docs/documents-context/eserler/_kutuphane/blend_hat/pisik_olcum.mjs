@@ -25,7 +25,7 @@ export const KARELER = [
 ];
 export const UZAKLIK = [440, 220];
 
-const lum = (d, n) => { const Y = new Float32Array(n); for (let i = 0; i < n; i++) Y[i] = 0.2126 * d[3 * i] + 0.7152 * d[3 * i + 1] + 0.0722 * d[3 * i + 2]; return Y; };
+export const lum = (d, n) => { const Y = new Float32Array(n); for (let i = 0; i < n; i++) Y[i] = 0.2126 * d[3 * i] + 0.7152 * d[3 * i + 1] + 0.0722 * d[3 * i + 2]; return Y; };
 function lab(d, n) {
   const o = new Float32Array(3 * n), li = x => (x /= 255) <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4, f = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
   for (let i = 0; i < n; i++) {
@@ -129,4 +129,55 @@ export async function uygulamaOlc({ ciz, sharp, K, etiket, dosyalar, ref, ana, g
   return { etiket, tarih: new Date().toISOString(), dosyalar, tablo, genel: g, gecen_440: kabul.filter(([, v]) => v.gecti).length, kare_440: kabul.length,
     kalan_440: kabul.filter(([, v]) => !v.gecti).map(([k, v]) => ({ kare: k, olcut: [v.keskinlik < SINIR.keskinlik_min && 'keskinlik', v.ssim < SINIR.ssim_min && 'ssim', (v.parlaklik < SINIR.parlaklik[0] || v.parlaklik > SINIR.parlaklik[1]) && 'parlaklik', v.renk_sapma > SINIR.renk_sapma_max && 'renk_sapma'].filter(Boolean) })),
     klasor: path.relative(path.dirname(K), D) };
+}
+
+// 4 Kasım 2026, diğer eserler (PISIRME_ISTEMI_DIGER_ESERLER.md): bina merkezine bakan 8 yön (yerel azimut 0, 45, … 315), bütün bina maskesi.
+// Kabul tema başına birleşik: parlaklık oranı medyanı 0,97–1,03, p10 ≥ 0,85, p90 ≤ 1,15, renk sapması ≤ %0,5 (yalnız 440 m).
+// Keskinlik ve SSIM raporlanır, sınırı yoktur. Kare: bina maskesinin kutusu (+12 px).
+export const GENEL_SINIR = { medyan: [0.97, 1.03], p10_min: 0.85, p90_max: 1.15, renk_sapma_max: 0.005 };
+export async function genelOlc({ ciz, kutu, sharp, K, etiket, dosyalar, ref, ana, gunesAz, doku = null }) {
+  const D = path.join(K, 'uygulama', etiket); fs.mkdirSync(D, { recursive: true });
+  const raw = async png => { const { data, info } = await sharp(Buffer.from(png.split(',')[1], 'base64')).removeAlpha().raw().toBuffer({ resolveWithObject: true }); return { data, w: info.width, h: info.height }; };
+  const etk = (t, w) => Buffer.from(`<svg width="${w}" height="30"><rect width="100%" height="100%" fill="#fff"/><text x="8" y="21" font-family="Helvetica, Arial" font-size="15" fill="#222">${t}</text></svg>`);
+  const hedef = await kutu();   // glTF yerel: kutu ortası, yüksekliğin %35'i
+  const tablo = {}, birlesik = {}, sayfa = {};
+  for (const uz of UZAKLIK) for (const tema of ['gunduz', 'gece']) {
+    const B = birlesik[`${uz}m/${tema}`] = { r: [], yab: 0, top: 0 };
+    for (let i = 0; i < 8; i++) {
+      const kamAz = i * 45, ortak = { ref, ana, gunesAz, tema, hedef, kamAz, uzaklik: uz };
+      const A = await raw((await ciz({ ...ortak, dosya: dosyalar[tema].mevcut })).png), Pm = await raw((await ciz({ ...ortak, dosya: dosyalar[tema].pismis, doku })).png);
+      const Mk = await raw((await ciz({ ...ortak, dosya: dosyalar[tema].mevcut, maske: { dugum: ['*'] } })).png);
+      let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+      for (let y = 0; y < Mk.h; y++) for (let x = 0; x < Mk.w; x++) if (Mk.data[3 * (y * Mk.w + x)] > 127) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      if (x1 < 0) continue;
+      x0 = Math.max(0, x0 - 12); y0 = Math.max(0, y0 - 12); x1 = Math.min(Mk.w - 1, x1 + 12); y1 = Math.min(Mk.h - 1, y1 + 12);
+      const W = x1 - x0 + 1, H = y1 - y0 + 1;
+      const kes = d => { const o = Buffer.alloc(3 * W * H); for (let y = 0; y < H; y++) d.data.copy(o, 3 * y * W, 3 * ((y0 + y) * d.w + x0), 3 * ((y0 + y) * d.w + x1 + 1)); return o; };
+      const a = kes(A), b = kes(Pm), mm = kes(Mk), M8 = new Uint8Array(W * H); for (let k = 0; k < W * H; k++) M8[k] = mm[3 * k];
+      const o = olc(a, b, M8, W, H);
+      const Ya = lum(a, W * H), Yb = lum(b, W * H), r = [];
+      for (let k = 0; k < W * H; k++) if (M8[k] > 127 && Ya[k] > 0) r.push(Yb[k] / Ya[k]);
+      r.sort((p, q) => p - q); const q = t => +r[Math.floor(t * (r.length - 1))].toFixed(3);
+      for (const v of r) B.r.push(v); B.yab += Math.round(o.renk_sapma * o.piksel); B.top += o.piksel;
+      tablo[`${uz}m/yon_${kamAz}/${tema}`] = { medyan: q(0.5), p10: q(0.1), p90: q(0.9), renk_sapma: +o.renk_sapma.toFixed(4), keskinlik: +o.keskinlik.toFixed(3), ssim: +o.ssim.toFixed(3), piksel: o.piksel };
+      const k = Math.min(3, Math.max(1, Math.floor(420 / Math.max(W, H)))), ZW = W * k, ZH = H * k;
+      const buyut = async buf => sharp(buf, { raw: { width: W, height: H, channels: 3 } }).resize(ZW, ZH, { kernel: 'nearest' }).png().toBuffer();
+      const parca = [{ input: etk(`mevcut · ${tema} · ${uz} m · yön ${kamAz}°`, ZW), left: 0, top: 0 }, { input: etk(`pişmiş · ${etiket}`, ZW), left: ZW + 6, top: 0 },
+        { input: etk(`fark · med ${q(0.5)} rs ${(100 * o.renk_sapma).toFixed(2)}% ss ${o.ssim.toFixed(2)}`, ZW), left: 2 * (ZW + 6), top: 0 },
+        { input: await buyut(a), left: 0, top: 30 }, { input: await buyut(b), left: ZW + 6, top: 30 }, { input: await buyut(o.fark), left: 2 * (ZW + 6), top: 30 }];
+      const f = path.join(D, `uclu_${uz}m_yon${String(kamAz).padStart(3, '0')}_${tema}.png`);
+      await sharp({ create: { width: 3 * ZW + 12, height: ZH + 30, channels: 3, background: '#fff' } }).composite(parca).png().toFile(f);
+      (sayfa[`${uz}_${tema}`] ??= []).push(f);
+    }
+  }
+  for (const [ad, liste] of Object.entries(sayfa)) {
+    const m = await Promise.all(liste.map(f => sharp(f).metadata())); const w = Math.max(...m.map(x => x.width)); let y = 0; const parca = [];
+    liste.forEach((f, i) => { parca.push({ input: f, left: 0, top: y }); y += m[i].height + 8; });
+    await sharp({ create: { width: w, height: y, channels: 3, background: '#fff' } }).composite(parca).png().toFile(path.join(D, `sayfa_${ad}.png`));
+  }
+  const genel = {};
+  for (const [ad, B] of Object.entries(birlesik)) { B.r.sort((p, q) => p - q); const q = t => +B.r[Math.floor(t * (B.r.length - 1))].toFixed(3);
+    const g = genel[ad] = { medyan: q(0.5), p10: q(0.1), p90: q(0.9), koyu_pay: +(B.r.filter(v => v < 0.75).length / B.r.length).toFixed(4), renk_sapma: +(B.yab / B.top).toFixed(4), piksel: B.top };
+    if (ad.startsWith('440m')) { g.kalan = [g.medyan < GENEL_SINIR.medyan[0] || g.medyan > GENEL_SINIR.medyan[1] ? 'medyan' : '', g.p10 < GENEL_SINIR.p10_min ? 'p10' : '', g.p90 > GENEL_SINIR.p90_max ? 'p90' : '', g.renk_sapma > GENEL_SINIR.renk_sapma_max ? 'renk_sapma' : ''].filter(Boolean); g.gecti = !g.kalan.length; } }
+  return { etiket, tarih: new Date().toISOString(), yontem: 'genel: 8 yön, bütün bina', dosyalar, hedef, tablo, genel, sinir: GENEL_SINIR, klasor: path.relative(path.dirname(K), D) };
 }

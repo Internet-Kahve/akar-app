@@ -46,5 +46,9 @@
       "tahmini": true,
       "not": "tonozlu revak; yön tahmini"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "emir-hani_v08_harita_pisik",
+  "glb_gece_harita_pisik": "night/emir-hani_v08_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 40°, 50°; Ulucami yöntemi; kabul kaldı (gündüz renk sapması); ölçüm README'de ve kontrol/v08_pisik/rapor.json içinde. Onay Muhammed'in."
 }

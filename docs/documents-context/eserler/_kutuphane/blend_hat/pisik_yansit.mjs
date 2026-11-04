@@ -138,8 +138,9 @@ export async function inceAyar({file,render,sharp,az,limit}) {
 // Alfa (gece: mahya yazısı) önceki atlastan. WebP kalitesi, dosya sınırına sığan en yüksek değer.
 // Bakış ağırlığı: güneşi arkasına alan yönler önde (uygulama güneşi ön cepheye ön-sol çaprazdan, bakanın arkasından vurdurur);
 // güneşe karşı bakışların görünüşe bağlı parlaması ortalamayı açmasın: ağırlık × (0,25 + 0,75 · max(0, cos(az − güneş az))).
-export const bakislar = gunesAz => {
-  const k = az => 0.25 + 0.75 * Math.max(0, Math.cos((az - gunesAz) * Math.PI / 180));
+export const bakislar = (gunesAz, kip = 'gunes') => {   // kip: 'gunes' (Ulucami), 'esit' (tercih yok), 'karsi' (güneşe karşı bakan yönler önde)
+  const yon = kip === 'karsi' ? gunesAz + 180 : gunesAz;
+  const k = az => kip === 'esit' ? 1 : 0.25 + 0.75 * Math.max(0, Math.cos((az - yon) * Math.PI / 180));
   return [
     ...Array.from({length: 12}, (_, i) => [i * 30 + 6, 30, 3]),   // uygulama kamerası: eğim 60° (30° yükseklik), her yön
     ...Array.from({length: 8}, (_, i) => [i * 45 + 28, 12, 1]),   // alçak: girintiler, basamaklar, alt pencereler
@@ -156,6 +157,7 @@ export async function yansitUygulama({file, render, sharp, limit, sinirYok = fal
   const r = await render();
   const dec = async u => sharp(Buffer.from(u.split(',')[1], 'base64')).ensureAlpha().raw().toBuffer();
   const rgb = await dec(r.rgb), bay = await dec(r.bayrak);
+  if (process.env.PISIK_TANI) { fs.writeFileSync(process.env.PISIK_TANI + '_bayrak.png', Buffer.from(r.bayrak.split(',')[1], 'base64')); fs.writeFileSync(process.env.PISIK_TANI + '_rgb.png', Buffer.from(r.rgb.split(',')[1], 'base64')); }
   const val = new Float32Array(3 * n), dur = new Uint8Array(n);   // dur: 2 örnek, 3 korunur (Mahya: önceki atlas), 1 ada içi (doldurulacak), 0 boş
   let korunan = 0;
   for (let k = 0; k < n; k++) { const f = bay[4 * k]; dur[k] = f > 200 ? 2 : f > 100 ? 3 : f > 32 ? 1 : 0;

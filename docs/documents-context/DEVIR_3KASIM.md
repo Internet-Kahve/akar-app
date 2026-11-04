@@ -100,7 +100,7 @@ Testlerin cihazında hepsi görülmüş sayılır (`playwright.config.ts`, stora
 - **Pişmiş Ulucami:** dördüncü denemede 16 karenin 6'sı ölçüyü geçti. Yakın zoomda sunum modeline geçildiği için dosya 17,5'e kadar kullanılır; 440 m'de fark küçük. `pisik_onay` satırı commit edilmedi, karar Muhammed'in.
 - **Tanıtım sayfası, ikinci tur:** Türkiye başlığı, şehir halkası ve şehir kartları (renkler `identity.accent`), Bursa deseni, gece fotoğrafı, TR/EN (`akar.dil`), gece teması (`akar.tema`), kaydırmalı Ulucami turu, gerçek kayıtlarla «İster dinle, ister oku».
 - **Harita:** şehir düğmesi masaüstünde de harita üstünde, açılır; bütün Türkiye'de kırmızı. Rota kapatma: rota sayfasında ✕, haritada «Rotayı kapat».
-- **Pişirme:** Ulucami onaylandı (`pisik_onay`). Kalan altı eser için istem: `PISIRME_ISTEMI_DIGER_ESERLER.md`.
+- **Pişirme:** Ulucami ve kalan altı eser Muhammed'in onayıyla açık (`pisik_onay`), harita yedi modelde de pişmiş dosyayı yüklüyor. Ölçüde iki temada yalnız Orhan Bey Hamamı geçti. Bedesten, Emir Han, Koza Han ve Orhan Gazi Türbesi gündüz güneş parlamasında (renk sapması %0,68–1,15, sınır %0,5), Orhan Bey Camii gece şebeke ve korkuluk saydamlığında (%0,87) kaldı; Koza Han'ın kutusu 3,6 cm farklı (sınır 1 cm). Sınırlar gevşetilmedi, uzak görünümdeki bu fark bilerek kabul edildi. Ölçümler: her eserin `3d/kontrol/<sürüm>_pisik/rapor.json`. Araç düzeltmesinden önce ölçülen Ulucami yeniden ölçülmedi. İstem: `PISIRME_ISTEMI_DIGER_ESERLER.md`.
 - **Canlıya aktarılacak alanlar (Burak):** `mapBaked`, `hideClosedInterior`, `temsili`, yeni açılar.
 
 ## Pişirme ölçümü (3 Kasım)
@@ -123,7 +123,7 @@ Denenen alternatifler (Lambert malzeme, tepe noktası rengiyle malzeme birleşti
 
 ## Bekleyenler
 
-- **Pişmiş harita modelleri:** ölçüldü, alınacak (sayılar aşağıda). Uygulama tarafı hazır. Üçüncü deneme istemi: `PISIRME_ISTEMI_3KASIM.md`. Dosya gelip Muhammed onaylayınca `model.json` içine `"pisik_onay": true` yazılır, `prepare-demo-content.mjs` çalıştırılır; harita o dosyayı kullanır. Sonra kalan 6 eser. Canlı API bu alanı (`SiteModel.mapBaked`) henüz taşımıyor: Burak'ın eklemesi gerekir, yoksa canlıda eski yol sürer.
+- **Pişmiş harita modelleri:** yedi eserde açık (`model.json` içinde `"pisik_onay": true`, sonra `prepare-demo-content.mjs`). Canlı API bu alanı (`SiteModel.mapBaked`) henüz taşımıyor: Burak'ın eklemesi gerekir, yoksa canlıda eski yol sürer.
 - **Burak / Tamer:**
   - Storage dosyalarına `cache-control: immutable`;
   - canlı içeriğin yeniden aktarımı (`import-demo`);

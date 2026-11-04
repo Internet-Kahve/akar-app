@@ -2,6 +2,23 @@
 
 Yalnız **son sürüm** tutulur. Eski sürüm kararları aşağıda ve `../emir-han_notlar.md` "Ek: Geçmiş kayıt" bölümündedir.
 
+## Pişirilmiş harita sürümü (4 Kasım 2026)
+
+Gündüz `export/emir-hani_v08_harita_pisik.glb`, gece `export/night/emir-hani_v08_night_harita_pisik.glb`. Bina `Harita_Pisik`, zemin gölgesi `Harita_Golge`; ikisi de `KHR_materials_unlit`. `pisik_onay` yok; onay Muhammed’in. Yöntem Ulucami’ninkidir (`ulu-cami/3d/README.md`): Cycles ara pişirmesi, görünürlüğe göre UV, atlas mevcut harita dosyasından uygulamanın ışığıyla yansıtılır (2048 px). Güneş yerel 40° (on_yonu 7 + 40 − yaw 7), 50°.
+
+Ölçüm (`_kutuphane/blend_hat/pisik_olcum.mjs → genelOlc`): mevcut `emir-hani_v08.glb` / `night/emir-hani_v08_night.glb` ile 780 × 1688, 36,87°, eğim 60°, 440 m; bina merkezine 8 yön, bütün bina maskesi. Görüntüler `kontrol/v08_pisik/uygulama/<etiket>/` (mevcut | pişmiş | fark), tablolar `kontrol/v08_pisik/rapor.json → uygulama_olcum`. Teslim `son` etiketidir.
+
+| 440 m | Medyan | p10 | p90 | Renk sapması | KB | Sınır KB | Sonuç |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gündüz | 1.024 | 0.974 | 1.126 | %0.74 | 212.6 | 217.8 | kaldı |
+| Gece | 1.004 | 0.973 | 1.021 | %0.13 | 309.5 | 329.4 | geçti |
+
+220 m (yalnız rapor): gündüz 1.02 / 0.978 / 1.124 / %0.91; gece 1.004 / 0.977 / 1.017 / %0.04. Yapısal doğrulama: düğümler, kutu, iki ışıksız malzeme, üçgen geçti.
+
+**Kaldı: gündüz renk sapması %0,74 (sınır %0,5).** Gece geçti. Neden Bedesten'deki gibi: kamera güneşe karşı (yerel 225°) bakınca mevcut modelde kurşun çatı yamaçları güneş parlamasıyla beyaz; ışıksız dokuda parlama sabit kalır. Deneme 1'de o yön %12,9, diğer yedi yön ≤ %0,22. Denemeler (bakış ağırlığı): 1 güneş arkada (Ulucami yöntemi) %1,75; 2 eşit %1,10; 3 güneşe karşı %0,74 (teslim; medyan 1,024, p90 1,126 sınır içinde). Sınır gevşetilmedi.
+
+Üretim (repo kökünden, `GT_DIR` glTF Transform + draco3dgltf + sharp kurulumu): `blender -b --python-exit-code 1 --python docs/documents-context/eserler/emir-han/3d/build/pisir_harita.py -- hepsi`; yalnız yansıtma ve ölçüm: `node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/emir-han/3d v08 --yansit-uygulama [--agirlik=gunes|esit|karsi] --uygulama son`.
+
 ## Güncel sürüm: v05 (22 Ekim 2026)
 
 v04 + üst kat revak ayakları düzeltmesi. v03/v04'te köşe kubbelerini oyan EXACT boolean bütün `Avlu_Revaklari` mesh'ine uygulanıyordu ve kubbelerden uzaktaki **7 üst kat ayağını** (24'ün 7'si) ve üst kat döşeme silmesinin bir kısmını siliyordu; avludan bakınca üst katta ayak yerine boşluk görünüyordu. Kesim artık yalnız kubbelerin değdiği üst kuşak halkasına uygulanır. Doku, süsleme, ölçü ve palet v04 ile aynı.

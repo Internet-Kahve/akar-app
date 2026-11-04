@@ -268,13 +268,19 @@ class Hat:
             M = o.matrix_world; b = len(V); V += [M @ v.co for v in o.data.vertices]; P += [[b + i for i in p.vertices] for p in o.data.polygons]
         bvh = BVHTree.FromPolygons(V, P)
         yon = [(i * 30 + 6, 30) for i in range(12)] + [(i * 45 + 28, 12) for i in range(8)] + [(i * 45 + 6, 55) for i in range(8)] + [(0, 88)]
+        if s.C.get('GORUNURLUK_SIK'):   # 4 Kasım 2026 (Koza Han): kemer arkası gibi kısmen görünen büyük yüzler için daha çok yön ve nokta
+            yon += [(i * 22.5 + 11, e) for e in (20, 40) for i in range(16)]
         D = [Vector((math.sin(math.radians(a)) * math.cos(math.radians(e)), math.cos(math.radians(a)) * math.cos(math.radians(e)), math.sin(math.radians(e)))) for a, e in yon]
         s.gor = {}; say = [0, 0]; alan = [0.0, 0.0]
         for o in s.objs:
             M = o.matrix_world; Nm = M.to_3x3().inverted().transposed(); g = np.zeros(len(o.data.polygons), np.int32)
             for p in o.data.polygons:
                 n = (Nm @ p.normal).normalized(); c = M @ p.center
-                pts = [c] + [c.lerp(M @ o.data.vertices[v].co, 0.7) for v in list(p.vertices)[:4]]
+                vs = [M @ o.data.vertices[v].co for v in p.vertices]
+                if s.C.get('GORUNURLUK_SIK'):
+                    pts = [c] + [c.lerp(v, f) for v in vs[:8] for f in (0.35, 0.7)] + [c.lerp((vs[i] + vs[(i + 1) % len(vs)]) / 2, 0.8) for i in range(min(8, len(vs)))]
+                else:
+                    pts = [c] + [c.lerp(v, 0.7) for v in vs[:4]]
                 ok = False
                 for d in D:
                     if n.dot(d) < 0.2: continue
@@ -513,6 +519,18 @@ class Hat:
         kenar = np.minimum(kx[None, :], ky[:, None]) / s.C['GOLGE_PAY_M']
         fade = np.clip(kenar, 0, 1); fade = fade * fade * (3 - 2 * fade)
         A = np.zeros((h, w, 4), np.float32); A[..., 3] = opak * (1 - g) * fade
+        if s.C.get('GOLGE_ORTU_KES'):   # 4 Kasım 2026 (Koza Han): üstünde 1 m içinde bina yüzeyi olan texel (avlu döşemesi, duvar dibi) gölgesiz:
+            # döşemenin kendi texeli gölgeyi taşır; düzlem 2 cm yukarıda olduğu için uzakta (440 m) gölge iki kat çiziliyordu
+            V, P = [], []
+            for o in s.objs:
+                M = o.matrix_world; b = len(V); V += [M @ v.co for v in o.data.vertices]; P += [[b + i for i in p.vertices] for p in o.data.polygons]
+            bvh = BVHTree.FromPolygons(V, P); x0, y0, x1, y1, z = s.golge_kutu; kes = 0; up = Vector((0, 0, 1))
+            for j in range(h):
+                for i in range(w):
+                    if A[j, i, 3] <= 0: continue
+                    q = Vector((x0 + xs[i], y0 + ys[j], z - 0.25))
+                    if bvh.ray_cast(q, up, 1.25)[0] is not None: A[j, i, 3] = 0.0; kes += 1
+            s.rapor['harita_golge']['ortu_kesilen_texel'] = kes
         s.rapor['harita_golge'].update(opaklik=opak, en_koyu_alfa=round(float(A[..., 3].max()), 3), acik_alan_degeri=round(float(acik), 4))
         bpy.data.images.remove(img); s.golge.data.materials.clear()
         return resim_yaz('Harita_Golge', A, True)

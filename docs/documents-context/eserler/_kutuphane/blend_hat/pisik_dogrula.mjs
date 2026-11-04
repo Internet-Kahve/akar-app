@@ -69,7 +69,7 @@ const fark = (a, b) => Math.max(...[0, 1, 2].flatMap(i => [Math.abs(a.min[i] - b
 const yuvar = b => ({ min: b.min.map(x => +x.toFixed(4)), max: b.max.map(x => +x.toFixed(4)) });
 
 const harita = await ozet(path.join(U, 'export', MJ.glb + '.glb'));
-const rapor = { tarih: new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'}), surum, sinirlar: { kutu_m: SINIR_M, bayt: {gunduz:1100000, gece:1300000}, doluluk_min:0.45, cm_piksel_max:12, golge_ucgen_kabul: GOLGE_UCGEN }, dosyalar: {} };
+const rapor = { tarih: new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'}), surum, sinirlar: { kutu_m: SINIR_M, bayt: path.basename(path.dirname(path.resolve(U))) === 'ulu-cami' ? {gunduz:1100000, gece:1300000} : 'mevcut × 1,3', doluluk_min:0.45, cm_piksel_max:12, golge_ucgen_kabul: GOLGE_UCGEN }, dosyalar: {} };
 let hepsi = true;
 for (const [kip, ref] of [['gunduz', MJ.glb], ['gece', MJ.glb_gece]]) {
   const yeni = path.join(U, 'export', ref + '_harita_pisik.glb');
@@ -93,7 +93,10 @@ for (const [kip, ref] of [['gunduz', MJ.glb], ['gece', MJ.glb_gece]]) {
   k.kutu.gecti = k.kutu.tum_fark_m <= SINIR_M && (k.kutu.ana_parca_fark_m ?? 0) <= SINIR_M;
   k.icerik.gecti = b.unlit === 2 && b.malzeme.length === 2 && ['Harita_Pisik','Harita_Golge'].every(n => b.malzeme.includes(n)) && b.doku === 2;
   k.ucgen.gecti = b.ucgen - GOLGE_UCGEN <= a.ucgen;   // karşılığı: gündüzde harita GLB'si, gecede gece GLB'si (mahya dahil)
-  k.kb.gecti = fs.statSync(yeni).size <= (kip === 'gunduz' ? 1100000 : 1300000);   // 4 Kasım 2026: ayrıntı için gevşetildi (Muhammed)
+  // boyut: Ulucami 1100 / 1300 KB (4 Kasım 2026, Muhammed); diğer eserler mevcut harita dosyasının 1,3 katı
+  const ulu = path.basename(path.dirname(path.resolve(U))) === 'ulu-cami';
+  k.kb.sinir_bayt = ulu ? (kip === 'gunduz' ? 1100000 : 1300000) : Math.floor(1.3 * fs.statSync(path.join(U, 'export', ref + '.glb')).size);
+  k.kb.gecti = fs.statSync(yeni).size <= k.kb.sinir_bayt;
   k.gecti = k.dugum.gecti && k.kutu.gecti && k.icerik.gecti && k.ucgen.gecti && k.kb.gecti; hepsi &&= k.gecti;
   const br = path.join(K, `blend_rapor_${kip}.json`); if (fs.existsSync(br)) k.blend = JSON.parse(fs.readFileSync(br, 'utf8'));
   rapor.dosyalar[kip] = { ref: a.dosya, yeni: b.dosya, ...k };
