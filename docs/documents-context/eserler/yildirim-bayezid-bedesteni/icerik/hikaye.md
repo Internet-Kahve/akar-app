@@ -40,8 +40,8 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 3 | Kubbeler | 4° | 62° | 0.42 |
 | 4 | Govde | 320° | 20° | 0.55 |
 | 5 | Merkez | 120° | 25° | 0.62 |
-| 6 | Ic_Sokak | 4° | 30° | 0.25 |
-| 7 | Ic_Sokak | 90° | 8° | 0.12 |
+| 6 | Kubbeler | 4° | 78° | 0.5 |
+| 7 | Merkez | 90° | 40° | 0.3 |
 | 8 | Dukkanlar | 4° | 14° | 0.25 |
 | 9 | Kubbeler | 60° | 35° | 0.3 |
 | 10 | Dukkanlar | 300° | 14° | 0.22 |
