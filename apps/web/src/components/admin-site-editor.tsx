@@ -18,6 +18,8 @@ import {
   kindLabels,
   trustLabels,
   nightPartsMissing,
+  partsMissing,
+  type MissingPart,
   publicationIssues,
   type HeritageSite,
   type SiteModel,
@@ -218,6 +220,8 @@ export function SiteEditor({
     }));
   }
   const issues = publicationIssues(draft);
+  // Checked on every render: a model swap shows at once which content points at parts the new file lacks.
+  const modelMissing = draft.model ? partsMissing(draft, draft.model.parts) : [];
   const photos = draft.photos ?? [],
     sources = draft.sources ?? [];
   const allPhotos = [
@@ -460,6 +464,7 @@ export function SiteEditor({
                       ))}
                     </ul>
                   </details>
+                  <MissingParts missing={modelMissing} />
                   <NightModel
                     site={{ ...draft, model: draft.model }}
                     busy={busy}
@@ -1094,6 +1099,13 @@ export function SiteEditor({
                     Türkçe içerik yayın için hazır.
                   </p>
                 )}
+                {modelMissing.length > 0 && (
+                  <p>
+                    <CircleAlert size={17} />
+                    3D modelde içeriğin kullandığı {modelMissing.length} parça
+                    yok; ayrıntı «3D model» adımında. Yayını engellemez.
+                  </p>
+                )}
                 <p>
                   {sources.length} kaynak · {photos.length} fotoğraf ·{" "}
                   {draft.stories.length} cümle
@@ -1485,6 +1497,23 @@ function NightModel({
         </Notice>
       )}
     </section>
+  );
+}
+/** Adım 1: content that names parts the day model lacks; these highlights, cards and tasks find nothing to show. */
+function MissingParts({ missing }: { missing: MissingPart[] }) {
+  if (!missing.length) return null;
+  return (
+    <Notice>
+      Modelde içeriğin kullandığı şu parçalar yok; ilgili yerleri yeni
+      parça adlarıyla güncelle:
+      <ul>
+        {missing.map((m) => (
+          <li key={m.part}>
+            <strong>{m.part}</strong>: {m.usedIn.join(", ")}
+          </li>
+        ))}
+      </ul>
+    </Notice>
   );
 }
 function PhotoPreview({

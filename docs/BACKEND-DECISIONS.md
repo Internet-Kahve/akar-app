@@ -627,3 +627,9 @@ Karar: Panelde cümleye kaydedilen 3B bakış («Açıyı ve vurguyu kaydet», �
 Neden: Bakış panelde 3B önizlemeden ayarlanır; aktarma onu ezerse editörün işi kaybolur (§11.52, §11.67, §11.69 ile aynı gerekçe). Cümle metni ise ekip arkadaşlarının dosyadaki düzeltmeleriyle güncel kalmalı; bu yüzden yalnız bakış alanları panelin.
 Karar veren / tarih: Burak, 3 Kas (yalnız bakış alanları; metin dosyada kalır).
 Nasıl değiştirilir: `loadCatalog` (`services/api/src/db/seed.ts`, `keepStoryViews`) ve `importDemoContent` (`services/api/src/db/import-demo.ts`, `replaceStoryViews`); ekran `apps/web/src/components/admin-model-preview.tsx`.
+
+**11.71 Model değişince içeriğin kullandığı eksik parçalar editörde işaretlenir, yükleme engellenmez.**
+Karar: Eser düzenleyici, açıkken her çizimde gündüz modelinin parça listesini içeriğin kullandığı parça adlarıyla karşılaştırır (hikâye vurguları ve kameraları, «Eser hakkında» bölümleri, parça kartları, görevler, «İçini göster» grupları; `partsMissing`, `packages/domain`). Eksik her parça, onu kullanan yerlerle birlikte «3D model» adımında listelenir; «Yayın kontrolü» adımında yalnız sayısı ve bu adıma yönlendiren bir satır görünür. Model kabul edilir, yayın engellenmez; sağlık kutusunda gösterilmez. API ve göç değişmedi. Gece modeli kontrolü aynı işlevi kullanır.
+Neden: Yeni model yüklenince eski parça adlarına bağlı vurgu, kart ve görevler sessizce boşa düşüyordu. Engellemek editörü modeli değiştiremez hâle getirebilirdi; editör açılışında hesaplamak her zaman günceldir ve saklanacak durum gerektirmez.
+Karar veren / tarih: Burak, 4 Kas (editör açılışında, yalnız işaret, yalnız editör adımlarında).
+Nasıl değiştirilir: `partsMissing` (`packages/domain/src/index.ts`), `MissingParts` ve «Yayın kontrolü» satırı (`apps/web/src/components/admin-site-editor.tsx`).

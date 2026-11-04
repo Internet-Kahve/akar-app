@@ -14,6 +14,7 @@ import {
   memoryPermissions,
   modelFileFor,
   nightPartsMissing,
+  partsMissing,
   type HeritageSite,
   type Memory,
 } from "./index";
@@ -461,4 +462,23 @@ test("a night file is checked against the part names the content uses, not again
   };
   assert.deepEqual(nightPartsMissing(site), ["Minare"]);
   assert.deepEqual(nightPartsMissing({ ...site, model: { ...site.model!, night: { ...site.model!.night!, parts: [] } } }), []);
+});
+test("a replaced model reports each part the content still names, with every place using it; unknown parts report nothing", () => {
+  const seed = createSeed().sites[0];
+  const site: HeritageSite = {
+    ...seed,
+    stories: [
+      { ...seed.stories[0], highlights: ["Kubbe"], camera: { target: "Minare", azimuthDeg: 0, elevationDeg: 20, distance: 1 } },
+      { ...seed.stories[0], highlights: ["Minare"] },
+    ],
+    partCards: [{ id: "kart", parts: ["Minare"], title: "Minare", body: "", photos: [], trust: "verified" }],
+    tasks: [],
+    chapters: [],
+    model: { name: "Gündüz", bytes: 1, src: "/gunduz.glb", parts: ["Kubbe"], trust: "representative", coverGroups: [["Avlu"]] },
+  };
+  assert.deepEqual(partsMissing(site, ["Kubbe"]), [
+    { part: "Minare", usedIn: ["Hikâye cümlesi 1", "Hikâye cümlesi 2", "Parça kartı «Minare»"] },
+    { part: "Avlu", usedIn: ["İçini göster"] },
+  ]);
+  assert.deepEqual(partsMissing(site, []), []);
 });
