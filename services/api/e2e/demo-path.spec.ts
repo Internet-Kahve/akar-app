@@ -584,3 +584,40 @@ test("the site language follows the account: an empty account takes the device's
     await context.close();
   }
 });
+
+test("a guest's visit is counted when the page is hidden and an admin reads it under «İstatistikler»", async ({ browser, page }) => {
+  const context = await browser.newContext();
+  const guest = await context.newPage();
+  // Every batch the page sends with its status; the 10 s timer may send one before the page hides.
+  // (A keepalive response body cannot be read here; the panel below shows what the server counted.)
+  const batches: Array<{ events: Array<{ event: string; siteId?: string }>; status: number }> = [];
+  guest.on("response", (r) => {
+    if (r.url() !== `${API}/v1/events` || r.request().method() !== "POST") return;
+    batches.push({ events: r.request().postDataJSON().events, status: r.status() });
+  });
+  await guest.goto("/#view=map");
+  await openSite(guest, MEMORY_SITE.name);
+  // Hiding the page sends what is queued at once.
+  await guest.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect
+    .poll(() => batches.flatMap((b) => b.events))
+    .toEqual(expect.arrayContaining([{ event: "app.open" }, { event: "site.view", siteId: MEMORY_SITE.id }]));
+  for (const b of batches) expect(b.status).toBe(200);
+  await context.close();
+
+  const email = `e2e-stats-admin-${randomUUID().slice(0, 8)}@akar.test`;
+  tokenFor(email, "admin");
+  await page.goto("/#view=admin");
+  await page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await signIn(page, email);
+  await page.getByRole("button", { name: "İstatistikler", exact: true }).click();
+  await page.getByRole("button", { name: "Son 7 gün" }).click();
+  const row = page.locator(".stats-table tbody tr").filter({ hasText: MEMORY_SITE.name });
+  await expect(row).toBeVisible();
+  await row.getByRole("button", { name: MEMORY_SITE.name }).click();
+  await expect(page.getByRole("heading", { name: MEMORY_SITE.name, level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hikâye cümleleri" })).toBeVisible();
+});

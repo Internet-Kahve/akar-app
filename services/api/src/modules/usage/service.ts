@@ -2,7 +2,8 @@ import { and, between, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { Db } from "../../db/client.ts";
 import { catalogRoutes, sitePartCards, siteTasks, sites, usageDaily } from "../../db/schema/index.ts";
 import { AppError } from "../../errors.ts";
-import { DEFAULT_STATS_DAYS, MAX_SENTENCE_INDEX, MAX_STATS_DAYS, USAGE_EVENTS, type UsageEventName } from "./events.ts";
+import { MAX_SENTENCE_INDEX, USAGE_EVENTS, type UsageEventName } from "@akar/domain";
+import { DEFAULT_STATS_DAYS, MAX_STATS_DAYS } from "./events.ts";
 import type { SiteStatsResponse, StatsResponse, UsageEvent } from "./schemas.ts";
 
 const DAY_MS = 86_400_000;

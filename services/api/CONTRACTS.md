@@ -268,6 +268,6 @@ Migration `0031_personal_routes`, eski `user_route_stops` satırlarını `defaul
 ## 15. Kullanım istatistikleri (§11.72)
 
 - **Tablo** `usage_daily` (RLS açık, yazma sahibi `usage` modülü, migration `0035_usage_daily`): `day` (İstanbul günü), `event`, `site_id`, `ref` (yoksa boş metin), `guest`, `count`. Yalnız günlük sayaç: kullanıcı kimliği, IP, cihaz kimliği ya da saat saklanmaz. Yabancı anahtar yok; silinen eserin sayıları kalır, adı `null` döner. Sayaç küçük olduğundan silme işi yok.
-- **Olay listesi** `modules/usage/events.ts` (`USAGE_EVENTS`): her olayın eser isteyip istemediği ve `ref` türü. Yeni olay = bu listeye bir satır + web çağrısı; göç gerekmez.
+- **Olay listesi** `USAGE_EVENTS` (`@akar/domain`; API ve web aynı listeyi kullanır): her olayın eser isteyip istemediği ve `ref` türü. Yeni olay = bu listeye bir satır + web çağrısı (`apps/web/src/lib/usage.ts` `track`); göç gerekmez.
 - **Yazma:** `POST /v1/events` `{ events: [{ event, siteId?, ref? }] }` (en fazla 50; dakikada 60 istek) → `{ accepted }`. Oturum yoksa misafir sayılır. Kuralı tutmayan ya da bilinmeyen esere, rotaya, o eserin parça kartına ya da görevine ait olay hata vermeden atlanır.
 - **Okuma (yalnız admin):** `GET /v1/admin/stats?from&to` → `totals`, `daily`, `sites` (görüntülemeye göre), `routes`; `GET /v1/admin/stats/sites/:id?from&to` → olay + `ref` satırları (cümle bırakma eğrisi, parça kartı ve görev başlığıyla). Dönem iki uç dahil, varsayılan son 30 gün, en fazla 366 gün.

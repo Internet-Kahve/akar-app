@@ -67,6 +67,8 @@ import { OPENING_MAX_MS, OpeningScreen } from "./loading-screens";
 import { Scene } from "./scene";
 import { HistoryView, type MemoryDraft } from "./history-view";
 import { memoryTraces } from "../lib/memory-traces";
+import { flushUsageOnHide, setUsageClient, track } from "../lib/usage";
+import { useCountOpen } from "../lib/use-count-open";
 import { LivingMemory } from "./living-memory";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { StoryPanel, StoryProgress } from "./story-panel";
@@ -76,7 +78,7 @@ import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
 import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal, VisitModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
-import { SignInModal } from "./sign-in-modal";
+import { SignInModal, takeGoogleSignIn } from "./sign-in-modal";
 import { Modal, Notice } from "./ui";
 import {
   isFieldTask,
@@ -314,6 +316,8 @@ export function AkarApp() {
             }),
         })
       : createMockClient(storage, demoContentUrl);
+    setUsageClient(client.current);
+    const stopUsageFlush = flushUsageOnHide();
     void load();
     // The opening screen names the default city and draws its pattern: its record is read beside the catalog, not after it.
     void client.current.getCities().then(setCityRecords, () => {});
@@ -358,8 +362,11 @@ export function AkarApp() {
     return () => {
       window.removeEventListener("hashchange", readLocation);
       subscription?.unsubscribe();
+      stopUsageFlush();
     };
   }, [load, t]);
+  // Once per page load; the client effect above re-runs on a language change.
+  useEffect(() => track("app.open"), []);
   useEffect(() => {
     if (!ready) return;
     const timer = setInterval(() => void refreshCatalog(), CATALOG_REFRESH_MS);
@@ -445,6 +452,7 @@ export function AkarApp() {
           start: Math.max(0, (site?.tasks ?? []).findIndex((x) => x.id === current.task.id)),
           found: result,
         });
+        if (site && !progress.tasks.some((p) => p.taskId === current.task.id)) track("task.complete", site.id, current.task.id);
         taskFinished(result.earnedBadges);
       } else
         setPick({
@@ -532,6 +540,17 @@ export function AkarApp() {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
     return client.current.getAdminHealth();
   }, []);
+  const loadStats = useCallback<AkarClient["getUsageStats"]>(async (range) => {
+    if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+    return client.current.getUsageStats(range);
+  }, []);
+  const loadSiteStats = useCallback<AkarClient["getSiteUsageStats"]>(
+    async (siteId, range) => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current.getSiteUsageStats(siteId, range);
+    },
+    [],
+  );
   /** Admin panel: the saved values become this tab's map settings at once. */
   const saveMapSettings = useCallback(async (next: MapSettings) => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
@@ -620,6 +639,25 @@ export function AkarApp() {
   }, [filtered, query, cityName, nearPoint]);
   const chipCategories = useMemo(() => categoriesOf(published), [published]);
   const peekSite = published.find((s) => s.id === peekId);
+  // Usage counts (§11.72), once per opening. A site counts when its card or one of its pages (detail, story, history,
+  // memories) comes up, and again only after it was left; the page of the same site after its card is not a second view.
+  useCountOpen(
+    !ready ? undefined : ["detail", "story", "history", "memories"].includes(view) ? site?.id : view === "map" ? peekSite?.id : undefined,
+    (id) => track("site.view", id),
+  );
+  useCountOpen(ready && view === "history" ? site?.id : undefined, (id) => track("history.open", id));
+  useCountOpen(ready && overlay === "about" ? site?.id : undefined, (id) => track("about.open", id));
+  // The search filters as it is typed: a query of 2+ characters that stays a second counts once.
+  useEffect(() => {
+    if (query.trim().length < 2) return;
+    const settled = setTimeout(() => track("search"), 1000);
+    return () => clearTimeout(settled);
+  }, [query]);
+  // Google sends the page away and back: the sign-in is counted when the session arrives and the visitor had just left for Google.
+  const accountKey = account?.id;
+  useEffect(() => {
+    if (accountKey && takeGoogleSignIn()) track("account.sign_in", undefined, "returning");
+  }, [accountKey]);
   // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
   // name, colour and emblem are that city's, whatever city the map was last left in.
   const pageCity = ["detail", "story", "history", "memories"].includes(view) ? site?.city : undefined;
@@ -772,12 +810,14 @@ export function AkarApp() {
       let route = routeDraft.id ? personalRoutes.find((route) => route.id === routeDraft.id)! : await api.createPersonalRoute(routeDraft.name);
       setRouteDraft({ ...routeDraft, id: route.id });
       setPersonalRoutes((routes) => [...routes.filter((item) => item.id !== route.id), route]);
+      const before = new Set(route.siteIds);
       if (route.name !== routeDraft.name.trim()) route = await api.renamePersonalRoute(route.id, routeDraft.name);
       if (route.isDefault) {
         if (!await commit({ type: "set-route", siteIds: routeDraft.siteIds })) return;
       } else await api.setPersonalRouteStops(route.id, routeDraft.siteIds);
       setPersonalRoutes(await api.getPersonalRoutes());
       setState(await api.getSnapshot());
+      for (const id of routeDraft.siteIds) if (!before.has(id)) track("my_route.add", id);
       setRouteDraft(null);
       setToast(t("route.saved"));
     } catch { setToast(t("route.failed")); }
@@ -804,8 +844,10 @@ export function AkarApp() {
       ? text(target.name, target.nameEn)
       : t("profile.siteFallback");
     const inRoute = state.routeIds.includes(id);
-    if (await commit({ type: "route", siteId: id }))
+    if (await commit({ type: "route", siteId: id })) {
+      if (!inRoute) track("my_route.add", id);
       setToast(t(inRoute ? "toast.routeRemoved" : "toast.routeAdded", { name }));
+    }
   }
   function togglePanel() {
     const next = !collapsed;
@@ -1200,6 +1242,8 @@ export function AkarApp() {
               live={live}
               mapSettings={mapSettings}
               saveMapSettings={saveMapSettings}
+              loadStats={loadStats}
+              loadSiteStats={loadSiteStats}
             />
             </LangProvider>
           )}
@@ -1441,6 +1485,7 @@ export function AkarApp() {
                         onPick={pickSite}
                         onRoute={(id) => void toggleRoute(id)}
                         onOpenRoute={(id) => {
+                          track("route.open", undefined, id);
                           setQuery("");
                           setTab("routes");
                           setRouteId(id);

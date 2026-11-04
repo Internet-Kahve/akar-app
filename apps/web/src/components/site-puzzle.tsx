@@ -9,6 +9,7 @@ import { Localized, useI18n } from "./i18n";
 import { Notice, Tag } from "./ui";
 import { isFieldTask, isQuizTask, type FieldDone } from "./site-tasks";
 import { answerText, badgeInLang, taskInLang } from "../lib/task-text";
+import { track } from "../lib/usage";
 
 const STAR = Array.from({ length: 16 }, (_, i) => {
   const r = i % 2 ? 11.2 : 15,
@@ -155,6 +156,7 @@ export function SitePuzzle({
           onSite: false,
           badges: result.earnedBadges,
         });
+        if (!progress.tasks.some((p) => p.taskId === task.id)) track("task.complete", site.id, task.id);
         onDone(result.earnedBadges);
       } else {
         const opened = hints < quiz.hints.length;
@@ -196,6 +198,7 @@ export function SitePuzzle({
           onSite: result.onSite,
           badges: result.earnedBadges,
         });
+        if (!progress.tasks.some((p) => p.taskId === task.id)) track("task.complete", site.id, task.id);
         onDone(result.earnedBadges);
       } else onToast(t(canPick ? "site.notNearCanPick" : "site.notNear"));
     } catch (e) {
