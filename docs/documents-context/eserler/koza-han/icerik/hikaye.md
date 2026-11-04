@@ -47,8 +47,8 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 7 | Mescit | 300° | 8° | 0.07 |
 | 8 | Mescit | 340° | 10° | 0.09 |
 | 9 | Ic_Koza | 90° | 40° | 0.4 |
-| 10 | Avlu_Revak | 300° | 10° | 0.12 |
-| 11 | Avlu_Zemin | 20° | 12° | 0.14 |
+| 10 | Avlu_Zemin | 200° | 45° | 0.12 |
+| 11 | Avlu_Zemin | 20° | 45° | 0.16 |
 | 12 | Merkez | 270° | 28° | 0.7 |
 ## Akar akışı
 

@@ -32,6 +32,9 @@ function wanted(): boolean {
   return on;
 }
 
+/** Whether the diagnostics were asked for in this tab. */
+export const gpuDebugOn = wanted;
+
 /** What the browser tells about the GPU and the context, as lines of text. */
 export function describeGpu(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera, shadowMap: number | null): string[] {
   const gl = renderer.getContext();

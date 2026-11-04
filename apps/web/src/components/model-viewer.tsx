@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { modelPixelRatio, modestDevice } from "../lib/device";
-import { mountGpuDebug } from "../lib/gpu-debug";
+import { gpuDebugOn, mountGpuDebug } from "../lib/gpu-debug";
 import { sized } from "../lib/image-size";
 import type {
   CameraPose,
@@ -458,7 +458,7 @@ export default function ModelViewer({
         if (disposed || compiling) return;
         syncInterior();
         syncTrees();
-        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 0.8 : 1.2) : 0;
+        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 1.4 : 1.2) : 0;
         if (shadowsStale) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
@@ -763,6 +763,8 @@ export default function ModelViewer({
             };
             frame = requestAnimationFrame(step);
           };
+          // `?debug=gpu`: a pose can be tried from the console (`__akarAim({target, azimuthDeg, elevationDeg, distance})`).
+          if (gpuDebugOn()) (window as unknown as { __akarAim?: unknown }).__akarAim = (pose: CameraPose) => aim.current?.(pose);
           // Parts that answer a tap: a card's parts, or every part when the site has no cards.
           const [partNames, cardParts] = JSON.parse(partsKey) as [string[], string[][]];
           const known = new Set(partNames);
@@ -1060,7 +1062,7 @@ export default function ModelViewer({
           scene.add(lit);
           innerWanted = () => {
             const on = coverWanted() || !!coverOpen?.();
-            lit.intensity = on ? (currentTheme() === "night" ? 0.45 : 0.7) : 0;
+            lit.intensity = on ? (currentTheme() === "night" ? 1.7 : 0.7) : 0; // night: the interior stayed black at 0.45 (4 Nov 2026)
             return on;
           };
           // Open, or with the camera sent close, the trees stand aside: it must not meet one on the way.

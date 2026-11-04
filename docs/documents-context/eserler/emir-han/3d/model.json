@@ -40,11 +40,11 @@
     {
       "foto": "03",
       "hedef": "Avlu_Revaklari",
-      "azimut": 97,
-      "egim": 14,
-      "uzaklik": "0.14",
+      "azimut": 0,
+      "egim": 6,
+      "uzaklik": "0.09",
       "tahmini": true,
-      "not": "tonozlu revak; yön tahmini"
+      "not": "tonozlu revak; avludan karşı revağın kemerleri (4 Kasım 2026, telefonda denendi); yön tahmini"
     }
   ],
   "pisik_onay": true,

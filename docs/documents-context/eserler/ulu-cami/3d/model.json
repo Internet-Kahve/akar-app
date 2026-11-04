@@ -66,6 +66,15 @@
       "uzaklik": "0.12",
       "ic": true,
       "not": "içeride havuz ve selsebil"
+    },
+    {
+      "foto": "02",
+      "hedef": "Ic_Sadirvan_Havuz",
+      "azimut": 354,
+      "egim": 10,
+      "uzaklik": "0.2",
+      "ic": true,
+      "not": "iç mekân: payeler ve kemerler arasından havuz (4 Kasım 2026, ikinci iç açı)"
     }
   ],
   "pisik_onay": true,
