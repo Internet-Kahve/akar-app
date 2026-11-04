@@ -35,7 +35,7 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 1 | Hamam_Giris | 186° | 8° | 0.12 |
 | 2 | Merkez | 140° | 45° | 0.45 |
 | 3 | Merkez | 6° | 75° | 0.5 |
-| 4 | Hamam_Giris | 220° | 10° | 0.14 |
+| 4 | Hamam_Giris | 186° | 5° | 0.11 |
 | 5 | Hamam_Sicaklik | 186° | 30° | 0.22 |
 | 6 | Merkez | 6° | 28° | 0.5 |
 | 7 | Hamam_Sicaklik | 120° | 28° | 0.16 |

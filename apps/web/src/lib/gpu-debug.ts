@@ -1,35 +1,17 @@
 import type * as THREE from "three";
 import { modelPixelRatio, modestDevice } from "./device";
 
-const KEY = "akar-debug-gpu";
-
 /**
- * The diagnostics box is asked for with `?debug=gpu` (or `#debug=gpu`); once asked it stays for the tab's session,
- * so moving between screens (which rewrites the hash) does not lose it. `?debug=off` puts it away.
+ * The diagnostics box is asked for with `?akar-debug=gpu` (or `#akar-debug=gpu`) and only while that is in the address:
+ * it does not stay in the tab, so a link opened once with the old `?debug=gpu` shows nothing (4 Nov 2026).
  */
-export function gpuDebugWanted(search: string, hash: string, stored: string | null): boolean {
+export function gpuDebugWanted(search: string, hash: string): boolean {
   const params = [new URLSearchParams(search), new URLSearchParams(hash.replace(/^#/, ""))];
-  const asked = params.map((p) => p.get("debug")).find((v) => v !== null);
-  if (asked === "off") return false;
-  return asked === "gpu" || stored === "1";
+  return params.some((p) => p.get("akar-debug") === "gpu");
 }
 
 function wanted(): boolean {
-  if (typeof window === "undefined") return false;
-  let stored: string | null = null;
-  try {
-    stored = sessionStorage.getItem(KEY);
-  } catch {
-    /* private mode: the box is only for this page load */
-  }
-  const on = gpuDebugWanted(location.search, location.hash, stored);
-  try {
-    if (on) sessionStorage.setItem(KEY, "1");
-    else sessionStorage.removeItem(KEY);
-  } catch {
-    /* ignore */
-  }
-  return on;
+  return typeof window !== "undefined" && gpuDebugWanted(location.search, location.hash);
 }
 
 /** Whether the diagnostics were asked for in this tab. */

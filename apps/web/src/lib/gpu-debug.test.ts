@@ -2,10 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { gpuDebugWanted } from "./gpu-debug";
 
-test("the diagnostics box is asked for in the query or the hash, stays for the session, and goes with ?debug=off", () => {
-  assert.equal(gpuDebugWanted("", "#view=story", null), false);
-  assert.equal(gpuDebugWanted("?debug=gpu", "", null), true);
-  assert.equal(gpuDebugWanted("", "#view=story&debug=gpu", null), true);
-  assert.equal(gpuDebugWanted("", "#view=story", "1"), true);
-  assert.equal(gpuDebugWanted("?debug=off", "", "1"), false);
+test("the diagnostics box shows only while ?akar-debug=gpu is in the address; the old ?debug=gpu shows nothing", () => {
+  assert.equal(gpuDebugWanted("", "#view=story"), false);
+  assert.equal(gpuDebugWanted("?debug=gpu", ""), false);
+  assert.equal(gpuDebugWanted("?akar-debug=gpu", ""), true);
+  assert.equal(gpuDebugWanted("", "#view=story&akar-debug=gpu"), true);
 });

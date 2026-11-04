@@ -69,12 +69,12 @@
     },
     {
       "foto": "02",
-      "hedef": "Ic_Sadirvan_Havuz",
+      "hedef": "Payeler",
       "azimut": 354,
-      "egim": 10,
-      "uzaklik": "0.2",
+      "egim": 30,
+      "uzaklik": "0.3",
       "ic": true,
-      "not": "iç mekân: payeler ve kemerler arasından havuz (4 Kasım 2026, ikinci iç açı)"
+      "not": "iç mekân: payeler ve kemerler yukarıdan (4 Kasım 2026, telefonda denendi; ikinci iç açı)"
     }
   ],
   "pisik_onay": true,

@@ -22,11 +22,11 @@
   "foto_acilari": [
     {
       "foto": "01",
-      "hedef": "Portal",
-      "azimut": 4,
+      "hedef": "Cephe",
+      "azimut": 180,
       "egim": 12,
-      "uzaklik": "0.14",
-      "not": "«KOZA HAN» yazılı kuzey cephe ve portal"
+      "uzaklik": "0.2",
+      "not": "«KOZA HAN» yazılı uzun taş-tuğla cephe, çatıda bacalar. Eskiden Portal'a bakıyordu; fotoğraf portalı değil bu cepheyi gösterdiği için 3D açı cepheye alındı (4 Kasım 2026). Arşivde kuzey kapısının fotoğrafı yok."
     },
     {
       "foto": "04",
@@ -52,6 +52,14 @@
       "uzaklik": "0.14",
       "tahmini": true,
       "not": "çınarlı avlu; yön tahmini"
+    },
+    {
+      "foto": "08",
+      "hedef": "Mescit",
+      "azimut": 20,
+      "egim": 28,
+      "uzaklik": "0.1",
+      "not": "köşk mescit: kapı ve merdiven sağda, alt katta şadırvan (4 Kasım 2026, telefonda denendi)"
     }
   ],
   "pisik_onay": true,
