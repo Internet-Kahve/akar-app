@@ -44,9 +44,66 @@ Bunlar bu dalda **yok**. Demo içerikte (`prepare-demo-content.mjs`) çalışıy
 1. `npm run check` (Docker açık). Bu dalda API testleri son API değişikliklerinden sonra çalıştırılmadı.
 2. `node apps/web/scripts/prepare-demo-content.mjs`: içerik üretilebiliyor mu ve dosya eksik mi?
 3. Yukarıdaki üç alan ve gerekiyorsa göç.
-4. Canlı içeriği yeniden aktar (`import-demo`). Yeni açılar, temsili görseller ve pişmiş dosyalar ancak böyle gelir.
+4. Canlı içeriği yeniden aktar (`import-demo`). Temsili görseller ve pişmiş dosyalar böyle gelir. **Yeni açılar kendiliğinden gelmez:** aşağıdaki «Açılar ve panel» bölümüne bak.
 5. Storage dosyalarına `cache-control: immutable`.
 6. Canlıda bak: harita Network sekmesinde `*_harita_pisik.glb` iniyor mu, 17,5 zoomda `*_sunum.glb` geliyor mu, ikisi arasında bina kararıyor mu?
+
+## Açılar ve panel: mutlaka çalışmalı
+
+Panelde açı ayarlama ve kaydetme bu dalın zorunlu şartı. Editör bir açıyı kaydettiyse hikâye açıldığında aynı açı görünmeli ve aktarma onu ezmemeli.
+
+**Bu dalda değişenler**
+
+- Yedi eserde `icerik/hikaye.md` «Açı» tabloları ve `3d/model.json` `foto_acilari` yenilendi. Açılar içeriye ve yakına alındı; uzaklık sayı olabilir, alt sınır 0,05.
+- «Açıyı kaydet» artık hemen sunucuya yazar (`saveAngle`, `admin-site-editor.tsx`). Önceden yalnız taslağı değiştiriyor, «kaydedildi» yazıyordu. Bu kayıt taslağın tamamını gönderir, yani o anda bekleyen diğer düzenlemeler de birlikte kaydedilir.
+- Hata olursa panelde «Açı kaydedilemedi» yazar ve kayıt tamamlanmamış sayılır.
+- Yakın açılar (`distance` < 0,4, hedef parça var) çarpışma denetiminden geçer (`aim`, `model-viewer.tsx`). Önünde duvar olan açıda kamera engelin önüne gelir, gerekirse çevresinde boş görüş arar. Açık iç mekâna ayrı ışık eklendi.
+
+**Aktarma kuralı: yeni açılar canlıya kendiliğinden gelmez**
+
+- §11.70 gereği `import-demo` var olan cümlenin `camera`, `highlights`, `interior`, `showCard` alanlarını **korur**.
+- Dosyadaki yeni hikâye açıları için `--replace-story-views` gerekir. Bu seçenek paneldeki kayıtları da ezer. Önce canlıda elle kaydedilmiş açı var mı bakın; varsa korunacakları not alın. Kararı Muhammed ile verin.
+- Galeri fotoğrafı açıları (`site_media.camera`) da korunur ve bunun için `--replace-*` seçeneği yok. Yeni `foto_acilari` yalnız açısı boş fotoğraflara gelir; öbürleri için panelden kayıt ya da ek iş gerekir.
+
+**Bilinen risk**
+
+Çarpışma denetimi panelden kaydedilen açıda da çalışır, çünkü dosya ile panel açısını ayırmaz. Kamerayı parça ile arasında bir engel kalacak yere koyan editör, yeniden açınca farklı bir konum görebilir. Bu durum kodu okuyarak bulundu, canlı denenmedi. Görülürse panelden gelen açıda denetimi kapatmak gerekir.
+
+**Elle kabul denemesi (otomatik testi yok)**
+
+Panelden hikâyeye kayıt akışını deneyen bir tarayıcı testi bu dalda yok. Birleştirip yayımladıktan sonra canlı panelde:
+
+1. Bir hikâye cümlesinde açıyı değiştirip «Açıyı ve vurguyu kaydet» de. Genel kaydet ya da yayınla düğmesine basma.
+2. Sayfayı yenile; panel aynı açıyı göstermeli.
+3. Hikâyeyi başka bir tarayıcıda aç; o cümle aynı açıyla gelmeli.
+4. İçten bir açıyı ve engele yakın bir açıyı da dene (yukarıdaki risk).
+5. Aktarmayı `--replace-story-views` olmadan yeniden çalıştır; kayıt durmalı.
+6. Fotoğraf açısı için de 1–3'ü tekrarla.
+
+Demo içerik modunda (`NEXT_PUBLIC_DEMO_CONTENT`, API yok) panel kayıtları yalnız o tarayıcıda kalır (`panelKey`, `packages/api-client/src/index.ts`).
+
+## İpuçları
+
+- Baştan yazıldı: `components/coach-tip.tsx` (`CoachTip`, `TipRow`, `Spotlight`), sıralar `akar-app.tsx`. Tam liste: DEVIR notu, «İpucu sıraları».
+- Telefon ve masaüstü ayrı. Her ipucu cihazda bir kez gösterilir (`akar.ipucu.<id>`), bir ziyarette ekran başına bir tane çıkar.
+- Ziyaretçi dokunmadan ipucu geçmez, ipucunu kapatan dokunuş hikâyede cümle atlatmaz.
+- Ziyaretçinin zaten yaptığı şey öğretilmez (`doneBy`), kart ya da bulmaca açıkken ipucu çıkmaz, 3D ipuçları model çizilince gelir.
+- Yeni ipucu kimliği eklerseniz `playwright.config.ts` içindeki `storageState` listesine de ekleyin, yoksa testler takılır.
+
+## 3D modeller
+
+- Model geometrisine dokunulmadı; sunum ve gece dosyaları aynı. Yeni olan yedi eserin pişmiş harita dosyaları (gündüz ve gece, `*_harita_pisik.glb`) ve pişirme araçları (`eserler/_kutuphane/blend_hat/pisik*`).
+- Harita 17,5 zoomda sunum dosyasına geçer, 17'nin altında pişmiş dosyaya döner (`CLOSE_ZOOM`, `map-models.ts`).
+- Kapalı iç mekân: `ic_gizle` olan eserde örtü kapalıyken iç parçalar çizilmez (`lib/interior.ts`).
+- Yakın zoomdaki kararma giderildi (`e819efb`): pişmiş model gölge çizimi istemez.
+
+## Tanıtım sayfası
+
+- `/tanitim` artık `public/tanitim2/index.html`, tek dosya; TR/EN ve gece teması sayfanın içinde (`akar.dil`, `akar.tema`).
+- Giriş: gündüz beyaz, gece siyah zemin; dünya görselleri `medya/dunya-gun.webp`, `dunya-gece.webp`; hareketli şehir madalyonları.
+- Bölümler: ekranlar, kaydırmalı Ulucami turu, «İster dinle, ister oku» (canlıdaki kayıtları çalar), eski ve bugün karşılaştırması, «Akar ne demek?».
+- Şehirlerin eser sayıları sayfaya elle yazılı (Bursa 9, Konya 1, Hatay 1). İçerik değişirse güncelleyin.
+- Ekran görüntüleri (`medya/ekran-*.webp`) elle üretildi; arayüz değişirse eskir.
 
 ## Çakışma çıkabilecek yerler
 
