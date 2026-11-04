@@ -46,3 +46,23 @@ test("STORAGE_QUOTA_MB must be a positive integer", () => {
   }
   assert.equal(loadConfig({ ...production, STORAGE_QUOTA_MB: "5120" }).STORAGE_QUOTA_MB, 5120);
 });
+
+test("production accepts exact mobile origins but rejects arbitrary custom schemes", () => {
+  assert.deepEqual(
+    loadConfig({ ...production, CORS_ORIGINS: "capacitor://localhost,https://localhost" }).CORS_ORIGINS,
+    ["capacitor://localhost", "https://localhost"],
+  );
+  for (const origin of ["capacitor://localhost/", "capacitor://evil", "capacitor://localhost/path", "null"]) {
+    assert.throws(() => loadConfig({ ...production, CORS_ORIGINS: origin }), /CORS_ORIGINS entry/);
+  }
+});
+
+test("mobile opt-in preserves existing CORS origins and adds only the two native clients", () => {
+  assert.deepEqual(loadConfig(production).CORS_ORIGINS, [production.CORS_ORIGINS]);
+  assert.deepEqual(loadConfig({
+    ...production,
+    CORS_ORIGINS: `${production.CORS_ORIGINS},https://localhost`,
+    MOBILE_CLIENTS_ENABLED: "1",
+  }).CORS_ORIGINS, [production.CORS_ORIGINS, "https://localhost", "capacitor://localhost"]);
+  assert.throws(() => loadConfig({ ...production, MOBILE_CLIENTS_ENABLED: "yes" }), /MOBILE_CLIENTS_ENABLED/);
+});
