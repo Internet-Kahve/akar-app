@@ -181,6 +181,13 @@ export const sites = pgTable(
      * too. Same part names as the day model: placement, story highlights, part cards and cover groups are shared.
      */
     nightModelMediaId: text("night_model_media_id").references(() => media.id),
+    /**
+     * The map's baked files (kind = model): light and shadow in the textures, so a phone draws the map faster. Day =
+     * baked from the day model, night = from the night model; null = the map draws that theme's model itself. Only the
+     * content import sets them; replacing the model they were baked from clears them (§11.73).
+     */
+    mapBakedMediaId: text("map_baked_media_id").references(() => media.id),
+    mapBakedNightMediaId: text("map_baked_night_media_id").references(() => media.id),
     /** "Açılış açısı": camera pose the 3D story opens with. */
     openingCamera: jsonb("opening_camera").$type<CameraPose>(),
     /** Null = "konum bulunamadı" import draft; required to publish. */

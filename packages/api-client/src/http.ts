@@ -157,6 +157,8 @@ interface MediaDto {
   coverGroups?: string[][];
   /** Interior parts of a model (the map leaves them out); absent on older API versions. */
   interiorParts?: string[];
+  /** The site page hides the interior while the cover is closed; absent on older API versions. */
+  hideClosedInterior?: boolean;
 }
 interface SiteSummaryDto {
   id: string;
@@ -233,6 +235,9 @@ interface SiteDetailDto {
   aboutCoverMediaId?: string | null;
   /** The night theme's model in `media`; null or absent (older API versions) = none. */
   nightModelId?: string | null;
+  /** The map's baked files in `media` (day, night); null or absent (older API versions) = none. */
+  mapBakedModelId?: string | null;
+  mapBakedNightModelId?: string | null;
   /** Absent on older API versions. */
   chapters?: Array<{
     id: string;
@@ -535,11 +540,16 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
   const aboutCover = d.aboutCoverMediaId
     ? d.media.find((m) => m.id === d.aboutCoverMediaId && m.kind === "photo")
     : undefined;
-  // The day model is the first model that is not the night one (the server lists it first).
-  const model = d.media.find((m) => m.kind === "model" && m.id !== d.nightModelId);
+  // The day model is the first model that is not the night one or a baked map file (the server lists it first).
+  const variants = new Set([d.nightModelId, d.mapBakedModelId, d.mapBakedNightModelId].filter(present));
+  const model = d.media.find((m) => m.kind === "model" && !variants.has(m.id));
+  const modelUrl = (id: string | null | undefined) =>
+    id ? d.media.find((m) => m.id === id && m.kind === "model")?.url : undefined;
   const night = d.nightModelId
     ? d.media.find((m) => m.id === d.nightModelId && m.kind === "model")
     : undefined;
+  const bakedDay = modelUrl(d.mapBakedModelId);
+  const bakedNight = modelUrl(d.mapBakedNightModelId);
   return {
     id: d.id,
     name: d.name,
@@ -725,6 +735,7 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
         triangles: model.triangles ?? null,
         ...(model.coverGroups?.length && { coverGroups: model.coverGroups }),
         ...(model.interiorParts?.length && { interiorParts: model.interiorParts }),
+        ...(model.hideClosedInterior && { hideClosedInterior: true }),
         ...(night && {
           night: {
             name: night.title || night.id,
@@ -733,6 +744,9 @@ export function mapSite(d: SiteDetailDto): HeritageSite {
             parts: night.parts,
             triangles: night.triangles ?? null,
           },
+        }),
+        ...((bakedDay || bakedNight) && {
+          mapBaked: { ...(bakedDay && { day: bakedDay }), ...(bakedNight && { night: bakedNight }) },
         }),
         placement: d.placement ?? null,
       },

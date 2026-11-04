@@ -253,6 +253,13 @@
       "when": 1793795062077,
       "tag": "0035_usage_daily",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793808083789,
+      "tag": "0036_map_baked",
+      "breakpoints": true
     }
   ]
 }

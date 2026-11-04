@@ -19,7 +19,8 @@ import { type HistoryViewpoint, cities, historyAngleMatches, historyImages, medi
  * archive photograph, or the photograph of a team-made İz Bırak sample.
  */
 type CreditedPhoto = { id: string; file: string; alt: string; credit: string; license: string };
-type PresentPhoto = CreditedPhoto & { angleMatch: HistoryAngleMatch };
+/** `imagined`: a generated image, not a photograph (`bugunku-esler.json → temsili`); it is stored as representative. */
+type PresentPhoto = CreditedPhoto & { angleMatch: HistoryAngleMatch; imagined?: boolean };
 type SampleTrace = CreditedPhoto & {
   author: string; text: string; addedOn: string;
   /** The site's archive photograph (`ArchiveEntry.id`) this shows the same view of; null = none. */
@@ -36,8 +37,12 @@ type ContentTask = {
 type ContentBadge = { id: string; title: string; text: string; condition: "story" | "task"; taskId: string | null; onSiteLabel: boolean };
 type ContentSite = Omit<HeritageSite, "photos" | "model" | "historyImages" | "sampleTraces" | "partCards" | "chapters" | "aboutCover" | "sections" | "tasks" | "badges"> & {
   photos: Array<NonNullable<HeritageSite["photos"]>[number] & { file: string; galleryPosition: number | null }>;
-  /** Absent for a photo-only site. `nightFile`: the night theme's model (`3d/model.json → glb_gece`), absent = none. */
-  model?: NonNullable<HeritageSite["model"]> & { file: string; nightFile?: string };
+  /**
+   * Absent for a photo-only site. `nightFile`: the night theme's model (`3d/model.json → glb_gece`), absent = none.
+   * `mapBakedFile` / `mapBakedNightFile`: the map's baked files of the day and night models (`glb_harita_pisik`,
+   * `glb_gece_harita_pisik`, only with `pisik_onay`); absent = the map draws the model itself.
+   */
+  model?: NonNullable<HeritageSite["model"]> & { file: string; nightFile?: string; mapBakedFile?: string; mapBakedNightFile?: string };
   historyImages: ArchiveEntry[];
   /** Team-made İz Bırak samples (`gecmisi-gor/izler.json`, §11.47); empty for a site without any. */
   sampleTraces: SampleTrace[];
@@ -98,6 +103,7 @@ function validateHistoryExtras(site: ContentSite): void {
   for (const present of site.historyImages.flatMap((h) => (h.present ? [h.present] : []))) {
     credited(present);
     if (!ANGLE_MATCHES.includes(present.angleMatch)) fail("Unknown angle match", present.id);
+    if (present.imagined !== undefined && typeof present.imagined !== "boolean") fail("imagined must be true or false", present.id);
   }
   const history = new Set(site.historyImages.map((h) => h.id));
   for (const t of site.sampleTraces) {
@@ -111,10 +117,13 @@ function validateHistoryExtras(site: ContentSite): void {
 
 /** Media id of a site's night model (`sites.night_model_media_id`), beside the day model's `<site>-model`. */
 const nightModelId = (siteId: string) => `${siteId}-model-gece`;
+/** Media ids of the map's baked files (`sites.map_baked_media_id`, `sites.map_baked_night_media_id`). */
+const mapBakedId = (siteId: string) => `${siteId}-model-harita`;
+const mapBakedNightId = (siteId: string) => `${siteId}-model-gece-harita`;
 
 /** Present-day photographs and sample traces become `media` rows keyed by their ids, so no id may repeat another photograph's. */
 function checkExtraMediaIds(manifest: Manifest): void {
-  const taken = new Set(manifest.sites.flatMap((s) => [`${s.id}-model`, nightModelId(s.id), ...[...s.photos, ...s.bookPhotos, ...s.historyImages].map((x) => x.id)]));
+  const taken = new Set(manifest.sites.flatMap((s) => [`${s.id}-model`, nightModelId(s.id), mapBakedId(s.id), mapBakedNightId(s.id), ...[...s.photos, ...s.bookPhotos, ...s.historyImages].map((x) => x.id)]));
   for (const id of manifest.sites.flatMap((s) => [...s.historyImages.flatMap((h) => (h.present ? [h.present.id] : [])), ...s.sampleTraces.map((t) => t.id)])) {
     if (taken.has(id)) throw new Error(`Media id used twice: ${id}`);
     taken.add(id);
@@ -180,7 +189,16 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
     if (site.aboutCoverPhotoId !== null && !ids.has(site.aboutCoverPhotoId)) throw new Error(`Unresolved about cover photograph: ${site.id}`);
     if (site.sections.some((s) => (s.chapterId !== null && !chapterIds.has(s.chapterId)) || s.photos.some((p) => !bookIds.has(p.id)))) throw new Error(`Unresolved chapter or section photographs: ${site.id}`);
     const extraPhotos = [...site.historyImages.flatMap((h) => (h.present ? [h.present] : [])), ...site.sampleTraces];
-    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, ...extraPhotos, ...(site.model ? [{ ...site.model, id: `${site.id}-model` }] : []), ...(site.model?.nightFile ? [{ id: nightModelId(site.id), file: site.model.nightFile }] : [])]) {
+    if (site.model?.mapBakedNightFile && !site.model.nightFile) throw new Error(`Baked night map file without a night model: ${site.id}`);
+    const modelFiles = site.model
+      ? [
+          { id: `${site.id}-model`, file: site.model.file },
+          ...(site.model.nightFile ? [{ id: nightModelId(site.id), file: site.model.nightFile }] : []),
+          ...(site.model.mapBakedFile ? [{ id: mapBakedId(site.id), file: site.model.mapBakedFile }] : []),
+          ...(site.model.mapBakedNightFile ? [{ id: mapBakedNightId(site.id), file: site.model.mapBakedNightFile }] : []),
+        ]
+      : [];
+    for (const item of [...site.photos, ...site.bookPhotos, ...site.historyImages, ...extraPhotos, ...modelFiles]) {
       const file = await realpath(resolve(root, item.file));
       if (!file.startsWith(root + sep)) throw new Error("Content path leaves the supplied root");
       if (!files.has(item.file)) {
@@ -207,6 +225,11 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
         if (lacking.length) throw new Error(`Night model lacks day model parts: ${site.id} ${lacking.join(", ")}`);
         nightParts.set(site.id, names);
         triangles.set(nightModelId(site.id), countTriangles(nightGltf));
+      }
+      // A baked map file only needs to be a readable GLB: the map draws it whole and never names its parts.
+      for (const id of [mapBakedId(site.id), mapBakedNightId(site.id)]) {
+        const baked = mediaFiles.has(id) ? files.get(mediaFiles.get(id)!)! : undefined;
+        if (baked) triangles.set(id, countTriangles(await readGlbJson(baked.body.length, async ({ start, end }) => baked.body.subarray(start, end + 1))));
       }
     }
     // A photo-only site has no parts, so anything that names one stops the import.
@@ -297,7 +320,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           const row = { kind: "photo" as const, mime: file.mime, url: storage.publicUrl(file.key), alt: h.alt, title: h.caption,
             description: h.credit, license: h.license, sourceId: h.sourceId, trust: h.trust, bytes: file.body.length };
           await tx.insert(media).values({ id: h.id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
-          if (h.present) await upsertPhoto(h.present, "verified");
+          if (h.present) await upsertPhoto(h.present, h.present.imagined ? "representative" : "verified");
           await tx.insert(historyImages).values({ id: h.id, siteId: site.id, position, mediaId: h.id, presentMediaId: h.present?.id ?? null, presentAngleMatch: h.present?.angleMatch ?? null, viewpoint: h.viewpoint ?? null,
             caption: h.caption, dateLabel: h.dateLabel, sourceId: h.sourceId, trust: h.trust, ...captionsEn.get(h.id) });
         }
@@ -350,11 +373,26 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
             parts: nightParts.get(site.id)!,
             coverGroups: site.model.coverGroups ?? [],
             interiorParts: site.model.interiorParts ?? [],
+            hideClosedInterior: site.model.hideClosedInterior ?? false,
             partsStatus: "done" as const,
           };
           await tx.insert(media).values({ id: nightModelId(site.id), ...row }).onConflictDoUpdate({ target: media.id, set: row });
           await tx.update(sites).set({ nightModelMediaId: nightModelId(site.id) }).where(eq(sites.id, site.id));
         }
+        // The map's baked files follow the package: what it no longer names is cleared (the panel never sets them).
+        const bakedRow = (id: string, name: string) => {
+          const file = files.get(mediaFiles.get(id)!)!;
+          return { kind: "model" as const, mime: file.mime, url: storage.publicUrl(file.key), title: `${site.model!.name} · ${name}`, license: "AKAR ekip üretimi · temsili model",
+            trust: site.model!.trust, bytes: file.body.length, triangles: triangles.get(id)!, parts: [], partsStatus: "done" as const };
+        };
+        const baked: Record<"mapBakedMediaId" | "mapBakedNightMediaId", string | null> = { mapBakedMediaId: null, mapBakedNightMediaId: null };
+        for (const [key, id, name] of [["mapBakedMediaId", mapBakedId(site.id), "harita"], ["mapBakedNightMediaId", mapBakedNightId(site.id), "gece harita"]] as const) {
+          if (!mediaFiles.has(id)) continue;
+          const row = bakedRow(id, name);
+          await tx.insert(media).values({ id, ...row }).onConflictDoUpdate({ target: media.id, set: row });
+          baked[key] = id;
+        }
+        await tx.update(sites).set(baked).where(eq(sites.id, site.id));
         // The map placement belongs to the panel once it exists (§11.63): a site without one gets the package's (heading,
         // base part, façade direction); a stored one keeps everything but the façade direction, which the package sets
         // when it names one (`3d/model.json → on_yonu`) and leaves alone when it is silent.

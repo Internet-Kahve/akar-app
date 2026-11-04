@@ -435,6 +435,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         coverMediaId: sites.coverMediaId,
         aboutCoverMediaId: sites.aboutCoverMediaId,
         nightModelMediaId: sites.nightModelMediaId,
+        mapBakedMediaId: sites.mapBakedMediaId,
+        mapBakedNightMediaId: sites.mapBakedNightMediaId,
         openingCamera: sites.openingCamera,
         updatedAt: sites.updatedAt,
       })
@@ -526,6 +528,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       ...traces.map((t) => t.mediaId),
       // After the linked media: the day model stays the first model of the list.
       extra.nightModelMediaId,
+      extra.mapBakedMediaId,
+      extra.mapBakedNightMediaId,
     ]);
     const contentSourceIds = distinct([
       ...(sourceLinksOf.get(id) ?? []).map((s) => s.id),
@@ -572,6 +576,8 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
       coverMediaId: extra.coverMediaId,
       aboutCoverMediaId: extra.aboutCoverMediaId,
       nightModelId: extra.nightModelMediaId,
+      mapBakedModelId: extra.mapBakedMediaId,
+      mapBakedNightModelId: extra.mapBakedNightMediaId,
       openingCamera: extra.openingCamera,
       updatedAt: extra.updatedAt.toISOString(),
       stories: stories.map((b) => ({
@@ -677,6 +683,7 @@ export async function getSiteDetails(db: Db, ids: string[]): Promise<SiteDetail[
         triangles: m.triangles,
         coverGroups: m.coverGroups,
         interiorParts: m.interiorParts,
+        hideClosedInterior: m.hideClosedInterior,
       })),
       sources: siteSourceList.map((s) => ({
         id: s.id,
