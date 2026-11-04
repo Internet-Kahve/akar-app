@@ -4773,3 +4773,8 @@ body:has(.gg) { overflow-x: clip; }
 .avatar-picker .avatar-grid button.chosen { border-color: var(--primary); }
 .avatar-picker .chosen-mark { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; }
 @media (max-width: 899.98px) { .profile-card .profile-hero { margin-bottom: 4px; } }
+
+/* Phone (4 Nov 2026): the topbar keeps the language and the night switch; «Aa» (contrast, text size) lives in the profile's settings. */
+@media (max-width: 899.98px) {
+  .topbar .access-menu { display: none; }
+}
