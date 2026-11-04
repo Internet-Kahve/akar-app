@@ -14,6 +14,7 @@ import type { AkarClient, PlayableQuiz } from "@akar/api-client";
 import type { HeritageSite, Memory, Snapshot } from "@akar/domain";
 import { describeError } from "../lib/errors";
 import { kvkkConsent } from "../lib/kvkk";
+import { photoWithoutMetadata } from "../lib/strip-photo";
 import { Modal, Notice, Tag, UploadProgress } from "./ui";
 import { Localized, useI18n } from "./i18n";
 export function MemoryModal({
@@ -55,10 +56,11 @@ export function MemoryModal({
       setError(t("memory.fileInvalid"));
       return;
     }
-    const reader = new FileReader();
-    reader.onerror = () => setError(t("memory.fileUnreadable"));
-    reader.onload = () => setPhoto(String(reader.result));
-    reader.readAsDataURL(file);
+    try {
+      setPhoto(await photoWithoutMetadata(file));
+    } catch {
+      setError(t("memory.fileUnreadable"));
+    }
   }
   return (
     <Modal title={done ? t("memory.received") : t("site.leaveTrace")} onClose={onClose} wide={!done} className="iz-form">
@@ -164,7 +166,8 @@ export function MemoryModal({
               : t("memory.noticeDemo")}
           </Notice>
           <Notice>
-            {t("kvkk.summary")} {t("kvkk.draftNotice")}
+            {t("kvkk.summary")} {t("kvkk.draftNotice")}{" "}
+            <a href="/aydinlatma.html" target="_blank" rel="noopener">{t("kvkk.noticeLink")}</a>
           </Notice>
           <label className="checkbox-label">
             <input

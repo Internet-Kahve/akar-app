@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { sized } from "../lib/image-size";
 import { ChevronLeft, ChevronRight, Square, Volume2, X } from "lucide-react";
 import type { PartCard, SiteSource } from "@akar/domain";
 import type { MessageKey } from "../lib/messages";
@@ -153,7 +154,7 @@ export function PartCardDialog({
           >
             {card.photos.map((photo) => (
               <figure key={photo.id}>
-                <img src={photo.src} alt={photo.alt} />
+                <img src={sized(photo.src, 560)} alt={photo.alt} loading="lazy" decoding="async" />
                 <figcaption lang={content}>{photo.title}</figcaption>
               </figure>
             ))}

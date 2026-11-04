@@ -1,0 +1,26 @@
+{
+ "hnc-soru-yasin": {
+  "baslik": "Who is Habib-i Neccar?",
+  "soru": "In which surah of the Qur'an is Habib-i Neccar, who gives the mosque its name, mentioned?",
+  "secenekler": [
+   "Yâsin",
+   "Fatiha",
+   "Yusuf",
+   "Kehf"
+  ],
+  "ipuclari": [
+   "Remember the story's second sentence.",
+   "The surah's name comes from two letters: Yâ and Sîn."
+  ],
+  "dogru_metin": "Habib-i Neccar is a martyr praised in the Surah Yâsin; according to the book, his grave is inside the mosque.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "hnc-hikaye": {
+  "ad": "You listened to Habib-i Neccar Mosque",
+  "metin": "You listened to or read the story of Habib-i Neccar Mosque to the end."
+ },
+ "hnc-yasin": {
+  "ad": "Habib-i Neccar",
+  "metin": "You got to know Habib-i Neccar, who gives the mosque its name."
+ }
+}

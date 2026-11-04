@@ -150,7 +150,8 @@ export function AdminModelPreview({
       setNote("Model yükleniyor; birazdan yeniden dene.");
       return null;
     }
-    return pose;
+    // What the editor sees is what is saved: the story does not move this camera out of a wall's way.
+    return { ...pose, exact: true };
   };
   const change = (
     apply: (pose: CameraPose | null) => void,

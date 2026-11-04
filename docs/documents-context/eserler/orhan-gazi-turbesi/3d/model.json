@@ -19,6 +19,7 @@
       "Dehliz"
     ]
   ],
+  "ic_gizle": true,
   "ic_parcalar": [
     "Ic_Duvarlar",
     "Ic_Zemin",
@@ -34,24 +35,28 @@
       "foto": "01",
       "azimut": 182,
       "egim": 12,
-      "uzaklik": "orta",
+      "uzaklik": "0.32",
       "not": "girişin olduğu güney cephe, üç kemerli pencere"
     },
     {
       "foto": "04",
       "azimut": 182,
       "egim": 80,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "not": "Hisariçi, tepeden"
     },
     {
       "foto": "02",
       "hedef": "Orhan_Gazi_Sandukasi",
       "azimut": 182,
-      "egim": 35,
-      "uzaklik": "orta",
+      "egim": 12,
+      "uzaklik": "0.12",
       "ic": true,
       "not": "içeride sandukalar"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "orhan-gazi-turbesi_v06_harita_pisik",
+  "glb_gece_harita_pisik": "night/orhan-gazi-turbesi_v06_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 220°, 50°; Ulucami yöntemi; kabul kaldı (gündüz renk sapması); ölçüm README'de ve kontrol/v06_pisik/rapor.json içinde. Onay Muhammed'in."
 }

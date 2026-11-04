@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { sized } from "../lib/image-size";
 import { ChevronLeft, Info, Plus } from "lucide-react";
 import { approvedMemories, type Command, type HeritageSite, type Role, type Snapshot } from "@akar/domain";
 import { memoryTraces, relativeDay, traceInitial, type MemoryFilter, type Trace } from "../lib/memory-traces";
@@ -65,7 +66,7 @@ function TraceCard({
   );
   const photo = trace.photo && (
     <button className={wide ? "hzd-foto" : "hz-foto"} onClick={() => onPhoto(trace)} aria-label={trace.alt || t("memories.photoAlt")}>
-      <img src={trace.photo} alt={trace.alt || t("memories.photoAlt")} loading="lazy" decoding="async" />
+      <img src={sized(trace.photo, 400)} alt={trace.alt || t("memories.photoAlt")} loading="lazy" decoding="async" />
       {angleText && <span className="hz-aci">{angleText}</span>}
     </button>
   );
@@ -306,7 +307,7 @@ export function LivingMemory({
     return (
       <main id="main-content" tabIndex={-1} className="hz hz-d">
         <header className="hzd-kapak">
-          {cover && <img className="hzd-kapak-foto" src={cover.src} alt="" aria-hidden="true" />}
+          {cover && <img className="hzd-kapak-foto" src={sized(cover.src, 1200)} alt="" aria-hidden="true" decoding="async" />}
           <div className="hzd-kapak-ic">
             <button className="hzd-geri" onClick={back}>
               <ChevronLeft size={16} />

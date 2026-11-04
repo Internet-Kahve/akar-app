@@ -46,10 +46,13 @@ button {
   transition:
     background 0.18s,
     box-shadow 0.18s,
-    transform 0.18s;
+    transform 0.18s,
+    translate 0.18s;
 }
+/* The press is its own property (translate), so a button placed by a transform (centred: translateY(-50%)) stays where
+   it is: a transform here pushed those 20 px down under the finger and the top half of a press missed (3 Nov 2026). */
 button:not(:disabled):active {
-  transform: translateY(1px);
+  translate: 0 1px;
 }
 a {
   color: var(--primary);

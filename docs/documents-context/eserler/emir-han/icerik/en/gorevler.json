@@ -1,0 +1,37 @@
+{
+ "emir-soru-ayaklar": {
+  "baslik": "The piers under the arcades",
+  "soru": "What material are the wide piers under the arcades of Emir Han's courtyard built of?",
+  "secenekler": [
+   "Cut stone and brick",
+   "Marble",
+   "Wood",
+   "Mud brick"
+  ],
+  "ipuclari": [
+   "Look at the thick piers in the photograph: thin reddish courses run between light stone ones.",
+   "Two materials are used together; one is brick."
+  ],
+  "dogru_metin": "The arcades rest on wide piers of cut stone and brick. The walls also alternate two courses of brick with one of küfeki stone.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "emir-saha-sadirvan": {
+  "baslik": "The fountain in the courtyard",
+  "gorev": "Find the jet fountain in the middle of Emir Han's courtyard.",
+  "yerinde": "Enter the courtyard, go up to the fountain and tap \"I'm here\".",
+  "evden": "Tap the fountain in the 3D model.",
+  "tamam_metin": "Emir Han's courtyard of about 650 square metres, with its jet fountain and plane trees, is still a meeting place today."
+ },
+ "emir-hikaye": {
+  "ad": "You listened to Emir Han",
+  "metin": "You listened to or read the story of Emir Han to the end."
+ },
+ "emir-tas-tugla": {
+  "ad": "Stone and brick",
+  "metin": "You recognised the cut stone and brick piers of the han's arcades."
+ },
+ "emir-avlu": {
+  "ad": "Han courtyard",
+  "metin": "You found Emir Han's courtyard with its fountain."
+ }
+}

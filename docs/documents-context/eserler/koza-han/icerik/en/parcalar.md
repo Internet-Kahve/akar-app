@@ -1,0 +1,13 @@
+# Koza Han · 3D part cards (English)
+
+Translation of `../parcalar.md`.
+
+| Parçalar | Title (EN) | Text (EN) |
+|---|---|---|
+| Govde_Dis, Cati | Koza Han | The han follows the classic Ottoman plan: rooms on two levels around a courtyard, and a single-storey stable and storage wing against the east façade. II. Bayezid had it built to provide an income for his complex in Istanbul; begun in March 1489, it was completed on 30 September 1491. Its architect was Abdülûlâ bin Pulad Şah, and its building supervisor Şücâ bin Karaca. |
+| Cephe | One han, many names | Through history the han has been known by names such as "Yeni Han", "Beylik Han", "Simkeş Han", "Sırmakeş Han" and "Beylik Kârbansaray". After Pirinç Han was built it came to be known as "Eski Yeni Han". Its place on the same axis as Orhan Mosque, Emir Han and Ulucami shows that the city's trade-centred pattern of settlement continued. |
+| Portal | North gate | According to the Site Management inventory sheet, the han's north façade has a gate decorated with stone reliefs. The han stands between Orhan Mosque and Ulucami, in the Bazaar and Hans District. |
+| Avlu_Revak, Revak_Kubbeleri, Revak_Tonozlari, Revak_Doseme | Arcades and rooms | Rooms are arranged on two levels around the courtyard. According to the Site Management sheet there are 51 rooms upstairs and 50 downstairs, opening on both floors onto an arcade about 3.40 metres wide. Today silk businesses occupy the upper floor and various tradesmen the lower. |
+| Mescit | Kiosk mosque and fountain | In the middle of the courtyard stands a free-standing mosque of the "kiosk mosque" kind also seen in some Seljuk caravanserais. The octagonal building of cut stone rises above round arches on eight hexagonal piers; its dome is covered with lead and it is reached by a marble stair of fourteen steps. The sixteen-sided pool beneath it is a fountain. It is among the rare han courtyard kiosk mosques in Bursa to survive in original form. |
+| Avlu_Zemin | Courtyard | The han's courtyard is used today as a tea garden and is very popular. Koza Han is one of the busiest trading places in the Bursa Bazaar. According to the Site Management sheet, the main courtyard measures about 46 × 38 metres. |
+| Ic_Koza | Inner Koza: stables and second courtyard | A passage 3.66 metres wide in the han's east wall leads to the second courtyard, where the stables were. This courtyard of about 22 × 30 metres is surrounded by arches on eighteen piers; the whole stable space is carried by forty-five piers. Used today as a coffee house and kiosk, it is among the rare stable buildings to survive from the Ottoman period. |

@@ -2,6 +2,23 @@
 
 Yalnız **son sürüm** tutulur. Eski sürümlerin değerleri ve kararları aşağıdaki tabloda ve `../bedesten_notlar.md` "Ek: Geçmiş kayıt" bölümündedir.
 
+## Pişirilmiş harita sürümü (4 Kasım 2026)
+
+Gündüz `export/bedesten_v11_harita_pisik.glb`, gece `export/night/bedesten_v11_night_harita_pisik.glb`. Bina `Harita_Pisik`, zemin gölgesi `Harita_Golge`; ikisi de `KHR_materials_unlit`. `pisik_onay` yok; onay Muhammed’in. Yöntem Ulucami’ninkidir (`ulu-cami/3d/README.md`): Cycles ara pişirmesi, görünürlüğe göre UV, atlas mevcut harita dosyasından uygulamanın ışığıyla yansıtılır (2048 px). Güneş yerel 40° (on_yonu 4 + 40 − yaw 4), 50°.
+
+Ölçüm (`_kutuphane/blend_hat/pisik_olcum.mjs → genelOlc`): mevcut `bedesten_v11.glb` / `night/bedesten_v11_night.glb` ile 780 × 1688, 36,87°, eğim 60°, 440 m; bina merkezine 8 yön, bütün bina maskesi. Görüntüler `kontrol/v11_pisik/uygulama/<etiket>/` (mevcut | pişmiş | fark), tablolar `kontrol/v11_pisik/rapor.json → uygulama_olcum`. Teslim `son` etiketidir.
+
+| 440 m | Medyan | p10 | p90 | Renk sapması | KB | Sınır KB | Sonuç |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gündüz | 1.026 | 0.951 | 1.084 | %1.10 | 230.1 | 233.2 | kaldı |
+| Gece | 1.005 | 0.974 | 1.046 | %0.17 | 385.2 | 408.5 | geçti |
+
+220 m (yalnız rapor): gündüz 1.024 / 0.948 / 1.088 / %1.21; gece 1.001 / 0.97 / 1.049 / %0.05. Yapısal doğrulama: düğümler, kutu, iki ışıksız malzeme, üçgen geçti.
+
+**Kaldı: gündüz renk sapması %1,10 (sınır %0,5).** Sapmanın tamamına yakını tek yönde: kamera güneşe karşı (yerel 225°) bakınca mevcut modelde kurşun düz örtü (Govde_Ortu) ve kubbe tepeleri güneş parlamasıyla neredeyse beyaz; ışıksız dokuda parlama sabit olduğu için o yönden gri görünür (o karede %8,4; diğer yedi yön ≤ %0,1). Üç deneme: bakış ağırlığı güneş arkada (Ulucami yöntemi) %1,56; eşit %1,10 (teslim); güneşe karşı %0,59 ama medyan 1,038'e çıktı. Hiçbir ağırlık iki ölçütü birlikte tutmuyor; sınır gevşetilmedi. Gündüz boyut sınırı (mevcut 179 KB × 1,3) WebP kalitesini 36–38'e indiriyor; diğer yönlerde sapma ≤ %0,1 olduğundan sapmanın nedeni sıkıştırma değil. Gece geçti.
+
+Üretim (repo kökünden, `GT_DIR` glTF Transform + draco3dgltf + sharp kurulumu): `blender -b --python-exit-code 1 --python docs/documents-context/eserler/yildirim-bayezid-bedesteni/3d/build/pisir_harita.py -- hepsi`; yalnız yansıtma ve ölçüm: `node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/yildirim-bayezid-bedesteni/3d v11 --yansit-uygulama [--agirlik=gunes|esit|karsi] --uygulama son`.
+
 ## Güncel sürüm: v11 (29 Ekim 2026) · iç mekân ayrıntısı (yalnız sunum GLB'si)
 
 v10 + ayrıntılı iç mekân. **İki dosya:** sunum GLB'si dış + iç; harita GLB'si yalnız dış (`model.json → ic_parcalar`). Dış görünüş v10 ile aynı. Betik `build/build_v11.py` → `build/doku_ic_v11.py` (dokular) → `build/build_v11_ic.py` (Blender, v10 blend'ini açar, dokunmaz) → `_kutuphane/blend_hat/uret.py`. Kontrol `kontrol/v11/` (`ic_detay.png`, `dis_esitlik.png`, `tiklama_haritasi.png`, `doku_ic_atlas.png`, `doku_zemin_tas.png`, `parca_dogrulama.json`, `ic_rapor.json`, `blend_rapor.json`).

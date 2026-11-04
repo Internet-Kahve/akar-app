@@ -48,6 +48,9 @@ export function fitHalfAngle(
   return Math.atan((perPixel * free) / 2);
 }
 
+/** A close pose on a part looks for a free view around walls; one the panel's editor placed by hand stands as it is. */
+export const looksForFreeView = (pose: { target?: string | null; distance: number; exact?: boolean }, closeBelow: number) =>
+  !!pose.target && pose.distance < closeBelow && !pose.exact;
 /** The next sentence about the whole building on the same pose goes on turning; the camera does not go back. */
 export function tourCarriesOn(
   tour: boolean | undefined,

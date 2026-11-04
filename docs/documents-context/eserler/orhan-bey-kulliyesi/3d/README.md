@@ -2,6 +2,23 @@
 
 Yalnız **son sürüm** tutulur. Eski sürümlerin kararları aşağıdaki tabloda ve `../orhan-bey-kulliyesi_notlar.md` "Ek: Geçmiş kayıt" bölümündedir. Hamam ve Emir Hanı üretimleri kendi klasörlerindedir.
 
+## Pişirilmiş harita sürümü (4 Kasım 2026)
+
+Gündüz `export/orhan-bey-camii_v11_harita_pisik.glb`, gece `export/night/orhan-bey-camii_v11_night_harita_pisik.glb`. Bina `Harita_Pisik`, zemin gölgesi `Harita_Golge`; ikisi de `KHR_materials_unlit`. `pisik_onay` yok; onay Muhammed’in. Yöntem Ulucami’ninkidir (`ulu-cami/3d/README.md`): Cycles ara pişirmesi, görünürlüğe göre UV, atlas mevcut harita dosyasından uygulamanın ışığıyla yansıtılır (2048 px). Güneş yerel 40° (on_yonu 13 + 40 − yaw 13), 50°.
+
+Ölçüm (`_kutuphane/blend_hat/pisik_olcum.mjs → genelOlc`): mevcut `orhan-bey-camii_v11.glb` / `night/orhan-bey-camii_v11_night.glb` ile 780 × 1688, 36,87°, eğim 60°, 440 m; bina merkezine 8 yön, bütün bina maskesi. Görüntüler `kontrol/v11_pisik/uygulama/<etiket>/` (mevcut | pişmiş | fark), tablolar `kontrol/v11_pisik/rapor.json → uygulama_olcum`. Teslim `son` etiketidir.
+
+| 440 m | Medyan | p10 | p90 | Renk sapması | KB | Sınır KB | Sonuç |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gündüz | 1.01 | 0.935 | 1.092 | %0.43 | 327.2 | 336.4 | geçti |
+| Gece | 1.005 | 0.941 | 1.091 | %0.87 | 422.3 | 443.4 | kaldı |
+
+220 m (yalnız rapor): gündüz 1.007 / 0.939 / 1.086 / %0.95; gece 1 / 0.942 / 1.081 / %0.56. Yapısal doğrulama: düğümler, kutu, iki ışıksız malzeme, üçgen geçti.
+
+**Kaldı: gece renk sapması %0,87 (sınır %0,5).** Gündüz geçti. Neden: mevcut modelde `Sebeke`, `Izgara` ve `Parmaklik` çift yüzlü, alfa karışımlı (BLEND), en-yakın süzmeli; gece deliklerinden arkadaki ışıklı revak görünür ve bu bakış yönüne bağlıdır, ışıksız tek opak atlasta sabit kalır (Ulucami'deki kafes olgusu). Kubbe etekleri ve korkuluklarda ince açık çizgiler bu yüzdendir; yanık pencereler doğru. Denemeler: 1 (Ulucami yöntemi + sık görünürlük + döşeme altı zemin gölgesi kesme): gündüz %0,45, gece %0,89; 2 (yansıtma pikseli 0,8 cm, üç tutarlı komşu yeter): gündüz %0,43, gece %0,87 — teslim. Kayıpsız atlasla gece %0,81: sıkıştırma ana neden değil. Bayrak dokusuyla doğrulandı: görünür texellerin hemen hepsi örnekleniyor. Üçüncü deneme yapılmadı; olası yol, bu üç malzemenin alfasını gece atlasının alfa kanalına aktarmak (gece malzemesi MASK, mahya gibi), böylece delikler gerçekten şeffaf olur.
+
+Üretim (repo kökünden, `GT_DIR` glTF Transform + draco3dgltf + sharp kurulumu): `blender -b --python-exit-code 1 --python docs/documents-context/eserler/orhan-bey-kulliyesi/3d/build/pisir_harita.py -- hepsi`; yalnız yansıtma ve ölçüm: `node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/orhan-bey-kulliyesi/3d v11 --yansit-uygulama [--agirlik=gunes|esit|karsi] --uygulama son`.
+
 ## Güncel sürüm: v11 (29 Ekim 2026) · iç mekân («İçini göster» + ayrıntı; iç parçalar yalnız sunumda)
 
 Betik `build/build_v11.py` → `build/doku_ic_v11.py` → `build/build_v11_ic.py` (Blender, v10 blend'ini açar, dokunmaz) → `_kutuphane/blend_hat/uret.py`. **İki dosya:** sunum GLB'si dış + iç; harita GLB'si yalnız dış (`model.json → ic_parcalar`). **Kalkan gruplar:** [`Kubbe_Ana`, `Kubbe_Mihrap`, `Kubbe_Tabhaneler`, `Kubbe_Pencereler`, `Ic_Kubbeler`] → [`Cami_Ortu`]. Kontrol `kontrol/v11/` (`icini_goster.png`, `ic_detay.png`, `ic_kaynak.png`, `dis_esitlik.png`, `tiklama_haritasi.png`, `doku_ic_atlas.png`, `parca_dogrulama.json`, `ic_rapor.json`, `blend_rapor.json`).

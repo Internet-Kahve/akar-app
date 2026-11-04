@@ -1,5 +1,6 @@
 "use client";
 import { useContext, useEffect, useRef, useState } from "react";
+import { sized } from "../lib/image-size";
 import {
   ArrowRight,
   ImageIcon,
@@ -15,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Expand,
-  Shrink,
   ImagePlus,
   User,
 } from "lucide-react";
@@ -24,50 +24,26 @@ import { readPreference, writePreference } from "../lib/preferences";
 import { TrustTag } from "./side-sheet";
 import { clampCardScale, NO_FRAME, storyCardFrame, storyPartCard } from "../lib/story-scene";
 import type { FlowCompanion } from "../lib/flow-companion";
-import { Lightbox, useWide, type Shown } from "./about-reading";
+import { Lightbox, useWide, ZoomPhoto, type Shown } from "./about-reading";
 import { Cities, useCityIdentity, useCityScene } from "./city-scenes";
 import { Localized, useI18n } from "./i18n";
+import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
+import { Spotlight } from "./coach-tip";
 import { ModelStage } from "./model-stage";
 import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
 
-/** How long the story's photo keeps its controls while nobody touches it. */
-const CONTROLS_MS = 3000;
 
-/** A sentence's photograph: fitted over its own blur, or filling the stage; the choice stays on the device. */
+/**
+ * A sentence's photograph, always whole and fitted over its own blur: it never fills the screen (Muhammed, 3 Nov
+ * 2026: the «fill» button and a photograph covering everything are gone).
+ */
 function StoryPhoto({ photo }: { photo: SitePhoto }) {
-  const { t, text } = useI18n();
-  const [fill, setFill] = useState(false),
-    [quiet, setQuiet] = useState(false);
-  useEffect(() => setFill(readPreference("akar.fotoKip") === "fill"), []);
-  useEffect(() => {
-    if (quiet) return;
-    const timer = setTimeout(() => setQuiet(true), CONTROLS_MS);
-    return () => clearTimeout(timer);
-  }, [quiet, photo.id]);
+  const { text } = useI18n();
   return (
-    <section
-      className={`story-photo${quiet ? " quiet" : ""}`}
-      aria-label={text(photo.title, photo.titleEn) || photo.alt}
-      onPointerMove={() => setQuiet(false)}
-      onPointerDown={() => setQuiet(false)}
-    >
-      <img className="story-photo-blur" src={photo.src} alt="" />
-      <img
-        className={`story-photo-main${fill ? " fill" : ""}`}
-        src={photo.src}
-        alt={photo.alt}
-      />
-      <button
-        className="story-photo-fill"
-        aria-pressed={fill}
-        aria-label={fill ? t("site.fitPhoto") : t("site.fillPhoto")}
-        onClick={() => {
-          writePreference("akar.fotoKip", fill ? "fit" : "fill");
-          setFill(!fill);
-        }}
-      >
-        {fill ? <Shrink size={18} /> : <Expand size={18} />}
-      </button>
+    <section className="story-photo" aria-label={text(photo.title, photo.titleEn) || photo.alt}>
+      <img className="story-photo-blur" src={sized(photo.src, 96)} alt="" decoding="async" />
+      {/* Two fingers zoom the story's photograph too (3 Nov 2026). */}
+      <ZoomPhoto className="story-photo-main" src={sized(photo.src, 1200)!} alt={photo.alt} doubleTap={false} />
       <div className="story-photo-foot">
         <TrustTag trust={photo.trust} quote={text(photo.title, photo.titleEn) || photo.alt} />
         {(photo.title || photo.license) && (
@@ -79,6 +55,43 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
         )}
       </div>
     </section>
+  );
+}
+
+/**
+ * Asked once on a phone, the first time a site with a model opens (Muhammed, 3 Nov 2026): photographs (fast) or the
+ * 3D model. Meanwhile the photographs show, so nothing heavy loads before the answer; the answer is kept.
+ */
+function ViewChoice({ onPick }: { onPick: (mode: "photo" | "model") => void }) {
+  const { t } = useI18n();
+  // Not at once (Muhammed, 3 Nov 2026: «direkt buton çıkmasın»): the page shows first, then the question comes in;
+  // its two answers follow one after the other, each with a small moving picture of what it opens.
+  return (
+    <div className="view-choice" role="group" aria-label={t("view.ask")}>
+      {/* An arrow under the two buttons at the top the question speaks of; the screen stays as it is (4 Nov 2026). */}
+      <Spotlight clear holes=".view-choice, .galeri-arac .scene-media-switch" arrowTo=".galeri-arac .scene-media-switch" />
+      <p className="vc-title">{t("view.ask")}</p>
+      <p className="vc-sub">{t("view.askSub")}</p>
+      <div className="vc-options">
+        <button className="vc-photo" onClick={() => onPick("photo")}>
+          <span className="vc-art" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          <b>{t("view.photos")}</b>
+          <small>{t("view.photosHint")}</small>
+        </button>
+        <span className="vc-or" aria-hidden="true">{t("view.or")}</span>
+        <button className="vc-model" onClick={() => onPick("model")}>
+          <span className="vc-art" aria-hidden="true">
+            <Box size={30} strokeWidth={1.6} />
+          </span>
+          <b>{t("view.model")}</b>
+          <small>{t("view.modelHint")}</small>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -237,9 +250,11 @@ function PhotoGallery({
             <button className="galeri-f" aria-label={t("gal.enlarge", { alt: photo.alt })} onClick={() => setOpen(index)}>
               <img
                 className="scene-photo"
-                src={photo.src}
+                // A phone's tiles are narrower: smaller files, there sooner.
+                src={sized(photo.src, index % 3 === 0 ? (wide ? 560 : 300) : wide ? 360 : 180)}
                 alt={photo.alt}
                 loading={index < 3 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : undefined}
                 decoding="async"
                 onLoad={measure}
               />
@@ -261,7 +276,7 @@ function PhotoGallery({
         {visitors.map((v, k) => (
           <figure key={v.id} className={`${(photos.length + k) % 3 === 0 ? "buyuk" : "kucuk"} ziyaretci`}>
             <button className="galeri-f" aria-label={t("gal.enlarge", { alt: v.alt })} onClick={() => setOpen(photos.length + k)}>
-              <img src={v.src} alt={v.alt} loading="lazy" decoding="async" />
+              <img src={sized(v.src, 360)} alt={v.alt} loading="lazy" decoding="async" />
               <span className="buyut-ic" aria-hidden="true">
                 <Expand size={15} />
               </span>
@@ -402,17 +417,24 @@ export function Scene({
     writePreference(CARD_KEY, JSON.stringify({ place: cardPlace, scale: cardScale }));
   }, [cardPlace, cardScale]);
   // A model site opens on the model, also in the story (its camera follows the sentences).
-  const [mode, setModeState] = useState<"photo" | "model">(
-    photoId && !site.model ? "photo" : "model",
-  );
+  // Photographs or the 3D model, as the visitor chose (kept on the device). A phone that has not chosen yet opens on
+  // the photographs (nothing heavy loads) and is asked once (`ask`); the 3D comes only when wanted.
+  const phoneLayout = useMedia(PHONE_LAYOUT);
+  const [chosen, setChosen] = useState(() => readPreference("akar.gorunum"));
+  const [mode, setModeState] = useState<"photo" | "model">(() => {
+    if (!site.model) return "photo";
+    const kept = readPreference("akar.gorunum");
+    if (kept === "photo" || kept === "model") return kept;
+    return typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? "photo" : "model";
+  });
   const setMode = (next: "photo" | "model") => {
+    // The question has shown where to change this: no hint repeats it.
+    if (ask) for (const id of ["d.foto", "masa.foto"]) writePreference(`akar.ipucu.${id}`, "1");
     writePreference("akar.gorunum", next);
+    setChosen(next);
     setModeState(next);
   };
-  useEffect(() => {
-    if (site.model && readPreference("akar.gorunum") === "photo")
-      setModeState("photo");
-  }, [site.model]);
+  const ask = context === "detail" && phoneLayout && !!site.model && !chosen;
   const photo = [...(site.photos ?? []), ...(site.storyPhotos ?? [])].find(
     (p) => p.id === (photoId || site.coverPhotoId),
   );
@@ -441,14 +463,25 @@ export function Scene({
         {site.model && <MediaSwitch value="photo" onPhoto={() => {}} onModel={() => setMode("model")} dark />}
       </>
     ) : (
-      <PhotoGallery
-        key={photoId || site.id}
-        site={site}
-        photos={photos}
-        visitors={visitors}
-        onAddPhoto={onAddPhoto}
-        onModel={site.model ? () => setMode("model") : undefined}
-      />
+      <>
+        <PhotoGallery
+          key={photoId || site.id}
+          site={site}
+          photos={photos}
+          visitors={visitors}
+          onAddPhoto={onAddPhoto}
+          onModel={site.model ? () => setMode("model") : undefined}
+        />
+        {ask && <ViewChoice onPick={setMode} />}
+      </>
+    );
+  // A site with no gallery photograph, not yet answered: the question on the stage's plain ground, no 3D loading.
+  // A task waiting for a tap on a part needs the model: no question then.
+  if (ask && mode === "photo" && site.model && !flow && !onPick)
+    return (
+      <div className="scene media-scene detail-scene">
+        <ViewChoice onPick={setMode} />
+      </div>
     );
   if (site.model && !flow) {
     const card = photoCard && !onPick && mode === "model" ? photo : undefined;
@@ -481,7 +514,7 @@ export function Scene({
             tour={context === "story" && !onPick && !highlights?.length && turn}
             // The sentence's parts breathe in the model (they were never handed to it).
             highlight={context === "story" && !onPick ? highlights : undefined}
-            frame={card && !cardPlace ? storyCardFrame(wide, cardScale) : frameBottom ? { left: 0, bottom: frameBottom } : NO_FRAME}
+            frame={frameBottom ? { left: 0, bottom: frameBottom } : card && !cardPlace ? storyCardFrame(wide, cardScale) : NO_FRAME}
             companion={companion}
             partCards={site.partCards}
             onPick={onPick}

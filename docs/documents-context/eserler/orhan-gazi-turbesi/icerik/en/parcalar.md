@@ -1,0 +1,13 @@
+# Tomb of Orhan Gazi · 3D part cards (English)
+
+Translation of `../parcalar.md`.
+
+| Parçalar | Title (EN) | Text (EN) |
+|---|---|---|
+| Govde | The tomb | The tomb of Orhan Gazi stands in Hisariçi, in the historic area now called Osmangazi Square. Sultan Abdülaziz rebuilt it, together with the Tomb of Osman Gazi, after its total destruction in the 1855 earthquake. The square building measures 16.80 × 16.80 metres, with walls 1.30 metres thick; its windows are round-arched with marble frames. |
+| Kubbe, Ic_Kubbe | Dome | According to documents in the judges' registers, the old tomb was covered by several domes; the new building was given a single dome. The inside of the pendentive dome, on pointed arches, is decorated with painted work in cartouches, and the pendentives and window pediments with large Baroque motifs. |
+| Giris_Holu | Entrance hall | As at the Tomb of Osman Gazi, the entrance is known to have had a porch with two small columns and a rectangular entrance hall. These parts were rebuilt in keeping with the original building in recent restoration. |
+| Orta_Kubbe_Sutunlar, Dehliz | Four columns and ambulatory | Entered through a door with a marble frame and a lobed arch, the building has at its centre a small dome on four columns, as in the Bursa tombs of Murad I Hüdavendigâr and Murad II. A passage with barrel vaults surrounds the dome. The column capitals carry Baroque volute decoration. |
+| Orhan_Gazi_Sandukasi | Orhan Gazi's cenotaph | On the marble base in the centre, the cenotaph covered with a green broadcloth pall is Orhan Gazi's, surrounded by a brass grille. A blue crystal chandelier with white lamps hangs above it. In place of the worn pall, a new cover begun by the Bursa Olgunlaşma Institute in 2018 and finished in 2023 was laid over the old one without removing it. |
+| Sandukalar | Twenty cenotaphs | Besides Orhan Gazi's, the tomb has twenty more cenotaphs, on brick platforms that look like marble. Those of his wife Nilüfer Hatun, his son Şehzade Kasım, Yıldırım Bayezid's daughter Fatma Sultan, Cem Sultan's son Abdullah and II. Bayezid's son Şehzade Korkut have been identified; it is not known to whom the others belong. |
+| Ic_Duvarlar, Ic_Zemin | Inside the tomb | The tomb takes light through three windows on each façade and two on the entrance side; curtains of Hereke fabric give the plain interior a slight palace air. The lack of a keeper's room, the plain grilles and the undecorated covers show it was arranged far more simply than the Tomb of Osman Gazi. Of the old building, only pieces of mosaic in the floor can be seen today. |

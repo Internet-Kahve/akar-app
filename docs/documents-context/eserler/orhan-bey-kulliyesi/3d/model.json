@@ -39,7 +39,7 @@
       "foto": "01",
       "azimut": 13,
       "egim": 45,
-      "uzaklik": "bütün yapı",
+      "uzaklik": "0.62",
       "not": "havadan; önde şadırvan ve son cemaat yeri"
     },
     {
@@ -47,24 +47,28 @@
       "hedef": "Cami_SonCemaat",
       "azimut": 13,
       "egim": 10,
-      "uzaklik": "yakın",
+      "uzaklik": "0.14",
       "not": "son cemaat yeri ve ikiz kemer"
     },
     {
       "foto": "04",
       "azimut": 13,
       "egim": 82,
-      "uzaklik": "çatı",
+      "uzaklik": "0.55",
       "not": "tepeden kubbeler"
     },
     {
       "foto": "02",
       "hedef": "Ic_Mihrap",
       "azimut": 13,
-      "egim": 25,
-      "uzaklik": "orta",
+      "egim": 12,
+      "uzaklik": "0.12",
       "ic": true,
       "not": "içeride mihrap ve minber"
     }
-  ]
+  ],
+  "pisik_onay": true,
+  "glb_harita_pisik": "orhan-bey-camii_v11_harita_pisik",
+  "glb_gece_harita_pisik": "night/orhan-bey-camii_v11_night_harita_pisik",
+  "_pisik_not": "4 Kasım 2026: haritanın pişirilmiş (ışıksız) sürümleri; güneş yerel 40°, 50°; Ulucami yöntemi; kabul kaldı (gece renk sapması); ölçüm README'de ve kontrol/v11_pisik/rapor.json içinde. Onay Muhammed'in."
 }

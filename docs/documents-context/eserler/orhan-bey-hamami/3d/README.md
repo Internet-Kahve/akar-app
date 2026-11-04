@@ -2,6 +2,23 @@
 
 Yalnız **son sürüm** tutulur. Eski sürüm kararları aşağıda ve `../orhan-bey-hamami_notlar.md` (§1 güncel kararlar, "Ek: Geçmiş kayıt") içindedir.
 
+## Pişirilmiş harita sürümü (4 Kasım 2026)
+
+Gündüz `export/orhan-bey-hamami_v08_harita_pisik.glb`, gece `export/night/orhan-bey-hamami_v08_night_harita_pisik.glb`. Bina `Harita_Pisik`, zemin gölgesi `Harita_Golge`; ikisi de `KHR_materials_unlit`. `pisik_onay` yok; onay Muhammed’in. Yöntem Ulucami’ninkidir (`ulu-cami/3d/README.md`): Cycles ara pişirmesi, görünürlüğe göre UV, atlas mevcut harita dosyasından uygulamanın ışığıyla yansıtılır (2048 px). Güneş yerel 220° (on_yonu 186 + 40 − yaw 6), 50°.
+
+Ölçüm (`_kutuphane/blend_hat/pisik_olcum.mjs → genelOlc`): mevcut `orhan-bey-hamami_v08.glb` / `night/orhan-bey-hamami_v08_night.glb` ile 780 × 1688, 36,87°, eğim 60°, 440 m; bina merkezine 8 yön, bütün bina maskesi. Görüntüler `kontrol/v08_pisik/uygulama/<etiket>/` (mevcut | pişmiş | fark), tablolar `kontrol/v08_pisik/rapor.json → uygulama_olcum`. Teslim `son` etiketidir.
+
+| 440 m | Medyan | p10 | p90 | Renk sapması | KB | Sınır KB | Sonuç |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gündüz | 1.014 | 0.955 | 1.083 | %0.13 | 231.2 | 243.8 | geçti |
+| Gece | 1.006 | 0.969 | 1.051 | %0.39 | 387.4 | 395.8 | geçti |
+
+220 m (yalnız rapor): gündüz 1.013 / 0.964 / 1.078 / %0.26; gece 1.005 / 0.971 / 1.045 / %0.14. Yapısal doğrulama: düğümler, kutu, iki ışıksız malzeme, üçgen geçti.
+
+**Geçti, gündüz ve gece.** model.json'da ana parça yok; kutu ve taban bütün modelden alınır. Deneme 1 (bakış ağırlığı güneş arkada, Ulucami yöntemi) gündüz %0,87 ile kaldı: güneşe karşı (yerel 45°) bakınca düz kurşun örtüler mevcutta parlamayla beyaz (o yön %6,45, diğerleri ≤ %0,13). Deneme 2 (eşit ağırlık) gündüz %0,13 ile geçti, teslim. Deneme 3 (güneşe karşı ağırlık) da geçti (%0,07, medyan 1,018, p90 1,108); daha dengeli olduğu için deneme 2 seçildi.
+
+Üretim (repo kökünden, `GT_DIR` glTF Transform + draco3dgltf + sharp kurulumu): `blender -b --python-exit-code 1 --python docs/documents-context/eserler/orhan-bey-hamami/3d/build/pisir_harita.py -- hepsi`; yalnız yansıtma ve ölçüm: `node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/orhan-bey-hamami/3d v08 --yansit-uygulama [--agirlik=gunes|esit|karsi] --uygulama son`.
+
 ## Güncel sürüm: v05 (21 Ekim 2026)
 
 v04 + ortak palet ve yumuşak pişirme; geometri ve parça adları aynı (aşağıdaki «Nesneler» v05 için de geçerli). Betik `build/build_hamam_v05.py` (v04 blend'ini açar, `_kutuphane/palet_v2/` ile yalnız rengi ve pişirilmiş ışığı değiştirir), sahne `blend/orhan-bey-hamami_v05.blend`, uygulama modeli `export/orhan-bey-hamami_v05.glb` (yalnız yapı, Draco, 0,21 MB, 15 008 üçgen, 11 nesne), sunum `export/orhan-bey-hamami_v05_sunum.glb`, render'lar `kontrol/hamam_v05/`. v04 blend'i silindiği için `build_hamam_v05.py`'yi baştan çalıştırmak için v04'ü git geçmişinden almak gerekir.

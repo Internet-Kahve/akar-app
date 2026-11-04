@@ -32,24 +32,24 @@ Hero eser: 12 cümle (~1,5–2 dk). Her cümle tek bilgi, en fazla ~20 kelime.
 - **Kullanılmayan:** Alan Başkanlığı föyündeki oda sayıları (üstte 51, altta 50) W kaynağı olduğu için hikâyeye alınmadı, `eser-hakkinda.md`'de ayrı paragrafta.
 - **Vurgu adları** ilk olarak `koza-han_v11.glb`'den alındı; yedisi de (`Govde_Dis`, `Portal`, `Avlu_Revak`, `Avlu_Mescit`, `Mescit_Kubbe`, `Ic_Koza`, `Avlu_Zemin`) güncel `koza-han_v14.glb`'de var (22 Ekim 2026).
 
-## Açı önerisi (panelde «Açıyı kaydet» ile girilir)
+## Açı
 
-Görev dosyasındaki hikâye tablosunda Açı sütunu yok; açı panelde model döndürülerek kaydediliyor (`FRONTEND_BACKEND_NOTLARI.md` §4). Aşağısı öneridir. Azimut: 0° = kuzeyden bakış, saat yönünde. Kaydedilmeyen cümle bir öncekinin açısında kalır.
+Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün model kadrajda, küçüldükçe yakın). 4 Kasım 2026: fotoğraflara ve tanıtım sayfasına göre yakın ve alçak açılar.
 
-| # | Hedef | Azimut | Eğim | Uzaklık | Neden |
-|---|---|---|---|---|---|
-| 1 | Merkez | 0° (kuzey) | 30° | bütün yapı | Portal cephesi (kuzey) önde |
-| 2 | Merkez | 0° | 75° | bütün yapı | Avlu ve mescit tepeden |
-| 3 | Govde_Dis | 180° (güney) | 20° | uzun cephe | Güney cephe fotoğrafıyla aynı yön; yön doğrulanmalı |
-| 4 | Portal | 0° | 10° | yakın | Kuzey portal |
-| 5 | Avlu_Revak | 0° | 40° | avlu kadrajda | Avlu içine bakış |
-| 6 | Mescit | 45° | 30° | yakın | Mescit ve merdiveni |
-| 7–8 | — | (6'da kalır) |  |  | Kartlar şadırvan ve kitabeyi gösterir |
-| 9 | Ic_Koza | 90° (doğu) | 45° | Ic_Koza + ana han | İkinci avlu doğuda |
-| 10 | Avlu_Revak | 0° | 25° | üst kat revak |  |
-| 11 | Avlu_Zemin | 0° | 60° | avlu |  |
-| 12 | Merkez | 270° (batı) | 30° | bütün yapı | Doğuya, Orhan Bey Camii yönüne bakış (~70 m doğu-güneydoğuda, OSM); kart aks fotoğrafını gösterir |
-
+| # | Hedef | Azimut | Eğim | Uzaklık |
+|---|---|---|---|---|
+| 1 | Merkez | 4° | 24° | 0.55 |
+| 2 | Govde_Dis | 4° | 70° | 0.6 |
+| 3 | Govde_Dis | 180° | 16° | 0.55 |
+| 4 | Portal | 4° | 8° | 0.13 |
+| 5 | Avlu_Revak | 30° | 14° | 0.2 |
+| 6 | Mescit | 300° | 10° | 0.1 |
+| 7 | Mescit | 300° | 8° | 0.07 |
+| 8 | Mescit | 340° | 10° | 0.09 |
+| 9 | Ic_Koza | 90° | 40° | 0.4 |
+| 10 | Avlu_Revak | 300° | 10° | 0.12 |
+| 11 | Avlu_Zemin | 20° | 12° | 0.14 |
+| 12 | Merkez | 270° | 28° | 0.7 |
 ## Akar akışı
 
 Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.

@@ -3,6 +3,9 @@ import { Box3, Vector3, type Mesh, type Object3D } from "three";
 /** Scenery that only the story viewer shows (ground, surroundings, scale figures, courtyard trees and lawn). */
 export const PRESENTATION_PARTS = /^(Zemin|Cevre|Olcek|Avlu_Agac|Avlu_Cim)/;
 
+/** The ground shadow a baked map file carries: it reaches past the building, so the base point leaves it out. */
+export const BAKED_SHADOW = /^Harita_Golge/;
+
 export interface ModelBase {
   /**
    * Position for the loaded scene inside a group that stands on the map point: the base point's
@@ -22,7 +25,7 @@ const isPresentation = (item: Object3D, root: Object3D): boolean => {
     node && node !== root;
     node = node.parent
   )
-    if (PRESENTATION_PARTS.test(node.name)) return true;
+    if (PRESENTATION_PARTS.test(node.name) || BAKED_SHADOW.test(node.name)) return true;
   return false;
 };
 

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { sized } from "../lib/image-size";
 import { Box, Check, ChevronLeft, MapPin, X } from "lucide-react";
 import type { AkarClient, SiteProgress } from "@akar/api-client";
 import type { HeritageSite, SiteBadge, SiteTask } from "@akar/domain";
@@ -217,7 +218,7 @@ export function SitePuzzle({
   }
   const photo = task.photo && (
     <figure className="gv-gorsel">
-      <img src={task.photo.src} alt={task.photo.alt} />
+      <img src={sized(task.photo.src, 560)} alt={task.photo.alt} decoding="async" />
       <figcaption lang={content}>
         <Localized tr={task.photo.title} en={task.photo.titleEn} />
       </figcaption>
@@ -327,7 +328,7 @@ export function SitePuzzle({
             </h2>
             <p lang={outcome.english ? undefined : tr}>{outcome.text}</p>
             <div className="gv-cipler">
-              <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>
+              {task.trust !== "verified" && <Tag tone={task.trust}>{t(`trust.${task.trust}`)}</Tag>}
               {task.source && (
                 <span className="gv-kaynak">
                   {t("site.sourceLabel")} <span lang={content}>{task.source}</span>

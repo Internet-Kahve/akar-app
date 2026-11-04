@@ -1,0 +1,158 @@
+# Birleştirme notu: `muhammedtalay/mobil-optimizasyon`
+
+4 Kasım 2026. Burak için: dalı `main`'e alırken ve canlıya çıkarken yapılacaklar. Ayrıntılı geçmiş: [DEVIR_3KASIM.md](DEVIR_3KASIM.md).
+
+## Özet
+
+- `main` `b13bc4b`e kadar bu dala birleştirildi (eksik parça uyarısı, kullanım sayacı; `0035_usage_daily` göçü `main`'den geliyor); `packages/domain/src/index.ts` ve testindeki çakışmalar çözüldü, iki tarafın eklemeleri de duruyor. PR'dan önce `git fetch` ile `main`'e yeniden bak.
+- **Veritabanı göçü yok.** Şema bu dalda değişmedi; aşağıdaki canlı alanlar için göç gerekecek.
+- **Kırıcı API değişikliği yok.** Web, yeni alanlar gelmezse eski yolda çalışır: harita sunum dosyasını gösterir, iç mekân gizlenmez, «Temsili görsel» etiketi çıkmaz.
+- Yeni ortam değişkeni yok.
+
+## Dalın API tarafına dokunduğu yerler
+
+| Dosya | Değişiklik |
+|---|---|
+| `services/api/src/modules/admin-catalog/sites-schemas.ts`, `docs/api/openapi.json` | Kamera `distance` alt sınırı 0,1'den 0,05'e indi (yakın açılar) |
+| `services/api/scripts/prepare-demo-content.py` | `hikaye.md` «Açı» tablosunda uzaklık artık sayı da olabilir (`0.06`) |
+| `services/api/scripts/history_extras.py` | Geçmişi Gör çiftine `imagined` (`temsili`) eklendi |
+| `services/api/e2e/demo-path.spec.ts` | Uygulamadan kalkan «Yanındayım» düğmesinin testi `test.skip`; API'deki ziyaret doğrulaması duruyor |
+
+## Canlıda görünmesi için API'ye eklenecekler
+
+Bunlar bu dalda **yok**. Demo içerikte (`prepare-demo-content.mjs`) çalışıyorlar, canlı API taşımıyor.
+
+### 1. `SiteModel.mapBaked` (`{ day?, night? }`): hız kazancının asıl kaynağı
+
+- Yedi eserde `3d/model.json`: `pisik_onay: true`, `glb_harita_pisik`, `glb_gece_harita_pisik`.
+- `prepare-demo-content.py` bu dosyaları manifeste yazmalı, `import-demo.ts` `nightFile` gibi Storage'a yüklemeli, API ve `packages/api-client/src/http.ts` (`mapSite`) taşımalı.
+- Yalnız `pisik_onay` olan eserde açılır. Web tarafı hazır: `mapModelSrc`, `mapCloseSrc` (`packages/domain/src/index.ts`).
+- Gelmezse canlıda harita eskisi gibi sunum dosyasını indirir, hız kazancı olmaz.
+
+### 2. `SiteModel.hideClosedInterior` (boolean)
+
+- Kaynak: `model.json` `ic_gizle` (Ulu Cami, Orhan Gazi Türbesi, Bedesten).
+- `interiorParts` ile aynı yoldan taşınabilir: `schema/media.ts`, `catalog/schemas.ts`, `catalog/service.ts`, `http.ts`.
+
+### 3. Geçmişi Gör `imagined`
+
+- `history_extras.py` üretiyor, web okuyor (`apps/web/src/lib/history-pair.ts`). `services/api/src` ve `openapi.json` içinde henüz yok.
+- Temsili görseller yapay üretimdir, etiket **gösterilmeden yayımlanmamalı**. Alan taşınana kadar 15 temsili görseli canlıya aktarma ya da alanı aktarımla birlikte ekle.
+
+## Birleştirdikten sonra sırayla
+
+1. `npm run check` (Docker açık). Bu dalda API testleri son API değişikliklerinden sonra çalıştırılmadı.
+2. `node apps/web/scripts/prepare-demo-content.mjs`: içerik üretilebiliyor mu ve dosya eksik mi?
+3. Yukarıdaki üç alan ve gerekiyorsa göç.
+4. Canlı içeriği yeniden aktar (`import-demo`). Temsili görseller ve pişmiş dosyalar böyle gelir. **Yeni açılar kendiliğinden gelmez:** aşağıdaki «Açılar ve panel» bölümüne bak.
+5. Storage dosyalarına `cache-control: immutable`.
+6. Canlıda bak: harita Network sekmesinde `*_harita_pisik.glb` iniyor mu, 17,5 zoomda `*_sunum.glb` geliyor mu, ikisi arasında bina kararıyor mu?
+
+## Burak'a bırakılan yeni işler
+
+1. **«Bildir» kayıt tutsun.** Şu an yalnız teşekkür gösteriyor (`sheet.report`, `side-sheet.tsx`; `toast.reportThanks`, `akar-app.tsx`). Gereken: `POST /v1/reports` (eser, metin parçası, kullanıcı notu, isteğe bağlı oturum), hız sınırı, panelde liste. İstemci dalı hazır olunca düğme ona bağlanır.
+2. **Ziyaret akışı.** «Yanındayım» kalkınca `visit` komutunu çağıran düğme de kalktı. `POST /v1/visits/verify` ve istemci komutu duruyor, ama çağıran yok. Rota duraklarındaki tik ve profildeki ziyaret durumu bu yüzden dolmaz. Rozetler etkilenmez: hikâye ve görev koşullu. Önerilen: yalnız rota sayfasında konum izniyle küçük «Buradayım»; karar Muhammed ile. Karar çıkana kadar demoda rota ilerlemesi gösterilmemeli.
+3. **İngilizce içeriğin aktarımı.** `icerik/en/` artık `prepare-demo-content.py` tarafından okunuyor: `nameEn`, `descriptionEn`, hikâye `textEn`/`simpleEn`/`titleEn`, fotoğraf `titleEn`, parça kartı `titleEn`/`bodyEn`, «Eser hakkında» `titleEn`/`bodyEn`. `import-demo` bu alanları yazıyor mu, parça kartı ve bölüm için kontrol edin. `seed.ts` veritabanındaki İngilizceyi korur (`keptEnglish`): canlıda Gemini taslağı varsa dosyadaki çeviri onu ezmez, gerekirse taslakları silip aktarın ya da bir değiştirme seçeneği ekleyin.
+4. **İngilizce ses.** Yeni çeviriler için kayıt üretin (`narrations`, `lang=en`). Kayıt yoksa tarayıcı sesi okur. Metin değişince eski kayıtlar eşleşmez.
+5. **Fotoğraf alt metni.** `SitePhoto` içinde `altEn` yok; `en/fotograflar.md` alt metin sütunu dolu ama kullanılmıyor. İstenirse alan eklenir.
+6. **Görev, rozet ve rota İngilizcesi.** `icerik/en/gorevler.json` ve rota `ad_en` artık manifeste giriyor. `import-demo` ve `editorial-routes` dışındaki canlı rota aktarımının bu alanları yazdığını doğrulayın.
+7. **KVKK.** Web tarafı `DELETE /v1/me` komutunu ekledi (`delete-account`); canlı hesapta deneyin. `aydinlatma.html` taslak: veri sorumlusu, iletişim, saklama süresi, aktarım dayanağı boş. `kvkkConsent.textVersion` metin değişince güncellenmeli. Fotoğraf EXIF'i istemcide temizleniyor; API tarafında ek temizlik yok.
+8. **Lisanslar.** `docs/LISANSLAR.md` hizmet koşullarını teyit edin.
+9. **Kullanım sayacı (§11.72).** Web henüz olay göndermiyor.
+
+## İngilizce içerik: gözden geçirilecek noktalar
+
+Çeviri kitabın İngilizce metniyle karşılaştırılmadı. Türkçe kaynakta rastlanan ve çeviriye taşınan iki sorun:
+
+- `orhan-bey-kulliyesi/icerik/eser-hakkinda.md`, «Onarımlar ve bugün»: «1863-186» eksik yazılmış; çeviride «the 1860s» denildi. Kitaptan doğrulanmalı.
+- `orhan-bey-hamami/icerik/eser-hakkinda.md`, «Tarihçe»: Koza Han için 1505 yazıyor, Koza Han metni 1491 diyor. Çeviri kitabı izliyor.
+
+## Açılar ve panel: mutlaka çalışmalı
+
+Panelde açı ayarlama ve kaydetme bu dalın zorunlu şartı. Editör bir açıyı kaydettiyse hikâye açıldığında aynı açı görünmeli ve aktarma onu ezmemeli.
+
+**Bu dalda değişenler**
+
+- Yedi eserde `icerik/hikaye.md` «Açı» tabloları ve `3d/model.json` `foto_acilari` yenilendi. Açılar içeriye ve yakına alındı; uzaklık sayı olabilir, alt sınır 0,05.
+- «Açıyı kaydet» artık hemen sunucuya yazar (`saveAngle`, `admin-site-editor.tsx`). Önceden yalnız taslağı değiştiriyor, «kaydedildi» yazıyordu. Bu kayıt taslağın tamamını gönderir, yani o anda bekleyen diğer düzenlemeler de birlikte kaydedilir.
+- Hata olursa panelde «Açı kaydedilemedi» yazar ve kayıt tamamlanmamış sayılır.
+- Yakın açılar (`distance` < 0,4, hedef parça var) çarpışma denetiminden geçer (`aim`, `model-viewer.tsx`). Önünde duvar olan açıda kamera engelin önüne gelir, gerekirse çevresinde boş görüş arar. Açık iç mekâna ayrı ışık eklendi.
+
+**Aktarma kuralı: yeni açılar canlıya kendiliğinden gelmez**
+
+- §11.70 gereği `import-demo` var olan cümlenin `camera`, `highlights`, `interior`, `showCard` alanlarını **korur**.
+- Dosyadaki yeni hikâye açıları için `--replace-story-views` gerekir. Bu seçenek paneldeki kayıtları da ezer. Önce canlıda elle kaydedilmiş açı var mı bakın; varsa korunacakları not alın. Kararı Muhammed ile verin.
+- Galeri fotoğrafı açıları (`site_media.camera`) da korunur ve bunun için `--replace-*` seçeneği yok. Yeni `foto_acilari` yalnız açısı boş fotoğraflara gelir; öbürleri için panelden kayıt ya da ek iş gerekir.
+
+**Açı alanı: `exact`**
+
+Panelde kaydedilen açı `exact: true` taşır (`CameraPose`, `CameraPoseInput`, `CameraPoseDto`, `openapi.json`; jsonb, göç gerekmez). Duvar denetimi bu açıya uygulanmaz (`looksForFreeView`), panel önizlemesinde kaydırma kapalıdır. Dosyadan gelen açılarda denetim sürer. **Canlıdaki eski kayıtlarda bu alan yoktur**; o açılar panelden yeniden kaydedilene kadar duvar denetiminden geçer.
+
+**Elle kabul denemesi (otomatik testi yok)**
+
+`tests/panel-angle.spec.ts` kaydın hemen yazıldığını, birim testi `exact` kuralını dener; hikâyede aynı açının göründüğünü deneyen otomatik test yok. Birleştirip yayımladıktan sonra canlı panelde:
+
+1. Bir hikâye cümlesinde açıyı değiştirip «Açıyı ve vurguyu kaydet» de. Genel kaydet ya da yayınla düğmesine basma.
+2. Sayfayı yenile; panel aynı açıyı göstermeli.
+3. Hikâyeyi başka bir tarayıcıda aç; o cümle aynı açıyla gelmeli.
+4. İçten bir açıyı ve engele yakın bir açıyı da dene (yukarıdaki risk).
+5. Aktarmayı `--replace-story-views` olmadan yeniden çalıştır; kayıt durmalı.
+6. Fotoğraf açısı için de 1–3'ü tekrarla.
+
+Demo içerik modunda (`NEXT_PUBLIC_DEMO_CONTENT`, API yok) panel kayıtları yalnız o tarayıcıda kalır (`panelKey`, `packages/api-client/src/index.ts`).
+
+## İpuçları
+
+- Baştan yazıldı: `components/coach-tip.tsx` (`CoachTip`, `TipRow`, `Spotlight`), sıralar `akar-app.tsx`. Tam liste: DEVIR notu, «İpucu sıraları».
+- Telefon ve masaüstü ayrı. Her ipucu cihazda bir kez gösterilir (`akar.ipucu.<id>`), bir ziyarette ekran başına bir tane çıkar.
+- Ziyaretçi dokunmadan ipucu geçmez, ipucunu kapatan dokunuş hikâyede cümle atlatmaz.
+- Ziyaretçinin zaten yaptığı şey öğretilmez (`doneBy`), kart ya da bulmaca açıkken ipucu çıkmaz, 3D ipuçları model çizilince gelir.
+- Yeni ipucu kimliği eklerseniz `playwright.config.ts` içindeki `storageState` listesine de ekleyin, yoksa testler takılır.
+
+## 3D modeller
+
+- Model geometrisine dokunulmadı; sunum ve gece dosyaları aynı. Yeni olan yedi eserin pişmiş harita dosyaları (gündüz ve gece, `*_harita_pisik.glb`) ve pişirme araçları (`eserler/_kutuphane/blend_hat/pisik*`).
+- Harita 17,5 zoomda sunum dosyasına geçer, 17'nin altında pişmiş dosyaya döner (`CLOSE_ZOOM`, `map-models.ts`).
+- Kapalı iç mekân: `ic_gizle` olan eserde örtü kapalıyken iç parçalar çizilmez (`lib/interior.ts`).
+- Yakın zoomdaki kararma giderildi (`e819efb`): pişmiş model gölge çizimi istemez.
+
+## Tanıtım sayfası
+
+- `/tanitim` artık `public/tanitim2/index.html`, tek dosya; TR/EN ve gece teması sayfanın içinde (`akar.dil`, `akar.tema`).
+- Giriş: gündüz beyaz, gece siyah zemin; dünya görselleri `medya/dunya-gun.webp`, `dunya-gece.webp`; hareketli şehir madalyonları.
+- Bölümler: ekranlar, kaydırmalı Ulucami turu, «İster dinle, ister oku» (canlıdaki kayıtları çalar), eski ve bugün karşılaştırması, «Akar ne demek?».
+- Şehirlerin eser sayıları sayfaya elle yazılı (Bursa 9, Konya 1, Hatay 1). İçerik değişirse güncelleyin.
+- Ekran görüntüleri (`medya/ekran-*.webp`) elle üretildi; arayüz değişirse eskir.
+
+## Çakışma çıkabilecek yerler
+
+En çok değişen dosyalar:
+
+- `apps/web/src/components/akar-app.tsx`, `story-panel.tsx`, `explore-panel.tsx`, `model-viewer.tsx`, `scene.tsx`
+- `apps/web/src/lib/map-models.ts`, `apps/web/src/app/design.css`
+- `tests/flows.spec.ts`, `playwright.config.ts`
+
+`design.css` ve `akar-app.tsx` çakışırsa dalın halini esas alın, `main`'deki yeni satırları üzerine ekleyin. İpucu ve kart davranışları bu dosyalara yayılmış durumda.
+
+Silinen web bileşeni: `welcome-card.tsx`. `main`'de ona dokunan yeni iş varsa dikkat.
+
+## Davranış değişiklikleri
+
+- `/tanitim` artık `public/tanitim2/index.html`. Eski sayfa `/tanitim/yeni/`, küre kitaplığı ve model dosyası oradan da kullanılıyor; silme.
+- `next.config.ts`: Supabase Storage görselleri `next/image` ile (`qualities: [75]`).
+- Karşılama kartı, «Doğrulanmış» rozeti, «Yanındayım», harita çipleri kalktı. Telefonda sekme yok.
+- Testlerin cihazında ipuçları görülmüş sayılır (`playwright.config.ts`, `storageState`). Yeni ipucu eklerseniz listeye de ekleyin.
+- Panel: demo içerik modunda düzenlemeler tarayıcıda kalır (`packages/api-client/src/index.ts`, `panelKey`). Canlıda API'ye gider.
+
+## Bilerek bırakılanlar
+
+- Yedi pişmiş eserden ölçü sınırlarının tamamını iki temada yalnız Orhan Bey Hamamı geçti; öbürleri Muhammed'in kararıyla açık. Sayılar DEVIR notunda ve her eserin 3D README'sinde.
+- `kontrol/` Git'te değil; ölçüm raporları ve karşılaştırma görüntüleri yalnız Muhammed'in Mac'inde.
+- Eski GLB sürümleri çalışma ağacından kaldırıldı (`925fee5`). Yalnız `model.json` içinde adı geçenler ve `_sunum` sürümleri kaldı. Canlı Storage'daki eski dosyalara dokunulmadı.
+- Birkaç açı (Türbe içi, Bedesten) hâlâ fotoğrafla birebir değil; panelden ayarlanabilir.
+
+## Test durumu
+
+- Tam tarayıcı testi `3bffaf2`'de: 149 geçti, 27 atlandı.
+- Birleştirmeden sonra tip kontrolü ve 209 birim testi geçti; önceki commit'lerde tarayıcıda harita, akış, ipucu, şehir menüsü, tanıtım ve hikâye testleri geçti.
+- API testleri ve gerçek telefon denemesi yapılmadı.

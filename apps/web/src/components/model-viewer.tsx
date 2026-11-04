@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { modelPixelRatio, modestDevice } from "../lib/device";
+import { sized } from "../lib/image-size";
 import type {
   CameraPose,
   CityScene,
@@ -16,6 +18,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { useI18n } from "./i18n";
 import { PartCardDialog, partLabel } from "./part-card";
 import { liftGroundLayers } from "../lib/ground-layers";
+import { hideableInterior, interiorNeeded } from "../lib/interior";
 import { PRESENTATION_PARTS } from "../lib/model-anchor";
 import { addModelLights, DETAIL_LIGHT, groundShadow, saturate, setSceneLights } from "../lib/scene-light";
 import { spreadOrder, type PartPoint } from "../lib/part-order";
@@ -26,6 +29,7 @@ import {
   NO_FRAME,
   tourCarriesOn,
   type SceneFrame,
+  looksForFreeView,
 } from "../lib/story-scene";
 import {
   forgetDownload,
@@ -39,7 +43,9 @@ const TWEEN_MS = 900;
 const LIFT_MS = 700;
 const LIFT_GAP = 0.35;
 /** "İçini göster" raises a low camera to this elevation so the inside is visible. */
-const INSIDE_ELEVATION = 58;
+const INSIDE_ELEVATION = 30;
+/** A pose closer than this (of the distance where the whole model fits) has the trees stand aside. */
+const CLOSE_POSE = 0.4;
 /**
  * Part glow: hover (mouse) and the open card's parts. Gold by day; blue by night, where the night files' lit windows
  * and minarets are already gold and a gold glow did not stand out (Muhammed, 2 Nov 2026).
@@ -48,7 +54,9 @@ const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) 
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
 /** Height the angle's photograph takes above the phone's site card (design.css: 10 + 190 + 34 + 10 + 40 px of buttons). */
-const VIEW_PHOTO_PHONE = 290;
+/** A phone's angle photograph: this share of the screen's height, above the lowered card and the ‹ ✕ › row. */
+const VIEW_PHOTO_PHONE_SHARE = 0.46;
+const VIEW_PHOTO_PHONE_FOOT = 116;
 /** One breath of a highlighted part: fade and light again. */
 const BREATH_MS = 1600;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
@@ -156,6 +164,8 @@ export default function ModelViewer({
     camera: THREE.PerspectiveCamera;
     controls: OrbitControls;
     render: () => void;
+    /** The model changed (not the camera): its shadows are drawn again on the next frame. */
+    staleShadows: () => void;
     decoder: DRACOLoader;
     sphere: number;
     ground: number;
@@ -290,6 +300,7 @@ export default function ModelViewer({
           other.scale.setScalar(scale);
           other.position.set(-mid.x * scale, -box.min.y * scale, -mid.z * scale);
           holder.add(other);
+          st.staleShadows();
           owned.push({ dispose: () => disposeObject(other) });
           drawRoad(st.ground + size.y * scale);
         },
@@ -339,8 +350,12 @@ export default function ModelViewer({
   const frameRef = useRef(frame);
   // On a phone the angle's photograph lies across the scene above the site card: while an angle is on, the model is
   // framed in what is left above it.
+  // On a phone the site card goes down to the screen's foot meanwhile and the photograph takes the lower half
+  // (design.css, 3 Nov 2026): the model is framed above that half.
   const withPhoto = (f: SceneFrame): SceneFrame =>
-    typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? { ...f, bottom: f.bottom + VIEW_PHOTO_PHONE } : f;
+    typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches
+      ? { ...f, bottom: Math.round(VIEW_PHOTO_PHONE_FOOT + innerHeight * VIEW_PHOTO_PHONE_SHARE) }
+      : f;
   const viewingRef = useRef(false);
   frameRef.current = viewingRef.current ? withPhoto(frame) : frame;
   const poseRef = useRef(pose);
@@ -378,6 +393,7 @@ export default function ModelViewer({
   const beforeViews = useRef<{ pose: CameraPose | null; inside: boolean } | null>(null);
   const heading = model.placement?.headingDeg ?? 0;
   const groupsKey = JSON.stringify(model.coverGroups ?? []);
+  const hiddenKey = JSON.stringify(model.hideClosedInterior ? hideableInterior(model.interiorParts, model.coverGroups) : []);
   const lightKey = JSON.stringify(cityScene.light);
   useEffect(() => {
     const element = host.current;
@@ -393,8 +409,10 @@ export default function ModelViewer({
     let detachPointer = () => {};
     let unfollowTheme = () => {};
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      // A modest phone: fewer pixels, no antialiasing, a smaller shadow map.
+      const modest = modestDevice();
+      renderer = new THREE.WebGLRenderer({ antialias: !modest, alpha: true, powerPreference: "high-performance" });
+      renderer.setPixelRatio(modelPixelRatio());
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -402,6 +420,9 @@ export default function ModelViewer({
         renderer.shadowMap.enabled = true;
         // Three r186 removed PCFSoftShadowMap; its supported replacement is PCF.
         renderer.shadowMap.type = THREE.PCFShadowMap;
+        // The sun stands still against the model, so its shadows do not change as the camera turns: drawn once, and
+        // again only when the model itself changes (`shadowsStale`: loaded, a lift, a theme, a building added).
+        renderer.shadowMap.autoUpdate = false;
       }
       renderer.domElement.setAttribute("aria-label", labelRef.current);
       renderer.domElement.setAttribute("role", "img");
@@ -414,8 +435,33 @@ export default function ModelViewer({
       controls.enableDamping = true;
       controls.dampingFactor = 0.09;
       controls.maxPolarAngle = Math.PI * 0.49;
+      // The panel saves a pose around a part: a moved centre could not be saved, and the story would look elsewhere.
+      if (poseReader) controls.enablePan = false;
+      // Until the model's shaders are compiled in the background (below), nothing draws: a draw would compile them
+      // on the spot, which held the page for 1.7–3.3 s on a slow phone.
+      let compiling = false;
+      let shadowsStale = true;
+      const staleShadows = () => {
+        shadowsStale = true;
+      };
+      scene.addEventListener("childadded", staleShadows);
+      scene.addEventListener("childremoved", staleShadows);
+      // Closed cover: the interior is not drawn (`lib/interior`); set once the model is here.
+      let syncInterior = () => {};
+      let syncTrees = () => {};
+      // Open, the interior gets its own light: under the sun's shadow and a sky light it stayed nearly black.
+      let inner: THREE.DirectionalLight | null = null;
+      let innerWanted = () => false;
       const render = () => {
-        if (!disposed) renderer!.render(scene, camera);
+        if (disposed || compiling) return;
+        syncInterior();
+        syncTrees();
+        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 0.8 : 1.2) : 0;
+        if (shadowsStale) {
+          renderer!.shadowMap.needsUpdate = true;
+          shadowsStale = false;
+        }
+        renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
       // Damped turning goes on after the hand lets go: the controls are stepped each frame until they come to rest.
@@ -548,11 +594,16 @@ export default function ModelViewer({
           object.position.sub(center);
           {
             const R = size.length() / 2 * 1.3;
-            addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
+            const sun = addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
+            if (modest) {
+              sun.shadow.mapSize.set(1024, 1024);
+              sun.shadow.normalBias = R / 1024;
+            }
             // A theme switch relights the open model in place, without reloading it.
             unfollowTheme = subscribeTheme((theme) => {
               setSceneLights(scene, DETAIL_LIGHT[theme]);
               renderer!.toneMappingExposure = DETAIL_LIGHT[theme].exposure;
+              staleShadows();
               render();
             });
           }
@@ -603,12 +654,13 @@ export default function ModelViewer({
           controls!.target.set(0, 0, 0);
           controls!.update();
           stage.current = {
-            scene, camera, controls: controls!, render, decoder: decoder!, sphere,
+            scene, camera, controls: controls!, render, staleShadows, decoder: decoder!, sphere,
             ground: box.min.y - center.y, height: size.y,
           };
           setStageReady((n) => n + 1);
           // The part the camera last went to: a pose read back keeps it, as the camera turns around it.
           let aimedTarget: string | null = null;
+          let closePose = false;
           const fitDistance = () => {
             const { width, height } = element.getBoundingClientRect();
             return sphere / Math.sin(fitHalfAngle(camera.fov, width, height, frameRef.current));
@@ -625,11 +677,33 @@ export default function ModelViewer({
               };
             };
           if (poseReader) poseReader.current = readPose.current;
+          const lifted = new Set((JSON.parse(groupsKey) as string[][]).flat());
+          const look = new THREE.Raycaster();
+          /** How far from `from` along `way` the camera can stand, up to `wanted`, with a free view of `from`. */
+          const clearDistance = (from: THREE.Vector3, way: THREE.Vector3, wanted: number, own: THREE.Object3D | null) => {
+            look.set(from, way);
+            look.far = wanted;
+            const open = interiorRef.current || coverWanted();
+            for (const hit of look.intersectObject(root, true)) {
+              let skip = false;
+              for (let n: THREE.Object3D | null = hit.object; n && n !== root; n = n.parent)
+                if (n === own || !n.visible || (open && lifted.has(n.name)) || /^(Cevre|Avlu)_Agac|^Olcek_|^Yer_Golgesi|^Avize/.test(n.name)) {
+                  skip = true;
+                  break;
+                }
+              if (skip || hit.distance < sphere * 0.01) continue;
+              return Math.max(hit.distance * 0.85, sphere * 0.04);
+            }
+            return wanted;
+          };
           aim.current = (next) => {
             aimedTarget = next.target;
+            closePose = next.distance < CLOSE_POSE;
             // Distance at which the bounding sphere fits the narrower field of view of the free part.
             const fit = fitDistance();
             controls!.maxDistance = Math.max(radius * 4, fit * 1.6);
+            // A close pose comes as close as it says, as the story needs to look inside (the hand's limit goes with it).
+            controls!.minDistance = Math.min(radius * 0.35, sphere * 0.03);
             const part = next.target ? root.getObjectByName(next.target) : undefined;
             const goal = part
               ? new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3())
@@ -637,13 +711,26 @@ export default function ModelViewer({
             const az = THREE.MathUtils.degToRad(next.azimuthDeg);
             const el = THREE.MathUtils.degToRad(Math.max(5, Math.min(85, next.elevationDeg)));
             const d = fit * next.distance;
-            const to = goal.clone().add(
-              new THREE.Vector3(
-                Math.sin(az) * Math.cos(el) * d,
-                Math.sin(el) * d,
-                -Math.cos(az) * Math.cos(el) * d,
-              ),
-            );
+            const wayAt = (azimuth: number, elevation: number) =>
+              new THREE.Vector3(Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation), -Math.cos(azimuth) * Math.cos(elevation));
+            let way = wayAt(az, el);
+            let free = d;
+            // A close pose on a part looks for a free view: its own side first, then round the part and a little higher,
+            // and stands in front of what is in the way. A camera sent inside looks inside, not at the back of a wall.
+            if (part && looksForFreeView(next, CLOSE_POSE)) {
+              free = -1;
+              search: for (const up of [0, 12, 26])
+                for (const turn of [0, 45, -45, 90, -90, 135, -135, 180]) {
+                  const candidate = wayAt(az + THREE.MathUtils.degToRad(turn), Math.min(THREE.MathUtils.degToRad(70), el + THREE.MathUtils.degToRad(up)));
+                  const room = clearDistance(goal, candidate, d, part);
+                  if (room > free) {
+                    free = room;
+                    way = candidate;
+                  }
+                  if (room >= d * 0.7) break search;
+                }
+            }
+            const to = goal.clone().addScaledVector(way, free);
             cancelAnimationFrame(frame);
             stopTurn();
             if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -721,7 +808,9 @@ export default function ModelViewer({
                     m instanceof THREE.MeshStandardMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
                   if (!colour) continue;
                   if (!baseColour.has(m)) baseColour.set(m, colour.clone());
-                  colour.copy(baseColour.get(m)!).lerp(tint, night ? Math.min(0.85, level * 1.5) : level);
+                  // Close up the part fills the frame: a touch of light is enough.
+                  const amount = night ? Math.min(0.85, level * 1.5) : level;
+                  colour.copy(baseColour.get(m)!).lerp(tint, closePose ? amount * 0.35 : amount);
                 }
             }
             render();
@@ -774,6 +863,8 @@ export default function ModelViewer({
               performance.now() - press.at < TAP_MS;
             press = null;
             if (!tap) return;
+            // A phone's story: a tap on the model moves the story on (akar-app, STORY_STEP_EVENT); no part card.
+            if (!pickRef.current && canvas.closest(".workspace")?.querySelector(".story-panel:is(.kart, .liste)")) return;
             const part = partAt(e);
             if (!part) return;
             if (pickRef.current) {
@@ -851,6 +942,8 @@ export default function ModelViewer({
             };
             breathFrame = requestAnimationFrame(step);
           };
+          let coverOpen: (() => boolean) | null = null;
+          let coverWanted = () => false;
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>
             names.flatMap((n) => root.getObjectByName(n) ?? []),
@@ -882,10 +975,13 @@ export default function ModelViewer({
             });
             const progress = groups.map(() => 0);
             let goal = 0;
+            coverOpen = () => goal === 1 || progress.some((t) => t > 0);
+            coverWanted = () => goal === 1;
             let liftFrame = 0;
             let last = 0;
             cancelLift = () => cancelAnimationFrame(liftFrame);
-            const place = () =>
+            const place = () => {
+              staleShadows();
               parts.forEach((g, i) => {
                 const t = progress[i]!;
                 // easeOutBack: a slight overshoot as the group settles.
@@ -906,6 +1002,7 @@ export default function ModelViewer({
                   f.material.userData.akarLift = t;
                 }
               });
+            };
             const step = (now: number) => {
               const dt = Math.min(64, now - last) / LIFT_MS;
               last = now;
@@ -941,17 +1038,59 @@ export default function ModelViewer({
               const elevation = THREE.MathUtils.radToDeg(
                 Math.asin(offset.y / (offset.length() || 1)),
               );
-              if (open && raise && elevation < 45)
+              if (open && raise)
                 aim.current?.({
                   target: null,
                   azimuthDeg: THREE.MathUtils.radToDeg(Math.atan2(offset.x, -offset.z)),
                   elevationDeg: INSIDE_ELEVATION,
-                  distance: 0.95,
+                  distance: 0.34,
                 });
             };
             const open = interiorRef.current ?? false;
             if (open) lift.current(true, false);
             setInside(open);
+          }
+          inner = new THREE.DirectionalLight(0xfff1dc, 0);
+          inner.position.set(0.15, 1, 0.25);
+          scene.add(inner, inner.target);
+          const lit = new THREE.HemisphereLight(0xfff4e6, 0xcdbda3, 0);
+          scene.add(lit);
+          innerWanted = () => {
+            const on = coverWanted() || !!coverOpen?.();
+            lit.intensity = on ? (currentTheme() === "night" ? 0.45 : 0.7) : 0;
+            return on;
+          };
+          // Open, or with the camera sent close, the trees stand aside: it must not meet one on the way.
+          const trees: THREE.Object3D[] = [];
+          root.traverse((node) => {
+            if (/^(Cevre|Avlu)_Agac/.test(node.name)) trees.push(node);
+          });
+          syncTrees = () => {
+            const show = !closePose && !coverWanted();
+            if (!trees.length || trees[0]!.visible === show) return;
+            for (const tree of trees) tree.visible = show;
+            staleShadows();
+          };
+          // Only where the cover can open: otherwise nothing would ever show the interior again.
+          const hiddenNames = JSON.parse(hiddenKey) as string[];
+          const hiddenNodes = coverOpen ? hiddenNames.flatMap((n) => root.getObjectByName(n) ?? []) : [];
+          let interiorReady = false;
+          if (hiddenNodes.length) {
+            // The box of the building where it now stands: a camera inside it sees the interior, cover or not.
+            const inner = box.clone().translate(center.clone().negate());
+            syncInterior = () => {
+              const show =
+                !interiorReady ||
+                interiorNeeded({
+                  coverOpen: coverOpen!(),
+                  cameraInside: inner.containsPoint(camera.position),
+                  parts: [...highlighted, ...selected, ...(aimedTarget ? [aimedTarget] : [])],
+                  hidden: hiddenNames,
+                });
+              if (hiddenNodes[0]!.visible === show) return;
+              for (const node of hiddenNodes) node.visible = show;
+              staleShadows();
+            };
           }
           if (highlightRef.current?.length) select.current(highlightRef.current);
           reframe.current?.();
@@ -968,8 +1107,29 @@ export default function ModelViewer({
           aimedPose.current = poseRef.current;
           spin.current?.(!!tourRef.current);
           tourPose.current = tourRef.current ? JSON.stringify(poseRef.current ?? null) : "";
-          render();
-          settledRef.current?.("ready");
+          // The shaders compile in parallel (KHR_parallel_shader_compile where the browser has it); the loading card
+          // stays until they are ready, then the first frame is drawn.
+          compiling = true;
+          renderer!
+            .compileAsync(scene, camera)
+            .catch(() => {})
+            .finally(() => {
+              compiling = false;
+              if (disposed) return;
+              // Its shaders were compiled above with the rest; its textures go up now too, so opening the cover
+              // does not stop to do it.
+              for (const node of hiddenNodes)
+                node.traverse((item) => {
+                  if (!(item instanceof THREE.Mesh)) return;
+                  for (const m of Array.isArray(item.material) ? item.material : [item.material])
+                    for (const value of Object.values(m)) if (value instanceof THREE.Texture) renderer!.initTexture(value);
+                });
+              interiorReady = true;
+              render();
+              // What is said about the model waits for the model (`TipRow`).
+              element.dataset.drawn = "";
+              settledRef.current?.("ready");
+            });
         },
         // The bytes the browser has read of the response, for the stage's loading card (§11.49).
         (event) => {
@@ -988,6 +1148,7 @@ export default function ModelViewer({
     }
     return () => {
       disposed = true;
+      delete element.dataset.drawn;
       aim.current = null;
       stage.current = null;
       if (poseReader) poseReader.current = null;
@@ -1015,7 +1176,7 @@ export default function ModelViewer({
       renderer?.forceContextLoss();
       renderer?.domElement.remove();
     };
-  }, [model.src, name, heading, model.placement?.frontDeg, groupsKey, partsKey, lightKey, detail]);
+  }, [model.src, name, heading, model.placement?.frontDeg, groupsKey, hiddenKey, partsKey, lightKey, detail]);
   // Before the pose: a sentence's camera is worked out for the frame of that sentence.
   useEffect(() => {
     reframe.current?.();
@@ -1157,7 +1318,7 @@ export default function ModelViewer({
           }}
           onPointerCancel={() => (photoDrag.current = null)}
         >
-          <img src={views[viewIndex]!.src} alt={views[viewIndex]!.alt} draggable={false} />
+          <img src={sized(views[viewIndex]!.src, 440)} alt={views[viewIndex]!.alt} draggable={false} decoding="async" />
           <figcaption>
             {views[viewIndex]!.title}
             <small>{t("site.viewCount", { index: viewIndex + 1, total: views.length })}</small>

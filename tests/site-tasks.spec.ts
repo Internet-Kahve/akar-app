@@ -58,7 +58,8 @@ test("the question can be retried, hints come one by one, a right answer earns t
   await expect(sheet).toContainText("Doğru! Kündekâri.");
   await expect(sheet).toContainText("Kündekâri: ahşap parçalar çivi, tutkal");
   await expect(sheet).toContainText("Kaynak: E cilt-1 PDF s.27");
-  await expect(sheet).toContainText("Doğrulanmış");
+  // A verified answer carries no «Doğrulanmış» tag any more; its source line says where it is from.
+  await expect(sheet).not.toContainText("Doğrulanmış");
   await expect(sheet).toContainText("Rozet profiline eklendi");
   expect((await quiz.innerText()).toLocaleLowerCase("tr-TR")).not.toMatch(/puan/);
 

@@ -1,0 +1,37 @@
+{
+ "ulu-soru-kundekari": {
+  "baslik": "The minbar's secret",
+  "soru": "What technique was used to make Ulucami's wooden minbar?",
+  "secenekler": [
+   "Kündekâri",
+   "Tile",
+   "Painted decoration",
+   "Muqarnas"
+  ],
+  "ipuclari": [
+   "Look at the pieces of the minbar: no nails or glue between them, they interlock.",
+   "The answer begins with \"K\"."
+  ],
+  "dogru_metin": "Kündekâri: wooden pieces are interlocked with no nails, glue or other binder. Ulucami's minbar is one of the most original examples of this technique.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "ulu-saha-sahaflar": {
+  "baslik": "Booksellers' Gate",
+  "gorev": "Find the marble crown portal on the mosque's north façade, popularly called the Booksellers' Gate.",
+  "yerinde": "Go up to the gate and tap \"I'm here\". If you like, take a photo and add it to Leave a Trace.",
+  "evden": "Tap the Booksellers' Gate in the 3D model.",
+  "tamam_metin": "Ulucami has three gates: the Booksellers' Gate to the north, the Bazaar Gate to the east and the Mufti's or Court Gate to the west."
+ },
+ "ulu-hikaye": {
+  "ad": "You listened to Ulucami",
+  "metin": "You listened to or read the story of Ulucami to the end."
+ },
+ "ulu-kundekari": {
+  "ad": "Kündekâri",
+  "metin": "You learned about the minbar's interlocking pieces, with no nails."
+ },
+ "ulu-sahaflar": {
+  "ad": "Booksellers' Gate",
+  "metin": "You found Ulucami's northern crown portal."
+ }
+}

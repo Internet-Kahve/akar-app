@@ -2,6 +2,23 @@
 
 Güncel sürüm **v18** (29 Ekim 2026; aşağıda). Önceki not: güncel sürüm **v14** (21 Ekim 2026). v13 blend, GLB ve kontrol dosyaları 21 Ekim 2026'da **silindi**; v13 bilgisi: (19 Ekim 2026; betik `build/build_v13.py` + `build/figur_yerlesim_v13.py`, GLB `export/koza-han_v13.glb` (yalnız yapı: `Cevre_*`, `Olcek_Insan_*`, `Avlu_Agac` ve `Avlu_Cim` 20 Ekim 2026'da çıkarıldı, 0,55 MB) ve `_sunum.glb` (çevre, ağaç ve figürlü), render'lar `kontrol/v13/`: varsayılan render listesinin 22 karesi + `kontrol_0…7`, `build/render_v13.py` ile v13 blend'inden alındı; modele dokunmaz: `Blender -b blend/koza-han_v13.blend --python build/render_v13.py [-- ad,ad]`). Üretim: `KOZA_FIGUR=1 blender -b --python build/build_v13.py` (`KOZA_RENDER=havadan,...` ile render listesi daraltılabilir). Ağaç dokuları `build/doku/yaprak_*.png` ve `agac_govde.png`; üreticisi ve UV kuralı `../../_kutuphane/agac_doku.py`. Aşağıdaki «İçerik» bölümü v02o döneminden kalmadır. Bu klasörde yalnızca son sürüm tutulur; önceki sürümler aşağıdaki tabloda kayıtlıdır, ayrıntılı karar metinleri `../koza-han_notlar.md` sonundaki "Geçmiş kayıt" ekinde. Sıradaki tur v03'ün talimatı `../SONNET_REVIZYON_PLANI.md` dosyasında.
 
+## Pişirilmiş harita sürümü (4 Kasım 2026)
+
+Gündüz `export/koza-han_v18_harita_pisik.glb`, gece `export/night/koza-han_v18_night_harita_pisik.glb`. Bina `Harita_Pisik`, zemin gölgesi `Harita_Golge`; ikisi de `KHR_materials_unlit`. `pisik_onay` yok; onay Muhammed’in. Yöntem Ulucami’ninkidir (`ulu-cami/3d/README.md`): Cycles ara pişirmesi, görünürlüğe göre UV, atlas mevcut harita dosyasından uygulamanın ışığıyla yansıtılır (2048 px). Güneş yerel 40° (on_yonu 4 + 40 − yaw 4), 50°.
+
+Ölçüm (`_kutuphane/blend_hat/pisik_olcum.mjs → genelOlc`): mevcut `koza-han_v18.glb` / `night/koza-han_v18_night.glb` ile 780 × 1688, 36,87°, eğim 60°, 440 m; bina merkezine 8 yön, bütün bina maskesi. Görüntüler `kontrol/v18_pisik/uygulama/<etiket>/` (mevcut | pişmiş | fark), tablolar `kontrol/v18_pisik/rapor.json → uygulama_olcum`. Teslim `son` etiketidir.
+
+| 440 m | Medyan | p10 | p90 | Renk sapması | KB | Sınır KB | Sonuç |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Gündüz | 1.005 | 0.958 | 1.062 | %0.68 | 602.6 | 1168.0 | kaldı |
+| Gece | 1.003 | 0.973 | 1.043 | %0.28 | 561.8 | 872.1 | kaldı |
+
+220 m (yalnız rapor): gündüz 1.004 / 0.956 / 1.058 / %0.79; gece 1.001 / 0.969 / 1.041 / %0.31. Yapısal doğrulama: düğümler, kutu, iki ışıksız malzeme, üçgen kaldı.
+
+**Kaldı: gündüz renk sapması %0,68 (sınır %0,5) ve yapısal kutu ölçütü.** (1) Sapma iki yönde: kamera güneşe karşı (yerel 225°, %3,1) ve 180° (%2,0) bakınca mevcut modeldeki kurşun örtü ve kubbe parlaması; ışıksız dokuda sabit kalır (Bedesten'deki olgunun aynısı). Diğer altı yön ≤ %0,05. (2) `Cati` ve `Portal` düğümlerinin kutusu harita GLB'sinden 3,6 cm farklı (sınır 1 cm): blend'deki geometri mevcut harita dosyasıyla birebir değil; düğüm adları, üçgen ve ana parça tutuyor. Pişirme denemeleri: 1 (Ulucami yöntemi), 2 (sık görünürlük testi: 61 yön, yüz başı 25 nokta; revak arkası yüzler artık görünür, gece %1,83 → %0,28), 3 (zemin gölgesi bina döşemelerinin altında kesildi: 139 177 texel). Ölçüm aracında iki hata bulunup düzeltildi (pişmiş zemin gölgesinin ve uygulamanın ShadowMaterial zemininin polygonOffset'i taklit edilmiyordu; 440 m'de avlu gölgesi iki kat çiziliyordu); düzeltilmiş araçla gündüz %2,36 → %0,68. Gece renk ve parlaklık ölçütlerinden geçti, kutu yüzünden yapısal olarak kaldı.
+
+Üretim (repo kökünden, `GT_DIR` glTF Transform + draco3dgltf + sharp kurulumu): `blender -b --python-exit-code 1 --python docs/documents-context/eserler/koza-han/3d/build/pisir_harita.py -- hepsi`; yalnız yansıtma ve ölçüm: `node docs/documents-context/eserler/_kutuphane/blend_hat/pisik_gorsel.mjs docs/documents-context/eserler/koza-han/3d v18 --yansit-uygulama [--agirlik=gunes|esit|karsi] --uygulama son`.
+
 ## Güncel sürüm: v18 (29 Ekim 2026) · avlu ve revak ayrıntısı (iç parçalar yalnız sunumda)
 
 **2 Kasım 2026 · z-fighting düzeltmesi (geometri yeniden dışa aktarılmadı):** revak tonozlarının uç yüzleri revak ve gövde duvarlarıyla (≈ 85 m²), çatının güney kenarı revak taş kaplamasıyla (≈ 8 m²), portalın yanları gövde duvarıyla (≈ 2 m²) aynı düzlemdeydi; döndürünce titriyordu. Dört GLB'de (harita, sunum, iki gece) `Revak_Tonozlari` × 0,998, `Cati` × 1,001, `Portal` × 1,004 yatay ölçek (kutu ortasına göre) verildi: `_kutuphane/dugum_olcek.py`, ayar `dugum_olcek.json`. Görünür çakışma ≈ 98 → 4 m²; kalanlar parçaların kendi içinde, blend'den yeniden üretimde giderilmeli (v19'da aynı ölçek blend'e işlenmeli). z=0'daki büyük çakışmalar aşağı bakan alt yüzler, görünmez.

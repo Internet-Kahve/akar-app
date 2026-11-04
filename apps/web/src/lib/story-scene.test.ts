@@ -9,6 +9,7 @@ import {
   resizedCardScale,
   storyPartCard,
   tourCarriesOn,
+  looksForFreeView,
 } from "./story-scene";
 
 const degrees = (radians: number) => (radians * 180) / Math.PI;
@@ -67,4 +68,12 @@ test("the photo card's size stays between its bounds, and the model's frame grow
   // Phone strip at the bottom: dragging its corner up enlarges it; once moved, dragging down does.
   assert.equal(resizedCardScale(1, false, 0, -48, true), 1.5);
   assert.equal(resizedCardScale(1, false, 0, 48, false), 1.5);
+});
+
+test("a hand-placed camera is left alone; a file's close pose looks for a free view", () => {
+  const pose = { target: "Mihrap", distance: 0.1 };
+  assert.equal(looksForFreeView(pose, 0.4), true);
+  assert.equal(looksForFreeView({ ...pose, exact: true }, 0.4), false);
+  assert.equal(looksForFreeView({ ...pose, distance: 0.6 }, 0.4), false);
+  assert.equal(looksForFreeView({ target: null, distance: 0.1 }, 0.4), false);
 });

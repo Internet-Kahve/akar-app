@@ -1,0 +1,26 @@
+{
+ "abc-soru-kemer": {
+  "baslik": "The fountain's arch",
+  "soru": "What shape is the arch covering the front of Alaaddin Bey Fountain?",
+  "secenekler": [
+   "Pointed arch",
+   "Round arch",
+   "Depressed arch",
+   "Horseshoe arch"
+  ],
+  "ipuclari": [
+   "Look at the top of the red and white arch in the photograph.",
+   "Its top does not curve round; it meets at a point in the middle."
+  ],
+  "dogru_metin": "The wide pointed arch covering nearly the whole front is common in early Bursa fountains; it is built of white travertine with bricks set between.",
+  "yanlis_metin": "Try again. You can ask for a hint below."
+ },
+ "abc-hikaye": {
+  "ad": "You listened to Alaaddin Bey Fountain",
+  "metin": "You listened to or read the story of Alaaddin Bey Fountain to the end."
+ },
+ "abc-sivri-kemer": {
+  "ad": "The oldest fountain",
+  "metin": "You recognised the pointed arch of Bursa's oldest fountain."
+ }
+}

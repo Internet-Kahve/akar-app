@@ -14,11 +14,12 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import "./design.css";
 import "./theme.css";
+import { ACCESS_BOOT } from "../lib/access";
 import { INTRO_BOOT, THEME_BOOT } from "../lib/theme-boot";
 export const metadata: Metadata = {
   title: "AKAR · Şehrin hikâyesine karış",
   description:
-    "Geçmişi gör. Hikâyesini dinle. İzini bırak. Bursa’nın kültürel mirasını keşfet.",
+    "Geçmişi gör. Hikâyesini dinle. İzini bırak. Türkiye’nin vakıf eserlerini keşfet.",
   icons: {
     icon: [
       { url: "/logo/favicon-32.png", sizes: "32x32", type: "image/png" },
@@ -39,6 +40,11 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: INTRO_BOOT }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+        <script dangerouslySetInnerHTML={{ __html: ACCESS_BOOT }} />
+        {/* The map's tiles, fonts and sprite come from OpenFreeMap: the connection is opened while the app loads,
+            not after the map's code has arrived (half a second on a phone's 4G). */}
+        <link rel="preconnect" href="https://tiles.openfreemap.org" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://tiles.openfreemap.org" />
       </head>
       <body>{children}</body>
     </html>

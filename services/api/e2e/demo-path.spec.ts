@@ -360,35 +360,6 @@ for (const role of ["editor", "moderator", "admin"] as const) {
   });
 }
 
-test("live visits require location and only display success after server verification", async ({ page, context }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "geolocation", { configurable: true, value: {
-      getCurrentPosition: (_success: unknown, failure: (error: { code: number }) => void) => failure({ code: 1 }),
-    } });
-  });
-  await page.goto("/#view=map");
-  await openSite(page, MEMORY_SITE.name);
-  await page.getByRole("button", { name: /^Yanındayım/ }).click();
-  const dialog = page.getByRole("dialog", { name: "Yanındayım", exact: true });
-  await expect(dialog.getByText(/Konum izni vererek/)).toBeVisible();
-  await expect(dialog.getByText(/Simülasyon/)).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
-  await expect(page.locator(".toast.fault")).toContainText("konum izni vermelisin");
-  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toHaveCount(0);
-  // Restore the real browser geolocation provider; the local API decides proximity.
-  await page.evaluate(() => { Reflect.deleteProperty(navigator, "geolocation"); });
-  await context.grantPermissions(["geolocation"]);
-  await context.setGeolocation({ latitude: 41, longitude: 29, accuracy: 10 });
-  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
-  await expect(page.locator(".toast.fault")).toContainText("esere yaklaşmalısın");
-  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toHaveCount(0);
-  const site = await (await fetch(`${API}/v1/sites/${MEMORY_SITE.id}`)).json();
-  await context.setGeolocation({ latitude: site.coordinates[1], longitude: site.coordinates[0], accuracy: 10 });
-  await dialog.getByRole("button", { name: "Ziyareti doğrula", exact: true }).click();
-  await expect(dialog.getByText("Ziyaretin doğrulandı", { exact: true })).toBeVisible();
-});
-
-
 test("live photo metadata editing preserves imported licenses and excludes unsupported file replacement", async ({ page }, testInfo) => {
   const email = `e2e-photo-editor-${randomUUID().slice(0, 8)}@akar.test`;
   tokenFor(email, "editor");
@@ -555,6 +526,7 @@ test("an admin finds a newly registered member, grants admin access and revokes 
 
 test("the site language follows the account: an empty account takes the device's, the account's wins over the device later", async ({
   browser,
+  isMobile,
 }) => {
   const email = `e2e-lang-${randomUUID().slice(0, 8)}@akar.test`;
   const preferences = async () =>
@@ -571,7 +543,8 @@ test("the site language follows the account: an empty account takes the device's
     // 2. Switching while signed in saves the account too.
     await page.goto("/#view=map");
     await expect(page.locator(".opening")).toHaveCount(0);
-    await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: "EN" }).click();
+    // A phone shows only the current language: one press on it turns to the other.
+    await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: isMobile ? "TR" : "EN" }).click();
     await expect.poll(async () => (await preferences()).siteLang).toBe("en");
 
     // 3. The device says Turkish again (as another device would): the signed-in load brings the account's English.

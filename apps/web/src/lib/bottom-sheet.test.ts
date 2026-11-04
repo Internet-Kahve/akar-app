@@ -4,10 +4,13 @@ import { clampSheet, mapSheetStops, settleSheet, siteCardStops, toggleSheet } fr
 
 const map = mapSheetStops(112, 1000);
 
-test("a sheet rests where it was left, except near its ends", () => {
+test("a sheet let go goes to its nearest stop, a flick to the next one", () => {
   assert.equal(settleSheet(150, map), 112);
-  assert.equal(settleSheet(500, map), 500);
+  assert.equal(settleSheet(500, map), map.open);
   assert.equal(settleSheet(890, map), 920);
+  // Half way between closed and half: a flick up goes to half, a flick down closes.
+  assert.equal(settleSheet(300, map, 1), map.open);
+  assert.equal(settleSheet(300, map, -1), 112);
 });
 
 test("clampSheet keeps the sheet between its stops", () => {

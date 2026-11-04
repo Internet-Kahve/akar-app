@@ -29,11 +29,23 @@ export function clampSheet(height: number, stops: SheetStops) {
 }
 
 /** Where a sheet let go at `height` comes to rest. */
-export function settleSheet(height: number, stops: SheetStops) {
-  if (height < stops.lowest + SHEET_SNAP_PX) return stops.lowest;
-  if (height > stops.highest - SHEET_SNAP_PX) return stops.highest;
-  return clampSheet(height, stops);
+/**
+ * Let go, a sheet goes to its nearest stop, closed, half or open (Muhammed, 3 Nov 2026: «yarım duruyor, kesik;
+ * kendiliğinden smooth bir şekilde yerine dönsün»), never left half way. A flick (`velocity`, px/ms, up positive)
+ * goes on to the next stop in its direction.
+ */
+export function settleSheet(height: number, stops: SheetStops, velocity = 0) {
+  const points = [...new Set([stops.lowest, stops.open, stops.highest].map((p) => Math.round(clampSheet(p, stops))))].sort(
+    (a, b) => a - b,
+  );
+  if (Math.abs(velocity) > SHEET_FLICK) {
+    const ahead = velocity > 0 ? points.find((p) => p > height + 1) : [...points].reverse().find((p) => p < height - 1);
+    if (ahead !== undefined) return ahead;
+  }
+  return points.reduce((best, p) => (Math.abs(p - height) < Math.abs(best - height) ? p : best), points[0]!);
 }
+/** A drag faster than this (px/ms) at its end is a flick. */
+const SHEET_FLICK = 0.5;
 
 /** The handle's tap: closed opens (the map half way, a site's card all the way), anything else closes. */
 export function toggleSheet(height: number, stops: SheetStops) {

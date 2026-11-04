@@ -243,6 +243,27 @@ export function SiteEditor({
   const cover = photos.find((p) => p.id === draft.coverPhotoId);
   const story = draft.stories[activeStory];
   const selectedPhoto = photos.find((p) => p.id === story?.photoId) ?? cover;
+  /**
+   * «Açıyı kaydet» writes to the server at once (Muhammed, 4 Nov 2026: «kaydediyorum ama hikâyede yansımıyor»): it only
+   * changed the draft until the editor's own save, while the note already said «kaydedildi». A site not yet on the server
+   * stays a draft. Nothing else in the draft waits behind it: the whole draft goes.
+   */
+  async function saveAngle(next: HeritageSite) {
+    setDraft(next);
+    if (!sites.some((s) => s.id === next.id)) return;
+    setBusy(true);
+    setError("");
+    try {
+      const canonical = await onSave(next);
+      setDraft(canonical);
+      setSavedDraft(canonical);
+      setBaseline(siteKey(canonical));
+    } catch (e) {
+      setError(e instanceof Error ? `Açı kaydedilemedi: ${e.message}` : "Açı kaydedilemedi.");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function save(status: HeritageSite["status"], exit = false) {
     if (status === "published" && issues.length) {
       setStep(steps.length - 1);
@@ -1212,7 +1233,7 @@ export function SiteEditor({
                 story,
                 storyIndex: activeStory,
                 onStory: (patch: Pick<StoryBlock, "camera" | "highlights" | "interior" | "showCard">) =>
-                  storyField(story.id, patch),
+                  void saveAngle({ ...draft, stories: draft.stories.map((s) => (s.id === story.id ? { ...s, ...patch } : s)) }),
               })}
               {...(step === 4 && {
                 card: draft.partCards?.[activeCard],
@@ -1249,14 +1270,14 @@ export function SiteEditor({
               {...(step === 0 && {
                 onOpening: (pose) => field("openingCamera", pose),
                 onPhotoCamera: (photoId, camera) =>
-                  field(
-                    "photos",
-                    photos.map((p) => {
+                  void saveAngle({
+                    ...draft,
+                    photos: photos.map((p) => {
                       if (p.id !== photoId) return p;
                       const { camera: _old, ...rest } = p;
                       return camera ? { ...rest, camera } : rest;
                     }),
-                  ),
+                  }),
               })}
             />
           ) : (

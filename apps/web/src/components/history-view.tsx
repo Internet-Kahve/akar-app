@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { sized } from "../lib/image-size";
 import { Camera, ChevronDown, ChevronLeft, ChevronRight, History, Image as ImageIcon, MapPin, MapPinOff } from "lucide-react";
 import type { HeritageSite, HistoryImage } from "@akar/domain";
 import { pairOf, type HistoryPair } from "../lib/history-pair";
@@ -36,7 +37,6 @@ function PhotoBox({
   index,
   count,
   wide,
-  small,
   sourceTitle,
   onStep,
 }: {
@@ -46,7 +46,6 @@ function PhotoBox({
   index: number;
   count: number;
   wide: boolean;
-  small: boolean;
   onStep: (step: number) => void;
 }) {
   const { t, lang, text } = useI18n();
@@ -59,6 +58,7 @@ function PhotoBox({
   const box = useRef<HTMLDivElement>(null),
     start = useRef<number | null>(null),
     dragging = useRef(false),
+    sideways = useRef<number | null>(null),
     touched = useRef(false);
   useEffect(() => {
     const el = box.current;
@@ -79,6 +79,11 @@ function PhotoBox({
     if (w) setPos(clamp(((x - r.left - (r.width - w) / 2) / w) * 100));
   };
   const loaded = shown === image.photo.src;
+  // Each photograph opens with the line in the middle, so both sides show.
+  useEffect(() => {
+    touched.current = false;
+    setPos(50);
+  }, [image.id]);
   useEffect(() => {
     // Once the photograph is in, the handle sways right, left and back, so the visitor sees it can be moved.
     if (!pair || !loaded || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -111,38 +116,61 @@ function PhotoBox({
   return (
     <div
       ref={box}
-      className={`gg-foto${pair ? " esli" : ""}${small ? " kucuk" : ""}`}
+      className={`gg-foto${pair ? " esli" : ""}`}
       style={{ "--ayrim": `${split}%`, "--oran": ratio } as CSSProperties}
       onPointerDown={(e) => {
-        if (pair && !(e.target as HTMLElement).closest("button")) {
-          e.preventDefault();
+        // On a phone a finger on the line moves it; a swipe elsewhere goes to the next photograph, as on any other, and a
+        // tap there puts the line there (Muhammed, 4 Nov 2026: «sağa kaydıramıyorum»).
+        const r = e.currentTarget.getBoundingClientRect();
+        const onLine = wide || e.pointerType === "mouse" || Math.abs(e.clientX - (r.left + (split / 100) * r.width)) < 56;
+        if (pair && onLine && !(e.target as HTMLElement).closest("button")) {
+          // A finger going up or down scrolls the page (`touch-action: pan-y`, then the browser cancels this touch);
+          // only one going sideways moves the line. A mouse takes hold at once.
           dragging.current = true;
+          sideways.current = e.pointerType === "mouse" ? null : e.clientX;
+          if (e.pointerType === "mouse") {
+            e.preventDefault();
+            place(e.currentTarget, e.clientX);
+          }
           e.currentTarget.setPointerCapture(e.pointerId);
-          place(e.currentTarget, e.clientX);
           return;
         }
         start.current = e.clientX;
       }}
-      onPointerMove={(e) => dragging.current && place(e.currentTarget, e.clientX)}
+      onPointerMove={(e) => {
+        if (!dragging.current) return;
+        if (sideways.current !== null) {
+          if (Math.abs(e.clientX - sideways.current) < 4) return;
+          sideways.current = null;
+        }
+        place(e.currentTarget, e.clientX);
+      }}
+      onPointerCancel={() => {
+        dragging.current = false;
+        start.current = null;
+      }}
       onPointerUp={(e) => {
         if (dragging.current) {
           dragging.current = false;
+          // A tap on the photograph puts the line there.
+          if (sideways.current !== null) place(e.currentTarget, e.clientX);
           return;
         }
         if (start.current === null || wide) return;
         const dx = e.clientX - start.current;
         start.current = null;
         if (Math.abs(dx) > 40) onStep(dx < 0 ? 1 : -1);
+        else if (pair && Math.abs(dx) < 10 && !(e.target as HTMLElement).closest("button")) place(e.currentTarget, e.clientX);
       }}
     >
       {pair && (
         <div className="gg-bugun-kat">
-          <img className="b-bulanik" src={pair.photo.src} alt="" draggable={false} />
+          <img className="b-bulanik" src={sized(pair.photo.src, 96)} alt="" draggable={false} decoding="async" />
           <img className="b-ana" src={pair.photo.src} alt={pair.photo.alt} draggable={false} />
         </div>
       )}
       <div className="gg-eski-kat">
-        <img className="bulanik" src={image.photo.src} alt="" draggable={false} />
+        <img className="bulanik" src={sized(image.photo.src, 96)} alt="" draggable={false} decoding="async" />
         <img
           className="ana"
           src={image.photo.src}
@@ -228,7 +256,6 @@ export function HistoryView({
   const images = site.historyImages ?? [];
   const [index, setIndex] = useState(() => Math.min(Math.max(0, start), Math.max(0, images.length - 1))),
     [camera, setCamera] = useState(false),
-    [small, setSmall] = useState(false),
     [whereHidden, setWhereHidden] = useState(false);
   const strip = useRef<HTMLDivElement>(null),
     whereRef = useRef<HTMLDivElement>(null),
@@ -304,7 +331,7 @@ export function HistoryView({
             className="gg-uzak-satir"
             onClick={() => onSite(v.site.id, v.site.historyImages!.indexOf(v.image))}
           >
-            <img src={v.image.photo.src} alt="" />
+            <img src={sized(v.image.photo.src, 96)} alt="" loading="lazy" decoding="async" />
             <div>
               <b><Localized tr={v.image.caption} en={v.image.captionEn} /></b>
               <small>{t("gg.farRow", { date: v.image.dateLabel, m: v.distance })}</small>
@@ -351,7 +378,6 @@ export function HistoryView({
       index={index}
       count={count}
       wide={wide}
-      small={small}
       sourceTitle={site.sources?.find((s) => s.id === image.sourceId)?.title ?? ""}
       onStep={(step) => select(index + step)}
     />
@@ -367,7 +393,7 @@ export function HistoryView({
       </div>
       <div className="gg-kaynak" lang={content}>
         {rest} · {shortLicense(image.photo.license)}
-        {pair && ` · ${t("site.presentPhoto")}: ${presentCredit(pair.photo.description)}`}
+        {pair && ` · ${t(pair.photo.trust === "representative" && !pair.example ? "site.presentImagined" : "site.presentPhoto")}: ${presentCredit(pair.photo.description)}`}
       </div>
     </div>
   );
@@ -418,7 +444,7 @@ export function HistoryView({
           const paired = !!pairOf(site, item, lang);
           return (
             <button key={item.id} aria-current={k === index} onClick={() => select(k)}>
-              <img src={item.photo.src} alt="" loading="lazy" />
+              <img src={sized(item.photo.src, 128)} alt="" loading="lazy" decoding="async" />
               {!paired && (
                 <i className="gg-cek-isaret" title={t("gg.noToday")}>
                   <Camera size={11} />
@@ -534,17 +560,15 @@ export function HistoryView({
       {head}
       <div
         className="gg-kaydir"
-        onScroll={(e) => {
-          const top = e.currentTarget.scrollTop;
-          if (top > 80) setSmall(true);
-          else if (top < 10) setSmall(false);
-        }}
+        // The photograph gets smaller with the scroll, one pixel for one, and the page keeps its length (design.css):
+        // a sudden change of height moved the page under the finger, and at the foot it could not settle.
+        onScroll={(e) => e.currentTarget.style.setProperty("--gg-kaydir", `${e.currentTarget.scrollTop}px`)}
       >
         {photo}
         {near}
+        {thumbs}
         {info}
         {today}
-        {thumbs}
         <section className="gg-yer">
           {where}
           {map}

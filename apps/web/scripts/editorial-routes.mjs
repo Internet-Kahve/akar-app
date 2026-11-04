@@ -12,6 +12,8 @@ export function editorialRoutes(records, manifest) {
       id: record.id,
       name: record.ad,
       description: record.aciklama ?? '',
+      ...(record.ad_en && { nameEn: record.ad_en }),
+      ...(record.aciklama_en && { descriptionEn: record.aciklama_en }),
       siteIds: (record.duraklar ?? []).map((id) => ids.get(id) ?? id),
       minutes: Number.isFinite(minutes) ? minutes : (existing?.minutes ?? 0),
       distance: record.mesafe ?? existing?.distance ?? '',

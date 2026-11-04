@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import {
-  BookOpen,
-  Headphones,
-  Pause,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  List,
+  Volume2,
+  VolumeX,
   Play,
-  SkipBack,
-  SkipForward,
   X,
 } from "lucide-react";
 import type { HeritageSite, StoryBlock } from "@akar/domain";
 import { sentenceSeconds, storySeconds, clock } from "../lib/story-time";
-import { writePreference } from "../lib/preferences";
+import { readPreference, writePreference } from "../lib/preferences";
 import { track } from "../lib/usage";
 import { useCountOpen } from "../lib/use-count-open";
 import { useWide } from "./about-reading";
@@ -31,6 +33,12 @@ const HAND_SCROLL_MS = 900;
  * The numbered sentences with the player under them; listening moves through them by itself. On a phone the
  * list is a sheet under the scene, and listening shows one sentence on a card over it.
  */
+/**
+ * A tap on the story's photograph or model (akar-app, the stage on a phone): `detail` is +1 (on) or -1 (back), as an
+ * Instagram story moves on a tap on its picture (Muhammed, 3 Nov 2026: «sağa sola basma kartta değil fotoğrafta»).
+ */
+export const STORY_STEP_EVENT = "akar:hikaye-adim";
+
 export function StoryPanel({
   site,
   index,
@@ -42,6 +50,7 @@ export function StoryPanel({
   voiceLang,
   voiceGender,
   onVoice,
+  hold = false,
 }: {
   site: HeritageSite;
   index: number;
@@ -54,13 +63,22 @@ export function StoryPanel({
   voiceLang: Lang;
   voiceGender: VoiceGender;
   onVoice: (choice: { lang?: Lang; gender?: VoiceGender }) => void;
+  /** A first-time hint is on screen: the story waits (no voice, no autoplay) until it is put away (3 Nov 2026). */
+  hold?: boolean;
 }) {
   const { t } = useI18n();
   const wide = useWide();
-  const [listen, setListen] = useState(startListening),
-    [listOpen, setListOpen] = useState(!startListening),
-    [playing, setPlaying] = useState(startListening),
+  // The sound is on unless the visitor turned it off (Muhammed, 3 Nov 2026: «ses default olarak açık olsun»).
+  const soundKept = () => startListening || readPreference("akar.ses") !== "0";
+  const [listen, setListen] = useState(soundKept),
+    // A phone always starts on the one-sentence card; the whole list is a tap away (☰).
+    [listOpen, setListOpen] = useState(() => !startListening && matchMedia("(min-width: 1000px)").matches),
+    [folded, setFolded] = useState(false),
+    cardRef = useRef<HTMLDivElement>(null),
+    [playing, setPlayingState] = useState(soundKept),
     [rate, setRate] = useState(1),
+    // Autoplay: with the sound off the sentences still move on by themselves, at about the time each takes to read.
+    [auto, setAutoState] = useState(() => readPreference("akar.otomatik") === "1"),
     [error, setError] = useState<MessageKey | "">(""),
     list = useRef<HTMLOListElement>(null),
     // Only the visitor's own scrolling picks a sentence; a scroll that follows the sentence never does.
@@ -83,6 +101,50 @@ export function StoryPanel({
   }
   const advance = useRef(go);
   advance.current = go;
+  // The visitor's own switch is kept; the story's end or an error stopping it is not a choice.
+  const setPlaying = (next: boolean | ((p: boolean) => boolean)) => setPlayingState(next);
+  const chooseSound = (next: boolean) => {
+    writePreference("akar.ses", next ? "1" : "0");
+    if (next && !listen) setListen(true);
+    setPlayingState(next);
+  };
+  const setAuto = (next: boolean) => {
+    writePreference("akar.otomatik", next ? "1" : "0");
+    setAutoState(next);
+  };
+  useEffect(() => {
+    if (!auto || playing || hold) return;
+    const timer = setTimeout(
+      () => advance.current(index + 1),
+      Math.max(3500, (sentenceSeconds(block.text) * 1000) / rate),
+    );
+    return () => clearTimeout(timer);
+  }, [auto, playing, index, block, rate, hold]);
+  useEffect(() => {
+    const step = (e: Event) => advance.current(index + ((e as CustomEvent<number>).detail < 0 ? -1 : 1));
+    window.addEventListener(STORY_STEP_EVENT, step);
+    return () => window.removeEventListener(STORY_STEP_EVENT, step);
+  }, [index]);
+  // The scene ends above the card (model and photograph are never behind it): the card's height, as it changes.
+  useEffect(() => {
+    const el = cardRef.current,
+      space = el?.closest<HTMLElement>(".workspace");
+    if (!el || !space) return;
+    const note = () => space.style.setProperty("--story-card-h", `${Math.round(el.getBoundingClientRect().height)}px`);
+    note();
+    const observer = new ResizeObserver(note);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      space.style.removeProperty("--story-card-h");
+    };
+  });
+  // The ☰ list opens on the sentence being told.
+  useEffect(() => {
+    if (!listOpen || wide) return;
+    (list.current?.children[index] as HTMLElement | undefined)?.scrollIntoView({ block: "center" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listOpen]);
   // Usage (§11.72): the story opened, each sentence that becomes the current one, and a listening that starts.
   useCountOpen(site.id, (id) => track("story.start", id));
   useCountOpen(String(index), (n) => track("story.sentence", site.id, Number(n)));
@@ -115,8 +177,9 @@ export function StoryPanel({
     return () => window.removeEventListener(PART_VOICE_EVENT, quiet);
   }, []);
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || hold) return;
     let stopped = false;
+    let retry: (() => void) | null = null;
     // No recording for this voice, or one that fails: the browser voice reads the sentence, never silence.
     const speak = () => {
       if (!("speechSynthesis" in window)) {
@@ -148,12 +211,19 @@ export function StoryPanel({
         if (!stopped) speak();
       };
       player.play().catch((e: unknown) => {
-        if (!stopped && !(e instanceof DOMException && e.name === "AbortError"))
-          speak();
+        if (stopped || (e instanceof DOMException && e.name === "AbortError")) return;
+        // The browser wants a touch before it plays sound: the recording waits for the next touch, never the machine voice.
+        if (e instanceof DOMException && e.name === "NotAllowedError") {
+          retry = () => {
+            if (!stopped) void player.play().catch(() => {});
+          };
+          window.addEventListener("pointerdown", retry, { once: true, capture: true });
+        } else speak();
       });
     } else speak();
     return () => {
       stopped = true;
+      if (retry) window.removeEventListener("pointerdown", retry, { capture: true });
       if (player) {
         player.onended = null;
         player.onerror = null;
@@ -161,7 +231,7 @@ export function StoryPanel({
       }
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     };
-  }, [playing, block, rate, index, voiceLang, voiceGender]);
+  }, [playing, block, rate, index, voiceLang, voiceGender, hold]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -227,6 +297,17 @@ export function StoryPanel({
       }));
   const current = sourceOf(block)[0];
   const shownNow = storyText(block, false, lang);
+  // One round sound button in the middle: on, the story reads itself aloud and moves on by itself; off, it stops.
+  const sound = (
+    <button
+      className={`story-sound${playing ? " on" : ""}`}
+      aria-pressed={playing}
+      aria-label={t(playing ? "site.soundOff" : "site.soundOn")}
+      onClick={() => chooseSound(!playing)}
+    >
+      {playing ? <Volume2 size={22} /> : <VolumeX size={22} />}
+    </button>
+  );
   const player = (
     <div className="story-player">
       {wide ? (
@@ -239,30 +320,24 @@ export function StoryPanel({
         </button>
       )}
       <div className="story-transport">
-        <button aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)}>
-          <SkipBack size={18} />
+        <button className="story-step-wide" aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)}>
+          <ChevronLeft size={26} />
         </button>
-        <button
-          className="story-play"
-          aria-label={playing ? t("site.stopAudio") : t("site.startAudio")}
-          onClick={() => {
-            if (!listen) setListen(true);
-            setPlaying(!playing);
-          }}
-        >
-          {playing ? <Pause size={22} /> : <Play size={22} />}
-        </button>
-        <button aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)}>
-          <SkipForward size={18} />
+        {sound}
+        <button className="story-step-wide" aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)}>
+          <ChevronRight size={26} />
         </button>
       </div>
-      <button
-        className="story-rate"
-        aria-label={t("site.speechRate", { rate })}
-        onClick={() => setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)}
-      >
-        {rate}x
-      </button>
+      <div className="story-player-end">
+        <button
+          className="story-rate"
+          aria-label={t("site.speechRate", { rate })}
+          onClick={() => setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)}
+        >
+          {rate}x
+        </button>
+        {voiceControls}
+      </div>
     </div>
   );
   const problem = error && (
@@ -275,35 +350,134 @@ export function StoryPanel({
       {index + 1} / {stories.length}
     </span>
   );
+  // ‹ and › beside it (3 Nov 2026): where a tap on the picture is not at hand (the income road's map), and for anyone
+  // who looks for them.
+  const foot = (
+    <div className="story-card-foot">
+      {listOpen ? (
+        <span className="story-foot-side" />
+      ) : (
+        <button className="story-all" aria-label={t("site.storyOpenList")} onClick={() => setListOpen(true)}>
+          <List size={20} />
+        </button>
+      )}
+      <button className="story-step" aria-hidden="true" tabIndex={-1} disabled={index === 0} onClick={() => go(index - 1)}>
+        <ChevronLeft size={24} />
+      </button>
+      {sound}
+      <button className="story-step" aria-hidden="true" tabIndex={-1} onClick={() => go(index + 1)}>
+        <ChevronRight size={24} />
+      </button>
+      <span className="story-count">{index + 1} / {stories.length}</span>
+    </div>
+  );
+  // The ☰ sheet's settings: autoplay, the speed, the voice (its language and gender).
+  const settings = (
+    <div className="story-settings">
+      <button className={`story-chip${auto ? " on" : ""}`} aria-pressed={auto} onClick={() => setAuto(!auto)}>
+        <Play size={14} fill={auto ? "currentColor" : "none"} />
+        {t("site.autoplay")}
+      </button>
+      <button
+        className="story-chip"
+        aria-label={t("site.speechRate", { rate })}
+        onClick={() => setRate(RATES[(RATES.indexOf(rate) + 1) % RATES.length]!)}
+      >
+        {rate}×
+      </button>
+      <button
+        className="story-chip"
+        aria-label={t("site.voiceSelected", { voice: voiceLabel })}
+        onClick={() => onVoice({ gender: voiceGender === "female" ? "male" : "female" })}
+      >
+        <span aria-hidden="true">{voiceGender === "female" ? "♀" : "♂"}</span>
+        {voiceLabel}
+      </button>
+      {languageAvailable && (
+        <button
+          className="story-chip"
+          aria-label={t("site.voiceLanguage", { lang: voiceLang.toUpperCase() })}
+          onClick={() => onVoice({ lang: nextVoiceLang })}
+        >
+          {voiceLang.toUpperCase()}
+        </button>
+      )}
+    </div>
+  );
+  // A phone's whole list (☰): the sentences and the same sound button; no modes, no transport (3 Nov 2026).
+  if (!wide && listOpen)
+    return (
+      <div className="story-panel liste" ref={cardRef}>
+        <div className="story-list-head">
+          <b>{t("site.storyListTitle")}</b>
+          <button className="story-list-close" aria-label={t("site.storyCloseList")} onClick={() => setListOpen(false)}>
+            <X size={18} />
+          </button>
+        </div>
+        {settings}
+        {problem}
+        <button className="sr-only" aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)} />
+        <button className="sr-only" aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)} />
+        <ol className="story-list" ref={list}>
+          {stories.map((s, i) => {
+            const shown = storyText(s, false, lang);
+            return (
+              <li key={s.id} className={i === index ? "current" : ""}>
+                <button
+                  aria-current={i === index ? "step" : undefined}
+                  aria-label={t("site.storyPartLabel", { n: i + 1, title: s.title || shown.text.slice(0, 40) })}
+                  onClick={() => {
+                    onIndex(i);
+                    setListOpen(false);
+                  }}
+                >
+                  <span>{i + 1}</span>
+                  <p className="story-text">
+                    <Localized tr={shown.tr} en={shown.en} />
+                  </p>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+        {foot}
+      </div>
+    );
+  // Phone (Muhammed, 3 Nov 2026, «Instagram hikâyesi gibi, Spotify'dan da basit»): one sentence on a small card.
+  // A tap on the card's left third goes back, anywhere else on to the next. One sound button: on, the story reads
+  // itself aloud and moves on by itself; off, it stops. ▾ folds the card away so the model and photograph show whole.
   if (card)
     return (
-      <div className="story-panel kart">
-        <button className="story-grip" aria-label={t("site.storyOpenList")} onClick={() => setListOpen(true)}>
-          <i />
+      <div className={`story-panel kart${folded ? " folded" : ""}${block.photoId ? " fotolu" : ""}`} ref={cardRef}>
+        <button
+          className="story-fold"
+          aria-expanded={!folded}
+          aria-label={t(folded ? "site.storyCardOpen" : "site.storyCardFold")}
+          onClick={() => setFolded(!folded)}
+        >
+          {folded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
-        <div className="story-card-top">
-          {position}
-          {voiceControls}
-          <TrustTag trust={block.trust} quote={block.text} sources={sourceOf(block)} />
-        </div>
-        <p className="story-card-text">
-          <Localized tr={shownNow.tr} en={shownNow.en} />
-        </p>
-        {(current || site.source) && (
-          <SourceLink
-            label={
-              <>
-                {t("site.sourceLabel")} {current?.title ?? site.source}
-                {current?.detail ? ` · ${current.detail}` : ""}
-              </>
-            }
-            trust={block.trust}
-            quote={block.text}
-            sources={sourceOf(block)}
-          />
+        {/* The taps are on the picture (STORY_STEP_EVENT); for a screen reader and the keyboard, the same two steps. */}
+        <button className="sr-only" aria-label={t("site.prevPart")} disabled={index === 0} onClick={() => go(index - 1)} />
+        <button className="sr-only" aria-label={last ? t("site.finishStory") : t("site.nextPart")} onClick={() => go(index + 1)} />
+        {!folded && (
+          <div className="story-card-body">
+            <p className="story-card-text" aria-live="polite">
+              <Localized tr={shownNow.tr} en={shownNow.en} />
+            </p>
+            {(current || site.source) && (
+              <SourceLink
+                mini
+                label={`${current?.title ?? site.source}${current?.detail ? ` · ${current.detail}` : ""}`}
+                trust={block.trust}
+                quote={block.text}
+                sources={sourceOf(block)}
+              />
+            )}
+          </div>
         )}
         {problem}
-        {player}
+        {foot}
       </div>
     );
   return (
@@ -317,17 +491,8 @@ export function StoryPanel({
         <button className="round-btn" onClick={onClose} aria-label={t("site.closeStory")}>
           <X size={18} />
         </button>
-        <div className="story-mode" role="group" aria-label={t("site.storyMode")}>
-          <button aria-pressed={listen} onClick={() => chooseMode(true)}>
-            <Headphones size={16} />
-            {t("site.listenMode")}
-          </button>
-          <button aria-pressed={!listen} onClick={() => chooseMode(false)}>
-            <BookOpen size={16} />
-            {t("site.read")}
-          </button>
-        </div>
-        {voiceControls}
+        {/* Wide screens (3 Nov 2026): the bar keeps only ✕ and the count; the sound sits between ‹ and › below. */}
+        <span className="story-bar-gap" />
         {position}
       </div>
       {listen && !clip && <p className="story-voice-note">{t("site.voiceBrowser")}</p>}

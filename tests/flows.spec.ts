@@ -78,6 +78,19 @@ async function openProfile(page: Page) {
   await profile.click();
 }
 
+/** Routes: the tab on a wide screen, «Rotalar ›» beside the count on a phone (no tabs there, 3 Nov 2026). */
+async function openRoutes(page: import("@playwright/test").Page) {
+  const tab = page.getByRole("tab", { name: "Rotalar" });
+  if (await tab.isVisible()) await tab.click();
+  else await page.locator(".explore-routes").click();
+}
+
+/** A phone's story opens on the one-sentence card (3 Nov 2026); the numbered list is behind its ☰ button. */
+async function openSentenceList(page: import("@playwright/test").Page) {
+  const button = page.getByRole("button", { name: "Cümle listesini aç" });
+  if (await button.isVisible()) await button.click();
+}
+
 test("discovery, story, memory moderation and persistence form one complete flow", async ({
   page,
 }) => {
@@ -101,15 +114,12 @@ test("discovery, story, memory moderation and persistence form one complete flow
   await page.getByRole("button", { name: "Eseri kaydet", exact: true }).click();
   // The detail panel has no route button (prototype): routes are added from the list.
   await expect(page.getByRole("button", { name: "Rotama ekle", exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: /^Yanındayım/ }).click();
-  await page.getByRole("button", { name: "Demo ziyaretini tamamla" }).click();
-  await expect(page.getByRole("heading", { name: "Demo ziyareti pasaportunda" })).toBeVisible();
-  await page.getByRole("button", { name: "Pencereyi kapat" }).click();
-  await expect(page.getByRole("button", { name: /^Ziyaretim/ })).toBeVisible();
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  // «Yanındayım» is gone from the site's page (Muhammed, 3 Nov 2026).
+  await expect(page.getByRole("button", { name: /^Yanındayım/ })).toHaveCount(0);
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
   for (let i = 0; i < 8; i++)
-    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
-  await page.getByRole("button", { name: "Hikâyeyi tamamla" }).click();
+    await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
+  await page.getByRole("button", { name: "Hikâyeyi tamamla" }).dispatchEvent("click");
   const finished = page.getByRole("dialog");
   await expect(finished).toContainText("Hikâye tamamlandı");
   await finished.getByRole("button", { name: "Devam et" }).click();
@@ -283,7 +293,8 @@ test("admin photo wizard publishes complete content and persists shared images",
     "alt",
     "Güncellenen ortak görsel",
   );
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
+  await openSentenceList(page);
   await expect(page.locator(".current .story-text")).toContainText(
     "bir fotoğraf ve bir kaynakla",
   );
@@ -332,7 +343,7 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
   await expect(
     page.locator(".explore-heading > h2:visible, .explore-heading > .explore-city:visible"),
   ).toHaveCount(1);
-  await page.getByRole("tab", { name: "Rotalar" }).click();
+  await openRoutes(page);
   await expect(page.locator(".route-card")).toHaveCount(3);
   expect(
     await page.evaluate(
@@ -373,46 +384,36 @@ test("responsive layouts do not overflow and Figma assets load locally", async (
 
 test.describe("first visit", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
-  test("the bare address shows the introduction, whose «Haritayı aç» opens the map with its welcome card", async ({ page }) => {
+  test("the bare address shows the introduction, whose «Haritayı aç» opens the map straight away", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /vakıf eserlerini haritada/ })).toBeVisible();
     await expect(page).toHaveURL(/\/$/);
     await page.getByRole("link", { name: /Haritayı aç/ }).first().click();
     await expect(page).toHaveURL(/\/#view=map$/);
-    await expect(page.getByRole("dialog", { name: "Şehrin hikâyesine karış." })).toBeVisible({ timeout: 12000 });
-    await page.goBack();
-    await expect(page.getByRole("heading", { name: /Şehrin hikâyesi/ })).toBeVisible();
-    await expect(page).toHaveURL(/\/$/);
-  });
-  test("the welcome card opens once and Evden gez asks for no position", async ({
-    page,
-  }) => {
-    await page.goto("/#view=map");
-    const card = page.getByRole("dialog", {
-      name: "Şehrin hikâyesine karış.",
-    });
-    await expect(card).toBeVisible({ timeout: 12000 });
-    await card.getByRole("button", { name: "Vakıf nedir? ›" }).click();
-    await expect(page.getByRole("dialog", { name: "Vakıf nedir?" })).toBeVisible();
-    await page.keyboard.press("Escape");
-    await card.getByRole("button", { name: "Evden gez" }).click();
-    await expect(card).toHaveCount(0);
-    await page.reload();
+    // No welcome card any more (Muhammed, 3 Nov 2026): the map, its list and «Evden gez» mode at once.
     await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
-    await expect(page.locator(".welcome")).toHaveCount(0);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.locator(".side-panel .site-row").first()).toBeVisible();
+    await page.goBack();
+    await expect(page.getByRole("heading", { name: /vakıf eserlerini haritada/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
   });
 });
 test("reading keeps the chosen sentence while the list follows it, and the visitor's scrolling leads", async ({
   page,
+  isMobile,
 }) => {
+  // A phone's ☰ list is a picker (3 Nov 2026): a sentence is chosen by a tap there, not by scrolling.
+  test.skip(isMobile, "the phone's list is a picker");
   await page.goto("/#view=detail&site=ulu-cami");
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
-  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
-  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
+  await page.getByRole("button", { name: "Sonraki bölüm", exact: true }).dispatchEvent("click");
   const count = page.locator(".story-count");
   await expect(count).toHaveText("3 / 9");
   await page.waitForTimeout(1200);
   await expect(count).toHaveText("3 / 9");
+  await openSentenceList(page);
   await page.locator(".story-list").hover();
   await page.mouse.wheel(0, 400);
   await expect(count).not.toHaveText("3 / 9");
@@ -422,7 +423,7 @@ test("a link to a site closes the short card and shows the site's panel", async 
 }) => {
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
-  await page.locator(".explore-tabs").waitFor();
+  await page.locator(".site-row-main").first().waitFor();
   await page.locator(".site-row-main").first().evaluate((el) => (el as HTMLElement).click());
   await expect(page.locator(".site-peek")).toBeVisible();
   await page.evaluate(() => {
@@ -437,7 +438,7 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await expect.poll(() => pinIds(page)).toHaveLength(6);
-  await page.getByRole("tab", { name: "Rotalar" }).click();
+  await openRoutes(page);
   await page.locator(".route-card").first().click();
   await expect.poll(async () => (await pinIds(page)).length).toBe(3);
   const icons = await page.evaluate(async () => {
@@ -446,7 +447,9 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   });
   expect(icons.every((icon) => icon.startsWith("stop-"))).toBe(true);
 });
-test("a trust tag tells where the statement comes from", async ({ page }) => {
+test("a trust tag tells where the statement comes from", async ({ page, isMobile }) => {
+  // A phone's short card only says which site it is (3 Nov 2026); the tag stays on the wide screen's card.
+  test.skip(isMobile, "the phone's short card has no trust tag");
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await page.locator(".site-row-main").first().click();
@@ -517,7 +520,8 @@ test("map failure keeps the artifact discovery usable", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Ulucami", level: 1 }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Oku", exact: true }).click();
+  await page.getByRole("button", { name: /^(Oku|Hikâyeyi başlat|Hikâyeyi yeniden izle)$/ }).filter({ visible: true }).first().click();
+  await openSentenceList(page);
   await expect(
     page.getByRole("button", { name: /Bursa’da bir başlangıç/ }),
   ).toBeVisible();
@@ -732,27 +736,10 @@ test("naming a city takes the map there, and a later refresh leaves it there", a
   expect(await center()).toEqual(arrived);
 });
 
-test("the role chips leave out what the city has no site of, and the income category is «Ticari (akar)»", async ({
-  page,
-}) => {
+test("over the map only the city stays, plainly a button that opens the cities", async ({ page }) => {
   await page.goto("/#view=map");
-  const chips = page.locator(".map-chips .chip[aria-pressed]");
-  await expect(chips).toHaveText(["Dinî", "Su", "Eğitim", "Ticari (akar)"]);
-  // Without the fountain and the school the city has no water or education category.
-  const snapshot = createSeed();
-  for (const site of snapshot.sites)
-    if (site.kind === "cesme" || site.kind === "egitim") site.status = "draft";
-  await page.evaluate(
-    (data) => localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data)),
-    snapshot,
-  );
-  await page.reload();
-  await expect(chips).toHaveText(["Dinî", "Ticari (akar)"]);
-  await expect(chips.last()).toHaveAttribute("title", /gelir getiren/);
-  // The first tap keeps one role, the next adds another, taking all away brings them back.
-  await chips.first().click();
-  await expect(chips.first()).toHaveAttribute("aria-pressed", "true");
-  await expect(chips.last()).toHaveAttribute("aria-pressed", "false");
-  await chips.first().click();
-  await expect(chips.last()).toHaveAttribute("aria-pressed", "true");
+  // No role chips and no «Evden gez» any more (Muhammed, 3 Nov 2026).
+  await expect(page.locator(".map-chips .chip")).toHaveCount(1);
+  await expect(page.locator(".map-chips .city-pick")).toContainText("Bursa");
+  await expect(page.getByRole("button", { name: /Evden gez/ })).toHaveCount(0);
 });

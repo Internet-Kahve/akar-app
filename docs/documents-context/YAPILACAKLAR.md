@@ -1,6 +1,6 @@
 # AKAR · Yapılacaklar
 
-*29 Ekim 2026'da yazıldı; 2 Kasım 2026'da baştan güncellendi (bitenler çıkarıldı; eski hali Git geçmişinde). Muhammed'in dal üzerindeki sıradaki işleri: [`PROTOTIP_AKTARIM.md`](PROTOTIP_AKTARIM.md) §3. Bu dosya ekip düzeyindeki açık işleri toplar.*
+*29 Ekim 2026'da yazıldı; 2 Kasım 2026'da baştan güncellendi (bitenler çıkarıldı; eski hali Git geçmişinde). §3. Bu dosya ekip düzeyindeki açık işleri toplar.*
 
 ## 1. Canlıya alma (Tamer)
 
@@ -41,7 +41,7 @@ Panelde olan: eser sihirbazı (Model, Bilgiler, Kaynaklar, Hikâye, Parça kartl
 2 Kasım'da eklenen: Hikâye adımında cümleye **«Yalnız rotada»** kutusu (alan API'de ve domain'de vardı, panelde yoktu); cümle özetinde «Yalnız rotada · Akar akışı var» satırı. Panel kayıtta `flow` ve `routeOnly` alanlarını zaten koruyordu.
 
 API'de olup panelde ekranı olmayanlar:
-- [ ] **Akar akışı** (`flow`: kaynak eser, hedef, etiket, kaynak, güven) — Muhammed'in sıradaki işi (`PROTOTIP_AKTARIM.md` §3.2).
+- [ ] **Akar akışı** (`flow`: kaynak eser, hedef, etiket, kaynak, güven).
 - [ ] Geçmişi Gör eski fotoğrafları (`PUT …/history-images`). («Eser hakkında» bölümleri artık `PUT …/about` ile panelde, §11.69; kitap fotoğrafları ve bölüm kamerası panelde yok.)
 - [ ] Bulmacalar (`/v1/admin/quizzes`), hikâye kartları (`/v1/admin/cards`), içe aktarma (`/v1/admin/imports`), raporlar (`/v1/admin/reports/*`: taslak sorunları, konum, kopya), ekip davetleri (`/v1/admin/staff`).
 
