@@ -220,6 +220,8 @@ test("a long archive scrolls inside its strip without widening the viewport", as
 });
 
 test("closing the archive camera while permission is pending stops the late camera stream", async ({ page }) => {
+  // The current UI intentionally offers camera capture only at phone widths.
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,

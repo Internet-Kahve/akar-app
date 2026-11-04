@@ -41,10 +41,11 @@ capacitor://localhost,https://localhost
 
 İlki iOS, ikincisi Android içindir. `services/api/src/config.ts` yalnız `capacitor://localhost` özel şemasını kabul eder; wildcard veya keyfî custom origin kabul etmez. Kod düzeltmesi ve ortam ayarı API dağıtımında birlikte uygulanmalıdır. Mevcut web origin'lerini silme. Bayrak varsayılan olarak kapalıdır; geri okunamayan mevcut listeyi değiştirmeden açılabilir. Bu değişiklik istemciye yetki vermez; API'nin mevcut token/rol kontrolleri geçerlidir.
 
-4 Kasım 2026 tarihli ilk canlı `/ready` denemesinde bu iki origin için `Access-Control-Allow-Origin` dönmedi. Kullanıcı onayıyla canlı Production ortamına `MOBILE_CLIENTS_ENABLED=1` eklendi; kod yayını [PR #98](https://github.com/Internet-Kahve/akar-app/pull/98) ile izlenir. Gerçek OTP oturum testi cihaz kabulünün parçasıdır.
+4 Kasım 2026'da kullanıcı onayıyla Production ortamına `MOBILE_CLIENTS_ENABLED=1` eklendi ve [PR #98](https://github.com/Internet-Kahve/akar-app/pull/98) yayımlandı (`9e2187b`). Canlı `https://akar-api.vercel.app` üzerinde mevcut web origin'i `https://akar.tamerakdeniz.com` ve iki mobil origin için `/ready`, `/v1/sites` GET istekleri 200, `/v1/me/saved/x` PUT ön uçuşu 204 ve doğru `Access-Control-Allow-Origin` ile doğrulandı. Liste dışı `https://untrusted.invalid` için CORS izni dönmedi. Bu kontrol kimlik doğrulanmış PUT işlemi yapmaz; gerçek OTP oturum testi cihaz kabulünün parçasıdır.
 
 ## Cihaz davranışı
 
+- Mobil paket doğrudan uygulamayı açar; web sürümünün tanıtım sayfasına yönlendirmesi korunur.
 - Konum, cihazda Capacitor Geolocation ile; tarayıcıda mevcut geolocation API ile istenir. İzin yalnız kullanıcı konum gerektiren işlemi başlatınca çıkar. Arka plan konumu kullanılmaz.
 - Tarihî fotoğraf kamerası canlı önizleme/üst üste görüntü için WebView `getUserMedia` kullanır. iOS ve Android kamera izinleri tanımlıdır. Ekran kapanırken geç tamamlanan izin isteğinin akışı durdurulur; uygulama gizlenince kamera bırakılır.
 - Fotoğraf paylaşımı cihazda önbellek dosyası ve işletim sistemi paylaşım menüsü kullanır. Android alıcısının dosyayı geç okuması ihtimali nedeniyle paylaşım dönüşünde dosya hemen silinmez; işletim sisteminin önbelleğindedir.
@@ -65,6 +66,14 @@ npm run mobile:test
 ```
 
 `mobile:test`, Next sunucusu olmadan gerçek statik çıktıyı Chromium/Pixel ve WebKit/iPhone profilleriyle çalıştırır. Keşif, hikâye, anı, profil, arşiv, galeri ve duyarlı yerleşim akışlarını kapsar. Yerelde Chrome ve Playwright WebKit kurulu olmalı (`npx playwright install webkit`). Tarayıcı emülasyonu, yerel eklenti veya fiziksel cihaz doğrulaması değildir.
+
+4 Kasım 2026 doğrulama durumu:
+
+- Web/API tip kontrolleri, 202 birim testi, 6 API yapılandırma testi ve web/API üretim derlemeleri geçti. API değişikliğinin PR kontrolleri de geçti.
+- Statik mobil pakette Chromium ve WebKit ile 22 test geçti; geç tamamlanan kamera izninden sonra akışın durdurulması dahil.
+- Web E2E çalışmasında 131 test geçti, 6 test atlandı. Kamera testinin masaüstü profilindeki tek hatası, testin telefon genişliğini açıkça seçmesiyle düzeltildi; ilgili test iki profilde yeniden çalıştırıldı ve geçti. Tam paket bu düzeltmeden sonra yeniden çalıştırılmadı.
+- Son canlı ayarlarla `mobile:sync` tamamlandı. iOS Simulator derlemesi başarılı; uygulama iPhone 17 Pro / iOS 26.5 simülatörüne kuruldu ve başlatıldı. Canlı katalog/giriş akışı simülatör arayüzünde ve fiziksel cihazda henüz doğrulanmadı.
+- Android Gradle 8.14.3 indirildi; ancak bu ortamda resmi Google Maven adresleri Android Gradle Plugin 8.13.0 ve Google Services 4.4.4 için HTTP 404 döndürdü. `assembleDebug` bağımlılık çözümlemesinde durdu; APK üretilmedi. Depo erişimi düzeldikten sonra derleme ve cihaz testleri tekrarlanmalı.
 
 Yerel derleme (önce `mobile:sync`):
 
