@@ -1,4 +1,6 @@
 "use client";
+import { Avatar, useAvatar } from "./avatar";
+import { AvatarPicker } from "./avatar-picker";
 import { LegalDialog, type LegalKind } from "./legal-dialog";
 import { AccessControls } from "./access-menu";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +18,7 @@ import {
   RotateCcw,
   Map as MapIcon,
   BarChart3,
+  Camera,
 } from "lucide-react";
 import {
   memoryPermissions,
@@ -75,6 +78,8 @@ export function Profile({
   const { lang, t } = useI18n();
   const [erasing, setErasing] = useState(false);
   const [legal, setLegal] = useState<LegalKind | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [figure, setFigure] = useAvatar();
   const tr = lang === "en" ? "tr" : undefined;
   const firstSite = state.sites.find((s) => s.status === "published");
   const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
@@ -93,10 +98,21 @@ export function Profile({
       <div className="profile-grid">
         <aside>
           <div className="profile-card">
-            <div className="avatar large">{state.name.slice(0, 1).toLocaleUpperCase(lang)}</div>
-            <h2>{state.name}</h2>
-            <p className="profile-badge-count">{t("profile.badgeCount", { count: badges.filter((b) => b.earned).length })}</p>
-            <p className="profile-progress-summary">{t("profile.progressSummary", { sites: state.readIds.length, tasks: progress.tasks.length })}</p>
+            <div className="profile-hero" style={{ ["--figure" as string]: figure.colour }}>
+              <div className="profile-cover" aria-hidden="true" />
+              <button className="profile-avatar-btn" onClick={() => setPicking(true)} aria-label={t("profile.avatarChange")}>
+                <Avatar figure={figure} size={96} />
+                <span className="profile-avatar-edit" aria-hidden="true"><Camera size={14} /></span>
+              </button>
+              <h2>{state.name}</h2>
+              <p className="profile-figure"><Localized tr={figure.name} en={figure.nameEn} /></p>
+              <dl className="profile-stats">
+                <div><dd>{badges.filter((b) => b.earned).length}</dd><dt>{t("profile.statBadges")}</dt></div>
+                <div><dd>{state.readIds.length}</dd><dt>{t("profile.statSites")}</dt></div>
+                <div><dd>{progress.tasks.length}</dd><dt>{t("profile.statTasks")}</dt></div>
+              </dl>
+            </div>
+            {picking && <AvatarPicker current={figure.id} onPick={(id) => { setFigure(id); setPicking(false); }} onClose={() => setPicking(false)} />}
             <div className="profile-motif"><Motif /></div>
             {auth ? (
               auth.email ? (

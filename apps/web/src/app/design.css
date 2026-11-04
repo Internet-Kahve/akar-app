@@ -4750,3 +4750,26 @@ body:has(.gg) { overflow-x: clip; }
   .legal-dialog td:last-child { border-bottom: 0; }
   .legal-dialog td::before { content: attr(data-label); display: block; color: var(--text); font-weight: 600; font-size: 12px; }
 }
+
+/* ---------------- Profile (4 Nov 2026): a coloured cover, a large round miniature with its edit button, three counts. */
+.figure-avatar { position: relative; display: inline-grid; place-items: center; flex: none; overflow: hidden; border-radius: 50%; background: color-mix(in srgb, var(--figure) 22%, var(--surface)); border: 2px solid var(--figure); color: var(--figure); font-family: var(--font-display); }
+.figure-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.figure-avatar b { font-weight: 700; line-height: 1; }
+.topbar .figure-avatar { border-width: 2px; }
+.profile-card .profile-hero { grid-column: 1 / -1; position: relative; display: grid; justify-items: center; padding: 0 16px 16px; overflow: hidden; border-radius: 24px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 8px 24px rgb(20 27 43 / .08); text-align: center; }
+.profile-cover { justify-self: stretch; width: calc(100% + 32px); height: 92px; margin: 0 -16px; background: radial-gradient(120% 140% at 15% 0%, color-mix(in srgb, var(--figure) 80%, white) 0%, var(--figure) 45%, color-mix(in srgb, var(--figure) 55%, #2a1d63) 100%); }
+.profile-avatar-btn { position: relative; margin-top: -48px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.profile-avatar-btn .figure-avatar { box-shadow: 0 0 0 4px var(--surface), 0 6px 16px rgb(20 27 43 / .18); border-width: 3px; }
+.profile-avatar-edit { position: absolute; right: -2px; bottom: 2px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--figure); color: #fff; box-shadow: 0 0 0 3px var(--surface); }
+.profile-card .profile-hero h2 { margin: 10px 0 0; font: 600 26px/1.1 var(--font-display); }
+.profile-card .profile-figure { margin: 2px 0 0; color: var(--text-muted); font: 500 13px/18px var(--font); }
+.profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin: 14px 0 0; }
+.profile-stats > div { display: flex; flex-direction: column; padding: 10px 4px; border-radius: 14px; background: color-mix(in srgb, var(--figure) 12%, var(--surface)); }
+.profile-stats dd { margin: 0; color: var(--text); font: 700 22px/26px var(--font-display); }
+.profile-stats dt { color: var(--text-muted); font: 500 12px/16px var(--font); }
+.profile-card > .profile-badge-count, .profile-card > .profile-progress-summary { display: none; }
+.avatar-picker .avatar-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0 10px; }
+.avatar-picker .avatar-grid button { position: relative; display: grid; justify-items: center; gap: 6px; padding: 12px 6px; border: 2px solid transparent; border-radius: 18px; background: var(--primary-light); color: var(--text); font: 500 12px/16px var(--font); cursor: pointer; }
+.avatar-picker .avatar-grid button.chosen { border-color: var(--primary); }
+.avatar-picker .chosen-mark { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; }
+@media (max-width: 899.98px) { .profile-card .profile-hero { margin-bottom: 4px; } }
