@@ -1,4 +1,5 @@
 "use client";
+import { Avatar, useAvatar } from "./avatar";
 import { RouteBuilder, type RouteDraft } from "./route-builder";
 import type { PersonalRoute } from "@akar/domain";
 import { flushSync } from "react-dom";
@@ -208,6 +209,7 @@ export function AkarApp() {
     [mapDrawn, setMapDrawn] = useState(false),
     [openingLate, setOpeningLate] = useState(false);
   const wide = useWide();
+  const [avatarFigure] = useAvatar();
   // The bottom sheet and the floating site card follow the CSS's phone layout (900 px), not `wide` (1000 px).
   const phone = useMedia(PHONE_LAYOUT);
   const client = useRef<AkarClient | null>(null),
@@ -1238,9 +1240,7 @@ export function AkarApp() {
           aria-label={t("header.profile")}
           onClick={() => go("profile")}
         >
-          <span className="avatar">
-            {(account?.email?.[0] ?? "G").toLocaleUpperCase(lang === "en" ? "en" : "tr")}
-          </span>
+          <Avatar figure={avatarFigure} size={36} />
         </button>
       </header>
       {!ready ? (
