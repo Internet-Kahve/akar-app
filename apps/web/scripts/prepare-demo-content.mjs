@@ -62,7 +62,7 @@ const sites = manifest.sites.map((s) => {
   }
   for (const t of s.tasks) taskKeys[t.id] = t.kind === "quiz" ? { correctIndex: t.correctIndex, correctText: t.details.correctText } : { doneText: t.details.doneText };
   return {
-    id: s.id, name: s.name, city: s.city, district: s.district ?? "", year: s.year, architect: s.architect, kind: s.kind, coordinates: s.coordinates,
+    id: s.id, name: s.name, ...(s.nameEn && { nameEn: s.nameEn }), ...(s.descriptionEn && { descriptionEn: s.descriptionEn }), city: s.city, district: s.district ?? "", year: s.year, architect: s.architect, kind: s.kind, coordinates: s.coordinates,
     minutes: s.minutes, description: s.description, status: "published", source: s.source, tier: s.tier,
     stories: s.stories.map(({ photoId, sourceId, camera, interior, routeOnly, flow, ...x }) => ({
       ...x, ...(photoId && { photoId }), ...(sourceId && { sourceId }), ...(camera && { camera }), ...(interior && { interior }), ...(routeOnly && { routeOnly }), ...(flow && { flow }),

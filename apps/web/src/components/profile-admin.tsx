@@ -1,4 +1,5 @@
 "use client";
+import { AccessControls } from "./access-menu";
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
@@ -70,16 +71,6 @@ export function Profile({
 }) {
   const { lang, t } = useI18n();
   const tr = lang === "en" ? "tr" : undefined;
-  const [contrast, setContrast] = useState(
-      () =>
-        typeof document !== "undefined" &&
-        document.documentElement.dataset.contrast === "high",
-    ),
-    [large, setLarge] = useState(
-      () =>
-        typeof document !== "undefined" &&
-        document.documentElement.dataset.textSize === "large",
-    );
   const firstSite = state.sites.find((s) => s.status === "published");
   const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
     (site.badges ?? []).map((badge) => ({
@@ -146,32 +137,8 @@ export function Profile({
                 </p>
               </>
             )}
-            <label>
-              {t("profile.contrast")}
-              <input
-                type="checkbox"
-                checked={contrast}
-                onChange={(e) => {
-                  setContrast(e.target.checked);
-                  document.documentElement.dataset.contrast = e.target.checked
-                    ? "high"
-                    : "normal";
-                }}
-              />
-            </label>
-            <label>
-              {t("profile.largeText")}
-              <input
-                type="checkbox"
-                checked={large}
-                onChange={(e) => {
-                  setLarge(e.target.checked);
-                  document.documentElement.dataset.textSize = e.target.checked
-                    ? "large"
-                    : "normal";
-                }}
-              />
-            </label>
+            <AccessControls />
+            <a className="text-btn" href="/lisanslar.html">{t("profile.licenses")}</a>
             {canManage && (
               <button className="text-btn" onClick={onAdmin}>
                 <Shield size={16} />

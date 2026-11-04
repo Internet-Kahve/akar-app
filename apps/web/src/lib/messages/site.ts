@@ -164,6 +164,7 @@ export const tr = {
   // Story panel
   "site.sourceLabel": "Kaynak:",
   "site.pageShort": "s. {page}",
+  "site.sourceShort": "Kaynak",
   "site.speechUnsupported": "Bu tarayıcı sesli okumayı desteklemiyor. Metinden devam edebilirsin.",
   "site.speechFailed": "Ses başlatılamadı. Okuma modundan devam edebilirsin.",
   "site.closeStory": "Hikâyeyi kapat",
@@ -580,6 +581,7 @@ export const en = {
   // Story panel
   "site.sourceLabel": "Source:",
   "site.pageShort": "p. {page}",
+  "site.sourceShort": "Source",
   "site.speechUnsupported": "This browser doesn't support reading aloud. You can continue with the text.",
   "site.speechFailed": "The audio could not be started. You can continue in reading mode.",
   "site.closeStory": "Close the story",

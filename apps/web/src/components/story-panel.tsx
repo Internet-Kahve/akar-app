@@ -453,12 +453,8 @@ export function StoryPanel({
             </p>
             {(current || site.source) && (
               <SourceLink
-                label={
-                  <>
-                    {current?.title ?? site.source}
-                    {current?.detail ? ` · ${current.detail}` : ""}
-                  </>
-                }
+                mini
+                label={`${current?.title ?? site.source}${current?.detail ? ` · ${current.detail}` : ""}`}
                 trust={block.trust}
                 quote={block.text}
                 sources={sourceOf(block)}

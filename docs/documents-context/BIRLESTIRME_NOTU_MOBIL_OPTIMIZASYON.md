@@ -48,6 +48,17 @@ Bunlar bu dalda **yok**. Demo içerikte (`prepare-demo-content.mjs`) çalışıy
 5. Storage dosyalarına `cache-control: immutable`.
 6. Canlıda bak: harita Network sekmesinde `*_harita_pisik.glb` iniyor mu, 17,5 zoomda `*_sunum.glb` geliyor mu, ikisi arasında bina kararıyor mu?
 
+## Burak'a bırakılan yeni işler
+
+1. **«Bildir» kayıt tutsun.** Şu an yalnız teşekkür gösteriyor (`sheet.report`, `side-sheet.tsx`; `toast.reportThanks`, `akar-app.tsx`). Gereken: `POST /v1/reports` (eser, metin parçası, kullanıcı notu, isteğe bağlı oturum), hız sınırı, panelde liste. İstemci dalı hazır olunca düğme ona bağlanır.
+2. **Ziyaret akışı.** «Yanındayım» kalkınca `visit` komutunu çağıran düğme de kalktı. `POST /v1/visits/verify` ve istemci komutu duruyor, ama çağıran yok. Rota duraklarındaki tik ve profildeki ziyaret durumu bu yüzden dolmaz. Rozetler etkilenmez: hikâye ve görev koşullu. Önerilen: yalnız rota sayfasında konum izniyle küçük «Buradayım»; karar Muhammed ile. Karar çıkana kadar demoda rota ilerlemesi gösterilmemeli.
+3. **İngilizce içeriğin aktarımı.** `icerik/en/` artık `prepare-demo-content.py` tarafından okunuyor: `nameEn`, `descriptionEn`, hikâye `textEn`/`simpleEn`/`titleEn`, fotoğraf `titleEn`, parça kartı `titleEn`/`bodyEn`, «Eser hakkında» `titleEn`/`bodyEn`. `import-demo` bu alanları yazıyor mu, parça kartı ve bölüm için kontrol edin. `seed.ts` veritabanındaki İngilizceyi korur (`keptEnglish`): canlıda Gemini taslağı varsa dosyadaki çeviri onu ezmez, gerekirse taslakları silip aktarın ya da bir değiştirme seçeneği ekleyin.
+4. **İngilizce ses.** Yeni çeviriler için kayıt üretin (`narrations`, `lang=en`). Kayıt yoksa tarayıcı sesi okur. Metin değişince eski kayıtlar eşleşmez.
+5. **Fotoğraf alt metni.** `SitePhoto` içinde `altEn` yok; `en/fotograflar.md` alt metin sütunu dolu ama kullanılmıyor. İstenirse alan eklenir.
+6. **Görevlerin İngilizcesi.** Görev ve rozet alanları var (`titleEn`, `promptEn` …), `gorevler.json` için okuyucu yok.
+7. **Rota adları.** `veri/rota` için `nameEn` kontrol edilmeli.
+8. **KVKK ve lisanslar.** `docs/LISANSLAR.md` ve `lib/kvkk.ts` taslak; hizmet koşullarını teyit edin.
+
 ## Açılar ve panel: mutlaka çalışmalı
 
 Panelde açı ayarlama ve kaydetme bu dalın zorunlu şartı. Editör bir açıyı kaydettiyse hikâye açıldığında aynı açı görünmeli ve aktarma onu ezmemeli.

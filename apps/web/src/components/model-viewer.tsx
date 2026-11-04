@@ -681,7 +681,7 @@ export default function ModelViewer({
             for (const hit of look.intersectObject(root, true)) {
               let skip = false;
               for (let n: THREE.Object3D | null = hit.object; n && n !== root; n = n.parent)
-                if (n === own || !n.visible || (open && lifted.has(n.name)) || /^(Cevre|Avlu)_Agac|^Olcek_|^Yer_Golgesi/.test(n.name)) {
+                if (n === own || !n.visible || (open && lifted.has(n.name)) || /^(Cevre|Avlu)_Agac|^Olcek_|^Yer_Golgesi|^Avize/.test(n.name)) {
                   skip = true;
                   break;
                 }

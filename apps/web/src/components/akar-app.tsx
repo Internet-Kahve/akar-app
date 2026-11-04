@@ -50,6 +50,7 @@ import {
   type Snapshot,
 } from "@akar/domain";
 import { HeritageMap, PEEK_INSET, type MapFlight } from "./heritage-map";
+import { AccessMenu } from "./access-menu";
 import {
   ExplorePanel,
   MapChips,
@@ -634,6 +635,13 @@ export function AkarApp() {
     return nearPoint ? nearestFirst(here, nearPoint) : byDisplayOrder(here);
   }, [filtered, query, cityName, nearPoint, wholeCountry]);
   const chipCategories = useMemo(() => categoriesOf(published), [published]);
+  // The same list before the kind is chosen: what the kind filter counts.
+  const beforeKind = useMemo(() => {
+    const all = filterSites(state.sites, query);
+    return query || wholeCountry ? all : all.filter((s) => !s.city || s.city === cityName);
+  }, [state.sites, query, cityName, wholeCountry]);
+  const listCategories = useMemo(() => categoriesOf(beforeKind), [beforeKind]);
+  const activeCategory = roles.size === 1 ? [...roles][0]! : null;
   const peekSite = published.find((s) => s.id === peekId);
   // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
   // name, colour and emblem are that city's, whatever city the map was last left in.
@@ -1174,6 +1182,7 @@ export function AkarApp() {
             </button>
           ))}
         </div>
+        <AccessMenu />
         <button
           className="theme-switch"
           aria-label={t(theme === "night" ? "theme.toDay" : "theme.toNight")}
@@ -1571,6 +1580,12 @@ export function AkarApp() {
                           setQuery("");
                           setRoles(new Set(siteCategories));
                         }}
+                        categories={listCategories}
+                        categoryCount={(c) =>
+                          c ? beforeKind.filter((s) => kindCategory[s.kind] === c).length : beforeKind.length
+                        }
+                        activeCategory={activeCategory}
+                        onCategory={(c) => setRoles(new Set(c ? [c] : siteCategories))}
                       />
                     )}
                   </div>

@@ -201,6 +201,10 @@ export function ExplorePanel({
   onCustomRoute,
   onCities,
   onClearFilters,
+  categories,
+  categoryCount,
+  activeCategory,
+  onCategory,
 }: {
   tab: ExploreTab;
   onTab: (tab: ExploreTab) => void;
@@ -225,6 +229,12 @@ export function ExplorePanel({
   onCustomRoute: () => void;
   onCities: () => void;
   onClearFilters: () => void;
+  /** The kinds of site in this list, with how many of each, whatever is chosen now. */
+  categories: readonly SiteCategory[];
+  categoryCount: (category: SiteCategory | null) => number;
+  /** The kind the list and the map are narrowed to; `null` for all. */
+  activeCategory: SiteCategory | null;
+  onCategory: (category: SiteCategory | null) => void;
 }) {
   const { t } = useI18n();
   const shown = routes.filter((r) =>
@@ -342,6 +352,23 @@ export function ExplorePanel({
               </button>
             )}
           </div>
+          {categories.length > 1 && (
+            <div className="kind-filter" role="group" aria-label={t("explore.filterLabel")}>
+              <button aria-pressed={!activeCategory} onClick={() => onCategory(null)}>
+                {t("explore.filterAll")} <small>{categoryCount(null)}</small>
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  aria-pressed={activeCategory === c}
+                  onClick={() => onCategory(activeCategory === c ? null : c)}
+                >
+                  <i className={`dot ${c}`} />
+                  {t(`category.${c}`)} <small>{categoryCount(c)}</small>
+                </button>
+              ))}
+            </div>
+          )}
           {query &&
             shown.map((r) => (
               <button
