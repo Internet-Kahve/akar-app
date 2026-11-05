@@ -481,3 +481,63 @@
     animation: none;
   }
 }
+
+/* ---------------- sharing */
+.share-week {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 4px 0 0;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: 600 14px/20px var(--font);
+  color: #3a2200;
+  background: linear-gradient(180deg, #f6cf62, #d99b1f);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 0 0 1.5px #2b1d14;
+  cursor: pointer;
+}
+.achievement-share {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+}
+.share-dialog {
+  text-align: center;
+}
+.share-preview {
+  display: grid;
+  place-items: center;
+  height: min(54vh, 534px);
+  max-width: 100%;
+  aspect-ratio: 9 / 16;
+  margin: 0 auto;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #1d130a;
+}
+.share-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.share-preview p {
+  color: #f6e9cf;
+}
+.share-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+.share-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.share-actions .btn {
+  min-height: 44px;
+}

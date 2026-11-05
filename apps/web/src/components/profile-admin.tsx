@@ -4,6 +4,8 @@ import { AvatarPicker } from "./avatar-picker";
 import { AchievementMedal, BadgeMedal } from "./badge-medal";
 import { BadgeCard, useHowToEarn } from "./badge-card";
 import { achievements as measureAchievements, badgeEntries, type BadgeEntry } from "../lib/badges";
+import { badgesThisWeek } from "../lib/share-card";
+import type { ShareRequest } from "./share-card";
 import { LegalDialog, type LegalKind } from "./legal-dialog";
 import { AccessControls } from "./access-menu";
 import { useEffect, useRef, useState } from "react";
@@ -22,6 +24,7 @@ import {
   Map as MapIcon,
   BarChart3,
   Camera,
+  Share2,
 } from "lucide-react";
 import {
   memoryPermissions,
@@ -41,6 +44,8 @@ import dynamic from "next/dynamic";
 
 // The content studio is for the team only: its screens come in their own chunks when an admin opens them, not with
 // every visitor's first download (3 Nov 2026; ~186 KB of source the map never used).
+/* The share card's canvas code comes only when the visitor asks to share. */
+const ShareDialog = dynamic(() => import("./share-card"), { ssr: false });
 const SiteEditor = dynamic(() => import("./admin-site-editor").then((m) => m.SiteEditor), { ssr: false });
 const RouteAdmin = dynamic(() => import("./admin-collections").then((m) => m.RouteAdmin), { ssr: false });
 const PhotoAdmin = dynamic(() => import("./admin-collections").then((m) => m.PhotoAdmin), { ssr: false });
@@ -86,6 +91,8 @@ export function Profile({
   const tr = lang === "en" ? "tr" : undefined;
   const firstSite = state.sites.find((s) => s.status === "published");
   const [openBadge, setOpenBadge] = useState<BadgeEntry | null>(null);
+  const [sharing, setSharing] = useState<ShareRequest | null>(null);
+  const weekCount = badgesThisWeek(progress, new Date()).length;
   const howToEarn = useHowToEarn();
   const badges = badgeEntries(state.sites, progress);
   const earnedCount = badges.filter((b) => b.held).length;
@@ -194,6 +201,12 @@ export function Profile({
         <div className="profile-main">
           <section className="card profile-badges">
             <div className="row between"><h3>{t("profile.badges")}</h3><span>{earnedCount} / {badges.length}</span></div>
+            {weekCount > 0 && (
+              <button className="share-week" onClick={() => setSharing({ kind: "week" })}>
+                <Share2 size={16} aria-hidden="true" />
+                {t("profile.shareWeek")}
+              </button>
+            )}
             {badges.length ? <div className="medal-grid">
               {badges.map((entry) => {
                 const { badge, english } = badgeInLang(entry.badge, lang);
@@ -204,7 +217,8 @@ export function Profile({
                 </button>;
               })}
             </div> : <p className="muted">{t("profile.noBadges")}</p>}
-            {openBadge && <BadgeCard entry={badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge} onClose={() => setOpenBadge(null)} onSite={(site) => { setOpenBadge(null); onSite(site.id); }} />}
+            {openBadge && <BadgeCard entry={badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge} onClose={() => setOpenBadge(null)} onSite={(site) => { setOpenBadge(null); onSite(site.id); }} onShare={() => { setSharing({ kind: "badge", entry: badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge }); setOpenBadge(null); }} />}
+            {sharing && <ShareDialog request={sharing} name={state.name} points={state.points} sites={state.sites} progress={progress} onClose={() => setSharing(null)} />}
           </section>
           <section className="card profile-achievements">
             <h3>{t("profile.achievements")}</h3>
@@ -222,6 +236,11 @@ export function Profile({
                       </span>
                     )}
                   </span>
+                  {a.done && (
+                    <button className="round-btn plain achievement-share" onClick={() => setSharing({ kind: "achievement", id: a.id })} aria-label={t("profile.shareAchievement", { title: t(`achievement.${a.id}.title`) })}>
+                      <Share2 size={17} />
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

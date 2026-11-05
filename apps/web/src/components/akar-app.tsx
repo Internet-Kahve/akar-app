@@ -116,10 +116,12 @@ import { VoiceProvider } from "./voice";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 import { achievements as measureAchievements, badgeEntries, newlyDone, type Achievement, type AchievementId } from "../lib/badges";
 import type { Celebrated } from "./badge-celebration";
+import type { ShareRequest } from "./share-card";
 import dynamic from "next/dynamic";
 
 /* The celebration's code comes only when something is earned. */
 const BadgeCelebration = dynamic(() => import("./badge-celebration"), { ssr: false });
+const ShareDialog = dynamic(() => import("./share-card"), { ssr: false });
 type View =
   | "map"
   | "sites"
@@ -171,6 +173,7 @@ export function AkarApp() {
     [lang, setLang] = useState<Lang>("tr"),
     [voice, setVoice] = useState<VoiceChoice>({ lang: null, gender: null }),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
+    [shareRequest, setShareRequest] = useState<ShareRequest | null>(null),
     [celebrate, setCelebrate] = useState<Array<{ kind: "badge"; id: string } | { kind: "achievement"; id: AchievementId }>>([]),
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
@@ -2048,9 +2051,13 @@ export function AkarApp() {
                 setPuzzle(null);
                 go("profile");
               }}
+              onShare={(item) => setShareRequest(item.kind === "badge" ? { kind: "badge", entry: item.entry } : { kind: "achievement", id: item.id })}
             />
           ) : null;
         })()}
+        {shareRequest && (
+          <ShareDialog request={shareRequest} name={state.name} points={state.points} sites={state.sites} progress={progress} onClose={() => setShareRequest(null)} />
+        )}
         {completion && site && (
           <CompletionCard
             site={site}

@@ -43,7 +43,7 @@ export function BadgeMedal({
   );
 }
 
-const ACHIEVEMENT_ICONS: Record<AchievementId, LucideIcon> = {
+export const ACHIEVEMENT_ICONS: Record<AchievementId, LucideIcon> = {
   "first-story": BookOpen,
   "whole-site": Landmark,
   "half-bursa": MapIcon,
