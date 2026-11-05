@@ -117,6 +117,8 @@ import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 import { achievements as measureAchievements, badgeEntries, newlyDone, type Achievement, type AchievementId } from "../lib/badges";
 import type { Celebrated } from "./badge-celebration";
 import type { ShareRequest } from "./share-card";
+import { LegalDialog, type LegalKind } from "./legal-dialog";
+import { legalFromHash, withoutLegal } from "../lib/legal-link";
 import { AVATAR_IDS, type AvatarId } from "@akar/domain";
 
 const isAvatarId = (id: string): id is AvatarId => (AVATAR_IDS as readonly string[]).includes(id);
@@ -431,6 +433,14 @@ export function AkarApp() {
       stopUsageFlush();
     };
   }, [load, t]);
+  // A legal text asked for in the address (the intro page's footer links): shown over the map, `belge` dropped on close.
+  const [hashLegal, setHashLegal] = useState<LegalKind | null>(null);
+  useEffect(() => {
+    const read = () => setHashLegal(legalFromHash(location.hash));
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, []);
   // Once per page load; the client effect above re-runs on a language change.
   useEffect(() => track("app.open"), []);
   useEffect(() => {
@@ -2104,6 +2114,15 @@ export function AkarApp() {
             />
           ) : null;
         })()}
+        {hashLegal && (
+          <LegalDialog
+            kind={hashLegal}
+            onClose={() => {
+              setHashLegal(null);
+              history.replaceState(null, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
+            }}
+          />
+        )}
         {shareRequest && (
           <ShareDialog request={shareRequest} name={state.name} points={state.points} sites={state.sites} progress={progress} onClose={() => setShareRequest(null)} />
         )}
