@@ -1,6 +1,9 @@
 "use client";
 import { Avatar, useAvatar } from "./avatar";
 import { AvatarPicker } from "./avatar-picker";
+import { AchievementMedal, BadgeMedal } from "./badge-medal";
+import { BadgeCard, useHowToEarn } from "./badge-card";
+import { achievements as measureAchievements, badgeEntries, type BadgeEntry } from "../lib/badges";
 import { LegalDialog, type LegalKind } from "./legal-dialog";
 import { AccessControls } from "./access-menu";
 import { useEffect, useRef, useState } from "react";
@@ -32,7 +35,7 @@ import {
 import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@akar/api-client";
 import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
-import { badgeInLang, taskInLang } from "../lib/task-text";
+import { badgeInLang } from "../lib/task-text";
 import { ConfirmDialog, MemoryActions } from "./memory-actions";
 import dynamic from "next/dynamic";
 
@@ -82,13 +85,11 @@ export function Profile({
   const [figure, setFigure] = useAvatar();
   const tr = lang === "en" ? "tr" : undefined;
   const firstSite = state.sites.find((s) => s.status === "published");
-  const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
-    (site.badges ?? []).map((badge) => ({
-      ...badge,
-      site,
-      earned: progress.badges.some((owned) => owned.badgeId === badge.id),
-    })),
-  );
+  const [openBadge, setOpenBadge] = useState<BadgeEntry | null>(null);
+  const howToEarn = useHowToEarn();
+  const badges = badgeEntries(state.sites, progress);
+  const earnedCount = badges.filter((b) => b.held).length;
+  const feats = measureAchievements({ sites: state.sites, readIds: state.readIds, memories: state.memories, progress });
   return (
     <main id="main-content" tabIndex={-1} className="profile-page">
       <header className="profile-heading">
@@ -107,7 +108,7 @@ export function Profile({
               <h2>{state.name}</h2>
               <p className="profile-figure"><Localized tr={figure.name} en={figure.nameEn} /></p>
               <dl className="profile-stats">
-                <div><dd>{badges.filter((b) => b.earned).length}</dd><dt>{t("profile.statBadges")}</dt></div>
+                <div><dd>{earnedCount}</dd><dt>{t("profile.statBadges")}</dt></div>
                 <div><dd>{state.readIds.length}</dd><dt>{t("profile.statSites")}</dt></div>
                 <div><dd>{progress.tasks.length}</dd><dt>{t("profile.statTasks")}</dt></div>
               </dl>
@@ -192,18 +193,38 @@ export function Profile({
         </aside>
         <div className="profile-main">
           <section className="card profile-badges">
-            <div className="row between"><h3>{t("profile.badges")}</h3><span>{badges.filter((b) => b.earned).length} / {badges.length}</span></div>
-            {badges.length ? <div className="badges">
-              {badges.map((owned) => {
-                const { badge, english } = badgeInLang(owned, lang);
-                const task = owned.site.tasks?.find((x) => x.id === owned.taskId);
-                return <div key={badge.id} className={owned.earned ? "earned" : ""}>
-                <img src={`/figma/${owned.earned ? "718a4" : "b8133"}.svg`} alt="" />
-                <b lang={english ? undefined : tr}>{badge.title}</b>
-                <small>{owned.earned ? <Localized tr={owned.site.name} en={owned.site.nameEn} /> : owned.condition === "story" ? t("profile.badgeStory") : t("profile.badgeTask", { title: task ? taskInLang(task, lang).task.title : badge.title })}</small>
-              </div>;
+            <div className="row between"><h3>{t("profile.badges")}</h3><span>{earnedCount} / {badges.length}</span></div>
+            {badges.length ? <div className="medal-grid">
+              {badges.map((entry) => {
+                const { badge, english } = badgeInLang(entry.badge, lang);
+                return <button key={badge.id} className={`medal-tile ${entry.held ? "earned" : "locked"}`} onClick={() => setOpenBadge(entry)} aria-label={t("badge.open", { title: badge.title })}>
+                  <BadgeMedal badge={entry.badge} tier={entry.tier} earned={!!entry.held} size={76} />
+                  <b lang={english ? undefined : tr}>{badge.title}</b>
+                  <small>{entry.held ? <Localized tr={entry.site.name} en={entry.site.nameEn} /> : howToEarn(entry)}</small>
+                </button>;
               })}
             </div> : <p className="muted">{t("profile.noBadges")}</p>}
+            {openBadge && <BadgeCard entry={badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge} onClose={() => setOpenBadge(null)} onSite={(site) => { setOpenBadge(null); onSite(site.id); }} />}
+          </section>
+          <section className="card profile-achievements">
+            <h3>{t("profile.achievements")}</h3>
+            <ul className="achievement-list">
+              {feats.map((a) => (
+                <li key={a.id} className={a.done ? "done" : ""}>
+                  <AchievementMedal id={a.id} done={a.done} size={52} />
+                  <span>
+                    <b>{t(`achievement.${a.id}.title`)}</b>
+                    <small>{t(`achievement.${a.id}.text`)}</small>
+                    {!a.done && a.progress[1] > 1 && (
+                      <span className="achievement-bar" role="progressbar" aria-valuemin={0} aria-valuemax={a.progress[1]} aria-valuenow={a.progress[0]} aria-label={t(`achievement.${a.id}.title`)}>
+                        <i style={{ width: `${(a.progress[0] / a.progress[1]) * 100}%` }} />
+                        <em>{t("profile.achievementProgress", { have: a.progress[0], need: a.progress[1] })}</em>
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </section>
           <section className="card profile-saved">
             <h3>{t("profile.saved")}</h3>

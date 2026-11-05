@@ -154,3 +154,12 @@ Dal: `muhammedtalay/hikaye-mobil-cerceve`. Backend'i doğrudan değiştirmedik; 
 7. **Telefonda hikâye kartı** ekranın %22'si (`PHONE_CARD_SHARE`, `story-scene.ts`); kamera çerçevesi buna göre ayarlanıyor. Admin Hikâye adımında «Telefon önizlemesi» kutusu var (yalnız hikâye cümlesi açılarında).
 8. **Mobil üst çubuktan «Aa» kalktı**; kontrast ve yazı boyutu profil ayarlarında.
 9. **Dağıtım notu:** `NEXT_PUBLIC_DEMO_CONTENT=1` olmadan alınan derleme demo içeriği (gece modeli, eser metinleri) yüklemez; yerelde `npm run dev:content` ya da `prepare-demo-content.mjs` + bu değişkenle `build`.
+
+## 5 Kasım · Burak için notlar (profil oyunlaştırma, Aşama A: rozetler)
+
+Dal: `talha/profil-oyunlastirma`. Backend değişmedi; bunlar API'yi ilgilendiren noktalar.
+
+1. **Rozet seviyesi istemcide hesaplanır** (`apps/web/src/lib/badges.ts`, `badgeTier`). Hikâye rozeti bronz, görev rozeti gümüş, `onSiteLabel` açık rozet `user_site_badges.on_site = true` ise altın. `GET /v1/me/site-progress` içindeki `onSite` ve `earnedAt` yeterli; yeni alan gerekmez. Evden kazanılıp sonra yerinde yapılan saha görevi rozeti altına çıkar (sunucudaki `on_site` yalnız `false → true` değişir, bu kural ona dayanıyor).
+2. **Rozet görselleri statik dosya**: `apps/web/public/rozetler/<badge-id>.webp` (256 × 256, 20 KB altı). Supabase'e yüklenmez, `site_badges` tablosuna medya alanı gerekmez. İçe aktarmayla yeni bir rozet gelirse ve dosyası yoksa ekran türüne göre yedek görseli (`_hikaye`, `_gorev`, `_saha`) gösterir. Yeni rozetin kendi görseli için `draw-badges.mjs` içine çizim ve `BADGE_ART` listesine id eklenir; boyamalı sürüm promptları `docs/ROZET-PROMPTLARI.md`.
+3. **Başarımlar** («İlk hikâye», «Eserin bütün rozetleri», «Bursa'nın yarısı», «Akar ile hayrat», «Yerinde», «İz bıraktın», «Koleksiyon tamam») istemcide mevcut veriden ölçülür ve **puan vermez**. «Akar ile hayrat» çifti eser id'leriyle tanımlı (`ulu-cami` + `yildirim-bayezid-bedesteni`); `sites.related_site_id` içerikte dolu olsaydı ona bağlanabilirdi.
+4. **Görevler puan vermez** kuralı korundu (`site-tasks/badges.ts`, `gorevler.json` «Puan, süre, ceza yok»). Seviye/XP çubuğu (Aşama C) yalnız `point_events` toplamını kullanacak.

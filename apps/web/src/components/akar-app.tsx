@@ -90,7 +90,6 @@ import {
   type FieldTask,
 } from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
-import { badgeInLang } from "../lib/task-text";
 import { apiUrl, demoContentUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
@@ -115,6 +114,12 @@ import { applyTheme, useTheme } from "../lib/theme";
 import { LangProvider, Localized } from "./i18n";
 import { VoiceProvider } from "./voice";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
+import { achievements as measureAchievements, badgeEntries, newlyDone, type Achievement, type AchievementId } from "../lib/badges";
+import type { Celebrated } from "./badge-celebration";
+import dynamic from "next/dynamic";
+
+/* The celebration's code comes only when something is earned. */
+const BadgeCelebration = dynamic(() => import("./badge-celebration"), { ssr: false });
 type View =
   | "map"
   | "sites"
@@ -166,6 +171,7 @@ export function AkarApp() {
     [lang, setLang] = useState<Lang>("tr"),
     [voice, setVoice] = useState<VoiceChoice>({ lang: null, gender: null }),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
+    [celebrate, setCelebrate] = useState<Array<{ kind: "badge"; id: string } | { kind: "achievement"; id: AchievementId }>>([]),
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
     [sheetDragging, setSheetDragging] = useState(false),
@@ -242,6 +248,28 @@ export function AkarApp() {
     account?.id ?? null,
     snapshotRevision,
   );
+  /**
+   * Achievements are celebrated only right after the visitor's own action (a finished task or story) has been read
+   * back, never because a sign-in or a reload filled the state.
+   */
+  const feats = useMemo(
+    () => measureAchievements({ sites: state.sites, readIds: state.readIds, memories: state.memories, progress }),
+    [state.sites, state.readIds, state.memories, progress],
+  );
+  const lastFeats = useRef<Achievement[] | null>(null);
+  const featsArmed = useRef(0);
+  useEffect(() => {
+    const before = lastFeats.current;
+    lastFeats.current = feats;
+    if (!before || Date.now() > featsArmed.current) return;
+    // One action, one look: the next change after it is compared, then nothing until the next action.
+    featsArmed.current = 0;
+    const fresh = newlyDone(before, feats);
+    if (fresh.length) setCelebrate((queue) => [...queue, ...fresh.map((a) => ({ kind: "achievement" as const, id: a.id }))]);
+  }, [feats]);
+  const armAchievements = useCallback(() => {
+    featsArmed.current = Date.now() + 8000;
+  }, []);
   /**
    * Map settings and city records (§11.42, §11.45) are a refinement: when one cannot be read the map
    * opens at the demo region and the viewer keeps the values it has.
@@ -436,13 +464,13 @@ export function AkarApp() {
   /** A finished task: the badges it earned are announced and the progress is read again. */
   const taskFinished = useCallback(
     (badges: SiteBadge[]) => {
-      if (badges.length)
-        setToast(
-          t("toast.newBadge", { titles: badges.map((b) => badgeInLang(b, langRef.current).badge.title).join(", ") }),
-        );
-      void refreshProgress();
+      armAchievements();
+      // Celebrated once the progress is read back, so a field task done at the site shows its gold.
+      void refreshProgress().then(() => {
+        if (badges.length) setCelebrate((queue) => [...queue, ...badges.map((b) => ({ kind: "badge" as const, id: b.id }))]);
+      });
     },
-    [refreshProgress, t],
+    [refreshProgress, armAchievements],
   );
   const closeOverlay = useCallback(() => setOverlay(null), []);
   const signInForBadges = () => setSignIn(t("toast.badgesSignIn"));
@@ -1530,6 +1558,7 @@ export function AkarApp() {
                       hold={storyHold}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
+                        armAchievements();
                         if (await commit({ type: "read", siteId: site.id })) {
                           writePreference(`akar.ilerleme.${site.id}`, "0");
                           const fresh = await refreshProgress();
@@ -2003,6 +2032,25 @@ export function AkarApp() {
         }
       >
         {shell}
+        {celebrate.length > 0 && !completion && (() => {
+          const entries = badgeEntries(state.sites, progress);
+          const items = celebrate.flatMap((c): Celebrated[] => {
+            if (c.kind === "achievement") return [c];
+            const entry = entries.find((e) => e.badge.id === c.id);
+            return entry ? [{ kind: "badge", entry }] : [];
+          });
+          return items.length ? (
+            <BadgeCelebration
+              items={items}
+              onClose={() => setCelebrate([])}
+              onCollection={() => {
+                setCelebrate([]);
+                setPuzzle(null);
+                go("profile");
+              }}
+            />
+          ) : null;
+        })()}
         {completion && site && (
           <CompletionCard
             site={site}

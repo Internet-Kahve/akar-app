@@ -60,6 +60,7 @@ export const LICENSES_DOC: LegalDoc = {
         "Vakıf Katılım: Vakıf Eserleri Envanteri kitaplarının metin ve görselleri ile envanter fotoğraf arşivi. Proje için verildi, uygulamada kullanılabilir. Kitap sayfalarına «E cilt-N PDF s.X» kodlarıyla atıf yapılır.",
         "3D modeller: ekip üretimi, «Temsili» olarak işaretlidir.",
         "Temsili görseller yapay olarak üretilmiştir ve «Temsili görsel» etiketiyle gösterilir.",
+        "Rozet görselleri yapay olarak üretilmiştir: ekip, eserin içeriğine göre yazılımla çizdi; gerçek bir nesneyi ya da yazıyı göstermez.",
         "Seslendirme: yapay ses (Deepgram). İngilizce metinler: ekip çevirisi, yapay zekâ desteğiyle.",
       ],
     },

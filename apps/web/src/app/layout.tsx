@@ -14,6 +14,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import "./design.css";
 import "./theme.css";
+import "./badges.css";
 import { ACCESS_BOOT } from "../lib/access";
 import { INTRO_BOOT, THEME_BOOT } from "../lib/theme-boot";
 export const metadata: Metadata = {
