@@ -67293,7 +67293,8 @@
                             "task.complete",
                             "my_route.add",
                             "route.open",
-                            "account.sign_in"
+                            "account.sign_in",
+                            "chat.message"
                           ],
                           "description": "Olay adı; liste ve kuralları `USAGE_EVENTS` (§11.72)"
                         },
@@ -67420,7 +67421,8 @@
                               "task.complete",
                               "my_route.add",
                               "route.open",
-                              "account.sign_in"
+                              "account.sign_in",
+                              "chat.message"
                             ]
                           },
                           "guest": {
@@ -67464,7 +67466,8 @@
                               "task.complete",
                               "my_route.add",
                               "route.open",
-                              "account.sign_in"
+                              "account.sign_in",
+                              "chat.message"
                             ]
                           },
                           "guest": {
@@ -67529,7 +67532,8 @@
                                     "task.complete",
                                     "my_route.add",
                                     "route.open",
-                                    "account.sign_in"
+                                    "account.sign_in",
+                                    "chat.message"
                                   ]
                                 },
                                 "guest": {
@@ -67702,7 +67706,8 @@
                               "task.complete",
                               "my_route.add",
                               "route.open",
-                              "account.sign_in"
+                              "account.sign_in",
+                              "chat.message"
                             ]
                           },
                           "guest": {
@@ -67745,6 +67750,162 @@
                     "siteId",
                     "name",
                     "rows"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chat": {
+      "post": {
+        "summary": "Asistana soru sor",
+        "tags": [
+          "chat"
+        ],
+        "description": "Yalnız giriş yapmış kullanıcı. `siteId` verilirse o eserin hikâyesi, «Eser hakkında» paragrafları ve parça kartları, verilmezse yayındaki eserlerin özeti bağlam olur; görev cevapları bağlama girmez. Hesap başına dakikada 6 soru; herkes için günlük sınır `CHAT_DAILY_LIMIT` (dolunca 429). Sohbet saklanmaz, yalnız günlük `chat.message` sayacı artar. Model anahtarı yoksa 503; tüm anahtarlar sınırdaysa 429; bilinmeyen ya da yayında olmayan eser 404.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                    "description": "Kullanıcının sorusu"
+                  },
+                  "history": {
+                    "default": [],
+                    "description": "Önceki mesajlar, eskiden yeniye; sunucu sohbet saklamaz, bağlamı istemci yollar",
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "assistant"
+                          ]
+                        },
+                        "text": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "text"
+                      ]
+                    }
+                  },
+                  "siteId": {
+                    "description": "Kullanıcı bir eser sayfasındaysa o eser; yoksa yayındaki eserlerin özeti kullanılır",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "lang": {
+                    "default": "tr",
+                    "description": "Yanıt dili",
+                    "type": "string",
+                    "enum": [
+                      "tr",
+                      "en"
+                    ]
+                  }
+                },
+                "required": [
+                  "message"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "answer": {
+                      "type": "string"
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "site",
+                              "story",
+                              "about",
+                              "part_card"
+                            ],
+                            "description": "site = eser tanıtımı, story = hikâye cümlesi, about = «Eser hakkında» paragrafı, part_card = 3B parça kartı"
+                          },
+                          "siteId": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "Gösterilecek etiket: eser adı, paragraf ya da kart başlığı"
+                          },
+                          "source": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "page": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "title",
+                                  "page"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bloğun bağlı olduğu kaynak (eser, sayfa); yoksa null"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "siteId",
+                          "title",
+                          "source"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Yanıtın dayandığı içerik blokları, tekrarsız, en fazla 5"
+                    },
+                    "general": {
+                      "type": "boolean",
+                      "description": "true = yanıt içeriğimizin dışında genel bilgiye de dayanıyor; istemci «genel bilgi» diye işaretler"
+                    }
+                  },
+                  "required": [
+                    "answer",
+                    "sources",
+                    "general"
                   ],
                   "additionalProperties": false
                 }

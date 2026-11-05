@@ -20,7 +20,7 @@
 - **Seviye:** puan defteri toplamından. Yolcu 0, Gezgin 60, Kâşif 200, Seyyah 450, Bilge Seyyah 800 (`apps/web/src/lib/levels.ts`).
 - **Görünen ad:** kırpılır, 2–24 karakter, bağlantı/telefon/küfür/ekip adı yok. Uygulama ve sunucu aynı kuralı kullanır (`displayNameProblem`, `packages/domain`).
 - **Hafta:** Pazartesi 00:00 Europe/Istanbul (`istanbulWeekStart`, `packages/domain`).
-- **Liderlik:** isteğe bağlı, varsayılan kapalı; yalnız görünen ad, figür, haftalık puan. E-posta ve kimlik yok. Karar: `docs/BACKEND-DECISIONS.md` §11.74.
+- **Liderlik:** isteğe bağlı, varsayılan kapalı; yalnız görünen ad, figür, haftalık puan. E-posta ve kimlik yok. Karar: `docs/BACKEND-DECISIONS.md` §11.76.
 - Para, ödül, sandık, şans, süreli baskı, seri kaybetme yok.
 
 ## Nasıl doğrulandı

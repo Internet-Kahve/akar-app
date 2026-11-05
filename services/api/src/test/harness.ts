@@ -26,6 +26,8 @@ export type TestAppOptions = {
   tts?: AppDeps["tts"];
   /** Default: null (translation answers 503). Pass a fake from `test/fakes.ts`. */
   translator?: AppDeps["translator"];
+  /** Default: null (chat answers 503). Pass `fakeChat()` from `test/fakes.ts`. */
+  chat?: AppDeps["chat"];
   /** Extra config values, e.g. `{ VISIT_RADIUS_M: "30" }`. */
   env?: Record<string, string>;
   /** Module plugins not yet registered in app.ts (see `buildApp`). */
@@ -65,6 +67,7 @@ export async function startTestApp(opts: TestAppOptions = {}): Promise<{
       geocoderFor: opts.geocoderFor ?? null,
       tts: opts.tts ?? null,
       translator: opts.translator ?? null,
+      chat: opts.chat ?? null,
     },
     { docs: false, register: opts.register ?? [] },
   );

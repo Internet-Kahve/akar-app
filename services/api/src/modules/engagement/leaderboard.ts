@@ -17,7 +17,7 @@ type Row = {
 };
 
 /**
- * «Haftanın Gezgini» (decision §11.74): the points ledger summed per user since Monday 00:00 Europe/Istanbul.
+ * «Haftanın Gezgini» (decision §11.76): the points ledger summed per user since Monday 00:00 Europe/Istanbul.
  * - The score is the server's: `point_events` only, so an event repeated earns nothing (the ledger's unique key) and
  *   a removed memory takes its points back within the week too.
  * - Listed: accounts that turned the list on (`profiles.leaderboard_visible`, off by default) with a display name and

@@ -61,6 +61,7 @@ Tüm değişkenler `.env.example` içinde; `src/config.ts` doğrular.
 | `STORAGE_QUOTA_MB` | `1024` | Yönetim panelinin depolama uyarısının ölçtüğü kota, MB (pozitif tam sayı); `1024` = Supabase Free. Ücretli plana geçilince büyütülür. Üretimde zorunlu değil (§11.21) |
 | `DEEPGRAM_API_KEY`, `TTS_VOICES`, `TTS_DAILY_CHAR_LIMIT` | yok, dört Flux sesi, `100000` | Hikâye seslendirmesi (§11.56). Anahtar yoksa `POST /v1/admin/sites/:id/narrations` 503 döner; `TTS_VOICES` `dil.ses=model` listesidir (dört birleşim zorunlu); sınır son 24 saatte seslendirilen karakter üst sınırıdır (aşılırsa 429). Üretimde zorunlu değil |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | yok, `gemini-2.5-flash` | Boş İngilizce hikâye metinlerinin makine çevirisi (§11.56). Anahtar yoksa `POST /v1/admin/sites/:id/translate` 503 döner. Üretimde zorunlu değil |
+| `GEMINI_CHAT_API_KEYS`, `GEMINI_CHAT_MODEL`, `CHAT_DAILY_LIMIT` | yok, `gemini-3.5-flash-lite`, `1000` | Site asistanı `POST /v1/chat` (§11.74). Anahtarlar virgülle ayrılır, sırayla denenir; sınıra takılan anahtar 60 sn dinlenir. Boşsa `GEMINI_API_KEY` tek anahtar olarak kullanılır; ikisi de yoksa 503. Günlük sınır herkes için toplam yanıt sayısıdır (dolunca 429). Üretimde zorunlu değil |
 
 ### İlk yönetici
 

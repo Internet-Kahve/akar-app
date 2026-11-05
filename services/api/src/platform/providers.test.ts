@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { AppError } from "../errors.ts";
+import { geminiChat, KEY_COOLDOWN_MS } from "./chat-model.ts";
 import { geminiTranslator } from "./translate.ts";
 import { deepgramTts, DEFAULT_TTS_VOICES, parseVoiceModels } from "./tts.ts";
 
@@ -93,4 +94,44 @@ test("Gemini: only the asked fields are sent; a persistent 429 ends as 502 after
 
   const empty = scripted(gemini(candidate({ text: "  " })));
   await assert.rejects(geminiTranslator("k", "m", empty.fetchImpl, async () => {}).translate({ text: "x" }), isUpstreamFailure);
+});
+
+const prompt = { system: "S", history: [{ role: "assistant" as const, text: "Önce" }], message: "Soru" };
+const keyOf = (call: Call | undefined) => headersOf(call)["x-goog-api-key"];
+
+test("chat: a key at its limit rests for a minute and the same question goes to the next key; all resting = 429 without a request", async () => {
+  let clock = 0;
+  const answer = gemini(candidate({ answer: "Yanıt", refs: ["s1"], general: false }));
+  const { fetchImpl, calls } = scripted(gemini({}, 429), answer, gemini(candidate({ answer: "B", refs: [], general: true })), gemini({}, 503), gemini(candidate({ answer: "C", refs: [], general: false })));
+  const model = geminiChat(["k1", "k2", "k3"], "flash-lite", fetchImpl, () => clock);
+
+  assert.deepEqual(await model.reply(prompt), { answer: "Yanıt", refs: ["s1"], general: false });
+  assert.deepEqual(calls.map(keyOf), ["k1", "k2"]);
+  const body = JSON.parse(String(calls[0]?.init.body));
+  assert.deepEqual(body.contents.map((c: { role: string }) => c.role), ["model", "user"]);
+  assert.equal(body.systemInstruction.parts[0].text, "S");
+
+  // Next turn starts at k2; k1 is still resting, so k2 answers, then k3 hits 503 and k2 takes it again.
+  assert.equal((await model.reply(prompt)).general, true);
+  assert.equal((await model.reply(prompt)).answer, "C");
+  assert.deepEqual(calls.slice(2).map(keyOf), ["k2", "k3", "k2"]);
+
+  const busy = scripted(gemini({}, 429), gemini({}, 429));
+  const two = geminiChat(["a", "b"], "m", busy.fetchImpl, () => clock);
+  await assert.rejects(two.reply(prompt), (err: unknown) => err instanceof AppError && err.statusCode === 429);
+  await assert.rejects(two.reply(prompt), (err: unknown) => err instanceof AppError && err.statusCode === 429);
+  assert.equal(busy.calls.length, 2, "resting keys are not called");
+
+  clock += KEY_COOLDOWN_MS + 1;
+  const rested = scripted(gemini(candidate({ answer: "Tekrar", refs: [], general: false })));
+  const again = geminiChat(["a"], "m", rested.fetchImpl, () => clock);
+  assert.equal((await again.reply(prompt)).answer, "Tekrar");
+});
+
+test("chat: other failures are 502 without the key in the message; an empty answer is refused", async () => {
+  const { fetchImpl } = scripted(new Response("secret-echo", { status: 400 }), gemini(candidate({ answer: " ", refs: [], general: false })), new Error("socket"));
+  const model = geminiChat(["gm-key"], "m", fetchImpl);
+  for (let i = 0; i < 3; i++) {
+    await assert.rejects(model.reply(prompt), (err: unknown) => isUpstreamFailure(err) && err instanceof AppError && !err.message.includes("gm-key") && !err.message.includes("secret-echo"));
+  }
 });

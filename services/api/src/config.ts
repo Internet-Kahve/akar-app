@@ -96,6 +96,14 @@ const Env = z.object({
   TTS_DAILY_CHAR_LIMIT: z.coerce.number().int().positive().default(100_000),
   GEMINI_API_KEY: optionalText,
   GEMINI_MODEL: z.string().trim().min(1).default("gemini-2.5-flash"),
+  // Site assistant (§11.74). Comma-separated keys, tried in turn; empty = `GEMINI_API_KEY` alone; none = 503.
+  GEMINI_CHAT_API_KEYS: z
+    .string()
+    .default("")
+    .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))]),
+  GEMINI_CHAT_MODEL: z.string().trim().min(1).default("gemini-3.5-flash-lite"),
+  /** Assistant answers per Istanbul day for everyone together (counted in `usage_daily`, event `chat.message`). */
+  CHAT_DAILY_LIMIT: z.coerce.number().int().positive().default(1000),
 });
 
 export type Config = z.infer<typeof Env>;

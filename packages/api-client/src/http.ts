@@ -402,7 +402,7 @@ interface MeDto {
   displayName: string | null;
   /** Absent from an API older than §26. */
   preferences?: UserPreferences;
-  /** Absent from an API older than §11.74. */
+  /** Absent from an API older than §11.76. */
   avatarId?: AvatarId | null;
   leaderboardVisible?: boolean;
 }

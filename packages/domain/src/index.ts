@@ -1228,6 +1228,7 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
 
 /**
  * Usage events the apps may count (§11.72). `site`: the event needs a site id; `ref`: what its detail is.
+ * `server`: counted by the API itself, never accepted from `POST /v1/events` (§11.74).
  * A new event is one line here plus the call in the web app; no migration.
  */
 export type UsageRefKind = "none" | "route" | "sentence" | "partCard" | "task" | "lang" | "signIn";
@@ -1247,7 +1248,8 @@ export const USAGE_EVENTS = {
   "my_route.add": { site: true, ref: "none", label: "Rotama ekleme" },
   "route.open": { site: false, ref: "route", label: "Rota açma" },
   "account.sign_in": { site: false, ref: "signIn", label: "Giriş" },
-} as const satisfies Record<string, { site: boolean; ref: UsageRefKind; label: string }>;
+  "chat.message": { site: false, ref: "none", label: "Asistan yanıtı", server: true },
+} as const satisfies Record<string, { site: boolean; ref: UsageRefKind; label: string; server?: true }>;
 
 export type UsageEventName = keyof typeof USAGE_EVENTS;
 export const usageEventNames = Object.keys(USAGE_EVENTS) as [UsageEventName, ...UsageEventName[]];
