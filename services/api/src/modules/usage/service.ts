@@ -31,8 +31,8 @@ type Key = { event: UsageEventName; siteId: string; ref: string };
 
 /** Shape rules of one event, before the database check; null = not counted. */
 function shape(e: UsageEvent): Key | null {
-  const rule = USAGE_EVENTS[e.event];
-  if (rule.site !== (e.siteId !== undefined)) return null;
+  const rule: { site: boolean; ref: string; server?: true } = USAGE_EVENTS[e.event];
+  if (rule.server || rule.site !== (e.siteId !== undefined)) return null;
   const ref = e.ref;
   switch (rule.ref) {
     case "none":
@@ -99,6 +99,26 @@ export async function recordUsage(db: Db, events: UsageEvent[], guest: boolean, 
       set: { count: sql`${usageDaily.count} + excluded.count` },
     });
   return accepted;
+}
+
+/** One count of an event the API records itself (`server` in `USAGE_EVENTS`), signed-in, no site or detail. */
+export async function countServerEvent(db: Db, event: UsageEventName, now: Date): Promise<void> {
+  await db
+    .insert(usageDaily)
+    .values({ day: usageDay(now), event, siteId: "", ref: "", guest: false, count: 1 })
+    .onConflictDoUpdate({
+      target: [usageDaily.day, usageDaily.event, usageDaily.siteId, usageDaily.ref, usageDaily.guest],
+      set: { count: sql`${usageDaily.count} + 1` },
+    });
+}
+
+/** Today's (Istanbul) total of one event, guests and signed-in together. */
+export async function countToday(db: Db, event: UsageEventName, now: Date): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`coalesce(sum(${usageDaily.count}), 0)::int` })
+    .from(usageDaily)
+    .where(and(eq(usageDaily.day, usageDay(now)), eq(usageDaily.event, event)));
+  return row?.n ?? 0;
 }
 
 const guestSum = sql<number>`coalesce(sum(${usageDaily.count}) filter (where ${usageDaily.guest}), 0)::int`;

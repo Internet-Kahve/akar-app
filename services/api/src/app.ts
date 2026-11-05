@@ -16,6 +16,7 @@ import { AppError, registerErrorHandling } from "./errors.ts";
 import type { AuthVerifier } from "./platform/auth.ts";
 import type { JobQueue } from "./platform/jobs.ts";
 import type { StorageBuckets } from "./platform/storage.ts";
+import type { ChatModel } from "./platform/chat-model.ts";
 import type { Translator } from "./platform/translate.ts";
 import type { TtsProvider } from "./platform/tts.ts";
 import type { Geocoder } from "./modules/ingest/geocode.ts";
@@ -36,6 +37,7 @@ import { settingsRoutes } from "./modules/settings/routes.ts";
 import { siteTaskRoutes } from "./modules/site-tasks/routes.ts";
 import { narrationRoutes } from "./modules/narrations/routes.ts";
 import { usageRoutes } from "./modules/usage/routes.ts";
+import { chatRoutes } from "./modules/chat/routes.ts";
 
 /**
  * Runtime dependencies. Optional services are null when not configured; a module that needs one
@@ -53,6 +55,8 @@ export type AppDeps = {
   tts: TtsProvider | null;
   /** Turkish → English translation provider (Gemini); null without `GEMINI_API_KEY`: translating answers 503. */
   translator: Translator | null;
+  /** Site assistant model (Gemini); null without `GEMINI_CHAT_API_KEYS` / `GEMINI_API_KEY`: chat answers 503. */
+  chat: ChatModel | null;
 };
 
 declare module "fastify" {
@@ -81,6 +85,7 @@ const MODULES: ModulePlugin[] = [
   settingsRoutes,
   narrationRoutes,
   usageRoutes,
+  chatRoutes,
 ];
 
 /**
