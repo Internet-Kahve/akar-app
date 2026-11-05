@@ -129,6 +129,31 @@ export interface AdminHealth {
     byKind: { photo: number; model: number; audio: number };
   };
 }
+/** One earlier message sent with `chat` as context; the server stores no conversation. */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  text: string;
+}
+/** `POST /v1/chat` request (§11.74): `siteId` when the visitor is on a site's pages. */
+export interface ChatQuestion {
+  message: string;
+  history: ChatTurn[];
+  siteId?: string;
+  lang: "tr" | "en";
+}
+/** A content block the answer rests on. */
+export interface ChatSource {
+  kind: "site" | "story" | "about" | "part_card";
+  siteId: string;
+  title: string;
+  source: { title: string; page: string } | null;
+}
+export interface ChatAnswer {
+  answer: string;
+  sources: ChatSource[];
+  /** The answer also rests on general knowledge outside our content. */
+  general: boolean;
+}
 /** One usage event (§11.72): `siteId` for site events, `ref` for the detail its kind takes (`USAGE_EVENTS`). */
 export interface UsageEvent {
   event: UsageEventName;
@@ -279,6 +304,11 @@ export interface AkarClient {
   getSiteProgress(): Promise<SiteProgress>;
   /** Moderator and admin only; the server answers 403 for other roles. */
   getAdminHealth(): Promise<AdminHealth>;
+  /**
+   * Site assistant (§11.74, §11.77): `POST /v1/chat`, signed-in only (401 for a guest). The server answers 503
+   * without a model key and 429 past a limit. The demo has no assistant and throws.
+   */
+  chat(question: ChatQuestion): Promise<ChatAnswer>;
   /**
    * Counts a usage event (§11.72). Never throws and never waits: events are batched and sent later; a failed
    * send drops them. The demo counts nothing.
@@ -895,6 +925,9 @@ export function createMockClient(
           thresholdHours: PENDING_STALE_HOURS,
         },
       };
+    },
+    async chat() {
+      throw new Error("Asistan yalnız canlı sistemde çalışır.");
     },
     track() {},
     flushUsage() {},

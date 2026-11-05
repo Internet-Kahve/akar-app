@@ -37,6 +37,7 @@ import {
 } from "@akar/domain";
 import type {
   AdminHealth,
+  ChatAnswer,
   AdminMember,
   MemberPage,
   AkarClient,
@@ -2690,6 +2691,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       ),
     getAdminHealth: () =>
       call<AdminHealth>("GET", "/v1/admin/health", { cache: "no-store" }),
+    chat: (question) =>
+      call<ChatAnswer>("POST", "/v1/chat", { body: question, cache: "no-store" }),
     track: (event) => {
       usageQueue.push(event);
       if (usageQueue.length >= MAX_EVENTS_PER_BATCH) flushUsage();
