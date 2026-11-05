@@ -62,20 +62,20 @@ const SHAPES = {
 };
 
 const PALETTES = {
-  lapis: ["#3a5f9c", "#1f3560"],
-  turquoise: ["#3d968f", "#1d5753"],
-  coral: ["#bd5a42", "#6e2c1f"],
-  emerald: ["#4f8a5f", "#264a32"],
-  plum: ["#7f4c72", "#432341"],
-  ochre: ["#c48d3a", "#6e4614"],
-  navy: ["#2e4b7d", "#172a49"],
-  rose: ["#b97284", "#5f3040"],
-  teal: ["#3d8580", "#1b4347"],
-  crimson: ["#a13f37", "#561a16"],
+  lapis: ["#3d6fb6", "#1b355f", "#f4e8c8", "#dcc690"],
+  turquoise: ["#2fb0aa", "#135a58", "#f5ead0", "#d9c896"],
+  coral: ["#d4614a", "#7a2a1e", "#f6e9cf", "#e0c896"],
+  emerald: ["#46a06f", "#1d4a33", "#f4ead0", "#d7c793"],
+  plum: ["#9b5689", "#4a1f43", "#f6ead2", "#dec79a"],
+  ochre: ["#e09a36", "#7d4a10", "#fbefd4", "#e6cd96"],
+  navy: ["#2f5996", "#132848", "#f3e7c9", "#d9c38c"],
+  rose: ["#c96a88", "#6b2c44", "#f8ebd6", "#e3c89c"],
+  teal: ["#2e8f8a", "#123f45", "#f2e7cc", "#d6c48f"],
+  crimson: ["#b33a3a", "#5c1717", "#f6e8cc", "#dec392"],
 };
 
 /* --------------------------------------------------------------------------------------------- helpers */
-const s = (w = 4) => `stroke="${OL}" stroke-width="${(w * 0.7).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round"`;
+const s = (w = 4) => `stroke="${OL}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
 const rect = (x, y, w, h, fill, sw = 4, extra = "") => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" ${s(sw)} ${extra}/>`;
 /** A pointed (Ottoman) arch opening, base at `by`, springing at `sy`, peak at `py`. */
 const archPath = (cx, w, by, sy, py) => {
@@ -95,11 +95,8 @@ const minaret = (x, by, h, w = 9) =>
   `<path d="M${x - w / 2} ${by} V${by - h} H${x + w / 2} V${by} Z" fill="${C.stone}" ${s(3.5)}/>` +
   `<rect x="${x - w / 2 - 3}" y="${by - h * 0.62}" width="${w + 6}" height="4" fill="${C.stoneShade}" ${s(2.5)}/>` +
   `<path d="M${x - w / 2 - 1} ${by - h} L${x} ${by - h - w * 2.4} L${x + w / 2 + 1} ${by - h} Z" fill="url(#lead)" ${s(3.5)}/>`;
-/** A small gold çintemani (three dots) where a game icon would put a shine. */
-const sparkle = (x, y, r) => {
-  const d = Math.max(1.6, r * 0.32);
-  return [[0, -d * 1.1], [-d, d * 0.7], [d, d * 0.7]].map(([dx, dy]) => `<circle cx="${(x + dx).toFixed(1)}" cy="${(y + dy).toFixed(1)}" r="${d.toFixed(1)}" fill="${C.gold}" stroke="${OL}" stroke-width=".8"/>`).join("");
-};
+const sparkle = (x, y, r, fill = C.white, op = 0.95) =>
+  `<path d="M${x} ${y - r} Q${x + r * 0.18} ${y - r * 0.18} ${x + r} ${y} Q${x + r * 0.18} ${y + r * 0.18} ${x} ${y + r} Q${x - r * 0.18} ${y + r * 0.18} ${x - r} ${y} Q${x - r * 0.18} ${y - r * 0.18} ${x} ${y - r} Z" fill="${fill}" opacity="${op}"/>`;
 const tulip = (x, y, sc = 1, fill = C.red) =>
   `<g transform="translate(${x} ${y}) scale(${sc})"><path d="M0 14 V2" ${s(2.5)} fill="none"/><path d="M0 4 C-7 2 -8 -6 -6 -12 L-2 -7 L0 -14 L2 -7 L6 -12 C8 -6 7 2 0 4 Z" fill="${fill}" ${s(2.5)}/></g>`;
 const star = (cx, cy, r1, r2, n, fill, sw = 3, rot = -Math.PI / 2) => {
@@ -466,47 +463,36 @@ const MEDALS = {
   _saha: ["shield", "emerald"],
 };
 
-/** A stable small number per badge, so each medal's hand-drawn wobble is its own and the same on every run. */
-const seedOf = (id) => [...id].reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) % 997, 7);
-
-/*
- * The medal is painted like a page of a miniature album rather than a glossy game icon (5 Nov 2026, after the
- * first set read as "made by a machine"): flat colours, ink lines that waver a little, a gilded border with a
- * row of dots (tezhip), paper grain on the face, no gloss and no sparkles.
- */
 function medal(id) {
   const [shape, paletteName] = MEDALS[id];
-  const [base, dark] = PALETTES[paletteName];
+  const [base, dark, field, fieldDark] = PALETTES[paletteName];
   const body = SHAPES[shape];
   // clipPath takes shapes only (no <g>), so the scale goes on the shape itself.
   const scaled = (k) => body.replace(/^<(\w+)/, `<$1 transform="translate(128 128) scale(${k}) translate(-128 -128)"`);
   const inner = scaled(0.78);
   const emblem = E[id]();
-  const seed = seedOf(id);
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="256" height="256" viewBox="0 0 256 256">
 <defs>
-  <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.stone}"/><stop offset="1" stop-color="#e3d1a6"/></linearGradient>
-  <linearGradient id="lead" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a3b3c4"/><stop offset="1" stop-color="#8797aa"/></linearGradient>
-  <radialGradient id="leadTop" cx="40%" cy="40%" r="70%"><stop offset="0" stop-color="#a3b3c4"/><stop offset="1" stop-color="#8797aa"/></radialGradient>
-  <linearGradient id="mirror" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dcebf2"/><stop offset="1" stop-color="#8fb6cb"/></linearGradient>
-  <filter id="hand" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="${seed}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/></filter>
-  <filter id="edge" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed="${seed + 3}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter>
-  <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="${seed + 7}"/><feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.33  0 0 0 0 0.18  0 0 0 0.16 0"/></filter>
+  <radialGradient id="body" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="${base}" stop-opacity="1"/><stop offset=".55" stop-color="${base}"/><stop offset="1" stop-color="${dark}"/></radialGradient>
+  <radialGradient id="field" cx="42%" cy="36%" r="70%"><stop offset="0" stop-color="${field}"/><stop offset="1" stop-color="${fieldDark}"/></radialGradient>
+  <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.stone}"/><stop offset="1" stop-color="${C.stoneShade}"/></linearGradient>
+  <linearGradient id="lead" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${C.leadLight}"/><stop offset="1" stop-color="${C.lead}"/></linearGradient>
+  <radialGradient id="leadTop" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="${C.leadLight}"/><stop offset="1" stop-color="${C.lead}"/></radialGradient>
+  <linearGradient id="mirror" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f4fb"/><stop offset=".5" stop-color="#9cc7de"/><stop offset="1" stop-color="#5b8fb0"/></linearGradient>
+  <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <clipPath id="clip">${body}</clipPath>
   <clipPath id="clipInner">${inner}</clipPath>
 </defs>
-<g filter="url(#edge)">
-  <g transform="translate(2 5)" fill="${C.shadowInk}" opacity=".18">${body}</g>
-  <g fill="${base}" stroke="${OL}" stroke-width="4.5" stroke-linejoin="round">${body}</g>
-  <g fill="none" stroke="${C.gold}" stroke-width="10" stroke-linejoin="round">${scaled(0.9)}</g>
-  <g fill="none" stroke="${dark}" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.01 7.2">${scaled(0.9)}</g>
-  <g fill="none" stroke="${OL}" stroke-width="1.4" stroke-linejoin="round" opacity=".7">${scaled(0.94)}${scaled(0.86)}</g>
-  <g fill="#f3e5c5" stroke="${OL}" stroke-width="3" stroke-linejoin="round">${inner}</g>
-</g>
+<g transform="translate(0 6)" fill="${C.shadowInk}" opacity=".28">${body}</g>
+<g fill="url(#body)" stroke="${OL}" stroke-width="7" stroke-linejoin="round">${body}</g>
+<g transform="translate(128 128) scale(.9) translate(-128 -128)" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3">${body}</g>
+<g fill="url(#field)" stroke="${OL}" stroke-width="5" stroke-linejoin="round">${inner}</g>
 <g clip-path="url(#clipInner)">
-  <rect width="256" height="256" filter="url(#paper)"/>
-  <g filter="url(#hand)"><g transform="translate(128 134) scale(1.2)">${emblem}</g></g>
+  <g transform="translate(128 134) scale(1.2)"><g transform="translate(3 5)" opacity=".22" fill="${C.shadowInk}">${emblem.replace(/fill="[^"]*"/g, `fill="${C.shadowInk}"`).replace(/stroke="[^"]*"/g, `stroke="${C.shadowInk}"`)}</g>${emblem}</g>
 </g>
-<g fill="none" stroke="${C.red}" stroke-width="1.2" opacity=".75" filter="url(#edge)">${scaled(0.74)}</g>
+<g transform="translate(128 128) scale(.78) translate(-128 -128)" fill="none" stroke="${OL}" stroke-width="6.4" stroke-linejoin="round">${body}</g>
+<g clip-path="url(#clip)"><ellipse cx="92" cy="40" rx="96" ry="44" fill="url(#gloss)" transform="rotate(-18 92 40)"/></g>
+${sparkle(196, 54, 11)}${sparkle(214, 80, 5, "#fff", 0.8)}
 </svg>`;
 }
 
