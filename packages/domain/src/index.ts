@@ -1311,6 +1311,8 @@ export function displayNameProblem(raw: string): DisplayNameProblem | null {
   if (length > DISPLAY_NAME_MAX) return "long";
   // Letters (any script), digits, spaces and a few joiners; no links, no @ handles, no control characters.
   if (!/^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .'’\-_]*$/u.test(name) || /\p{N}{7,}/u.test(name)) return "characters";
+  // A web address written with dots («www.site.com», «site.com.tr»): a name is not a link.
+  if (/(^|[\s.])www\./iu.test(name) || /\p{L}\.(com|net|org|info|biz|io|co|app|dev|me|tr|gov|edu|xyz)(\.[a-z]{2})?$/iu.test(name) || /\p{L}\.(com|net|org)(?![\p{L}])/iu.test(name)) return "characters";
   const folded = foldForCheck(name);
   const words = folded.split(/[^a-z]+/).filter(Boolean);
   const squashed = words.join("");

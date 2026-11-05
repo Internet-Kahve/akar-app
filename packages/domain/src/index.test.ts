@@ -511,6 +511,8 @@ test("display names: 2–24 characters once trimmed, no links or slurs, no team 
   assert.equal(displayNameProblem("x".repeat(25)), "long");
   assert.equal(displayNameProblem("a".repeat(24)), null);
   assert.equal(displayNameProblem("www.site.com/x"), "characters");
+  for (const link of ["www.site.com", "site.com", "Benim Site.com.tr", "akar.io", "WWW.ornek.NET"]) assert.equal(displayNameProblem(link), "characters", link);
+  for (const ok of ["Ali K.", "Dr. Ayşe", "A. Rıza", "Ece.Nur"]) assert.equal(displayNameProblem(ok), null, ok);
   assert.equal(displayNameProblem("@hesap"), "characters");
   assert.equal(displayNameProblem("05321234567"), "characters");
   assert.equal(displayNameProblem("Akar Ekibi"), "reserved");

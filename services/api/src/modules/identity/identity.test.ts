@@ -493,6 +493,8 @@ test("preferences: partial PUT keeps the other keys, null clears, a name-less ac
     email: "prefs@akar.test",
     displayName: null,
     preferences: { siteLang: "en", voiceLang: "tr", voiceGender: "male" },
+    avatarId: null,
+    leaderboardVisible: false,
   });
 
   assert.deepEqual((await call("PUT", "/v1/me/preferences", headers, { voiceGender: null })).json(), { siteLang: "en", voiceLang: "tr", voiceGender: null });
