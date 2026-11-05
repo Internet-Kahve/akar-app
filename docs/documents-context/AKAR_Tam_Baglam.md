@@ -214,7 +214,8 @@ Bu bölüm aşağıdaki bazı bölümlerin yerini alır. Çelişki varsa burası
 ### Kesilenler ve nedenleri
 - **Ayrı native uygulama:** PWA yeterli.
 - **Yapay zekâ ile tarihî video veya görüntü:** Jüride VGM var; uydurma görüntü riski taşır.
-- **Liderlik tablosu, sezonlar, puan ekonomisi:** Jüriyi etkilemez ve bir banka sponsoru yanında yanlış çağrışım yapar. (Not: Başvuruda puan ekonomisinden bahsedilmiş olabilir; bu tutarsızlık bir kez işaretlendi.)
+- **Sezonlar, puan ekonomisi:** Jüriyi etkilemez ve bir banka sponsoru yanında yanlış çağrışım yapar. (Not: Başvuruda puan ekonomisinden bahsedilmiş olabilir; bu tutarsızlık bir kez işaretlendi.)
+  - **Güncelleme (5 Kasım 2026):** Liderlik kararı değişti. İsteğe bağlı, haftalık sıfırlanan bir «Haftanın Gezgini» listesi eklendi (varsayılan kapalı; ödül, para, sandık, seri yok). Ayrıntı: `docs/BACKEND-DECISIONS.md` §11.74.
 - **FastAPI + PostGIS + monorepo:** 4 haftada yönetilemez; Supabase yeterli.
 - **Kedi/maskot mekaniği:** Odağı dağıtıyor.
 - **Bütün şehrin tarihî 3D modeli:** Ağır ve doğrulanamaz.

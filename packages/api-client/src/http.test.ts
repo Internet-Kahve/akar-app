@@ -3647,3 +3647,26 @@ test("display name: a guest keeps it on the device, an account saves it with PUT
   assert.ok(put.headers["idempotency-key"]);
   signedIn = false;
 });
+
+test("weekly list and figure: the list is read as is; a guest's figure stays on the device, an account's is saved", async () => {
+  const board = { weekStart: "2026-11-01T21:00:00.000Z", items: [{ rank: 1, name: "Ayşe", avatarId: "fatih", points: 115 }], me: null };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/leaderboard/week": () => board,
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ayşe", avatarId: "fatih", leaderboardVisible: true }),
+    "GET /v1/me/passport": () => ({ points: 0, saved: [], read: [], visited: [], quizzesSolved: [] }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "PUT /v1/me/avatar": () => ({ avatarId: "mimar-sinan" }),
+    "PUT /v1/me/leaderboard": () => ({ visible: false }),
+  });
+  const guest = createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: api.fetch });
+  assert.deepEqual(await guest.getWeeklyLeaderboard(), board);
+  await guest.setAvatar("mimar-sinan");
+  assert.ok(!api.calls.some((c) => c.path === "/v1/me/avatar"));
+
+  const account = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "tok", fetch: api.fetch });
+  assert.deepEqual((await account.getSnapshot()).publicProfile, { avatarId: "fatih", leaderboardVisible: true });
+  await account.setAvatar("mimar-sinan");
+  assert.equal(api.calls.find((c) => c.path === "/v1/me/avatar")?.method, "PUT");
+  assert.equal(await account.setLeaderboardVisible(false), false);
+});

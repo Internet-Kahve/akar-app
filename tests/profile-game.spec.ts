@@ -34,7 +34,7 @@ test("the level and its bar come from the score; the name is edited with the pen
   await expect(page.getByRole("progressbar", { name: "Seviye ilerlemesi" })).toHaveAttribute("aria-valuetext", "Sonraki seviyeye 70 puan");
 
   await page.getByRole("button", { name: "Adını değiştir" }).click();
-  const field = page.getByLabel("Görünen ad");
+  const field = page.getByRole("textbox", { name: "Görünen ad" });
   await field.fill("A");
   await page.getByRole("button", { name: "Adı kaydet" }).click();
   await expect(page.locator("#profile-name-help")).toHaveText("Ad en az 2 karakter olmalı.");

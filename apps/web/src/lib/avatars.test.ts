@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { AVATAR_IDS } from "@akar/domain";
 import { AVATARS, avatarById, randomAvatar, resolveAvatar } from "./avatars";
 
 test("six figures with unique ids, each with a colour", () => {
@@ -14,4 +15,8 @@ test("a kept figure stays; an unknown or missing one is replaced by a chance fig
   assert.equal(resolveAvatar(null, () => 0.999999).id, AVATARS[5]!.id);
   assert.equal(randomAvatar(() => 1).id, AVATARS[5]!.id);
   assert.equal(avatarById("nobody"), undefined);
+});
+
+test("the figures are exactly the ids the server accepts", () => {
+  assert.deepEqual(AVATARS.map((a) => a.id).sort(), [...AVATAR_IDS].sort());
 });

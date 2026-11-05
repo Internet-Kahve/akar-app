@@ -2,6 +2,7 @@
 import { Avatar, useAvatar } from "./avatar";
 import { AvatarPicker } from "./avatar-picker";
 import { AchievementMedal } from "./badge-medal";
+import { WeeklyBoard } from "./weekly-board";
 import { BadgeCollection, BadgeStrip, DiscoveredStrip, LevelBar, NameEditor, ShareWeekButton } from "./profile-parts";
 import { BadgeCard } from "./badge-card";
 import { achievements as measureAchievements, badgeEntries, type BadgeEntry } from "../lib/badges";
@@ -72,6 +73,8 @@ export function Profile({
   onRename,
   collectionOpen,
   onCollection,
+  board,
+  onAvatar,
 }: {
   state: Snapshot;
   progress: SiteProgress;
@@ -89,6 +92,10 @@ export function Profile({
   /** The whole badge collection is open (also from «Koleksiyonda gör» in a celebration). */
   collectionOpen: boolean;
   onCollection: (open: boolean) => void;
+  /** «Haftanın Gezgini»: how to read the list and turn appearing on or off. */
+  board: { mode: "account" | "guest" | "demo"; load: AkarClient["getWeeklyLeaderboard"]; setVisible: AkarClient["setLeaderboardVisible"]; onSignIn?: () => void };
+  /** A figure picked: the account keeps it too, for the weekly list. */
+  onAvatar: (id: string) => void;
   /** Present only when connected to the real API; `email` is `null` for a guest. */
   auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void; onDelete: () => Promise<boolean> };
 }) {
@@ -129,7 +136,7 @@ export function Profile({
               </dl>
               <LevelBar points={state.points} />
             </div>
-            {picking && <AvatarPicker current={figure.id} onPick={(id) => { setFigure(id); setPicking(false); }} onClose={() => setPicking(false)} />}
+            {picking && <AvatarPicker current={figure.id} onPick={(id) => { setFigure(id); onAvatar(id); setPicking(false); }} onClose={() => setPicking(false)} />}
             <div className="profile-motif"><Motif /></div>
             {auth ? (
               auth.email ? (
@@ -241,6 +248,7 @@ export function Profile({
               ))}
             </ul>
           </section>
+          <WeeklyBoard mode={board.mode} load={board.load} setVisible={board.setVisible} onSignIn={board.onSignIn} />
           <section className="card profile-saved">
             <h3>{t("profile.saved")}</h3>
             {state.savedIds.length ? state.sites.filter((site) => state.savedIds.includes(site.id)).map((site) =>

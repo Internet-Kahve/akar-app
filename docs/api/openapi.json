@@ -9177,6 +9177,29 @@
                       ],
                       "additionalProperties": false,
                       "description": "Site ve ses tercihleri; seçilmeyenler null"
+                    },
+                    "avatarId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "kosem-sultan",
+                            "evliya-celebi",
+                            "fatih",
+                            "mimar-sinan",
+                            "mihrimah-sultan",
+                            "hezarfen"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Profil resmi (figür); hesapla seçilmediyse null"
+                    },
+                    "leaderboardVisible": {
+                      "type": "boolean",
+                      "description": "Haftanın Gezgini listesinde görünüyor mu (varsayılan kapalı)"
                     }
                   },
                   "required": [
@@ -9184,7 +9207,9 @@
                     "role",
                     "email",
                     "displayName",
-                    "preferences"
+                    "preferences",
+                    "avatarId",
+                    "leaderboardVisible"
                   ],
                   "additionalProperties": false
                 }
@@ -9249,6 +9274,119 @@
                   "required": [
                     "id",
                     "displayName"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/avatar": {
+      "put": {
+        "summary": "Profil resmini (figür) kaydet; haftalık listede adın yanında görünür",
+        "tags": [
+          "me"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatarId": {
+                    "type": "string",
+                    "enum": [
+                      "kosem-sultan",
+                      "evliya-celebi",
+                      "fatih",
+                      "mimar-sinan",
+                      "mihrimah-sultan",
+                      "hezarfen"
+                    ],
+                    "description": "Altı figürden biri"
+                  }
+                },
+                "required": [
+                  "avatarId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "avatarId": {
+                      "type": "string",
+                      "enum": [
+                        "kosem-sultan",
+                        "evliya-celebi",
+                        "fatih",
+                        "mimar-sinan",
+                        "mihrimah-sultan",
+                        "hezarfen"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "avatarId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/leaderboard": {
+      "put": {
+        "summary": "Haftanın Gezgini listesinde görün ya da çık (KVKK: varsayılan kapalı)",
+        "tags": [
+          "me"
+        ],
+        "description": "true: görünen ad, figür ve bu haftanın puanı herkese açık haftalık listede görünür. Görünen ad yoksa 409. false: listeden hemen çıkar. E-posta ve kullanıcı kimliği hiçbir zaman listede yer almaz.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "visible": {
+                    "type": "boolean",
+                    "description": "true: haftalık listede görün (görünen ad gerekir); false: listeden çık"
+                  }
+                },
+                "required": [
+                  "visible"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "visible": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "visible"
                   ],
                   "additionalProperties": false
                 }
@@ -66233,6 +66371,130 @@
                     "quizzesSolved",
                     "badges",
                     "progress"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/leaderboard/week": {
+      "get": {
+        "summary": "Haftanın Gezgini: bu haftanın ilk 10'u (yalnız görünmeyi seçenler) ve giriş yapanın kendi sırası",
+        "tags": [
+          "leaderboard"
+        ],
+        "description": "Puan yalnız sunucudaki puan defterinden toplanır (Pazartesi 00:00 Europe/Istanbul'dan bu yana). Listede yalnız `PUT /v1/me/leaderboard` ile görünmeyi açmış, görünen adı olan hesaplar vardır; e-posta ve kullanıcı kimliği dönmez. Misafir de okuyabilir; `me` yalnız oturumda dolu.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "weekStart": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                      "description": "Haftanın başı: Pazartesi 00:00 Europe/Istanbul"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rank": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 9007199254740991
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Görünen ad"
+                          },
+                          "avatarId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "kosem-sultan",
+                                  "evliya-celebi",
+                                  "fatih",
+                                  "mimar-sinan",
+                                  "mihrimah-sultan",
+                                  "hezarfen"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "points": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Bu haftanın puanı (puan defterinden)"
+                          }
+                        },
+                        "required": [
+                          "rank",
+                          "name",
+                          "avatarId",
+                          "points"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Listede görünmeyi seçmiş, görünen adı olan ilk 10 hesap; e-posta ve kimlik yok"
+                    },
+                    "me": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "rank": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Listede değilse ya da puanı yoksa null"
+                            },
+                            "points": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "visible": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "rank",
+                            "points",
+                            "visible"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "description": "Giriş yapan kullanıcının haftası; misafirde null"
+                    }
+                  },
+                  "required": [
+                    "weekStart",
+                    "items",
+                    "me"
                   ],
                   "additionalProperties": false
                 }

@@ -173,3 +173,13 @@ Backend değişmedi. Rozet, başarım ve hafta için 1080 × 1920 kart tarayıc�
 1. **`PUT /v1/me/profile` kuralı değişti.** Görünen ad artık boşlukları kırpılıp tek boşluğa indirilir, **2–24 karakter** (önce 40), yalnız harf/rakam/boşluk ve `. ' - _`; bağlantı, `@` ve 7+ basamaklı sayı (telefon) olmaz. Kaba sözcük kökleri ve ekibe ayrılmış adlar («Akar», «Akar ekibi», «admin», «moderatör»…) 400 `VALIDATION_FAILED` döner. Kural `packages/domain` içinde `displayNameProblem`; sunucu (`identity/schemas.ts`) ve uygulama aynı fonksiyonu kullanır. OpenAPI yeniden üretildi. 24 karakterden uzun **mevcut** adlar silinmez; yalnız yeni kayıt reddedilir. `identity.test.ts` yeni durumlarla güncellendi ama **Docker olmadığı için çalıştırılmadı**; lütfen `npm run check` ile doğrula.
 2. **Misafirin adı yalnız cihazda** (`akar-http-*` yerel durumunda `name`); sunucuya gitmez, girişte hesaba taşınmaz.
 3. **Seviye** istemcide `Snapshot.points` (puan defteri toplamı) ile hesaplanır: Yolcu 0, Gezgin 60, Kâşif 200, Seyyah 450, Bilge Seyyah 800 (`apps/web/src/lib/levels.ts`). Sunucuda alan gerekmez.
+
+### Aşama D: Haftanın Gezgini (5 Kasım) — **Docker ile doğrulanmadı**
+
+Karar: `docs/BACKEND-DECISIONS.md` §11.74. Bu bilgisayarda Docker/Postgres olmadığı için migration uygulanmadı ve API testleri **çalıştırılmadı**; yalnız tip denetimi ve OpenAPI üretimi geçti. Lütfen `npm run check` ile doğrula.
+
+1. **Migration `0037_leaderboard`:** `profiles.avatar_id text`, `profiles.leaderboard_visible boolean not null default false`, `point_events_at_idx`. `avatar_id` için DB'de CHECK yok; doğrulama Zod'da (`AVATAR_IDS`), böylece figür eklemek migration istemez. Bilinmeyen kayıtlı id `null` okunur.
+2. **Uçlar:** `GET /v1/leaderboard/week` (herkese açık; `me` yalnız oturumda), `PUT /v1/me/avatar {avatarId}`, `PUT /v1/me/leaderboard {visible}` (görünen ad yoksa 409). `GET /v1/me` artık `avatarId` ve `leaderboardVisible` da döner.
+3. **Sorgu** (`engagement/leaderboard.ts`): ham SQL, `row_number()` ile; eşitlikte son olayı daha erken olan önde. Misafir ve `deleted_accounts` dışarıda; silinen hesabın `profiles` satırı zaten gidiyor. Kullanıcı sayısı büyürse haftalık özet tablo ya da materialized view düşünülebilir; şimdilik `point_events.at` dizini yeterli görünüyor (ölçülmedi).
+4. **Testler** `identity.test.ts` sonunda: figür doğrulaması, 409, hafta sınırı (Pazartesiden bir saniye önceki olay sayılmaz), gizli kullanıcı, misafir, eşitlik sırası, e-posta/kimlik sızmaması, tekrar olayın puan vermemesi, silinen hesabın düşmesi.
+5. **KVKK:** `lib/legal-content.ts` aydınlatma metnine liste satırı eklendi (açık rıza, varsayılan kapalı). Hukuki kontrol gerekiyor.

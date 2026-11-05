@@ -1,4 +1,7 @@
 import type { SiteProgress } from "@akar/api-client";
+import { istanbulWeekStart } from "@akar/domain";
+
+export { istanbulWeekStart };
 
 /**
  * The share card (5 Nov 2026): a 1080 × 1920 picture for an Instagram or WhatsApp story, drawn on a canvas when the
@@ -8,25 +11,6 @@ import type { SiteProgress } from "@akar/api-client";
  */
 export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1920;
-
-/** Offset of Europe/Istanbul from UTC at `at`, in minutes (+180 since 2016; read from the platform, not assumed). */
-function istanbulOffsetMinutes(at: Date): number {
-  const part = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Istanbul", timeZoneName: "longOffset" })
-    .formatToParts(at)
-    .find((p) => p.type === "timeZoneName")?.value;
-  const m = /GMT([+-])(\d{2}):?(\d{2})?/.exec(part ?? "");
-  if (!m) return 180;
-  return (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] ?? 0));
-}
-
-/** The start of the week that holds `now`: Monday 00:00 in Istanbul, as an instant. */
-export function istanbulWeekStart(now: Date): Date {
-  const offset = istanbulOffsetMinutes(now);
-  const local = new Date(now.getTime() + offset * 60_000); // Istanbul wall clock, read with the UTC getters
-  const sinceMonday = (local.getUTCDay() + 6) % 7;
-  const midnight = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() - sinceMonday);
-  return new Date(midnight - offset * 60_000);
-}
 
 /** Badges earned in the week that holds `now`, newest first. */
 export function badgesThisWeek(progress: SiteProgress, now: Date): SiteProgress["badges"] {

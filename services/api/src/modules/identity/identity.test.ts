@@ -14,7 +14,7 @@ import {
   type JWTVerifyGetKey,
 } from "jose";
 import type { App } from "../../app.ts";
-import { auditLog, profiles, staffInvites, staffMembers } from "../../db/schema/index.ts";
+import { auditLog, pointEvents, profiles, staffInvites, staffMembers } from "../../db/schema/index.ts";
 import type { ErrorBody } from "../../errors.ts";
 import type { AuthVerifier } from "../../platform/auth.ts";
 import { startTestApp } from "../../test/harness.ts";
@@ -455,6 +455,8 @@ test("the display name is trimmed, replaced on every save and returned by /v1/me
     email: "Profile@akar.test",
     displayName: null,
     preferences: { siteLang: null, voiceLang: null, voiceGender: null },
+    avatarId: null,
+    leaderboardVisible: false,
   });
 
   const saved = await call("PUT", "/v1/me/profile", headers, { displayName: "  Ayşe  " });
@@ -661,4 +663,73 @@ test("an actor demoted after token verification cannot write through either memb
   }
   assert.equal(upstream.length, 0);
   assert.equal((await app.deps.db.select().from(auditLog)).length, 0);
+});
+
+test("the figure is one of the six; the weekly list is off by default and needs a display name to turn on", async () => {
+  assert.equal((await call("PUT", "/v1/me/avatar", {}, { avatarId: "fatih" })).statusCode, 401);
+  const headers = await login("user-figure", "figure@akar.test");
+  assert.equal((await call("PUT", "/v1/me/avatar", headers, { avatarId: "nobody" })).statusCode, 400);
+  assert.deepEqual((await call("PUT", "/v1/me/avatar", headers, { avatarId: "mimar-sinan" })).json(), { avatarId: "mimar-sinan" });
+  let me = (await call("GET", "/v1/me", headers)).json<{ avatarId: string; leaderboardVisible: boolean }>();
+  assert.equal(me.avatarId, "mimar-sinan");
+  assert.equal(me.leaderboardVisible, false);
+
+  const nameless = await call("PUT", "/v1/me/leaderboard", headers, { visible: true });
+  assert.equal(nameless.statusCode, 409);
+  await call("PUT", "/v1/me/profile", headers, { displayName: "Seyyah" });
+  assert.deepEqual((await call("PUT", "/v1/me/leaderboard", headers, { visible: true })).json(), { visible: true });
+  me = (await call("GET", "/v1/me", headers)).json();
+  assert.equal(me.leaderboardVisible, true);
+  assert.deepEqual((await call("PUT", "/v1/me/leaderboard", headers, { visible: false })).json(), { visible: false });
+});
+
+test("Haftanın Gezgini: this week's ledger since Monday 00:00 Istanbul, only those who chose to appear, no e-mail or id; erased accounts leave", async () => {
+  await app.deps.db.execute(sql`truncate table point_events`);
+  const a = await login("lb-a", "a@akar.test");
+  const b = await login("lb-b", "b@akar.test");
+  const c = await login("lb-c", "c@akar.test");
+  for (const [h, name] of [[a, "Ayşe"], [b, "Burak"], [c, "Cem"]] as const) await call("PUT", "/v1/me/profile", h, { displayName: name });
+  await call("PUT", "/v1/me/leaderboard", a, { visible: true });
+  await call("PUT", "/v1/me/leaderboard", b, { visible: true });
+  await call("PUT", "/v1/me/avatar", a, { avatarId: "fatih" });
+  // This week (Monday 00:00 Istanbul = Sunday 21:00 UTC) and last week.
+  const now = new Date();
+  const istanbulNow = new Date(now.getTime() + 3 * 3_600_000);
+  const monday = new Date(Date.UTC(istanbulNow.getUTCFullYear(), istanbulNow.getUTCMonth(), istanbulNow.getUTCDate() - ((istanbulNow.getUTCDay() + 6) % 7)) - 3 * 3_600_000);
+  const at = (msAfterMonday: number) => new Date(monday.getTime() + msAfterMonday);
+  await app.deps.db.insert(pointEvents).values([
+    { userId: "lb-a", action: "story.complete", subjectId: "s1", points: 15, at: at(60_000) },
+    { userId: "lb-a", action: "visit.verified", subjectId: "s1", points: 100, at: at(120_000) },
+    { userId: "lb-b", action: "visit.verified", subjectId: "s2", points: 100, at: at(60_000) },
+    { userId: "lb-b", action: "story.complete", subjectId: "s2", points: 15, at: at(180_000) },
+    // Last week, one second before Monday: does not count.
+    { userId: "lb-b", action: "visit.verified", subjectId: "old", points: 100, at: at(-1000) },
+    // Hidden: Cem has the most points but did not turn the list on.
+    { userId: "lb-c", action: "visit.verified", subjectId: "s3", points: 100, at: at(60_000) },
+    { userId: "lb-c", action: "visit.verified", subjectId: "s4", points: 100, at: at(60_000) },
+    { userId: "guest:device", action: "visit.verified", subjectId: "s5", points: 100, at: at(60_000) },
+  ]);
+
+  const guest = (await call("GET", "/v1/leaderboard/week")).json<{ items: Array<Record<string, unknown>>; me: unknown; weekStart: string }>();
+  assert.equal(guest.weekStart, monday.toISOString());
+  assert.equal(guest.me, null);
+  // 115 each: Ayşe got there first (her last event is earlier).
+  assert.deepEqual(guest.items, [
+    { rank: 1, name: "Ayşe", avatarId: "fatih", points: 115 },
+    { rank: 2, name: "Burak", avatarId: null, points: 115 },
+  ]);
+  assert.ok(!JSON.stringify(guest).includes("@akar.test") && !JSON.stringify(guest).includes("lb-"), "no e-mail, no id");
+
+  const hidden = (await call("GET", "/v1/leaderboard/week", c)).json<{ me: unknown }>();
+  assert.deepEqual(hidden.me, { rank: null, points: 200, visible: false });
+  assert.deepEqual((await call("GET", "/v1/leaderboard/week", b)).json<{ me: unknown }>().me, { rank: 2, points: 115, visible: true });
+
+  // A repeated event earns nothing: the ledger's unique key.
+  await app.deps.db.insert(pointEvents).values({ userId: "lb-b", action: "visit.verified", subjectId: "s2", points: 100, at: at(200_000) }).onConflictDoNothing();
+  assert.equal((await call("GET", "/v1/leaderboard/week", b)).json<{ me: { points: number } }>().me.points, 115);
+
+  // An erased account has no profile row and is in deleted_accounts: off the list at once.
+  await app.deps.db.delete(profiles).where(eq(profiles.userId, "lb-a"));
+  await app.deps.db.execute(sql`insert into deleted_accounts (user_id) values ('lb-a')`);
+  assert.deepEqual((await call("GET", "/v1/leaderboard/week")).json<{ items: Array<{ name: string; rank: number }> }>().items.map((i) => [i.rank, i.name]), [[1, "Burak"]]);
 });

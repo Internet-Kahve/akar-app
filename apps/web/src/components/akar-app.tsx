@@ -117,6 +117,9 @@ import { byDisplayOrder, siteMeta } from "../lib/site-meta";
 import { achievements as measureAchievements, badgeEntries, newlyDone, type Achievement, type AchievementId } from "../lib/badges";
 import type { Celebrated } from "./badge-celebration";
 import type { ShareRequest } from "./share-card";
+import { AVATAR_IDS, type AvatarId } from "@akar/domain";
+
+const isAvatarId = (id: string): id is AvatarId => (AVATAR_IDS as readonly string[]).includes(id);
 import dynamic from "next/dynamic";
 
 /* The celebration's code comes only when something is earned. */
@@ -271,6 +274,19 @@ export function AkarApp() {
     const fresh = newlyDone(before, feats);
     if (fresh.length) setCelebrate((queue) => [...queue, ...fresh.map((a) => ({ kind: "achievement" as const, id: a.id }))]);
   }, [feats]);
+  // The account's figure (for the weekly list): one chosen with the account wins on this device; an account with
+  // none yet takes the device's.
+  const [figure, setFigure] = useAvatar();
+  const publicAvatar = state.publicProfile?.avatarId;
+  const hasPublicProfile = !!state.publicProfile;
+  useEffect(() => {
+    if (!hasPublicProfile) return;
+    if (publicAvatar) {
+      if (publicAvatar !== figure.id) setFigure(publicAvatar);
+    } else if (isAvatarId(figure.id)) void client.current?.setAvatar(figure.id).catch(() => undefined);
+    // Only when the account's value arrives or changes, not on each pick (a pick saves itself).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasPublicProfile, publicAvatar]);
   // The collection opens over the profile only; leaving the profile closes it.
   useEffect(() => {
     if (view !== "profile") setProfileCollection(false);
@@ -1309,6 +1325,21 @@ export function AkarApp() {
               onAdmin={() => go("admin")}
               onReset={() => setOverlay("reset")}
               commit={commit}
+              board={{
+                mode: !live ? "demo" : account ? "account" : "guest",
+                load: () => client.current!.getWeeklyLeaderboard(),
+                setVisible: async (visible) => {
+                  try {
+                    return await client.current!.setLeaderboardVisible(visible);
+                  } catch (e) {
+                    throw new Error(describeError(e, t("board.toggleFailed"), langRef.current));
+                  }
+                },
+                onSignIn: () => setSignIn(""),
+              }}
+              onAvatar={(id) => {
+                if (isAvatarId(id)) void client.current?.setAvatar(id).catch(() => undefined);
+              }}
               collectionOpen={profileCollection}
               onCollection={setProfileCollection}
               onRename={async (name) => {

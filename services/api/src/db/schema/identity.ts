@@ -1,4 +1,4 @@
-import { check, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, check, index, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { timestamps } from "./shared.ts";
 
@@ -48,6 +48,10 @@ export const profiles = pgTable(
     voiceLang: text("voice_lang"),
     /** Narration voice: `female` or `male`; null until chosen. */
     voiceGender: text("voice_gender"),
+    /** Profile picture: one of `AVATAR_IDS` (@akar/domain); null until chosen with an account. */
+    avatarId: text("avatar_id"),
+    /** «Haftanın Gezgini»: listed only after the user turns it on (KVKK: off by default). */
+    leaderboardVisible: boolean("leaderboard_visible").notNull().default(false),
     ...timestamps,
   },
   (t) => [

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DISPLAY_NAME_MAX, DISPLAY_NAME_MIN, displayNameProblem, normalizeDisplayName } from "@akar/domain";
+import { AVATAR_IDS, DISPLAY_NAME_MAX, DISPLAY_NAME_MIN, displayNameProblem, normalizeDisplayName } from "@akar/domain";
 import { staffRoles } from "../../db/schema/index.ts";
 import { roles } from "../../platform/auth.ts";
 
@@ -27,7 +27,19 @@ export const MeResponse = z.object({
   email: z.string().nullable().describe("Girişte kullanılan e-posta (token'dan)"),
   displayName: z.string().nullable().describe("Onaylı anılarda görünen ad; henüz belirlenmediyse null"),
   preferences: PreferencesDto.describe("Site ve ses tercihleri; seçilmeyenler null"),
+  avatarId: z.enum(AVATAR_IDS).nullable().describe("Profil resmi (figür); hesapla seçilmediyse null"),
+  leaderboardVisible: z.boolean().describe("Haftanın Gezgini listesinde görünüyor mu (varsayılan kapalı)"),
 });
+
+export const AvatarBody = z.object({
+  avatarId: z.enum(AVATAR_IDS, "Bilinmeyen figür.").describe("Altı figürden biri"),
+});
+export const AvatarResponse = z.object({ avatarId: z.enum(AVATAR_IDS) });
+
+export const LeaderboardVisibilityBody = z.object({
+  visible: z.boolean("visible true ya da false olmalı.").describe("true: haftalık listede görün (görünen ad gerekir); false: listeden çık"),
+});
+export const LeaderboardVisibilityResponse = z.object({ visible: z.boolean() });
 
 /** Any subset of the keys: a value sets it, null clears it, a missing key stays as it was. */
 export const PreferencesBody = z.object({

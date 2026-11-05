@@ -778,3 +778,203 @@
   padding: 24px 0;
   text-align: center;
 }
+
+/* ---------------- «Haftanın Gezgini» (stage D) */
+.weekly-board h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.weekly-board h3 svg {
+  color: var(--gold-text);
+}
+.board-week {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.board-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 18px 8px 6px;
+  text-align: center;
+}
+.board-empty > span {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  color: #5b3a10;
+  background: radial-gradient(circle at 36% 30%, #fff1bf, #ecc055 55%, #b8861f);
+  box-shadow: 0 0 0 3px #2b1d14, 0 8px 18px rgba(184, 134, 31, 0.35);
+}
+.board-empty p {
+  margin: 0;
+  max-width: 34ch;
+}
+.board-champion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0 6px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  color: #fff8ea;
+  background: radial-gradient(circle at 20% 30%, #7a521c, #2e1d0d 70%);
+}
+.board-champion-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: 5px;
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, #9a6a12, #ffe9a3, #e6b53c, #9a6a12, #ffe9a3, #9a6a12);
+  box-shadow: 0 0 0 2px #2b1d14, 0 0 24px rgba(255, 196, 64, 0.45);
+}
+.board-champion > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.board-champion small {
+  font: 700 11px/14px var(--font);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffd56b;
+}
+.board-champion b {
+  font: 600 26px/1.1 var(--font-display);
+  overflow-wrap: anywhere;
+}
+.board-champion em {
+  font: 600 14px/18px var(--font);
+  font-style: normal;
+  color: rgba(255, 248, 234, 0.85);
+}
+.board-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.board-podium li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+.board-podium li b {
+  max-width: 100%;
+  font: 600 13px/16px var(--font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-podium li small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.board-step {
+  display: grid;
+  place-items: start center;
+  width: 100%;
+  padding-top: 6px;
+  border-radius: 10px 10px 4px 4px;
+  font: 800 20px/1 var(--font);
+  color: #3b2410;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.15), 0 0 0 1.5px #2b1d14;
+}
+.board-podium .place-1 .board-step {
+  height: 64px;
+  background: linear-gradient(180deg, #fff0b3, #e6b53c);
+}
+.board-podium .place-2 .board-step {
+  height: 46px;
+  color: #26313c;
+  background: linear-gradient(180deg, #ffffff, #b3c0cc);
+}
+.board-podium .place-3 .board-step {
+  height: 34px;
+  background: linear-gradient(180deg, #f0be8c, #c47c43);
+}
+.board-list {
+  display: grid;
+  gap: 2px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.board-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 6px;
+  border-radius: var(--radius-md);
+}
+.board-list li:nth-child(odd) {
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+}
+.board-list b {
+  flex: 1;
+  min-width: 0;
+  font: 600 14px/18px var(--font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-rank {
+  width: 22px;
+  font: 700 14px/1 var(--font);
+  text-align: center;
+  color: var(--text-muted);
+}
+.board-initial {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  color: #fff;
+  background: #8a7a66;
+}
+.board-me {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font: 600 14px/20px var(--font);
+  background: color-mix(in srgb, var(--gold) 14%, transparent);
+}
+.board-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin: 12px 0 0;
+  cursor: pointer;
+}
+.board-toggle > span {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+.board-toggle small {
+  font-size: 12px;
+  line-height: 16px;
+}
+.board-toggle input {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  accent-color: var(--gold);
+}
+.board-join {
+  min-height: 44px;
+  margin-top: 12px;
+}
