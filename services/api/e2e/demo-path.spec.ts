@@ -594,3 +594,54 @@ test("a guest's visit is counted when the page is hidden and an admin reads it u
   await expect(page.getByRole("heading", { name: MEMORY_SITE.name, level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Hikâye cümleleri" })).toBeVisible();
 });
+
+test("the assistant asks a guest to sign in; signed in, it asks about the open site and shows the answer's sources", async ({
+  browser,
+}) => {
+  const email = `e2e-chat-${randomUUID().slice(0, 8)}@akar.test`;
+  const { context, page } = await guestPage(browser);
+  try {
+    // 1. A guest's tap opens the sign-in with the reason.
+    await expect(page.locator(".opening")).toHaveCount(0);
+    await page.getByRole("button", { name: "Asistana sor" }).click();
+    await expect(page.getByText("Asistanı kullanmak için giriş yap.")).toBeVisible();
+    await signIn(page, email);
+
+    // 2. The model is stubbed (no key in CI): a busy model keeps the question for a retry, then an answer comes.
+    const sent: Array<Record<string, unknown>> = [];
+    let calls = 0;
+    await page.route(`${API}/v1/chat`, async (route) => {
+      sent.push(route.request().postDataJSON());
+      calls += 1;
+      if (calls === 1)
+        return route.fulfill({
+          status: 503,
+          json: { error: { code: "SERVICE_UNAVAILABLE", message: "Asistan yapılandırılmamış." } },
+        });
+      return route.fulfill({
+        json: {
+          answer: "Ulucami 1399'da tamamlandı.",
+          sources: [{ kind: "story", siteId: MEMORY_SITE.id, title: "Yıldırım'ın adağı", source: { title: "Bursa Envanteri", page: "s. 12" } }],
+          general: true,
+        },
+      });
+    });
+    await openSite(page, MEMORY_SITE.name);
+    await page.getByRole("button", { name: "Asistana sor" }).click();
+    const chat = page.getByRole("dialog", { name: "Akar asistanı" });
+    await expect(chat.getByText(`${MEMORY_SITE.name} hakkında soruyorsun.`)).toBeVisible();
+    const box = chat.getByRole("textbox", { name: "Sorunu yaz…" });
+    await box.fill("Ne zaman yapıldı?");
+    await box.press("Enter");
+    await expect(chat.getByRole("alert")).toHaveText("Asistan şu an kullanılamıyor.");
+    await expect(box).toHaveValue("Ne zaman yapıldı?");
+
+    await chat.getByRole("button", { name: "Gönder" }).click();
+    await expect(chat.getByText("Ulucami 1399'da tamamlandı.")).toBeVisible();
+    await expect(chat.getByRole("list", { name: "Kaynaklar" })).toContainText("Bursa Envanteri, s. 12");
+    await expect(chat.getByText("Genel bilgi")).toBeVisible();
+    expect(sent[1]).toEqual({ message: "Ne zaman yapıldı?", history: [], siteId: MEMORY_SITE.id, lang: "tr" });
+  } finally {
+    await context.close();
+  }
+});

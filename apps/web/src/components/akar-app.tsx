@@ -81,6 +81,7 @@ import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
 import { SignInModal, takeGoogleSignIn } from "./sign-in-modal";
+import { ChatWidget } from "./chat-widget";
 import { Modal, Notice } from "./ui";
 import {
   isFieldTask,
@@ -2044,6 +2045,19 @@ export function AkarApp() {
             </button>
           </div>
         </Modal>
+      )}
+      {/* Site assistant (§11.77): live only (the demo has no model), on the public pages, not the panel. */}
+      {live && ready && !opening && view !== "admin" && (
+        <ChatWidget
+          signedIn={!!account}
+          site={
+            site && ["detail", "story", "history", "memories"].includes(view)
+              ? { id: site.id, name: text(site.name, site.nameEn) }
+              : undefined
+          }
+          ask={(question) => client.current!.chat(question)}
+          onSignIn={(reason) => setSignIn(reason)}
+        />
       )}
       {signIn !== null && (
         <SignInModal
