@@ -18,6 +18,11 @@ import {
   type PartCard,
   type StoryBlock,
   type UsageEventName,
+  displayNameProblem,
+  normalizeDisplayName,
+  istanbulWeekStart,
+  type AvatarId,
+  type WeeklyLeaderboard,
 } from "@akar/domain";
 import {
   createSeed,
@@ -215,6 +220,20 @@ export interface AkarClient {
    * returns the whole saved object. The demo keeps it in memory.
    */
   savePreferences(patch: Partial<UserPreferences>): Promise<UserPreferences>;
+  /**
+   * The public display name: `PUT /v1/me/profile` when signed in; a guest and the demo keep it on the device.
+   * Trimmed and checked by the same rule as the server (`displayNameProblem`); returns the saved name.
+   */
+  setDisplayName(name: string): Promise<string>;
+  /** `PUT /v1/me/avatar` when signed in (the weekly list shows it); a guest and the demo keep the figure on the device only. */
+  setAvatar(avatarId: AvatarId): Promise<void>;
+  /**
+   * «Haftanın Gezgini»: `GET /v1/leaderboard/week`. The demo answers with made-up rows marked `sample`; the live list
+   * never has made-up rows and may be empty.
+   */
+  getWeeklyLeaderboard(): Promise<WeeklyLeaderboard>;
+  /** `PUT /v1/me/leaderboard`, signed-in only (409 without a display name); the demo keeps it on the device. */
+  setLeaderboardVisible(visible: boolean): Promise<boolean>;
   /** `GET /v1/cities`: every city with its map view, inventory, scene and identity (§11.42, §11.45, §11.49), alphabetical. */
   getCities(): Promise<CityRecord[]>;
   /**
@@ -540,6 +559,12 @@ export function createMockClient(
     persist(state, progress, { tasks, badges });
     return earned;
   };
+  let demoVisible = false;
+  try {
+    demoVisible = storage?.getItem(`${key}-liderlik`) === "1";
+  } catch {
+    /* off */
+  }
   // Demo: a change lasts until the page reloads, like the demo member roles.
   let mapSettings: MapSettings = { ...defaultMapSettings };
   let preferences: UserPreferences = {
@@ -569,6 +594,27 @@ export function createMockClient(
     async setMapSettings(settings) {
       mapSettings = { ...settings };
       return { ...mapSettings };
+    },
+    async setAvatar() {
+      // The demo has no list of other people to show it in; the figure stays on the device.
+    },
+    async getWeeklyLeaderboard() {
+      return demoLeaderboard(state.name, state.points, demoVisible);
+    },
+    async setLeaderboardVisible(visible) {
+      demoVisible = visible;
+      try {
+        storage?.setItem(`${key}-liderlik`, visible ? "1" : "0");
+      } catch {
+        /* the choice lasts until the page reloads */
+      }
+      return visible;
+    },
+    async setDisplayName(raw) {
+      const name = normalizeDisplayName(raw);
+      if (displayNameProblem(name)) throw new Error("Bu ad kullanılamaz.");
+      persist({ ...state, name });
+      return name;
     },
     async savePreferences(patch) {
       // A missing (undefined) key stays; null clears.
@@ -863,5 +909,30 @@ export function createMockClient(
         rows: [],
       };
     },
+  };
+}
+
+/**
+ * The demo's weekly list: made-up travellers, marked `sample` so the screen tags them «Örnek»; the visitor joins with
+ * the demo's points once they turn the list on. The live API never returns made-up rows.
+ */
+export function demoLeaderboard(name: string, points: number, visible: boolean, now = new Date()): WeeklyLeaderboard {
+  const sample: Array<{ name: string; avatarId: AvatarId; points: number }> = [
+    { name: "Elif", avatarId: "mihrimah-sultan", points: 330 },
+    { name: "Mert", avatarId: "evliya-celebi", points: 245 },
+    { name: "Zeynep", avatarId: "kosem-sultan", points: 160 },
+    { name: "Can", avatarId: "hezarfen", points: 115 },
+    { name: "Deniz", avatarId: "mimar-sinan", points: 40 },
+  ];
+  const rows = [...sample.map((r) => ({ ...r, me: false })), ...(visible && points > 0 ? [{ name, avatarId: null, points, me: true }] : [])]
+    // On a tie the made-up row stays ahead: it «got there first».
+    .sort((a, b) => b.points - a.points || Number(a.me) - Number(b.me))
+    .map((r, i) => ({ ...r, rank: i + 1 }));
+  const own = rows.find((r) => r.me);
+  return {
+    weekStart: istanbulWeekStart(now).toISOString(),
+    items: rows.slice(0, 10).map(({ rank, name, avatarId, points }) => ({ rank, name, avatarId, points })),
+    me: { rank: own?.rank ?? null, points, visible },
+    sample: true,
   };
 }

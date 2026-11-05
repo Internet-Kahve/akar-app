@@ -131,7 +131,7 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
   // 2. Moderator signs in from Mirasım and approves it in the panel.
   const moderator = await guestPage(browser);
   await openProfile(moderator.page);
-  await moderator.page.getByRole("button", { name: "Giriş yap" }).click();
+  await moderator.page.getByRole("button", { name: "Giriş yap", exact: true }).click();
   await signIn(moderator.page, moderatorEmail);
   await moderator.page.getByRole("button", { name: "Yönetim paneli" }).click();
   await moderator.page.locator(".admin-nav").getByRole("button", { name: /Katkılar/ }).click();
@@ -208,7 +208,7 @@ test("a guest's saved site and Rotam move into the account at sign-in; Rotam the
   // 2. Sign in: both move into the account.
   await page.goto("/#view=map");
   await openProfile(page);
-  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
   await signIn(page, email);
   const auth = { authorization: `Bearer ${tokenFor(email, "user")}` };
   const account = async () => {
@@ -259,7 +259,7 @@ test("an admin deletes another visitor's approved memory permanently from the pu
 
   const page = (await guestPage(browser)).page;
   await openProfile(page);
-  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
   await signIn(page, adminEmail);
   await page.goto("/#view=map");
   await openSite(page, MEMORY_SITE.name);
@@ -536,7 +536,7 @@ test("the site language follows the account: an empty account takes the device's
   try {
     // 1. A Turkish browser signs in: the account had no language and takes Turkish.
     await openProfile(page);
-    await page.getByRole("button", { name: "Giriş yap" }).click();
+    await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
     await signIn(page, email);
     await expect.poll(async () => (await preferences()).siteLang).toBe("tr");
 

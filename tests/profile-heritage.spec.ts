@@ -11,7 +11,7 @@ test("profile uses catalog badges, saved places and persistent language preferen
     siteProgress: { tasks: [], badges: [{ badgeId: "catalog-story", siteId: site.id, onSite: false, earnedAt: "2026-10-31" }] },
   });
   await page.goto("/#view=profile");
-  await expect(page.locator(".profile-badges .earned")).toContainText("Katalog rozeti");
+  await expect(page.locator(".profile-badges .medal-tile.earned")).toContainText("Katalog rozeti");
   await expect(page.locator(".profile-saved .list-row")).toContainText(site.name);
   await page.getByRole("button", { name: "English", exact: true }).click();
   await expect(page.getByRole("heading", { name: "My heritage" })).toBeVisible();

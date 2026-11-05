@@ -30,6 +30,10 @@ import {
   type StoryNarration,
   type Trust,
   type UserPreferences,
+  displayNameProblem,
+  normalizeDisplayName,
+  type AvatarId,
+  type WeeklyLeaderboard,
 } from "@akar/domain";
 import type {
   AdminHealth,
@@ -128,6 +132,8 @@ interface StoredReceipt {
 }
 interface LocalState {
   personalRoutes?: PersonalRoute[];
+  /** A guest's display name, kept on the device (never sent). */
+  name?: string;
   deviceId: string;
   receipts: StoredReceipt[];
   saved: string[];
@@ -396,6 +402,9 @@ interface MeDto {
   displayName: string | null;
   /** Absent from an API older than §26. */
   preferences?: UserPreferences;
+  /** Absent from an API older than §11.76. */
+  avatarId?: AvatarId | null;
+  leaderboardVisible?: boolean;
 }
 interface PassportDto {
   points: number;
@@ -965,6 +974,8 @@ interface UserState {
   name: string;
   /** The account's preferences; null for a guest (the device keeps them). */
   preferences: UserPreferences | null;
+  /** The account's figure and weekly-list choice; null for a guest. */
+  publicProfile?: { avatarId: AvatarId | null; leaderboardVisible: boolean } | null;
   savedIds: string[];
   /** "Rotam": the account's when signed in, the device's for a guest. */
   routeIds: string[];
@@ -1001,6 +1012,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           saved: Array.isArray(v.saved) ? v.saved : [],
           route: Array.isArray(v.route) ? v.route : [],
           personalRoutes: Array.isArray(v.personalRoutes) ? v.personalRoutes : [],
+          ...(typeof v.name === "string" && !displayNameProblem(v.name) && { name: v.name }),
         };
     } catch {
       /* Corrupt storage starts a fresh local state. */
@@ -1410,7 +1422,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       return {
         signedIn: false,
         role: "user",
-        name: "Gezgin",
+        name: local.name ?? "Gezgin",
         preferences: null,
         savedIds: local.saved,
         routeIds: local.route,
@@ -1465,6 +1477,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       signedIn: true,
       role: me.role,
       name,
+      publicProfile: { avatarId: me.avatarId ?? null, leaderboardVisible: me.leaderboardVisible ?? false },
       preferences: me.preferences ?? {
         siteLang: null,
         voiceLang: null,
@@ -1538,6 +1551,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       points: user.points,
       name: user.name,
       ...(user.preferences && { preferences: user.preferences }),
+      ...(user.publicProfile && { publicProfile: user.publicProfile }),
       catalogRoutes: [...cat.routes, ...(drafts?.routes ?? [])],
     };
     return structuredClone(snapshot);
@@ -2430,6 +2444,29 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     },
     setMapSettings: (settings) =>
       call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
+    setAvatar: async (avatarId) => {
+      if (!(await token())) return;
+      await call<{ avatarId: AvatarId }>("PUT", "/v1/me/avatar", { body: { avatarId } });
+      if (user?.signedIn) user = { ...user, publicProfile: { avatarId, leaderboardVisible: user.publicProfile?.leaderboardVisible ?? false } };
+    },
+    getWeeklyLeaderboard: () => call<WeeklyLeaderboard>("GET", "/v1/leaderboard/week"),
+    setLeaderboardVisible: async (visible) => {
+      const saved = await call<{ visible: boolean }>("PUT", "/v1/me/leaderboard", { body: { visible } });
+      if (user?.signedIn) user = { ...user, publicProfile: { avatarId: user.publicProfile?.avatarId ?? null, leaderboardVisible: saved.visible } };
+      return saved.visible;
+    },
+    setDisplayName: async (raw) => {
+      const name = normalizeDisplayName(raw);
+      if (displayNameProblem(name)) throw new Error("Bu ad kullanılamaz.");
+      if (!(await token())) {
+        writeLocal({ ...local, name });
+        if (user && !user.signedIn) user = { ...user, name };
+        return name;
+      }
+      const saved = await call<{ id: string; displayName: string }>("PUT", "/v1/me/profile", { body: { displayName: name } });
+      if (user?.signedIn) user = { ...user, name: saved.displayName };
+      return saved.displayName;
+    },
     savePreferences: async (patch) => {
       const saved = await call<UserPreferences>("PUT", "/v1/me/preferences", {
         body: patch,

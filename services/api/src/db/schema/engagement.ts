@@ -25,7 +25,8 @@ export const pointEvents = pgTable(
     receiptId: text("receipt_id").unique("point_events_receipt_uq"),
     at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique("point_events_once_uq").on(t.userId, t.action, t.subjectId), index("point_events_user_idx").on(t.userId)],
+  // `at`: the weekly list («Haftanın Gezgini») reads the events since Monday.
+  (t) => [unique("point_events_once_uq").on(t.userId, t.action, t.subjectId), index("point_events_user_idx").on(t.userId), index("point_events_at_idx").on(t.at)],
 );
 
 /** "Kaydet": state-setting PUT/DELETE, never a toggle. */

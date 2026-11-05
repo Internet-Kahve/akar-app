@@ -3619,3 +3619,54 @@ test("usage events go out in batches of at most 50 with keepalive; a failed send
   client.flushUsage();
   assert.equal(sent.length, 2);
 });
+
+test("display name: a guest keeps it on the device, an account saves it with PUT /v1/me/profile; a bad name is refused before any request", async () => {
+  const s = storage();
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: null }),
+    "GET /v1/me/passport": () => ({ points: 0, saved: [], read: [], visited: [], quizzesSolved: [] }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "PUT /v1/me/profile": () => ({ id: "u", displayName: "Ayşe Nur" }),
+  });
+  const guest = createHttpClient({ baseUrl: "http://api.test", storage: s, fetch: api.fetch });
+  assert.equal((await guest.getSnapshot()).name, "Gezgin");
+  assert.equal(await guest.setDisplayName("  Yolcu   Ali "), "Yolcu Ali");
+  assert.equal((await createHttpClient({ baseUrl: "http://api.test", storage: s, fetch: api.fetch }).getSnapshot()).name, "Yolcu Ali");
+  assert.ok(!api.calls.some((c) => c.path === "/v1/me/profile"), "a guest's name never leaves the device");
+
+  let signedIn = true;
+  const account = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => (signedIn ? "tok" : null), fetch: api.fetch });
+  await account.getSnapshot();
+  await assert.rejects(account.setDisplayName("a"));
+  await assert.rejects(account.setDisplayName("Akar Ekibi"));
+  assert.ok(!api.calls.some((c) => c.path === "/v1/me/profile"));
+  assert.equal(await account.setDisplayName(" Ayşe Nur "), "Ayşe Nur");
+  const put = api.calls.find((c) => c.path === "/v1/me/profile")!;
+  assert.equal(put.method, "PUT");
+  assert.ok(put.headers["idempotency-key"]);
+  signedIn = false;
+});
+
+test("weekly list and figure: the list is read as is; a guest's figure stays on the device, an account's is saved", async () => {
+  const board = { weekStart: "2026-11-01T21:00:00.000Z", items: [{ rank: 1, name: "Ayşe", avatarId: "fatih", points: 115 }], me: null };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/leaderboard/week": () => board,
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ayşe", avatarId: "fatih", leaderboardVisible: true }),
+    "GET /v1/me/passport": () => ({ points: 0, saved: [], read: [], visited: [], quizzesSolved: [] }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "PUT /v1/me/avatar": () => ({ avatarId: "mimar-sinan" }),
+    "PUT /v1/me/leaderboard": () => ({ visible: false }),
+  });
+  const guest = createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: api.fetch });
+  assert.deepEqual(await guest.getWeeklyLeaderboard(), board);
+  await guest.setAvatar("mimar-sinan");
+  assert.ok(!api.calls.some((c) => c.path === "/v1/me/avatar"));
+
+  const account = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "tok", fetch: api.fetch });
+  assert.deepEqual((await account.getSnapshot()).publicProfile, { avatarId: "fatih", leaderboardVisible: true });
+  await account.setAvatar("mimar-sinan");
+  assert.equal(api.calls.find((c) => c.path === "/v1/me/avatar")?.method, "PUT");
+  assert.equal(await account.setLeaderboardVisible(false), false);
+});

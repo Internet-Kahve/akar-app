@@ -90,7 +90,6 @@ import {
   type FieldTask,
 } from "./site-tasks";
 import { describeError, needsSignIn } from "../lib/errors";
-import { badgeInLang } from "../lib/task-text";
 import { apiUrl, demoContentUrl, getSupabase } from "../lib/supabase";
 import { setUploadProgress } from "../lib/upload-progress";
 import { locateOnce } from "../lib/locate";
@@ -115,6 +114,19 @@ import { applyTheme, useTheme } from "../lib/theme";
 import { LangProvider, Localized } from "./i18n";
 import { VoiceProvider } from "./voice";
 import { byDisplayOrder, siteMeta } from "../lib/site-meta";
+import { achievements as measureAchievements, badgeEntries, newlyDone, type Achievement, type AchievementId } from "../lib/badges";
+import type { Celebrated } from "./badge-celebration";
+import type { ShareRequest } from "./share-card";
+import { LegalDialog, type LegalKind } from "./legal-dialog";
+import { legalFromHash, withoutLegal } from "../lib/legal-link";
+import { AVATAR_IDS, type AvatarId } from "@akar/domain";
+
+const isAvatarId = (id: string): id is AvatarId => (AVATAR_IDS as readonly string[]).includes(id);
+import dynamic from "next/dynamic";
+
+/* The celebration's code comes only when something is earned. */
+const BadgeCelebration = dynamic(() => import("./badge-celebration"), { ssr: false });
+const ShareDialog = dynamic(() => import("./share-card"), { ssr: false });
 type View =
   | "map"
   | "sites"
@@ -166,6 +178,9 @@ export function AkarApp() {
     [lang, setLang] = useState<Lang>("tr"),
     [voice, setVoice] = useState<VoiceChoice>({ lang: null, gender: null }),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
+    [shareRequest, setShareRequest] = useState<ShareRequest | null>(null),
+    [profileCollection, setProfileCollection] = useState(false),
+    [celebrate, setCelebrate] = useState<Array<{ kind: "badge"; id: string } | { kind: "achievement"; id: AchievementId }>>([]),
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
     [sheetDragging, setSheetDragging] = useState(false),
@@ -242,6 +257,45 @@ export function AkarApp() {
     account?.id ?? null,
     snapshotRevision,
   );
+  /**
+   * Achievements are celebrated only right after the visitor's own action (a finished task or story) has been read
+   * back, never because a sign-in or a reload filled the state.
+   */
+  const feats = useMemo(
+    () => measureAchievements({ sites: state.sites, readIds: state.readIds, memories: state.memories, progress }),
+    [state.sites, state.readIds, state.memories, progress],
+  );
+  const lastFeats = useRef<Achievement[] | null>(null);
+  const featsArmed = useRef(0);
+  useEffect(() => {
+    const before = lastFeats.current;
+    lastFeats.current = feats;
+    if (!before || Date.now() > featsArmed.current) return;
+    // One action, one look: the next change after it is compared, then nothing until the next action.
+    featsArmed.current = 0;
+    const fresh = newlyDone(before, feats);
+    if (fresh.length) setCelebrate((queue) => [...queue, ...fresh.map((a) => ({ kind: "achievement" as const, id: a.id }))]);
+  }, [feats]);
+  // The account's figure (for the weekly list): one chosen with the account wins on this device; an account with
+  // none yet takes the device's.
+  const [figure, setFigure] = useAvatar();
+  const publicAvatar = state.publicProfile?.avatarId;
+  const hasPublicProfile = !!state.publicProfile;
+  useEffect(() => {
+    if (!hasPublicProfile) return;
+    if (publicAvatar) {
+      if (publicAvatar !== figure.id) setFigure(publicAvatar);
+    } else if (isAvatarId(figure.id)) void client.current?.setAvatar(figure.id).catch(() => undefined);
+    // Only when the account's value arrives or changes, not on each pick (a pick saves itself).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasPublicProfile, publicAvatar]);
+  // The collection opens over the profile only; leaving the profile closes it.
+  useEffect(() => {
+    if (view !== "profile") setProfileCollection(false);
+  }, [view]);
+  const armAchievements = useCallback(() => {
+    featsArmed.current = Date.now() + 8000;
+  }, []);
   /**
    * Map settings and city records (§11.42, §11.45) are a refinement: when one cannot be read the map
    * opens at the demo region and the viewer keeps the values it has.
@@ -379,6 +433,14 @@ export function AkarApp() {
       stopUsageFlush();
     };
   }, [load, t]);
+  // A legal text asked for in the address (the intro page's footer links): shown over the map, `belge` dropped on close.
+  const [hashLegal, setHashLegal] = useState<LegalKind | null>(null);
+  useEffect(() => {
+    const read = () => setHashLegal(legalFromHash(location.hash));
+    read();
+    window.addEventListener("hashchange", read);
+    return () => window.removeEventListener("hashchange", read);
+  }, []);
   // Once per page load; the client effect above re-runs on a language change.
   useEffect(() => track("app.open"), []);
   useEffect(() => {
@@ -436,13 +498,13 @@ export function AkarApp() {
   /** A finished task: the badges it earned are announced and the progress is read again. */
   const taskFinished = useCallback(
     (badges: SiteBadge[]) => {
-      if (badges.length)
-        setToast(
-          t("toast.newBadge", { titles: badges.map((b) => badgeInLang(b, langRef.current).badge.title).join(", ") }),
-        );
-      void refreshProgress();
+      armAchievements();
+      // Celebrated once the progress is read back, so a field task done at the site shows its gold.
+      void refreshProgress().then(() => {
+        if (badges.length) setCelebrate((queue) => [...queue, ...badges.map((b) => ({ kind: "badge" as const, id: b.id }))]);
+      });
     },
-    [refreshProgress, t],
+    [refreshProgress, armAchievements],
   );
   const closeOverlay = useCallback(() => setOverlay(null), []);
   const signInForBadges = () => setSignIn(t("toast.badgesSignIn"));
@@ -1273,6 +1335,33 @@ export function AkarApp() {
               onAdmin={() => go("admin")}
               onReset={() => setOverlay("reset")}
               commit={commit}
+              board={{
+                mode: !live ? "demo" : account ? "account" : "guest",
+                load: () => client.current!.getWeeklyLeaderboard(),
+                setVisible: async (visible) => {
+                  try {
+                    return await client.current!.setLeaderboardVisible(visible);
+                  } catch (e) {
+                    throw new Error(describeError(e, t("board.toggleFailed"), langRef.current));
+                  }
+                },
+                onSignIn: () => setSignIn(""),
+              }}
+              onAvatar={(id) => {
+                if (isAvatarId(id)) void client.current?.setAvatar(id).catch(() => undefined);
+              }}
+              collectionOpen={profileCollection}
+              onCollection={setProfileCollection}
+              onRename={async (name) => {
+                const c = client.current;
+                if (!c) return;
+                try {
+                  const saved = await c.setDisplayName(name);
+                  setState((s) => ({ ...s, name: saved }));
+                } catch (e) {
+                  throw new Error(describeError(e, t("name.failed"), langRef.current));
+                }
+              }}
               auth={
                 live
                   ? {
@@ -1530,6 +1619,7 @@ export function AkarApp() {
                       hold={storyHold}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
+                        armAchievements();
                         if (await commit({ type: "read", siteId: site.id })) {
                           writePreference(`akar.ilerleme.${site.id}`, "0");
                           const fresh = await refreshProgress();
@@ -2003,6 +2093,39 @@ export function AkarApp() {
         }
       >
         {shell}
+        {celebrate.length > 0 && !completion && (() => {
+          const entries = badgeEntries(state.sites, progress);
+          const items = celebrate.flatMap((c): Celebrated[] => {
+            if (c.kind === "achievement") return [c];
+            const entry = entries.find((e) => e.badge.id === c.id);
+            return entry ? [{ kind: "badge", entry }] : [];
+          });
+          return items.length ? (
+            <BadgeCelebration
+              items={items}
+              onClose={() => setCelebrate([])}
+              onCollection={() => {
+                setCelebrate([]);
+                setPuzzle(null);
+                setProfileCollection(true);
+                go("profile");
+              }}
+              onShare={(item) => setShareRequest(item.kind === "badge" ? { kind: "badge", entry: item.entry } : { kind: "achievement", id: item.id })}
+            />
+          ) : null;
+        })()}
+        {hashLegal && (
+          <LegalDialog
+            kind={hashLegal}
+            onClose={() => {
+              setHashLegal(null);
+              history.replaceState(null, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
+            }}
+          />
+        )}
+        {shareRequest && (
+          <ShareDialog request={shareRequest} name={state.name} points={state.points} sites={state.sites} progress={progress} onClose={() => setShareRequest(null)} />
+        )}
         {completion && site && (
           <CompletionCard
             site={site}
@@ -2084,7 +2207,7 @@ export function AkarApp() {
             ]}
           />
         ) : view === "profile" ? (
-          <TipRow key="t-profil" tips={[{ id: "profil.avatar", text: t("tip.avatar"), place: "under-spot", gesture: "tap", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }]} />
+          <TipRow key="t-profil" tips={[{ id: "profil.avatar", text: t("tip.avatar"), place: "under-spot", gesture: "tap", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }, { id: "profil.ad", text: t("tip.name"), place: "under-spot", gesture: "tap", spot: ".profile-name-edit", arrowTo: ".profile-name-edit", doneBy: ".profile-name-edit", pressSpot: true, swallow: true }]} />
         ) : view === "history" ? (
           <TipRow key="t-gecmis" tips={historyTips(true)} />
         ) : null
@@ -2115,7 +2238,7 @@ export function AkarApp() {
             ]}
           />
         ) : view === "profile" ? (
-          <TipRow key="m-profil" tips={[{ id: "masa.profil.avatar", text: t("tip.avatarWide"), place: "under-spot", gesture: "click", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }]} />
+          <TipRow key="m-profil" tips={[{ id: "masa.profil.avatar", text: t("tip.avatarWide"), place: "under-spot", gesture: "click", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }, { id: "masa.profil.ad", text: t("tip.name"), place: "under-spot", gesture: "click", spot: ".profile-name-edit", arrowTo: ".profile-name-edit", doneBy: ".profile-name-edit", pressSpot: true, swallow: true }]} />
         ) : view === "history" ? (
           <TipRow key="m-gecmis" tips={historyTips(false)} />
         ) : null

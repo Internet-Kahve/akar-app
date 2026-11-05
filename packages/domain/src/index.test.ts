@@ -501,3 +501,22 @@ test("a replaced model reports each part the content still names, with every pla
   ]);
   assert.deepEqual(partsMissing(site, []), []);
 });
+
+test("display names: 2–24 characters once trimmed, no links or slurs, no team names; ordinary names pass", async () => {
+  const { displayNameProblem, normalizeDisplayName } = await import("./index.ts");
+  assert.equal(normalizeDisplayName("  Ayşe   Nur  "), "Ayşe Nur");
+  for (const ok of ["Ayşe Nur", "Işık", "Kemal", "Gökçe", "Çağrı Ö.", "Evliya'nın izinde", "Ali-Rıza", "Mehmet 1453", "Seyyah_34", "Zeynep"])
+    assert.equal(displayNameProblem(ok), null, ok);
+  assert.equal(displayNameProblem(" A "), "short");
+  assert.equal(displayNameProblem("x".repeat(25)), "long");
+  assert.equal(displayNameProblem("a".repeat(24)), null);
+  assert.equal(displayNameProblem("www.site.com/x"), "characters");
+  for (const link of ["www.site.com", "site.com", "Benim Site.com.tr", "akar.io", "WWW.ornek.NET"]) assert.equal(displayNameProblem(link), "characters", link);
+  for (const ok of ["Ali K.", "Dr. Ayşe", "A. Rıza", "Ece.Nur"]) assert.equal(displayNameProblem(ok), null, ok);
+  assert.equal(displayNameProblem("@hesap"), "characters");
+  assert.equal(displayNameProblem("05321234567"), "characters");
+  assert.equal(displayNameProblem("Akar Ekibi"), "reserved");
+  assert.equal(displayNameProblem("ADMIN"), "reserved");
+  for (const bad of ["or0spu", "Orospu çocuğu", "amk", "AQ", "s1kt1r git", "pezevenkadam", "Fuck you"])
+    assert.equal(displayNameProblem(bad), "inappropriate", bad);
+});

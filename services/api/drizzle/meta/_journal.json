@@ -260,6 +260,13 @@
       "when": 1793808083789,
       "tag": "0036_map_baked",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793887904051,
+      "tag": "0037_leaderboard",
+      "breakpoints": true
     }
   ]
 }

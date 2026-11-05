@@ -123,6 +123,11 @@ test("discovery, story, memory moderation and persistence form one complete flow
   const finished = page.getByRole("dialog");
   await expect(finished).toContainText("Hikâye tamamlandı");
   await finished.getByRole("button", { name: "Devam et" }).click();
+  // The first finished story is an achievement: celebrated once the story's own card is closed.
+  const feat = page.getByRole("dialog", { name: /Yeni başarım!/ });
+  await expect(feat).toContainText("İlk hikâye");
+  await feat.getByRole("button", { name: "Harika" }).click();
+  await expect(feat).toHaveCount(0);
   // «İz Bırak» opens from the living memory row's window.
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
   // No trace yet: the wall opens with its invitation on a wide screen, the empty note on a phone.

@@ -677,6 +677,8 @@ export interface Snapshot {
   role?: Role;
   /** The signed-in account's preferences; absent for a guest (kept on the device) and in the demo. */
   preferences?: UserPreferences;
+  /** The signed-in account's figure and weekly-list choice (`GET /v1/me`); absent for a guest and in the demo. */
+  publicProfile?: { avatarId: AvatarId | null; leaderboardVisible: boolean };
 }
 export type Command =
   | { type: "save"; siteId: string }
@@ -1256,3 +1258,112 @@ export const usageEventNames = Object.keys(USAGE_EVENTS) as [UsageEventName, ...
 export const MAX_SENTENCE_INDEX = 499;
 /** Events per `POST /v1/events` request. */
 export const MAX_EVENTS_PER_BATCH = 50;
+
+/* ------------------------------------------------------------------------------------------- display name */
+
+/**
+ * The public display name (5 Nov 2026): shown on the profile, on approved memories and on share cards. The same
+ * rule runs in the app (before saving, and for a guest who keeps the name on the device) and on the server
+ * (`PUT /v1/me/profile`), which is the one that counts.
+ */
+export const DISPLAY_NAME_MIN = 2;
+export const DISPLAY_NAME_MAX = 24;
+
+/** Spaces trimmed and runs of white space made one space. */
+export const normalizeDisplayName = (name: string): string => name.normalize("NFC").replace(/\s+/g, " ").trim();
+
+/**
+ * Word roots that make a name unfit for a public list. Kept short on purpose: it stops the obvious, a moderator
+ * can still remove the rest. A root is matched at the start of a word; the longer ones also inside a run of letters
+ * written without spaces. Short roots only as a whole word, so «Işık», «Kemal» or «Gökçe» pass.
+ */
+const BLOCKED_PREFIX = ["orospu", "yarrak", "pezevenk", "kahpe", "ibne", "siktir", "sikis", "sikik", "amcik", "amina", "gavat", "fuck", "shit", "bitch", "whore", "cunt", "nigg", "faggot"];
+const BLOCKED_WORD = ["amk", "aq", "sik", "got", "oc", "pic", "yavsak", "salak", "gerizekali", "dick", "ass"];
+/** Names that would pass for the team or a role. */
+const RESERVED = ["akar", "akar ekibi", "admin", "yonetici", "moderator", "editor", "destek", "support"];
+
+/** Lower case, Turkish letters folded to Latin, and common look-alike digits and signs read as letters. */
+function foldForCheck(name: string): string {
+  return name
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[çc]/g, "c")
+    .replace(/ğ/g, "g")
+    .replace(/[ıi̇]/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ş/g, "s")
+    .replace(/ü/g, "u")
+    .replace(/[âà]/g, "a")
+    .replace(/[îì]/g, "i")
+    .replace(/[ûù]/g, "u")
+    .replace(/0/g, "o")
+    .replace(/1/g, "i")
+    .replace(/3/g, "e")
+    .replace(/4|@/g, "a")
+    .replace(/5|\$/g, "s")
+    .replace(/7/g, "t");
+}
+
+export type DisplayNameProblem = "short" | "long" | "characters" | "inappropriate" | "reserved";
+
+/** Why a (normalized) name cannot be used, or `null` when it can. */
+export function displayNameProblem(raw: string): DisplayNameProblem | null {
+  const name = normalizeDisplayName(raw);
+  const length = [...name].length;
+  if (length < DISPLAY_NAME_MIN) return "short";
+  if (length > DISPLAY_NAME_MAX) return "long";
+  // Letters (any script), digits, spaces and a few joiners; no links, no @ handles, no control characters.
+  if (!/^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .'’\-_]*$/u.test(name) || /\p{N}{7,}/u.test(name)) return "characters";
+  // A web address written with dots («www.site.com», «site.com.tr»): a name is not a link.
+  if (/(^|[\s.])www\./iu.test(name) || /\p{L}\.(com|net|org|info|biz|io|co|app|dev|me|tr|gov|edu|xyz)(\.[a-z]{2})?$/iu.test(name) || /\p{L}\.(com|net|org)(?![\p{L}])/iu.test(name)) return "characters";
+  const folded = foldForCheck(name);
+  const words = folded.split(/[^a-z]+/).filter(Boolean);
+  const squashed = words.join("");
+  if (RESERVED.includes(folded.replace(/[^a-z ]+/g, "").trim())) return "reserved";
+  if (words.some((w) => BLOCKED_WORD.includes(w) || BLOCKED_PREFIX.some((p) => w.startsWith(p)))) return "inappropriate";
+  if (BLOCKED_PREFIX.some((p) => p.length >= 5 && squashed.includes(p))) return "inappropriate";
+  return null;
+}
+
+/* ------------------------------------------------------------------------------------------- public profile */
+
+/** The figures a profile picture can be (`apps/web/public/avatarlar/<id>.webp`); the server accepts only these. */
+export const AVATAR_IDS = ["kosem-sultan", "evliya-celebi", "fatih", "mimar-sinan", "mihrimah-sultan", "hezarfen"] as const;
+export type AvatarId = (typeof AVATAR_IDS)[number];
+
+/**
+ * «Haftanın Gezgini» (5 Nov 2026): the week's points from the ledger, Monday 00:00 Europe/Istanbul onwards. Only
+ * accounts that chose to appear (off by default) and have a display name are listed; never an e-mail or an id.
+ */
+export interface WeeklyLeaderboard {
+  /** ISO instant of Monday 00:00 in Istanbul. */
+  weekStart: string;
+  /** The first ten, best first; rank 1-based, ties broken by who got there first. */
+  items: Array<{ rank: number; name: string; avatarId: AvatarId | null; points: number }>;
+  /** The signed-in visitor's week; null for a guest. `rank` is null while hidden or without points. */
+  me: { rank: number | null; points: number; visible: boolean } | null;
+  /** Demo only: made-up rows, shown with «Örnek». */
+  sample?: boolean;
+}
+
+/* ------------------------------------------------------------------------------------------- week */
+
+/** Offset of Europe/Istanbul from UTC at `at`, in minutes (+180 since 2016; read from the platform, not assumed). */
+function istanbulOffsetMinutes(at: Date): number {
+  const part = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Istanbul", timeZoneName: "longOffset" })
+    .formatToParts(at)
+    .find((p) => p.type === "timeZoneName")?.value;
+  const m = /GMT([+-])(\d{2}):?(\d{2})?/.exec(part ?? "");
+  if (!m) return 180;
+  return (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] ?? 0));
+}
+
+/** The start of the week that holds `now`: Monday 00:00 in Istanbul, as an instant. */
+/** Shared by the weekly list (server) and the week's share card (app). */
+export function istanbulWeekStart(now: Date): Date {
+  const offset = istanbulOffsetMinutes(now);
+  const local = new Date(now.getTime() + offset * 60_000); // Istanbul wall clock, read with the UTC getters
+  const sinceMonday = (local.getUTCDay() + 6) % 7;
+  const midnight = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() - sinceMonday);
+  return new Date(midnight - offset * 60_000);
+}
+
