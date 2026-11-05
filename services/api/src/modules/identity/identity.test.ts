@@ -464,7 +464,7 @@ test("the display name is trimmed, replaced on every save and returned by /v1/me
   assert.equal((await call("GET", "/v1/me", headers)).json<{ displayName: string }>().displayName, "Ayşe Yılmaz");
   assert.equal((await app.deps.db.select().from(profiles)).length, 1);
 
-  for (const displayName of ["a", "   ", "x".repeat(41)]) {
+  for (const displayName of ["a", "   ", "x".repeat(25), "or0spu", "Akar Ekibi", "www.site.com"]) {
     const res = await call("PUT", "/v1/me/profile", headers, { displayName });
     assert.equal(res.statusCode, 400, JSON.stringify(displayName));
     assert.equal(res.json<ErrorBody>().error.code, "VALIDATION_FAILED");

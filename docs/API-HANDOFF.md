@@ -167,3 +167,9 @@ Dal: `talha/profil-oyunlastirma`. Backend değişmedi; bunlar API'yi ilgilendire
 ### Aşama B: paylaşım kartı (5 Kasım)
 
 Backend değişmedi. Rozet, başarım ve hafta için 1080 × 1920 kart tarayıcıda canvas ile çizilir (`components/share-card.tsx`, yalnız paylaşırken yüklenir). Kartta figür, görünen ad (`profiles.display_name` ya da «Gezgin»), madalya, toplam puan (`Snapshot.points`, sunucudan) ve logo var; e-posta ya da hesap kimliği yok. «Bu hafta» istemcide `user_site_badges.earned_at` ile Pazartesi 00:00 Europe/Istanbul'dan sayılıyor (`lib/share-card.ts`); Aşama D'deki haftalık sıralama sunucuda aynı sınırı kullanmalı.
+
+### Aşama C: profil düzeni (5 Kasım)
+
+1. **`PUT /v1/me/profile` kuralı değişti.** Görünen ad artık boşlukları kırpılıp tek boşluğa indirilir, **2–24 karakter** (önce 40), yalnız harf/rakam/boşluk ve `. ' - _`; bağlantı, `@` ve 7+ basamaklı sayı (telefon) olmaz. Kaba sözcük kökleri ve ekibe ayrılmış adlar («Akar», «Akar ekibi», «admin», «moderatör»…) 400 `VALIDATION_FAILED` döner. Kural `packages/domain` içinde `displayNameProblem`; sunucu (`identity/schemas.ts`) ve uygulama aynı fonksiyonu kullanır. OpenAPI yeniden üretildi. 24 karakterden uzun **mevcut** adlar silinmez; yalnız yeni kayıt reddedilir. `identity.test.ts` yeni durumlarla güncellendi ama **Docker olmadığı için çalıştırılmadı**; lütfen `npm run check` ile doğrula.
+2. **Misafirin adı yalnız cihazda** (`akar-http-*` yerel durumunda `name`); sunucuya gitmez, girişte hesaba taşınmaz.
+3. **Seviye** istemcide `Snapshot.points` (puan defteri toplamı) ile hesaplanır: Yolcu 0, Gezgin 60, Kâşif 200, Seyyah 450, Bilge Seyyah 800 (`apps/web/src/lib/levels.ts`). Sunucuda alan gerekmez.

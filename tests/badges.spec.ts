@@ -11,6 +11,8 @@ async function openProfile(page: import("@playwright/test").Page) {
     localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data));
     localStorage.setItem("akar.ipucu.profil.avatar", "1");
     localStorage.setItem("akar.ipucu.masa.profil.avatar", "1");
+    localStorage.setItem("akar.ipucu.profil.ad", "1");
+    localStorage.setItem("akar.ipucu.masa.profil.ad", "1");
   }, {
     ...snapshot,
     siteProgress: {
@@ -80,6 +82,8 @@ test("a badge, an achievement and the week are shared as a 1080×1920 story card
     localStorage.setItem("akar-demo-bursa-v1", JSON.stringify(data));
     localStorage.setItem("akar.ipucu.profil.avatar", "1");
     localStorage.setItem("akar.ipucu.masa.profil.avatar", "1");
+    localStorage.setItem("akar.ipucu.profil.ad", "1");
+    localStorage.setItem("akar.ipucu.masa.profil.ad", "1");
     // Plain http: no file sharing, as on a phone at a 10.x address.
     Object.defineProperty(navigator, "canShare", { value: () => false, configurable: true });
   }, { ...snapshot, siteProgress: { tasks: [], badges: [{ badgeId: "ulu-sahaflar", siteId: site.id, onSite: true, earnedAt: new Date().toISOString() }] } });

@@ -9221,8 +9221,7 @@
                 "properties": {
                   "displayName": {
                     "type": "string",
-                    "minLength": 2,
-                    "maxLength": 40
+                    "description": "Görünen ad: boşluklar kırpılır, 2–24 karakter; uygunsuz ya da ekibe ayrılmış adlar kabul edilmez"
                   }
                 },
                 "required": [

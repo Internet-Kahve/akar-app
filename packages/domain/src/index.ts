@@ -1254,3 +1254,66 @@ export const usageEventNames = Object.keys(USAGE_EVENTS) as [UsageEventName, ...
 export const MAX_SENTENCE_INDEX = 499;
 /** Events per `POST /v1/events` request. */
 export const MAX_EVENTS_PER_BATCH = 50;
+
+/* ------------------------------------------------------------------------------------------- display name */
+
+/**
+ * The public display name (5 Nov 2026): shown on the profile, on approved memories and on share cards. The same
+ * rule runs in the app (before saving, and for a guest who keeps the name on the device) and on the server
+ * (`PUT /v1/me/profile`), which is the one that counts.
+ */
+export const DISPLAY_NAME_MIN = 2;
+export const DISPLAY_NAME_MAX = 24;
+
+/** Spaces trimmed and runs of white space made one space. */
+export const normalizeDisplayName = (name: string): string => name.normalize("NFC").replace(/\s+/g, " ").trim();
+
+/**
+ * Word roots that make a name unfit for a public list. Kept short on purpose: it stops the obvious, a moderator
+ * can still remove the rest. A root is matched at the start of a word; the longer ones also inside a run of letters
+ * written without spaces. Short roots only as a whole word, so «Işık», «Kemal» or «Gökçe» pass.
+ */
+const BLOCKED_PREFIX = ["orospu", "yarrak", "pezevenk", "kahpe", "ibne", "siktir", "sikis", "sikik", "amcik", "amina", "gavat", "fuck", "shit", "bitch", "whore", "cunt", "nigg", "faggot"];
+const BLOCKED_WORD = ["amk", "aq", "sik", "got", "oc", "pic", "yavsak", "salak", "gerizekali", "dick", "ass"];
+/** Names that would pass for the team or a role. */
+const RESERVED = ["akar", "akar ekibi", "admin", "yonetici", "moderator", "editor", "destek", "support"];
+
+/** Lower case, Turkish letters folded to Latin, and common look-alike digits and signs read as letters. */
+function foldForCheck(name: string): string {
+  return name
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[çc]/g, "c")
+    .replace(/ğ/g, "g")
+    .replace(/[ıi̇]/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ş/g, "s")
+    .replace(/ü/g, "u")
+    .replace(/[âà]/g, "a")
+    .replace(/[îì]/g, "i")
+    .replace(/[ûù]/g, "u")
+    .replace(/0/g, "o")
+    .replace(/1/g, "i")
+    .replace(/3/g, "e")
+    .replace(/4|@/g, "a")
+    .replace(/5|\$/g, "s")
+    .replace(/7/g, "t");
+}
+
+export type DisplayNameProblem = "short" | "long" | "characters" | "inappropriate" | "reserved";
+
+/** Why a (normalized) name cannot be used, or `null` when it can. */
+export function displayNameProblem(raw: string): DisplayNameProblem | null {
+  const name = normalizeDisplayName(raw);
+  const length = [...name].length;
+  if (length < DISPLAY_NAME_MIN) return "short";
+  if (length > DISPLAY_NAME_MAX) return "long";
+  // Letters (any script), digits, spaces and a few joiners; no links, no @ handles, no control characters.
+  if (!/^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .'’\-_]*$/u.test(name) || /\p{N}{7,}/u.test(name)) return "characters";
+  const folded = foldForCheck(name);
+  const words = folded.split(/[^a-z]+/).filter(Boolean);
+  const squashed = words.join("");
+  if (RESERVED.includes(folded.replace(/[^a-z ]+/g, "").trim())) return "reserved";
+  if (words.some((w) => BLOCKED_WORD.includes(w) || BLOCKED_PREFIX.some((p) => w.startsWith(p)))) return "inappropriate";
+  if (BLOCKED_PREFIX.some((p) => p.length >= 5 && squashed.includes(p))) return "inappropriate";
+  return null;
+}

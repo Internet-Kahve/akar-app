@@ -408,3 +408,11 @@ test("mock: translate marks empty English as machine draft and leaves written En
   await assert.rejects(c.narrateSite(site.id, { storyBlockId: "no-such" }));
   await assert.rejects(c.narrateSite(site.id, { partCardId: "no-such" }));
 });
+test("demo: the display name is kept on the device and checked like the server", async () => {
+  const s = storage();
+  const client = createMockClient(s);
+  assert.equal(await client.setDisplayName("  Ayşe  "), "Ayşe");
+  assert.equal((await createMockClient(s).getSnapshot()).name, "Ayşe");
+  await assert.rejects(client.setDisplayName("x".repeat(25)));
+  assert.equal((await createMockClient(s).getSnapshot()).name, "Ayşe");
+});

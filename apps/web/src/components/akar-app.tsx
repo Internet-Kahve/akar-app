@@ -174,6 +174,7 @@ export function AkarApp() {
     [voice, setVoice] = useState<VoiceChoice>({ lang: null, gender: null }),
     [completion, setCompletion] = useState<{ earned: SiteBadge[] } | null>(null),
     [shareRequest, setShareRequest] = useState<ShareRequest | null>(null),
+    [profileCollection, setProfileCollection] = useState(false),
     [celebrate, setCelebrate] = useState<Array<{ kind: "badge"; id: string } | { kind: "achievement"; id: AchievementId }>>([]),
     [waqf, setWaqf] = useState(false),
     [sheetHeight, setSheetHeight] = useState(0),
@@ -270,6 +271,10 @@ export function AkarApp() {
     const fresh = newlyDone(before, feats);
     if (fresh.length) setCelebrate((queue) => [...queue, ...fresh.map((a) => ({ kind: "achievement" as const, id: a.id }))]);
   }, [feats]);
+  // The collection opens over the profile only; leaving the profile closes it.
+  useEffect(() => {
+    if (view !== "profile") setProfileCollection(false);
+  }, [view]);
   const armAchievements = useCallback(() => {
     featsArmed.current = Date.now() + 8000;
   }, []);
@@ -1304,6 +1309,18 @@ export function AkarApp() {
               onAdmin={() => go("admin")}
               onReset={() => setOverlay("reset")}
               commit={commit}
+              collectionOpen={profileCollection}
+              onCollection={setProfileCollection}
+              onRename={async (name) => {
+                const c = client.current;
+                if (!c) return;
+                try {
+                  const saved = await c.setDisplayName(name);
+                  setState((s) => ({ ...s, name: saved }));
+                } catch (e) {
+                  throw new Error(describeError(e, t("name.failed"), langRef.current));
+                }
+              }}
               auth={
                 live
                   ? {
@@ -2049,6 +2066,7 @@ export function AkarApp() {
               onCollection={() => {
                 setCelebrate([]);
                 setPuzzle(null);
+                setProfileCollection(true);
                 go("profile");
               }}
               onShare={(item) => setShareRequest(item.kind === "badge" ? { kind: "badge", entry: item.entry } : { kind: "achievement", id: item.id })}
@@ -2139,7 +2157,7 @@ export function AkarApp() {
             ]}
           />
         ) : view === "profile" ? (
-          <TipRow key="t-profil" tips={[{ id: "profil.avatar", text: t("tip.avatar"), place: "under-spot", gesture: "tap", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }]} />
+          <TipRow key="t-profil" tips={[{ id: "profil.avatar", text: t("tip.avatar"), place: "under-spot", gesture: "tap", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }, { id: "profil.ad", text: t("tip.name"), place: "under-spot", gesture: "tap", spot: ".profile-name-edit", arrowTo: ".profile-name-edit", doneBy: ".profile-name-edit", pressSpot: true, swallow: true }]} />
         ) : view === "history" ? (
           <TipRow key="t-gecmis" tips={historyTips(true)} />
         ) : null
@@ -2170,7 +2188,7 @@ export function AkarApp() {
             ]}
           />
         ) : view === "profile" ? (
-          <TipRow key="m-profil" tips={[{ id: "masa.profil.avatar", text: t("tip.avatarWide"), place: "under-spot", gesture: "click", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }]} />
+          <TipRow key="m-profil" tips={[{ id: "masa.profil.avatar", text: t("tip.avatarWide"), place: "under-spot", gesture: "click", spot: ".profile-avatar-btn", arrowTo: ".profile-avatar-btn", doneBy: ".profile-avatar-btn", pressSpot: true, swallow: true }, { id: "masa.profil.ad", text: t("tip.name"), place: "under-spot", gesture: "click", spot: ".profile-name-edit", arrowTo: ".profile-name-edit", doneBy: ".profile-name-edit", pressSpot: true, swallow: true }]} />
         ) : view === "history" ? (
           <TipRow key="m-gecmis" tips={historyTips(false)} />
         ) : null

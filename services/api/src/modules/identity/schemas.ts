@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DISPLAY_NAME_MAX, DISPLAY_NAME_MIN, displayNameProblem, normalizeDisplayName } from "@akar/domain";
 import { staffRoles } from "../../db/schema/index.ts";
 import { roles } from "../../platform/auth.ts";
 
@@ -35,12 +36,24 @@ export const PreferencesBody = z.object({
   voiceGender: z.enum(["female", "male"], "Ses female ya da male olmalı.").nullable().optional(),
 });
 
+/** Same rule as the app (`displayNameProblem` in @akar/domain): the server's check is the one that counts. */
+const DISPLAY_NAME_MESSAGES = {
+  short: `Görünen ad en az ${DISPLAY_NAME_MIN} karakter olmalı.`,
+  long: `Görünen ad en fazla ${DISPLAY_NAME_MAX} karakter olmalı.`,
+  characters: "Görünen adda yalnız harf, rakam, boşluk ve . ' - _ olabilir; bağlantı ya da telefon numarası olmaz.",
+  inappropriate: "Bu ad herkese açık görünemez; başka bir ad seç.",
+  reserved: "Bu ad ekibe ya da bir role ayrıldı; başka bir ad seç.",
+} as const;
+
 export const ProfileBody = z.object({
   displayName: z
     .string("Görünen ad metin olmalı.")
-    .trim()
-    .min(2, "Görünen ad en az 2 karakter olmalı.")
-    .max(40, "Görünen ad en fazla 40 karakter olmalı."),
+    .overwrite(normalizeDisplayName)
+    .superRefine((name, ctx) => {
+      const problem = displayNameProblem(name);
+      if (problem) ctx.addIssue({ code: "custom", message: DISPLAY_NAME_MESSAGES[problem] });
+    })
+    .describe(`Görünen ad: boşluklar kırpılır, ${DISPLAY_NAME_MIN}–${DISPLAY_NAME_MAX} karakter; uygunsuz ya da ekibe ayrılmış adlar kabul edilmez`),
 });
 
 export const ProfileResponse = z.object({

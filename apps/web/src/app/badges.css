@@ -171,7 +171,7 @@
   gap: 12px;
   min-width: 0;
 }
-.achievement-list li > span:last-child {
+.achievement-list li > span:not(.medal) {
   flex: 1;
   display: grid;
   gap: 2px;
@@ -540,4 +540,241 @@
 }
 .share-actions .btn {
   min-height: 44px;
+}
+
+/* ---------------- profile: name, level, rows of cards (stage C) */
+.profile-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  width: 100%;
+  margin: 10px 0 0;
+}
+.profile-card .profile-name h2 {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.profile-name .round-btn,
+.achievement-share {
+  width: 44px;
+  height: 44px;
+}
+.profile-name.editing input {
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 240px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  font: 600 18px/1 var(--font);
+  color: var(--text);
+  background: var(--surface);
+}
+.profile-name.editing input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+.profile-name.editing p {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  font-size: 12px;
+  text-align: center;
+}
+.profile-name.editing p.error {
+  color: var(--error);
+}
+
+.level-bar {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 14px 0 0;
+  text-align: left;
+}
+.level-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.level-head .muted {
+  margin-left: auto;
+  font-size: 13px;
+}
+.level-badge {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font: 800 14px/1 var(--font);
+  color: #4a3005;
+  background: radial-gradient(circle at 36% 30%, #fff1bf, #ecc055 55%, #b8861f);
+  box-shadow: 0 0 0 2px #2b1d14, inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+.level-track {
+  position: relative;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+.level-track i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d99b1f, #f6cf62);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+}
+.level-bar small {
+  font-size: 12px;
+}
+
+/* A row of cards that scrolls sideways; «Tümünü gör» under it. */
+.strip-wrap {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.strip {
+  display: flex;
+  gap: 10px;
+  margin: 8px -4px 0;
+  padding: 4px 4px 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+.strip > * {
+  flex: none;
+  scroll-snap-align: start;
+}
+.medal-strip .medal-tile {
+  width: 108px;
+}
+.see-all {
+  justify-self: end;
+  margin: -6px 0 -10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  font: 600 14px/20px var(--font);
+  color: var(--gold-text);
+  cursor: pointer;
+}
+.discovered-card {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 4px;
+  width: 152px;
+  padding: 0 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.discovered-cover {
+  display: grid;
+  place-items: center;
+  height: 112px;
+  min-height: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--gold) 14%, var(--surface));
+}
+.discovered-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.discovered-card strong,
+.discovered-card small {
+  padding: 0 10px;
+}
+.discovered-card strong {
+  font: 600 14px/18px var(--font);
+}
+.discovered-card small {
+  display: grid;
+  gap: 2px;
+  font: 400 12px/16px var(--font);
+  color: var(--text-muted);
+}
+.discovered-visit {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--verified);
+}
+.discovered-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.discovered-grid .discovered-card {
+  width: auto;
+}
+
+/* The whole collection. */
+.collection-progress {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.collection-progress .achievement-bar {
+  height: 12px;
+}
+.collection-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filter-chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 13px/1 var(--font);
+  cursor: pointer;
+}
+.filter-chip[aria-pressed="true"] {
+  border-color: transparent;
+  color: #3a2200;
+  background: linear-gradient(180deg, #f6cf62, #d99b1f);
+}
+.collection-site select {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font: 500 14px/1 var(--font);
+}
+.collection-empty {
+  padding: 24px 0;
+  text-align: center;
 }

@@ -18,6 +18,8 @@ import {
   type PartCard,
   type StoryBlock,
   type UsageEventName,
+  displayNameProblem,
+  normalizeDisplayName,
 } from "@akar/domain";
 import {
   createSeed,
@@ -215,6 +217,11 @@ export interface AkarClient {
    * returns the whole saved object. The demo keeps it in memory.
    */
   savePreferences(patch: Partial<UserPreferences>): Promise<UserPreferences>;
+  /**
+   * The public display name: `PUT /v1/me/profile` when signed in; a guest and the demo keep it on the device.
+   * Trimmed and checked by the same rule as the server (`displayNameProblem`); returns the saved name.
+   */
+  setDisplayName(name: string): Promise<string>;
   /** `GET /v1/cities`: every city with its map view, inventory, scene and identity (§11.42, §11.45, §11.49), alphabetical. */
   getCities(): Promise<CityRecord[]>;
   /**
@@ -569,6 +576,12 @@ export function createMockClient(
     async setMapSettings(settings) {
       mapSettings = { ...settings };
       return { ...mapSettings };
+    },
+    async setDisplayName(raw) {
+      const name = normalizeDisplayName(raw);
+      if (displayNameProblem(name)) throw new Error("Bu ad kullanılamaz.");
+      persist({ ...state, name });
+      return name;
     },
     async savePreferences(patch) {
       // A missing (undefined) key stays; null clears.

@@ -30,6 +30,8 @@ import {
   type StoryNarration,
   type Trust,
   type UserPreferences,
+  displayNameProblem,
+  normalizeDisplayName,
 } from "@akar/domain";
 import type {
   AdminHealth,
@@ -128,6 +130,8 @@ interface StoredReceipt {
 }
 interface LocalState {
   personalRoutes?: PersonalRoute[];
+  /** A guest's display name, kept on the device (never sent). */
+  name?: string;
   deviceId: string;
   receipts: StoredReceipt[];
   saved: string[];
@@ -1001,6 +1005,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           saved: Array.isArray(v.saved) ? v.saved : [],
           route: Array.isArray(v.route) ? v.route : [],
           personalRoutes: Array.isArray(v.personalRoutes) ? v.personalRoutes : [],
+          ...(typeof v.name === "string" && !displayNameProblem(v.name) && { name: v.name }),
         };
     } catch {
       /* Corrupt storage starts a fresh local state. */
@@ -1410,7 +1415,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       return {
         signedIn: false,
         role: "user",
-        name: "Gezgin",
+        name: local.name ?? "Gezgin",
         preferences: null,
         savedIds: local.saved,
         routeIds: local.route,
@@ -2430,6 +2435,18 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     },
     setMapSettings: (settings) =>
       call<MapSettings>("PUT", "/v1/admin/map-settings", { body: settings }),
+    setDisplayName: async (raw) => {
+      const name = normalizeDisplayName(raw);
+      if (displayNameProblem(name)) throw new Error("Bu ad kullanılamaz.");
+      if (!(await token())) {
+        writeLocal({ ...local, name });
+        if (user && !user.signedIn) user = { ...user, name };
+        return name;
+      }
+      const saved = await call<{ id: string; displayName: string }>("PUT", "/v1/me/profile", { body: { displayName: name } });
+      if (user?.signedIn) user = { ...user, name: saved.displayName };
+      return saved.displayName;
+    },
     savePreferences: async (patch) => {
       const saved = await call<UserPreferences>("PUT", "/v1/me/preferences", {
         body: patch,

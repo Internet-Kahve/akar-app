@@ -1,8 +1,9 @@
 "use client";
 import { Avatar, useAvatar } from "./avatar";
 import { AvatarPicker } from "./avatar-picker";
-import { AchievementMedal, BadgeMedal } from "./badge-medal";
-import { BadgeCard, useHowToEarn } from "./badge-card";
+import { AchievementMedal } from "./badge-medal";
+import { BadgeCollection, BadgeStrip, DiscoveredStrip, LevelBar, NameEditor, ShareWeekButton } from "./profile-parts";
+import { BadgeCard } from "./badge-card";
 import { achievements as measureAchievements, badgeEntries, type BadgeEntry } from "../lib/badges";
 import { badgesThisWeek } from "../lib/share-card";
 import type { ShareRequest } from "./share-card";
@@ -68,6 +69,9 @@ export function Profile({
   onExperimentalChange,
   auth,
   commit,
+  onRename,
+  collectionOpen,
+  onCollection,
 }: {
   state: Snapshot;
   progress: SiteProgress;
@@ -80,6 +84,11 @@ export function Profile({
   experimental: boolean;
   onExperimentalChange: (enabled: boolean) => void;
   commit: Commit;
+  /** Saves the display name (the account's, or the device's for a guest and the demo). */
+  onRename: (name: string) => Promise<void>;
+  /** The whole badge collection is open (also from «Koleksiyonda gör» in a celebration). */
+  collectionOpen: boolean;
+  onCollection: (open: boolean) => void;
   /** Present only when connected to the real API; `email` is `null` for a guest. */
   auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void; onDelete: () => Promise<boolean> };
 }) {
@@ -93,7 +102,6 @@ export function Profile({
   const [openBadge, setOpenBadge] = useState<BadgeEntry | null>(null);
   const [sharing, setSharing] = useState<ShareRequest | null>(null);
   const weekCount = badgesThisWeek(progress, new Date()).length;
-  const howToEarn = useHowToEarn();
   const badges = badgeEntries(state.sites, progress);
   const earnedCount = badges.filter((b) => b.held).length;
   const feats = measureAchievements({ sites: state.sites, readIds: state.readIds, memories: state.memories, progress });
@@ -112,13 +120,14 @@ export function Profile({
                 <Avatar figure={figure} size={96} />
                 <span className="profile-avatar-edit" aria-hidden="true"><Camera size={14} /></span>
               </button>
-              <h2>{state.name}</h2>
+              <NameEditor name={state.name} onRename={onRename} />
               <p className="profile-figure"><Localized tr={figure.name} en={figure.nameEn} /></p>
               <dl className="profile-stats">
                 <div><dd>{earnedCount}</dd><dt>{t("profile.statBadges")}</dt></div>
                 <div><dd>{state.readIds.length}</dd><dt>{t("profile.statSites")}</dt></div>
                 <div><dd>{progress.tasks.length}</dd><dt>{t("profile.statTasks")}</dt></div>
               </dl>
+              <LevelBar points={state.points} />
             </div>
             {picking && <AvatarPicker current={figure.id} onPick={(id) => { setFigure(id); setPicking(false); }} onClose={() => setPicking(false)} />}
             <div className="profile-motif"><Motif /></div>
@@ -201,23 +210,10 @@ export function Profile({
         <div className="profile-main">
           <section className="card profile-badges">
             <div className="row between"><h3>{t("profile.badges")}</h3><span>{earnedCount} / {badges.length}</span></div>
-            {weekCount > 0 && (
-              <button className="share-week" onClick={() => setSharing({ kind: "week" })}>
-                <Share2 size={16} aria-hidden="true" />
-                {t("profile.shareWeek")}
-              </button>
-            )}
-            {badges.length ? <div className="medal-grid">
-              {badges.map((entry) => {
-                const { badge, english } = badgeInLang(entry.badge, lang);
-                return <button key={badge.id} className={`medal-tile ${entry.held ? "earned" : "locked"}`} onClick={() => setOpenBadge(entry)} aria-label={t("badge.open", { title: badge.title })}>
-                  <BadgeMedal badge={entry.badge} tier={entry.tier} earned={!!entry.held} size={76} />
-                  <b lang={english ? undefined : tr}>{badge.title}</b>
-                  <small>{entry.held ? <Localized tr={entry.site.name} en={entry.site.nameEn} /> : howToEarn(entry)}</small>
-                </button>;
-              })}
-            </div> : <p className="muted">{t("profile.noBadges")}</p>}
-            {openBadge && <BadgeCard entry={badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge} onClose={() => setOpenBadge(null)} onSite={(site) => { setOpenBadge(null); onSite(site.id); }} onShare={() => { setSharing({ kind: "badge", entry: badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge }); setOpenBadge(null); }} />}
+            {weekCount > 0 && <ShareWeekButton onShare={() => setSharing({ kind: "week" })} />}
+            {badges.length ? <BadgeStrip entries={badges} onOpen={setOpenBadge} onAll={() => onCollection(true)} /> : <p className="muted">{t("profile.noBadges")}</p>}
+            {collectionOpen && <BadgeCollection entries={badges} onOpen={setOpenBadge} onClose={() => onCollection(false)} />}
+            {openBadge && <BadgeCard entry={badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge} onClose={() => setOpenBadge(null)} onSite={(site) => { setOpenBadge(null); onCollection(false); onSite(site.id); }} onShare={() => { setSharing({ kind: "badge", entry: badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge }); setOpenBadge(null); }} />}
             {sharing && <ShareDialog request={sharing} name={state.name} points={state.points} sites={state.sites} progress={progress} onClose={() => setSharing(null)} />}
           </section>
           <section className="card profile-achievements">
@@ -253,50 +249,7 @@ export function Profile({
           </section>
           <div className="card profile-discovered">
             <h3>{t("profile.discovered")}</h3>
-            {state.readIds.length === 0 ? (
-              <div className="empty-inline">
-                <BookOpen size={26} />
-                <p>
-                  {firstSite
-                    ? t("profile.firstStory")
-                    : t("profile.noSites")}
-                </p>
-                {firstSite && (
-                  <button
-                    className="text-btn"
-                    onClick={() => onSite(firstSite.id)}
-                  >
-                    {t("profile.start")} <ArrowRight size={15} />
-                  </button>
-                )}
-              </div>
-            ) : (
-              state.readIds.map((id) => (
-                <button
-                  className="list-row"
-                  key={id}
-                  onClick={() => onSite(id)}
-                >
-                  <span>
-                    <strong>
-                      {(() => {
-                        const s = state.sites.find((x) => x.id === id);
-                        return s && <Localized tr={s.name} en={s.nameEn} />;
-                      })()}
-                    </strong>
-                    <small>
-                      {t("profile.storyDone")}{" "}
-                      {state.visitedIds.includes(id)
-                        ? auth
-                          ? `· ${t("profile.visitVerified")}`
-                          : `· ${t("profile.visitDemo")}`
-                        : ""}
-                    </small>
-                  </span>
-                  <ArrowRight size={17} />
-                </button>
-              ))
-            )}
+            <DiscoveredStrip state={state} live={!!auth} onSite={onSite} onStart={firstSite ? () => onSite(firstSite.id) : undefined} />
           </div>
           <div className="card">
             <h3>{t("profile.shared")}</h3>
