@@ -9,7 +9,7 @@
 | `A-rozetler/` | A · Rozetler | `sheet`: 28 rozet + 3 yedek görselin toplu görünümü. `shelf-*`: profildeki rozetler (kazanılmış/gri siluet). `card-*`: büyük rozet kartı, `card-locked-*`: kazanılmamış rozet kartı. `ach-*`: başarımlar. `celebrate-*`: kazanma kutlaması (`-mid-` animasyon ortası; gece görüntüleri hareket azaltılmış). `profile-*`: profilin üst kısmı. |
 | `B-paylasim/` | B · Paylaşım | `card-badge`, `card-ach`, `card-week`: 1080×1920 hikâye kartları (indirilen dosya). `cards`: üçü yan yana. `share-dialog-*`, `share-week-*`: paylaşım penceresi (dosya paylaşımı olmayan tarayıcıda indirme yolu). |
 | `C-profil/` | C · Profil düzeni | `c-top-*`: ad, figür, seviye ve XP çubuğu. `c-discovered-*`, `c-badges-*`: yatay kart şeritleri. `c-collection-*`: koleksiyon ekranı (ilerleme, seviye ve eser süzgeci). `c-name-*`: ad düzenleme ve doğrulama hatası. |
-| `D-liderlik/` | D · Haftanın Gezgini | `d-board-on-*`: ziyaretçi listede (kendi sırası, kendi figürü). `d-board-off-*`: listede değil (varsayılan). Demo verisi «Örnek» etiketli. |
+| `D-liderlik/` | D · Haftanın Gezgini | `d-board-on-*`: ziyaretçi listede (kendi sırası, kendi figürü). `d-board-off-*`: listede değil (varsayılan). Demo verisi «Örnek» etiketli. `d-board-empty-live-*`: canlı API modunda (sahte API ile) boş liste, misafir görünümü; «Örnek» etiketi yok. |
 
 `A-rozetler/` içindeki profil görüntüleri Aşama C'den önce alındı: rozetler o zaman alt alta ızgaradaydı, şimdi şerit + koleksiyon (`C-profil/`).
 
