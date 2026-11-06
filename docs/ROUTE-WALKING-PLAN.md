@@ -35,7 +35,7 @@ Anahtar `akar-api` ortam değişkenine (`ROUTING_API_KEY`) girer; Vercel projesi
 
 ## Veri ve API (taslak)
 
-- `route_stops` satırına bir sonraki durağa giden bacak: `leg_geometry` (GeoJSON LineString), `leg_meters`, `leg_seconds`, `leg_computed_at`; boşsa düz çizgi. Migration canlı projeye (`akar-demo-frankfurt`) PR birleştirilmeden önce uygulanır.
+- Uygulamada (§11.79) bacaklar `route_stops` sütunları yerine ayrı `walking_legs` tablosunda, iki ucun tam koordinatına göre saklanır: eser taşınınca ya da sıra değişince eski çizgi kendiliğinden görünmez, geciken yanıt yeni durumu ezemez, ortak bacak bir kez sorulur. Eksik bacakları dakikada bir çalışan bakım işi doldurur; panel kaydı dış servisi beklemez. Migration canlı projeye (`akar-demo-frankfurt`) PR birleştirilmeden önce uygulanır.
 - Rota oluşturma / güncelleme / durak değişikliği: değişen bacaklar yeniden hesaplanır. Bir eserin konumu panelde değişirse o eseri içeren rotaların bacakları da yeniden hesaplanır.
 - Her bacak; başlangıç/bitiş eser kimlikleri, iki koordinat, sağlayıcı ve profil ile eşleşir. Durak sırası veya konumu değişince eski çizgi geçersizleşir; hata durumunda yeni duraklarla birlikte eski çizgi gösterilmez. Değişmeyen bacaklar yeniden kullanılabilir.
 - `GET /v1/routes` ve `/v1/routes/:id` cevabında durak başına `leg` (çizgi, metre, saniye) ve rota hesabı için `complete / partial / unavailable` durumu bulunur. Toplam yürüme süresi/mesafesi yalnız bütün bacaklar hesaplandıysa verilir; kısmi sonuç tam rota toplamı gibi sunulmaz. Hikâye/ziyaret süresi ayrı kalır. OpenAPI, `CONTRACTS.md`, `API-HANDOFF.md` güncellenir.

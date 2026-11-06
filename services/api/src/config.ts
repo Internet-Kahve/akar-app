@@ -77,6 +77,11 @@ const Env = z.object({
   /** Visit check radius in metres (D4). */
   VISIT_RADIUS_M: z.coerce.number().positive().default(30),
 
+  // Walking paths of routes (§11.79): openrouteservice key; without it routes keep straight lines.
+  ROUTING_API_KEY: optionalText,
+  /** Routing requests per rolling 24 hours (free openrouteservice plan: 2000 directions/day). */
+  ROUTING_DAILY_LIMIT: z.coerce.number().int().positive().default(500),
+
   // AI voice-over and translation of site texts (decision §11.56). Both keys are optional, also in production:
   // without them the endpoints answer 503 and nothing else is affected.
   DEEPGRAM_API_KEY: optionalText,

@@ -12,7 +12,7 @@ Her modül `src/modules/<modül>/` altında yaşar: `routes.ts` (Fastify eklenti
 | --- | --- | --- | --- |
 | platform | `src/platform/` | `schema/platform.ts`, `schema/shared.ts` | `idempotency_keys`, `audit_log`; ortak enum ve tipler |
 | catalog (okuma) | `modules/catalog/` | `schema/catalog.ts` | sözlük tabloları (`role_categories`, `site_types`, `periods`), `cities`, `regions`, `sources`, `sites`, `site_*`, `cards`, `story_blocks`, `history_images` |
-| routes (okuma) | `modules/routes/` | `schema/routes.ts` | `catalog_routes`, `route_stops`, `quizzes`, `quiz_answers` |
+| routes (okuma) | `modules/routes/` | `schema/routes.ts` | `catalog_routes`, `route_stops`, `quizzes`, `quiz_answers`, `walking_legs` (yürüme yolu önbelleği; bakım işi yazar, §11.79) |
 | media | `modules/media/` | `schema/media.ts` | `media`, `media_uploads`, `media_deletions` |
 | ingest | `modules/ingest/` | yok | catalog `drafts.ts` üzerinden yazar |
 | identity | `modules/identity/` | `schema/identity.ts` | `staff_members`, `staff_invites`, `profiles`, `deleted_accounts`; hesap silme (`erasure.ts`) diğer modüllerin silme fonksiyonlarını çağırır |
