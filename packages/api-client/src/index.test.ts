@@ -416,17 +416,17 @@ test("demo: the display name is kept on the device and checked like the server",
   await assert.rejects(client.setDisplayName("x".repeat(25)));
   assert.equal((await createMockClient(s).getSnapshot()).name, "Ayşe");
 });
-test("demo weekly list: made-up rows marked as samples; the visitor joins only after turning it on", async () => {
+test("demo weekly list: no made-up rows; the visitor alone, only after turning it on", async () => {
   const { demoLeaderboard } = await import("./index");
   const hidden = demoLeaderboard("Ayşe", 200, false, new Date("2026-11-05T09:00:00Z"));
-  assert.equal(hidden.sample, true);
+  assert.equal(hidden.sample, undefined);
   assert.equal(hidden.weekStart, "2026-11-01T21:00:00.000Z");
-  assert.ok(!hidden.items.some((i) => i.name === "Ayşe"));
+  assert.deepEqual(hidden.items, []);
   assert.deepEqual(hidden.me, { rank: null, points: 200, visible: false });
   const shown = demoLeaderboard("Ayşe", 200, true);
-  assert.deepEqual(shown.items.map((i) => i.rank), [1, 2, 3, 4, 5, 6]);
-  assert.equal(shown.items.find((i) => i.name === "Ayşe")?.rank, 3);
-  assert.equal(shown.me?.rank, 3);
+  assert.deepEqual(shown.items, [{ rank: 1, name: "Ayşe", avatarId: null, points: 200 }]);
+  assert.equal(shown.me?.rank, 1);
+  assert.deepEqual(demoLeaderboard("Ayşe", 0, true).items, []);
   const s = storage();
   const client = createMockClient(s);
   assert.equal(await client.setLeaderboardVisible(true), true);

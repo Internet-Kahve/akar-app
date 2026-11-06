@@ -62,9 +62,8 @@ const MOTION_REST_MS = 180;
 const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) };
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
-/** Height the angle's photograph takes above the phone's site card (design.css: 10 + 190 + 34 + 10 + 40 px of buttons). */
 /** A phone's angle photograph: this share of the screen's height, above the lowered card and the ‹ ✕ › row. */
-const VIEW_PHOTO_PHONE_SHARE = 0.46;
+const VIEW_PHOTO_PHONE_SHARE = 0.22;
 const VIEW_PHOTO_PHONE_FOOT = 116;
 /** One breath of a highlighted part: fade and light again. */
 const BREATH_MS = 1600;
@@ -454,8 +453,38 @@ export default function ModelViewer({
       // on the spot, which held the page for 1.7–3.3 s on a slow phone.
       let compiling = false;
       let shadowsStale = true;
+      // What the camera can see, for its depth range (below). Measured again whenever the scene changes.
+      let reachStale = true;
+      const reachBox = new THREE.Box3();
+      const reach = new THREE.Sphere();
       const staleShadows = () => {
         shadowsStale = true;
+        reachStale = true;
+      };
+      /**
+       * Z-fighting on phones (Muhammed, 6 Nov 2026: Ulucami and the others flicker on a phone). A phone's depth buffer
+       * can be 16 bits: with the near plane fixed at 1/100 of the model, surfaces a few centimetres apart could not be
+       * told apart from a whole-building view. The near plane now starts just before the nearest thing the camera can
+       * see and the far plane ends just after the farthest, so the depth steps fall on the building. Inside the
+       * building (or close) the near plane stays at the model's 1/100, as before.
+       */
+      const fitDepth = () => {
+        if (reachStale) {
+          reachBox.setFromObject(scene);
+          reachStale = false;
+          if (reachBox.isEmpty()) return;
+          reachBox.getBoundingSphere(reach);
+        }
+        if (reach.radius <= 0) return;
+        const floor = reach.radius / 100;
+        const away = camera.position.distanceTo(reach.center);
+        const near = Math.max(floor, (away - reach.radius * 1.2) * 0.9);
+        const far = away + reach.radius * 2;
+        if (Math.abs(near - camera.near) > floor * 0.01 || Math.abs(far - camera.far) > floor) {
+          camera.near = near;
+          camera.far = far;
+          camera.updateProjectionMatrix();
+        }
       };
       scene.addEventListener("childadded", staleShadows);
       scene.addEventListener("childremoved", staleShadows);
@@ -497,6 +526,7 @@ export default function ModelViewer({
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
         }
+        fitDepth();
         renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
