@@ -101,11 +101,11 @@ export async function recordUsage(db: Db, events: UsageEvent[], guest: boolean, 
   return accepted;
 }
 
-/** One count of an event the API records itself (`server` in `USAGE_EVENTS`), signed-in, no site or detail. */
-export async function countServerEvent(db: Db, event: UsageEventName, now: Date): Promise<void> {
+/** One count of an event the API records itself (`server` in `USAGE_EVENTS`), signed-in, with the site when the event takes one, no detail. */
+export async function countServerEvent(db: Db, event: UsageEventName, now: Date, siteId = ""): Promise<void> {
   await db
     .insert(usageDaily)
-    .values({ day: usageDay(now), event, siteId: "", ref: "", guest: false, count: 1 })
+    .values({ day: usageDay(now), event, siteId, ref: "", guest: false, count: 1 })
     .onConflictDoUpdate({
       target: [usageDaily.day, usageDaily.event, usageDaily.siteId, usageDaily.ref, usageDaily.guest],
       set: { count: sql`${usageDaily.count} + 1` },

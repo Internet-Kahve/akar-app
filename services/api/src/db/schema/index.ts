@@ -12,3 +12,4 @@ export * from "./engagement.ts";
 export * from "./settings.ts";
 export * from "./narrations.ts";
 export * from "./usage.ts";
+export * from "./model-gen.ts";

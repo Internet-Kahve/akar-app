@@ -23,13 +23,14 @@ Her modül `src/modules/<modül>/` altında yaşar: `routes.ts` (Fastify eklenti
 | admin-health | `modules/admin-health/` | yok | yok; `memories` ve `media` tablolarını yalnız okur |
 | settings | `modules/settings/` | `schema/settings.ts` | `map_settings` (tek satır) |
 | usage | `modules/usage/` | `schema/usage.ts` | `usage_daily` (§11.72) |
+| model-gen | `modules/model-gen/` | `schema/model-gen.ts` | `model_gen_jobs` (§11.80); hesap silme `eraseModelGenJobs` ile satırları siler |
 
 Kurallar:
 
 - Bir modül başka modülün tablosuna **yazmaz**; dışa açılmış servis fonksiyonunu çağırır. Tek istisna: `admin-catalog` içerik tablolarının yazarıdır (catalog/routes yalnız okur).
 - Okuma sorguları yayın kapısını atlamamak koşuluyla başka modülün tablosuna `join` yapabilir (örnek: catalog → `media`).
-- `app.ts`, `server.ts`, `src/db/schema/index.ts`, `drizzle/`, `package.json`, `src/config.ts`, `src/platform/*`, `src/test/harness.ts` ve `CONTRACTS.md` ortak dosyalardır; backend sorumlusu düzenler. Yeni modül, kayıt satırını (`MODULES` listesine eklenecek eklenti) ve bağımlılık ihtiyacını PR açıklamasında belirtir. Kayıtlı modüller: health, catalog, routes, identity, media, admin-catalog (sites, routes-editor, imports, reports), moderation, admin-health, engagement, site-tasks, settings.
-- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0032` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`, `0008` `user_route_stops`, `0009` `media_deletions`, `0010` `background_jobs`, `0011` `deleted_accounts`, `0012` `upload_deletions`, `0013` silme tablolarında RLS, `0014` `media.triangles` ve `site_map_placements`, `0015` `map_settings` varsayılanı, `0016` `media.cover_groups`, `0017` `site_part_cards` ve fotoğrafları, `0018` `cities.scene`, `0019` `site_about_chapters`, `site_section_photos`, `site_sections.chapter_id` ve `sites.about_cover_media_id`, `0020` `site_tasks`, `site_task_answers`, `site_badges`, `user_site_tasks` ve `user_site_badges`, `0021` şehir kaydı sütunları (`cities.center_lng` …), `0022` `history_images.present_angle_match` ve `site_sample_traces`, `0023` `sites.display_order`, `0032` `site_map_placements.front_deg` ve `media.interior_parts`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
+- `app.ts`, `server.ts`, `src/db/schema/index.ts`, `drizzle/`, `package.json`, `src/config.ts`, `src/platform/*`, `src/test/harness.ts` ve `CONTRACTS.md` ortak dosyalardır; backend sorumlusu düzenler. Yeni modül, kayıt satırını (`MODULES` listesine eklenecek eklenti) ve bağımlılık ihtiyacını PR açıklamasında belirtir. Kayıtlı modüller: health, catalog, routes, identity, media, admin-catalog (sites, routes-editor, imports, reports), moderation, admin-health, engagement, site-tasks, settings, chat, model-gen.
+- Migration'ı yalnız backend sorumlusu üretir (`npm run db:generate`). Mevcut migration'lar `0000`–`0039` (`0004` modül tabloları, `0005` `map_settings`, `0006` `media_uploads.cleaned_at`, `0007` `memories.pending_since`, `0008` `user_route_stops`, `0009` `media_deletions`, `0010` `background_jobs`, `0011` `deleted_accounts`, `0012` `upload_deletions`, `0013` silme tablolarında RLS, `0014` `media.triangles` ve `site_map_placements`, `0015` `map_settings` varsayılanı, `0016` `media.cover_groups`, `0017` `site_part_cards` ve fotoğrafları, `0018` `cities.scene`, `0019` `site_about_chapters`, `site_section_photos`, `site_sections.chapter_id` ve `sites.about_cover_media_id`, `0020` `site_tasks`, `site_task_answers`, `site_badges`, `user_site_tasks` ve `user_site_badges`, `0021` şehir kaydı sütunları (`cities.center_lng` …), `0022` `history_images.present_angle_match` ve `site_sample_traces`, `0023` `sites.display_order`, `0032` `site_map_placements.front_deg` ve `media.interior_parts`, `0039` `model_gen_jobs`); şemada değişiklik gerekiyorsa modül kendi şema dosyasını düzenler, migration ayrı üretilir. Elle SQL gerekiyorsa `drizzle-kit generate --custom`.
 - Modül eklentisi `FastifyPluginAsyncZod` döner ve kendi `routes.ts` dosyasından dışa açılır. Testler eklentiyi `startTestApp({ register: [xxxRoutes] })` ile yükler; modül `MODULES`'a eklendiğinde aynı test değişmeden çalışır.
 
 ### Çalışma zamanı bağımlılıkları (`app.deps`)
@@ -99,8 +100,10 @@ Gövde her zaman `{ error: { code, message, fieldErrors, requestId } }`. Mesajla
 | 400 | `INVALID_CURSOR` | Bozuk sayfalama imleci |
 | 401 | `UNAUTHENTICATED` | Giriş yok ya da token geçersiz |
 | 403 | `FORBIDDEN` | Rol yetmiyor |
+| 400 | `MODEL_GEN_SITE_UNSUPPORTED` / `MODEL_GEN_UNKNOWN_SITE` | Yapay zekâ model işi (§11.80): eser kimliği çalıştırıcının eser adı biçiminde (`^[a-z0-9-]{1,64}$`) değil / çalıştırıcı eseri tanımıyor |
 | 404 | `NOT_FOUND` | Kayıt yok **veya yayında değil** (taslağın varlığı sızdırılmaz) |
 | 409 | `CONFLICT` | Durum geçişi geçersiz (örn. onaylı anıyı tekrar onaylama; reddedilmiş anıya karar), kapanmış yüklemeye PUT, yinelenen kayıt, yetkili hesabı silme |
+| 409 | `MODEL_GEN_BUSY` | Model çalıştırıcı başka bir işle meşgul (§11.80) |
 | 413 | `PAYLOAD_TOO_LARGE` | Dosya sınırı aşıldı |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Dosya içeriği beyan edilen türle uyuşmuyor |
 | 422 | `PUBLISH_BLOCKED` | Yayın kapısı (`publicationIssues`); sorunlar `fieldErrors._` içinde |
@@ -110,6 +113,7 @@ Gövde her zaman `{ error: { code, message, fieldErrors, requestId } }`. Mesajla
 | 500 | `INTERNAL` | Beklenmeyen hata (ayrıntı loga) |
 | 502 | `UPSTREAM_FAILED` | Dış servis (Supabase Auth admin API, e-posta) hata döndü |
 | 503 | `SERVICE_UNAVAILABLE` | Gerekli bağımlılık (depolama, kimlik, iş kuyruğu, coğrafi kodlama) yapılandırılmamış |
+| 503 | `MODEL_GEN_DISABLED` | `MODEL_RUNNER_URL` ya da `MODEL_RUNNER_SECRET` yok: yapay zekâ model düzenleme kapalı (§11.80) |
 | 503 | `NOT_READY` | `/ready`: veritabanına ulaşılamıyor |
 
 ## 4. Idempotency
@@ -131,7 +135,7 @@ return idempotent(app.deps.db, req, req.user!.id, async (tx) => {
 
 ## 5. Audit
 
-Her ayrıcalıklı yazma (`editor`, `moderator`, `admin` işlemleri) aynı işlem içinde `recordAudit` çağırır. `action` noktalı fiil: `site.create`, `site.update`, `site.map-placement`, `site.publish`, `site.unpublish`, `card.create`, `card.update`, `route.create`, `route.update`, `route.set-stops`, `route.publish`, `route.unpublish`, `quiz.create`, `quiz.update`, `media.create`, `media.update`, `import.create`, `import.commit`, `memory.create`, `memory.approve`, `memory.reject`, `memory.takedown`, `memory.delete`, `memory.report`, `account.delete`, `staff.invite`, `staff.grant`, `staff.role`, `staff.revoke`, `map-settings.update`. `before`/`after` JSON anlık görüntülerdir; kişisel veri (e-posta dışında) yazılmaz. `memory.create` (her gönderide, günlük anı kotası bunu sayar) ve `memory.delete` anı metnini içermez.
+Her ayrıcalıklı yazma (`editor`, `moderator`, `admin` işlemleri) aynı işlem içinde `recordAudit` çağırır. `action` noktalı fiil: `site.create`, `site.update`, `site.map-placement`, `site.publish`, `site.unpublish`, `card.create`, `card.update`, `route.create`, `route.update`, `route.set-stops`, `route.publish`, `route.unpublish`, `quiz.create`, `quiz.update`, `media.create`, `media.update`, `import.create`, `import.commit`, `memory.create`, `memory.approve`, `memory.reject`, `memory.takedown`, `memory.delete`, `memory.report`, `account.delete`, `staff.invite`, `staff.grant`, `staff.role`, `staff.revoke`, `map-settings.update`, `model-gen.job`. `before`/`after` JSON anlık görüntülerdir; kişisel veri (e-posta dışında) yazılmaz. `memory.create` (her gönderide, günlük anı kotası bunu sayar) ve `memory.delete` anı metnini içermez.
 
 ## 6. Puan olay kaydı
 
@@ -279,3 +283,12 @@ Migration `0031_personal_routes`, eski `user_route_stops` satırlarını `defaul
 - **Saklama:** sohbet, soru ya da yanıt saklanmaz; yalnız başarılı yanıtta `usage_daily`'de `chat.message` sayacı artar (`countServerEvent`). `USAGE_EVENTS`'te `server: true` olan olay `POST /v1/events` ile gelirse sayılmaz.
 - **Sınırlar:** hesap başına dakikada `CHAT_PER_MINUTE` (6, `@fastify/rate-limit`, örnek başına); günün (İstanbul) `chat.message` toplamı `CHAT_DAILY_LIMIT`'e ulaşınca 429 `RATE_LIMITED` (model çağrılmaz).
 - **Sağlayıcı:** `platform/chat-model.ts` (`ChatModel`, Gemini `geminiChat`): `GEMINI_CHAT_API_KEYS` sırayla denenir (her istek bir sonraki anahtardan başlar); 429/503 veren anahtar `KEY_COOLDOWN_MS` (60 sn) atlanır ve aynı istek sıradaki anahtara gider; hepsi dinleniyorsa 429, başka hata 502 `UPSTREAM_FAILED`. Bekleme süreleri bellekte, sunucusuz örnek başına. `AppDeps.chat` anahtar yoksa `null` → 503. Testte `fakeChat()`.
+
+## 17. Yapay zekâ ile model düzenleme (§11.80)
+
+- **Uçlar (hepsi yalnız `admin`; `onRequest`'te `requireRole("admin")`, editör 403, misafir 401; `cache-control: no-store`):** `GET /v1/admin/model-gen/status` → `{ enabled, loggedIn, plan, expiresAt }` (yapılandırılmamışsa 200, `enabled: false`); `POST /v1/admin/sites/:siteId/model-gen/jobs` `{ prompt (1–4000, kırpılır), newSession? }` → 202 iş (`Idempotency-Key` desteklenir; transaction çalıştırıcı çağrısını sarmaz, `idempotentUnlocked`); `GET /v1/admin/sites/:siteId/model-gen/jobs?cursor&limit` → yeniden eskiye sayfa (`created_at`, `id` imleci); `GET /v1/admin/model-gen/jobs/:id`.
+- **Dış sözleşme:** `platform/model-runner.ts` (`ModelRunner`, `httpModelRunner`): `GET /auth/status`, `POST /jobs`, `GET /jobs/:id`; `Authorization: Bearer MODEL_RUNNER_SECRET`, istek başına 10 sn. 409 → 409 `MODEL_GEN_BUSY`; çalıştırıcı 400 (`unknown site`) → 400 `MODEL_GEN_UNKNOWN_SITE`; ulaşılamayan ya da başka hata → 502 `UPSTREAM_FAILED`; `MODEL_RUNNER_URL` ya da `MODEL_RUNNER_SECRET` yoksa 503 `MODEL_GEN_DISABLED`. Çalıştırıcı `AppDeps`'te değil, yapılandırmadan istek başına kurulur; testte `env: { MODEL_RUNNER_URL, MODEL_RUNNER_SECRET }` yerel bir sahte sunucuyu gösterir.
+- **Eser kimliği:** `sites.id` çalıştırıcının eser adıdır (`^[a-z0-9-]{1,64}$`); biçime uymazsa 400 `MODEL_GEN_SITE_UNSUPPORTED`, eser yoksa 404.
+- **Durum:** `running` → çalıştırıcıdan okunur; `succeeded`/`failed` saklanır (`status = 'running'` koşullu güncelleme, yarışta ilk yazan kazanır); çalıştırıcı 404 → `lost`. Biten iş okunurken çalıştırıcıdan yalnız yeni imzalı bağlantı ve olaylar istenir; çalıştırıcı yoksa saklanan sonuç döner, `files[].url = null`.
+- **Saklama:** dosya yalnız `{ name, bytes }`; imzalı bağlantı ve `events` saklanmaz. Mutlak dosya adresi `MODEL_RUNNER_PUBLIC_URL` (yoksa `MODEL_RUNNER_URL`) + çalıştırıcının göreli yoludur. Liste çalıştırıcıya sormaz (`events: []`, `url: null`).
+- **Kayıtlar:** audit `model-gen.job` (`entityType` site, `after.jobId`); `usage_daily` `model_gen.job` (`server: true`, eser kimliğiyle) iş açılınca sayılır.

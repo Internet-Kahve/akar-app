@@ -67582,7 +67582,8 @@
                             "my_route.add",
                             "route.open",
                             "account.sign_in",
-                            "chat.message"
+                            "chat.message",
+                            "model_gen.job"
                           ],
                           "description": "Olay adı; liste ve kuralları `USAGE_EVENTS` (§11.72)"
                         },
@@ -67710,7 +67711,8 @@
                               "my_route.add",
                               "route.open",
                               "account.sign_in",
-                              "chat.message"
+                              "chat.message",
+                              "model_gen.job"
                             ]
                           },
                           "guest": {
@@ -67755,7 +67757,8 @@
                               "my_route.add",
                               "route.open",
                               "account.sign_in",
-                              "chat.message"
+                              "chat.message",
+                              "model_gen.job"
                             ]
                           },
                           "guest": {
@@ -67821,7 +67824,8 @@
                                     "my_route.add",
                                     "route.open",
                                     "account.sign_in",
-                                    "chat.message"
+                                    "chat.message",
+                                    "model_gen.job"
                                   ]
                                 },
                                 "guest": {
@@ -67995,7 +67999,8 @@
                               "my_route.add",
                               "route.open",
                               "account.sign_in",
-                              "chat.message"
+                              "chat.message",
+                              "model_gen.job"
                             ]
                           },
                           "guest": {
@@ -68194,6 +68199,779 @@
                     "answer",
                     "sources",
                     "general"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/model-gen/status": {
+      "get": {
+        "summary": "Model çalıştırıcının Claude oturumu (yalnız admin)",
+        "tags": [
+          "admin-model-gen"
+        ],
+        "description": "`enabled: false` = çalıştırıcı yapılandırılmamış (bu uç yine 200 döner, öbür uçlar 503 `MODEL_GEN_DISABLED`). Çalıştırıcıya ulaşılamazsa 502.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "false = MODEL_RUNNER_URL ya da MODEL_RUNNER_SECRET tanımlı değil; öbür uçlar 503 MODEL_GEN_DISABLED döner"
+                    },
+                    "loggedIn": {
+                      "type": "boolean",
+                      "description": "Çalıştırıcıdaki Claude hesabı oturum açmış mı"
+                    },
+                    "plan": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "expiresAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "loggedIn",
+                    "plan",
+                    "expiresAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/sites/{siteId}/model-gen/jobs": {
+      "post": {
+        "summary": "Eserin modeli için yapay zekâ işi başlat; 202 ile işi döner (yalnız admin)",
+        "tags": [
+          "admin-model-gen"
+        ],
+        "description": "İstemi model çalıştırıcıya iletir ve işi geçmişe yazar. Çalıştırıcı meşgulse 409 `MODEL_GEN_BUSY`; ulaşılamazsa 502; yapılandırılmamışsa 503 `MODEL_GEN_DISABLED`; eser yoksa 404; eser kimliği çalıştırıcı biçiminde değilse ya da çalıştırıcı eseri tanımazsa 400. `Idempotency-Key` tekrarı aynı işi döndürür.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "prompt": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000,
+                    "description": "Modelde ne değişecek; Türkçe serbest metin"
+                  },
+                  "newSession": {
+                    "description": "true = önceki konuşma bağlamı olmadan yeni oturum",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "prompt"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "path",
+            "name": "siteId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "siteId": {
+                      "type": "string"
+                    },
+                    "prompt": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "running",
+                        "succeeded",
+                        "failed",
+                        "lost"
+                      ],
+                      "description": "lost = çalıştırıcı işi artık tanımıyor (yeniden başlamış olabilir)"
+                    },
+                    "reply": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "version": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "bytes": {
+                            "type": "number"
+                          },
+                          "url": {
+                            "description": "Çalıştırıcının imzalı, 15 dakika geçerli mutlak bağlantısı; yalnız iş ayrıntısında ve çalıştırıcı hâlâ biliyorsa dolu",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "bytes",
+                          "url"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "usage": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "turns": {
+                              "type": "number"
+                            },
+                            "durationMs": {
+                              "type": "number"
+                            },
+                            "costUsd": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "turns",
+                            "durationMs",
+                            "costUsd"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "t": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Olay zamanı, Unix epoch milisaniye"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "start",
+                              "text",
+                              "tool",
+                              "export"
+                            ]
+                          },
+                          "text": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "name": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "summary": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "t",
+                          "type",
+                          "text",
+                          "name",
+                          "summary"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Canlı akış; saklanmaz, yalnız iş ayrıntısında ve çalıştırıcı biliyorsa dolu"
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "description": "İşi başlatan yöneticinin hesap kimliği"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "finishedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "siteId",
+                    "prompt",
+                    "status",
+                    "reply",
+                    "error",
+                    "version",
+                    "files",
+                    "warnings",
+                    "usage",
+                    "events",
+                    "createdBy",
+                    "createdAt",
+                    "finishedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Eserin yapay zekâ iş geçmişi, yeniden eskiye (yalnız admin)",
+        "tags": [
+          "admin-model-gen"
+        ],
+        "description": "Liste çalıştırıcıya sormaz: `events` boş, dosya `url`'leri `null`. Canlı görünüm için işin kendi ucu kullanılır.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "description": "Önceki yanıttaki nextCursor"
+          },
+          {
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "in": "path",
+            "name": "siteId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "siteId": {
+                            "type": "string"
+                          },
+                          "prompt": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "running",
+                              "succeeded",
+                              "failed",
+                              "lost"
+                            ],
+                            "description": "lost = çalıştırıcı işi artık tanımıyor (yeniden başlamış olabilir)"
+                          },
+                          "reply": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "error": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "version": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "files": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "bytes": {
+                                  "type": "number"
+                                },
+                                "url": {
+                                  "description": "Çalıştırıcının imzalı, 15 dakika geçerli mutlak bağlantısı; yalnız iş ayrıntısında ve çalıştırıcı hâlâ biliyorsa dolu",
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "bytes",
+                                "url"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "warnings": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "usage": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "turns": {
+                                    "type": "number"
+                                  },
+                                  "durationMs": {
+                                    "type": "number"
+                                  },
+                                  "costUsd": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "turns",
+                                  "durationMs",
+                                  "costUsd"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "events": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "t": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991,
+                                  "description": "Olay zamanı, Unix epoch milisaniye"
+                                },
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "start",
+                                    "text",
+                                    "tool",
+                                    "export"
+                                  ]
+                                },
+                                "text": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "name": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "summary": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "t",
+                                "type",
+                                "text",
+                                "name",
+                                "summary"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "description": "Canlı akış; saklanmaz, yalnız iş ayrıntısında ve çalıştırıcı biliyorsa dolu"
+                          },
+                          "createdBy": {
+                            "type": "string",
+                            "description": "İşi başlatan yöneticinin hesap kimliği"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "finishedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "siteId",
+                          "prompt",
+                          "status",
+                          "reply",
+                          "error",
+                          "version",
+                          "files",
+                          "warnings",
+                          "usage",
+                          "events",
+                          "createdBy",
+                          "createdAt",
+                          "finishedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "nextCursor"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/model-gen/jobs/{id}": {
+      "get": {
+        "summary": "Bir işin durumu; çalışıyorsa çalıştırıcıdan okunur ve bitiş durumu saklanır (yalnız admin)",
+        "tags": [
+          "admin-model-gen"
+        ],
+        "description": "Çalışan iş çalıştırıcıdan sorulur; bitince yanıt saklanır, çalıştırıcı işi tanımıyorsa (404) durum `lost` olur. Canlı `events` saklanmaz. Dosya `url`'leri çalıştırıcının 15 dakika geçerli, mutlak (`MODEL_RUNNER_PUBLIC_URL`) imzalı bağlantılarıdır; biten iş için de çalıştırıcı hâlâ biliyorsa yenilenir, bilmiyorsa `null`.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "siteId": {
+                      "type": "string"
+                    },
+                    "prompt": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "running",
+                        "succeeded",
+                        "failed",
+                        "lost"
+                      ],
+                      "description": "lost = çalıştırıcı işi artık tanımıyor (yeniden başlamış olabilir)"
+                    },
+                    "reply": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "error": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "version": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "bytes": {
+                            "type": "number"
+                          },
+                          "url": {
+                            "description": "Çalıştırıcının imzalı, 15 dakika geçerli mutlak bağlantısı; yalnız iş ayrıntısında ve çalıştırıcı hâlâ biliyorsa dolu",
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "bytes",
+                          "url"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "usage": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "turns": {
+                              "type": "number"
+                            },
+                            "durationMs": {
+                              "type": "number"
+                            },
+                            "costUsd": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "turns",
+                            "durationMs",
+                            "costUsd"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "t": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Olay zamanı, Unix epoch milisaniye"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "start",
+                              "text",
+                              "tool",
+                              "export"
+                            ]
+                          },
+                          "text": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "name": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "summary": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "t",
+                          "type",
+                          "text",
+                          "name",
+                          "summary"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Canlı akış; saklanmaz, yalnız iş ayrıntısında ve çalıştırıcı biliyorsa dolu"
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "description": "İşi başlatan yöneticinin hesap kimliği"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "finishedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "siteId",
+                    "prompt",
+                    "status",
+                    "reply",
+                    "error",
+                    "version",
+                    "files",
+                    "warnings",
+                    "usage",
+                    "events",
+                    "createdBy",
+                    "createdAt",
+                    "finishedAt"
                   ],
                   "additionalProperties": false
                 }
