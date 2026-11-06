@@ -9,6 +9,7 @@ import { maintenanceRoutes, runMaintenance } from "./platform/maintenance.ts";
 import { chatModelFromConfig } from "./platform/chat-model.ts";
 import { translatorFromConfig } from "./platform/translate.ts";
 import { ttsFromConfig } from "./platform/tts.ts";
+import { routerFromConfig } from "./platform/routing.ts";
 
 /** Shared by the local server and the Vercel handler. No listeners or timers on import. */
 export async function createRuntime(env: NodeJS.ProcessEnv = process.env) {
@@ -20,7 +21,9 @@ export async function createRuntime(env: NodeJS.ProcessEnv = process.env) {
       : null;
     const storage = storageFromConfig(config);
     const jobs = databaseJobs(db, (err, name) => app.log.error({ err, name }, "background job waiting for retry"));
-    const maintenance = () => runMaintenance({ db, storage }, jobs);
+    const router = routerFromConfig(config);
+    const walking = router ? { router, dailyLimit: config.ROUTING_DAILY_LIMIT } : null;
+    const maintenance = () => runMaintenance({ db, storage, walking }, jobs);
     const app = await buildApp({ config, db, auth, storage, jobs, geocoderFor: curatedGeocoderFor, tts: ttsFromConfig(config), translator: translatorFromConfig(config), chat: chatModelFromConfig(config) }, {
       register: [maintenanceRoutes(maintenance)],
       // The local docs UI serves static assets and is unnecessary in the serverless runtime.
