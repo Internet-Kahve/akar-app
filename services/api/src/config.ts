@@ -109,6 +109,14 @@ const Env = z.object({
   GEMINI_CHAT_MODEL: z.string().trim().min(1).default("gemini-3.5-flash-lite"),
   /** Assistant answers per Istanbul day for everyone together (counted in `usage_daily`, event `chat.message`). */
   CHAT_DAILY_LIMIT: z.coerce.number().int().positive().default(1000),
+
+  // AI-assisted model editing (§11.80): the separate model runner service. Both URL and secret are optional,
+  // also in production: without either the endpoints answer 503 and nothing else is affected.
+  MODEL_RUNNER_URL: optionalUrl,
+  /** Server-to-server bearer secret of the runner. Never sent to the browser. */
+  MODEL_RUNNER_SECRET: optionalText,
+  /** Base of the runner's file links as the browser reaches them; default `MODEL_RUNNER_URL`. */
+  MODEL_RUNNER_PUBLIC_URL: optionalUrl,
 });
 
 export type Config = z.infer<typeof Env>;

@@ -39,6 +39,9 @@ import {
 import type {
   AdminHealth,
   ChatAnswer,
+  ModelGenJob,
+  ModelGenJobPage,
+  ModelGenStatus,
   AdminMember,
   MemberPage,
   AkarClient,
@@ -2699,6 +2702,24 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       call<AdminHealth>("GET", "/v1/admin/health", { cache: "no-store" }),
     chat: (question) =>
       call<ChatAnswer>("POST", "/v1/chat", { body: question, cache: "no-store" }),
+    getModelGenStatus: () =>
+      call<ModelGenStatus>("GET", "/v1/admin/model-gen/status", { cache: "no-store" }),
+    startModelGenJob: (siteId, input) =>
+      call<ModelGenJob>(
+        "POST",
+        `/v1/admin/sites/${encodeURIComponent(createdIds.get(siteId) ?? siteId)}/model-gen/jobs`,
+        { body: input },
+      ),
+    listModelGenJobs: (siteId, cursor) =>
+      call<ModelGenJobPage>(
+        "GET",
+        `/v1/admin/sites/${encodeURIComponent(createdIds.get(siteId) ?? siteId)}/model-gen/jobs`,
+        { query: { limit: 25, ...(cursor && { cursor }) }, cache: "no-store" },
+      ),
+    getModelGenJob: (id) =>
+      call<ModelGenJob>("GET", `/v1/admin/model-gen/jobs/${encodeURIComponent(id)}`, {
+        cache: "no-store",
+      }),
     track: (event) => {
       usageQueue.push(event);
       if (usageQueue.length >= MAX_EVENTS_PER_BATCH) flushUsage();
