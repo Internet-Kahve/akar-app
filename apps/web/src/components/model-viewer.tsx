@@ -4,6 +4,7 @@ import { modelMotionRatio, modelPixelRatio, modestDevice } from "../lib/device";
 import { isAllUnlit, lambertWanted, useLambert } from "../lib/light-materials";
 import { warmNightInterior } from "../lib/night-interior";
 import { MODEST_ANISOTROPY, smoothTextures, TEXTURE_ANISOTROPY } from "../lib/texture-quality";
+import { liftOverlays } from "../lib/overlay-layers";
 import { gpuDebugOn, mountGpuDebug } from "../lib/gpu-debug";
 import { sized } from "../lib/image-size";
 import type {
@@ -459,6 +460,8 @@ export default function ModelViewer({
       // on the spot, which held the page for 1.7–3.3 s on a slow phone.
       let compiling = false;
       let shadowsStale = true;
+      // A model that opens on its interior still gets its first shadow map.
+      let shadowsDrawn = false;
       // What the camera can see, for its depth range (below). Measured again whenever the scene changes.
       let reachStale = true;
       const reachBox = new THREE.Box3();
@@ -532,9 +535,13 @@ export default function ModelViewer({
         const open = innerWanted();
         if (inner) inner.intensity = open ? INSIDE_LIGHT[currentTheme()].sun : 0;
         if (modelSun) modelSun.intensity = DETAIL_LIGHT[currentTheme()].sun * (open ? INSIDE_LIGHT[currentTheme()].sunScale : 1);
-        if (shadowsStale) {
+        // While «İçini göster» is open or moving the sun's shadow map stays as it was with the building closed
+        // (Muhammed, 6 Nov 2026: «içini göster için ekstra bir hesaplanma olmasın»): the press draws no shadow map,
+        // the interior keeps the roof's even shade, and the sky light lights it. Once closed again it is drawn once.
+        if (shadowsStale && (!open || !shadowsDrawn)) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
+          shadowsDrawn = true;
         }
         fitDepth();
         renderer!.render(scene, camera);
@@ -666,6 +673,8 @@ export default function ModelViewer({
           }
           // Coplanar ground surfaces keep one drawing order from every angle (no flicker on the courtyard).
           liftGroundLayers(object);
+          // Lines, bands and seams laid on a surface stay in front of it from every angle (lib/overlay-layers).
+          liftOverlays(object);
           warmNightInterior(object, model.interiorParts ?? []);
           smoothTextures(object, modest ? MODEST_ANISOTROPY : TEXTURE_ANISOTROPY, renderer!.capabilities.getMaxAnisotropy());
           if (box.isEmpty()) box.setFromObject(object);
