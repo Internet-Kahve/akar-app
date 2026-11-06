@@ -66,12 +66,6 @@ const PICK_GLOW = 0.55;
 /** A phone's angle photograph: this share of the screen's height, above the lowered card and the ‹ ✕ › row. */
 const VIEW_PHOTO_PHONE_SHARE = 0.22;
 const VIEW_PHOTO_PHONE_FOOT = 116;
-/**
- * The light while «İçini göster» is open (6 Nov 2026, «eşit ışık»): the sun dimmed to `sunScale` and a warm sky light
- * added, so the interior is evenly lit; at full sun the lifted domes let it fall in bright patches on the floor. No
- * shadow setting changes (that would compile shaders on the press).
- */
-const INSIDE_LIGHT = { day: { sun: 0, sky: 1.1, sunScale: 0.3 }, night: { sun: 0, sky: 0.55, sunScale: 0.45 } };
 /** One breath of a highlighted part: fade and light again. */
 const BREATH_MS = 1600;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
@@ -500,10 +494,8 @@ export default function ModelViewer({
       // Closed cover: the interior is not drawn (`lib/interior`); set once the model is here.
       let syncInterior = () => {};
       let syncTrees = () => {};
-      // Open, the interior gets its own light: under the sun's shadow and a sky light it stayed nearly black.
-      let inner: THREE.DirectionalLight | null = null;
-      // The site's sun, dimmed while the interior is open (INSIDE_LIGHT).
-      let modelSun: THREE.DirectionalLight | null = null;
+      // Whether «İçini göster» is open or moving. The light stays the same open or closed (Muhammed, 6 Nov 2026: «dışını
+      // gösterde ne ışık varsa aynısı olsun»); only the shadow map waits (below).
       let innerWanted = () => false;
       // Two draws this close together are motion: fewer pixels until it stops, then one sharp frame at full size.
       const stillRatio = renderer.getPixelRatio();
@@ -533,8 +525,6 @@ export default function ModelViewer({
         syncInterior();
         syncTrees();
         const open = innerWanted();
-        if (inner) inner.intensity = open ? INSIDE_LIGHT[currentTheme()].sun : 0;
-        if (modelSun) modelSun.intensity = DETAIL_LIGHT[currentTheme()].sun * (open ? INSIDE_LIGHT[currentTheme()].sunScale : 1);
         // While «İçini göster» is open or moving the sun's shadow map stays as it was with the building closed
         // (Muhammed, 6 Nov 2026: «içini göster için ekstra bir hesaplanma olmasın»): the press draws no shadow map,
         // the interior keeps the roof's even shade, and the sky light lights it. Once closed again it is drawn once.
@@ -685,7 +675,6 @@ export default function ModelViewer({
           {
             const R = size.length() / 2 * 1.3;
             const sun = addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
-            modelSun = sun;
             if (unlit) sun.castShadow = false;
             shadowSize = modest ? 1024 : sun.shadow.mapSize.x;
             if (modest) {
@@ -1174,16 +1163,7 @@ export default function ModelViewer({
             if (open) lift.current(true, false);
             setInside(open);
           }
-          inner = new THREE.DirectionalLight(0xfff1dc, 0);
-          inner.position.set(0.15, 1, 0.25);
-          scene.add(inner, inner.target);
-          const lit = new THREE.HemisphereLight(0xfff4e6, 0xcdbda3, 0);
-          scene.add(lit);
-          innerWanted = () => {
-            const on = coverWanted() || !!coverOpen?.();
-            lit.intensity = on ? INSIDE_LIGHT[currentTheme()].sky : 0;
-            return on;
-          };
+          innerWanted = () => coverWanted() || !!coverOpen?.();
           // Only a tree between the camera and what it looks at stands aside (5 Nov 2026: «içini göster deyince etraftaki
           // ağaçlar gidiyor»): the rest stay around the building, open or closed, near or far.
           const trees: { node: THREE.Object3D; centre: THREE.Vector3; radius: number }[] = [];
