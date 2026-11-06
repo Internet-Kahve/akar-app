@@ -71,6 +71,7 @@ import { memoryTraces } from "../lib/memory-traces";
 import { flushUsageOnHide, setUsageClient, track } from "../lib/usage";
 import { useCountOpen } from "../lib/use-count-open";
 import { LivingMemory } from "./living-memory";
+import { WalkStrip } from "./walk-strip";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { STORY_STEP_EVENT, StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
@@ -158,6 +159,8 @@ const CARD_CLOSE_PULL = 70;
 const CARD_SCROLL_RISE = 150;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
 const CATALOG_REFRESH_MS = 5 * 60_000;
+const isDetailView = (v: string) => v === "detail" || v === "story";
+
 export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
@@ -173,6 +176,9 @@ export function AkarApp() {
     [place, setPlace] = useState<PlaceMode>("home"),
     [nearPoint, setNearPoint] = useState<[number, number] | null>(null),
     [peekId, setPeekId] = useState<string>(),
+    // The route being walked (6 Nov 2026): its stops and the one the visitor is at. The map goes stop to stop.
+    [walk, setWalk] = useState<{ ids: string[]; at: number } | null>(null),
+    walkPeek = useRef<string | undefined>(undefined),
     [hoverId, setHoverId] = useState<string>(),
     [cityInView, setCityInView] = useState<CityRecord | null>(null),
     [flight, setFlight] = useState<MapFlight>(),
@@ -399,7 +405,9 @@ export function AkarApp() {
     const readLocation = () => {
       setPuzzle(null);
       setPick(null);
-      setPeekId(undefined);
+      // The next stop of a walked route opens its card once the address has changed (goNextStop).
+      setPeekId(walkPeek.current);
+      walkPeek.current = undefined;
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
       if (
@@ -758,9 +766,21 @@ export function AkarApp() {
   )
     .map((id) => published.find((s) => s.id === id))
     .filter((s): s is HeritageSite => !!s);
-  const nextStop = routeId
-    ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
-    : undefined;
+  // A stop opened any way (its pin, the list, the strip) is where the visitor now is on the walk.
+  useEffect(() => {
+    const here = peekId ?? (isDetailView(view) ? siteId : undefined);
+    if (!walk || !here) return;
+    const i = walk.ids.indexOf(here);
+    if (i >= 0 && i !== walk.at) setWalk({ ...walk, at: i });
+  }, [peekId, siteId, view, walk]);
+  const walkIndex = walk ? walk.ids.indexOf(siteId) : -1;
+  const nextStop = walk
+    ? walkIndex >= 0
+      ? published.find((s) => s.id === walk.ids[walkIndex + 1])
+      : undefined
+    : routeId
+      ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
+      : undefined;
   const isDetail = ["detail", "story"].includes(view),
     showMap = !["profile", "admin", "history", "memories"].includes(view),
     showRoutes = tab === "routes" && !query;
@@ -829,6 +849,14 @@ export function AkarApp() {
     turn.ready.catch(() => {});
     turn.updateCallbackDone.catch(() => {});
     void turn.finished.catch(() => {}).finally(() => root.classList.remove("vt-yuzey"));
+  }
+  /** On a walked route the next stop is reached on the map: it flies there and the stop's card opens (6 Nov 2026). */
+  function goNextStop(id: string) {
+    if (!walk) return selectSite(id);
+    setWalk({ ...walk, at: Math.max(0, walk.ids.indexOf(id)) });
+    walkPeek.current = id;
+    go("map");
+    setPeekId(id);
   }
   /** A pick on the map or in the list: the map goes there and the short card opens. */
   function pickSite(id: string) {
@@ -1639,7 +1667,7 @@ export function AkarApp() {
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
-                        nextStop={nextStop} onNextStop={selectSite} />
+                        nextStop={nextStop} onNextStop={goNextStop} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1667,11 +1695,15 @@ export function AkarApp() {
                         onStart={async () => {
                           const ids = routeSites.map((s) => s.id);
                           if (await commit({ type: "set-route", siteIds: ids })) {
-                            selectSite(
-                              ids.find((id) => !state.visitedIds.includes(id)) ??
-                                ids[0]!,
-                            );
-                            setToast(t("toast.routeReady"));
+                            // Not straight into the site (6 Nov 2026): the map flies to the first stop not yet seen,
+                            // its card opens, and a strip says the route is on; the visitor starts the story.
+                            const first = Math.max(0, ids.findIndex((id) => !state.visitedIds.includes(id)));
+                            setWalk({ ids, at: first });
+                            setRouteId(undefined);
+                            setTab("sites");
+                            // A route found by its name leaves no search behind: the map shows every stop's pin.
+                            setQuery("");
+                            pickSite(ids[first]!);
                           }
                         }}
                       />
@@ -1860,6 +1892,20 @@ export function AkarApp() {
                       onWholeCountry={setWholeCountry}
                       onLocate={chooseNear}
                       flight={flight}
+                      banner={
+                        walk && !routeDraft ? (
+                          <WalkStrip
+                            sites={walk.ids.map((id) => published.find((s) => s.id === id)).filter((x): x is HeritageSite => !!x)}
+                            at={walk.at}
+                            seenIds={state.readIds}
+                            onStop={(i) => {
+                              setWalk({ ...walk, at: i });
+                              pickSite(walk.ids[i]!);
+                            }}
+                            onExit={() => setWalk(null)}
+                          />
+                        ) : undefined
+                      }
                       bottomInset={peekSite ? PEEK_INSET : sheetHeight}
                       insetDragging={sheetDragging}
                       routeIds={
@@ -2162,7 +2208,7 @@ export function AkarApp() {
             }}
             onNextStop={(id) => {
               setCompletion(null);
-              selectSite(id);
+              goNextStop(id);
             }}
             onProfile={() => {
               setCompletion(null);

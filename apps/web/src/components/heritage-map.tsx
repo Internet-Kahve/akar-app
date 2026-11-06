@@ -24,6 +24,7 @@ import { currentTheme, type Theme } from "../lib/theme";
 import {
   PIN_LABEL_LAYER,
   PIN_LAYER,
+  PIN_SOURCE,
   pinAt,
   pinFeatures,
   pinFiles,
@@ -146,6 +147,7 @@ export function HeritageMap({
   peek,
   finishedIds,
   routeColour = colors.cityBursa,
+  banner,
 }: {
   /** Hidden behind a site's page, kept for the way back: no model downloads meanwhile. */
   resting?: boolean;
@@ -186,6 +188,8 @@ export function HeritageMap({
   finishedIds?: string[];
   /** The route's city colour, for its line and stop stars. */
   routeColour?: string;
+  /** A strip over the map's top (the route being walked: «Rotadasın · 2/4»). */
+  banner?: ReactNode;
 }) {
   const { lang, t, text } = useI18n();
   const scenes = useCityScenes();
@@ -601,6 +605,54 @@ export function HeritageMap({
       cancelled = true;
     };
   }, [sites, selectedId, highlightId, routeIds, loaded, finishedIds, routeColour, lang, buildingRoute]);
+  // Building a route (6 Nov 2026, «pinler yansın büyüsün»): the pins that can be added ring out in a wave for a few
+  // seconds, then the ring goes. A circle layer under the pins, its radius and opacity stepped per frame.
+  useEffect(() => {
+    const m = map.current;
+    if (!loaded || !m || !buildingRoute) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    let gone = false;
+    const start = performance.now();
+    const LAYER = "pin-pulse";
+    const add = () => {
+      if (gone || m.getLayer(LAYER)) return;
+      if (!m.getSource(PIN_SOURCE)) {
+        frame = requestAnimationFrame(add);
+        return;
+      }
+      m.addLayer(
+        {
+          id: LAYER,
+          type: "circle",
+          source: PIN_SOURCE,
+          minzoom: CITY_MARKER_MAX_ZOOM,
+          filter: ["==", ["get", "stop"], 0],
+          paint: { "circle-color": "transparent", "circle-stroke-color": "#C9A13B", "circle-stroke-width": 3, "circle-radius": 0, "circle-stroke-opacity": 0, "circle-translate": [0, -22] },
+        },
+        PIN_LAYER,
+      );
+      step(start);
+    };
+    const step = (now: number) => {
+      if (gone || !m.getLayer(LAYER)) return;
+      const t = (now - start) / 1000;
+      // Each pin a little after the one before (its place in the list), three rings each.
+      const phase = ["-", t * 1.1, ["*", ["%", ["get", "order"], 7], 0.12]] as unknown as number;
+      const ring = ["%", ["max", phase, 0], 1] as unknown as number;
+      const live = t < 3.2;
+      m.setPaintProperty(LAYER, "circle-radius", live ? (["+", 14, ["*", 22, ring]] as unknown as number) : 0);
+      m.setPaintProperty(LAYER, "circle-stroke-opacity", live ? (["*", 0.85, ["-", 1, ring]] as unknown as number) : 0);
+      if (live) frame = requestAnimationFrame(step);
+      else if (m.getLayer(LAYER)) m.removeLayer(LAYER);
+    };
+    add();
+    return () => {
+      gone = true;
+      cancelAnimationFrame(frame);
+      if (m.getLayer(LAYER)) m.removeLayer(LAYER);
+    };
+  }, [buildingRoute, loaded]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);
@@ -765,6 +817,7 @@ export function HeritageMap({
         }}
         onLocate={() => onLocate?.()}
       />
+      {banner && <div className="map-banner">{banner}</div>}
       {selectedId && peek && (
         <>
           {/* The thin line from the short card to its pin; placed by `placePeek`. */}

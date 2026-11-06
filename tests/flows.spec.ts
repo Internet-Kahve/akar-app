@@ -480,15 +480,26 @@ test("route search opens a usable route and selection persists", async ({
   await page
     .getByRole("button", { name: "Rotayı başlat", exact: true })
     .click();
-  // The route opens on its first stop; the panel leads on to the next one.
-  await expect(page.getByRole("button", { name: /^Sonraki durak:/ })).toBeVisible();
+  // The map flies to the first stop and opens its card; a strip says the route is on (6 Nov 2026).
+  const strip = page.locator(".walk-strip");
+  await expect(strip).toBeVisible();
+  await expect(strip.locator(".walk-now")).toHaveText(/^1\/2 · /);
+  await expect(page.locator(".site-peek")).toBeVisible();
+  // The stop's page leads on to the next one, which the map then shows.
+  await page.locator(".site-peek").getByRole("button", { name: /Eseri incele|sayfasını aç/ }).first().click();
+  const next = page.getByRole("button", { name: /^Sonraki durak:/ });
+  await expect(next).toBeVisible();
+  await next.click();
+  await expect(strip.locator(".walk-now")).toHaveText(/^2\/2 · /);
+  await expect(page.locator(".site-peek")).toBeVisible();
   const routeIds = () =>
     page.evaluate(
       () => (JSON.parse(localStorage.getItem("akar-demo-bursa-v1") ?? "{}") as { routeIds?: string[] }).routeIds ?? [],
     );
   await expect.poll(routeIds).toHaveLength(2);
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // The walk itself lives in the page; the chosen route is kept.
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await expect.poll(routeIds).toHaveLength(2);
 });
 test("map failure keeps the artifact discovery usable", async ({ page }) => {
