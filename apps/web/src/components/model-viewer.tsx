@@ -494,9 +494,9 @@ export default function ModelViewer({
       // Closed cover: the interior is not drawn (`lib/interior`); set once the model is here.
       let syncInterior = () => {};
       let syncTrees = () => {};
-      // Whether «İçini göster» is open or moving. The light stays the same open or closed (Muhammed, 6 Nov 2026: «dışını
-      // gösterde ne ışık varsa aynısı olsun»); only the shadow map waits (below).
-      let innerWanted = () => false;
+      // The light stays the same open or closed (Muhammed, 6 Nov 2026: «dışını gösterde ne ışık varsa aynısı olsun»).
+      // Whether a cover group is between closed and open (the lift animation).
+      let coverMoving = () => false;
       // Two draws this close together are motion: fewer pixels until it stops, then one sharp frame at full size.
       const stillRatio = renderer.getPixelRatio();
       const motionRatio = modelMotionRatio(stillRatio, modest);
@@ -524,11 +524,10 @@ export default function ModelViewer({
         }
         syncInterior();
         syncTrees();
-        const open = innerWanted();
-        // While «İçini göster» is open or moving the sun's shadow map stays as it was with the building closed
-        // (Muhammed, 6 Nov 2026: «içini göster için ekstra bir hesaplanma olmasın»): the press draws no shadow map,
-        // the interior keeps the roof's even shade, and the sky light lights it. Once closed again it is drawn once.
-        if (shadowsStale && (!open || !shadowsDrawn)) {
+        // While the roof is lifting or settling the sun's shadow map is not drawn again (Muhammed, 6 Nov 2026: «içini
+        // göster için ekstra bir hesaplanma olmasın»): once at rest, open or closed, it is drawn one time, so the sun
+        // comes in where the domes were («güneş içeri girsin»). A model that opens on its interior gets its first.
+        if (shadowsStale && (!coverMoving() || !shadowsDrawn)) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
           shadowsDrawn = true;
@@ -1086,6 +1085,7 @@ export default function ModelViewer({
             let goal = 0;
             coverOpen = () => goal === 1 || progress.some((t) => t > 0);
             coverWanted = () => goal === 1;
+            coverMoving = () => progress.some((t) => t !== goal);
             let liftFrame = 0;
             let last = 0;
             cancelLift = () => cancelAnimationFrame(liftFrame);
@@ -1163,7 +1163,6 @@ export default function ModelViewer({
             if (open) lift.current(true, false);
             setInside(open);
           }
-          innerWanted = () => coverWanted() || !!coverOpen?.();
           // Only a tree between the camera and what it looks at stands aside (5 Nov 2026: «içini göster deyince etraftaki
           // ağaçlar gidiyor»): the rest stay around the building, open or closed, near or far.
           const trees: { node: THREE.Object3D; centre: THREE.Vector3; radius: number }[] = [];
