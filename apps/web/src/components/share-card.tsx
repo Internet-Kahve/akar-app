@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Share2 } from "lucide-react";
+import { Check, Download, Facebook, Instagram, Link2, MessageCircle, Share2 } from "lucide-react";
 import type { HeritageSite } from "@akar/domain";
 import type { SiteProgress } from "@akar/api-client";
 import { badgeArt, badgeEntries, type AchievementId, type BadgeEntry, type BadgeTier } from "../lib/badges";
 import { badgesThisWeek, CARD_HEIGHT, CARD_WIDTH, istanbulWeekStart, shareFileName, weekRange, wrapLines } from "../lib/share-card";
 import { canShareFile, downloadFile, shareFile } from "../lib/share-file";
+import { instagramOpenUrl, shareAddress, shareTargetUrl, type ShareTarget } from "../lib/share-targets";
+import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
 import { badgeInLang } from "../lib/task-text";
 import { useAvatar } from "./avatar";
 import { ACHIEVEMENT_ICONS } from "./badge-medal";
@@ -312,6 +314,10 @@ export default function ShareDialog({
   const [file, setFile] = useState<File | null>(null);
   const [failed, setFailed] = useState(false);
   const [note, setNote] = useState("");
+  // The sentence that goes with the app buttons (WhatsApp, X, Facebook): what was won, and the app's address.
+  const [message, setMessage] = useState("");
+  const [copied, setCopied] = useState(false);
+  const phone = useMedia(PHONE_LAYOUT);
   const iconHost = useRef<HTMLSpanElement>(null);
   const url = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
   useEffect(() => () => void (url && URL.revokeObjectURL(url)), [url]);
@@ -335,6 +341,7 @@ export default function ShareDialog({
         score,
         footer,
       };
+      setMessage(t("share.textBadge", { badge: badge.title, site: text(request.entry.site.name, request.entry.site.nameEn) }));
     } else if (request.kind === "achievement") {
       spec = {
         file: shareFileName("basarim", request.id),
@@ -345,6 +352,7 @@ export default function ShareDialog({
         score,
         footer,
       };
+      setMessage(t("share.textAchievement", { title: t(`achievement.${request.id}.title`) }));
     } else {
       const now = new Date();
       const week = badgesThisWeek(progress, now);
@@ -362,6 +370,7 @@ export default function ShareDialog({
         score,
         footer,
       };
+      setMessage(t("share.textWeek", { count: week.length }));
     }
     drawCard(spec).then(
       (blob) => live && setFile(new File([blob], spec.file, { type: "image/png" })),
@@ -375,6 +384,31 @@ export default function ShareDialog({
   }, []);
 
   const sharable = file ? canShareFile(file) : false;
+  const address = typeof window === "undefined" ? "" : shareAddress(window.location);
+  const sentence = `${message} ${t("share.invite")}`;
+  const openTarget = (target: ShareTarget) => window.open(shareTargetUrl(target, sentence, address), "_blank", "noopener");
+  const instagram = async () => {
+    // A picture is what Instagram takes: the system sheet where there is one, else the file and then the app.
+    if (sharable) {
+      await shareFile(file!, t("share.title"));
+      return;
+    }
+    downloadFile(file!);
+    setNote(t("share.instagramNote"));
+    setTimeout(() => {
+      if (phone) window.location.href = instagramOpenUrl(true);
+      else window.open(instagramOpenUrl(false), "_blank", "noopener");
+    }, 600);
+  };
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(`${sentence} ${address}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setNote(address);
+    }
+  };
   return (
     <Modal title={t("share.title")} onClose={onClose} className="share-dialog">
       {request.kind === "achievement" && (
@@ -388,8 +422,33 @@ export default function ShareDialog({
       <div className="share-preview" aria-busy={!file && !failed}>
         {file ? <img src={url} alt={t("share.previewAlt")} /> : <p className="muted">{failed ? t("share.failed") : t("share.preparing")}</p>}
       </div>
-      {!sharable && file && <p className="muted share-note">{t("share.downloadNote")}</p>}
       {note && <p className="share-note" role="status">{note}</p>}
+      <div className="share-apps" role="group" aria-label={t("share.apps")}>
+        <button className="share-app whatsapp" disabled={!file} onClick={() => openTarget("whatsapp")}>
+          <span><MessageCircle size={22} aria-hidden="true" /></span>
+          WhatsApp
+        </button>
+        <button className="share-app instagram" disabled={!file} onClick={() => void instagram()}>
+          <span><Instagram size={22} aria-hidden="true" /></span>
+          Instagram
+        </button>
+        <button className="share-app x" disabled={!file} onClick={() => openTarget("x")}>
+          <span>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path fill="currentColor" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+            </svg>
+          </span>
+          X
+        </button>
+        <button className="share-app facebook" disabled={!file} onClick={() => openTarget("facebook")}>
+          <span><Facebook size={22} aria-hidden="true" /></span>
+          Facebook
+        </button>
+        <button className="share-app link" disabled={!file} onClick={() => void copy()}>
+          <span>{copied ? <Check size={22} aria-hidden="true" /> : <Link2 size={22} aria-hidden="true" />}</span>
+          {copied ? t("share.copied") : t("share.copyLink")}
+        </button>
+      </div>
       <div className="share-actions">
         {sharable && (
           <button
