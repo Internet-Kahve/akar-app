@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Expand,
-  ImagePlus,
   User,
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
@@ -173,13 +172,11 @@ function PhotoGallery({
   site,
   photos,
   visitors = [],
-  onAddPhoto,
   onModel,
 }: {
   site: HeritageSite;
   photos: SitePhoto[];
   visitors?: VisitorPhoto[];
-  onAddPhoto?: () => void;
   onModel?: () => void;
 }) {
   const { t, text } = useI18n();
@@ -288,15 +285,6 @@ function PhotoGallery({
             </figcaption>
           </figure>
         ))}
-        {onAddPhoto && photos.length > 0 && (
-          <figure className="kucuk ekle">
-            <button className="galeri-ekle" onClick={onAddPhoto}>
-              <ImagePlus size={24} />
-              {t("gal.addPhoto")}
-              <small>{t("gal.addPhotoNote")}</small>
-            </button>
-          </figure>
-        )}
       </div>
       {open !== null && (
         <Lightbox photos={shown} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
@@ -357,7 +345,6 @@ export function Scene({
   highlights,
   turn = true,
   visitors = [],
-  onAddPhoto,
   onHotspot,
   onPick,
   context = "detail",
@@ -371,8 +358,6 @@ export function Scene({
   companion?: FlowCompanion;
   /** Visitors' photographs of the site (Yaşayan hafıza): the gallery shows them after the site's own. */
   visitors?: VisitorPhoto[];
-  /** «Fotoğrafını ekle», the gallery's last tile: İz Bırak. */
-  onAddPhoto?: () => void;
   flow?: boolean;
   live?: boolean;
   photoId?: string;
@@ -469,7 +454,6 @@ export function Scene({
           site={site}
           photos={photos}
           visitors={visitors}
-          onAddPhoto={onAddPhoto}
           onModel={site.model ? () => setMode("model") : undefined}
         />
         {ask && <ViewChoice onPick={setMode} />}

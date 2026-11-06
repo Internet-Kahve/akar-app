@@ -1833,7 +1833,6 @@ export function AkarApp() {
                         !storyBlock?.photoId)
                     }
                     visitors={view === "detail" ? visitorPhotos : []}
-                    onAddPhoto={() => setOverlay("memory")}
                     onPick={pick ? pickPart : undefined}
                   />
                 )}
