@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { mapPixelRatio, modestDevice } from "../lib/device";
+import { mapAntialias, mapPixelRatio, modestDevice, touchScreen } from "../lib/device";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
@@ -333,8 +333,8 @@ export function HeritageMap({
             // (1.5 on a modest phone): the difference is hard to see and the GPU's work drops by half or more.
             pixelRatio: mapPixelRatio(),
             // MapLibre owns the canvas, so three.js's own `antialias` means nothing here: without this the models' edges on
-            // the map are bare steps (5 Nov 2026, measured: samples 0). A modest phone stays without it.
-            canvasContextAttributes: { antialias: !modestDevice() },
+            // the map are bare steps (5 Nov 2026, measured: samples 0). On a computer only (lib/device `mapAntialias`).
+            canvasContextAttributes: { antialias: mapAntialias({ modest: modestDevice(), touch: touchScreen() }) },
             attributionControl: { compact: true },
             style: mapStyle(),
           });

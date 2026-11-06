@@ -23,13 +23,33 @@ export function mapPixelRatio(): number {
   return Math.min(ratio, modestDevice() ? 1.5 : 2);
 }
 
+/** A phone or a tablet: the pointer is a finger. */
+export function touchScreen(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+}
+
 /**
- * The site's 3D viewer, the app's showcase: 2 where the device can (a 1.5 on a 2× screen was scaled up and read as soft
- * steps, 5 Nov 2026), 1.5 on a modest device. It draws only when something moves, unlike the map.
+ * The site's 3D viewer, the app's showcase: 2 on a computer and an iPhone, 1.5 on other phones, 1.25 on a modest one.
+ * An Android phone at 2 drew four times the pixels of a 1 for little the eye could see on its small dense screen and
+ * stuttered (Muhammed, 6 Nov 2026: «telefon eskisinden daha çok kasıyor»), so it is back where it was before 5 Nov.
  */
 export function modelPixelRatio(): number {
   const ratio = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
-  return Math.min(ratio, modestDevice() ? 1.5 : 2);
+  const apple = typeof navigator !== "undefined" && isAppleTouch(navigator.userAgent, navigator.maxTouchPoints);
+  return Math.min(ratio, modelRatioCap({ modest: modestDevice(), apple, touch: touchScreen() }));
+}
+export function modelRatioCap(d: { modest: boolean; apple: boolean; touch: boolean }): number {
+  if (d.modest) return 1.25;
+  if (d.apple || !d.touch) return 2;
+  return 1.5;
+}
+
+/**
+ * Antialiasing on the map: on a computer only. The map draws all the time it moves, and four samples a pixel on a
+ * phone's 2× canvas was the heaviest thing added on 5 Nov; a phone's dense screen hides most of the steps anyway.
+ */
+export function mapAntialias(d: { modest: boolean; touch: boolean }): boolean {
+  return !d.modest && !d.touch;
 }
 
 /**

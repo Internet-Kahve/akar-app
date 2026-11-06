@@ -120,7 +120,9 @@ export function pinFeatures(
       .filter((site) => site.kind in kindIcons)
       .map((site) => {
         const stop = routeIds.indexOf(site.id) + 1;
-        const finished = look.finishedIds?.includes(site.id) ?? false;
+        // Building a route the «+» badge takes the pin's corner: the «story heard» tick waits (6 Nov 2026, the two drew
+        // one over the other).
+        const finished = !look.buildingRoute && (look.finishedIds?.includes(site.id) ?? false);
         const selected = site.id === selectedId;
         // A pin with the site's own photograph says which site it is (Muhammed, 3 Nov 2026: «pinler anlaşılmıyor»).
         const cover = look.photos

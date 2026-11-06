@@ -176,3 +176,15 @@ test("a tap finds the pin or label around it and nothing without the layers", ()
   } as unknown as MapLibreMap;
   assert.equal(pinAt(empty, 1, 1), null);
 });
+
+test("building a route a heard site shows its «+» alone, the tick comes back after", async () => {
+  const { pinFeatures } = await import("./map-pins");
+  const site = { id: "s", name: "S", kind: "cami", coordinates: [29, 40], photos: [] } as unknown as Parameters<typeof pinFeatures>[0][number];
+  const building = pinFeatures([site], [], undefined, { finishedIds: ["s"], buildingRoute: true }).features[0]!.properties;
+  expect(building.finished, false);
+  const after = pinFeatures([site], [], undefined, { finishedIds: ["s"] }).features[0]!.properties;
+  expect(after.finished, true);
+});
+function expect(actual: unknown, wanted: unknown) {
+  if (actual !== wanted) throw new Error(`${String(actual)} !== ${String(wanted)}`);
+}
