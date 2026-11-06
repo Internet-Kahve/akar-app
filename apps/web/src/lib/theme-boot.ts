@@ -11,6 +11,7 @@ export const INTRO_PAGE = "/tanitim";
 /**
  * Runs in <head> before the page paints: the bare address is the introduction. The app lives behind its views
  * (`/#view=map`, `/#view=detail&site=…`), which every button and link into it carries. The introduction shows the
- * bare address again; its own anchors (`/#akar`) carry no view and return to it.
+ * bare address again; its own anchors (`/#akar`) carry no view and return to it. A sign-in return (Google sends
+ * the session or the error back as `/#access_token=…` / `/#error=…`) stays in the app, which reads it.
  */
-export const INTRO_BOOT = `try{if(location.pathname==="/"&&!/(^|[#&])view=/.test(location.hash))location.replace("${INTRO_PAGE}"+location.hash)}catch(e){}`;
+export const INTRO_BOOT = `try{if(location.pathname==="/"&&!/(^|[#&])(view|access_token|error)=/.test(location.hash))location.replace("${INTRO_PAGE}"+location.hash)}catch(e){}`;
