@@ -1163,8 +1163,9 @@ export default function ModelViewer({
             if (open) lift.current(true, false);
             setInside(open);
           }
-          // Only a tree between the camera and what it looks at stands aside (5 Nov 2026: «içini göster deyince etraftaki
-          // ağaçlar gidiyor»): the rest stay around the building, open or closed, near or far.
+          // The trees stay where they stand (Muhammed, 7 Nov 2026: turning the model they came and went, and the light with
+          // them). Only with «İçini göster» open does a tree between the camera and the interior stand aside (5 Nov 2026:
+          // «içini göster deyince etraftaki ağaçlar gidiyor»: the others stay).
           const trees: { node: THREE.Object3D; centre: THREE.Vector3; radius: number }[] = [];
           root.updateMatrixWorld(true);
           root.traverse((node) => {
@@ -1175,7 +1176,8 @@ export default function ModelViewer({
           syncTrees = () => {
             let changed = false;
             for (const tree of trees) {
-              const show = !treeBlocksView(camera.position, controls!.target, tree.centre, tree.radius);
+              const open = interiorRef.current || coverWanted();
+              const show = !open || !treeBlocksView(camera.position, controls!.target, tree.centre, tree.radius);
               if (tree.node.visible !== show) {
                 tree.node.visible = show;
                 changed = true;
