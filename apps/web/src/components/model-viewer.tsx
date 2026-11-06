@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { modelPixelRatio, modestDevice } from "../lib/device";
+import { modelMotionRatio, modelPixelRatio, modestDevice } from "../lib/device";
+import { isAllUnlit, lambertWanted, useLambert } from "../lib/light-materials";
+import { warmNightInterior } from "../lib/night-interior";
+import { MODEST_ANISOTROPY, smoothTextures, TEXTURE_ANISOTROPY } from "../lib/texture-quality";
 import { gpuDebugOn, mountGpuDebug } from "../lib/gpu-debug";
 import { sized } from "../lib/image-size";
 import type {
@@ -31,6 +34,7 @@ import {
   tourCarriesOn,
   type SceneFrame,
   looksForFreeView,
+  treeBlocksView,
 } from "../lib/story-scene";
 import {
   forgetDownload,
@@ -47,6 +51,10 @@ const LIFT_GAP = 0.35;
 const INSIDE_ELEVATION = 30;
 /** A pose closer than this (of the distance where the whole model fits) has the trees stand aside. */
 const CLOSE_POSE = 0.4;
+/** Draws closer together than this count as motion (a phone at 15 fps still is). */
+const MOTION_GAP_MS = 80;
+/** The sharp frame comes this long after the last moving one. */
+const MOTION_REST_MS = 180;
 /**
  * Part glow: hover (mouse) and the open card's parts. Gold by day; blue by night, where the night files' lit windows
  * and minarets are already gold and a gold glow did not stand out (Muhammed, 2 Nov 2026).
@@ -412,9 +420,9 @@ export default function ModelViewer({
     let unmountDebug = () => {};
     let shadowSize: number | null = null;
     try {
-      // A modest phone: fewer pixels, no antialiasing, a smaller shadow map.
+      // A modest phone: fewer pixels and a smaller shadow map; the edges stay smooth on every device (5 Nov 2026).
       const modest = modestDevice();
-      renderer = new THREE.WebGLRenderer({ antialias: !modest, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
       renderer.setPixelRatio(modelPixelRatio());
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       {
@@ -457,11 +465,34 @@ export default function ModelViewer({
       // Open, the interior gets its own light: under the sun's shadow and a sky light it stayed nearly black.
       let inner: THREE.DirectionalLight | null = null;
       let innerWanted = () => false;
+      // Two draws this close together are motion: fewer pixels until it stops, then one sharp frame at full size.
+      const stillRatio = renderer.getPixelRatio();
+      const motionRatio = modelMotionRatio(stillRatio, modest);
+      let moving = false;
+      let lastDraw = -Infinity;
+      let settle = 0;
+      let treesMoved = false;
       const render = () => {
         if (disposed || compiling) return;
+        const now = performance.now();
+        if (!moving && now - lastDraw < MOTION_GAP_MS && motionRatio < stillRatio) {
+          moving = true;
+          renderer!.setPixelRatio(motionRatio);
+        }
+        lastDraw = now;
+        if (moving) {
+          clearTimeout(settle);
+          settle = window.setTimeout(() => {
+            moving = false;
+            renderer!.setPixelRatio(stillRatio);
+            if (treesMoved) staleShadows();
+            treesMoved = false;
+            render();
+          }, MOTION_REST_MS);
+        }
         syncInterior();
         syncTrees();
-        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 1.4 : 1.2) : 0;
+        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 0.8 : 1.2) : 0;
         if (shadowsStale) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
@@ -574,6 +605,9 @@ export default function ModelViewer({
           }
           object = gltf.scene;
           const light: CityScene["light"] = JSON.parse(lightKey);
+          if (lambertWanted(location.search, location.hash)) useLambert(object);
+          // A night file is unlit: no light reaches it, so the sun's shadow map would be drawn for nothing.
+          const unlit = isAllUnlit(object);
           saturate(object, light.saturation);
           // Turned like on the map, so a pose's azimuth (0 = from the north) means the real north.
           object.rotation.y = -THREE.MathUtils.degToRad(heading);
@@ -582,7 +616,7 @@ export default function ModelViewer({
           {
             object.traverse(item => {
               if (!(item instanceof THREE.Mesh)) return;
-              item.castShadow = item.receiveShadow = true;
+              item.castShadow = item.receiveShadow = !unlit;
               for (let node: THREE.Object3D | null = item; node && node !== object; node = node.parent) {
                 if (/^Yer_Golgesi/.test(node.name)) { item.visible = false; return; }
                 if (PRESENTATION_PARTS.test(node.name)) return;
@@ -592,6 +626,8 @@ export default function ModelViewer({
           }
           // Coplanar ground surfaces keep one drawing order from every angle (no flicker on the courtyard).
           liftGroundLayers(object);
+          warmNightInterior(object, model.interiorParts ?? []);
+          smoothTextures(object, modest ? MODEST_ANISOTROPY : TEXTURE_ANISOTROPY, renderer!.capabilities.getMaxAnisotropy());
           if (box.isEmpty()) box.setFromObject(object);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
@@ -600,6 +636,7 @@ export default function ModelViewer({
           {
             const R = size.length() / 2 * 1.3;
             const sun = addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
+            if (unlit) sun.castShadow = false;
             shadowSize = modest ? 1024 : sun.shadow.mapSize.x;
             if (modest) {
               sun.shadow.mapSize.set(1024, 1024);
@@ -813,7 +850,7 @@ export default function ModelViewer({
               for (const mesh of meshes)
                 for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
                   const colour =
-                    m instanceof THREE.MeshStandardMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
+                    m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshLambertMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
                   if (!colour) continue;
                   if (!baseColour.has(m)) baseColour.set(m, colour.clone());
                   // Close up the part fills the frame: a touch of light is enough.
@@ -952,6 +989,7 @@ export default function ModelViewer({
           };
           let coverOpen: (() => boolean) | null = null;
           let coverWanted = () => false;
+          let compileFading = async () => {};
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>
             names.flatMap((n) => root.getObjectByName(n) ?? []),
@@ -981,6 +1019,19 @@ export default function ModelViewer({
                 });
               return list;
             });
+            // A fading material is another shader: compiled with the rest while the card is up, not at the first press.
+            compileFading = async () => {
+              const list = fading.flat().filter((f) => !f.transparent);
+              const set = (on: boolean) => {
+                for (const f of list) {
+                  f.material.transparent = on;
+                  f.material.needsUpdate = true;
+                }
+              };
+              set(true);
+              await renderer!.compileAsync(scene, camera).catch(() => {});
+              set(false);
+            };
             const progress = groups.map(() => 0);
             let goal = 0;
             coverOpen = () => goal === 1 || progress.some((t) => t > 0);
@@ -988,14 +1039,16 @@ export default function ModelViewer({
             let liftFrame = 0;
             let last = 0;
             cancelLift = () => cancelAnimationFrame(liftFrame);
+            // The sun's whole map is not drawn again every frame of the lift (5 Nov 2026, «içini gösterde kasıyor»): only when
+            // a group is gone or back, and when it all comes to rest.
             const place = () => {
-              staleShadows();
               parts.forEach((g, i) => {
                 const t = progress[i]!;
                 // easeOutBack: a slight overshoot as the group settles.
                 const k = t === 0 ? 0 : 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;
                 for (const p of g) {
                   p.node.position.y = p.y + p.dy * k;
+                  if (p.node.visible !== t < 0.999) staleShadows();
                   p.node.visible = t < 0.999;
                 }
                 for (const f of fading[i]!) {
@@ -1027,6 +1080,7 @@ export default function ModelViewer({
                   progress[i] = goal === 1 ? Math.min(1, t + dt) : Math.max(0, t - dt);
               });
               place();
+              if (!moving) staleShadows();
               render();
               if (moving && !disposed) liftFrame = requestAnimationFrame(step);
             };
@@ -1036,6 +1090,7 @@ export default function ModelViewer({
               if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
                 progress.fill(goal);
                 place();
+                staleShadows();
                 render();
               } else {
                 last = performance.now();
@@ -1065,19 +1120,32 @@ export default function ModelViewer({
           scene.add(lit);
           innerWanted = () => {
             const on = coverWanted() || !!coverOpen?.();
-            lit.intensity = on ? (currentTheme() === "night" ? 1.7 : 0.7) : 0; // night: the interior stayed black at 0.45 (4 Nov 2026)
+            lit.intensity = on ? (currentTheme() === "night" ? 0.45 : 0.7) : 0;
             return on;
           };
-          // Open, or with the camera sent close, the trees stand aside: it must not meet one on the way.
-          const trees: THREE.Object3D[] = [];
+          // Only a tree between the camera and what it looks at stands aside (5 Nov 2026: «içini göster deyince etraftaki
+          // ağaçlar gidiyor»): the rest stay around the building, open or closed, near or far.
+          const trees: { node: THREE.Object3D; centre: THREE.Vector3; radius: number }[] = [];
+          root.updateMatrixWorld(true);
           root.traverse((node) => {
-            if (/^(Cevre|Avlu)_Agac/.test(node.name)) trees.push(node);
+            if (!/^(Cevre|Avlu)_Agac/.test(node.name)) return;
+            const sphere = new THREE.Box3().setFromObject(node).getBoundingSphere(new THREE.Sphere());
+            trees.push({ node, centre: sphere.center, radius: sphere.radius });
           });
           syncTrees = () => {
-            const show = !closePose && !coverWanted();
-            if (!trees.length || trees[0]!.visible === show) return;
-            for (const tree of trees) tree.visible = show;
-            staleShadows();
+            let changed = false;
+            for (const tree of trees) {
+              const show = !treeBlocksView(camera.position, controls!.target, tree.centre, tree.radius);
+              if (tree.node.visible !== show) {
+                tree.node.visible = show;
+                changed = true;
+              }
+            }
+            // Not mid-turn: a whole shadow map for one tree is a visible hitch. It is drawn when the model comes to rest.
+            if (changed) {
+              if (moving) treesMoved = true;
+              else staleShadows();
+            }
           };
           // Only where the cover can open: otherwise nothing would ever show the interior again.
           const hiddenNames = JSON.parse(hiddenKey) as string[];
@@ -1121,6 +1189,7 @@ export default function ModelViewer({
           renderer!
             .compileAsync(scene, camera)
             .catch(() => {})
+            .then(() => (disposed ? undefined : compileFading()))
             .finally(() => {
               compiling = false;
               if (disposed) return;
@@ -1132,6 +1201,8 @@ export default function ModelViewer({
                   for (const m of Array.isArray(item.material) ? item.material : [item.material])
                     for (const value of Object.values(m)) if (value instanceof THREE.Texture) renderer!.initTexture(value);
                 });
+              // One draw with it all there sends the interior's geometry to the GPU under the card, not at the first press.
+              if (hiddenNodes.length) render();
               interiorReady = true;
               render();
               // What is said about the model waits for the model (`TipRow`).

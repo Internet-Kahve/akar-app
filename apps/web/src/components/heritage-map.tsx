@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { mapPixelRatio } from "../lib/device";
+import { mapPixelRatio, modestDevice } from "../lib/device";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
@@ -328,6 +328,9 @@ export function HeritageMap({
             // Phones report up to 3.5 pixels per CSS pixel; the map with its buildings and models draws at most 2
             // (1.5 on a modest phone): the difference is hard to see and the GPU's work drops by half or more.
             pixelRatio: mapPixelRatio(),
+            // MapLibre owns the canvas, so three.js's own `antialias` means nothing here: without this the models' edges on
+            // the map are bare steps (5 Nov 2026, measured: samples 0). A modest phone stays without it.
+            canvasContextAttributes: { antialias: !modestDevice() },
             attributionControl: { compact: true },
             style: mapStyle(),
           });

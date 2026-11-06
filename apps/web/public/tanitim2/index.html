@@ -444,8 +444,8 @@ const bas = async () => {
     const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
     const yukleyici = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/'));
     const dar = innerWidth < 900;
-    const r = new THREE.WebGLRenderer({ antialias: !dar, alpha: true, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(devicePixelRatio, dar ? 1.25 : 1.5));
+    const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    r.setPixelRatio(Math.min(devicePixelRatio, dar ? 1.5 : 2));
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; r.shadowMap.autoUpdate = false;
     kutu.prepend(r.domElement);

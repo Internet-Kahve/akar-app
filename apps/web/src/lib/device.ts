@@ -23,9 +23,19 @@ export function mapPixelRatio(): number {
   return Math.min(ratio, modestDevice() ? 1.5 : 2);
 }
 
-/** The site's 3D viewer: 1.5 as before, 1.25 on a modest device, 2 on an iPhone (its screen is 3× and Safari scales up). */
+/**
+ * The site's 3D viewer, the app's showcase: 2 where the device can (a 1.5 on a 2× screen was scaled up and read as soft
+ * steps, 5 Nov 2026), 1.5 on a modest device. It draws only when something moves, unlike the map.
+ */
 export function modelPixelRatio(): number {
   const ratio = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
-  const apple = typeof navigator !== "undefined" && isAppleTouch(navigator.userAgent, navigator.maxTouchPoints);
-  return Math.min(ratio, modestDevice() ? 1.25 : apple ? 2 : 1.5);
+  return Math.min(ratio, modestDevice() ? 1.5 : 2);
+}
+
+/**
+ * Pixels the 3D viewer draws while the model moves: the eye cannot read the difference in motion, the GPU can (5 Nov 2026,
+ * «kasıyor»). At rest it goes straight back to `modelPixelRatio`, so what is looked at stays as sharp as before.
+ */
+export function modelMotionRatio(still: number, modest: boolean): number {
+  return Math.min(still, modest ? 1 : 1.5);
 }
