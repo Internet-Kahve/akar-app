@@ -1,7 +1,7 @@
 /** Site page: story, 3D viewer, about, history, tasks. */
 export const tr = {
   "route.build": "Rota oluştur",
-  "route.choose": "Hangi rotaya?",
+  "route.choose": "Eklendiği rota",
   "route.new": "Yeni rota",
   "route.name": "Rota adı",
   "route.summary": "{count} durak · ~{minutes} dk · {km} km",
@@ -420,7 +420,7 @@ export const tr = {
 
 export const en = {
   "route.build": "Build a route",
-  "route.choose": "Which route?",
+  "route.choose": "Added to",
   "route.new": "New route",
   "route.name": "Route name",
   "route.summary": "{count} stops · ~{minutes} min · {km} km",

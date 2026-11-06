@@ -401,27 +401,6 @@ img {
   border-radius: 50%;
   background: var(--text-muted);
 }
-.custom-route {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  padding: 18px 12px;
-  border: 1px dashed #b6c7dd;
-  border-radius: 12px;
-  background: var(--primary-light);
-  margin-top: 20px;
-}
-.custom-route strong {
-  font-size: 12px;
-  display: block;
-  margin-bottom: 5px;
-}
-.custom-route small {
-  font-size: 10px;
-  display: block;
-  color: var(--text-muted);
-}
 .demo-label {
   position: absolute;
   bottom: 22px;

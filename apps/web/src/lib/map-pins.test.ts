@@ -59,14 +59,17 @@ test("a pin sits at the site, names it and numbers the route stops from 1", () =
   const koza = features.find((f) => f.properties.id === "koza-han")!;
   assert.deepEqual(koza.geometry.coordinates, at("koza-han").coordinates);
   assert.equal(koza.properties.name, at("koza-han").name);
+  // A stop keeps its own pin and wears its number as a badge (7 Nov 2026).
   assert.equal(koza.properties.stop, 1);
-  assert.equal(koza.properties.icon, "stop-1-#22566E");
+  assert.equal(koza.properties.icon, "pin-han");
+  assert.equal(koza.properties.badge, "stop-badge-1-#22566E");
   const ulucami = features.find((f) => f.properties.id === "ulu-cami")!;
   assert.equal(ulucami.properties.stop, 2);
-  assert.equal(ulucami.properties.icon, "stop-2-#22566E");
+  assert.equal(ulucami.properties.badge, "stop-badge-2-#22566E");
   const outside = features.find((f) => f.properties.id === "orhan-gazi")!;
   assert.equal(outside.properties.stop, 0);
   assert.equal(outside.properties.icon, "pin-cami");
+  assert.equal(outside.properties.badge, "");
   assert.deepEqual(
     features.filter((f) => f.properties.selected).map((f) => f.properties.id),
     ["bedesten"],
@@ -139,12 +142,12 @@ test("a label that finds no room beside its pin moves to the other side, then be
   assert.equal("icon-image" in layout, false);
 });
 
-test("a style without a glyph server gets the icons alone", () => {
+test("a style without a glyph server gets the icons and the stop numbers, no text", () => {
   const layers = specs(false);
-  assert.equal(layers.length, 1);
-  assert.equal(layers[0]!.id, PIN_LAYER);
-  for (const key of ["text-field", "text-font", "text-variable-anchor-offset"])
-    assert.equal(key in layers[0]!.layout, false, key);
+  assert.deepEqual(layers.map((l) => l.id), [PIN_LAYER, "pin-stop"]);
+  for (const layer of layers)
+    for (const key of ["text-field", "text-font", "text-variable-anchor-offset"])
+      assert.equal(key in layer.layout, false, key);
 });
 
 test("a tap finds the pin or label around it and nothing without the layers", () => {

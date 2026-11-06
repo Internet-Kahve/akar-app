@@ -7,8 +7,11 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Flag,
   Footprints,
+  Pencil,
   Plus,
+  SkipForward,
   Route,
   UserRound,
   X,
@@ -277,17 +280,15 @@ export function ExplorePanel({
       </div>
       {tab === "routes" ? (
         <>
-          <div className="explore-heading">
-            {/* A phone has no tabs (3 Nov 2026): back to the sites from here. */}
-            <button className="narrow-only explore-back" onClick={() => onTab("sites")}>
-              <ChevronLeft size={16} />
-              {t("explore.tabSites")}
-            </button>
-            <h2>{heading("routes")}</h2>
-          </div>
-          {personalRoutes.some((p) => p.siteIds.length) && (
-            <section className="route-cards mine" aria-label={t("route.mine")}>
-              <h3 className="route-mine-heading">{t("route.mine")}</h3>
+          {/* A phone has no tabs (3 Nov 2026): back to the sites from here. */}
+          <button className="narrow-only explore-back" onClick={() => onTab("sites")}>
+            <ChevronLeft size={16} />
+            {t("explore.tabSites")}
+          </button>
+          {/* Rotalarım first, with the way to a new one as its last card (Muhammed, 7 Nov 2026: the big card at the foot
+              outweighed the routes and covered the last one on a phone); the city's routes below, under their heading. */}
+          <section className="route-cards mine" aria-label={t("route.mine")}>
+            <h3 className="route-mine-heading">{t("route.mine")}</h3>
               {personalRoutes
                 .filter((p) => p.siteIds.length)
                 .map((p) => (
@@ -308,9 +309,21 @@ export function ExplorePanel({
                     <ChevronRight size={18} className="route-card-go" />
                   </button>
                 ))}
-            </section>
-          )}
-          {personalRoutes.some((p) => p.siteIds.length) && <h3 className="route-mine-heading">{t("route.suggested")}</h3>}
+            <button className="route-new" onClick={onCustomRoute}>
+              <span className="route-new-plus" aria-hidden="true"><Plus size={18} strokeWidth={2.4} /></span>
+              <span className="route-card-text">
+                <strong>{t("explore.custom")}</strong>
+                <small>
+                  {routeIds.length
+                    ? t(routeIds.length === 1 ? "explore.customWaitingOne" : "explore.customWaiting", { count: routeIds.length })
+                    : t("explore.customEmpty")}
+                </small>
+              </span>
+            </button>
+          </section>
+          <div className="explore-heading">
+            <h2>{heading("routes")}</h2>
+          </div>
           <div className="route-cards">
             {shown.map((r) => {
               const stops = r.siteIds.filter((id) =>
@@ -325,7 +338,7 @@ export function ExplorePanel({
                   <span className="route-card-text">
                     <strong><Localized tr={r.name} en={r.nameEn} /></strong>
                     <small>
-                      {t("explore.routeLine", { count: r.siteIds.length, minutes: r.minutes, distance: r.distance })}
+                      {[t(r.siteIds.length === 1 ? "explore.stopCountOne" : "explore.stopCount", { count: r.siteIds.length }), ...routeTail(r, t)].join(" · ")}
                     </small>
                     {stops > 0 && (
                       <em className="going">{t("common.continueProgress", { done: stops, total: r.siteIds.length })}</em>
@@ -342,24 +355,6 @@ export function ExplorePanel({
               );
             })}
           </div>
-          {/* A new route (Muhammed, 3 Nov 2026: «rezalet, değiştirelim»): a clear card, a small walk drawn on it. */}
-          <button className="custom-route yeni" onClick={onCustomRoute}>
-            <svg className="cr-art" viewBox="0 0 64 44" aria-hidden="true">
-              <path d="M8 34 C 20 34, 18 12, 32 14 S 46 30, 56 10" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
-              <circle cx="8" cy="34" r="4.5" />
-              <circle cx="32" cy="14" r="4.5" />
-              <circle cx="56" cy="10" r="4.5" className="cr-new" />
-            </svg>
-            <span>
-              <strong>{t("explore.custom")}</strong>
-              <small>
-                {routeIds.length
-                  ? t(routeIds.length === 1 ? "explore.customWaitingOne" : "explore.customWaiting", { count: routeIds.length })
-                  : t("explore.customEmpty")}
-              </small>
-            </span>
-            <span className="cr-plus" aria-hidden="true"><Plus size={20} strokeWidth={2.4} /></span>
-          </button>
         </>
       ) : (
         <>
@@ -451,6 +446,19 @@ export function ExplorePanel({
   );
 }
 
+/** A route's time and length, each only once known (a route without walking data has neither: no «~0 dk ·»). */
+function routeTail(route: HeritageRoute, t: ReturnType<typeof useI18n>["t"]) {
+  return [route.minutes > 0 ? t("route.minutes", { minutes: route.minutes }) : "", route.distance].filter(Boolean);
+}
+
+/** A route being walked, as the panel shows it: where the visitor is and what they did with each stop. */
+export interface RouteWalkState {
+  /** The stop the visitor is at; `sites.length` once the walk is over. */
+  at: number;
+  doneIds: string[];
+  skippedIds: string[];
+}
+
 /** A route's page in the panel. */
 export function RoutePreview({
   route,
@@ -458,10 +466,16 @@ export function RoutePreview({
   sites,
   live,
   visitedIds,
+  walk,
   onBack,
   onClose,
   onSite,
   onStart,
+  onStep,
+  onDone,
+  onSkip,
+  onExitWalk,
+  onEdit,
 }: {
   route?: HeritageRoute | undefined;
   custom: boolean;
@@ -473,24 +487,43 @@ export function RoutePreview({
   onClose: () => void;
   onSite: (id: string) => void;
   onStart: () => void;
+  /** Set while this route is walked: the panel shows the steps and the stop the visitor is at (7 Nov 2026). */
+  walk?: RouteWalkState | undefined;
+  onStep?: (index: number) => void;
+  onDone?: () => void;
+  onSkip?: () => void;
+  onExitWalk?: () => void;
+  /** One of the visitor's own routes: a pencil beside the close button takes it to the builder (7 Nov 2026). */
+  onEdit?: (() => void) | undefined;
 }) {
   const { lang, t } = useI18n();
   const tr = lang === "en" ? "tr" : undefined;
   const done = sites.filter((s) => visitedIds.includes(s.id)).length;
+  if (walk && sites.length)
+    return (
+      <RouteWalk route={route} custom={custom} sites={sites} live={live} walk={walk} onSite={onSite}
+        onStep={onStep ?? (() => {})} onDone={onDone ?? (() => {})} onSkip={onSkip ?? (() => {})}
+        onExit={onExitWalk ?? (() => {})} onRestart={onStart} />
+    );
   return (
     <div className="route-page">
       <button className="route-close" aria-label={t("route.close")} title={t("route.close")} onClick={onClose}>
         <X size={18} />
       </button>
+      {onEdit && (
+        <button className="route-close route-edit" aria-label={t("route.editTitle")} title={t("route.editTitle")} onClick={onEdit}>
+          <Pencil size={17} />
+        </button>
+      )}
       <Back onClick={onBack}>{t("route.all")}</Back>
       <div className="route-cover">
         <SiteArtwork site={sites[0]} live={live} />
         {custom && <Tag>{t("route.tagCustom")}</Tag>}
       </div>
-      <h1>{custom ? t("route.customTitle") : route && <Localized tr={route.name} en={route.nameEn} />}</h1>
+      <h1>{route ? <Localized tr={route.name} en={route.nameEn} /> : t("route.customTitle")}</h1>
       <p className="muted">
         {t(sites.length === 1 ? "explore.stopCountOne" : "explore.stopCount", { count: sites.length })}{" "}
-        {route && t("route.metaTail", { minutes: route.minutes, distance: route.distance })}
+        {route && routeTail(route, t).map((x) => `· ${x} `)}
       </p>
       <p>
         {route?.description ? <span lang={tr}>{route.description}</span> : t("route.defaultDescription")}
@@ -546,6 +579,119 @@ export function RoutePreview({
             {t("route.fromHome")}
           </button>
         </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Walking a route in the panel (Muhammed, 7 Nov 2026: «rotayı başlat dediğinde rota başlasın ama aynı panelden devam
+ * etsin»): the steps along the top, the stop the visitor is at with the walk to it, and three ways on: done (to the
+ * next), skip, or any step tapped. The map beside it flies to each stop.
+ */
+function RouteWalk({
+  route,
+  custom,
+  sites,
+  live,
+  walk,
+  onSite,
+  onStep,
+  onDone,
+  onSkip,
+  onExit,
+  onRestart,
+}: {
+  route?: HeritageRoute | undefined;
+  custom: boolean;
+  sites: HeritageSite[];
+  live: boolean;
+  walk: RouteWalkState;
+  onSite: (id: string) => void;
+  onStep: (index: number) => void;
+  onDone: () => void;
+  onSkip: () => void;
+  onExit: () => void;
+  onRestart: () => void;
+}) {
+  const { t, text } = useI18n();
+  const here = sites[walk.at];
+  const last = walk.at === sites.length - 1;
+  const before = sites[walk.at - 1];
+  const leg = here && before && walkingLeg(route, before.id, here.id);
+  const finished = sites.filter((s) => walk.doneIds.includes(s.id)).length;
+  const title = route ? text(route.name, route.nameEn) : t("route.customTitle");
+  return (
+    <div className="route-page route-walk">
+      <button className="route-close" aria-label={t("walk.exit")} title={t("walk.exit")} onClick={onExit}>
+        <X size={18} />
+      </button>
+      <span className="walk-kicker">{t("walk.on")}</span>
+      <h1>{title}</h1>
+      <ol className="walk-steps" aria-label={t("walk.steps")}>
+        {sites.map((s, i) => {
+          const isDone = walk.doneIds.includes(s.id);
+          const skipped = !isDone && walk.skippedIds.includes(s.id);
+          return (
+            <li key={s.id} className={`${i === walk.at ? "now" : ""}${isDone ? " done" : ""}${skipped ? " skipped" : ""}`}>
+              <button
+                aria-label={t("walk.goTo", { n: i + 1, name: text(s.name, s.nameEn) })}
+                aria-current={i === walk.at ? "step" : undefined}
+                onClick={() => onStep(i)}
+              >
+                <span className="walk-step-dot">{isDone ? <Check size={14} strokeWidth={3} aria-hidden="true" /> : i + 1}</span>
+                <span className="walk-step-name">{text(s.name, s.nameEn)}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      {here ? (
+        <section className="walk-here" aria-live="polite">
+          <p className="muted walk-count">
+            {t("walk.stopOf", { at: walk.at + 1, total: sites.length })}
+            {leg && (
+              <>
+                {" · "}
+                <Footprints size={13} aria-hidden="true" />
+                {t("route.legWalk", { minutes: legMinutes(leg), distance: legDistance(leg) })}
+              </>
+            )}
+          </p>
+          <button className="walk-here-card" onClick={() => onSite(here.id)}>
+            <SiteArtwork site={here} live={live} />
+            <span>
+              <strong><Localized tr={here.name} en={here.nameEn} /></strong>
+              <small className="muted">{here.year}</small>
+              <span className="walk-open">{t("walk.open")} <ArrowRight size={14} aria-hidden="true" /></span>
+            </span>
+          </button>
+          <div className="walk-actions">
+            <button className="btn full" onClick={onDone}>
+              {last ? <Flag size={18} aria-hidden="true" /> : <Check size={18} aria-hidden="true" />}
+              {last ? t("walk.finish") : t("walk.done")}
+            </button>
+            {!last && (
+              <button className="btn secondary walk-skip" onClick={onSkip}>
+                <SkipForward size={16} aria-hidden="true" />
+                {t("walk.skip")}
+              </button>
+            )}
+          </div>
+        </section>
+      ) : (
+        <section className="walk-here walk-finished" aria-live="polite">
+          <Flag size={28} aria-hidden="true" />
+          <h2>{t("walk.finished")}</h2>
+          <p className="muted">{t("walk.finishedCount", { done: finished, total: sites.length })}</p>
+          <button className="btn full" onClick={onExit}>{t("walk.close")}</button>
+          <button className="text-btn route-home" onClick={onRestart}>{t("route.again")}</button>
+        </section>
+      )}
+      {here && (
+        <button className="text-btn route-home" onClick={onExit}>
+          {t("walk.exit")}
+        </button>
       )}
     </div>
   );

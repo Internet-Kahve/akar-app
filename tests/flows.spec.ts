@@ -437,7 +437,7 @@ test("a link to a site closes the short card and shows the site's panel", async 
   await expect(page.locator(".site-peek")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Koza Hanı", level: 1 })).toBeVisible();
 });
-test("a route shows only its stops on the map, as numbered stars", async ({
+test("a route shows only its stops on the map, each its own pin with a numbered star", async ({
   page,
 }) => {
   await page.goto("/#view=map");
@@ -446,11 +446,13 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   await openRoutes(page);
   await page.locator(".route-card").first().click();
   await expect.poll(async () => (await pinIds(page)).length).toBe(3);
-  const icons = await page.evaluate(async () => {
+  // A stop keeps its own pin (7 Nov 2026) and wears its number as a star badge.
+  const pins = await page.evaluate(async () => {
     const data = await window.akarMap!.getSource("pins")!.getData();
-    return data.features.map((f) => f.properties.icon as string);
+    return data.features.map((f) => [f.properties.icon as string, f.properties.badge as string]);
   });
-  expect(icons.every((icon) => icon.startsWith("stop-"))).toBe(true);
+  expect(pins.every(([icon]) => !icon.startsWith("stop-"))).toBe(true);
+  expect(pins.map(([, badge]) => badge.replace(/-#.*/, "")).sort()).toEqual(["stop-badge-1", "stop-badge-2", "stop-badge-3"]);
 });
 test("a trust tag tells where the statement comes from", async ({ page, isMobile }) => {
   // A phone's short card only says which site it is (3 Nov 2026); the tag stays on the wide screen's card.
@@ -466,6 +468,7 @@ test("a trust tag tells where the statement comes from", async ({ page, isMobile
 });
 test("route search opens a usable route and selection persists", async ({
   page,
+  isMobile,
 }) => {
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
@@ -480,27 +483,61 @@ test("route search opens a usable route and selection persists", async ({
   await page
     .getByRole("button", { name: "Rotayı başlat", exact: true })
     .click();
-  // The map flies to the first stop and opens its card; a strip says the route is on (6 Nov 2026).
-  const strip = page.locator(".walk-strip");
-  await expect(strip).toBeVisible();
-  await expect(strip.locator(".walk-now")).toHaveText(/^1\/2 · /);
-  await expect(page.locator(".site-peek")).toBeVisible();
-  // The stop's page leads on to the next one, which the map then shows.
-  await page.locator(".site-peek").getByRole("button", { name: /Eseri incele|sayfasını aç/ }).first().click();
-  const next = page.getByRole("button", { name: /^Sonraki durak:/ });
+  // The walk goes on in the same panel (7 Nov 2026): the steps along its top, the map at the first stop, its card open.
+  const walk = page.locator(".route-walk");
+  const count = walk.locator(".walk-count");
+  await expect(walk.locator(".walk-steps li")).toHaveCount(2);
+  await expect(count).toHaveText(/^1\. durak \/ 2/);
+  // A wide screen opens the stop's short card too; a phone's sheet is the walk's own card, nothing over it.
+  await expect(page.locator(".site-peek")).toHaveCount(isMobile ? 0 : 1);
+  // The stop's page leads on to the next one with the panel's own «Tamamladım, sıradaki».
+  await walk.locator(".walk-here-card").click();
+  const next = page.locator(".detail-next").getByRole("button", { name: "Tamamladım, sıradaki" });
   await expect(next).toBeVisible();
   await next.click();
-  await expect(strip.locator(".walk-now")).toHaveText(/^2\/2 · /);
-  await expect(page.locator(".site-peek")).toBeVisible();
+  await expect(count).toHaveText(/^2\. durak \/ 2/);
+  await expect(walk.locator(".walk-steps li.done")).toHaveCount(1);
   const routeIds = () =>
     page.evaluate(
       () => (JSON.parse(localStorage.getItem("akar-demo-bursa-v1") ?? "{}") as { routeIds?: string[] }).routeIds ?? [],
     );
   await expect.poll(routeIds).toHaveLength(2);
   await page.reload();
-  // The walk itself lives in the page; the chosen route is kept.
+  // The walk and the chosen route last through a reload.
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await expect.poll(routeIds).toHaveLength(2);
+  await expect(count).toHaveText(/^2\. durak \/ 2/);
+  // The last stop done, the walk is over; the way back is the route list.
+  await walk.getByRole("button", { name: "Rotayı bitir" }).click();
+  await expect(walk.getByRole("heading", { name: "Rota tamamlandı" })).toBeVisible();
+  await expect(walk.locator(".walk-steps li.done")).toHaveCount(2);
+  await walk.getByRole("button", { name: "Rotalara dön" }).click();
+  await expect(page.locator(".route-card").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Yeni rota oluştur/ })).toBeVisible();
+});
+test("a route's stops can be done, skipped or picked in its panel", async ({ page }) => {
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
+  await openRoutes(page);
+  await page.locator(".route-card").first().click();
+  await page.getByRole("button", { name: "Rotayı başlat", exact: true }).click();
+  const walk = page.locator(".route-walk");
+  const steps = walk.locator(".walk-steps li");
+  const total = await steps.count();
+  expect(total).toBeGreaterThan(2);
+  await walk.getByRole("button", { name: "Tamamladım, sıradaki" }).click();
+  await walk.getByRole("button", { name: "Atla" }).click();
+  await expect(steps.nth(0)).toHaveClass(/done/);
+  await expect(steps.nth(1)).toHaveClass(/skipped/);
+  await expect(steps.nth(2)).toHaveClass(/now/);
+  // A step tapped takes the walk there.
+  await steps.nth(0).getByRole("button").click();
+  await expect(steps.nth(0)).toHaveClass(/now/);
+  await expect(walk.locator(".walk-count")).toHaveText(new RegExp(`^1\\. durak \\/ ${total}`));
+  // Leaving the walk closes the route as well: one press, back to the list.
+  await walk.getByRole("button", { name: "Rotadan çık" }).last().click();
+  await expect(walk).toHaveCount(0);
+  await expect(page.locator(".route-card").first()).toBeVisible();
 });
 test("map failure keeps the artifact discovery usable", async ({ page }) => {
   // Use a deterministic tile failure without depending on the provider's style.
