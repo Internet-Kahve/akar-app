@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -21,6 +21,7 @@ import {
 } from "@akar/domain";
 import { cityCase } from "../lib/place-names";
 import { siteMeta } from "../lib/site-meta";
+import { legDistance, legMinutes, walkingLeg } from "../lib/route-walking";
 import { SiteArtwork } from "./site-artwork";
 import { Back, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
@@ -462,20 +463,36 @@ export function RoutePreview({
         {route?.description ? <span lang={tr}>{route.description}</span> : t("route.defaultDescription")}
       </p>
       <div className="route-stop-list">
-        {sites.map((s, i) => (
-          <button key={s.id} onClick={() => onSite(s.id)}>
-            <span
-              className={`stop-number ${visitedIds.includes(s.id) ? "visited" : ""}`}
-            >
-              {visitedIds.includes(s.id) ? <Check size={15} /> : i + 1}
-            </span>
-            <span>
-              <strong><Localized tr={s.name} en={s.nameEn} /></strong>
-              <small>{s.year}</small>
-            </span>
-            <ArrowRight size={15} />
-          </button>
-        ))}
+        {sites.map((s, i) => {
+          const next = sites[i + 1];
+          const leg = next && walkingLeg(route, s.id, next.id);
+          // Only curated routes carry walking data; Rotam (custom) stays a straight line without a note per leg.
+          const schematic = !!next && !leg && !custom && !!route?.walking;
+          return (
+            <Fragment key={s.id}>
+              <button onClick={() => onSite(s.id)}>
+                <span
+                  className={`stop-number ${visitedIds.includes(s.id) ? "visited" : ""}`}
+                >
+                  {visitedIds.includes(s.id) ? <Check size={15} /> : i + 1}
+                </span>
+                <span>
+                  <strong><Localized tr={s.name} en={s.nameEn} /></strong>
+                  <small>{s.year}</small>
+                </span>
+                <ArrowRight size={15} />
+              </button>
+              {(leg || schematic) && (
+                <small className="route-leg muted">
+                  <Footprints size={13} aria-hidden="true" />
+                  {leg
+                    ? t("route.legWalk", { minutes: legMinutes(leg), distance: legDistance(leg) })
+                    : t("route.legSchematic")}
+                </small>
+              )}
+            </Fragment>
+          );
+        })}
       </div>
       {sites.length === 0 ? (
         <Notice>{t("route.emptyNotice")}</Notice>

@@ -147,9 +147,10 @@ const catalogHandlers = (): Record<string, Handler> => ({
         minutes: 8,
         distance: "1 km",
         theme: "t",
+        walking: { status: "complete", meters: 120, minutes: 2 },
         stops: [
-          { site: { id: "b" }, quizId: "q1" },
-          { site: { id: "a" }, quizId: null },
+          { site: { id: "b" }, quizId: "q1", leg: { coordinates: [[29.07, 40.18], [29.06, 40.18]], meters: 120, seconds: 95 } },
+          { site: { id: "a" }, quizId: null, leg: null },
         ],
       },
     ],
@@ -182,6 +183,9 @@ test("snapshot maps site DTOs: coordinates order, photos without card/history me
   assert.equal(a.district, "");
   assert.equal(a.stories[0]?.photoId, "cover");
   assert.deepEqual(snap.catalogRoutes?.[0]?.siteIds, ["b", "a"]);
+  // One leg per pair of stops, in stop order; the last stop's (always null) is dropped.
+  assert.deepEqual(snap.catalogRoutes?.[0]?.legs?.map((l) => l?.meters), [120]);
+  assert.equal(snap.catalogRoutes?.[0]?.walking, "complete");
   assert.ok(
     !api.calls.some((c) => c.path.startsWith("/v1/sites/")),
     "the catalog loads in bulk",

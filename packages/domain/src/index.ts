@@ -615,6 +615,13 @@ export interface HeritageSite {
     narrations?: StoryNarration[];
   }>;
 }
+/** Stored walking path from one route stop to the next (§11.79). */
+export interface RouteLeg {
+  /** `[lng, lat]` points, GeoJSON LineString order. */
+  coordinates: Array<[number, number]>;
+  meters: number;
+  seconds: number;
+}
 export interface HeritageRoute {
   id: string;
   name: string;
@@ -625,6 +632,13 @@ export interface HeritageRoute {
   theme: string;
   nameEn?: string;
   status?: "draft" | "published";
+  /**
+   * Walking path from `siteIds[i]` to `siteIds[i + 1]`; `null` = not computed yet (drawn schematic).
+   * Absent for drafts and local routes.
+   */
+  legs?: Array<RouteLeg | null>;
+  /** `complete`: every leg computed, so `minutes`/`distance` use the real path (§11.79). */
+  walking?: "complete" | "partial" | "unavailable";
 }
 export type Role = "user" | "editor" | "moderator" | "admin";
 /** Points an approved memory earns and loses again when it is removed; the API's `memory.approved` ledger value. */
