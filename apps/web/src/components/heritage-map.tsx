@@ -6,6 +6,7 @@ import { colors } from "@akar/design-tokens";
 import {
   CITY_MARKER_MAX_ZOOM,
   type CityRecord,
+  type HeritageRoute,
   type HeritageSite,
   type MapSettings,
 } from "@akar/domain";
@@ -32,6 +33,7 @@ import {
 } from "../lib/map-pins";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { nearestCity, type LngLat } from "../lib/nearby";
+import { walkingLeg } from "../lib/route-walking";
 import { useCities, useCityScenes } from "./city-scenes";
 import { MapControls } from "./map-controls";
 import { useI18n, type I18n } from "./i18n";
@@ -131,6 +133,7 @@ export function HeritageMap({
   onOpen,
   onClear,
   routeIds,
+  walkingRoute,
   buildingRoute = false,
   collapsed,
   mapSettings,
@@ -159,6 +162,8 @@ export function HeritageMap({
   /** A tap on the map itself, away from any site. */
   onClear?: () => void;
   routeIds: string[];
+  /** Curated route whose stored walking legs replace the straight line between its stops (§11.79). */
+  walkingRoute?: HeritageRoute | undefined;
   buildingRoute?: boolean;
   collapsed: boolean;
   /** Without settings the map draws no models (the route preview in the panel). */
@@ -551,34 +556,47 @@ export function HeritageMap({
     const m = map.current;
     if (!loaded || !m) return;
     let cancelled = false;
-    const coordinates = routeIds
-      .map((id) => sites.find((s) => s.id === id)?.coordinates)
-      .filter((x): x is [number, number] => !!x);
-    const data: GeoJSON.Feature<GeoJSON.LineString> = {
+    const stops = routeIds.flatMap((id) => {
+      const point = sites.find((s) => s.id === id)?.coordinates;
+      return point ? [{ id, point }] : [];
+    });
+    // Each pair of stops: the stored walking path (solid), else a straight schematic segment (dashed).
+    const walked: LngLat[][] = [],
+      schematic: LngLat[][] = [];
+    stops.slice(1).forEach((to, i) => {
+      const from = stops[i]!;
+      const leg = walkingLeg(walkingRoute, from.id, to.id);
+      if (leg) walked.push(leg.coordinates);
+      else schematic.push([from.point, to.point]);
+    });
+    const lines = (coordinates: LngLat[][]): GeoJSON.Feature<GeoJSON.MultiLineString> => ({
       type: "Feature",
       properties: {},
-      geometry: {
-        type: "LineString",
-        coordinates: coordinates.length > 1 ? coordinates : [],
-      },
-    };
-    const route = m.getSource<GeoJSONSource>("route");
-    if (route) route.setData(data);
-    else {
-      m.addSource("route", { type: "geojson", data });
-      m.addLayer({
-        id: "route",
-        type: "line",
-        source: "route",
-        minzoom: CITY_MARKER_MAX_ZOOM,
-        paint: {
-          "line-color": routeColour,
-          "line-width": 4,
-          "line-dasharray": [1.2, 1.2],
-        },
-      });
+      geometry: { type: "MultiLineString", coordinates },
+    });
+    for (const [id, data, dashed] of [
+      ["route", lines(schematic), true],
+      ["route-walk", lines(walked), false],
+    ] as const) {
+      const source = m.getSource<GeoJSONSource>(id);
+      if (source) source.setData(data);
+      else {
+        m.addSource(id, { type: "geojson", data });
+        m.addLayer({
+          id,
+          type: "line",
+          source: id,
+          minzoom: CITY_MARKER_MAX_ZOOM,
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": routeColour,
+            "line-width": 4,
+            ...(dashed && { "line-dasharray": [1.2, 1.2] }),
+          },
+        });
+      }
+      m.setPaintProperty(id, "line-color", routeColour);
     }
-    m.setPaintProperty("route", "line-color", routeColour);
     // The pins draw over the route line; without them the schematic view keeps discovery usable.
     syncPins(
       m,
@@ -597,7 +615,7 @@ export function HeritageMap({
     return () => {
       cancelled = true;
     };
-  }, [sites, selectedId, highlightId, routeIds, loaded, finishedIds, routeColour, lang, buildingRoute]);
+  }, [sites, selectedId, highlightId, routeIds, walkingRoute, loaded, finishedIds, routeColour, lang, buildingRoute]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);

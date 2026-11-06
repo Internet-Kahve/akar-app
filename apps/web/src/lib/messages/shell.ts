@@ -343,6 +343,10 @@ export const tr = {
   "route.defaultDescription": "Seçtiğin eserleri sırayla keşfet. Her durak yeni bir hikâye.",
   "route.emptyNotice": "Başlamak için bir eser aç ve “Rotama ekle”yi seç.",
   "route.schematic": "Durakları birleştiren çizgi şematiktir; yürüyüş yol tarifi değildir.",
+  "route.legWalk": "~{minutes} dk yürüme · {distance}",
+  "route.legSchematic": "Şematik bağlantı; yürüme yolu hesaplanamadı",
+  "route.openInMaps": "Haritada aç",
+  "route.openInApple": "Apple Haritalar",
   "route.again": "Rotayı yeniden keşfet",
   "route.start": "Rotayı başlat",
   // Memory actions
@@ -885,6 +889,10 @@ export const en = {
   "route.defaultDescription": "Explore the sites you picked one by one. Every stop is a new story.",
   "route.emptyNotice": "To start, open a site and choose “Add to my route”.",
   "route.schematic": "The line joining the stops is schematic; it is not walking directions.",
+  "route.legWalk": "~{minutes} min walk · {distance}",
+  "route.legSchematic": "Schematic link; no walking path could be computed",
+  "route.openInMaps": "Open in Maps",
+  "route.openInApple": "Apple Maps",
   "route.again": "Explore the route again",
   "route.start": "Start the route",
   // Memory actions

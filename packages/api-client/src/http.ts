@@ -14,6 +14,7 @@ import {
   type StoryFlow,
   type Command,
   type HeritageRoute,
+  type RouteLeg,
   type CityRecord,
   type PersonalRoute,
   type HeritageSite,
@@ -381,7 +382,8 @@ interface RouteDto {
   minutes: number;
   distance: string;
   theme: string;
-  stops: Array<{ site: SiteSummaryDto; quizId: string | null }>;
+  stops: Array<{ site: SiteSummaryDto; quizId: string | null; leg?: RouteLeg | null }>;
+  walking?: { status: "complete" | "partial" | "unavailable" };
 }
 /** `AdminRoute`: drafts included; stops may name draft sites. */
 interface AdminRouteDto {
@@ -809,6 +811,10 @@ const mapRoute = (r: RouteDto): HeritageRoute => ({
   name: r.name,
   description: r.description,
   siteIds: r.stops.map((s) => s.site.id),
+  ...(r.walking && {
+    walking: r.walking.status,
+    legs: r.stops.slice(0, -1).map((s) => s.leg ?? null),
+  }),
   minutes: r.minutes,
   distance: r.distance,
   theme: r.theme,

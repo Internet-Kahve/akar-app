@@ -106,6 +106,7 @@ import {
 } from "../lib/bottom-sheet";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
+import { walkingLeg } from "../lib/route-walking";
 import { cityCase } from "../lib/place-names";
 import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
 import type { MessageKey } from "../lib/messages";
@@ -1639,7 +1640,7 @@ export function AkarApp() {
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
-                        nextStop={nextStop} onNextStop={selectSite} />
+                        nextStop={nextStop} nextLeg={nextStop && walkingLeg(route, site.id, nextStop.id)} onNextStop={selectSite} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1864,6 +1865,7 @@ export function AkarApp() {
                       routeIds={
                         routeDraft?.siteIds ?? (routeId ? routeSites.map((s) => s.id) : state.routeIds)
                       }
+                      walkingRoute={routeDraft ? undefined : route}
                       collapsed={collapsed}
                       mapSettings={mapSettings}
                       focusCity={
