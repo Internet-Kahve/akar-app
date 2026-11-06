@@ -3,17 +3,23 @@ import type { FastifyPluginAsync } from "fastify";
 import type { AppDeps } from "../app.ts";
 import { AppError } from "../errors.ts";
 import { drainMediaDeletions, expireUploads, sweepUnattachedPhotos } from "../modules/media/service.ts";
+import { fillWalkingLegs } from "../modules/routes/walking.ts";
 import { purgeIdempotencyKeys } from "./idempotency.ts";
 import type { DurableJobQueue } from "./jobs.ts";
+import type { WalkingRouter } from "./routing.ts";
 
-export async function runMaintenance(deps: Pick<AppDeps, "db" | "storage">, jobs: DurableJobQueue) {
+export async function runMaintenance(
+  deps: Pick<AppDeps, "db" | "storage"> & { walking: { router: WalkingRouter; dailyLimit: number } | null },
+  jobs: DurableJobQueue,
+) {
   const processed = await jobs.drain({ limit: 5, budgetMs: 120_000 });
   const { db, storage } = deps;
   const expired = storage ? await expireUploads({ db, storage }, { limit: 10 }) : 0;
   const unattached = storage ? await sweepUnattachedPhotos({ db, storage }, { limit: 10 }) : 0;
   const deleted = storage ? await drainMediaDeletions({ db, storage }, { limit: 10 }) : null;
   const purged = await purgeIdempotencyKeys(db);
-  return { processed, expired, unattached, deleted, purged };
+  const walking = deps.walking ? await fillWalkingLegs({ db, ...deps.walking }) : null;
+  return { processed, expired, unattached, deleted, purged, walking };
 }
 
 const digest = (value: string) => createHash("sha256").update(value).digest();

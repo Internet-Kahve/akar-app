@@ -2392,8 +2392,23 @@ button.model-label { border: 0; color: inherit; cursor: default; }
 .detail-panel .ky:hover .bugun {
   opacity: 1;
 }
-.detail-panel .detail-next-stop {
+.detail-panel .detail-next {
   margin-top: 16px;
+}
+.detail-next-leg {
+  margin: 8px 0 0;
+  font: 500 13px/18px var(--font);
+}
+.detail-next-maps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.detail-next-maps .btn {
+  flex: 1 1 auto;
+  justify-content: center;
+  text-decoration: none;
 }
 .detail-panel .detail-task-ring.bitti {
   color: var(--verified);
@@ -2798,6 +2813,7 @@ button.model-label { border: 0; color: inherit; cursor: default; }
 .route-stop-list small { font-size: 14px; margin: 0; }
 .route-stop-list button > svg { display: none; }
 .route-stop-list button:not(:last-child)::after { content: ""; position: absolute; left: 14px; top: 36px; width: 1px; height: 24px; background: var(--text-muted); opacity: .6; }
+.route-stop-list .route-leg { display: flex; align-items: center; gap: 6px; margin: 0 0 4px 44px; font-size: 12px; line-height: 16px; }
 .route-stop-list:not(:empty) + .notice { display: none; }
 .route-page > .btn svg { display: none; }
 /* Puzzle screen, as the prototype (app.css «görevler»; buzlu tema) */
@@ -3783,7 +3799,7 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .workspace.on-site .detail-panel .tam-kart { margin-top: 14px; padding: 10px 14px; }
   .workspace.on-site .detail-panel .tk-yazi b { font-size: 20px; line-height: 24px; }
   .workspace.on-site .detail-panel .tk-ok { width: 38px; height: 38px; }
-  .detail-panel .detail-next-stop { order: 2; }
+  .detail-panel .detail-next { order: 2; }
   .detail-panel .kesif-bas { order: 3; }
   .detail-panel .kesif-yollari { order: 4; }
   .detail-panel .detail-meta-end { order: 5; display: block; margin-top: 14px; color: var(--text-muted); font: 500 14px/20px var(--font); }

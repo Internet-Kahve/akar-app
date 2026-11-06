@@ -5616,16 +5616,63 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991,
-                            "description": "Hesaplanır: yürüme (4,5 km/sa) + durakların anlatım süresi"
+                            "description": "Hesaplanır: yürüme + durakların anlatım süresi; yürüme walking.status complete iken gerçek yoldan, yoksa düz çizgiden (4,5 km/sa)"
                           },
                           "distance": {
                             "type": "string",
-                            "description": "Hesaplanır: yayındaki durak zincirinin uzunluğu, örn. 1,2 km"
+                            "description": "Hesaplanır, örn. 1,2 km; walking.status complete iken gerçek yürüme yolu, yoksa durak zincirinin düz uzunluğu"
                           },
                           "distanceMeters": {
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "walking": {
+                            "type": "object",
+                            "properties": {
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "complete",
+                                  "partial",
+                                  "unavailable"
+                                ],
+                                "description": "complete: bütün bacaklar hesaplandı; partial: bir kısmı; unavailable: hiçbiri"
+                              },
+                              "meters": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Toplam yürüme mesafesi; yalnız complete iken"
+                              },
+                              "minutes": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Toplam yürüme süresi (anlatım hariç); yalnız complete iken"
+                              }
+                            },
+                            "required": [
+                              "status",
+                              "meters",
+                              "minutes"
+                            ],
+                            "additionalProperties": false,
+                            "description": "Kayıtlı yürüme yollarının durumu (§11.79)"
                           },
                           "theme": {
                             "type": "string"
@@ -5898,13 +5945,61 @@
                                     "string",
                                     "null"
                                   ]
+                                },
+                                "leg": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "coordinates": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                              {
+                                                "type": "number"
+                                              },
+                                              {
+                                                "type": "number"
+                                              }
+                                            ],
+                                            "items": false,
+                                            "minItems": 2,
+                                            "maxItems": 2
+                                          },
+                                          "description": "Yürüme yolu, [boylam, enlem] çiftleri (GeoJSON LineString sırası)"
+                                        },
+                                        "meters": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "seconds": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "maximum": 9007199254740991
+                                        }
+                                      },
+                                      "required": [
+                                        "coordinates",
+                                        "meters",
+                                        "seconds"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ],
+                                  "description": "Bir sonraki durağa yürüme yolu; son durakta ya da yol henüz hesaplanmadıysa null (o bacak şematik düz çizgidir)"
                                 }
                               },
                               "required": [
                                 "position",
                                 "site",
                                 "quizId",
-                                "historyImageId"
+                                "historyImageId",
+                                "leg"
                               ],
                               "additionalProperties": false
                             },
@@ -5920,6 +6015,7 @@
                           "minutes",
                           "distance",
                           "distanceMeters",
+                          "walking",
                           "theme",
                           "badge",
                           "stops"
@@ -6000,16 +6096,63 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991,
-                      "description": "Hesaplanır: yürüme (4,5 km/sa) + durakların anlatım süresi"
+                      "description": "Hesaplanır: yürüme + durakların anlatım süresi; yürüme walking.status complete iken gerçek yoldan, yoksa düz çizgiden (4,5 km/sa)"
                     },
                     "distance": {
                       "type": "string",
-                      "description": "Hesaplanır: yayındaki durak zincirinin uzunluğu, örn. 1,2 km"
+                      "description": "Hesaplanır, örn. 1,2 km; walking.status complete iken gerçek yürüme yolu, yoksa durak zincirinin düz uzunluğu"
                     },
                     "distanceMeters": {
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "walking": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "complete",
+                            "partial",
+                            "unavailable"
+                          ],
+                          "description": "complete: bütün bacaklar hesaplandı; partial: bir kısmı; unavailable: hiçbiri"
+                        },
+                        "meters": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "Toplam yürüme mesafesi; yalnız complete iken"
+                        },
+                        "minutes": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ],
+                          "description": "Toplam yürüme süresi (anlatım hariç); yalnız complete iken"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "meters",
+                        "minutes"
+                      ],
+                      "additionalProperties": false,
+                      "description": "Kayıtlı yürüme yollarının durumu (§11.79)"
                     },
                     "theme": {
                       "type": "string"
@@ -6282,13 +6425,61 @@
                               "string",
                               "null"
                             ]
+                          },
+                          "leg": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "coordinates": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "array",
+                                      "prefixItems": [
+                                        {
+                                          "type": "number"
+                                        },
+                                        {
+                                          "type": "number"
+                                        }
+                                      ],
+                                      "items": false,
+                                      "minItems": 2,
+                                      "maxItems": 2
+                                    },
+                                    "description": "Yürüme yolu, [boylam, enlem] çiftleri (GeoJSON LineString sırası)"
+                                  },
+                                  "meters": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "seconds": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  }
+                                },
+                                "required": [
+                                  "coordinates",
+                                  "meters",
+                                  "seconds"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Bir sonraki durağa yürüme yolu; son durakta ya da yol henüz hesaplanmadıysa null (o bacak şematik düz çizgidir)"
                           }
                         },
                         "required": [
                           "position",
                           "site",
                           "quizId",
-                          "historyImageId"
+                          "historyImageId",
+                          "leg"
                         ],
                         "additionalProperties": false
                       },
@@ -6304,6 +6495,7 @@
                     "minutes",
                     "distance",
                     "distanceMeters",
+                    "walking",
                     "theme",
                     "badge",
                     "stops"
@@ -6380,16 +6572,63 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991,
-                          "description": "Hesaplanır: yürüme (4,5 km/sa) + durakların anlatım süresi"
+                          "description": "Hesaplanır: yürüme + durakların anlatım süresi; yürüme walking.status complete iken gerçek yoldan, yoksa düz çizgiden (4,5 km/sa)"
                         },
                         "distance": {
                           "type": "string",
-                          "description": "Hesaplanır: yayındaki durak zincirinin uzunluğu, örn. 1,2 km"
+                          "description": "Hesaplanır, örn. 1,2 km; walking.status complete iken gerçek yürüme yolu, yoksa durak zincirinin düz uzunluğu"
                         },
                         "distanceMeters": {
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "walking": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "complete",
+                                "partial",
+                                "unavailable"
+                              ],
+                              "description": "complete: bütün bacaklar hesaplandı; partial: bir kısmı; unavailable: hiçbiri"
+                            },
+                            "meters": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Toplam yürüme mesafesi; yalnız complete iken"
+                            },
+                            "minutes": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ],
+                              "description": "Toplam yürüme süresi (anlatım hariç); yalnız complete iken"
+                            }
+                          },
+                          "required": [
+                            "status",
+                            "meters",
+                            "minutes"
+                          ],
+                          "additionalProperties": false,
+                          "description": "Kayıtlı yürüme yollarının durumu (§11.79)"
                         },
                         "theme": {
                           "type": "string"
@@ -6662,13 +6901,61 @@
                                   "string",
                                   "null"
                                 ]
+                              },
+                              "leg": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "coordinates": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "array",
+                                          "prefixItems": [
+                                            {
+                                              "type": "number"
+                                            },
+                                            {
+                                              "type": "number"
+                                            }
+                                          ],
+                                          "items": false,
+                                          "minItems": 2,
+                                          "maxItems": 2
+                                        },
+                                        "description": "Yürüme yolu, [boylam, enlem] çiftleri (GeoJSON LineString sırası)"
+                                      },
+                                      "meters": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "seconds": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "coordinates",
+                                      "meters",
+                                      "seconds"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "description": "Bir sonraki durağa yürüme yolu; son durakta ya da yol henüz hesaplanmadıysa null (o bacak şematik düz çizgidir)"
                               }
                             },
                             "required": [
                               "position",
                               "site",
                               "quizId",
-                              "historyImageId"
+                              "historyImageId",
+                              "leg"
                             ],
                             "additionalProperties": false
                           },
@@ -6684,6 +6971,7 @@
                         "minutes",
                         "distance",
                         "distanceMeters",
+                        "walking",
                         "theme",
                         "badge",
                         "stops"

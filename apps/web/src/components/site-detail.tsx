@@ -9,11 +9,14 @@ import {
   Headphones,
   History,
   MessageCircle,
+  Navigation,
   Play,
   Puzzle,
 } from "lucide-react";
 import { sized } from "../lib/image-size";
-import type { HeritageSite } from "@akar/domain";
+import { useEffect, useState } from "react";
+import type { HeritageSite, RouteLeg } from "@akar/domain";
+import { appleWalkUrl, googleWalkUrl, isAppleMobile, legDistance, legMinutes } from "../lib/route-walking";
 import type { SiteProgress } from "@akar/api-client";
 import { readingMinutes, wordCount } from "../lib/about-reading";
 import { siteMeta } from "../lib/site-meta";
@@ -49,6 +52,7 @@ export function SiteDetail({
   onMemories,
   onPuzzle,
   nextStop,
+  nextLeg,
   onNextStop,
 }: {
   site: HeritageSite;
@@ -64,10 +68,15 @@ export function SiteDetail({
   onMemories: () => void;
   onPuzzle: () => void;
   /** On a route: the stop after this one (the prototype's «Sonraki durak»). */
-  nextStop?: HeritageSite;
+  nextStop?: HeritageSite | undefined;
+  /** Stored walking path to `nextStop`; `null`/absent = schematic (§11.79). */
+  nextLeg?: RouteLeg | null | undefined;
   onNextStop?: (id: string) => void;
 }) {
   const { t } = useI18n();
+  // Apple Maps is offered on iPhone/iPad only; read after mount so server and client render alike.
+  const [apple, setApple] = useState(false);
+  useEffect(() => setApple(isAppleMobile()), []);
   const cover =
     [...(site.storyPhotos ?? []), ...(site.photos ?? [])].find(
       (p) => p.id === site.coverPhotoId,
@@ -281,13 +290,31 @@ export function SiteDetail({
         </button>
       </nav>
       {nextStop && onNextStop && (
-        <button
-          className="btn secondary full detail-next-stop"
-          onClick={() => onNextStop(nextStop.id)}
-        >
-          {t("completion.nextStop", { name: nextStop.name })}
-          <ArrowRight size={16} />
-        </button>
+        <div className="detail-next">
+          <button
+            className="btn secondary full detail-next-stop"
+            onClick={() => onNextStop(nextStop.id)}
+          >
+            {t("completion.nextStop", { name: nextStop.name })}
+            <ArrowRight size={16} />
+          </button>
+          <p className="muted detail-next-leg">
+            {nextLeg
+              ? t("route.legWalk", { minutes: legMinutes(nextLeg), distance: legDistance(nextLeg) })
+              : t("route.legSchematic")}
+          </p>
+          <div className="detail-next-maps">
+            <a className="btn secondary" href={googleWalkUrl(nextStop.coordinates)} target="_blank" rel="noopener noreferrer">
+              <Navigation size={16} />
+              {t("route.openInMaps")}
+            </a>
+            {apple && (
+              <a className="btn secondary" href={appleWalkUrl(nextStop.coordinates)} target="_blank" rel="noopener noreferrer">
+                {t("route.openInApple")}
+              </a>
+            )}
+          </div>
+        </div>
       )}
     </>
   );

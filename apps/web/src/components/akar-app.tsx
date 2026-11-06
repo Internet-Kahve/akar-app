@@ -107,6 +107,7 @@ import {
 } from "../lib/bottom-sheet";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
+import { walkingLeg } from "../lib/route-walking";
 import { cityCase } from "../lib/place-names";
 import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
 import type { MessageKey } from "../lib/messages";
@@ -177,7 +178,7 @@ export function AkarApp() {
     [nearPoint, setNearPoint] = useState<[number, number] | null>(null),
     [peekId, setPeekId] = useState<string>(),
     // The route being walked (6 Nov 2026): its stops and the one the visitor is at. The map goes stop to stop.
-    [walk, setWalk] = useState<{ ids: string[]; at: number } | null>(null),
+    [walk, setWalk] = useState<{ ids: string[]; at: number; routeId?: string | undefined } | null>(null),
     walkPeek = useRef<string | undefined>(undefined),
     [hoverId, setHoverId] = useState<string>(),
     [cityInView, setCityInView] = useState<CityRecord | null>(null),
@@ -773,6 +774,8 @@ export function AkarApp() {
     const i = walk.ids.indexOf(here);
     if (i >= 0 && i !== walk.at) setWalk({ ...walk, at: i });
   }, [peekId, siteId, view, walk]);
+  // The walked route's own record (its walking path and legs), once the route panel has closed.
+  const walkRoute = walk?.routeId ? routes.find((r) => r.id === walk.routeId) : undefined;
   const walkIndex = walk ? walk.ids.indexOf(siteId) : -1;
   const nextStop = walk
     ? walkIndex >= 0
@@ -1667,7 +1670,7 @@ export function AkarApp() {
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
-                        nextStop={nextStop} onNextStop={goNextStop} />
+                        nextStop={nextStop} nextLeg={nextStop && walkingLeg(route ?? walkRoute, site.id, nextStop.id)} onNextStop={goNextStop} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1698,7 +1701,7 @@ export function AkarApp() {
                             // Not straight into the site (6 Nov 2026): the map flies to the first stop not yet seen,
                             // its card opens, and a strip says the route is on; the visitor starts the story.
                             const first = Math.max(0, ids.findIndex((id) => !state.visitedIds.includes(id)));
-                            setWalk({ ids, at: first });
+                            setWalk({ ids, at: first, routeId });
                             setRouteId(undefined);
                             setTab("sites");
                             // A route found by its name leaves no search behind: the map shows every stop's pin.
@@ -1911,6 +1914,7 @@ export function AkarApp() {
                       routeIds={
                         routeDraft?.siteIds ?? (routeId ? routeSites.map((s) => s.id) : state.routeIds)
                       }
+                      walkingRoute={routeDraft ? undefined : (route ?? walkRoute)}
                       collapsed={collapsed}
                       mapSettings={mapSettings}
                       focusCity={
