@@ -429,6 +429,7 @@ export function Scene({
           <ModelStage
             key={site.model.src}
             model={site.model}
+            kind={site.kind}
             name={text(site.name, site.nameEn)}
             scene={cityScene}
             identity={identity}

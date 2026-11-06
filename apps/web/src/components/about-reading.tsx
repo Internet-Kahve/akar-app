@@ -759,6 +759,7 @@ function Reading({
                 <ModelStage
                   key={site.model.src}
                   model={site.model}
+                  kind={site.kind}
                   name={i18n.text(site.name, site.nameEn)}
                   scene={cityScene}
                   identity={identity}

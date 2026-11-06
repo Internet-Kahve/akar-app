@@ -183,6 +183,7 @@ export function AdminModelPreview({
       <ModelStage
         {...(phoneCard && { frame: storyCardFrame(false, 1, PHONE_PREVIEW.screenHeight) })}
         model={model}
+        kind={site.kind}
         name={site.name}
         scene={sceneOf(site, scenes)}
         identity={identity}

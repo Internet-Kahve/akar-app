@@ -17,6 +17,7 @@ import { kvkkConsent } from "../lib/kvkk";
 import { photoWithoutMetadata } from "../lib/strip-photo";
 import { Modal, Notice, Tag, UploadProgress } from "./ui";
 import { LegalDialog } from "./legal-dialog";
+import { TileLoader, WaitWords } from "./loading-screens";
 import { Localized, useI18n } from "./i18n";
 export function MemoryModal({
   site,
@@ -182,6 +183,13 @@ export function MemoryModal({
             {t("kvkk.checkbox")}
           </label>
           <UploadProgress />
+          {/* While it goes: the tiles turning and a line from the scribe's desk (6 Nov 2026). */}
+          {busy && (
+            <div className="saving-tiles" role="status" aria-label={t("memory.saving")}>
+              <TileLoader />
+              <WaitWords group="save" />
+            </div>
+          )}
           {error && (
             <p role="alert" className="error">
               {error}
