@@ -1654,13 +1654,6 @@ export function AkarApp() {
                   <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />
                 ) : (
                   <div className="discovery-panel">
-                    {/* The visitor's own routes; an empty one (no stops yet) says nothing worth a line. */}
-                    {showRoutes && !routeId && personalRoutes.some((p) => p.siteIds.length) && <section className="personal-route-list" aria-label={t("route.mine")}>
-                      <h3>{t("route.mine")}</h3>
-                      {personalRoutes.filter((p) => p.siteIds.length).map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
-                        setRouteDraft({ ...personal, siteIds: [...personal.siteIds] }); setRouteSite(undefined); setTab("sites"); setRouteId(undefined);
-                      }}>{personal.name} · {personal.siteIds.length}</button>)}
-                    </section>}
                     {routeId && showRoutes ? (
                       <RoutePreview
                         route={route}
@@ -1712,6 +1705,15 @@ export function AkarApp() {
                           setQuery("");
                           setTab("routes");
                           setRouteId(id);
+                        }}
+                        personalRoutes={showRoutes ? personalRoutes : []}
+                        onOpenPersonal={(id) => {
+                          const personal = personalRoutes.find((p) => p.id === id);
+                          if (!personal) return;
+                          setRouteDraft({ ...personal, siteIds: [...personal.siteIds] });
+                          setRouteSite(undefined);
+                          setTab("sites");
+                          setRouteId(undefined);
                         }}
                         onCustomRoute={() => void openRouteBuilder()}
                         onCities={() =>

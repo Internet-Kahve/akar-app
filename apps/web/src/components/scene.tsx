@@ -372,6 +372,12 @@ export function Scene({
     if (kept === "photo" || kept === "model") return kept;
     return typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? "photo" : "model";
   });
+  const [labelOpen, setLabelOpen] = useState(false);
+  useEffect(() => {
+    if (!labelOpen) return;
+    const timer = setTimeout(() => setLabelOpen(false), 3500);
+    return () => clearTimeout(timer);
+  }, [labelOpen]);
   const setMode = (next: "photo" | "model") => {
     writePreference("akar.gorunum", next);
     setModeState(next);
@@ -454,11 +460,18 @@ export function Scene({
             siteId={site.id}
             onPhotos={photos.length ? () => setMode("photo") : undefined}
           />
-          <div className="model-label">
+          {/* On a phone only the (i), its words at a tap (Muhammed, 6 Nov 2026: «çok yer kaplıyor mobilde»). */}
+          <button
+            type="button"
+            className={`model-label${labelOpen ? " open" : ""}`}
+            aria-label={t("site.modelLabel")}
+            aria-expanded={labelOpen}
+            onClick={() => setLabelOpen((open) => !open)}
+          >
             <i />
-            {t("site.modelLabel")}
+            <span>{t("site.modelLabel")}</span>
             <Info size={13} />
-          </div>
+          </button>
           <div className="model-hint">
             <Move size={14} />
             {t("site.modelHint", {

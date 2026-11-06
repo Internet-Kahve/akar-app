@@ -1870,6 +1870,7 @@ h1,
   font-size: 12px;
   font-weight: 600;
 }
+button.model-label { border: 0; color: inherit; cursor: default; }
 .model-label i {
   width: 7px;
   height: 7px;
@@ -3557,7 +3558,23 @@ dialog.parca-kart-arka::backdrop { background: transparent; }
   .rb-foot { padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
 }
 
-.personal-route-list { display: grid; gap: 8px; margin-bottom: 16px; }
+/* The visitor's own routes (6 Nov 2026): the city's route cards, marked as theirs with a gold edge and «Rotam». */
+.route-cards.mine { margin-bottom: 18px; }
+.route-mine-heading { margin: 0 0 8px; font: 600 15px/20px var(--font); color: var(--text); }
+.route-card.mine { border-color: color-mix(in srgb, var(--gold) 55%, var(--border)); box-shadow: inset 4px 0 0 var(--gold); }
+.route-mine-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  color: color-mix(in srgb, var(--gold) 70%, var(--text));
+  font: 600 11px/16px var(--font);
+  font-style: normal;
+}
 /* The reading page's figures on a wide screen: as many to a row as fit (prototype `.hk-d .hk-rakamlar`), so three stand side by side. */
 @media (min-width: 900px) {
   .about-page .about-figures { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
@@ -4739,4 +4756,15 @@ body:has(.gg) { overflow-x: clip; }
 /* Phone (4 Nov 2026): the topbar keeps the language and the night switch; «Aa» (contrast, text size) lives in the profile's settings. */
 @media (max-width: 899.98px) {
   .topbar .access-menu { display: none; }
+}
+
+/* A phone shows only the 3D label's (i); a tap opens «3D model · Temsili» for a moment (6 Nov 2026). */
+@media (max-width: 899.98px) {
+  button.model-label { cursor: pointer; }
+  .scene .model-label:not(.open),
+  .detail-scene .model-label:not(.open) { width: 30px; height: 30px; padding: 0; justify-content: center; gap: 0; border-radius: 50%; }
+  .scene .model-label:not(.open) :is(i, span),
+  .detail-scene .model-label:not(.open) :is(i, span) { display: none; }
+  .scene .model-label:not(.open) svg,
+  .detail-scene .model-label:not(.open) svg { width: 16px; height: 16px; }
 }

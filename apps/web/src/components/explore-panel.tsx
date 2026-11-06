@@ -10,6 +10,7 @@ import {
   Footprints,
   Plus,
   Route,
+  UserRound,
   X,
 } from "lucide-react";
 import {
@@ -17,6 +18,7 @@ import {
   normalize,
   type HeritageRoute,
   type HeritageSite,
+  type PersonalRoute,
   type SiteCategory,
 } from "@akar/domain";
 import { cityCase } from "../lib/place-names";
@@ -199,6 +201,8 @@ export function ExplorePanel({
   onOpenRoute,
   onOpen,
   onCustomRoute,
+  personalRoutes = [],
+  onOpenPersonal,
   onCities,
   onClearFilters,
   categories,
@@ -227,6 +231,9 @@ export function ExplorePanel({
   /** Straight to a site's page from the list; left out while a route is being built. */
   onOpen?: (id: string) => void;
   onCustomRoute: () => void;
+  /** The visitor's own routes with stops: cards like the city's routes, marked as theirs (6 Nov 2026). */
+  personalRoutes?: PersonalRoute[];
+  onOpenPersonal?: (id: string) => void;
   onCities: () => void;
   onClearFilters: () => void;
   /** The kinds of site in this list, with how many of each, whatever is chosen now. */
@@ -277,6 +284,32 @@ export function ExplorePanel({
             </button>
             <h2>{heading("routes")}</h2>
           </div>
+          {personalRoutes.some((p) => p.siteIds.length) && (
+            <section className="route-cards mine" aria-label={t("route.mine")}>
+              <h3 className="route-mine-heading">{t("route.mine")}</h3>
+              {personalRoutes
+                .filter((p) => p.siteIds.length)
+                .map((p) => (
+                  <button className="route-card mine" key={p.id} onClick={() => onOpenPersonal?.(p.id)}>
+                    <span className="route-card-text">
+                      <strong>{p.name}</strong>
+                      <small>{t("explore.myRouteLine", { count: p.siteIds.length })}</small>
+                      <em className="route-mine-tag">
+                        <UserRound size={12} aria-hidden="true" />
+                        {t("explore.myRouteTag")}
+                      </em>
+                    </span>
+                    <span className="route-card-stops" aria-hidden="true">
+                      {p.siteIds.slice(0, 4).map((id) => (
+                        <SiteArtwork key={id} site={allSites.find((s) => s.id === id)} live={live} />
+                      ))}
+                    </span>
+                    <ChevronRight size={18} className="route-card-go" />
+                  </button>
+                ))}
+            </section>
+          )}
+          {personalRoutes.some((p) => p.siteIds.length) && <h3 className="route-mine-heading">{t("route.suggested")}</h3>}
           <div className="route-cards">
             {shown.map((r) => {
               const stops = r.siteIds.filter((id) =>
@@ -451,7 +484,7 @@ export function RoutePreview({
       <Back onClick={onBack}>{t("route.all")}</Back>
       <div className="route-cover">
         <SiteArtwork site={sites[0]} live={live} />
-        <Tag>{custom ? t("route.tagCustom") : t("route.tagCurated")}</Tag>
+        {custom && <Tag>{t("route.tagCustom")}</Tag>}
       </div>
       <h1>{custom ? t("route.customTitle") : route && <Localized tr={route.name} en={route.nameEn} />}</h1>
       <p className="muted">

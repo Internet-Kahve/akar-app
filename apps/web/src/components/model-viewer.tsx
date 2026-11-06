@@ -65,6 +65,8 @@ const PICK_GLOW = 0.55;
 /** A phone's angle photograph: this share of the screen's height, above the lowered card and the ‹ ✕ › row. */
 const VIEW_PHOTO_PHONE_SHARE = 0.22;
 const VIEW_PHOTO_PHONE_FOOT = 116;
+/** The extra light «İçini göster» adds inside: a soft sun from above and a warm sky light. */
+const INSIDE_LIGHT = { day: { sun: 0, sky: 0.25 }, night: { sun: 0, sky: 0.2 } };
 /** One breath of a highlighted part: fade and light again. */
 const BREATH_MS = 1600;
 /** A press that moves less than this (px) and ends sooner (ms) is a tap, not a drag. */
@@ -521,7 +523,7 @@ export default function ModelViewer({
         }
         syncInterior();
         syncTrees();
-        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 0.8 : 1.2) : 0;
+        if (inner) inner.intensity = innerWanted() ? INSIDE_LIGHT[currentTheme()].sun : 0;
         if (shadowsStale) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
@@ -792,16 +794,27 @@ export default function ModelViewer({
             // and stands in front of what is in the way. A camera sent inside looks inside, not at the back of a wall.
             if (part && looksForFreeView(next, CLOSE_POSE)) {
               free = -1;
-              search: for (const up of [0, 12, 26])
+              // The pose's own height first, round the part; higher only when no side at that height has room enough.
+              // On a phone the camera stands farther back (a narrower frame), so piers are in the way more often: the
+              // widest view overall used to win, which was from high above (Muhammed, 6 Nov 2026: Ulucami's pool «yukarıdan»).
+              search: for (const up of [0, 12, 26]) {
+                let best = -1;
+                let bestWay = way;
                 for (const turn of [0, 45, -45, 90, -90, 135, -135, 180]) {
                   const candidate = wayAt(az + THREE.MathUtils.degToRad(turn), Math.min(THREE.MathUtils.degToRad(70), el + THREE.MathUtils.degToRad(up)));
                   const room = clearDistance(goal, candidate, d, part);
-                  if (room > free) {
-                    free = room;
-                    way = candidate;
+                  if (room > best) {
+                    best = room;
+                    bestWay = candidate;
                   }
-                  if (room >= d * 0.7) break search;
+                  if (room >= d * 0.7) break;
                 }
+                if (best > free) {
+                  free = best;
+                  way = bestWay;
+                }
+                if (free >= d * 0.4) break search;
+              }
             }
             const to = goal.clone().addScaledVector(way, free);
             cancelAnimationFrame(frame);
@@ -1150,7 +1163,7 @@ export default function ModelViewer({
           scene.add(lit);
           innerWanted = () => {
             const on = coverWanted() || !!coverOpen?.();
-            lit.intensity = on ? (currentTheme() === "night" ? 0.45 : 0.7) : 0;
+            lit.intensity = on ? INSIDE_LIGHT[currentTheme()].sky : 0;
             return on;
           };
           // Only a tree between the camera and what it looks at stands aside (5 Nov 2026: «içini göster deyince etraftaki

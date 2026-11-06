@@ -22,6 +22,9 @@ export const tr = {
   "route.saved": "Rota kaydedildi",
   "route.failed": "Rota kaydedilemedi. Yeniden dene.",
   "route.mine": "Rotalarım",
+  "explore.myRouteLine": "{count} durak",
+  "explore.myRouteTag": "Rotam",
+  "route.suggested": "Önerilen rotalar",
 
   "site.todayExists": "Bugünkü hali var",
   "site.todayMissing": "Bu açının bugünkü hali yok",
@@ -438,6 +441,9 @@ export const en = {
   "route.saved": "Route saved",
   "route.failed": "Could not save the route. Try again.",
   "route.mine": "My routes",
+  "explore.myRouteLine": "{count} stops",
+  "explore.myRouteTag": "My route",
+  "route.suggested": "Suggested routes",
 
   "site.todayExists": "A present-day view is available",
   "site.todayMissing": "This angle has no present-day photo",

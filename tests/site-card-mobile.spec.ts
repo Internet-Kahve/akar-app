@@ -85,6 +85,12 @@ test("«3D model · Temsili» and «İçini göster» ride on the card's top edg
   // It moved up with the card and kept its distance.
   expect((await label.boundingBox())!.y).toBeLessThan(closedTop - 200);
   expect(Math.abs((await gap()) - closedGap)).toBeLessThanOrEqual(2);
+  // Only the (i) on a phone (6 Nov 2026); a tap shows the words, read out from the start.
+  await expect(label).toHaveAccessibleName("3D model · Temsili");
+  await expect(label.locator("span")).toBeHidden();
+  expect((await label.boundingBox())!.width).toBeLessThanOrEqual(32);
+  await label.click();
+  await expect(label.locator("span")).toBeVisible();
 });
 
 test("scrolling the closed card's content raises it a little, enough to scroll, not all the way", async ({ page }) => {
