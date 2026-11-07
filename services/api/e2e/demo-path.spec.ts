@@ -96,8 +96,26 @@ async function openProfile(page: Page) {
   await expect(page.getByRole("heading", { name: "Mirasım", level: 1 })).toBeVisible();
 }
 
-async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+// These paths are not about the hints: a hint shown on a slow machine takes the next touch to put itself away (6 Nov
+// 2026, `coach-tip.tsx`), so every hint counts as already seen here. The hints have their own tests (`tests/`).
+const SEEN_HINTS = () => {
+  const getItem = Storage.prototype.getItem;
+  Storage.prototype.getItem = function (key: string) {
+    return key.startsWith("akar.ipucu.") ? "1" : getItem.call(this, key);
+  };
+};
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(SEEN_HINTS);
+});
+
+async function newContext(browser: Browser, options?: BrowserContextOptions) {
   const context = await browser.newContext(options);
+  await context.addInitScript(SEEN_HINTS);
+  return context;
+}
+
+async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+  const context = await newContext(browser, options);
   const page = await context.newPage();
   await page.goto("/#view=map");
   return { context, page };
@@ -567,7 +585,7 @@ test("the site language follows the account: an empty account takes the device's
 });
 
 test("a guest's visit is counted when the page is hidden and an admin reads it under «İstatistikler»", async ({ browser, page }) => {
-  const context = await browser.newContext();
+  const context = await newContext(browser);
   const guest = await context.newPage();
   // Every batch the page sends with its status; the 10 s timer may send one before the page hides.
   // (A keepalive response body cannot be read here; the panel below shows what the server counted.)
