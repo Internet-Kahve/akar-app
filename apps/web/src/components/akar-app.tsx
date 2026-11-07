@@ -691,6 +691,8 @@ export function AkarApp() {
       start: (siteId, input) => api().startModelGenJob(siteId, input),
       list: (siteId) => api().listModelGenJobs(siteId),
       get: (id) => api().getModelGenJob(id),
+      pack: (siteId, version) => api().startModelGenPackage(siteId, version),
+      getPack: (id) => api().getModelGenPackage(id),
     };
   }, []);
   /** Admin panel: the saved values become this tab's map settings at once. */

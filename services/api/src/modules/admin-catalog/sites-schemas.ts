@@ -205,6 +205,12 @@ export const NightModelBody = z.object({
 });
 export type NightModelInput = z.infer<typeof NightModelBody>;
 
+export const MapBakedBody = z.object({
+  mediaId: Id.nullable().describe("kind=model medya: gündüz modelinden pişirilmiş harita dosyası; null = yok"),
+  nightMediaId: Id.nullable().describe("kind=model medya: gece modelinden pişirilmiş harita dosyası; null = yok"),
+});
+export type MapBakedInput = z.infer<typeof MapBakedBody>;
+
 export const PhotoCameraInput = CameraPoseInput.extend({
   interior: z.boolean().optional().describe("true = bu açıda model açılır, içeriden çekilmiş fotoğraf"),
 });

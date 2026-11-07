@@ -91,6 +91,7 @@ import type {
   LocationInput,
   MapPlacementInput,
   ModelInput,
+  MapBakedInput,
   NightModelInput,
   PartCardsInput,
   AboutInput,
@@ -1254,6 +1255,38 @@ export function setNightModel(tx: Tx, ctx: AuditCtx, id: string, input: NightMod
       }
       errors.throwIfAny();
       return { nightModelMediaId: input.mediaId, ...(input.mediaId !== before.site.nightModelMediaId && { mapBakedNightMediaId: null }) };
+    },
+  );
+}
+
+/**
+ * The map's baked files (light baked into the texture, shown unlit when zoomed out), each baked from the linked day or
+ * night model. Replaced together; a model change clears the one baked from it (`setModel`, `setNightModel`).
+ */
+export function setMapBaked(tx: Tx, ctx: AuditCtx, id: string, input: MapBakedInput): Promise<AdminSiteDetail> {
+  return mutate(
+    tx,
+    ctx,
+    id,
+    (a) => ({ mapBakedMediaId: a.site.mapBakedMediaId, mapBakedNightMediaId: a.site.mapBakedNightMediaId }),
+    async (before) => {
+      const errors = new FieldErrors();
+      const day = modelOf(before)?.id ?? null, night = before.site.nightModelMediaId;
+      const ids = [input.mediaId, input.nightMediaId].filter((m): m is string => m !== null);
+      const kinds = await mediaKindsOf(tx, ids);
+      for (const [field, mediaId, source, missing] of [
+        ["mediaId", input.mediaId, day, "Pişmiş harita dosyası için önce gündüz modelini bağla."],
+        ["nightMediaId", input.nightMediaId, night, "Gece pişmiş harita dosyası için önce gece modelini bağla."],
+      ] as const) {
+        if (mediaId === null) continue;
+        if (!source) errors.add(field, missing);
+        else if (mediaId === day || mediaId === night) errors.add(field, "Pişmiş harita dosyası modelden ayrı bir dosya olmalı.");
+        checkMedia(errors, field, mediaId, kinds, "model");
+      }
+      if (input.mediaId !== null && input.mediaId === input.nightMediaId)
+        errors.add("nightMediaId", "Gündüz ve gece pişmiş dosyaları ayrı olmalı.");
+      errors.throwIfAny();
+      return { mapBakedMediaId: input.mediaId, mapBakedNightMediaId: input.nightMediaId };
     },
   );
 }

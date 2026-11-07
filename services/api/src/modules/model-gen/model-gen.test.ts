@@ -82,6 +82,15 @@ async function startRunner(): Promise<void> {
         runner.jobs.set(id, job);
         return send(202, { ...job, input: "in.blend", exported: false });
       }
+      if (req.method === "POST" && req.url === "/packages") {
+        if (runner.busy) return send(409, { error: "busy", jobId: "r-busy" });
+        if (body.version !== "v21") return send(404, { error: "version not exported" });
+        runner.created.push(body);
+        const id = `00000000-0000-4000-8000-00000000000${runner.next++}`;
+        const job = { id, kind: "package", site: body.site, version: body.version, status: "running", startedAt: Date.parse("2026-11-06T10:00:00.000Z"), events: [{ t: 0, type: "start" }] };
+        runner.jobs.set(id, job);
+        return send(202, job);
+      }
       const m = /^\/jobs\/([^/]+)$/.exec(req.url ?? "");
       if (req.method === "GET" && m) {
         runner.reads++;
@@ -324,4 +333,33 @@ test("the history is newest first, per site, and pages by cursor", async () => {
   assert.equal(second.nextCursor, null);
   assert.equal((await list("?cursor=bozuk")).statusCode, 400);
   assert.equal((await list("", "yok")).statusCode, 404);
+});
+
+const pack = (payload: object, siteId = SITE) =>
+  app.inject({ method: "POST", url: `/v1/admin/sites/${siteId}/model-gen/packages`, payload, headers: admin });
+const packPoll = (id: string) => app.inject({ method: "GET", url: `/v1/admin/model-gen/packages/${id}`, headers: admin });
+
+test("a package job runs on the runner for the site and version; its four files come back by role with absolute links", async () => {
+  const res = await pack({ version: "v21" });
+  assert.equal(res.statusCode, 202, res.body);
+  const { id } = res.json<{ id: string }>();
+  assert.deepEqual(runner.created, [{ site: SITE, version: "v21" }]);
+  finish(id, {
+    events: [{ t: 0, type: "start" }, { t: 1, type: "step", name: "night" }, { t: 2, type: "step", name: "bake" }],
+    checks: [{ theme: "day", passed: true }, { theme: "night", passed: true }],
+    files: ["day", "night", "mapDay", "mapNight"].map((role) => ({ role, name: `${role}.glb`, bytes: 1, url: `/files/${role}.glb?sig=1` })),
+  });
+  const done = (await packPoll(id)).json<{ status: string; steps: string[]; files: { role: string; url: string }[] }>();
+  assert.equal(done.status, "succeeded");
+  assert.deepEqual(done.steps, ["night", "bake"]);
+  assert.deepEqual(done.files.map((f) => [f.role, f.url]), ["day", "night", "mapDay", "mapNight"].map((r) => [r, `${PUBLIC_URL}/files/${r}.glb?sig=1`]));
+});
+
+test("a version the runner has not exported is 404; a busy runner 409; an edit job is not readable as a package", async () => {
+  assert.equal((await pack({ version: "v99" })).json().error.code, "MODEL_GEN_VERSION_MISSING");
+  assert.equal((await pack({ version: "21" })).statusCode, 400);
+  runner.busy = true;
+  assert.equal((await pack({ version: "v21" })).statusCode, 409);
+  runner.jobs.set("00000000-0000-4000-8000-0000000000aa", { id: "00000000-0000-4000-8000-0000000000aa", status: "running" });
+  assert.equal((await packPoll("00000000-0000-4000-8000-0000000000aa")).statusCode, 404);
 });

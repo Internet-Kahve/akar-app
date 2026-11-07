@@ -39,7 +39,7 @@ import { AboutStep } from "./admin-site-about";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
 import { pinFollowingModel } from "../lib/placement";
 import { AdminModelPreview, poseSummary } from "./admin-model-preview";
-import { ModelGenPanel, type ModelGenApi } from "./admin-model-gen";
+import { ModelGenPanel, type ModelGenApi, type ModelGenPackageFiles } from "./admin-model-gen";
 import { prepareModel } from "../lib/editor-media";
 import { translationLabels } from "../lib/translation-labels";
 const steps = [
@@ -556,7 +556,7 @@ export function SiteEditor({
                   siteId={draft.id}
                   saved={sites.some((s) => s.id === draft.id)}
                   busy={busy}
-                  onUse={uploadModel}
+                  onUse={takePackage}
                 />
               )}
             </div>
@@ -1501,6 +1501,26 @@ export function SiteEditor({
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gece modeli okunamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  /** «3D üret» package: the day and night models and the map's baked files, together as a hand-made model has them. */
+  async function takePackage(files: ModelGenPackageFiles) {
+    setBusy(true);
+    setError("");
+    try {
+      const [day, night, mapDay, mapNight] = await Promise.all(
+        [files.day, files.night, files.mapDay, files.mapNight].map((f) => prepareModel(f)),
+      );
+      const { name, bytes, src, parts, triangles } = night!;
+      field("model", {
+        ...day!,
+        night: { name, bytes, src, parts, ...(triangles !== undefined && { triangles }) },
+        mapBaked: { day: mapDay!.src, night: mapNight!.src },
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Model okunamadı.");
     } finally {
       setBusy(false);
     }
