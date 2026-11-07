@@ -169,15 +169,6 @@ img {
 #main-content:focus {
   outline: none;
 }
-/* «Hareketi azalt» in the app's menu: nothing glides, as with the device's own setting. */
-:root[data-motion="reduced"] *,
-:root[data-motion="reduced"] *::before,
-:root[data-motion="reduced"] *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
-}
 .loading {
   padding: 100px;
   text-align: center;

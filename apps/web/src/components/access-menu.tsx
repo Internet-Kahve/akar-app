@@ -3,9 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { announce } from "../lib/announce";
 import {
   highContrast,
-  reducedMotionChosen,
   setContrast,
-  setReducedMotion,
   setTextSize,
   TEXT_SIZES,
   textSize,
@@ -19,12 +17,11 @@ const SIZE_LABEL: Record<TextSize, "access.sizeNormal" | "access.sizeLarge" | "a
   xlarge: "access.sizeXlarge",
 };
 
-/** High contrast, reduced motion and text size: in the header's menu and on the profile page. Each change is spoken. */
+/** High contrast and text size: in the header's menu and on the profile page. Each change is spoken. */
 export function AccessControls() {
   const { t } = useI18n();
   const [contrast, setOn] = useState(highContrast);
   const [size, setSize] = useState<TextSize>(textSize);
-  const [still, setStill] = useState(reducedMotionChosen);
   return (
     <div className="access-controls">
       <label>
@@ -36,18 +33,6 @@ export function AccessControls() {
             setOn(e.target.checked);
             setContrast(e.target.checked);
             announce(t(e.target.checked ? "access.contrastOn" : "access.contrastOff"));
-          }}
-        />
-      </label>
-      <label>
-        {t("access.motion")}
-        <input
-          type="checkbox"
-          checked={still}
-          onChange={(e) => {
-            setStill(e.target.checked);
-            setReducedMotion(e.target.checked);
-            announce(t(e.target.checked ? "access.motionOn" : "access.motionOff"));
           }}
         />
       </label>

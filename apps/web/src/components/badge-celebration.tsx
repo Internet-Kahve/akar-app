@@ -1,5 +1,4 @@
 "use client";
-import { stillMotion } from "../lib/access";
 import { useEffect, useId, useRef, useState } from "react";
 import type { HeritageSite } from "@akar/domain";
 import type { AchievementId, BadgeEntry } from "../lib/badges";
@@ -50,7 +49,7 @@ export default function BadgeCelebration({
     };
   }, []);
   useEffect(() => {
-    const still = stillMotion();
+    const still = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!still && typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.([24, 60, 36]);
   }, [index]);
   const next = () => (last ? onClose() : setIndex((i) => i + 1));

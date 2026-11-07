@@ -1,5 +1,4 @@
 "use client";
-import { stillMotion } from "../lib/access";
 import { writePreference } from "../lib/preferences";
 import { PHONE_LAYOUT } from "../lib/use-media";
 import { useEffect, useRef, useState } from "react";
@@ -196,7 +195,7 @@ export default function ModelViewer({
     if (!st || !companionKey) return;
     const road = JSON.parse(companionKey) as FlowCompanion;
     const { scene, camera, controls, render } = st;
-    const reduced = stillMotion();
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const group = new THREE.Group();
     scene.add(group);
     // Seen from the front, a little to the side (Muhammed, 2 Nov 2026): the façade's direction 35° to the left, from
@@ -606,7 +605,7 @@ export default function ModelViewer({
           tweening ||
           !turnWanted ||
           !aim.current ||
-          stillMotion()
+          matchMedia("(prefers-reduced-motion: reduce)").matches
         )
           return;
         turning = true;
@@ -827,7 +826,7 @@ export default function ModelViewer({
             const to = goal.clone().addScaledVector(way, free);
             cancelAnimationFrame(frame);
             stopTurn();
-            if (stillMotion()) {
+            if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
               camera.position.copy(to);
               controls!.target.copy(goal);
               controls!.update();
@@ -1024,7 +1023,7 @@ export default function ModelViewer({
             selected = [];
             highlighted = parts;
             cancelAnimationFrame(breathFrame);
-            if (!parts.length || stillMotion()) {
+            if (!parts.length || matchMedia("(prefers-reduced-motion: reduce)").matches) {
               breath = parts.length ? PICK_GLOW : 0;
               glow();
               return;
@@ -1139,7 +1138,7 @@ export default function ModelViewer({
             lift.current = (open, raise) => {
               goal = open ? 1 : 0;
               cancelAnimationFrame(liftFrame);
-              if (stillMotion()) {
+              if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
                 progress.fill(goal);
                 place();
                 staleShadows();
@@ -1391,7 +1390,7 @@ export default function ModelViewer({
             writePreference(window.matchMedia(PHONE_LAYOUT).matches ? "akar.ipucu.d.parca" : "akar.ipucu.masa.parca", "1");
             cancelAnimationFrame(pulseFrame.current);
             setShowingParts(true);
-            const reduced = stillMotion();
+            const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
             const stagger = Math.min(PART_STAGGER_MS, 2600 / Math.max(1, partCards.length - 1));
             const duration = reduced ? 1000 : PART_PULSE_MS + (partCards.length - 1) * stagger;
             // Random, each card far from the one before (lib/part-order): neighbours lit in turn read as one part.

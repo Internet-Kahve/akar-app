@@ -1,4 +1,3 @@
-import { stillMotion } from "./access";
 import {
   CITY_MARKER_MAX_ZOOM,
   defaultMapSettings,
@@ -457,7 +456,7 @@ export class MapModelLayer implements CustomLayerInterface {
     // The first frame of a fade moves it one frame's worth, not all the way.
     const step = (this.lastFrame ? Math.min(100, now - this.lastFrame) : 16) / FADE_MS;
     this.lastFrame = now;
-    const reduced = stillMotion();
+    const reduced = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
     let any = false;
     for (const [id, entry] of [...this.loaded, ...this.leaving]) {
       if (entry.fade === entry.fadeTo) continue;

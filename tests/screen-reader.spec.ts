@@ -15,15 +15,12 @@ test("a display change in the menu is spoken once and focus returns with Esc", a
   const open = page.getByRole("button", { name: "Görünüm ve erişilebilirlik" });
   await open.click();
   await expect(page.getByLabel("Yüksek kontrast")).toBeFocused();
-  await page.getByLabel("Hareketi azalt").check();
-  await expect(page.locator(polite)).toHaveText("Hareket azaltıldı.");
-  await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
+  await page.getByRole("button", { name: "Büyük", exact: true }).click();
+  await expect(page.locator(polite)).toHaveText("Yazı boyutu: Büyük.");
   // The visible toast has no live role of its own: nothing is read twice.
   await expect(page.locator(".toast[role]")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(open).toBeFocused();
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-motion", "reduced");
 });
 
 test("the keyboard reaches the site list from the map", async ({ page, isMobile }) => {

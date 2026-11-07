@@ -1,5 +1,4 @@
 "use client";
-import { stillMotion } from "../lib/access";
 import { Avatar, useAvatar } from "./avatar";
 import { RouteBuilder, type RouteDraft } from "./route-builder";
 import type { HeritageRoute, PersonalRoute } from "@akar/domain";
@@ -1023,7 +1022,7 @@ export function AkarApp() {
    */
   function changePeek(id: string | undefined) {
     const update = () => setPeekId(id);
-    if (wide || !peekId === !id || stillMotion() || !document.startViewTransition)
+    if (wide || !peekId === !id || matchMedia("(prefers-reduced-motion: reduce)").matches || !document.startViewTransition)
       return update();
     const root = document.documentElement;
     root.classList.add("vt-yuzey");

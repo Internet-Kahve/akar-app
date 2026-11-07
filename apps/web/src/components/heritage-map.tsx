@@ -1,5 +1,4 @@
 "use client";
-import { stillMotion } from "../lib/access";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { mapAntialias, mapPixelRatio, modestDevice, touchScreen } from "../lib/device";
 import { fitPadding } from "../lib/fit-padding";
@@ -276,7 +275,7 @@ export function HeritageMap({
     const top = Math.max(PEEK_TOP, Math.min(height - cardHeight - 16, point.y - cardHeight / 2));
     // Following the pin while the map moves stays immediate; only a new side or a new site glides, frame by frame
     // until it is done (with or without the map moving). Reduced motion goes straight there.
-    if (last && (last.site !== site.id || last.onLeft !== onLeft) && !stillMotion()) {
+    if (last && (last.site !== site.id || last.onLeft !== onLeft) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       glide.current = {
         left: parseFloat(card.style.left) || left,
         top: parseFloat(card.style.top) || top,
@@ -660,7 +659,7 @@ export function HeritageMap({
   useEffect(() => {
     const m = map.current;
     if (!loaded || !m || !buildingRoute) return;
-    if (stillMotion()) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let frame = 0;
     let gone = false;
     const start = performance.now();
@@ -738,7 +737,7 @@ export function HeritageMap({
     const key = JSON.stringify(padding);
     if (key === padTarget.current) return;
     padTarget.current = key;
-    if (insetDragging || stillMotion()) m.setPadding(padding);
+    if (insetDragging || matchMedia("(prefers-reduced-motion: reduce)").matches) m.setPadding(padding);
     else m.easeTo({ padding, duration: 280 });
   }, [bottomInset, insetDragging, loaded]);
   useEffect(() => {
@@ -757,7 +756,7 @@ export function HeritageMap({
         pitch: tiltPitch(),
         bearing: 0,
         padding: flat,
-        duration: stillMotion() ? 0 : 1400,
+        duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1400,
         curve: 1.8,
         essential: true,
       });

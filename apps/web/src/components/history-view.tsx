@@ -1,5 +1,4 @@
 "use client";
-import { stillMotion } from "../lib/access";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { sized } from "../lib/image-size";
 import { Camera, ChevronDown, ChevronLeft, ChevronRight, History, Image as ImageIcon, MapPin, MapPinOff } from "lucide-react";
@@ -87,7 +86,7 @@ function PhotoBox({
   }, [image.id]);
   useEffect(() => {
     // Once the photograph is in, the handle sways right, left and back, so the visitor sees it can be moved.
-    if (!pair || !loaded || stillMotion()) return;
+    if (!pair || !loaded || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let frame = 0;
     const timer = setTimeout(() => {
       const t0 = performance.now();
@@ -274,7 +273,7 @@ export function HistoryView({
       br = b.getBoundingClientRect();
     s.scrollTo({
       left: s.scrollLeft + br.left - sr.left - (s.clientWidth - br.width) / 2,
-      behavior: stillMotion() ? "auto" : "smooth",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
   }, [index]);
   useEffect(() => {
@@ -487,7 +486,7 @@ export function HistoryView({
       onClick={() =>
         whereRef.current?.scrollIntoView({
           block: "start",
-          behavior: stillMotion() ? "auto" : "smooth",
+          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
         })
       }
     >
