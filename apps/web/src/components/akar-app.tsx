@@ -53,6 +53,8 @@ import {
 } from "@akar/domain";
 import { HeritageMap, PEEK_INSET, type MapFlight } from "./heritage-map";
 import { AccessMenu } from "./access-menu";
+import { LiveRegion } from "./live-region";
+import { announce } from "../lib/announce";
 import {
   ExplorePanel,
   MapChips,
@@ -507,6 +509,13 @@ export function AkarApp() {
       document.removeEventListener("visibilitychange", refocus);
     };
   }, [ready, refreshCatalog]);
+  // The visible toasts carry no live role: the one LiveRegion speaks them, so nothing is read twice.
+  useEffect(() => {
+    if (toast) announce(toast);
+  }, [toast]);
+  useEffect(() => {
+    if (fault) announce(fault, "assertive");
+  }, [fault]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 4500);
@@ -927,6 +936,33 @@ export function AkarApp() {
     : routeId
       ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
       : undefined;
+  // A view that changes without a page load is said aloud once (the first view of the visit is not).
+  const spokenView = useRef<string | null>(null);
+  const viewSiteName = site ? localize(lang, site.name, site.nameEn).text : "";
+  useEffect(() => {
+    if (!ready) return;
+    const key = `${view}:${["detail", "story"].includes(view) ? (site?.id ?? "") : ""}`;
+    const first = spokenView.current === null;
+    if (spokenView.current === key) return;
+    spokenView.current = key;
+    if (first) return;
+    const said =
+      view === "map"
+        ? t("a11y.viewMap")
+        : view === "sites"
+          ? t("a11y.viewSites")
+          : view === "routes"
+            ? t("a11y.viewRoutes")
+            : view === "detail" && viewSiteName
+              ? t("a11y.viewDetail", { name: viewSiteName })
+              : view === "story" && viewSiteName
+                ? t("a11y.viewStory", { name: viewSiteName })
+                : view === "profile"
+                  ? t("a11y.viewProfile")
+                  : "";
+    if (said) announce(said);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a language change alone is not a new view
+  }, [ready, view, site?.id, t]);
   const isDetail = ["detail", "story"].includes(view),
     showMap = !["profile", "admin", "history", "memories"].includes(view),
     showRoutes = tab === "routes" && !query;
@@ -2367,7 +2403,7 @@ export function AkarApp() {
         />
       )}
       {toast && (
-        <div className="toast" role="status">
+        <div className="toast">
           <Check size={18} />
           {toast}
           <button
@@ -2380,7 +2416,7 @@ export function AkarApp() {
         </div>
       )}
       {fault && (
-        <div className="toast fault" role="alert">
+        <div className="toast fault">
           {fault}
           <button
             className="small-icon"
@@ -2404,6 +2440,7 @@ export function AkarApp() {
         }
       >
         {shell}
+        <LiveRegion />
         {celebrate.length > 0 && !completion && (() => {
           const entries = badgeEntries(state.sites, progress);
           const items = celebrate.flatMap((c): Celebrated[] => {

@@ -112,7 +112,7 @@ test("on site the position decides: too far gets a friendly message, near the si
   await dialog.getByRole("button", { name: "Bu soruyu atla" }).click();
   const field = page.getByRole("dialog", { name: "Saha görevi" });
   await field.getByRole("button", { name: "Buradayım" }).click();
-  await expect(page.getByText("yakınında görünmüyorsun")).toBeVisible();
+  await expect(page.locator(".toast").getByText("yakınında görünmüyorsun")).toBeVisible();
 
   await context.setGeolocation({ latitude: 40.184, longitude: 29.0619 });
   await field.getByRole("button", { name: "Buradayım" }).click();

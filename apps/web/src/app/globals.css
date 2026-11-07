@@ -127,19 +127,47 @@ img {
   position: absolute;
   width: 1px;
   height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
   overflow: hidden;
+  white-space: nowrap;
   clip: rect(0, 0, 0, 0);
 }
-.skip-link {
+/* Keyboard ways in: hidden until focused, then a 44 px target above everything. */
+.skip-link,
+.map-list-link {
   position: fixed;
-  z-index: 100;
+  z-index: 1000;
   top: -80px;
   left: 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 12px;
   background: var(--surface);
-  padding: 12px;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: underline;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.18);
 }
-.skip-link:focus {
+.map-list-link {
+  position: absolute;
+  z-index: 30;
+}
+.skip-link:focus,
+.map-list-link:focus {
   top: 12px;
+}
+/* One focus ring for everything a keyboard reaches; components may draw their own. */
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+/* Targets reached by a skip link take focus only to move the reading position: no ring on the whole page. */
+#main-content:focus {
+  outline: none;
 }
 .loading {
   padding: 100px;

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { mapAntialias, mapPixelRatio, modestDevice, touchScreen } from "../lib/device";
 import { fitPadding } from "../lib/fit-padding";
 import { demoRegion } from "@akar/api-client";
@@ -198,6 +198,7 @@ export function HeritageMap({
   banner?: ReactNode;
 }) {
   const { lang, t, text } = useI18n();
+  const hintId = useId();
   const scenes = useCityScenes();
   const cities = useCities();
   const container = useRef<HTMLDivElement>(null),
@@ -821,10 +822,27 @@ export function HeritageMap({
   }, [collapsed]);
   return (
     <div className={`map-wrap${cityMode}`}>
+      {/* The pins are drawn into the map's canvas, out of reach of a keyboard: the side panel's list is the way in. */}
+      <a
+        className="map-list-link"
+        href="#site-list"
+        onClick={(e) => {
+          // The app keeps its own state in the hash: the link never changes it.
+          e.preventDefault();
+          document.getElementById("site-list")?.focus();
+        }}
+      >
+        {t("map.listLink")}
+      </a>
+      <p id={hintId} className="sr-only">
+        {t("map.keyboardHint")}
+      </p>
       <div
         ref={container}
         className="map-canvas"
+        role="region"
         aria-label={t("map.aria")}
+        aria-describedby={hintId}
       />
       {(!loaded || failed) && (
         <div className="map-fallback">

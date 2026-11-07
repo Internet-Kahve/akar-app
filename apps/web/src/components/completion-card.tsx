@@ -46,9 +46,14 @@ export function CompletionCard({
   const ref = useRef<HTMLDialogElement>(null),
     titleId = useId();
   useEffect(() => {
+    // Focus goes back to where it was when the window closes.
+    const previous = document.activeElement as HTMLElement | null;
     const dialog = ref.current;
     dialog?.showModal();
-    return () => dialog?.close();
+    return () => {
+      dialog?.close();
+      previous?.focus?.();
+    };
   }, []);
   const badges = (site.badges ?? []).map((b) => ({ original: b, ...badgeInLang(b, lang) }));
   const first = earned[0];
