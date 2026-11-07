@@ -2501,7 +2501,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       await call<{ avatarId: AvatarId }>("PUT", "/v1/me/avatar", { body: { avatarId } });
       if (user?.signedIn) user = { ...user, publicProfile: { avatarId, leaderboardVisible: user.publicProfile?.leaderboardVisible ?? false } };
     },
-    getWeeklyLeaderboard: () => call<WeeklyLeaderboard>("GET", "/v1/leaderboard/week"),
+    getWeeklyLeaderboard: () => call<WeeklyLeaderboard>("GET", "/v1/leaderboard/week", { cache: "no-store" }),
     setLeaderboardVisible: async (visible) => {
       const saved = await call<{ visible: boolean }>("PUT", "/v1/me/leaderboard", { body: { visible } });
       if (user?.signedIn) user = { ...user, publicProfile: { avatarId: user.publicProfile?.avatarId ?? null, leaderboardVisible: saved.visible } };

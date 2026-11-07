@@ -314,43 +314,9 @@
 
 /* ---------------- a phone's header (4 Nov 2026) */
 @media (max-width: 899.98px) {
-  /* The language is one round button with the language shown; a press turns to the other. Both stay for a screen reader. */
   .lang-switch {
-    position: relative;
-    flex: none;
-    display: block;
     width: 32px;
     height: 32px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: none;
-  }
-  .lang-switch::before {
-    display: none;
-  }
-  .lang-switch button {
-    width: 100%;
-    min-width: 0;
-    height: 100%;
-    padding: 0;
-    border-radius: 50%;
-    background: var(--glass);
-    box-shadow: var(--glass-edge), var(--glass-shadow);
-    color: var(--text);
-    font: 700 12px/1 var(--font);
-  }
-  .lang-switch [aria-pressed="true"] {
-    position: relative;
-    display: block;
-    color: var(--text);
-  }
-  .lang-switch button[aria-pressed="false"] {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
   }
   /* Typing needs the room: while the search has the focus only the profile stays beside it. */
   header:has(.global-search:focus-within) :is(.lang-switch, .access-menu, .theme-switch) {

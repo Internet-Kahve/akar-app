@@ -94,7 +94,9 @@ export function SignInModal({
       () =>
         supabase.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: window.location.href.split("#")[0] },
+          // Supabase consumes the token hash. Keep the return marker in the query so
+          // the introduction redirect cannot send a successful sign-in to the landing page.
+          options: { redirectTo: `${window.location.origin}/?auth=callback` },
         }),
       t("signin.googleFailed"),
     );

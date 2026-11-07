@@ -253,7 +253,7 @@ export function Profile({
               ))}
             </ul>
           </section>
-          <WeeklyBoard mode={board.mode} load={board.load} setVisible={board.setVisible} onSignIn={board.onSignIn} />
+          <WeeklyBoard mode={board.mode} refreshKey={`${state.points}:${state.name}`} load={board.load} setVisible={board.setVisible} onSignIn={board.onSignIn} />
           <section className="card profile-saved">
             <h3>{t("profile.saved")}</h3>
             {state.savedIds.length ? state.sites.filter((site) => state.savedIds.includes(site.id)).map((site) =>
