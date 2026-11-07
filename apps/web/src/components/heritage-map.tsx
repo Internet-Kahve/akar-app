@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { stillMotion } from "../lib/access";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { mapPixelRatio } from "../lib/device";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
@@ -193,6 +194,7 @@ export function HeritageMap({
   routeColour?: string;
 }) {
   const { lang, t, text } = useI18n();
+  const hintId = useId();
   const scenes = useCityScenes();
   const cities = useCities();
   const container = useRef<HTMLDivElement>(null),
@@ -269,7 +271,7 @@ export function HeritageMap({
     const top = Math.max(PEEK_TOP, Math.min(height - cardHeight - 16, point.y - cardHeight / 2));
     // Following the pin while the map moves stays immediate; only a new side or a new site glides, frame by frame
     // until it is done (with or without the map moving). Reduced motion goes straight there.
-    if (last && (last.site !== site.id || last.onLeft !== onLeft) && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (last && (last.site !== site.id || last.onLeft !== onLeft) && !stillMotion()) {
       glide.current = {
         left: parseFloat(card.style.left) || left,
         top: parseFloat(card.style.top) || top,
@@ -651,7 +653,7 @@ export function HeritageMap({
     const key = JSON.stringify(padding);
     if (key === padTarget.current) return;
     padTarget.current = key;
-    if (insetDragging || matchMedia("(prefers-reduced-motion: reduce)").matches) m.setPadding(padding);
+    if (insetDragging || stillMotion()) m.setPadding(padding);
     else m.easeTo({ padding, duration: 280 });
   }, [bottomInset, insetDragging, loaded]);
   useEffect(() => {
@@ -670,7 +672,7 @@ export function HeritageMap({
         pitch: tiltPitch(),
         bearing: 0,
         padding: flat,
-        duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1400,
+        duration: stillMotion() ? 0 : 1400,
         curve: 1.8,
         essential: true,
       });
@@ -736,10 +738,27 @@ export function HeritageMap({
   }, [collapsed]);
   return (
     <div className={`map-wrap${cityMode}`}>
+      {/* The pins are drawn into the map's canvas, out of reach of a keyboard: the side panel's list is the way in. */}
+      <a
+        className="map-list-link"
+        href="#site-list"
+        onClick={(e) => {
+          // The app keeps its own state in the hash: the link never changes it.
+          e.preventDefault();
+          document.getElementById("site-list")?.focus();
+        }}
+      >
+        {t("map.listLink")}
+      </a>
+      <p id={hintId} className="sr-only">
+        {t("map.keyboardHint")}
+      </p>
       <div
         ref={container}
         className="map-canvas"
+        role="region"
         aria-label={t("map.aria")}
+        aria-describedby={hintId}
       />
       {(!loaded || failed) && (
         <div className="map-fallback">

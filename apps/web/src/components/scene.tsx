@@ -1,4 +1,5 @@
 "use client";
+import { stillMotion } from "../lib/access";
 import { useContext, useEffect, useRef, useState } from "react";
 import { sized } from "../lib/image-size";
 import {
@@ -196,7 +197,7 @@ function PhotoGallery({
   const page = (direction: number) =>
     gallery.current?.scrollBy({
       left: direction * gallery.current.clientWidth * 0.8,
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      behavior: stillMotion() ? "auto" : "smooth",
     });
   const shown: Shown[] = [
     ...photos.map((p) => ({

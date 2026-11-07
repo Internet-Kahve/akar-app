@@ -1,4 +1,5 @@
 "use client";
+import { stillMotion } from "../lib/access";
 import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
 import { sized } from "../lib/image-size";
 import { ChevronLeft, ChevronRight, Square, Volume2, X } from "lucide-react";
@@ -124,7 +125,7 @@ export function PartCardDialog({
     const next = Math.max(0, Math.min(count - 1, index));
     box.scrollTo({
       left: next * box.clientWidth,
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      behavior: stillMotion() ? "auto" : "smooth",
     });
   }
   return (

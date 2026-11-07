@@ -250,7 +250,7 @@ export function ExplorePanel({
         });
   const someModelMissing = allSites.some((s) => !s.model);
   return (
-    <div className="explore">
+    <div className="explore" id="site-list" tabIndex={-1}>
       {/* Two tabs as one switch: a press anywhere on it turns to the other tab. */}
       <div className="explore-tabs" role="tablist" data-tab={tab}>
         <button

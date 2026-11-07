@@ -1,4 +1,5 @@
 "use client";
+import { stillMotion } from "../lib/access";
 import { useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
@@ -166,7 +167,7 @@ export function StoryPanel({
     if (!item || !list.current) return;
     list.current.scrollTo({
       top: item.offsetTop - list.current.offsetTop - 12,
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+      behavior: stillMotion()
         ? "instant"
         : "smooth",
     });

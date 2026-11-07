@@ -259,6 +259,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 44px;
   font: 500 14px/20px var(--font);
 }
 .access-controls fieldset {

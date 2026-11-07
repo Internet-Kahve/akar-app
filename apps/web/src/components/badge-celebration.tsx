@@ -1,4 +1,5 @@
 "use client";
+import { stillMotion } from "../lib/access";
 import { useEffect, useId, useRef, useState } from "react";
 import type { HeritageSite } from "@akar/domain";
 import type { AchievementId, BadgeEntry } from "../lib/badges";
@@ -39,12 +40,17 @@ export default function BadgeCelebration({
   const item = items[Math.min(index, items.length - 1)]!;
   const last = index >= items.length - 1;
   useEffect(() => {
+    // Focus goes back to where it was when the window closes.
+    const previous = document.activeElement as HTMLElement | null;
     const dialog = ref.current;
     dialog?.showModal();
-    return () => dialog?.close();
+    return () => {
+      dialog?.close();
+      previous?.focus?.();
+    };
   }, []);
   useEffect(() => {
-    const still = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const still = stillMotion();
     if (!still && typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.([24, 60, 36]);
   }, [index]);
   const next = () => (last ? onClose() : setIndex((i) => i + 1));

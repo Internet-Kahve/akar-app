@@ -1,6 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { highContrast, setContrast, setTextSize, TEXT_SIZES, textSize, type TextSize } from "../lib/access";
+import { announce } from "../lib/announce";
+import {
+  highContrast,
+  reducedMotionChosen,
+  setContrast,
+  setReducedMotion,
+  setTextSize,
+  TEXT_SIZES,
+  textSize,
+  type TextSize,
+} from "../lib/access";
 import { useI18n } from "./i18n";
 
 const SIZE_LABEL: Record<TextSize, "access.sizeNormal" | "access.sizeLarge" | "access.sizeXlarge"> = {
@@ -9,11 +19,12 @@ const SIZE_LABEL: Record<TextSize, "access.sizeNormal" | "access.sizeLarge" | "a
   xlarge: "access.sizeXlarge",
 };
 
-/** High contrast and text size: in the header's menu and on the profile page. */
+/** High contrast, reduced motion and text size: in the header's menu and on the profile page. Each change is spoken. */
 export function AccessControls() {
   const { t } = useI18n();
   const [contrast, setOn] = useState(highContrast);
   const [size, setSize] = useState<TextSize>(textSize);
+  const [still, setStill] = useState(reducedMotionChosen);
   return (
     <div className="access-controls">
       <label>
@@ -24,6 +35,19 @@ export function AccessControls() {
           onChange={(e) => {
             setOn(e.target.checked);
             setContrast(e.target.checked);
+            announce(t(e.target.checked ? "access.contrastOn" : "access.contrastOff"));
+          }}
+        />
+      </label>
+      <label>
+        {t("access.motion")}
+        <input
+          type="checkbox"
+          checked={still}
+          onChange={(e) => {
+            setStill(e.target.checked);
+            setReducedMotion(e.target.checked);
+            announce(t(e.target.checked ? "access.motionOn" : "access.motionOff"));
           }}
         />
       </label>
@@ -39,6 +63,7 @@ export function AccessControls() {
               onClick={() => {
                 setSize(s);
                 setTextSize(s);
+                announce(t("access.sizeChanged", { size: t(SIZE_LABEL[s]) }));
               }}
             >
               A
@@ -50,18 +75,26 @@ export function AccessControls() {
   );
 }
 
-/** The header's «Aa»: opens the controls beside it; Esc or a press elsewhere closes them. */
+/**
+ * The header's «Aa»: opens the controls beside it and moves focus into them; Esc or a press elsewhere closes them,
+ * Esc returning focus to «Aa».
+ */
 export function AccessMenu() {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
+    pop.current?.querySelector<HTMLElement>("input, button")?.focus();
     const away = (e: PointerEvent) => {
       if (!root.current?.contains(e.target as Node)) setOpen(false);
     };
     const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      toggle.current?.focus();
     };
     window.addEventListener("pointerdown", away);
     window.addEventListener("keydown", esc);
@@ -73,6 +106,7 @@ export function AccessMenu() {
   return (
     <div className="access-menu" ref={root}>
       <button
+        ref={toggle}
         type="button"
         className="theme-switch"
         aria-label={t("access.open")}
@@ -83,7 +117,7 @@ export function AccessMenu() {
         Aa
       </button>
       {open && (
-        <div className="access-pop" role="dialog" aria-label={t("access.open")}>
+        <div className="access-pop" role="dialog" aria-label={t("access.open")} ref={pop}>
           <AccessControls />
         </div>
       )}

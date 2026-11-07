@@ -1,4 +1,5 @@
 "use client";
+import { stillMotion } from "../lib/access";
 import {
   createContext,
   useContext,
@@ -57,7 +58,6 @@ const TextLang = createContext<"tr" | undefined>(undefined);
 
 /** Wide screens read with the 3D model beside the text; narrow ones never load it. */
 const WIDE = "(min-width: 1000px)";
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
 export function useWide() {
   return useSyncExternalStore(
@@ -73,7 +73,7 @@ export function useWide() {
 
 const pad = (n: number) => String(n + 1).padStart(2, "0");
 const RATES = [1, 1.25, 1.5];
-const GLIDE = (): ScrollBehavior => (matchMedia(REDUCED_MOTION).matches ? "auto" : "smooth");
+const GLIDE = (): ScrollBehavior => (stillMotion() ? "auto" : "smooth");
 
 /** Where the page lays its next steps; absent ones are left out. */
 interface AboutActions {
@@ -313,7 +313,7 @@ function Reading({
     if (!strip || !tab) return;
     strip.scrollTo({
       left: tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2,
-      behavior: matchMedia(REDUCED_MOTION).matches ? "auto" : "smooth",
+      behavior: stillMotion() ? "auto" : "smooth",
     });
   }, [active]);
 
@@ -340,7 +340,7 @@ function Reading({
   const goTo = (index: number) =>
     document.getElementById(`about-chapter-${grouped[index]!.chapter.id}`)?.scrollIntoView({
       block: "start",
-      behavior: matchMedia(REDUCED_MOTION).matches ? "auto" : "smooth",
+      behavior: stillMotion() ? "auto" : "smooth",
     });
   const toggle = (id: string) =>
     setOpened((prev) => {
