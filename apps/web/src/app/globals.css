@@ -5027,18 +5027,25 @@ td small {
   }
 }
 
-/* Site assistant (§11.77): floating button and the conversation sheet, full screen on a phone. */
+/* Site assistant: low stacking priority, anchored to the safe bottom-right corner. */
+.app-shell:has(.chat-fab) > :is(.workspace, .profile-page) {
+  /* Keep the map's controls in their own stack so the z-0 launcher remains reachable. */
+  isolation: isolate;
+}
+.app-shell:has(.chat-fab) > :is(.gg, .hz) {
+  z-index: 0;
+}
 .chat-fab {
   position: fixed;
-  right: 20px;
-  /* Above the stage's bottom row («İçini göster», photo arrows). */
-  bottom: calc(112px + var(--sab, 0px));
-  z-index: 90;
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  bottom: calc(12px + var(--sab, 0px));
+  z-index: 0;
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  border: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--border);
   border-radius: 50%;
   color: var(--on-primary);
   background: var(--primary);
@@ -5050,43 +5057,100 @@ td small {
   outline-offset: 3px;
 }
 .modal.chat-sheet[open] {
+  position: fixed;
+  inset: auto calc(12px + env(safe-area-inset-right, 0px)) calc(12px + var(--sab, 0px)) auto;
+  z-index: 0;
   display: flex;
   flex-direction: column;
-  height: min(640px, 90dvh);
+  width: min(420px, calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  height: min(640px, calc(100dvh - 24px - var(--sat, 0px) - var(--sab, 0px)));
+  max-height: calc(100dvh - 24px - var(--sat, 0px) - var(--sab, 0px));
+  margin: 0;
+  padding: 20px;
+  overflow: hidden;
 }
 .modal.chat-sheet .modal-heading {
-  margin-bottom: 8px;
+  flex: none;
+  margin-bottom: 12px;
 }
-.chat-note,
+.modal.chat-sheet .modal-heading h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.modal.chat-sheet .modal-heading .icon-btn {
+  flex: none;
+}
 .chat-context {
-  margin: 0 0 6px;
-  color: var(--text-muted);
+  flex: none;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-light);
+  color: var(--text);
+  overflow-wrap: anywhere;
 }
 .chat-log {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  margin: 8px 0;
-  padding: 0;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 4px 4px 16px;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+}
+.chat-log > li {
+  flex: none;
+  min-width: 0;
 }
 .chat-empty {
-  margin: auto;
+  width: 100%;
+  padding: 20px 0 8px;
   color: var(--text-muted);
-  font-size: 14px;
   text-align: center;
 }
-.chat-msg {
-  max-width: 85%;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 14px;
-  line-height: 1.45;
+.chat-empty > svg { color: var(--primary); }
+.chat-empty h3 {
+  margin: 12px 0 8px;
+  color: var(--text);
+  font-size: 20px;
 }
-.chat-msg p {
+.chat-empty p { margin: 0 0 20px; }
+.chat-suggestions {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+.chat-suggestions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  background: var(--bg);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: start;
+}
+.chat-suggestions button:hover,
+.chat-source-link:hover { background: var(--primary-light); }
+.chat-suggestions svg,
+.chat-source-link svg { flex: none; }
+.chat-msg {
+  max-width: 92%;
+  padding: 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.modal.chat-sheet .chat-msg p {
   margin: 0;
   font-size: 14px;
   white-space: pre-wrap;
@@ -5095,15 +5159,15 @@ td small {
   align-self: flex-end;
   color: var(--on-primary);
   background: var(--primary);
+  border-bottom-right-radius: 4px;
 }
 .chat-msg.assistant {
   align-self: flex-start;
   border: 1px solid var(--border);
   background: var(--bg);
+  border-bottom-left-radius: 4px;
 }
-.chat-msg.pending {
-  color: var(--text-muted);
-}
+.chat-msg.pending { color: var(--text-muted); }
 .chat-general {
   display: inline-block;
   margin-top: 8px;
@@ -5117,33 +5181,54 @@ td small {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
 .chat-sources li {
-  display: flex;
-  flex-direction: column;
-  padding: 4px 8px;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  overflow: hidden;
   font-size: 12px;
 }
+.chat-source-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  color: var(--primary);
+  font-weight: 600;
+  text-align: start;
+}
 .chat-sources small {
+  display: block;
+  padding: 0 10px 8px;
   color: var(--text-muted);
   font-size: 11px;
+}
+.chat-composer {
+  flex: none;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 .chat-problem {
   margin: 0 0 8px;
   color: var(--error);
 }
 .chat-form {
-  display: flex;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: end;
   gap: 8px;
 }
 .chat-form textarea {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
   resize: none;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -5153,24 +5238,18 @@ td small {
   font: inherit;
   font-size: 16px;
 }
-/* A phone: top right under the top bar, clear of the bottom sheets. */
-@media (max-width: 899.98px) {
-  .chat-fab {
-    top: calc(72px + var(--sat, 0px));
-    right: 12px;
-    bottom: auto;
-    width: 44px;
-    height: 44px;
-  }
+.chat-form .btn {
+  width: 44px;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+}
+.modal.chat-sheet .chat-note {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
 }
 @media (max-width: 600px) {
-  .modal.chat-sheet[open] {
-    width: 100vw;
-    max-width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
-    margin: 0;
-    border-radius: 0;
-    padding: 16px 16px calc(16px + var(--sab, 0px));
-  }
+  .modal.chat-sheet[open] { padding: 16px; }
 }
