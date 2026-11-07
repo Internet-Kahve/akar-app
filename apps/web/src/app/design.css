@@ -5022,3 +5022,26 @@ body:has(.gg) { overflow-x: clip; }
   @keyframes more-nudge { 50% { transform: translateY(4px); } }
 }
 @media (prefers-reduced-motion: reduce) { .more-below button { animation: none; } }
+
+/* The route's badge on its page, before the walk: in colour, as the prize it is. */
+.route-page-badge { margin: 4px 0 12px; border-style: solid; border-color: color-mix(in srgb, var(--gold) 55%, transparent); background: var(--surface); }
+.route-page-badge img { filter: none; opacity: 1; }
+
+/* The walk followed by location (7 Nov 2026): the distance to the stop, then the visit at it. */
+.walk-location { display: grid; gap: 8px; }
+.walk-locate,
+.walk-distance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font: 600 14px/18px var(--font);
+}
+.walk-locate { justify-self: start; padding: 4px 0; color: var(--sehir-aksan, var(--primary)); }
+.walk-distance { display: flex; color: var(--text); }
+.walk-distance.near { color: var(--sehir-aksan, var(--primary)); }
+.walk-distance svg { flex: none; }
+.walk-locate-off { margin-left: auto; padding: 2px 0; color: var(--text-muted); font: 500 13px/16px var(--font); }
+.walk-visited { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--sehir-aksan, var(--primary)); font: 600 14px/18px var(--font); }
+.walk-visit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.route-page.route-walk .walk-location svg { display: inline; }

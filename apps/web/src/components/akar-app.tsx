@@ -108,6 +108,7 @@ import {
 } from "../lib/bottom-sheet";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
+import { nearStop, stopDistance, useWatchedPosition } from "../lib/walk-position";
 import { walkingLeg } from "../lib/route-walking";
 import { cityCase } from "../lib/place-names";
 import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
@@ -175,6 +176,8 @@ type Walk = {
   startedAt?: string | undefined;
 };
 const WALK_KEY = "akar.rota.yuruyus";
+/** «1» when the visitor asked the walk to follow their position (the distance to the stop, the visit at it). */
+const WALK_FOLLOW_KEY = "akar.rota.konum";
 /** The route id of one of the visitor's own routes in the panel. */
 const MINE = "mine:";
 function readWalk(raw: string | null | undefined): Walk | null {
@@ -837,6 +840,40 @@ export function AkarApp() {
     const i = walk.ids.indexOf(here);
     if (i >= 0 && i !== walk.at) setWalk({ ...walk, at: i });
   }, [peekId, siteId, view, walk]);
+  // A stop whose story is finished, or whose visit is verified, during the walk is done on the walk too: that is what
+  // earns its points and badge, so the visitor need not press «Tamamladım» as well (7 Nov 2026). Only what is new
+  // since the last look counts: a story read before the walk began does not tick its step.
+  // Following the walk by location (7 Nov 2026): only after the visitor asks, and only while a walk is on.
+  const [walkFollow, setWalkFollow] = useState(false);
+  useEffect(() => setWalkFollow(readPreference(WALK_FOLLOW_KEY) === "1"), []);
+  const walkHereId = walk && walk.at < walk.ids.length ? walk.ids[walk.at] : undefined;
+  const walkPosition = useWatchedPosition(ready && walkFollow && !!walkHereId, {
+    unsupported: t("verify.unsupported"),
+    denied: t("walk.locateDenied"),
+    timeout: t("verify.timeout"),
+    failed: t("verify.failed"),
+  });
+  const walkHereSite = walkHereId ? state.sites.find((s) => s.id === walkHereId) : undefined;
+  const walkDistance = walkHereSite ? stopDistance(walkPosition.coordinates, walkHereSite.coordinates) : null;
+  const walkLocation = {
+    on: walkFollow,
+    distance: walkDistance,
+    near: walkDistance !== null && nearStop(walkDistance, walkPosition.accuracyM ?? 0),
+    error: walkPosition.error,
+    visited: !!walkHereId && state.visitedIds.includes(walkHereId),
+  };
+  const earnedBefore = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    // Before the visitor's state has loaded, the lists are the empty seed: everything would look new.
+    if (!ready) return;
+    const now = new Set([...state.readIds, ...state.visitedIds]);
+    const before = earnedBefore.current;
+    earnedBefore.current = now;
+    if (!before || !walk) return;
+    const fresh = walk.ids.filter((id) => now.has(id) && !before.has(id) && !walk.doneIds.includes(id));
+    if (fresh.length)
+      setWalk({ ...walk, doneIds: [...walk.doneIds, ...fresh], skippedIds: walk.skippedIds.filter((id) => !fresh.includes(id)) });
+  }, [ready, state.readIds, state.visitedIds, walk]);
   // The walked route's own record (its walking path and legs), once the route panel has closed.
   const walkRoute = findRoute(walk?.routeId);
   // What a finished walk earned (7 Nov 2026): its points, the badges of its stops won since it began, and the
@@ -1078,6 +1115,13 @@ export function AkarApp() {
       setState(await api.getSnapshot());
       for (const id of routeDraft.siteIds) if (!before.has(id)) track("my_route.add", id);
       setRouteDraft(null);
+      setRouteSite(undefined);
+      // The builder borrows the sites tab for the pins' «+»; saved, the panel is back on the routes, at this one's page
+      // (Muhammed, 7 Nov 2026: «direkt rotalar panelinde kalması lazım»).
+      setTab("routes");
+      setRouteId(MINE + route.id);
+      // The search that found the stops would hide the route in the routes panel.
+      setQuery("");
       setToast(t("route.saved"));
     } catch { setToast(t("route.failed")); }
     finally { setRouteBusy(false); }
@@ -1090,6 +1134,9 @@ export function AkarApp() {
       setPersonalRoutes(await client.current!.getPersonalRoutes());
       setState(await client.current!.getSnapshot());
       setRouteDraft(null);
+      setRouteSite(undefined);
+      setTab("routes");
+      setRouteId(undefined);
     } catch { setToast(t("route.failed")); }
     finally { setRouteBusy(false); }
   }
@@ -1798,7 +1845,16 @@ export function AkarApp() {
                   </div>
                 ) : routeDraft && view === "map" ? (
                   // Rotam is built in the panel (the map beside it shows the route as it grows).
-                  <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} adding={!!routeSite} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />
+                  <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} adding={!!routeSite} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => {
+                    // Begun from a site («rotama ekle»), the visitor goes back to the sites; begun in the routes, to them:
+                    // an existing route's page, or the list for a new one.
+                    if (!routeSite) {
+                      setTab("routes");
+                      setRouteId(routeDraft.id ? MINE + routeDraft.id : undefined);
+                    }
+                    setRouteDraft(null);
+                    setRouteSite(undefined);
+                  }} onDelete={() => void deleteRouteDraft()} />
                 ) : (
                   <div className="discovery-panel">
                     {routeId && showRoutes ? (
@@ -1822,6 +1878,14 @@ export function AkarApp() {
                         visitedIds={state.visitedIds}
                         walk={walk && walk.routeId === routeId ? walk : undefined}
                         summary={walkSummary}
+                        location={walkLocation}
+                        onFollow={(on) => {
+                          setWalkFollow(on);
+                          writePreference(WALK_FOLLOW_KEY, on ? "1" : "");
+                        }}
+                        onVisit={async () => {
+                          if (walkHereId) await commit({ type: "visit", siteId: walkHereId });
+                        }}
                         onShare={() =>
                           walkSummary &&
                           setShareRequest({

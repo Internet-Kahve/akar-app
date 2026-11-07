@@ -9,9 +9,12 @@ import {
   ChevronRight,
   Flag,
   Footprints,
+  LocateFixed,
+  MapPin,
   Pencil,
   Plus,
   Share2,
+  ShieldCheck,
   SkipForward,
   Route,
   UserRound,
@@ -30,6 +33,7 @@ import { siteMeta } from "../lib/site-meta";
 import { legDistance, legMinutes, walkingLeg } from "../lib/route-walking";
 import type { BadgeEntry } from "../lib/badges";
 import { badgeInLang } from "../lib/task-text";
+import { formatDistance } from "../lib/walk-position";
 import { SiteArtwork } from "./site-artwork";
 import { BadgeMedal } from "./badge-medal";
 import { Back, Notice, Tag } from "./ui";
@@ -463,6 +467,18 @@ export interface RouteWalkState {
   skippedIds: string[];
 }
 
+/** The walk followed by the visitor's position: the distance to the stop they are at, and the visit there. */
+export interface RouteWalkLocation {
+  on: boolean;
+  /** Metres to the stop; `null` until a position has come. */
+  distance: number | null;
+  /** Close enough for the API to verify the visit. */
+  near: boolean;
+  error?: string | undefined;
+  /** The stop's visit is already verified. */
+  visited: boolean;
+}
+
 /** What a finished walk earned, for its finish card. */
 export interface RouteWalkSummary {
   done: number;
@@ -474,6 +490,70 @@ export interface RouteWalkSummary {
   /** Stops whose story is not finished and that were not visited: what the route's badge still needs. */
   openIds: string[];
   routeBadge?: { title: string; url?: string; alt?: string; earned: boolean } | undefined;
+}
+
+/**
+ * Where the visitor is against the stop (7 Nov 2026): asked for once («Uzaklığı göster»), then the distance as they
+ * walk («Ulucami'ye 120 m»), and at the stop «Ziyaretini doğrula», the visit that earns the most points and counts
+ * for the route's badge. The demo has no position check, so it offers its simulated visit at any distance.
+ */
+function WalkLocation({
+  live,
+  location,
+  onFollow,
+  onVisit,
+}: {
+  live: boolean;
+  location: RouteWalkLocation;
+  onFollow: (on: boolean) => void;
+  onVisit: () => Promise<void>;
+}) {
+  const { lang, t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const canVisit = !location.visited && (location.near || !live);
+  return (
+    <div className="walk-location" aria-live="polite">
+      {!location.on ? (
+        <button className="text-btn walk-locate" onClick={() => onFollow(true)}>
+          <LocateFixed size={15} aria-hidden="true" />
+          {t("walk.locate")}
+        </button>
+      ) : location.error ? (
+        <p className="muted walk-distance">{location.error}</p>
+      ) : (
+        <p className={`walk-distance${location.near ? " near" : ""}`}>
+          <MapPin size={15} aria-hidden="true" />
+          {location.distance === null
+            ? t("walk.locating")
+            : location.near
+              ? t("walk.atStop")
+              : t("walk.distanceTo", { distance: formatDistance(location.distance, lang) })}
+          <button className="text-btn walk-locate-off" onClick={() => onFollow(false)}>{t("walk.locateOff")}</button>
+        </p>
+      )}
+      {location.visited ? (
+        <p className="walk-visited"><ShieldCheck size={15} aria-hidden="true" /> {t("visit.verified")}</p>
+      ) : (
+        canVisit && (
+          <button
+            className="btn secondary full walk-visit"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await onVisit();
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <MapPin size={16} aria-hidden="true" />
+            {busy ? t("visit.verifying") : live ? t("walk.verifyVisit") : t("visit.demoComplete")}
+          </button>
+        )
+      )}
+    </div>
+  );
 }
 
 /**
@@ -579,12 +659,18 @@ export function RoutePreview({
   onEdit,
   summary,
   onShare,
+  location,
+  onFollow,
+  onVisit,
 }: {
   route?: HeritageRoute | undefined;
   custom: boolean;
   sites: HeritageSite[];
   live: boolean;
   visitedIds: string[];
+  location?: RouteWalkLocation | undefined;
+  onFollow?: (on: boolean) => void;
+  onVisit?: () => Promise<void>;
   onBack: () => void;
   /** Takes the route off the map altogether. */
   onClose: () => void;
@@ -609,7 +695,8 @@ export function RoutePreview({
     return (
       <RouteWalk route={route} custom={custom} sites={sites} live={live} walk={walk} onSite={onSite}
         onStep={onStep ?? (() => {})} onDone={onDone ?? (() => {})} onSkip={onSkip ?? (() => {})}
-        onExit={onExitWalk ?? (() => {})} onRestart={onStart} summary={summary} onShare={onShare} />
+        onExit={onExitWalk ?? (() => {})} onRestart={onStart} summary={summary} onShare={onShare}
+        location={location} onFollow={onFollow} onVisit={onVisit} />
     );
   return (
     <div className="route-page">
@@ -634,6 +721,17 @@ export function RoutePreview({
       <p>
         {route?.description ? <span lang={tr}>{route.description}</span> : t("route.defaultDescription")}
       </p>
+      {route?.badge && (
+        // What finishing it earns, before the walk begins (7 Nov 2026), as the finish card shows it at the end.
+        <div className="walk-route-badge route-page-badge">
+          <img src={route.badge.url ?? "/rozetler/_hikaye.webp"} alt={route.badge.alt ?? ""} width={56} height={56} />
+          <span>
+            <small className="muted">{t("route.badgeFor")}</small>
+            <strong>{route.badge.title}</strong>
+            <small className="muted">{t("route.badgeHow")}</small>
+          </span>
+        </div>
+      )}
       <div className="route-stop-list">
         {sites.map((s, i) => {
           const next = sites[i + 1];
@@ -709,12 +807,18 @@ function RouteWalk({
   onRestart,
   summary,
   onShare,
+  location,
+  onFollow,
+  onVisit,
 }: {
   route?: HeritageRoute | undefined;
   custom: boolean;
   sites: HeritageSite[];
   live: boolean;
   walk: RouteWalkState;
+  location?: RouteWalkLocation | undefined;
+  onFollow?: ((on: boolean) => void) | undefined;
+  onVisit?: (() => Promise<void>) | undefined;
   onSite: (id: string) => void;
   onStep: (index: number) => void;
   onDone: () => void;
@@ -768,6 +872,9 @@ function RouteWalk({
               </>
             )}
           </p>
+          {location && onFollow && onVisit && (
+            <WalkLocation live={live} location={location} onFollow={onFollow} onVisit={onVisit} />
+          )}
           <button className="walk-here-card" onClick={() => onSite(here.id)}>
             <SiteArtwork site={here} live={live} />
             <span>

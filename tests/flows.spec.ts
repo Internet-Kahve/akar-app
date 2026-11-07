@@ -548,6 +548,33 @@ test("a route's stops can be done, skipped or picked in its panel", async ({ pag
   await expect(walk).toHaveCount(0);
   await expect(page.locator(".route-card").first()).toBeVisible();
 });
+test("a walk shows the distance to its stop by location, and its visit ticks the step", async ({ page, context }) => {
+  // Far from Bursa first: the distance reads in kilometres.
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ longitude: 29.1, latitude: 40.2 });
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
+  await openRoutes(page);
+  await page.locator(".route-card").first().click();
+  await page.getByRole("button", { name: "Rotayı başlat", exact: true }).click();
+  const walk = page.locator(".route-walk");
+  const name = (await walk.locator(".walk-here-card strong").innerText()).trim();
+  const stop = createSeed().sites.find((s) => s.name === name)!;
+  // Nothing is asked of the browser until the visitor asks for it.
+  await walk.getByRole("button", { name: "Uzaklığı göster" }).click();
+  await expect(walk.locator(".walk-distance")).toContainText(/Durağa [\d,]+ km/);
+  // At the stop: «Duraktasın».
+  await context.setGeolocation({ longitude: stop.coordinates[0], latitude: stop.coordinates[1] });
+  await expect(walk.locator(".walk-distance")).toContainText("Duraktasın");
+  // The demo's visit (no position check) earns the visit and ticks the step without «Tamamladım».
+  const steps = walk.locator(".walk-steps li");
+  await walk.getByRole("button", { name: /Demo ziyaretini tamamla/ }).click();
+  await expect(walk.locator(".walk-visited")).toContainText("Ziyaretin doğrulandı");
+  await expect(steps.nth(0)).toHaveClass(/done/);
+  // Turned off, the distance goes and the choice is remembered as off.
+  await walk.getByRole("button", { name: "Kapat", exact: true }).click();
+  await expect(walk.getByRole("button", { name: "Uzaklığı göster" })).toBeVisible();
+});
 test("one tile failing among others leaves the map, not the schematic view", async ({ page }) => {
   await page.route("**/harita/akar-style.json", (route) =>
     route.fulfill({
