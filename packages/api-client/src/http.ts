@@ -2351,6 +2351,10 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
             },
           },
         );
+        if (command.siteCoordinates)
+          await call("PUT", `/v1/admin/sites/${encodeURIComponent(id)}/location`, {
+            body: { coordinates: command.siteCoordinates },
+          });
         // The answer is the admin detail; the catalog entry (and the visitor's placement in it) is re-read.
         await refreshAdminSite(id);
         return false;
