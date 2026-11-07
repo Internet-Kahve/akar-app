@@ -58,22 +58,34 @@ export function ModelGenPanel({
     [error, setError] = useState(""),
     [using, setUsing] = useState<string | null>(null);
 
+  // The status comes first: when the feature is off the panel shows nothing, not even for an unsaved site.
   useEffect(() => {
-    if (!saved) return;
     let cancelled = false;
-    Promise.all([api.status(), api.list(siteId)])
-      .then(([s, page]) => {
-        if (cancelled) return;
-        setStatus(s);
-        setHistory(page.items);
-        const running = page.items.find((j) => j.status === "running");
-        if (running) setJob(running);
-      })
+    api
+      .status()
+      .then((s) => !cancelled && setStatus(s))
       .catch((e) => !cancelled && setLoadError(describeError(e, "Model üretimi durumu alınamadı.")));
     return () => {
       cancelled = true;
     };
-  }, [api, siteId, saved]);
+  }, [api]);
+  const enabled = status?.enabled === true;
+  useEffect(() => {
+    if (!saved || !enabled) return;
+    let cancelled = false;
+    api
+      .list(siteId)
+      .then((page) => {
+        if (cancelled) return;
+        setHistory(page.items);
+        const running = page.items.find((j) => j.status === "running");
+        if (running) setJob(running);
+      })
+      .catch((e) => !cancelled && setLoadError(describeError(e, "Model üretimi geçmişi alınamadı.")));
+    return () => {
+      cancelled = true;
+    };
+  }, [api, siteId, saved, enabled]);
 
   // A running job is read again every two seconds: its live events, then the result with fresh file links.
   const runningId = job?.status === "running" ? job.id : null;
@@ -151,6 +163,8 @@ export function ModelGenPanel({
       </p>
     </>
   );
+  // Nothing while the status loads or when the feature is off on this system; a failed status read still shows its error.
+  if (!loadError && !status?.enabled) return null;
   if (!saved)
     return (
       <section className="model-gen">
@@ -167,22 +181,11 @@ export function ModelGenPanel({
         </p>
       </section>
     );
-  if (!status)
-    return (
-      <section className="model-gen" aria-busy="true">
-        {header}
-        <p role="status">Model üretimi durumu alınıyor…</p>
-      </section>
-    );
-  if (!status.enabled || !status.loggedIn)
+  if (!status?.loggedIn)
     return (
       <section className="model-gen">
         {header}
-        <Notice>
-          {!status.enabled
-            ? "Model çalıştırıcı bu sistemde yapılandırılmamış."
-            : "Çalıştırıcıdaki Claude hesabının oturumu kapalı; sunucuda yeniden giriş yapılmalı."}
-        </Notice>
+        <Notice>Çalıştırıcıdaki Claude hesabının oturumu kapalı; sunucuda yeniden giriş yapılmalı.</Notice>
       </section>
     );
 
