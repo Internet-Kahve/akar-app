@@ -121,8 +121,8 @@ const CONCURRENCY = 6;
 const FEED_SITE_IDS_MAX = 100;
 /** Licence stated for files the panel uploads; the editor states the trust level. */
 const CONTRIBUTOR_LICENSE = "Katkı sahibi izniyle";
-/** A new model's part names come from a server job: polled this often, this long apart (~20 s). */
-const MODEL_PARTS_ATTEMPTS = 20;
+/** A new model's part names come from a server job: polled this often, this long apart (~60 s; 23–41 s seen locally). */
+const MODEL_PARTS_ATTEMPTS = 60;
 const MODEL_PARTS_WAIT_MS = 1000;
 /** Most stops "Rotam" may hold (`MY_ROUTE_MAX` server-side). */
 const MY_ROUTE_MAX = 100;
@@ -1928,6 +1928,9 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         });
     }
 
+    // A new day model whose part names the stories, part cards or tasks below need; waited for after the night and
+    // baked files, which do not need them, so a slow read never leaves a «3D üret» package half saved.
+    let readPartsOf: string | undefined;
     if (modelChanged) {
       const model = site.model;
       const linked = before.media.find((m) => m.kind === "model");
@@ -1948,7 +1951,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           ((partCardsChanged && site.partCards?.length) ||
             (tasksChanged && site.tasks?.length))
         )
-          await modelParts(path, id);
+          readPartsOf = id;
       } else if (linked && model.trust !== linked.trust) {
         await call(
           "PATCH",
@@ -2008,6 +2011,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
         },
       });
     }
+    if (readPartsOf) await modelParts(path, readPartsOf);
 
     if (photosChanged) {
       // Only the angles that changed: the server keeps the others with their photographs.
