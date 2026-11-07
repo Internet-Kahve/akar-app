@@ -377,7 +377,8 @@ function MoreBelow({ label }: { label: string }) {
   useEffect(() => {
     const scroller = ref.current?.closest<HTMLElement>(".side-panel");
     if (!scroller) return;
-    const check = () => setShow(scroller.scrollTop < 24 && scroller.scrollHeight - scroller.clientHeight > 80);
+    // Anything cut off at the foot counts (7 Nov 2026: with only the last row cut, 80 px of slack hid the hint).
+    const check = () => setShow(scroller.scrollTop < 24 && scroller.scrollHeight - scroller.clientHeight > 8);
     check();
     const resize = new ResizeObserver(check);
     resize.observe(scroller);
