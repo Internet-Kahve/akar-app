@@ -37,6 +37,7 @@ import { TasksStep } from "./admin-site-tasks";
 import { AboutStep } from "./admin-site-about";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
 import { AdminModelPreview, poseSummary } from "./admin-model-preview";
+import { ModelGenPanel, type ModelGenApi } from "./admin-model-gen";
 import { prepareModel } from "../lib/editor-media";
 import { translationLabels } from "../lib/translation-labels";
 const steps = [
@@ -119,6 +120,7 @@ export function SiteEditor({
   narrateSite,
   translateSite,
   live,
+  modelGen,
 }: {
   site: HeritageSite;
   sites: HeritageSite[];
@@ -134,6 +136,8 @@ export function SiteEditor({
   /** Fills the empty English story and part card texts with a machine draft (`AkarClient.translateSite`). */
   translateSite: AkarClient["translateSite"];
   live: boolean;
+  /** Chat model editing; only an admin on the live system has it. */
+  modelGen?: ModelGenApi;
 }) {
   const [draft, setDraft] = useState(() => prepareSite(site));
   // The site as last saved (or opened): «Değişiklikleri geri al» goes back to it.
@@ -514,6 +518,15 @@ export function SiteEditor({
                 <ImagePlus size={17} />
                 Fotoğrafla devam et
               </button>
+              {modelGen && (
+                <ModelGenPanel
+                  api={modelGen}
+                  siteId={draft.id}
+                  saved={sites.some((s) => s.id === draft.id)}
+                  busy={busy}
+                  onUse={uploadModel}
+                />
+              )}
             </div>
           )}
           {step === 1 && (
