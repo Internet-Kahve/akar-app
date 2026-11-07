@@ -17,13 +17,11 @@ export type LegalDoc = { title: string; blocks: LegalBlock[] };
 export const KVKK_DOC: LegalDoc = {
   title: "Kişisel verilerin korunması aydınlatma metni",
   blocks: [
-    { kind: "p", tone: "draft", text: "Taslak. Bu metin hukuki onaydan geçmemiştir. Köşeli parantezli alanlar yayımlanmadan önce doldurulacaktır." },
-    { kind: "h", text: "Veri sorumlusu" },
-    { kind: "p", text: "[Veri sorumlusunun adı], [adres]. İletişim: [e-posta]. AKAR, KÖK&KOD Hackathon'u kapsamında İnternet Kahve ekibi tarafından geliştirilmektedir." },
+    { kind: "p", text: "AKAR, KÖK&KOD Hackathon'u kapsamında İnternet Kahve ekibi tarafından geliştirilmektedir." },
     { kind: "h", text: "Hangi verileri, neden işliyoruz?" },
     {
       kind: "table",
-      head: ["Veri", "Amaç", "Hukuki sebep (taslak)"],
+      head: ["Veri", "Amaç", "Hukuki sebep"],
       rows: [
         ["E-posta adresi ve oturum bilgisi (giriş yaparsan)", "Hesabı açmak, kayıtlı rota ve ilerlemeni saklamak", "Hizmetin sunulması"],
         ["Google ile girersen Google'ın bize verdiği ad, e-posta adresi ve profil fotoğrafı adresi", "Hesabını açmak ve seni tanımak; Google hesabındaki başka hiçbir bilgiye erişmeyiz", "Hizmetin sunulması"],
@@ -47,13 +45,13 @@ export const KVKK_DOC: LegalDoc = {
       ],
     },
     { kind: "h", text: "Kimlere aktarılır?" },
-    { kind: "p", text: "Veriler barındırma ve kimlik doğrulama hizmeti aldığımız sağlayıcılarda (Vercel, Supabase) saklanır. API ve veritabanı Frankfurt'tadır, yani veriler yurt dışına aktarılır. [Aktarımın hukuki dayanağı yazılacak.] Google ile girişi seçersen giriş Google üzerinden yapılır; Google'ın kendi gizlilik koşulları geçerlidir. Onaylanan anılar herkese açık görünür." },
+    { kind: "p", text: "Veriler barındırma ve kimlik doğrulama hizmeti aldığımız sağlayıcılarda (Vercel, Supabase) saklanır. API ve veritabanı Frankfurt'tadır, yani veriler yurt dışına aktarılır. Google ile girişi seçersen giriş Google üzerinden yapılır; Google'ın kendi gizlilik koşulları geçerlidir. Onaylanan anılar herkese açık görünür." },
     { kind: "h", text: "Ne kadar saklanır?" },
-    { kind: "p", text: "[Saklama süresi yazılacak.] Hesabını sildiğinde hesabın, anıların, fotoğrafların, kayıtlı rotaların, puanların ve Haftanın Gezgini listesindeki yerin hemen silinir. Reddedilen ya da yayından kaldırılan anının fotoğrafı silinir." },
+    { kind: "p", text: "Hesabını sildiğinde hesabın, anıların, fotoğrafların, kayıtlı rotaların, puanların ve Haftanın Gezgini listesindeki yerin hemen silinir. Reddedilen ya da yayından kaldırılan anının fotoğrafı silinir." },
     { kind: "h", text: "Hakların" },
-    { kind: "p", text: "KVKK madde 11 uyarınca verilerinin işlenip işlenmediğini öğrenebilir, düzeltilmesini ya da silinmesini isteyebilir, işlemeye itiraz edebilirsin. Açık rızanı her zaman geri alabilirsin; bu, önceki işlemleri etkilemez. Anını kendin silebilir, profilindeki «Hesabımı ve verilerimi sil» düğmesiyle hesabını silebilirsin. Diğer başvurular için: [e-posta]." },
+    { kind: "p", text: "KVKK madde 11 uyarınca verilerinin işlenip işlenmediğini öğrenebilir, düzeltilmesini ya da silinmesini isteyebilir, işlemeye itiraz edebilirsin. Açık rızanı her zaman geri alabilirsin; bu, önceki işlemleri etkilemez. Anını kendin silebilir, profilindeki «Hesabımı ve verilerimi sil» düğmesiyle hesabını silebilirsin." },
     { kind: "h", text: "In English (summary)" },
-    { kind: "p", text: "Draft, not yet legally reviewed. We process your email and session if you sign in, the memory and photo you submit (moderation and, if approved, publishing, with your explicit consent) and your saved progress. If you sign in with Google, we receive only your name, email address and profile picture address from Google and use them to create and recognise your account; we access nothing else in your Google account. Your display name, figure and weekly points appear on the public «Traveller of the Week» list only if you turn it on (off by default); never your e-mail. Preferences stay in your browser. Photos are redrawn on your device so location and device data are not sent. Data is hosted with Vercel and Supabase; the API and database are in Frankfurt. You can delete your memories, and your account from your profile." },
+    { kind: "p", text: "We process your email and session if you sign in, the memory and photo you submit (moderation and, if approved, publishing, with your explicit consent) and your saved progress. If you sign in with Google, we receive only your name, email address and profile picture address from Google and use them to create and recognise your account; we access nothing else in your Google account. Your display name, figure and weekly points appear on the public «Traveller of the Week» list only if you turn it on (off by default); never your e-mail. Preferences stay in your browser. Photos are redrawn on your device so location and device data are not sent. Data is hosted with Vercel and Supabase; the API and database are in Frankfurt. You can delete your memories, and your account from your profile." },
   ],
 };
 
