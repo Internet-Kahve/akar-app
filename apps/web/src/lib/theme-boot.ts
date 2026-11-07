@@ -13,5 +13,6 @@ export const INTRO_PAGE = "/tanitim";
  * (`/#view=map`, `/#view=detail&site=…`), which every button and link into it carries. The introduction shows the
  * bare address again; its own anchors (`/#akar`) carry no view and return to it. A sign-in return (Google sends
  * the session or the error back as `/#access_token=…` / `/#error=…`) stays in the app, which reads it.
+ * `?auth=callback` also survives Supabase clearing that hash, until the app finishes signing in on the map.
  */
-export const INTRO_BOOT = `try{if(location.pathname==="/"&&!/(^|[#&])(view|access_token|error)=/.test(location.hash))location.replace("${INTRO_PAGE}"+location.hash)}catch(e){}`;
+export const INTRO_BOOT = `try{if(location.pathname==="/"&&new URLSearchParams(location.search).get("auth")!=="callback"&&!/(^|[#&])(view|access_token|error)=/.test(location.hash))location.replace("${INTRO_PAGE}"+location.hash)}catch(e){}`;

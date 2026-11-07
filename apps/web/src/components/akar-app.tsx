@@ -24,6 +24,7 @@ import {
   Users,
   Moon,
   Sun,
+  Globe,
 } from "lucide-react";
 import {
   createHttpClient,
@@ -112,7 +113,7 @@ import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
 import { nearStop, stopDistance, useWatchedPosition } from "../lib/walk-position";
 import { walkingLeg } from "../lib/route-walking";
 import { cityCase } from "../lib/place-names";
-import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
+import { deviceLang, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
 import type { MessageKey } from "../lib/messages";
 import { readPreference, writePreference } from "../lib/preferences";
 import { deviceVoice, saveDeviceVoice, voiceFromAccount, type VoiceChoice, type VoiceGender } from "../lib/story-voice";
@@ -474,7 +475,7 @@ export function AkarApp() {
     // Back to the bare address (the browser's back from the map to the introduction): the introduction is another
     // page, so load it (layout INTRO_BOOT), as the introduction reloads into the app on a link to a view.
     const followHash = () => {
-      if (location.pathname === "/" && !/(^|[#&])view=/.test(location.hash)) location.reload();
+      if (location.pathname === "/" && new URLSearchParams(location.search).get("auth") !== "callback" && !/(^|[#&])view=/.test(location.hash)) location.reload();
       else readLocation();
     };
     window.addEventListener("hashchange", followHash);
@@ -808,8 +809,14 @@ export function AkarApp() {
   // Google sends the page away and back: the sign-in is counted when the session arrives and the visitor had just left for Google.
   const accountKey = account?.id;
   useEffect(() => {
-    if (accountKey && takeGoogleSignIn()) track("account.sign_in", undefined, "returning");
-  }, [accountKey]);
+    if (!accountKey) return;
+    const googleReturn = takeGoogleSignIn();
+    if (googleReturn) track("account.sign_in", undefined, "returning");
+    if (googleReturn || new URLSearchParams(location.search).get("auth") === "callback") {
+      go("map");
+      history.replaceState(null, "", "/#view=map");
+    }
+  }, [accountKey, go]);
   // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
   // name, colour and emblem are that city's, whatever city the map was last left in.
   const pageCity = ["detail", "story", "history", "memories"].includes(view) ? site?.city : undefined;
@@ -1487,19 +1494,14 @@ export function AkarApp() {
             {pageCity}
           </button>}
         </div>
-        {/* One switch: a press anywhere on it turns to the other language, and the thumb slides there. */}
-        <div className="lang-switch" role="group" aria-label={t("lang.switch")} data-lang={lang}>
-          {LANGS.map((l) => (
-            <button
-              key={l}
-              lang={l}
-              aria-pressed={lang === l}
-              onClick={() => changeLanguage(LANGS.find((other) => other !== lang) ?? l)}
-            >
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        <button
+          className="lang-switch"
+          aria-label={lang === "tr" ? "Switch to English" : "Türkçeye geç"}
+          title={lang === "tr" ? "Switch to English" : "Türkçeye geç"}
+          onClick={() => changeLanguage(lang === "tr" ? "en" : "tr")}
+        >
+          <Globe size={18} aria-hidden="true" />
+        </button>
         <AccessMenu />
         <button
           className="theme-switch"
@@ -1512,7 +1514,8 @@ export function AkarApp() {
         <button
           className={`profile-button ${view === "profile" ? "active" : ""}`}
           aria-label={t("header.profile")}
-          onClick={() => go("profile")}
+          aria-haspopup={live && !account ? "dialog" : undefined}
+          onClick={() => live && !account ? setSignIn("") : go("profile")}
         >
           <Avatar figure={avatarFigure} size={36} />
         </button>
@@ -1536,6 +1539,7 @@ export function AkarApp() {
         <>
           {view === "profile" && (
             <Profile
+              key={accountKey ?? "guest"}
               state={state}
               progress={progress}
               onBack={() => go("map")}
@@ -2352,6 +2356,10 @@ export function AkarApp() {
           onClose={() => setSignIn(null)}
           onSignedIn={() => {
             setSignIn(null);
+            go("map");
+            // Keep an in-progress contribution mounted while returning to the map.
+            // Its text, photo and consent must survive the sign-in it requested.
+            if (overlay === "memory") setOverlay("memory");
             setToast(t("toast.signedIn"));
           }}
         />

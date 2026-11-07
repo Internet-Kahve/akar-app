@@ -25,8 +25,8 @@ test("an English browser gets the English site, Turkish-only content is marked, 
   await page.evaluate(() => {
     location.hash = "view=map";
   });
-  // One press on what shows turns to the other language: a phone shows the current one only.
-  await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: "EN" }).click();
+  // The globe switches to the other language on desktop and mobile.
+  await page.getByRole("button", { name: "Türkçeye geç" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "tr");
   await expect(search).toHaveAttribute("placeholder", trHint);
   await page.evaluate(() => {

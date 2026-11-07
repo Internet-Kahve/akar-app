@@ -207,46 +207,17 @@ h1,
 }
 .lang-switch {
   position: relative;
-  isolation: isolate;
-  display: inline-grid;
-  grid-template-columns: 1fr 1fr;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
+  width: 36px;
+  height: 36px;
   margin-left: auto;
-  padding: 2px;
+  padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-}
-/* The thumb under the chosen language; it slides as the Sites | Routes tabs do. */
-.lang-switch::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 2px;
-  bottom: 2px;
-  left: 2px;
-  width: calc(50% - 2px);
-  border-radius: var(--radius-pill);
-  background: var(--primary);
-  transition: transform 280ms var(--ease);
-}
-.lang-switch[data-lang="en"]::before {
-  transform: translateX(100%);
-}
-.lang-switch button {
-  min-width: 32px;
-  height: 28px;
-  padding: 0 8px;
-  border-radius: var(--radius-pill);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-.lang-switch button {
-  transition: color 280ms var(--ease);
-}
-.lang-switch [aria-pressed="true"] {
-  color: var(--on-primary);
+  border-radius: 50%;
+  color: var(--text);
 }
 /* «Turkish» beside a text with no English yet. It keeps its own small face and line inside a large serif title, and
    takes the colour of the text around it, so it reads on the site's dark header as on a light page. */
@@ -1235,10 +1206,6 @@ h1,
     border-color: transparent;
     background: var(--bg);
   }
-  .lang-switch button {
-    min-width: 30px;
-    padding: 0 7px;
-  }
   .workspace,
   .workspace.panel-collapsed {
     display: block;
@@ -1394,7 +1361,6 @@ h1,
 }
 @media (prefers-reduced-motion: reduce) {
   .explore-tabs::before,
-  .lang-switch::before,
   .side-panel,
   .map-controls,
   .site-peek {
@@ -2735,10 +2701,10 @@ button.model-label { border: 0; color: inherit; cursor: default; }
     bottom: 8px;
   }
   .maplibregl-ctrl-attrib { font-size: 10px; line-height: 16px; }
-  .chip, .site-row-add, .trust-tag, .explore-city, .lang-switch button {
+  .chip, .site-row-add, .trust-tag, .explore-city, .lang-switch {
     position: relative;
   }
-  .chip::after, .site-row-add::after, .trust-tag::after, .explore-city::after, .lang-switch button::after {
+  .chip::after, .site-row-add::after, .trust-tag::after, .explore-city::after, .lang-switch::after {
     content: "";
     position: absolute;
     left: 50%;
