@@ -27,9 +27,13 @@ import {
   BarChart3,
   Camera,
   Share2,
+  Trash2,
 } from "lucide-react";
 import {
+  canDeleteSite,
   memoryPermissions,
+  siteStatuses,
+  siteStatusLabels,
   type Command,
   type HeritageSite,
   type MapPlacement,
@@ -375,6 +379,8 @@ export function Admin({
     ),
     [query, setQuery] = useState(""),
     [editing, setEditing] = useState<HeritageSite | null>(null),
+    [deleting, setDeleting] = useState<HeritageSite | null>(null),
+    [statusBusy, setStatusBusy] = useState<string | null>(null),
     [reject, setReject] = useState<string>(),
     [reason, setReason] = useState(""),
     [health, setHealth] = useState<AdminHealth | null>(null),
@@ -660,7 +666,7 @@ export function Admin({
                         <th>Seviye</th>
                         <th>Durum</th>
                         <th>
-                          <span className="sr-only">Düzenle</span>
+                          <span className="sr-only">İşlemler</span>
                         </th>
                       </tr>
                     </thead>
@@ -683,24 +689,57 @@ export function Admin({
                               <Tag>{s.tier}</Tag>
                             </td>
                             <td>
-                              <Tag
-                                tone={
-                                  s.status === "published" ? "success" : "muted"
-                                }
+                              {/* §11.81: any status to any other; publishing runs the publication checks. */}
+                              <select
+                                className={`site-status site-status-${s.status}`}
+                                aria-label={`${s.name} durumu`}
+                                value={s.status}
+                                disabled={statusBusy === s.id}
+                                onChange={async (e) => {
+                                  const status = e.target
+                                    .value as HeritageSite["status"];
+                                  setStatusBusy(s.id);
+                                  try {
+                                    await commit({
+                                      type: "site-status",
+                                      siteId: s.id,
+                                      status,
+                                    });
+                                  } finally {
+                                    setStatusBusy(null);
+                                  }
+                                }}
                               >
-                                {s.status === "published"
-                                  ? "Yayında"
-                                  : "Taslak"}
-                              </Tag>
+                                {siteStatuses.map((status) => (
+                                  <option key={status} value={status}>
+                                    {siteStatusLabels[status]}
+                                  </option>
+                                ))}
+                              </select>
                             </td>
                             <td>
-                              <button
-                                className="icon-btn"
-                                aria-label={`${s.name} düzenle`}
-                                onClick={() => setEditing(s)}
-                              >
-                                <Pencil size={16} />
-                              </button>
+                              <span className="row-actions">
+                                <button
+                                  className="icon-btn"
+                                  aria-label={`${s.name} düzenle`}
+                                  onClick={() => setEditing(s)}
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  className="icon-btn danger"
+                                  aria-label={`${s.name} sil`}
+                                  title={
+                                    canDeleteSite(s)
+                                      ? "Eseri sil"
+                                      : "Yayındaki eser silinemez; önce deaktif et ya da taslağa al."
+                                  }
+                                  disabled={!canDeleteSite(s)}
+                                  onClick={() => setDeleting(s)}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -836,6 +875,19 @@ export function Admin({
           </section>
         )}
       </div>
+      {deleting && (
+        <ConfirmDialog
+          title="Eseri sil"
+          confirm="Evet, sil"
+          onClose={() => setDeleting(null)}
+          onConfirm={() => commit({ type: "delete-site", siteId: deleting.id })}
+        >
+          <p>
+            «{deleting.name}» ({siteStatusLabels[deleting.status].toLocaleLowerCase("tr")}) panelden kaldırılacak.
+            Ziyaretçilerin bu eserdeki rozet ve puanları korunur. Emin misin?
+          </p>
+        </ConfirmDialog>
+      )}
       {reject && (
         <Modal title="Katkıyı reddet" onClose={() => setReject(undefined)}>
           <label className="field">

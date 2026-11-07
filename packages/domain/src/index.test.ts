@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   reduceSnapshot,
+  canDeleteSite,
   categoriesOf,
   categoryLabels,
   filterSites,
@@ -519,4 +520,31 @@ test("display names: 2–24 characters once trimmed, no links or slurs, no team 
   assert.equal(displayNameProblem("ADMIN"), "reserved");
   for (const bad of ["or0spu", "Orospu çocuğu", "amk", "AQ", "s1kt1r git", "pezevenkadam", "Fuck you"])
     assert.equal(displayNameProblem(bad), "inappropriate", bad);
+});
+
+test("§11.81: a site moves between published, draft and inactive; only one that is not published can be deleted", () => {
+  let state = createSeed();
+  const id = "ulu-cami";
+  assert.equal(state.sites.find((s) => s.id === id)?.status, "published");
+  assert.throws(() => reduceSnapshot(state, { type: "delete-site", siteId: id }), /Yayındaki eser silinemez/);
+
+  state = reduceSnapshot(state, { type: "save", siteId: id });
+  state = reduceSnapshot(state, { type: "site-status", siteId: id, status: "inactive" });
+  const site = state.sites.find((s) => s.id === id)!;
+  assert.equal(site.status, "inactive");
+  assert.ok(canDeleteSite(site));
+  // Back on the map: publishing runs the publication checks again.
+  assert.equal(
+    reduceSnapshot(state, { type: "site-status", siteId: id, status: "published" }).sites.find((s) => s.id === id)?.status,
+    "published",
+  );
+
+  const deleted = reduceSnapshot(state, { type: "delete-site", siteId: id });
+  assert.ok(!deleted.sites.some((s) => s.id === id));
+  assert.ok(!deleted.savedIds.includes(id));
+  assert.throws(() => reduceSnapshot(deleted, { type: "delete-site", siteId: id }), /Eser bulunamadı/);
+  assert.throws(
+    () => reduceSnapshot(state, { type: "site-status", siteId: id, status: "archived" as never }),
+    /Geçersiz eser durumu/,
+  );
 });

@@ -171,6 +171,11 @@ export const sites = pgTable(
     /** Legacy one-line source summary kept for backward compatibility (domain `source`). */
     sourceSummary: text("source_summary").notNull().default(""),
     status: publishStatusEnum("status").notNull().default("draft"),
+    /**
+     * Deleted from the panel (§11.81): never published at the time; hidden from every list and read, its rows and the
+     * visitors' history with it kept. Null = not deleted.
+     */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     /** null = legacy record; 2 = editor v2, strict `publicationIssues` gate on publish. */
     editorVersion: integer("editor_version"),
     coverMediaId: text("cover_media_id").references(() => media.id),
@@ -216,6 +221,8 @@ export const sites = pgTable(
       "sites_published_complete",
       sql`${t.status} <> 'published' OR (${t.location} IS NOT NULL AND ${t.typeId} IS NOT NULL AND ${t.locationSource} IS DISTINCT FROM 'nominatim-neighbourhood' AND ${t.locationSource} IS DISTINCT FROM 'nominatim-street')`,
     ),
+    // A deleted site is never on the map (§11.81).
+    check("sites_deleted_not_published", sql`${t.deletedAt} IS NULL OR ${t.status} <> 'published'`),
     index("sites_location_gist").using("gist", t.location),
     index("sites_published_order_idx")
       .on(sql`${t.sortName} COLLATE "C"`, sql`${t.id} COLLATE "C"`)
