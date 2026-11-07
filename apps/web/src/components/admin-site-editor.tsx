@@ -36,6 +36,7 @@ import { PartCardsStep } from "./admin-part-cards";
 import { TasksStep } from "./admin-site-tasks";
 import { AboutStep } from "./admin-site-about";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
+import { pinFollowingModel } from "../lib/placement";
 import { AdminModelPreview, poseSummary } from "./admin-model-preview";
 import { ModelGenPanel, type ModelGenApi } from "./admin-model-gen";
 import { prepareModel } from "../lib/editor-media";
@@ -167,9 +168,34 @@ export function SiteEditor({
     coordinates: draft.coordinates,
     persisted,
     load: loadPlacement,
-    onSave: savePlacement,
+    // The pin moved with the model: «Yerleşimi kaydet» saves it too, alone (the last saved site with only the new
+    // location), so other edits on this screen stay unsaved and the placement never leaves the pin behind.
+    onSave: async (siteId, value) => {
+      await savePlacement(siteId, value);
+      if (!pinFollowingModel(savedDraft.coordinates, value)) return;
+      const located = await onSave({ ...savedDraft, coordinates: [value.lng, value.lat] });
+      setSavedDraft(located);
+      setDraft((d) => ({ ...d, coordinates: located.coordinates }));
+      setBaseline((b) => {
+        try {
+          const parsed = JSON.parse(b) as HeritageSite;
+          return siteKey({ ...parsed, coordinates: located.coordinates });
+        } catch {
+          return siteKey(located);
+        }
+      });
+    },
   });
   const dirty = siteKey(draft) !== baseline || placement.dirty;
+  // Moving the model on the map moves the site's pin with it (the pin is the site's own location): only after an
+  // edit of the placement here, never because a saved placement was read.
+  useEffect(() => {
+    if (!placement.dirty) return;
+    const next = pinFollowingModel(draft.coordinates, placement.value);
+    if (next) field("coordinates", next);
+    // `field` and the coordinates are read at the time of the move.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placement.dirty, placement.value.lng, placement.value.lat]);
   // Both requests work on the texts the server holds: the site must be saved there, with no edit left on this screen.
   const storyJobsReady =
     sites.some((s) => s.id === draft.id) && !dirty && !busy && !storyJob;
