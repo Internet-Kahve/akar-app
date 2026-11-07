@@ -2980,6 +2980,7 @@ test("the placement command PUTs the whole placement with an Idempotency-Key, re
       stored = c.body as Record<string, unknown>;
       return {};
     },
+    "PUT /v1/admin/sites/a/location": () => ({}),
   });
   const client = createHttpClient({
     baseUrl: "http://api.test",
@@ -3029,6 +3030,16 @@ test("the placement command PUTs the whole placement with an Idempotency-Key, re
       }
     ).visible,
     true,
+  );
+  assert.ok(!api.calls.some((c) => c.path.endsWith("/location")), "no pin move unless asked");
+  // The pin follows the model: the placement first, then the site's location alone.
+  await client.dispatch({ type: "map-placement", siteId: "a", placement: hidden, siteCoordinates: [29.0625, 40.1841] });
+  assert.deepEqual(
+    api.calls.filter((c) => c.method === "PUT").slice(-2).map((c) => [c.path, c.body]),
+    [
+      ["/v1/admin/sites/a/map-placement", hidden],
+      ["/v1/admin/sites/a/location", { coordinates: [29.0625, 40.1841] }],
+    ],
   );
   const puts = api.calls.filter((c) => c.method === "PUT").length;
   await assert.rejects(

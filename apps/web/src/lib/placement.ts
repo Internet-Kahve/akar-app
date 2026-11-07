@@ -84,3 +84,19 @@ export const moveTo = (
   lng: number,
   lat: number,
 ): PlacementDraft => ({ ...p, lng: round7(lng), lat: round7(lat) });
+
+/**
+ * The site's own location (its pin) follows its model (7 Nov 2026): moving the model on the map moves the pin with
+ * it, so the pin never stays where the site was first put down. Returns the new location, or `null` when it is
+ * already there (to a ~1 cm step) or the model's point is not a usable one.
+ */
+export function pinFollowingModel(
+  coordinates: [number, number],
+  model: { lng: number; lat: number },
+): [number, number] | null {
+  if (!Number.isFinite(model.lng) || !Number.isFinite(model.lat)) return null;
+  const same = (a: number, b: number) => Math.abs(a - b) < 1e-7;
+  if (same(coordinates[0], model.lng) && same(coordinates[1], model.lat)) return null;
+  const round = (v: number) => Math.round(v * 1e7) / 1e7;
+  return [round(model.lng), round(model.lat)];
+}

@@ -716,8 +716,11 @@ export type Command =
       reason?: string;
     }
   | { type: "site"; site: HeritageSite }
-  /** Saves the whole placement of a site's model (the site and its model must already be saved). */
-  | { type: "map-placement"; siteId: string; placement: MapPlacement }
+  /**
+   * Saves the whole placement of a site's model (the site and its model must already be saved). `siteCoordinates`
+   * also moves the site's own location (its pin) there, alone: no other site field is saved or checked.
+   */
+  | { type: "map-placement"; siteId: string; placement: MapPlacement; siteCoordinates?: [number, number] }
   | { type: "catalog-routes"; routes: HeritageRoute[] }
   | { type: "photo"; photo: SitePhoto; source: SiteSource }
   | { type: "import-sites"; sites: HeritageSite[] };
@@ -1239,6 +1242,12 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
         );
       validatePlacement(command.placement);
       site.model.placement = structuredClone(command.placement);
+      if (command.siteCoordinates) {
+        const [lng, lat] = command.siteCoordinates;
+        if (!Number.isFinite(lng) || !Number.isFinite(lat) || Math.abs(lng) > 180 || Math.abs(lat) > 90)
+          throw new Error("Geçerli enlem ve boylam gir.");
+        site.coordinates = [lng, lat];
+      }
       break;
     }
   }

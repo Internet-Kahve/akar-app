@@ -37,6 +37,7 @@ import { PartCardsStep } from "./admin-part-cards";
 import { TasksStep } from "./admin-site-tasks";
 import { AboutStep } from "./admin-site-about";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
+import { pinFollowingModel } from "../lib/placement";
 import { AdminModelPreview, poseSummary } from "./admin-model-preview";
 import { ModelGenPanel, type ModelGenApi } from "./admin-model-gen";
 import { prepareModel } from "../lib/editor-media";
@@ -130,8 +131,8 @@ export function SiteEditor({
   onSave: (s: HeritageSite) => Promise<HeritageSite>;
   /** The placement saved for the site's model, hidden or not (`AkarClient.getMapPlacement`). */
   loadPlacement: (siteId: string) => Promise<MapPlacement | null>;
-  /** Saves the whole placement of the site's model (the `map-placement` command). */
-  savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
+  /** Saves the whole placement of the site's model (the `map-placement` command); `siteCoordinates` moves the pin too. */
+  savePlacement: (siteId: string, placement: MapPlacement, siteCoordinates?: [number, number]) => Promise<void>;
   /** Records the voice-overs of the saved story and part card texts (`AkarClient.narrateSite`). */
   narrateSite: AkarClient["narrateSite"];
   /** Fills the empty English story and part card texts with a machine draft (`AkarClient.translateSite`). */
@@ -168,9 +169,27 @@ export function SiteEditor({
     coordinates: draft.coordinates,
     persisted,
     load: loadPlacement,
-    onSave: savePlacement,
+    // The pin moved with the model: «Yerleşimi kaydet» saves the new location too, alone (no other site field is
+    // saved or checked), so other edits on this screen stay unsaved and the placement never leaves the pin behind.
+    onSave: async (siteId, value) => {
+      const moved = pinFollowingModel(savedDraft.coordinates, value);
+      await savePlacement(siteId, value, moved ?? undefined);
+      if (!moved) return;
+      setSavedDraft((s) => ({ ...s, coordinates: moved }));
+      setDraft((d) => ({ ...d, coordinates: moved }));
+      setBaseline((b) => siteKey({ ...(JSON.parse(b) as HeritageSite), coordinates: moved }));
+    },
   });
   const dirty = siteKey(draft) !== baseline || placement.dirty;
+  // Moving the model on the map moves the site's pin with it (the pin is the site's own location): only after an
+  // edit of the placement here, never because a saved placement was read.
+  useEffect(() => {
+    if (!placement.dirty) return;
+    const next = pinFollowingModel(draft.coordinates, placement.value);
+    if (next) field("coordinates", next);
+    // `field` and the coordinates are read at the time of the move.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placement.dirty, placement.value.lng, placement.value.lat]);
   // Both requests work on the texts the server holds: the site must be saved there, with no edit left on this screen.
   const storyJobsReady =
     sites.some((s) => s.id === draft.id) && !dirty && !busy && !storyJob;

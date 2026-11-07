@@ -209,3 +209,13 @@ Dal: `muhammedtalay/mobil-duzeltmeler`. Backend değişmedi; şema ve uçlar ayn
    - Google Cloud OAuth istemcisinde yetkili JavaScript kökenlerine yeni alan adı eklenmeli (geri dönüş adresi Supabase'in `/auth/v1/callback` adresi, o değişmez).
    - Yerelde `services/api/supabase/config.toml` (`site_url`, `additional_redirect_urls`) yalnız 127.0.0.1:3000; canlıyı etkilemez.
    - Deneme: internetkahve.com.tr'de profil → Giriş yap → Google; dönüşte adres çubuğu internetkahve.com.tr kalmalı ve profil açık olmalı. E-posta + şifre girişi sayfadan ayrılmadığı için etkilenmiyor; kayıt ve şifre sıfırlama e-postası bağlantısını da dene.
+
+## 7 Kasım · eser düzenleyici: imleç ve «Girdi doğrulanamadı» notları
+
+Dal: `talha/imlec-modelle-tasinir` (PR #115). Backend değişmedi.
+
+1. **İmleç modelle taşınır.** Eserin konumu (`sites.location`, imleç) ile modelin harita yerleşimi (`site_map_placements.lng/lat`) iki ayrı kayıt. Panelde model taşınınca imleç eski yerde kalıyordu (canlıda «deneme»: imleç yeni eserin başlangıç değeri olan Ulucami koordinatında, model ~200 m ötede). Artık model taşınınca konum da aynı noktaya gelir; «Yerleşimi kaydet» `PUT /v1/admin/sites/:id/location` ile konumu da yazar. Daha önce imleci ve modeli bilerek ayrı yerlere koymuş bir eser varsa, modeli bir kez taşımak imleci de oraya götürür.
+2. **Konum tek başına kaydedilir.** İlk sürüm konumu tüm eser kaydıyla (`site` komutu) yazıyordu; yayındaki eksikli bir eserde yayın denetimi bunu reddediyor, hata yerleşimin altında çıkıyordu (`tests/map-placement.spec.ts` bu yüzden düşüyordu). Artık `map-placement` komutu isteğe bağlı `siteCoordinates` alır: yerleşimden sonra yalnız `PUT /v1/admin/sites/:id/location` gider, eserin başka alanı kaydedilmez ya da denetlenmez.
+3. **«Girdi doğrulanamadı» (canlıda «deneme» yayınlanırken).** Neden: kaynağın «Bağlantı» alanına `www.…` gibi `https://` olmadan yazılmış adres. Sunucu doğru yanıt veriyor (`fieldErrors: { "sources.0.url": ["Adres http:// ya da https:// ile başlamalı."] }`), ama panel iki yerde eksik; ikisi de düzeltilmedi:
+   - Eser kaydı hatada yalnız genel mesajı gösteriyor (`admin-site-editor.tsx` `save()` → `error.message`); alan mesajlarını gösteren `describeFieldError` (`lib/errors.ts`) orada kullanılmıyor.
+   - Panel kaydetmeden önce kontrol etmiyor: bağlantının `https://` ile başlaması, gezinti süresinin 0–240 arası tam sayı olması (alan `15.5` ya da `300` kabul ediyor), «Gelir / hizmet ilişkisi» bir eser seçilip «İlişki yok»a dönülünce `relatedSiteId: ""` gitmesi (sunucu reddeder). Sonuncular kodda görüldü, canlıda denenmedi.
