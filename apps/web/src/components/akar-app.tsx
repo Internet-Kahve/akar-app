@@ -2163,7 +2163,9 @@ export function AkarApp() {
             kind={hashLegal}
             onClose={() => {
               setHashLegal(null);
-              history.replaceState(null, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
+              // Only remove our hash parameter. Keep the current history state so Next does not
+              // schedule a URL restore that can overwrite the visitor's next hash navigation.
+              history.replaceState(history.state, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
             }}
           />
         )}
