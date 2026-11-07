@@ -188,6 +188,28 @@ Karar: `docs/BACKEND-DECISIONS.md` §11.76. Bu bilgisayarda Docker/Postgres olma
 4. **Testler** `identity.test.ts` sonunda: figür doğrulaması, 409, hafta sınırı (Pazartesiden bir saniye önceki olay sayılmaz), gizli kullanıcı, misafir, eşitlik sırası, e-posta/kimlik sızmaması, tekrar olayın puan vermemesi, silinen hesabın düşmesi.
 5. **KVKK:** `lib/legal-content.ts` aydınlatma metnine liste satırı eklendi (açık rıza, varsayılan kapalı). Hukuki kontrol gerekiyor.
 
+## 6 Kasım · Burak için notlar (hikâye açısında yakınlaştırma, galeri, mobil 3D)
+
+Dal: `muhammedtalay/mobil-duzeltmeler`. Backend değişmedi; şema ve uçlar aynı.
+
+1. **Yakınlaştırma açıyla birlikte kaydedilir.** Panelde hikâye cümlesinin önizlemesinde tekerlek ya da iki parmakla yapılan yakınlaştırma zaten `CameraPose.distance` olarak yazılıyordu (§11.39 kararı: 1 = bütün model kadrajda). Panel bunu yalnız «yakın / orta / çatı / bütün yapı» sözcüğüyle gösterdiği için değişiklik görünmüyordu. Artık:
+   - Düğme «Açıyı, yakınlaştırmayı ve vurguyu kaydet → Cümle N». Tek basışta açı (azimut, eğim, hedef parça), yakınlaştırma (`distance`), vurgu (`highlights`) ve iç mekân (`interior`) birlikte gider; ayrı alan ya da uç yok.
+   - Özetlerde yakınlaştırma sayıyla yazar: `yakınlaştırma 2,1×` = `1 / distance` (`apps/web/src/lib/pose-summary.ts`). Kaydedilmemiş uyarısı önizlemenin o anki açısını ve yakınlaştırmasını gösterir.
+   - API sınırı değişmedi: `CameraPoseInput.distance` 0,05–4 (`admin-catalog/sites-schemas.ts`). Panel `exact: true` gönderir, ziyaretçi tarafı kamerayı duvardan kaçırmaz.
+   - İçe aktarmada `hikaye.md` «Açı» tablosunun uzaklık sütunu sayı da alır (`prepare-demo-content.py`, `camera()`): paneldeki `2,1×` dosyaya `0,48` olarak yazılır. §11.70 gereği panelde kaydedilen bakış yeniden aktarımda korunur; dosyadaki değeri zorlamak için `--replace-story-views`.
+   - Ziyaretçide aynı `distance`, kartın bıraktığı boş alana göre uygulanır (masaüstünde fotoğraf kartı solda, telefonda altta %22). Panelde «Telefon önizlemesi» bunu gösterir; masaüstü önizlemesi kartsız çerçevedir.
+2. **Galerideki «Fotoğrafını ekle» kutusu kaldırıldı** (eserin fotoğraf galerisinin son kutusu, İz Bırak formunu açıyordu). İz Bırak'ın diğer girişleri (Yaşayan hafıza, Geçmişi Gör, kamera) duruyor; ziyaretçi fotoğrafları galeride görünmeye devam ediyor. `POST` uçları ve moderasyon değişmedi.
+3. **4 Kasım notu 5. madde geri alındı.** Gece iç ışığı 0.45 → 1.7 artışı etkisizdi: gece sunum dosyaları ışıksız (unlit, renk köşelere pişmiş). Yerine iç mekân renkleri yüklemede sıcak tona çekiliyor (`lib/night-interior.ts`); Ulucami gece dosyası zaten sıcak. Gece dosyalarında gölge haritası da kapalı (`lib/light-materials.ts`, `isAllUnlit`).
+4. **Mobil 3D keskinlik/akıcılık** yalnız istemcide: harita kenar yumuşatma, doku süzmesi, sunum çözünürlüğü 2× (zayıf cihaz 1,5×), harekette geçici 1,5×. «İçini göster» takılması için gölge yalnız gerektiğinde çiziliyor, saydam shader ve iç geometri önceden hazırlanıyor. Sunucuya etkisi yok.
+5. **Avatar adı** `mihrimah-sultan` kimliği aynı kaldı, görünen adı «Hürrem Sultan». `AVATAR_IDS` ve `profiles.avatar_id` etkilenmez.
+6. **Giriş internetkahve.com.tr'den akar.tamerakdeniz.com'a atıyor (düzeltilmeli).** Profilden «Giriş yap» → Google ile girişte kullanıcı başka alan adına dönüyor, oturum orada açılıyor. Uygulama doğru adresi istiyor: `sign-in-modal.tsx` `signInWithOAuth({ redirectTo: window.location.href.split("#")[0] })`. Supabase bu adres **Redirect URLs** listesinde yoksa sessizce **Site URL**'ye döner; belirti tam bu. Yapılacaklar:
+   - Supabase panel → Authentication → URL Configuration → Redirect URLs: `https://internetkahve.com.tr/**` ve `https://www.internetkahve.com.tr/**` ekle (akar.tamerakdeniz.com ve Vercel önizleme adresleri kalsın).
+   - Site URL hangi alan adı asıl olacaksa ona çekilsin. Kayıt kodu ve «şifremi unuttum» e-postalarındaki bağlantılar da Site URL'yi kullanıyor; e-posta şablonlarında sabit yazılmış adres varsa güncellenmeli.
+   - API'de `CORS_ORIGINS`'e `https://internetkahve.com.tr` (ve `www`) eklenmeli, yoksa giriş sonrası `/v1/me` istekleri tarayıcıda engellenir.
+   - Google Cloud OAuth istemcisinde yetkili JavaScript kökenlerine yeni alan adı eklenmeli (geri dönüş adresi Supabase'in `/auth/v1/callback` adresi, o değişmez).
+   - Yerelde `services/api/supabase/config.toml` (`site_url`, `additional_redirect_urls`) yalnız 127.0.0.1:3000; canlıyı etkilemez.
+   - Deneme: internetkahve.com.tr'de profil → Giriş yap → Google; dönüşte adres çubuğu internetkahve.com.tr kalmalı ve profil açık olmalı. E-posta + şifre girişi sayfadan ayrılmadığı için etkilenmiyor; kayıt ve şifre sıfırlama e-postası bağlantısını da dene.
+
 ## 7 Kasım · eser düzenleyici: imleç ve «Girdi doğrulanamadı» notları
 
 Dal: `talha/imlec-modelle-tasinir` (PR #115). Backend değişmedi.
@@ -197,3 +219,12 @@ Dal: `talha/imlec-modelle-tasinir` (PR #115). Backend değişmedi.
 3. **«Girdi doğrulanamadı» (canlıda «deneme» yayınlanırken).** Neden: kaynağın «Bağlantı» alanına `www.…` gibi `https://` olmadan yazılmış adres. Sunucu doğru yanıt veriyor (`fieldErrors: { "sources.0.url": ["Adres http:// ya da https:// ile başlamalı."] }`), ama panel iki yerde eksik; ikisi de düzeltilmedi:
    - Eser kaydı hatada yalnız genel mesajı gösteriyor (`admin-site-editor.tsx` `save()` → `error.message`); alan mesajlarını gösteren `describeFieldError` (`lib/errors.ts`) orada kullanılmıyor.
    - Panel kaydetmeden önce kontrol etmiyor: bağlantının `https://` ile başlaması, gezinti süresinin 0–240 arası tam sayı olması (alan `15.5` ya da `300` kabul ediyor), «Gelir / hizmet ilişkisi» bir eser seçilip «İlişki yok»a dönülünce `relatedSiteId: ""` gitmesi (sunucu reddeder). Sonuncular kodda görüldü, canlıda denenmedi.
+
+## 7 Kasım · eser durumu ve silme (Burak için) — **Docker ile doğrulanmadı**
+
+Dal: `talha/eser-durum-silme`. Karar: `docs/BACKEND-DECISIONS.md` §11.81.
+
+1. **Yeni durum `inactive` (deaktif).** Migration `0040_site_status`: `ALTER TYPE publish_status ADD VALUE 'inactive'`, `sites.deleted_at` ve CHECK `sites_deleted_not_published`. Enum'a değer eklemek aynı işlemde kullanılmadığı için transaction içinde güvenli (PG 12+); migration'da `inactive` değeri hiç kullanılmıyor.
+2. **Uçlar.** `POST /v1/admin/sites/:id/deactivate` yeni; `publish` ve `unpublish` artık deaktif eserden de çalışıyor. `DELETE /v1/admin/sites/:id` yeni: yayındaki eser 409, taslak/deaktif 204. `GET /v1/admin/sites` ve `/site-details` `status=inactive` alıyor. Silinmiş eser `loadSites` ve `pageSites` içinde süzülüyor, bu yüzden tüm panel okuma/yazmaları 404 veriyor; tekrar raporu, rota durağı ve ilişkili eser denetimi de süzüyor. Herkese açık katalog zaten yalnız `published` okuduğu için değişmedi.
+3. **Çalıştırılmadı:** `services/api` testleri ve migration (bu bilgisayarda Docker yok). Yeni test `sites.test.ts` sonunda (§11.81). `npm run check` ile doğrulanmalı. Typecheck (API + web), `npm test` (244/244) ve OpenAPI üretimi geçti.
+4. **Bilinen sınır.** İçe aktarmanın tekrar denetimi (`existingSiteKeys`) silinmiş eserleri hâlâ görüyor: silinen bir eser aynı dosyadan yeniden içe aktarılırsa «zaten var» sayılır. Panelden elle yeni eser açmak engellenmiyor.

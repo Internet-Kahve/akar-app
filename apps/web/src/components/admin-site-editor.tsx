@@ -31,6 +31,7 @@ import {
 } from "@akar/domain";
 import { ApiError, routes, type AkarClient, type JobTarget } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
+import { TileLoader, WaitWords } from "./loading-screens";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
 import { TasksStep } from "./admin-site-tasks";
@@ -287,6 +288,8 @@ export function SiteEditor({
       setBusy(false);
     }
   }
+  /** Saving without publishing keeps a deactivated site deactivated (§11.81); anything else becomes a draft. */
+  const offMap: HeritageSite["status"] = savedDraft.status === "inactive" ? "inactive" : "draft";
   async function save(status: HeritageSite["status"], exit = false) {
     if (status === "published" && issues.length) {
       setStep(steps.length - 1);
@@ -310,10 +313,14 @@ export function SiteEditor({
         live
           ? canonical.status === "published"
             ? "Eser yayında."
-            : "Taslak sunucuya kaydedildi."
+            : canonical.status === "inactive"
+              ? "Deaktif eser sunucuya kaydedildi."
+              : "Taslak sunucuya kaydedildi."
           : canonical.status === "published"
             ? "Eser demo keşfinde yayında."
-            : "Taslak bu tarayıcıya kaydedildi.",
+            : canonical.status === "inactive"
+              ? "Deaktif eser bu tarayıcıya kaydedildi."
+              : "Taslak bu tarayıcıya kaydedildi.",
       );
       // The placement has its own save; one still open goes out with the site, now that the server has the model.
       const refused =
@@ -376,6 +383,12 @@ export function SiteEditor({
           <span className="editor-breadcrumb"> › {steps[step]}</span>
         </div>
         <div className="editor-actions">
+          {busy && (
+            <span className="saving-tiles inline" role="status" aria-label="Kaydediliyor">
+              <TileLoader small />
+              <WaitWords group="save" />
+            </span>
+          )}
           {dirty && (
             <button className="btn secondary" onClick={() => setReverting(true)}>
               <RotateCcw size={16} />
@@ -388,9 +401,9 @@ export function SiteEditor({
           <button
             className="btn soft"
             disabled={busy}
-            onClick={() => void save("draft")}
+            onClick={() => void save(offMap)}
           >
-            Taslak kaydet
+            {offMap === "inactive" ? "Deaktif olarak kaydet" : "Taslak kaydet"}
           </button>
           <button
             className="btn"
@@ -1430,9 +1443,9 @@ export function SiteEditor({
             <button
               className="btn"
               disabled={busy}
-              onClick={() => void save("draft", true)}
+              onClick={() => void save(offMap, true)}
             >
-              Taslağı kaydet ve çık
+              {offMap === "inactive" ? "Kaydet ve çık" : "Taslağı kaydet ve çık"}
             </button>
           </div>
         </Modal>

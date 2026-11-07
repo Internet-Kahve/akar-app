@@ -2,7 +2,7 @@
 import { stillMotion } from "../lib/access";
 import { Avatar, useAvatar } from "./avatar";
 import { RouteBuilder, type RouteDraft } from "./route-builder";
-import type { PersonalRoute } from "@akar/domain";
+import type { HeritageRoute, PersonalRoute } from "@akar/domain";
 import { flushSync } from "react-dom";
 import {
   useCallback,
@@ -25,6 +25,7 @@ import {
   Users,
   Moon,
   Sun,
+  Globe,
 } from "lucide-react";
 import {
   createHttpClient,
@@ -60,6 +61,7 @@ import {
   MapChips,
   RoutePreview,
   toggleCategory,
+  type RouteWalkSummary,
   type ExploreTab,
   type PlaceMode,
 } from "./explore-panel";
@@ -74,6 +76,7 @@ import { memoryTraces } from "../lib/memory-traces";
 import { flushUsageOnHide, setUsageClient, track } from "../lib/usage";
 import { useCountOpen } from "../lib/use-count-open";
 import { LivingMemory } from "./living-memory";
+import { WalkStrip } from "./walk-strip";
 import { firstOpenTask, SitePuzzle } from "./site-puzzle";
 import { STORY_STEP_EVENT, StoryPanel, StoryProgress } from "./story-panel";
 import { CompletionCard } from "./completion-card";
@@ -110,9 +113,10 @@ import {
 } from "../lib/bottom-sheet";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { distanceM, NEAR_CITY_MAX_M, nearestFirst } from "../lib/nearby";
+import { nearStop, stopDistance, useWatchedPosition } from "../lib/walk-position";
 import { walkingLeg } from "../lib/route-walking";
 import { cityCase } from "../lib/place-names";
-import { deviceLang, LANGS, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
+import { deviceLang, localize, saveDeviceLang, translate, type Lang } from "../lib/i18n";
 import type { MessageKey } from "../lib/messages";
 import { readPreference, writePreference } from "../lib/preferences";
 import { deviceVoice, saveDeviceVoice, voiceFromAccount, type VoiceChoice, type VoiceGender } from "../lib/story-voice";
@@ -163,6 +167,45 @@ const CARD_CLOSE_PULL = 70;
 const CARD_SCROLL_RISE = 150;
 /** The catalog is read again this often, and whenever the tab comes back to the front. */
 const CATALOG_REFRESH_MS = 5 * 60_000;
+const isDetailView = (v: string) => v === "detail" || v === "story";
+
+/** A route being walked: its stops, the one the visitor is at (its length once over), and what they did with each. */
+type Walk = {
+  ids: string[];
+  at: number;
+  routeId?: string | undefined;
+  doneIds: string[];
+  skippedIds: string[];
+  /** The visitor's points and the time when the walk began: the finish card counts what this walk earned. */
+  startPoints?: number | undefined;
+  startedAt?: string | undefined;
+};
+const WALK_KEY = "akar.rota.yuruyus";
+/** «1» when the visitor asked the walk to follow their position (the distance to the stop, the visit at it). */
+const WALK_FOLLOW_KEY = "akar.rota.konum";
+/** The route id of one of the visitor's own routes in the panel. */
+const MINE = "mine:";
+function readWalk(raw: string | null | undefined): Walk | null {
+  if (!raw) return null;
+  try {
+    const w = JSON.parse(raw) as Partial<Walk>;
+    const list = (x: unknown) => (Array.isArray(x) ? x.filter((v): v is string => typeof v === "string") : []);
+    const ids = list(w.ids);
+    if (!ids.length || typeof w.at !== "number") return null;
+    return {
+      ids,
+      at: Math.min(Math.max(0, w.at), ids.length),
+      routeId: typeof w.routeId === "string" ? w.routeId : undefined,
+      doneIds: list(w.doneIds),
+      skippedIds: list(w.skippedIds),
+      startPoints: typeof w.startPoints === "number" ? w.startPoints : undefined,
+      startedAt: typeof w.startedAt === "string" ? w.startedAt : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function AkarApp() {
   const [state, setState] = useState<Snapshot>(createSeed),
     [ready, setReady] = useState(false),
@@ -179,6 +222,9 @@ export function AkarApp() {
     [place, setPlace] = useState<PlaceMode>("home"),
     [nearPoint, setNearPoint] = useState<[number, number] | null>(null),
     [peekId, setPeekId] = useState<string>(),
+    // The route being walked (6 Nov 2026): its stops and the one the visitor is at. The map goes stop to stop.
+    [walk, setWalk] = useState<Walk | null>(null),
+    walkPeek = useRef<string | undefined>(undefined),
     [hoverId, setHoverId] = useState<string>(),
     [cityInView, setCityInView] = useState<CityRecord | null>(null),
     [flight, setFlight] = useState<MapFlight>(),
@@ -405,7 +451,9 @@ export function AkarApp() {
     const readLocation = () => {
       setPuzzle(null);
       setPick(null);
-      setPeekId(undefined);
+      // The next stop of a walked route opens its card once the address has changed (goNextStop).
+      setPeekId(walkPeek.current);
+      walkPeek.current = undefined;
       const p = new URLSearchParams(location.hash.slice(1));
       const v = p.get("view");
       if (
@@ -430,7 +478,7 @@ export function AkarApp() {
     // Back to the bare address (the browser's back from the map to the introduction): the introduction is another
     // page, so load it (layout INTRO_BOOT), as the introduction reloads into the app on a link to a view.
     const followHash = () => {
-      if (location.pathname === "/" && !/(^|[#&])view=/.test(location.hash)) location.reload();
+      if (location.pathname === "/" && new URLSearchParams(location.search).get("auth") !== "callback" && !/(^|[#&])view=/.test(location.hash)) location.reload();
       else readLocation();
     };
     window.addEventListener("hashchange", followHash);
@@ -771,23 +819,122 @@ export function AkarApp() {
   // Google sends the page away and back: the sign-in is counted when the session arrives and the visitor had just left for Google.
   const accountKey = account?.id;
   useEffect(() => {
-    if (accountKey && takeGoogleSignIn()) track("account.sign_in", undefined, "returning");
-  }, [accountKey]);
+    if (!accountKey) return;
+    const googleReturn = takeGoogleSignIn();
+    if (googleReturn) track("account.sign_in", undefined, "returning");
+    if (googleReturn || new URLSearchParams(location.search).get("auth") === "callback") {
+      go("map");
+      history.replaceState(null, "", "/#view=map");
+    }
+  }, [accountKey, go]);
   // A page of a site (its detail, story, «Geçmişi Gör», «Yaşayan hafıza») belongs to the site's city: the chip's
   // name, colour and emblem are that city's, whatever city the map was last left in.
   const pageCity = ["detail", "story", "history", "memories"].includes(view) ? site?.city : undefined;
   const lookCity =
     cityRecords.find((c) => c.name === pageCity) ?? activeCity;
   const cityLook = cityIdentityStyle(lookCity?.identity ?? null);
-  const route = routes.find((r) => r.id === routeId);
+  /** A catalog route, or one of the visitor's own (`mine:<id>`) dressed as one so it opens and walks the same. */
+  function findRoute(id: string | undefined): HeritageRoute | undefined {
+    if (!id) return undefined;
+    if (id.startsWith(MINE)) {
+      const own = personalRoutes.find((p) => MINE + p.id === id);
+      return own && { id, name: own.name, description: "", siteIds: own.siteIds, minutes: 0, distance: "", theme: "" };
+    }
+    return routes.find((r) => r.id === id);
+  }
+  const route = findRoute(routeId);
   const routeSites = (
     routeId === "custom" ? state.routeIds : (route?.siteIds ?? [])
   )
     .map((id) => published.find((s) => s.id === id))
     .filter((s): s is HeritageSite => !!s);
-  const nextStop = routeId
-    ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
-    : undefined;
+  // The walk lasts through a reload (7 Nov 2026: it used to start over); read once, then written on every change.
+  const walkRead = useRef(false);
+  useEffect(() => {
+    if (!walkRead.current) {
+      walkRead.current = true;
+      const kept = readWalk(readPreference(WALK_KEY));
+      if (kept) {
+        setWalk(kept);
+        // Its panel opens again too, unless the visitor came back to something else (a site's own address).
+        if (kept.routeId && kept.at < kept.ids.length && view === "map") {
+          setTab("routes");
+          setRouteId(kept.routeId);
+        }
+      }
+      return;
+    }
+    writePreference(WALK_KEY, walk ? JSON.stringify(walk) : "");
+  }, [walk]);
+  // A stop opened any way (its pin, the list, the strip) is where the visitor now is on the walk.
+  useEffect(() => {
+    const here = peekId ?? (isDetailView(view) ? siteId : undefined);
+    if (!walk || !here) return;
+    const i = walk.ids.indexOf(here);
+    if (i >= 0 && i !== walk.at) setWalk({ ...walk, at: i });
+  }, [peekId, siteId, view, walk]);
+  // Following the walk by location (7 Nov 2026): only after the visitor asks, and only while a walk is on.
+  const [walkFollow, setWalkFollow] = useState(false);
+  useEffect(() => setWalkFollow(readPreference(WALK_FOLLOW_KEY) === "1"), []);
+  const walkHereId = walk && walk.at < walk.ids.length ? walk.ids[walk.at] : undefined;
+  const walkPosition = useWatchedPosition(ready && walkFollow && !!walkHereId, {
+    unsupported: t("verify.unsupported"),
+    denied: t("walk.locateDenied"),
+    timeout: t("verify.timeout"),
+    failed: t("verify.failed"),
+  });
+  const walkHereSite = walkHereId ? state.sites.find((s) => s.id === walkHereId) : undefined;
+  const walkDistance = walkHereSite ? stopDistance(walkPosition.coordinates, walkHereSite.coordinates) : null;
+  const walkLocation = {
+    on: walkFollow,
+    distance: walkDistance,
+    near: walkDistance !== null && nearStop(walkDistance, walkPosition.accuracyM ?? 0),
+    error: walkPosition.error,
+    visited: !!walkHereId && state.visitedIds.includes(walkHereId),
+  };
+  // A stop whose story is finished, or whose visit is verified, during the walk is done on the walk too: that is what
+  // earns its points and badge, so the visitor need not press «Tamamladım» as well (7 Nov 2026). Only what is new
+  // since the last look counts: a story read before the walk began does not tick its step.
+  const earnedBefore = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    // Before the visitor's state has loaded, the lists are the empty seed: everything would look new.
+    if (!ready) return;
+    const now = new Set([...state.readIds, ...state.visitedIds]);
+    const before = earnedBefore.current;
+    earnedBefore.current = now;
+    if (!before || !walk) return;
+    const fresh = walk.ids.filter((id) => now.has(id) && !before.has(id) && !walk.doneIds.includes(id));
+    if (fresh.length)
+      setWalk({ ...walk, doneIds: [...walk.doneIds, ...fresh], skippedIds: walk.skippedIds.filter((id) => !fresh.includes(id)) });
+  }, [ready, state.readIds, state.visitedIds, walk]);
+  // The walked route's own record (its walking path and legs), once the route panel has closed.
+  const walkRoute = findRoute(walk?.routeId);
+  // What a finished walk earned (7 Nov 2026): its points, the badges of its stops won since it began, and the
+  // route's own badge, which the API gives once every stop's story is finished or the stop is visited.
+  const walkSummary = useMemo((): RouteWalkSummary | undefined => {
+    if (!walk || walk.at < walk.ids.length) return undefined;
+    const ids = new Set(walk.ids);
+    const since = walk.startedAt ?? "";
+    const counted = new Set([...state.readIds, ...state.visitedIds]);
+    const openIds = walk.ids.filter((id) => !counted.has(id));
+    const badge = walkRoute?.badge;
+    return {
+      done: walk.ids.filter((id) => walk.doneIds.includes(id)).length,
+      total: walk.ids.length,
+      points: walk.startPoints === undefined ? undefined : Math.max(0, state.points - walk.startPoints),
+      badges: badgeEntries(state.sites, progress).filter((e) => ids.has(e.site.id) && e.held && e.held.earnedAt >= since),
+      openIds,
+      ...(badge && { routeBadge: { ...badge, earned: openIds.length === 0 } }),
+    };
+  }, [walk, walkRoute, state.readIds, state.visitedIds, state.points, state.sites, progress]);
+  const walkIndex = walk ? walk.ids.indexOf(siteId) : -1;
+  const nextStop = walk
+    ? walkIndex >= 0
+      ? published.find((s) => s.id === walk.ids[walkIndex + 1])
+      : undefined
+    : routeId
+      ? routeSites[routeSites.findIndex((s) => s.id === siteId) + 1]
+      : undefined;
   // A view that changes without a page load is said aloud once (the first view of the visit is not).
   const spokenView = useRef<string | null>(null);
   const viewSiteName = site ? localize(lang, site.name, site.nameEn).text : "";
@@ -818,6 +965,7 @@ export function AkarApp() {
   const isDetail = ["detail", "story"].includes(view),
     showMap = !["profile", "admin", "history", "memories"].includes(view),
     showRoutes = tab === "routes" && !query;
+  const walkInPanel = !!walk && walk.routeId === routeId && showRoutes && view === "map";
   // Back to the map from a site (or the profile, the panel…): the map is built anew, and until its first view has
   // come in its buildings and models stand flat or missing. The opening screen covers that, as at the start.
   const onMapView = showMap && !isDetail;
@@ -883,6 +1031,45 @@ export function AkarApp() {
     turn.ready.catch(() => {});
     turn.updateCallbackDone.catch(() => {});
     void turn.finished.catch(() => {}).finally(() => root.classList.remove("vt-yuzey"));
+  }
+  /** On a walked route the next stop is reached on the map: it flies there and the stop's card opens (6 Nov 2026). */
+  /** Walking in the panel: a step tapped, the stop done, or skipped; the map flies to the stop the walk is now at. */
+  function walkTo(next: Walk) {
+    setWalk(next);
+    const id = next.ids[next.at];
+    if (!id) {
+      changePeek(undefined);
+      if (view !== "map") go("map");
+      return;
+    }
+    // From a site's page, back to the map first; its card opens once the address has changed.
+    if (view !== "map") {
+      walkPeek.current = phone ? undefined : id;
+      go("map");
+    }
+    // On a phone the sheet is the walk's own card (7 Nov 2026): the map only flies there, no short card over it.
+    if (phone) {
+      changePeek(undefined);
+      const stop = published.find((s) => s.id === id);
+      if (stop) setFlight((f) => ({ key: (f?.key ?? 0) + 1, to: "point", point: stop.coordinates }));
+    } else if (view === "map") pickSite(id);
+    else setPeekId(id);
+  }
+  function walkOn(how: "done" | "skipped", from = walk?.at ?? 0, to = from + 1) {
+    if (!walk) return;
+    const id = walk.ids[from];
+    if (!id) return;
+    const doneIds = how === "done" ? [...new Set([...walk.doneIds, id])] : walk.doneIds.filter((x) => x !== id);
+    const skippedIds = how === "skipped" ? [...new Set([...walk.skippedIds, id])] : walk.skippedIds.filter((x) => x !== id);
+    walkTo({ ...walk, doneIds, skippedIds, at: to });
+  }
+  // «Sonraki durak» on a site's page or its story's end does what «Tamamladım, sıradaki» does in the route panel
+  // (Muhammed, 7 Nov 2026: «aynı işlevi yapması gerekiyor»): the stop is done, the walk goes on to the next.
+  function goNextStop(id: string) {
+    if (!walk) return selectSite(id);
+    const here = walk.ids.indexOf(siteId);
+    const at = here >= 0 ? here : walk.at;
+    walkOn("done", at, Math.max(0, walk.ids.indexOf(id)));
   }
   /** A pick on the map or in the list: the map goes there and the short card opens. */
   function pickSite(id: string) {
@@ -992,6 +1179,13 @@ export function AkarApp() {
       setState(await api.getSnapshot());
       for (const id of routeDraft.siteIds) if (!before.has(id)) track("my_route.add", id);
       setRouteDraft(null);
+      setRouteSite(undefined);
+      // The builder borrows the sites tab for the pins' «+»; saved, the panel is back on the routes, at this one's page
+      // (Muhammed, 7 Nov 2026: «direkt rotalar panelinde kalması lazım»).
+      setTab("routes");
+      setRouteId(MINE + route.id);
+      // The search that found the stops would hide the route in the routes panel.
+      setQuery("");
       setToast(t("route.saved"));
     } catch { setToast(t("route.failed")); }
     finally { setRouteBusy(false); }
@@ -1004,6 +1198,9 @@ export function AkarApp() {
       setPersonalRoutes(await client.current!.getPersonalRoutes());
       setState(await client.current!.getSnapshot());
       setRouteDraft(null);
+      setRouteSite(undefined);
+      setTab("routes");
+      setRouteId(undefined);
     } catch { setToast(t("route.failed")); }
     finally { setRouteBusy(false); }
   }
@@ -1334,19 +1531,14 @@ export function AkarApp() {
             {pageCity}
           </button>}
         </div>
-        {/* One switch: a press anywhere on it turns to the other language, and the thumb slides there. */}
-        <div className="lang-switch" role="group" aria-label={t("lang.switch")} data-lang={lang}>
-          {LANGS.map((l) => (
-            <button
-              key={l}
-              lang={l}
-              aria-pressed={lang === l}
-              onClick={() => changeLanguage(LANGS.find((other) => other !== lang) ?? l)}
-            >
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        <button
+          className="lang-switch"
+          aria-label={lang === "tr" ? "Switch to English" : "Türkçeye geç"}
+          title={lang === "tr" ? "Switch to English" : "Türkçeye geç"}
+          onClick={() => changeLanguage(lang === "tr" ? "en" : "tr")}
+        >
+          <Globe size={18} aria-hidden="true" />
+        </button>
         <AccessMenu />
         <button
           className="theme-switch"
@@ -1359,7 +1551,8 @@ export function AkarApp() {
         <button
           className={`profile-button ${view === "profile" ? "active" : ""}`}
           aria-label={t("header.profile")}
-          onClick={() => go("profile")}
+          aria-haspopup={live && !account ? "dialog" : undefined}
+          onClick={() => live && !account ? setSignIn("") : go("profile")}
         >
           <Avatar figure={avatarFigure} size={36} />
         </button>
@@ -1383,6 +1576,7 @@ export function AkarApp() {
         <>
           {view === "profile" && (
             <Profile
+              key={accountKey ?? "guest"}
               state={state}
               progress={progress}
               onBack={() => go("map")}
@@ -1699,7 +1893,10 @@ export function AkarApp() {
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
                         onChat={live ? openChat : undefined}
-                        nextStop={nextStop} nextLeg={nextStop && walkingLeg(route, site.id, nextStop.id)} onNextStop={selectSite} />
+                        nextStop={nextStop} nextLeg={nextStop && walkingLeg(route ?? walkRoute, site.id, nextStop.id)} onNextStop={goNextStop}
+                        walkStep={walk && walkIndex >= 0 ? { at: walkIndex, total: walk.ids.length, ids: walk.ids, doneIds: walk.doneIds } : undefined}
+                        onSkip={() => walkIndex >= 0 && walkOn("skipped", walkIndex)}
+                        onFinish={() => walk && walkIndex >= 0 && walkOn("done", walkIndex, walk.ids.length)} />
                     </div>
                   )
                 ) : isDetail && !site ? (
@@ -1711,34 +1908,79 @@ export function AkarApp() {
                   </div>
                 ) : routeDraft && view === "map" ? (
                   // Rotam is built in the panel (the map beside it shows the route as it grows).
-                  <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => { setRouteDraft(null); setRouteSite(undefined); }} onDelete={() => void deleteRouteDraft()} />
+                  <RouteBuilder draft={routeDraft} routes={personalRoutes} sites={published} busy={routeBusy} adding={!!routeSite} onChange={(next) => setRouteDraft(routeSite && next.id !== routeDraft.id ? { ...next, siteIds: [...new Set([...next.siteIds, routeSite])] } : next)} onSave={() => void saveRouteDraft()} onCancel={() => {
+                    // Begun from a site («rotama ekle»), the visitor goes back to the sites; begun in the routes, to them:
+                    // an existing route's page, or the list for a new one.
+                    if (!routeSite) {
+                      setTab("routes");
+                      setRouteId(routeDraft.id ? MINE + routeDraft.id : undefined);
+                    }
+                    setRouteDraft(null);
+                    setRouteSite(undefined);
+                  }} onDelete={() => void deleteRouteDraft()} />
                 ) : (
                   <div className="discovery-panel">
-                    {/* The visitor's own routes; an empty one (no stops yet) says nothing worth a line. */}
-                    {showRoutes && !routeId && personalRoutes.some((p) => p.siteIds.length) && <section className="personal-route-list" aria-label={t("route.mine")}>
-                      <h3>{t("route.mine")}</h3>
-                      {personalRoutes.filter((p) => p.siteIds.length).map((personal) => <button key={personal.id} className="btn secondary" onClick={() => {
-                        setRouteDraft({ ...personal, siteIds: [...personal.siteIds] }); setRouteSite(undefined); setTab("sites"); setRouteId(undefined);
-                      }}>{personal.name} · {personal.siteIds.length}</button>)}
-                    </section>}
                     {routeId && showRoutes ? (
                       <RoutePreview
                         route={route}
-                        custom={routeId === "custom"}
+                        custom={routeId === "custom" || !!routeId?.startsWith(MINE)}
+                        onEdit={
+                          routeId?.startsWith(MINE)
+                            ? () => {
+                                const personal = personalRoutes.find((p) => MINE + p.id === routeId);
+                                if (!personal) return;
+                                setRouteDraft({ ...personal, siteIds: [...personal.siteIds] });
+                                setRouteSite(undefined);
+                                setTab("sites");
+                                setRouteId(undefined);
+                              }
+                            : undefined
+                        }
                         sites={routeSites}
                         live={live}
                         visitedIds={state.visitedIds}
+                        walk={walk && walk.routeId === routeId ? walk : undefined}
+                        summary={walkSummary}
+                        location={walkLocation}
+                        onFollow={(on) => {
+                          setWalkFollow(on);
+                          writePreference(WALK_FOLLOW_KEY, on ? "1" : "");
+                        }}
+                        onVisit={async () => {
+                          if (walkHereId) await commit({ type: "visit", siteId: walkHereId });
+                        }}
+                        onShare={() =>
+                          walkSummary &&
+                          setShareRequest({
+                            kind: "route",
+                            id: routeId ?? "rota",
+                            title: route ? text(route.name, route.nameEn) : t("route.customTitle"),
+                            done: walkSummary.done,
+                            total: walkSummary.total,
+                            badges: walkSummary.badges,
+                          })
+                        }
                         onBack={() => setRouteId(undefined)}
                         onClose={closeRoute}
                         onSite={selectSite}
+                        onStep={(i) => walk && walkTo({ ...walk, at: i })}
+                        onDone={() => walkOn("done")}
+                        onSkip={() => walkOn("skipped")}
+                        // Leaving the walk closes the route too (7 Nov 2026: one press, its line off the map).
+                        onExitWalk={() => {
+                          setWalk(null);
+                          changePeek(undefined);
+                          closeRoute();
+                        }}
                         onStart={async () => {
                           const ids = routeSites.map((s) => s.id);
                           if (await commit({ type: "set-route", siteIds: ids })) {
-                            selectSite(
-                              ids.find((id) => !state.visitedIds.includes(id)) ??
-                                ids[0]!,
-                            );
-                            setToast(t("toast.routeReady"));
+                            // The walk goes on in this same panel (7 Nov 2026): the steps along its top, the map
+                            // flying to the first stop not yet seen and its card open; the visitor starts the story.
+                            const first = Math.max(0, ids.findIndex((id) => !state.visitedIds.includes(id)));
+                            // A route found by its name leaves no search behind: the map shows every stop's pin.
+                            setQuery("");
+                            walkTo({ ids, at: first, routeId, doneIds: [], skippedIds: [], startPoints: state.points, startedAt: new Date().toISOString() });
                           }
                         }}
                       />
@@ -1772,6 +2014,13 @@ export function AkarApp() {
                           setQuery("");
                           setTab("routes");
                           setRouteId(id);
+                        }}
+                        personalRoutes={showRoutes ? personalRoutes : []}
+                        onOpenPersonal={(id) => {
+                          // A route of one's own opens like any route (7 Nov 2026); its page has the pencil to edit it.
+                          setQuery("");
+                          setTab("routes");
+                          setRouteId(MINE + id);
                         }}
                         onCustomRoute={() => void openRouteBuilder()}
                         onCities={() =>
@@ -1893,7 +2142,6 @@ export function AkarApp() {
                         !storyBlock?.photoId)
                     }
                     visitors={view === "detail" ? visitorPhotos : []}
-                    onAddPhoto={() => setOverlay("memory")}
                     onPick={pick ? pickPart : undefined}
                   />
                 )}
@@ -1919,12 +2167,25 @@ export function AkarApp() {
                       onWholeCountry={setWholeCountry}
                       onLocate={chooseNear}
                       flight={flight}
+                      banner={
+                        // The panel shows the walk itself where it is beside the map; the strip is for elsewhere.
+                        // A phone has its sheet for that (7 Nov 2026: «üstteki küçük yapı kalkabilir»).
+                        walk && !routeDraft && walk.at < walk.ids.length && !walkInPanel && !phone ? (
+                          <WalkStrip
+                            sites={walk.ids.map((id) => published.find((s) => s.id === id)).filter((x): x is HeritageSite => !!x)}
+                            at={walk.at}
+                            seenIds={walk.doneIds}
+                            onExit={() => setWalk(null)}
+                            onStop={(i) => walkTo({ ...walk, at: i })}
+                          />
+                        ) : undefined
+                      }
                       bottomInset={peekSite ? PEEK_INSET : sheetHeight}
                       insetDragging={sheetDragging}
                       routeIds={
                         routeDraft?.siteIds ?? (routeId ? routeSites.map((s) => s.id) : state.routeIds)
                       }
-                      walkingRoute={routeDraft ? undefined : route}
+                      walkingRoute={routeDraft ? undefined : (route ?? walkRoute)}
                       collapsed={collapsed}
                       mapSettings={mapSettings}
                       focusCity={
@@ -2132,6 +2393,10 @@ export function AkarApp() {
           onClose={() => setSignIn(null)}
           onSignedIn={() => {
             setSignIn(null);
+            go("map");
+            // Keep an in-progress contribution mounted while returning to the map.
+            // Its text, photo and consent must survive the sign-in it requested.
+            if (overlay === "memory") setOverlay("memory");
             setToast(t("toast.signedIn"));
           }}
         />
@@ -2201,7 +2466,9 @@ export function AkarApp() {
             kind={hashLegal}
             onClose={() => {
               setHashLegal(null);
-              history.replaceState(null, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
+              // Next.js keeps its router's state in the history entry: dropped (`null`), Next writes its old address
+              // back on the next hash change, and a legal link opened after this one would vanish at once.
+              history.replaceState(history.state, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
             }}
           />
         )}
@@ -2229,7 +2496,7 @@ export function AkarApp() {
             }}
             onNextStop={(id) => {
               setCompletion(null);
-              selectSite(id);
+              goNextStop(id);
             }}
             onProfile={() => {
               setCompletion(null);

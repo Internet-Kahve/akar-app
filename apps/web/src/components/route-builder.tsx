@@ -27,8 +27,10 @@ const routeLength = (stops: HeritageSite[]) => {
  * name, the numbered stops (drag, ↑ ↓, remove), the estimate, and Vazgeç / Kaydet fixed at its foot. Stops are
  * added from the map's pins and the short card, as before; the map draws the route as it grows.
  */
-export function RouteBuilder({ draft, routes, sites, busy, onChange, onSave, onCancel, onDelete }: {
+export function RouteBuilder({ draft, routes, sites, busy, adding, onChange, onSave, onCancel, onDelete }: {
   draft: RouteDraft; routes: PersonalRoute[]; sites: HeritageSite[]; busy: boolean;
+  /** A site is being added from the map: the visitor picks which of their routes it goes into. */
+  adding?: boolean;
   onChange: (draft: RouteDraft) => void; onSave: () => void; onCancel: () => void; onDelete: () => void;
 }) {
   const { t, text } = useI18n();
@@ -56,8 +58,9 @@ export function RouteBuilder({ draft, routes, sites, busy, onChange, onSave, onC
         )}
       </header>
       <div className="rb-fields">
-        {/* Which route: only when the visitor already has one to choose from. */}
-        {routes.some((route) => route.siteIds.length > 0 || route.id === draft.id && !!draft.id) && <label>
+        {/* Which route: only while adding a site from the map and with a route to choose (7 Nov 2026: a route opened
+            to edit, or a new one, has nothing to choose). */}
+        {adding && routes.some((route) => route.siteIds.length > 0) && <label>
           <span>{t("route.choose")}</span>
           <select value={draft.id} disabled={busy} onChange={(event) => {
             const route = routes.find((route) => route.id === event.target.value);

@@ -78,3 +78,16 @@ export function storyPartCard(
 ): PartCard | undefined {
   return cards.find((card) => card.parts.some((p) => highlights.includes(p)));
 }
+
+type Point = { x: number; y: number; z: number };
+/** Whether a tree (a sphere) stands on the line from the camera to what it looks at, or around the camera itself. */
+export function treeBlocksView(camera: Point, target: Point, centre: Point, radius: number): boolean {
+  const way = { x: target.x - camera.x, y: target.y - camera.y, z: target.z - camera.z };
+  const to = { x: centre.x - camera.x, y: centre.y - camera.y, z: centre.z - camera.z };
+  const length = way.x * way.x + way.y * way.y + way.z * way.z;
+  const along = length ? Math.min(1, Math.max(0, (to.x * way.x + to.y * way.y + to.z * way.z) / length)) : 0;
+  const dx = to.x - way.x * along,
+    dy = to.y - way.y * along,
+    dz = to.z - way.z * along;
+  return dx * dx + dy * dy + dz * dz < radius * radius;
+}

@@ -116,6 +116,10 @@ Render artık dağıtım hedefi değildir. Eski hesapların verileri otomatik si
 7. Web projesi Root Directory `apps/web`, Framework Next.js. Production ortamına
    `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publishable key)
    ekle ve yeniden derle. Preview'a üretim veritabanı sırlarını kopyalama.
+   Supabase → Authentication → URL Configuration → Redirect URLs listesine web kökeninin
+   `/?auth=callback` adresini ekle (ör. `https://internetkahve.com.tr/?auth=callback`). Bu adresi
+   kapsayan mevcut `/**` kuralı da yeterlidir. Google dönüşünde bu işaret oturum okunana kadar
+   tanıtım sayfasına yönlendirmeyi engeller; başarılı giriş `/#view=map` adresinde tamamlanır.
 8. Supabase Vault'a `akar_api_url` (API origin) ve `akar_job_secret` (`JOB_SECRET` ile aynı değer)
    kaydet. `scripts/schedule-maintenance.sql` dosyasını SQL Editor'da çalıştır. Dakikalık çağrılar
    kalıcı GLB/içe aktarma işlerini ve sınırlı temizlik gruplarını işler. `/internal/jobs/run`

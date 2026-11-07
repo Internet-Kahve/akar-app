@@ -95,7 +95,22 @@ test("a badge, an achievement and the week are shared as a 1080×1920 story card
   const card = share.getByRole("img", { name: "Paylaşım kartı" });
   await expect(card).toBeVisible();
   expect(await card.evaluate((i) => [(i as HTMLImageElement).naturalWidth, (i as HTMLImageElement).naturalHeight])).toEqual([1080, 1920]);
-  await expect(share).toContainText("İndirip hikâyende paylaşabilirsin");
+  // The apps are offered even where the browser cannot share a file (6 Nov 2026): WhatsApp, Instagram, X, Facebook, a link.
+  const apps = share.getByRole("group", { name: "Uygulamada paylaş" });
+  for (const app of ["WhatsApp", "Instagram", "X", "Facebook", "Bağlantı"]) await expect(apps.getByRole("button", { name: app, exact: true })).toBeVisible();
+  await page.evaluate(() => {
+    const w = window as unknown as { opened: string[] };
+    w.opened = [];
+    window.open = (u?: string | URL) => (w.opened.push(String(u)), null);
+  });
+  await apps.getByRole("button", { name: "WhatsApp", exact: true }).click();
+  const opened = await page.evaluate(() => (window as unknown as { opened: string[] }).opened);
+  expect(opened).toHaveLength(1);
+  const wa = new URL(opened[0]!);
+  expect(wa.host).toBe("wa.me");
+  // A local address shares the public site, with what was won.
+  expect(wa.searchParams.get("text")).toContain("Sahaflar Kapısı");
+  expect(wa.searchParams.get("text")).toContain("https://www.internetkahve.com.tr");
   const download = page.waitForEvent("download");
   await share.getByRole("button", { name: "İndir" }).click();
   expect((await download).suggestedFilename()).toBe("akar-rozet-ulu-sahaflar.png");

@@ -5,6 +5,7 @@ import { routes as seedRoutes } from "@akar/api-client";
 import {
   kindLabels,
   normalize,
+  siteStatusLabels,
   type Command,
   type HeritageRoute,
   type HeritageSite,
@@ -242,7 +243,9 @@ export function RouteAdmin({
                 .map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
-                    {s.status === "draft" ? " (taslak)" : ""}
+                    {s.status === "published"
+                      ? ""
+                      : ` (${siteStatusLabels[s.status].toLocaleLowerCase("tr")})`}
                   </option>
                 ))}
             </select>

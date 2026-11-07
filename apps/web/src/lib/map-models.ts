@@ -11,6 +11,7 @@ import {
   type SceneLight,
 } from "@akar/domain";
 import { modestDevice } from "./device";
+import { MODEST_ANISOTROPY, smoothTextures, TEXTURE_ANISOTROPY } from "./texture-quality";
 import { mergeByMaterial } from "./model-merge";
 import type {
   CustomLayerInterface,
@@ -699,6 +700,7 @@ export class MapModelLayer implements CustomLayerInterface {
       site = this.sites.get(site.id)!;
       const modest = modestDevice();
       stripScenery(gltf.scene, site.interiorParts);
+      smoothTextures(gltf.scene, modest ? MODEST_ANISOTROPY : TEXTURE_ANISOTROPY, this.renderer?.capabilities.getMaxAnisotropy() ?? 1);
       const baked = isBaked(gltf.scene);
       if (!baked) saturate(gltf.scene, site.light.saturation);
       gltf.scene.traverse((node) => {

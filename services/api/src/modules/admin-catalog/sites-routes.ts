@@ -1,5 +1,6 @@
 import type { FastifyRequest } from "fastify";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
+import { z } from "zod";
 import { requireRole } from "../../platform/auth.ts";
 import { idempotent, type Tx } from "../../platform/idempotency.ts";
 import { IdParams } from "../catalog/schemas.ts";
@@ -11,6 +12,8 @@ import {
   listAdminSiteDetails,
   listAdminSites,
   listCards,
+  deactivateSite,
+  deleteSite,
   publishSite,
   setHistoryImages,
   setLocation,
@@ -349,6 +352,38 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => write(req, 200, (tx, ctx) => unpublishSite(tx, ctx, req.params.id)),
+  );
+
+  app.post(
+    "/v1/admin/sites/:id/deactivate",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary: "Eseri deaktif et: haritadan kalkar, kaydı durur; deaktif eser silinebilir (§11.81)",
+        params: IdParams,
+        response: { 200: AdminSiteDetail },
+      },
+    },
+    async (req) => write(req, 200, (tx, ctx) => deactivateSite(tx, ctx, req.params.id)),
+  );
+
+  app.delete(
+    "/v1/admin/sites/:id",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary:
+          "Yayında olmayan (taslak ya da deaktif) eseri sil: panelden kalkar, kaydı ve ziyaretçi geçmişi gizli saklanır; yayındaki eser 409 (§11.81)",
+        params: IdParams,
+        response: { 204: z.null() },
+      },
+    },
+    async (req, reply) => {
+      await write(req, 204, (tx, ctx) => deleteSite(tx, ctx, req.params.id));
+      return reply.status(204).send(null);
+    },
   );
 
   app.get(

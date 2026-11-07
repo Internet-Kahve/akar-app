@@ -7,14 +7,20 @@ import { customType, pgEnum, timestamp } from "drizzle-orm/pg-core";
 
 type NonEmpty<T> = [T, ...T[]];
 export const trustLevels = Object.keys(trustLabels) as NonEmpty<Trust>;
+/** A route's status. */
 export const publishStatuses = ["draft", "published"] as const satisfies readonly HeritageSite["status"][];
+/**
+ * A site's status (§11.81): routes' two plus `inactive` (taken off the map, kept). One database enum serves both
+ * tables; the route schemas accept only `publishStatuses`.
+ */
+export const siteStatuses = ["draft", "published", "inactive"] as const satisfies readonly HeritageSite["status"][];
 export const sourceKinds = ["book", "article", "archive", "web", "field"] as const satisfies readonly SiteSource["kind"][];
 export const siteTiers = ["Hero", "Tier 2", "Tier 1"] as const satisfies readonly HeritageSite["tier"][];
 export const siteRoles = ["akar", "hayrat", "both"] as const satisfies readonly NonNullable<HeritageSite["role"]>[];
 export const mediaKinds = ["photo", "model", "audio"] as const;
 
 export const trustEnum = pgEnum("trust_level", trustLevels);
-export const publishStatusEnum = pgEnum("publish_status", publishStatuses);
+export const publishStatusEnum = pgEnum("publish_status", siteStatuses);
 export const sourceKindEnum = pgEnum("source_kind", sourceKinds);
 export const siteTierEnum = pgEnum("site_tier", siteTiers);
 export const siteRoleEnum = pgEnum("site_role", siteRoles);

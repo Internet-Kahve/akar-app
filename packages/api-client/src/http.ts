@@ -35,6 +35,8 @@ import {
   normalizeDisplayName,
   type AvatarId,
   type WeeklyLeaderboard,
+  type SiteStatus,
+  PUBLISHED_SITE_DELETE_ERROR,
 } from "@akar/domain";
 import type {
   AdminHealth,
@@ -370,7 +372,7 @@ interface AdminSiteDetailDto extends Omit<
 > {
   kind: string | null;
   coordinates: [number, number] | null;
-  status: "draft" | "published";
+  status: SiteStatus;
   openingCamera: CameraPose | null;
   /** The saved placement; `null` while none was saved; absent on older API versions. */
   mapPlacement?: AdminPlacementDto | null;
@@ -387,6 +389,8 @@ interface RouteDto {
   theme: string;
   stops: Array<{ site: SiteSummaryDto; quizId: string | null; leg?: RouteLeg | null }>;
   walking?: { status: "complete" | "partial" | "unavailable" };
+  /** Absent from an API older than route badges. */
+  badge?: { title: string; url: string | null; alt: string | null } | null;
 }
 /** `AdminRoute`: drafts included; stops may name draft sites. */
 interface AdminRouteDto {
@@ -787,6 +791,12 @@ const mapAdminPlacement = (
 });
 
 /** Panel view of an admin detail. A draft without a type shows "cami"; one without a location shows `placeholder` (decision log §11.23). */
+/** The panel command that moves a site to each status (`POST /v1/admin/sites/:id/<action>`). */
+const statusAction: Record<SiteStatus, string> = {
+  published: "publish",
+  draft: "unpublish",
+  inactive: "deactivate",
+};
 const mapAdminSite = (
   d: AdminSiteDetailDto,
   placeholder: [number, number],
@@ -823,6 +833,9 @@ const mapRoute = (r: RouteDto): HeritageRoute => ({
   theme: r.theme,
   status: "published",
   ...(present(r.nameEn) && { nameEn: r.nameEn }),
+  ...(r.badge?.title.trim() && {
+    badge: { title: r.badge.title, ...(present(r.badge.url) && { url: r.badge.url }), ...(present(r.badge.alt) && { alt: r.badge.alt }) },
+  }),
 });
 
 /** Panel view of a draft route. Duration and distance are computed only for published routes; the panel recomputes both when it saves. */
@@ -1279,12 +1292,17 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
     }
     const key = await token();
     if (!drafts || drafts.key !== key) {
-      const [items, routes] = await Promise.all([
+      // Not published: drafts and inactive sites (§11.81); deleted ones the server never lists.
+      const [draftItems, inactiveItems, routes] = await Promise.all([
         pages<AdminSiteDetailDto>("/v1/admin/site-details", {
           status: "draft",
         }),
+        pages<AdminSiteDetailDto>("/v1/admin/site-details", {
+          status: "inactive",
+        }),
         loadDraftRoutes(),
       ]);
+      const items = [...draftItems, ...inactiveItems];
       drafts = {
         key,
         raw: new Map(items.map((d) => [d.id, d])),
@@ -1728,10 +1746,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
           body: { coordinates: site.coordinates },
         });
       await saveContent(site, cur, path);
-      if (site.status === "published" && !pub)
-        await call("POST", `${path}/publish`);
-      if (site.status === "draft" && pub)
-        await call("POST", `${path}/unpublish`);
+      if (site.status !== cur.status)
+        await call("POST", `${path}/${statusAction[site.status]}`);
     } catch (e) {
       // Earlier steps may have been saved (e.g. info before a refused publish): show them.
       await refreshAdminSite(site.id).catch(() => undefined);
@@ -2200,6 +2216,8 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       "siteId" in command &&
       // A placement is also saved for drafts, which the published catalog does not list.
       command.type !== "map-placement" &&
+      command.type !== "site-status" &&
+      command.type !== "delete-site" &&
       !cat.sites.some((s) => s.id === command.siteId)
     )
       throw new Error("Eser bulunamadı.");
@@ -2329,6 +2347,26 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       case "site":
         await updateSite(command.site);
         return false;
+      case "site-status": {
+        const id = createdIds.get(command.siteId) ?? command.siteId;
+        const path = `/v1/admin/sites/${encodeURIComponent(id)}`;
+        try {
+          await call("POST", `${path}/${statusAction[command.status]}`);
+        } finally {
+          // A refused publish leaves the site as it was; either way the panel shows the server's state.
+          await refreshAdminSite(id).catch(() => undefined);
+        }
+        return false;
+      }
+      case "delete-site": {
+        const id = createdIds.get(command.siteId) ?? command.siteId;
+        const cat = await loadCatalog();
+        if (cat.raw.has(id)) throw new Error(PUBLISHED_SITE_DELETE_ERROR);
+        await call("DELETE", `/v1/admin/sites/${encodeURIComponent(id)}`);
+        drafts?.raw.delete(id);
+        drafts?.stale.delete(id);
+        return false;
+      }
       case "map-placement": {
         validatePlacement(command.placement);
         const p = command.placement;
@@ -2463,7 +2501,7 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       await call<{ avatarId: AvatarId }>("PUT", "/v1/me/avatar", { body: { avatarId } });
       if (user?.signedIn) user = { ...user, publicProfile: { avatarId, leaderboardVisible: user.publicProfile?.leaderboardVisible ?? false } };
     },
-    getWeeklyLeaderboard: () => call<WeeklyLeaderboard>("GET", "/v1/leaderboard/week"),
+    getWeeklyLeaderboard: () => call<WeeklyLeaderboard>("GET", "/v1/leaderboard/week", { cache: "no-store" }),
     setLeaderboardVisible: async (visible) => {
       const saved = await call<{ visible: boolean }>("PUT", "/v1/me/leaderboard", { body: { visible } });
       if (user?.signedIn) user = { ...user, publicProfile: { avatarId: user.publicProfile?.avatarId ?? null, leaderboardVisible: saved.visible } };

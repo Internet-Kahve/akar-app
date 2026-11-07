@@ -87,7 +87,7 @@ h2{font-size:clamp(30px,3.6vw,46px);line-height:1.08}
 .qr-kutu small{color:rgba(255,255,255,.7);font-size:13px}
 .nav-sag{display:flex;align-items:center;gap:8px}
 .dil,.tema{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:42px;min-width:42px;padding:0 10px;border:1px solid var(--cizgi);border-radius:999px;background:transparent;color:var(--murekkep);font:500 13px/1 inherit;font-family:inherit;cursor:pointer}
-.dil b{font-weight:700}.dil span{color:var(--soluk)}
+
 .tema svg{width:18px;height:18px}
 h1 em{font-style:normal;color:#C9A13B}
 .giris-alt{display:flex;flex-wrap:wrap;align-items:center;gap:18px 28px;margin-top:26px}
@@ -220,7 +220,7 @@ footer .yasal a{display:inline-flex;align-items:center;min-height:44px;color:var
 <header class="nav"><div class="ic">
   <a href="#" aria-label="AKAR, sayfanın başı"><img src="/logo/logo-web.png" alt="AKAR" width="800" height="237"></a>
   <div class="nav-sag">
-    <button type="button" class="dil" id="dil" aria-label="Dil / Language"><b>TR</b><span>EN</span></button>
+    <button type="button" class="dil" id="dil" aria-label="Switch to English" title="Switch to English"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a18 18 0 0 0 0 20 18 18 0 0 0 0-20M2 12h20"/></svg></button>
     <button type="button" class="tema" id="tema" aria-label="Gece teması"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg></button>
     <a class="btn" href="/#view=map">Haritayı aç</a>
   </div>
@@ -405,7 +405,7 @@ var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),d;
 while(d=w.nextNode()){var k=d.nodeValue,t=k.trim();if(t&&EN[k]!==undefined)ilk.set(d,{tr:k,en:EN[k]});else if(t&&EN[t]!==undefined)ilk.set(d,{tr:k,en:k.replace(t,EN[t])});}
 document.querySelectorAll('[alt],[aria-label]').forEach(function(e){['alt','aria-label'].forEach(function(a){var v=e.getAttribute(a);if(v&&ATTR[v])attrIlk.push([e,a,v,ATTR[v]]);});});
 var trBaslik=document.title,dilBtn=document.getElementById('dil');
-function dil(l){ilk.forEach(function(v,n){n.nodeValue=l==='en'?v.en:v.tr});attrIlk.forEach(function(x){x[0].setAttribute(x[1],l==='en'?x[3]:x[2])});document.documentElement.lang=l;document.title=l==='en'?"AKAR · Türkiye's waqf heritage on the map":trBaslik;dilBtn.innerHTML=l==='en'?'<span>TR</span><b>EN</b>':'<b>TR</b><span>EN</span>';window.AKAR_DIL=l;}
+function dil(l){ilk.forEach(function(v,n){n.nodeValue=l==='en'?v.en:v.tr});attrIlk.forEach(function(x){x[0].setAttribute(x[1],l==='en'?x[3]:x[2])});document.documentElement.lang=l;document.title=l==='en'?"AKAR · Türkiye's waqf heritage on the map":trBaslik;dilBtn.setAttribute('aria-label',l==='en'?'Türkçeye geç':'Switch to English');dilBtn.title=dilBtn.getAttribute('aria-label');window.AKAR_DIL=l;}
 var kayit=null;try{kayit=localStorage.getItem('akar.dil')}catch(e){}
 dil(kayit==='en'||kayit==='tr'?kayit:(/^tr/i.test(navigator.language||'tr')?'tr':'en'));
 dilBtn.addEventListener('click',function(){var n=window.AKAR_DIL==='en'?'tr':'en';dil(n);try{localStorage.setItem('akar.dil',n)}catch(e){}});
@@ -444,8 +444,8 @@ const bas = async () => {
     const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
     const yukleyici = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('/draco/'));
     const dar = innerWidth < 900;
-    const r = new THREE.WebGLRenderer({ antialias: !dar, alpha: true, powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(devicePixelRatio, dar ? 1.25 : 1.5));
+    const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    r.setPixelRatio(Math.min(devicePixelRatio, dar ? 1.5 : 2));
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap; r.shadowMap.autoUpdate = false;
     kutu.prepend(r.domElement);

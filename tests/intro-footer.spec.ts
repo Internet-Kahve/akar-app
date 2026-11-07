@@ -19,6 +19,7 @@ test("the intro page's footer ends with the KVKK notice and the licences, which 
 
   await page.goto("/#view=map&belge=lisanslar");
   await expect(page.getByRole("dialog", { name: "Lisanslar ve kaynaklar" })).toBeVisible();
+  await expect(page).toHaveURL(/#view=map&belge=lisanslar$/);
 });
 
 test("the footer reads in English when the page is in English", async ({ page }) => {

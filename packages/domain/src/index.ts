@@ -559,7 +559,7 @@ export interface HeritageSite {
   coordinates: [number, number];
   minutes: number;
   description: string;
-  status: "published" | "draft";
+  status: SiteStatus;
   stories: StoryBlock[];
   source: string;
   tier: "Hero" | "Tier 2" | "Tier 1";
@@ -622,6 +622,23 @@ export interface RouteLeg {
   meters: number;
   seconds: number;
 }
+/**
+ * Where a site stands in the panel (§11.81): `published` is on the map; `draft` is still being written; `inactive`
+ * was taken off the map and kept. Only `published` is public. A site that is not published can be deleted.
+ */
+export type SiteStatus = "published" | "draft" | "inactive";
+/** Every site status in the order the panel offers them. */
+export const siteStatuses: readonly SiteStatus[] = ["published", "draft", "inactive"];
+export const siteStatusLabels: Record<SiteStatus, string> = {
+  published: "Yayında",
+  draft: "Taslak",
+  inactive: "Deaktif",
+};
+/** A published site is never deleted outright: it is first set to draft or inactive (§11.81). */
+export const canDeleteSite = (site: { status: SiteStatus }): boolean =>
+  site.status !== "published";
+export const PUBLISHED_SITE_DELETE_ERROR =
+  "Yayındaki eser silinemez; önce deaktif et ya da taslağa al.";
 export interface HeritageRoute {
   id: string;
   name: string;
@@ -639,6 +656,11 @@ export interface HeritageRoute {
   legs?: Array<RouteLeg | null>;
   /** `complete`: every leg computed, so `minutes`/`distance` use the real path (§11.79). */
   walking?: "complete" | "partial" | "unavailable";
+  /**
+   * The badge the API gives whoever finishes every stop (its story or a visit at the site); absent when the route has
+   * none, and for drafts, local routes and the demo.
+   */
+  badge?: { title: string; url?: string; alt?: string };
 }
 export type Role = "user" | "editor" | "moderator" | "admin";
 /** Points an approved memory earns and loses again when it is removed; the API's `memory.approved` ledger value. */
@@ -711,6 +733,10 @@ export type Command =
       reason?: string;
     }
   | { type: "site"; site: HeritageSite }
+  /** Changes only the site's status (publishing runs the publication checks); no other field is saved. */
+  | { type: "site-status"; siteId: string; status: SiteStatus }
+  /** Removes a site that is not published from the panel (§11.81): the server keeps its record, hidden. */
+  | { type: "delete-site"; siteId: string }
   /**
    * Saves the whole placement of a site's model (the site and its model must already be saved). `siteCoordinates`
    * also moves the site's own location (its pin) there, alone: no other site field is saved or checked.
@@ -1077,7 +1103,10 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
   const next = structuredClone(state);
   if (
     "siteId" in command &&
+    // Panel commands also name drafts and inactive sites; each checks its own site.
     command.type !== "map-placement" &&
+    command.type !== "site-status" &&
+    command.type !== "delete-site" &&
     !state.sites.some(
       (s) => s.id === command.siteId && s.status === "published",
     )
@@ -1226,6 +1255,27 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
       next.sites = before
         ? next.sites.map((s) => (s.id === incoming.id ? incoming : s))
         : [...next.sites, incoming];
+      break;
+    }
+    case "site-status": {
+      const at = next.sites.findIndex((s) => s.id === command.siteId);
+      const site = next.sites[at];
+      if (!site) throw new Error("Eser bulunamadı.");
+      if (!siteStatuses.includes(command.status))
+        throw new Error("Geçersiz eser durumu.");
+      const changed = { ...site, status: command.status };
+      if (command.status === "published") validateSite(changed);
+      next.sites[at] = changed;
+      break;
+    }
+    case "delete-site": {
+      const at = next.sites.findIndex((s) => s.id === command.siteId);
+      const site = next.sites[at];
+      if (!site) throw new Error("Eser bulunamadı.");
+      if (!canDeleteSite(site)) throw new Error(PUBLISHED_SITE_DELETE_ERROR);
+      next.sites.splice(at, 1);
+      next.savedIds = next.savedIds.filter((id) => id !== command.siteId);
+      next.routeIds = next.routeIds.filter((id) => id !== command.siteId);
       break;
     }
     case "map-placement": {

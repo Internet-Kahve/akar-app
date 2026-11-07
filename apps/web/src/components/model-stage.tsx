@@ -9,7 +9,7 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { Box } from "lucide-react";
-import { modelFileFor, type CityIdentity, type CityScene } from "@akar/domain";
+import { modelFileFor, type CityIdentity, type CityScene, type SiteKind } from "@akar/domain";
 import { identityStyle } from "../lib/city-identity";
 import {
   describeDownload,
@@ -48,12 +48,15 @@ function Stage({
   scene,
   identity,
   context,
+  kind,
   onPhotos,
   ...viewer
 }: {
   scene: CityScene;
   identity: CityIdentity | null;
   context: ModelLoadingContext;
+  /** The site's kind, for the loading picture: a building rising for a mosque or a tomb, arches otherwise. */
+  kind?: SiteKind | undefined;
   /** «Görsellerle devam et» when the model cannot open; absent when the site has no photographs. */
   onPhotos?: (() => void) | undefined;
 } & Omit<
@@ -100,7 +103,7 @@ function Stage({
         onSettled={setPhase}
       />
       {card && "--city-pattern" in look && <CityPattern />}
-      {card && <ModelLoadingCard progress={progress} context={context} />}
+      {card && <ModelLoadingCard progress={progress} context={context} kind={kind} identity={identity} />}
       {phase === "failed" && (
         <div className="model-failed" role="alert">
           <Box size={28} />

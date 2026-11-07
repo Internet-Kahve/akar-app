@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { check, doublePrecision, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { cities, historyImages, sites, sources } from "./catalog.ts";
 import { media } from "./media.ts";
-import { publishStatusEnum, timestamps, trustEnum } from "./shared.ts";
+import { publishStatusEnum, type publishStatuses, timestamps, trustEnum } from "./shared.ts";
 
 /** Duration and distance are not stored: computed from the stop chain (PostGIS) + narration minutes. */
 export const catalogRoutes = pgTable(
@@ -18,7 +18,8 @@ export const catalogRoutes = pgTable(
     theme: text("theme").notNull(),
     badgeTitle: text("badge_title"),
     badgeMediaId: text("badge_media_id").references(() => media.id),
-    status: publishStatusEnum("status").notNull().default("draft"),
+    /** One enum with sites (§11.81), but a route is only ever draft or published. */
+    status: publishStatusEnum("status").$type<(typeof publishStatuses)[number]>().notNull().default("draft"),
     ...timestamps,
   },
   (t) => [
