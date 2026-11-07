@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { modelMotionRatio, modelPixelRatio, modestDevice } from "../lib/device";
-import { isAllUnlit, lambertWanted, useLambert } from "../lib/light-materials";
+import { isAllUnlit } from "../lib/light-materials";
 import { warmNightInterior } from "../lib/night-interior";
 import { MODEST_ANISOTROPY, smoothTextures, TEXTURE_ANISOTROPY } from "../lib/texture-quality";
 import { liftOverlays } from "../lib/overlay-layers";
@@ -641,7 +641,6 @@ export default function ModelViewer({
           }
           object = gltf.scene;
           const light: CityScene["light"] = JSON.parse(lightKey);
-          if (lambertWanted(location.search, location.hash)) useLambert(object);
           // A night file is unlit: no light reaches it, so the sun's shadow map would be drawn for nothing.
           const unlit = isAllUnlit(object);
           saturate(object, light.saturation);
@@ -899,7 +898,7 @@ export default function ModelViewer({
               for (const mesh of meshes)
                 for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
                   const colour =
-                    m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshLambertMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
+                    m instanceof THREE.MeshStandardMaterial ? m.emissive : m instanceof THREE.MeshBasicMaterial ? m.color : null;
                   if (!colour) continue;
                   if (!baseColour.has(m)) baseColour.set(m, colour.clone());
                   // Close up the part fills the frame: a touch of light is enough.
