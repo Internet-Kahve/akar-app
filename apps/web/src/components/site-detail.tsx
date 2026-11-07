@@ -55,6 +55,7 @@ export function SiteDetail({
   onHistory,
   onMemories,
   onPuzzle,
+  onChat,
   nextStop,
   nextLeg,
   onNextStop,
@@ -74,6 +75,7 @@ export function SiteDetail({
   onHistory: () => void;
   onMemories: () => void;
   onPuzzle: () => void;
+  onChat?: (() => void) | undefined;
   /** On a route: the stop after this one (the prototype's «Sonraki durak»). */
   nextStop?: HeritageSite | undefined;
   /** Stored walking path to `nextStop`; `null`/absent = schematic (§11.79). */
@@ -219,6 +221,20 @@ export function SiteDetail({
         {t("site.explore")}
       </div>
       <nav className="kesif-yollari" aria-labelledby="detail-explore">
+        {onChat && (
+          <button className="ky" onClick={onChat}>
+            <span className="ky-ik">
+              <span className="ky-daire">
+                <MessageCircle size={22} />
+              </span>
+            </span>
+            <span className="ky-yazi">
+              <b>{t("chat.askSite")}</b>
+              <small>{t("chat.askSiteNote")}</small>
+            </span>
+            <ChevronRight className="ky-ok" size={18} />
+          </button>
+        )}
         <button className="ky" onClick={onHistory}>
           <span className="ky-ik">
             {oldest ? (

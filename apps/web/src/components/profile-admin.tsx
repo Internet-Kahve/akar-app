@@ -56,6 +56,7 @@ const AdminMembers = dynamic(() => import("./admin-members").then((m) => m.Admin
 const AdminHealthAlert = dynamic(() => import("./admin-health").then((m) => m.AdminHealthAlert), { ssr: false });
 const AdminMapSettings = dynamic(() => import("./admin-map-settings").then((m) => m.AdminMapSettings), { ssr: false });
 const AdminStats = dynamic(() => import("./admin-stats").then((m) => m.AdminStats), { ssr: false });
+import type { ModelGenApi } from "./admin-model-gen";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -324,6 +325,7 @@ export function Admin({
   saveMapSettings,
   loadStats,
   loadSiteStats,
+  modelGen,
 }: {
   state: Snapshot;
   commit: Commit;
@@ -343,6 +345,8 @@ export function Admin({
   saveMapSettings: (settings: MapSettings) => Promise<MapSettings>;
   loadStats: AkarClient["getUsageStats"];
   loadSiteStats: AkarClient["getSiteUsageStats"];
+  /** Chat model editing (admin only, live system). */
+  modelGen: ModelGenApi;
 }) {
   const canEdit = role === "editor" || role === "admin";
   const [page, setPage] = useState<ModerationPage>({
@@ -594,6 +598,7 @@ export function Admin({
             narrateSite={narrateSite}
             translateSite={translateSite}
             live={live}
+            modelGen={live && role === "admin" ? modelGen : undefined}
           />
         ) : tab === "members" && role === "admin" ? (
           <AdminMembers

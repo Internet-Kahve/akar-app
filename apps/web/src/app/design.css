@@ -5045,3 +5045,26 @@ body:has(.gg) { overflow-x: clip; }
 .walk-visited { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--sehir-aksan, var(--primary)); font: 600 14px/18px var(--font); }
 .walk-visit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .route-page.route-walk .walk-location svg { display: inline; }
+
+/* Leave the assistant's bottom-right corner clear of persistent page actions. */
+@media (min-width: 900px) {
+  .app-shell:has(.chat-fab) .detail-scene .model-views,
+  .app-shell:has(.chat-fab) .detail-scene > .model-viewer > .model-inside {
+    right: 76px;
+  }
+  .app-shell:has(.chat-fab) .maplibregl-ctrl-bottom-right { right: 76px; }
+}
+@media (max-width: 899.98px) {
+  .app-shell:has(.chat-fab) .gg-bos-alt,
+  .app-shell:has(.chat-fab) .gg-m .gg-nereye { right: 76px; }
+  .app-shell:has(.chat-fab) .story-player,
+  .app-shell:has(.chat-fab) .hz-alt-cubuk { padding-right: 76px; }
+  .app-shell:has(.chat-fab) .workspace.on-map .side-panel { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  .app-shell:has(.chat-fab) .workspace.on-site .detail-panel::after {
+    content: "";
+    display: block;
+    flex: none;
+    order: 10;
+    height: 60px;
+  }
+}

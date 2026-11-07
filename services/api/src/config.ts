@@ -1,5 +1,6 @@
 import { DEFAULT_TTS_VOICES, parseVoiceModels } from "./platform/tts.ts";
 import { z } from "zod";
+import { DEFAULT_CHAT_MODEL } from "./platform/chat-model.ts";
 
 const optionalUrl = z
   .string()
@@ -106,9 +107,22 @@ const Env = z.object({
     .string()
     .default("")
     .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))]),
-  GEMINI_CHAT_MODEL: z.string().trim().min(1).default("gemini-3.5-flash-lite"),
+  GEMINI_CHAT_MODEL: z.string().trim().min(1).default(DEFAULT_CHAT_MODEL),
+  /** Ordered lower models; unset = current free-tier ladder below the primary, empty = no fallbacks. */
+  GEMINI_CHAT_FALLBACK_MODELS: z.string()
+    .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))])
+    .pipe(z.array(z.string().regex(/^[a-zA-Z0-9._-]+$/)).max(8))
+    .optional(),
   /** Assistant answers per Istanbul day for everyone together (counted in `usage_daily`, event `chat.message`). */
   CHAT_DAILY_LIMIT: z.coerce.number().int().positive().default(1000),
+
+  // AI-assisted model editing (§11.80): the separate model runner service. Both URL and secret are optional,
+  // also in production: without either the endpoints answer 503 and nothing else is affected.
+  MODEL_RUNNER_URL: optionalUrl,
+  /** Server-to-server bearer secret of the runner. Never sent to the browser. */
+  MODEL_RUNNER_SECRET: optionalText,
+  /** Base of the runner's file links as the browser reaches them; default `MODEL_RUNNER_URL`. */
+  MODEL_RUNNER_PUBLIC_URL: optionalUrl,
 });
 
 export type Config = z.infer<typeof Env>;

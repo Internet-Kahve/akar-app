@@ -112,6 +112,7 @@ test("what the visitor did on their own is not taught afterwards", async ({ page
   await open(page);
   // Before its hint has come in, the visitor presses the parts button.
   await page.locator(".detail-scene .model-show-parts").click();
+  expect(await page.evaluate(() => localStorage.getItem("akar.ipucu.masa.parca"))).toBe("1");
   await expect(tip(page)).toContainText("Şimdi bir parçaya tıkla", { timeout: 15000 });
   await close(page);
   await page.reload();

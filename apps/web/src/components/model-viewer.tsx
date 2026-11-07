@@ -1,4 +1,6 @@
 "use client";
+import { writePreference } from "../lib/preferences";
+import { PHONE_LAYOUT } from "../lib/use-media";
 import { useEffect, useRef, useState } from "react";
 import { modelMotionRatio, modelPixelRatio, modestDevice } from "../lib/device";
 import { isAllUnlit } from "../lib/light-materials";
@@ -1383,6 +1385,9 @@ export default function ModelViewer({
           title={t("site.showParts")}
           aria-pressed={showingParts}
           onClick={() => {
+            // The opening screen can still be fading out, before TipRow mounts its click listener.
+            // Remember the completed action here so a later hint does not teach it again.
+            writePreference(window.matchMedia(PHONE_LAYOUT).matches ? "akar.ipucu.d.parca" : "akar.ipucu.masa.parca", "1");
             cancelAnimationFrame(pulseFrame.current);
             setShowingParts(true);
             const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

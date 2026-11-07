@@ -17,6 +17,7 @@ import {
   mediaUploads,
   uploadDeletions,
   memories,
+  modelGenJobs,
   memoryReports,
   pointEvents,
   profiles,
@@ -213,6 +214,7 @@ async function fullAccount(userId: string, other: string) {
   await db.insert(userBadges).values({ userId, routeId: ROUTE });
   await db.insert(userSiteTasks).values({ userId, taskId: SITE_TASK, onSite: true });
   await db.insert(userSiteBadges).values({ userId, badgeId: SITE_BADGE, onSite: true });
+  await db.insert(modelGenJobs).values({ siteId: SITE, userId, prompt: "Kubbeyi büyüt", runnerJobId: "r-1" });
   await db.insert(profiles).values({ userId, displayName: "Ayşe" });
   // A former editor's used invite holds their address.
   await db.insert(staffInvites).values({ id: randomUUID(), email: `${userId}@akar.test`, role: "editor", invitedBy: "admin-x", userId, revokedAt: new Date() });

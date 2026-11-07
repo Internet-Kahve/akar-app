@@ -38,6 +38,7 @@ import { siteTaskRoutes } from "./modules/site-tasks/routes.ts";
 import { narrationRoutes } from "./modules/narrations/routes.ts";
 import { usageRoutes } from "./modules/usage/routes.ts";
 import { chatRoutes } from "./modules/chat/routes.ts";
+import { modelGenRoutes } from "./modules/model-gen/routes.ts";
 
 /**
  * Runtime dependencies. Optional services are null when not configured; a module that needs one
@@ -86,6 +87,7 @@ const MODULES: ModulePlugin[] = [
   narrationRoutes,
   usageRoutes,
   chatRoutes,
+  modelGenRoutes,
 ];
 
 /**

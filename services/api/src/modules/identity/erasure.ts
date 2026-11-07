@@ -7,6 +7,7 @@ import { forgetIdempotencyKeys, type Tx } from "../../platform/idempotency.ts";
 import { eraseEngagement } from "../engagement/service.ts";
 import { eraseUploads } from "../media/service.ts";
 import { eraseMemories } from "../moderation/service.ts";
+import { eraseModelGenJobs } from "../model-gen/service.ts";
 import { lockStaff, type SupabaseAdmin } from "./service.ts";
 
 /** Objects freed by an erasure, per bucket; after the commit: `media` keys (already in the outbox) via `deleteMediaObjects`, `uploads` keys via `deleteUploadObjects`. */
@@ -40,6 +41,7 @@ export async function eraseAccount(
   // A used invite holds the address; open invites belong to whoever signs up with it next.
   await tx.delete(staffInvites).where(eq(staffInvites.userId, userId));
   await forgetIdempotencyKeys(tx, userId);
+  await eraseModelGenJobs(tx, userId);
   await tx.insert(deletedAccounts).values({ userId }).onConflictDoNothing();
   await recordAudit(tx, {
     actorId: actor.id,

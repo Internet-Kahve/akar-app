@@ -1268,6 +1268,7 @@ export const USAGE_EVENTS = {
   "route.open": { site: false, ref: "route", label: "Rota açma" },
   "account.sign_in": { site: false, ref: "signIn", label: "Giriş" },
   "chat.message": { site: false, ref: "none", label: "Asistan yanıtı", server: true },
+  "model_gen.job": { site: true, ref: "none", label: "Yapay zekâ model isteği", server: true },
 } as const satisfies Record<string, { site: boolean; ref: UsageRefKind; label: string; server?: true }>;
 
 export type UsageEventName = keyof typeof USAGE_EVENTS;

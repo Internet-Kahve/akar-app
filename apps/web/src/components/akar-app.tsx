@@ -82,6 +82,7 @@ import { TipRow, type TipProps } from "./coach-tip";
 import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
+import type { ModelGenApi } from "./admin-model-gen";
 import { SignInModal, takeGoogleSignIn } from "./sign-in-modal";
 import { ChatWidget } from "./chat-widget";
 import { Modal, Notice } from "./ui";
@@ -207,6 +208,7 @@ export function AkarApp() {
     [snapshotRevision, setSnapshotRevision] = useState(0),
     [experimental, setExperimental] = useState(false),
     [view, setView] = useState<View>("map"),
+    [chatOpen, setChatOpen] = useState(false),
     [siteId, setSiteId] = useState("ulu-cami"),
     [query, setQuery] = useState(""),
     [roles, setRoles] = useState<Set<SiteCategory>>(
@@ -515,6 +517,7 @@ export function AkarApp() {
     return () => clearTimeout(t);
   }, []);
   const go = useCallback((next: View, id?: string) => {
+    setChatOpen(false);
     setView(next);
     setHistoryStart(0);
     setCollapsed(false);
@@ -676,6 +679,18 @@ export function AkarApp() {
     },
     [],
   );
+  const modelGen = useMemo<ModelGenApi>(() => {
+    const api = () => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current;
+    };
+    return {
+      status: () => api().getModelGenStatus(),
+      start: (siteId, input) => api().startModelGenJob(siteId, input),
+      list: (siteId) => api().listModelGenJobs(siteId),
+      get: (id) => api().getModelGenJob(id),
+    };
+  }, []);
   /** Admin panel: the saved values become this tab's map settings at once. */
   const saveMapSettings = useCallback(async (next: MapSettings) => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
@@ -1018,6 +1033,10 @@ export function AkarApp() {
   function selectSite(id: string) {
     setStoryIndex(0);
     go("detail", id);
+  }
+  function openChat() {
+    if (account) setChatOpen(true);
+    else setSignIn(t("chat.signIn"));
   }
   function closeRoute() {
     setRouteId(undefined);
@@ -1611,6 +1630,7 @@ export function AkarApp() {
               narrateSite={narrateSite}
               translateSite={translateSite}
               live={live}
+              modelGen={modelGen}
               mapSettings={mapSettings}
               saveMapSettings={saveMapSettings}
               loadStats={loadStats}
@@ -1808,7 +1828,7 @@ export function AkarApp() {
                       voiceLang={voice.lang ?? lang}
                       voiceGender={voice.gender ?? "male"}
                       onVoice={changeVoice}
-                      hold={storyHold}
+                      hold={storyHold || chatOpen}
                       onClose={() => go("detail", site.id)}
                       onComplete={async () => {
                         armAchievements();
@@ -1830,6 +1850,7 @@ export function AkarApp() {
                         onBack={() => go("map")} onSave={() => void commit({ type: "save", siteId: site.id })}
                         onStory={openStory} onAbout={() => setOverlay("about")} onHistory={() => go("history", site.id)}
                         onMemories={() => go("memories", site.id)} onPuzzle={() => setPuzzle({ start: firstOpenTask(site.tasks ?? [], progress) })}
+                        onChat={live ? openChat : undefined}
                         nextStop={nextStop} nextLeg={nextStop && walkingLeg(route ?? walkRoute, site.id, nextStop.id)} onNextStop={goNextStop}
                         walkStep={walk && walkIndex >= 0 ? { at: walkIndex, total: walk.ids.length, ids: walk.ids, doneIds: walk.doneIds } : undefined}
                         onSkip={() => walkIndex >= 0 && walkOn("skipped", walkIndex)}
@@ -2308,7 +2329,11 @@ export function AkarApp() {
       {/* Site assistant (§11.77): live only (the demo has no model), on the public pages, not the panel. */}
       {live && ready && !opening && view !== "admin" && (
         <ChatWidget
+          key={`${account?.id ?? "guest"}:${["detail", "story", "history", "memories"].includes(view) ? site?.id : "catalog"}`}
           signedIn={!!account}
+          open={chatOpen && !!account}
+          onOpen={openChat}
+          onClose={() => setChatOpen(false)}
           site={
             site && ["detail", "story", "history", "memories"].includes(view)
               ? { id: site.id, name: text(site.name, site.nameEn) }
@@ -2316,6 +2341,7 @@ export function AkarApp() {
           }
           ask={(question) => client.current!.chat(question)}
           onSignIn={(reason) => setSignIn(reason)}
+          onSite={selectSite}
         />
       )}
       {signIn !== null && (

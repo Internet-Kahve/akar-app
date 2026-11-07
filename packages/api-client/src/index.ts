@@ -154,6 +154,50 @@ export interface ChatAnswer {
   /** The answer also rests on general knowledge outside our content. */
   general: boolean;
 }
+/** `GET /v1/admin/model-gen/status` (§11.80): the Claude login of the model runner. `enabled: false` = not configured. */
+export interface ModelGenStatus {
+  enabled: boolean;
+  loggedIn: boolean;
+  plan: string | null;
+  expiresAt: string | null;
+}
+export type ModelGenJobStatus = "running" | "succeeded" | "failed" | "lost";
+/** One line of the runner's live feed; only the job detail carries them, and they are not stored. */
+export interface ModelGenEvent {
+  /** Unix epoch milliseconds. */
+  t: number;
+  type: "start" | "text" | "tool" | "export";
+  text: string | null;
+  name: string | null;
+  summary: string | null;
+}
+export interface ModelGenFile {
+  name: string;
+  bytes: number;
+  /** Absolute signed runner link (valid 15 minutes) the browser opens directly; null in the history list and once the runner forgot the file. */
+  url: string | null;
+}
+/** An AI model-editing job of a site (admin only, §11.80). */
+export interface ModelGenJob {
+  id: string;
+  siteId: string;
+  prompt: string;
+  status: ModelGenJobStatus;
+  reply: string | null;
+  error: string | null;
+  version: string | null;
+  files: ModelGenFile[];
+  warnings: string[];
+  usage: { turns: number; durationMs: number; costUsd: number } | null;
+  events: ModelGenEvent[];
+  createdBy: string;
+  createdAt: string;
+  finishedAt: string | null;
+}
+export interface ModelGenJobPage {
+  items: ModelGenJob[];
+  nextCursor: string | null;
+}
 /** One usage event (§11.72): `siteId` for site events, `ref` for the detail its kind takes (`USAGE_EVENTS`). */
 export interface UsageEvent {
   event: UsageEventName;
@@ -309,6 +353,17 @@ export interface AkarClient {
    * without a model key and 429 past a limit. The demo has no assistant and throws.
    */
   chat(question: ChatQuestion): Promise<ChatAnswer>;
+  /**
+   * AI-assisted model editing (§11.80), admin only; the server answers 403 for other roles and 503
+   * `MODEL_GEN_DISABLED` when no model runner is configured (`getModelGenStatus` still answers, `enabled: false`).
+   * Starting a job: 409 `MODEL_GEN_BUSY` while the runner works on another. The demo has no runner and throws.
+   */
+  getModelGenStatus(): Promise<ModelGenStatus>;
+  startModelGenJob(siteId: string, input: { prompt: string; newSession?: boolean }): Promise<ModelGenJob>;
+  /** Newest first; no live events or file links (open one job for those). */
+  listModelGenJobs(siteId: string, cursor?: string): Promise<ModelGenJobPage>;
+  /** Asks the runner while the job runs; poll it. Carries live `events` and fresh file `url`s. */
+  getModelGenJob(id: string): Promise<ModelGenJob>;
   /**
    * Counts a usage event (§11.72). Never throws and never waits: events are batched and sent later; a failed
    * send drops them. The demo counts nothing.
@@ -928,6 +983,18 @@ export function createMockClient(
     },
     async chat() {
       throw new Error("Asistan yalnız canlı sistemde çalışır.");
+    },
+    async getModelGenStatus() {
+      return { enabled: false, loggedIn: false, plan: null, expiresAt: null };
+    },
+    async startModelGenJob() {
+      throw new Error("Yapay zekâ ile model düzenleme yalnız canlı sistemde çalışır.");
+    },
+    async listModelGenJobs() {
+      return { items: [], nextCursor: null };
+    },
+    async getModelGenJob() {
+      throw new Error("Yapay zekâ ile model düzenleme yalnız canlı sistemde çalışır.");
     },
     track() {},
     flushUsage() {},
