@@ -559,13 +559,14 @@ export function AkarApp() {
   );
   // Not through `run`: the editor shows the error next to the values it refused.
   const savePlacement = useCallback(
-    async (siteId: string, placement: MapPlacement) => {
+    async (siteId: string, placement: MapPlacement, siteCoordinates?: [number, number]) => {
       if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
       setState(
         await client.current.dispatch({
           type: "map-placement",
           siteId,
           placement,
+          siteCoordinates,
         }),
       );
     },

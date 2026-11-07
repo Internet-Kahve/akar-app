@@ -130,8 +130,8 @@ export function SiteEditor({
   onSave: (s: HeritageSite) => Promise<HeritageSite>;
   /** The placement saved for the site's model, hidden or not (`AkarClient.getMapPlacement`). */
   loadPlacement: (siteId: string) => Promise<MapPlacement | null>;
-  /** Saves the whole placement of the site's model (the `map-placement` command). */
-  savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
+  /** Saves the whole placement of the site's model (the `map-placement` command); `siteCoordinates` moves the pin too. */
+  savePlacement: (siteId: string, placement: MapPlacement, siteCoordinates?: [number, number]) => Promise<void>;
   /** Records the voice-overs of the saved story and part card texts (`AkarClient.narrateSite`). */
   narrateSite: AkarClient["narrateSite"];
   /** Fills the empty English story and part card texts with a machine draft (`AkarClient.translateSite`). */
@@ -168,22 +168,15 @@ export function SiteEditor({
     coordinates: draft.coordinates,
     persisted,
     load: loadPlacement,
-    // The pin moved with the model: «Yerleşimi kaydet» saves it too, alone (the last saved site with only the new
-    // location), so other edits on this screen stay unsaved and the placement never leaves the pin behind.
+    // The pin moved with the model: «Yerleşimi kaydet» saves the new location too, alone (no other site field is
+    // saved or checked), so other edits on this screen stay unsaved and the placement never leaves the pin behind.
     onSave: async (siteId, value) => {
-      await savePlacement(siteId, value);
-      if (!pinFollowingModel(savedDraft.coordinates, value)) return;
-      const located = await onSave({ ...savedDraft, coordinates: [value.lng, value.lat] });
-      setSavedDraft(located);
-      setDraft((d) => ({ ...d, coordinates: located.coordinates }));
-      setBaseline((b) => {
-        try {
-          const parsed = JSON.parse(b) as HeritageSite;
-          return siteKey({ ...parsed, coordinates: located.coordinates });
-        } catch {
-          return siteKey(located);
-        }
-      });
+      const moved = pinFollowingModel(savedDraft.coordinates, value);
+      await savePlacement(siteId, value, moved ?? undefined);
+      if (!moved) return;
+      setSavedDraft((s) => ({ ...s, coordinates: moved }));
+      setDraft((d) => ({ ...d, coordinates: moved }));
+      setBaseline((b) => siteKey({ ...(JSON.parse(b) as HeritageSite), coordinates: moved }));
     },
   });
   const dirty = siteKey(draft) !== baseline || placement.dirty;
