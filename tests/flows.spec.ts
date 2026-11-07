@@ -574,6 +574,13 @@ test("a walk shows the distance to its stop by location, and its visit ticks the
   // Turned off, the distance goes and the choice is remembered as off.
   await walk.getByRole("button", { name: "Kapat", exact: true }).click();
   await expect(walk.getByRole("button", { name: "Uzaklığı göster" })).toBeVisible();
+  // At the end, the finish card counts the visit's points, and the visited stop is no longer among those still open.
+  const total = await steps.count();
+  await steps.nth(total - 1).getByRole("button").click();
+  await walk.getByRole("button", { name: "Rotayı bitir" }).click();
+  await expect(walk.locator(".walk-earned")).toContainText("+100");
+  await expect(walk.locator(".walk-open-stops li")).toHaveCount(total - 1);
+  await expect(walk.locator(".walk-open-stops")).not.toContainText(name);
 });
 test("one tile failing among others leaves the map, not the schematic view", async ({ page }) => {
   await page.route("**/harita/akar-style.json", (route) =>

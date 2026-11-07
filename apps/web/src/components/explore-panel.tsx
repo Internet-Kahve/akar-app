@@ -872,9 +872,6 @@ function RouteWalk({
               </>
             )}
           </p>
-          {location && onFollow && onVisit && (
-            <WalkLocation live={live} location={location} onFollow={onFollow} onVisit={onVisit} />
-          )}
           <button className="walk-here-card" onClick={() => onSite(here.id)}>
             <SiteArtwork site={here} live={live} />
             <span>
@@ -883,6 +880,9 @@ function RouteWalk({
               <span className="walk-open">{t("walk.open")} <ArrowRight size={14} aria-hidden="true" /></span>
             </span>
           </button>
+          {location && onFollow && onVisit && (
+            <WalkLocation live={live} location={location} onFollow={onFollow} onVisit={onVisit} />
+          )}
           <div className="walk-actions">
             <button className="btn full" onClick={onDone}>
               {last ? <Flag size={18} aria-hidden="true" /> : <Check size={18} aria-hidden="true" />}

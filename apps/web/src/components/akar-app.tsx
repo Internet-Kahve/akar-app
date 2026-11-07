@@ -840,9 +840,6 @@ export function AkarApp() {
     const i = walk.ids.indexOf(here);
     if (i >= 0 && i !== walk.at) setWalk({ ...walk, at: i });
   }, [peekId, siteId, view, walk]);
-  // A stop whose story is finished, or whose visit is verified, during the walk is done on the walk too: that is what
-  // earns its points and badge, so the visitor need not press «Tamamladım» as well (7 Nov 2026). Only what is new
-  // since the last look counts: a story read before the walk began does not tick its step.
   // Following the walk by location (7 Nov 2026): only after the visitor asks, and only while a walk is on.
   const [walkFollow, setWalkFollow] = useState(false);
   useEffect(() => setWalkFollow(readPreference(WALK_FOLLOW_KEY) === "1"), []);
@@ -862,6 +859,9 @@ export function AkarApp() {
     error: walkPosition.error,
     visited: !!walkHereId && state.visitedIds.includes(walkHereId),
   };
+  // A stop whose story is finished, or whose visit is verified, during the walk is done on the walk too: that is what
+  // earns its points and badge, so the visitor need not press «Tamamladım» as well (7 Nov 2026). Only what is new
+  // since the last look counts: a story read before the walk began does not tick its step.
   const earnedBefore = useRef<Set<string> | null>(null);
   useEffect(() => {
     // Before the visitor's state has loaded, the lists are the empty seed: everything would look new.
