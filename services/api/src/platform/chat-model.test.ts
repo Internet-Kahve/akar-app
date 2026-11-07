@@ -80,7 +80,7 @@ const rateLimited = (e: unknown) =>
 const upstreamFailed = (e: unknown) =>
   e instanceof AppError && e.statusCode === 502;
 
-test("default config falls from the strongest free-tier model to lower models with the exact same question", async (t) => {
+test("default config tries only 3.5, 3.1 and 2.5 Flash-Lite with the exact same question", async (t) => {
   const transport = script(limited(), limited(503), success());
   t.mock.method(globalThis, "fetch", transport.fetchImpl);
   const model = chatModelFromConfig(config({ GEMINI_API_KEY: "test-key" }));
@@ -92,7 +92,7 @@ test("default config falls from the strongest free-tier model to lower models wi
   });
   assert.deepEqual(
     transport.calls.map((c) => c.model),
-    FREE_CHAT_MODELS.slice(0, 3),
+    ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
   );
   assert.deepEqual(
     transport.calls.map((c) => c.key),
@@ -245,11 +245,19 @@ test("authentication and invalid requests fail without consuming every fallback 
 });
 
 test("model configuration preserves explicit pins, deduplicates fallbacks and permits disabling the ladder", () => {
-  assert.equal(config().GEMINI_CHAT_MODEL, "gemini-3.8-flash");
+  assert.equal(config().GEMINI_CHAT_MODEL, "gemini-3.5-flash-lite");
   assert.deepEqual(chatModels(config().GEMINI_CHAT_MODEL), FREE_CHAT_MODELS);
   assert.deepEqual(chatModels("gemini-3.5-flash-lite"), [
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+  ]);
+  assert.deepEqual(chatModels("gemini-3.1-flash-lite"), [
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+  ]);
+  assert.deepEqual(chatModels("gemini-2.5-flash-lite"), [
+    "gemini-2.5-flash-lite",
   ]);
   assert.deepEqual(chatModels("custom"), ["custom"]);
   assert.deepEqual(chatModels("strong", ["strong", "small", "small"]), [
@@ -265,8 +273,64 @@ test("model configuration preserves explicit pins, deduplicates fallbacks and pe
       config().GEMINI_CHAT_MODEL,
       config({ GEMINI_CHAT_FALLBACK_MODELS: "" }).GEMINI_CHAT_FALLBACK_MODELS,
     ),
-    ["gemini-3.8-flash"],
+    ["gemini-3.5-flash-lite"],
   );
   assert.throws(() => config({ GEMINI_CHAT_FALLBACK_MODELS: "invalid/model" }));
   assert.equal(chatModelFromConfig(config()), null);
+});
+
+test("web search uses Google grounding, keeps the Flash-Lite ladder and exposes only cited safe URLs", async () => {
+  const transport = script(
+    limited(),
+    Response.json({
+      candidates: [
+        {
+          content: { parts: [{ text: "Yerel bilgi [s1]. Web ayrıntısı." }] },
+          groundingMetadata: {
+            groundingChunks: [
+              { web: { uri: "https://museum.example/history", title: "Müze" } },
+              { web: { uri: "javascript:alert(1)", title: "Unsafe" } },
+              { web: { uri: "https://unused.example", title: "Unused" } },
+            ],
+            groundingSupports: [{ groundingChunkIndices: [0, 1, 0, 99] }],
+            searchEntryPoint: { renderedContent: "<div>Google</div>" },
+          },
+        },
+      ],
+    }),
+  );
+  const model = geminiChat(["key"], FREE_CHAT_MODELS, transport.fetchImpl);
+  const reply = await model.search!(prompt);
+  assert.deepEqual(
+    transport.calls.map((c) => c.model),
+    ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"],
+  );
+  const body = JSON.parse(transport.calls[0]!.body);
+  assert.deepEqual(body.tools, [{ google_search: {} }]);
+  assert.equal(body.generationConfig.responseSchema, undefined);
+  assert.equal(body.generationConfig.responseMimeType, undefined);
+  assert.deepEqual(reply.sources, [
+    { title: "Müze", url: "https://museum.example/history" },
+  ]);
+  assert.deepEqual(reply.refs, ["s1"]);
+  assert.equal(reply.searchSuggestions, "<div>Google</div>");
+});
+
+test("web answers without grounded citations are rejected; local generation never enables search", async () => {
+  const transport = script(
+    success(),
+    Response.json({
+      candidates: [
+        {
+          content: {
+            parts: [{ text: "An unverified answer https://invented.example" }],
+          },
+        },
+      ],
+    }),
+  );
+  const model = geminiChat(["key"], FREE_CHAT_MODELS, transport.fetchImpl);
+  await model.reply(prompt);
+  assert.equal(JSON.parse(transport.calls[0]!.body).tools, undefined);
+  await assert.rejects(model.search!(prompt), upstreamFailed);
 });

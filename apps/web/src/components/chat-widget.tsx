@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight, MessageCircle, Send } from "lucide-react";
 import {
   ApiError,
@@ -7,7 +7,7 @@ import {
   type ChatQuestion,
   type ChatTurn,
 } from "@akar/api-client";
-import { CHAT_MESSAGE_MAX, chatHistory } from "../lib/chat";
+import { CHAT_MESSAGE_MAX, chatHistory, chatSourceUrl } from "../lib/chat";
 import { describeError, needsSignIn } from "../lib/errors";
 import { useI18n } from "./i18n";
 import { Modal } from "./ui";
@@ -15,10 +15,12 @@ import { Modal } from "./ui";
 interface Message extends ChatTurn {
   sources?: ChatAnswer["sources"];
   general?: boolean;
+  searchSuggestions?: string;
+  webUnavailable?: boolean;
 }
 
 /**
- * Site assistant (§11.74, §11.77): a floating button on the public pages opens a conversation anchored to the bottom right.
+ * Site assistant (§11.74, §11.77): a floating button on the public pages opens a conversation anchored right on desktop and left on mobile.
  * Signed-in users only: a guest's tap opens the sign-in. The conversation lives in this component only;
  * nothing is stored, and the current site (if any) goes with each question.
  */
@@ -31,7 +33,9 @@ export function ChatWidget({
   ask,
   onSignIn,
   onSite,
+  mobileBottom = 144,
 }: {
+  mobileBottom?: number;
   signedIn: boolean;
   open: boolean;
   onOpen: () => void;
@@ -94,6 +98,8 @@ export function ChatWidget({
           text: reply.answer,
           sources: reply.sources,
           general: reply.general,
+          searchSuggestions: reply.searchSuggestions,
+          webUnavailable: reply.webUnavailable,
         },
       ]);
     } catch (e) {
@@ -115,6 +121,7 @@ export function ChatWidget({
       <button
         type="button"
         className="chat-fab"
+        style={{ "--chat-mobile-bottom": `${mobileBottom}px` } as CSSProperties}
         aria-label={t("chat.open")}
         title={t("chat.open")}
         aria-haspopup="dialog"
@@ -168,38 +175,79 @@ export function ChatWidget({
                 <p>{m.text}</p>
                 {m.general && (
                   <span className="chat-general" title={t("chat.generalNote")}>
-                    {t("chat.general")}
+                    {t(
+                      m.sources?.some((s) => s.kind === "web")
+                        ? "chat.web"
+                        : "chat.general",
+                    )}
                   </span>
                 )}
                 {!!m.sources?.length && (
-                  <ul className="chat-sources" aria-label={t("chat.sources")}>
-                    {m.sources.map((s, j) => (
-                      <li key={j}>
-                        {s.siteId ? (
-                          <button
-                            type="button"
-                            className="chat-source-link"
-                            aria-label={t("chat.openSite", { name: s.title })}
-                            onClick={() => {
-                              onClose();
-                              onSite(s.siteId);
-                            }}
-                          >
+                  <footer className="chat-citations">
+                    <span>{t("chat.sources")}</span>
+                    <ul className="chat-sources" aria-label={t("chat.sources")}>
+                      {m.sources.map((s, j) => (
+                        <li key={j}>
+                          {s.siteId ? (
+                            <button
+                              type="button"
+                              className="chat-source-link"
+                              aria-label={t("chat.openSite", { name: s.title })}
+                              onClick={() => {
+                                onClose();
+                                if (s.siteId) onSite(s.siteId);
+                              }}
+                            >
+                              <span>{s.title}</span>
+                              <ArrowUpRight size={14} aria-hidden="true" />
+                            </button>
+                          ) : chatSourceUrl(s.url) ? (
+                            <a
+                              className="chat-source-link"
+                              href={chatSourceUrl(s.url)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <span>{s.title}</span>
+                              <ArrowUpRight size={14} aria-hidden="true" />
+                            </a>
+                          ) : (
                             <span>{s.title}</span>
-                            <ArrowUpRight size={14} aria-hidden="true" />
-                          </button>
-                        ) : (
-                          s.title
-                        )}
-                        {s.source && (
-                          <small>
-                            {s.source.title}
-                            {s.source.page && `, ${s.source.page}`}
-                          </small>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                          )}
+                          {s.source && (
+                            <small>
+                              {chatSourceUrl(s.source.url) ? (
+                                <a
+                                  href={chatSourceUrl(s.source.url)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {s.source.title}
+                                </a>
+                              ) : (
+                                s.source.title
+                              )}
+                              {s.source.page && `, ${s.source.page}`}
+                            </small>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </footer>
+                )}
+                {m.webUnavailable && (
+                  <small className="chat-web-note">
+                    {t("chat.webUnavailable")}
+                  </small>
+                )}
+                {m.searchSuggestions && (
+                  <iframe
+                    className="chat-search-suggestions"
+                    title={t("chat.searchSuggestions")}
+                    sandbox="allow-popups allow-popups-to-escape-sandbox"
+                    referrerPolicy="no-referrer"
+                    srcDoc={`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src https: data:; base-uri 'none'; form-action 'none'">${m.searchSuggestions}`}
+                  />
                 )}
               </li>
             ))}

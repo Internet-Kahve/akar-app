@@ -2331,6 +2331,7 @@ export function AkarApp() {
       {live && ready && !opening && view !== "admin" && (
         <ChatWidget
           key={`${account?.id ?? "guest"}:${["detail", "story", "history", "memories"].includes(view) ? site?.id : "catalog"}`}
+          mobileBottom={showMap ? (sheetHeight || (isDetail ? 194 : 128)) + (isDetail ? 64 : 16) : 96}
           signedIn={!!account}
           open={chatOpen && !!account}
           onOpen={openChat}

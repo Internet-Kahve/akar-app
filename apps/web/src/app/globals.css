@@ -5177,7 +5177,7 @@ td small {
   .loader-building .line { stroke-dashoffset: 0; transition: none; }
 }
 
-/* Site assistant: low stacking priority, anchored to the safe bottom-right corner. */
+/* Site assistant: low stacking priority, with room around persistent page controls. */
 .app-shell:has(.chat-fab) > :is(.workspace, .profile-page) {
   /* Keep the map's controls in their own stack so the z-0 launcher remains reachable. */
   isolation: isolate;
@@ -5187,8 +5187,8 @@ td small {
 }
 .chat-fab {
   position: fixed;
-  right: calc(12px + env(safe-area-inset-right, 0px));
-  bottom: calc(12px + var(--sab, 0px));
+  right: calc(24px + env(safe-area-inset-right, 0px));
+  bottom: calc(32px + var(--sab, 0px));
   z-index: 0;
   display: grid;
   place-items: center;
@@ -5208,7 +5208,7 @@ td small {
 }
 .modal.chat-sheet[open] {
   position: fixed;
-  inset: auto calc(12px + env(safe-area-inset-right, 0px)) calc(12px + var(--sab, 0px)) auto;
+  inset: auto calc(24px + env(safe-area-inset-right, 0px)) calc(24px + var(--sab, 0px)) auto;
   z-index: 0;
   display: flex;
   flex-direction: column;
@@ -5327,39 +5327,14 @@ td small {
   background: var(--inferred-bg);
   font-size: 12px;
 }
-.chat-sources {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.chat-sources li {
-  min-width: 0;
-  max-width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  font-size: 12px;
-}
-.chat-source-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 44px;
-  padding: 8px 10px;
-  color: var(--primary);
-  font-weight: 600;
-  text-align: start;
-}
-.chat-sources small {
-  display: block;
-  padding: 0 10px 8px;
-  color: var(--text-muted);
-  font-size: 11px;
-}
+.chat-citations { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.chat-sources { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
+.chat-sources li { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.chat-source-link { display: flex; align-items: center; gap: 6px; width: fit-content; max-width: 100%; min-height: 32px; padding: 4px 0; color: var(--primary); font-size: 12px; text-align: start; text-decoration: underline; text-underline-offset: 3px; }
+.chat-sources small { display: block; color: var(--text-muted); font-size: 11px; }
+.chat-sources small a { color: inherit; text-decoration: underline; }
+.chat-web-note { display: block; margin-top: 8px; font-size: 11px; color: var(--text-muted); }
+.chat-search-suggestions { display: block; width: 100%; height: 120px; border: 0; margin-top: 8px; background: white; }
 .chat-composer {
   flex: none;
   min-width: 0;
@@ -5403,3 +5378,21 @@ td small {
 @media (max-width: 600px) {
   .modal.chat-sheet[open] { padding: 16px; }
 }
+
+@media (max-width: 899.98px) {
+  .chat-fab {
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    right: auto;
+    bottom: min(calc(var(--chat-mobile-bottom, 144px) + var(--sab, 0px)), calc(100dvh - 120px - var(--sat, 0px)));
+    transition: bottom 280ms var(--ease);
+  }
+  .modal.chat-sheet[open] {
+    left: calc(12px + env(safe-area-inset-left, 0px));
+    right: auto;
+    bottom: calc(80px + var(--sab, 0px));
+    height: min(640px, calc(100dvh - 100px - var(--sat, 0px) - var(--sab, 0px)));
+    max-height: calc(100dvh - 100px - var(--sat, 0px) - var(--sab, 0px));
+  }
+  .chat-source-link { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .chat-fab { transition: none; } }
