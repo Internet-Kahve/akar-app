@@ -16,7 +16,7 @@ export const chatRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         tags: ["chat"],
         summary: "Asistana soru sor",
-        description: `Yalnız giriş yapmış kullanıcı. \`siteId\` verilirse o eserin hikâyesi, «Eser hakkında» paragrafları ve parça kartları, verilmezse yayındaki eserlerin özeti bağlam olur; görev cevapları bağlama girmez. Hesap başına dakikada ${CHAT_PER_MINUTE} soru; herkes için günlük sınır \`CHAT_DAILY_LIMIT\` (dolunca 429). Sohbet saklanmaz, yalnız günlük \`chat.message\` sayacı artar. Model anahtarı yoksa 503; tüm model/anahtar seçenekleri sınırdaysa 429; bilinmeyen ya da yayında olmayan eser 404.`,
+        description: `Yalnız giriş yapmış kullanıcı. \`siteId\` verilirse o eserin yayımlanmış metinleri ve envanter ayrıntıları, verilmezse yayındaki eserlerin soruyla ilgili ayrıntıları bağlam olur; görev cevapları ve editör notları bağlama girmez. Önce yerel kaynaklarla yanıt hazırlanır; yetersizse Google aramasıyla doğrulanan web kaynakları eklenir. Web araması başarısızsa yerel yanıt ve webUnavailable=true döner. Kaynak bağlantıları ve Google arama önerileri yanıtta taşınır. Hesap başına dakikada ${CHAT_PER_MINUTE} soru; herkes için günlük sınır \`CHAT_DAILY_LIMIT\` (dolunca 429). Sohbet saklanmaz, yalnız günlük \`chat.message\` sayacı artar. Model anahtarı yoksa 503; tüm model/anahtar seçenekleri sınırdaysa 429; bilinmeyen ya da yayında olmayan eser 404.`,
         body: ChatRequest,
         response: { 200: ChatResponse },
       },

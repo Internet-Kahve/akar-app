@@ -256,7 +256,9 @@ test("model configuration preserves explicit pins, deduplicates fallbacks and pe
     "gemini-3.1-flash-lite",
     "gemini-2.5-flash-lite",
   ]);
-  assert.deepEqual(chatModels("gemini-2.5-flash-lite"), ["gemini-2.5-flash-lite"]);
+  assert.deepEqual(chatModels("gemini-2.5-flash-lite"), [
+    "gemini-2.5-flash-lite",
+  ]);
   assert.deepEqual(chatModels("custom"), ["custom"]);
   assert.deepEqual(chatModels("strong", ["strong", "small", "small"]), [
     "strong",
@@ -275,4 +277,60 @@ test("model configuration preserves explicit pins, deduplicates fallbacks and pe
   );
   assert.throws(() => config({ GEMINI_CHAT_FALLBACK_MODELS: "invalid/model" }));
   assert.equal(chatModelFromConfig(config()), null);
+});
+
+test("web search uses Google grounding, keeps the Flash-Lite ladder and exposes only cited safe URLs", async () => {
+  const transport = script(
+    limited(),
+    Response.json({
+      candidates: [
+        {
+          content: { parts: [{ text: "Yerel bilgi [s1]. Web ayrıntısı." }] },
+          groundingMetadata: {
+            groundingChunks: [
+              { web: { uri: "https://museum.example/history", title: "Müze" } },
+              { web: { uri: "javascript:alert(1)", title: "Unsafe" } },
+              { web: { uri: "https://unused.example", title: "Unused" } },
+            ],
+            groundingSupports: [{ groundingChunkIndices: [0, 1, 0, 99] }],
+            searchEntryPoint: { renderedContent: "<div>Google</div>" },
+          },
+        },
+      ],
+    }),
+  );
+  const model = geminiChat(["key"], FREE_CHAT_MODELS, transport.fetchImpl);
+  const reply = await model.search!(prompt);
+  assert.deepEqual(
+    transport.calls.map((c) => c.model),
+    ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"],
+  );
+  const body = JSON.parse(transport.calls[0]!.body);
+  assert.deepEqual(body.tools, [{ google_search: {} }]);
+  assert.equal(body.generationConfig.responseSchema, undefined);
+  assert.equal(body.generationConfig.responseMimeType, undefined);
+  assert.deepEqual(reply.sources, [
+    { title: "Müze", url: "https://museum.example/history" },
+  ]);
+  assert.deepEqual(reply.refs, ["s1"]);
+  assert.equal(reply.searchSuggestions, "<div>Google</div>");
+});
+
+test("web answers without grounded citations are rejected; local generation never enables search", async () => {
+  const transport = script(
+    success(),
+    Response.json({
+      candidates: [
+        {
+          content: {
+            parts: [{ text: "An unverified answer https://invented.example" }],
+          },
+        },
+      ],
+    }),
+  );
+  const model = geminiChat(["key"], FREE_CHAT_MODELS, transport.fetchImpl);
+  await model.reply(prompt);
+  assert.equal(JSON.parse(transport.calls[0]!.body).tools, undefined);
+  await assert.rejects(model.search!(prompt), upstreamFailed);
 });

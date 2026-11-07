@@ -143,16 +143,27 @@ export interface ChatQuestion {
 }
 /** A content block the answer rests on. */
 export interface ChatSource {
-  kind: "site" | "story" | "about" | "part_card";
-  siteId: string;
+  kind:
+    | "site"
+    | "story"
+    | "about"
+    | "part_card"
+    | "inventory"
+    | "card"
+    | "history"
+    | "web";
+  siteId: string | null;
   title: string;
-  source: { title: string; page: string } | null;
+  source: { title: string; page: string; url?: string } | null;
+  url?: string;
 }
 export interface ChatAnswer {
   answer: string;
   sources: ChatSource[];
   /** The answer also rests on general knowledge outside our content. */
   general: boolean;
+  searchSuggestions?: string;
+  webUnavailable?: boolean;
 }
 /** `GET /v1/admin/model-gen/status` (§11.80): the Claude login of the model runner. `enabled: false` = not configured. */
 export interface ModelGenStatus {
