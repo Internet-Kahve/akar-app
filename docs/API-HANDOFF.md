@@ -187,3 +187,13 @@ Karar: `docs/BACKEND-DECISIONS.md` §11.76. Bu bilgisayarda Docker/Postgres olma
 3. **Sorgu** (`engagement/leaderboard.ts`): ham SQL, `row_number()` ile; eşitlikte son olayı daha erken olan önde. Misafir ve `deleted_accounts` dışarıda; silinen hesabın `profiles` satırı zaten gidiyor. Kullanıcı sayısı büyürse haftalık özet tablo ya da materialized view düşünülebilir; şimdilik `point_events.at` dizini yeterli görünüyor (ölçülmedi).
 4. **Testler** `identity.test.ts` sonunda: figür doğrulaması, 409, hafta sınırı (Pazartesiden bir saniye önceki olay sayılmaz), gizli kullanıcı, misafir, eşitlik sırası, e-posta/kimlik sızmaması, tekrar olayın puan vermemesi, silinen hesabın düşmesi.
 5. **KVKK:** `lib/legal-content.ts` aydınlatma metnine liste satırı eklendi (açık rıza, varsayılan kapalı). Hukuki kontrol gerekiyor.
+
+## 7 Kasım · eser düzenleyici: imleç ve «Girdi doğrulanamadı» notları
+
+Dal: `talha/imlec-modelle-tasinir` (PR #115). Backend değişmedi.
+
+1. **İmleç modelle taşınır.** Eserin konumu (`sites.location`, imleç) ile modelin harita yerleşimi (`site_map_placements.lng/lat`) iki ayrı kayıt. Panelde model taşınınca imleç eski yerde kalıyordu (canlıda «deneme»: imleç yeni eserin başlangıç değeri olan Ulucami koordinatında, model ~200 m ötede). Artık model taşınınca konum da aynı noktaya gelir; «Yerleşimi kaydet» `PUT /v1/admin/sites/:id/location` ile konumu da yazar. Daha önce imleci ve modeli bilerek ayrı yerlere koymuş bir eser varsa, modeli bir kez taşımak imleci de oraya götürür.
+2. **`tests/map-placement.spec.ts` bu değişiklikle düşüyor** (masaüstü ve telefonda ilk test). Nedeni incelenmedi; PR birleşmeden önce düzeltilmeli.
+3. **«Girdi doğrulanamadı» (canlıda «deneme» yayınlanırken).** Neden: kaynağın «Bağlantı» alanına `www.…` gibi `https://` olmadan yazılmış adres. Sunucu doğru yanıt veriyor (`fieldErrors: { "sources.0.url": ["Adres http:// ya da https:// ile başlamalı."] }`), ama panel iki yerde eksik; ikisi de düzeltilmedi:
+   - Eser kaydı hatada yalnız genel mesajı gösteriyor (`admin-site-editor.tsx` `save()` → `error.message`); alan mesajlarını gösteren `describeFieldError` (`lib/errors.ts`) orada kullanılmıyor.
+   - Panel kaydetmeden önce kontrol etmiyor: bağlantının `https://` ile başlaması, gezinti süresinin 0–240 arası tam sayı olması (alan `15.5` ya da `300` kabul ediyor), «Gelir / hizmet ilişkisi» bir eser seçilip «İlişki yok»a dönülünce `relatedSiteId: ""` gitmesi (sunucu reddeder). Sonuncular kodda görüldü, canlıda denenmedi.
