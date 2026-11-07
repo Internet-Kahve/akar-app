@@ -2328,7 +2328,9 @@ export function AkarApp() {
             kind={hashLegal}
             onClose={() => {
               setHashLegal(null);
-              history.replaceState(null, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
+              // Next.js keeps its router's state in the history entry: dropped (`null`), Next writes its old address
+              // back on the next hash change, and a legal link opened after this one would vanish at once.
+              history.replaceState(history.state, "", `${location.pathname}${location.search}${withoutLegal(location.hash)}`);
             }}
           />
         )}
