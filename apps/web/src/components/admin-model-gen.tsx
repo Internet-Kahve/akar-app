@@ -1,17 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Sparkles, Send, Download } from "lucide-react";
-import { ApiError, type AkarClient, type ModelGenJob, type ModelGenStatus } from "@akar/api-client";
+import { ApiError, type AkarClient, type ModelGenJob, type ModelGenPackage, type ModelGenStatus } from "@akar/api-client";
 import { describeError } from "../lib/errors";
 import { Notice, Tag } from "./ui";
 
-/** The four model-gen calls of `AkarClient`, as the panel uses them. */
+/** The model-gen calls of `AkarClient`, as the panel uses them. */
 export type ModelGenApi = {
   status: AkarClient["getModelGenStatus"];
   start: AkarClient["startModelGenJob"];
   list: AkarClient["listModelGenJobs"];
   get: AkarClient["getModelGenJob"];
+  pack: AkarClient["startModelGenPackage"];
+  getPack: AkarClient["getModelGenPackage"];
 };
+
+/** A package's four files, as the draft takes them: day and night models, the map's baked day and night files. */
+export type ModelGenPackageFiles = Record<"day" | "night" | "mapDay" | "mapNight", File>;
+const PACKAGE_ROLES = ["day", "night", "mapDay", "mapNight"] as const;
+const PACK_POLL_MS = 5000;
+const stepLabel: Record<string, string> = { night: "Gece modeli çıkarılıyor…", bake: "Harita dosyaları pişiriliyor…" };
 
 const MAX_PROMPT = 4000;
 const POLL_MS = 2000;
@@ -32,7 +40,8 @@ function jobError(e: unknown): string {
 
 /**
  * Adım 0, «3D üret»: the admin asks for a model change in plain words; the runner edits the Blender file and exports
- * a preview. «Taslağa al» puts the chosen GLB into the draft like an uploaded file; saving the site publishes it.
+ * a preview. «Taslağa al» has the runner make the version's night model and map files (a few minutes), then puts all
+ * four into the draft as a hand-made model has them; saving the site publishes them.
  */
 export function ModelGenPanel({
   api,
@@ -46,7 +55,7 @@ export function ModelGenPanel({
   /** The server has the site: the runner works on the server's site id. */
   saved: boolean;
   busy: boolean;
-  onUse: (file: File) => Promise<void>;
+  onUse: (files: ModelGenPackageFiles) => Promise<void>;
 }) {
   const [status, setStatus] = useState<ModelGenStatus | null>(null),
     [loadError, setLoadError] = useState("");
@@ -56,7 +65,8 @@ export function ModelGenPanel({
     [newSession, setNewSession] = useState(false),
     [sending, setSending] = useState(false),
     [error, setError] = useState(""),
-    [using, setUsing] = useState<string | null>(null);
+    [pack, setPack] = useState<ModelGenPackage | null>(null),
+    [taking, setTaking] = useState(false);
 
   // The status comes first: when the feature is off the panel shows nothing, not even for an unsaved site.
   useEffect(() => {
@@ -133,22 +143,65 @@ export function ModelGenPanel({
     }
   }
 
-  /** The signed link expires in 15 minutes; an old job is read again for a fresh one. */
-  async function use(name: string) {
-    if (!job) return;
-    setUsing(name);
+  // The package job is read every five seconds; when it is done its four files go into the draft.
+  const packId = pack?.status === "running" ? pack.id : null;
+  useEffect(() => {
+    if (!packId) return;
+    let cancelled = false,
+      timer: ReturnType<typeof setTimeout>;
+    const tick = async () => {
+      try {
+        const fresh = await api.getPack(packId);
+        if (cancelled) return;
+        setPack(fresh);
+        if (fresh.status === "succeeded") return void take(fresh);
+        if (fresh.status === "failed") return setTaking(false);
+      } catch (e) {
+        if (cancelled) return;
+        if (e instanceof ApiError && e.status === 404) {
+          setError("Çalıştırıcı yeniden başladı, paketleme yarıda kaldı.");
+          setPack(null);
+          return setTaking(false);
+        }
+        setError(describeError(e, "Paketlemenin durumu alınamadı; yeniden deneniyor."));
+      }
+      timer = setTimeout(tick, PACK_POLL_MS);
+    };
+    timer = setTimeout(tick, PACK_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [api, packId]);
+
+  async function startPack(version: string) {
+    setTaking(true);
     setError("");
     try {
-      const fresh = job.files.some((f) => f.name === name && f.url) ? job : await api.get(job.id);
-      const url = fresh.files.find((f) => f.name === name)?.url;
-      if (!url) throw new Error("Bu modelin dosyası çalıştırıcıda artık yok.");
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Model dosyası indirilemedi.");
-      await onUse(new File([await res.blob()], name, { type: "model/gltf-binary" }));
+      setPack(await api.pack(siteId, version));
+    } catch (e) {
+      setError(jobError(e));
+      setTaking(false);
+    }
+  }
+
+  /** The signed links expire in 15 minutes: they are fresh here, right after the job finished. */
+  async function take(done: ModelGenPackage) {
+    try {
+      const entries = await Promise.all(
+        PACKAGE_ROLES.map(async (role) => {
+          const f = done.files.find((x) => x.role === role);
+          if (!f?.url) throw new Error("Paketin bir dosyası çalıştırıcıda yok.");
+          const res = await fetch(f.url);
+          if (!res.ok) throw new Error("Model dosyası indirilemedi.");
+          return [role, new File([await res.blob()], f.name, { type: "model/gltf-binary" })] as const;
+        }),
+      );
+      await onUse(Object.fromEntries(entries) as ModelGenPackageFiles);
     } catch (e) {
       setError(describeError(e, "Model dosyası indirilemedi."));
     } finally {
-      setUsing(null);
+      setTaking(false);
     }
   }
 
@@ -159,7 +212,8 @@ export function ModelGenPanel({
       </h3>
       <p className="muted">
         Modelde ne değişsin, yaz: çalıştırıcı Blender dosyasını düzenler, önizleme modelini çıkarır. Beğendiğin sonucu
-        «Taslağa al» ile modele koy, eseri kaydedince yayına girer.
+        «Taslağa al» ile modele koy: gece modeli ve harita dosyaları da üretilir (birkaç dakika). Eseri kaydedince yayına
+        girer.
       </p>
     </>
   );
@@ -262,18 +316,28 @@ export function ModelGenPanel({
               ))}
             </ul>
           )}
-          {job.status === "succeeded" &&
-            job.files.map((f) => (
-              <div key={f.name} className="row between">
-                <span>
-                  {f.name} · {(f.bytes / 1024).toFixed(0)} KB
-                </span>
-                <button className="btn secondary" disabled={busy || using !== null} onClick={() => void use(f.name)}>
-                  <Download size={16} />
-                  {using === f.name ? "Alınıyor…" : "Taslağa al"}
-                </button>
-              </div>
-            ))}
+          {job.status === "succeeded" && job.version && (
+            <div className="row between">
+              <span>
+                {job.files[0] && `${job.files[0].name} · ${(job.files[0].bytes / 1024).toFixed(0)} KB`}
+              </span>
+              <button className="btn secondary" disabled={busy || taking} onClick={() => void startPack(job.version!)}>
+                <Download size={16} />
+                {taking ? "Hazırlanıyor…" : "Taslağa al"}
+              </button>
+            </div>
+          )}
+          {pack && pack.version === job.version && (
+            <div role="status">
+              {pack.status === "running" && <p>{stepLabel[pack.steps.at(-1) ?? ""] ?? "Başlıyor…"} Birkaç dakika sürer.</p>}
+              {pack.status === "succeeded" && <p className="muted">Gece modeli ve harita dosyaları hazır; taslakta.</p>}
+              {pack.status === "failed" && (
+                <p className="error" role="alert">
+                  {pack.error || "Paketleme başarısız oldu."}
+                </p>
+              )}
+            </div>
+          )}
           {job.usage && (
             <small className="muted">
               {job.usage.turns} adım · {Math.round(job.usage.durationMs / 1000)} sn

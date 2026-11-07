@@ -8,7 +8,7 @@ import type { Tx } from "../../platform/idempotency.ts";
 import { modelRunnerFromConfig, RunnerError, type ModelRunner, type RunnerJob } from "../../platform/model-runner.ts";
 import { decodeCursor, encodeCursor } from "../../platform/pagination.ts";
 import { countServerEvent } from "../usage/service.ts";
-import type { CreateJobBody, ModelGenJobDto, ModelGenStatusResponse } from "./schemas.ts";
+import type { CreateJobBody, CreatePackageBody, ModelGenJobDto, ModelGenPackageDto, ModelGenStatusResponse } from "./schemas.ts";
 
 type Row = typeof modelGenJobs.$inferSelect;
 type Deps = { db: Db; config: Config };
@@ -88,6 +88,72 @@ export async function startJob(
   });
   await countServerEvent(deps.db, "model_gen.job", now, site.id);
   return toDto(row, null, runner);
+}
+
+/**
+ * Starts the package job of an exported version: the runner makes the night model from it and bakes the map's day and
+ * night files, as for a hand-made model. Not stored: the runner keeps it until it restarts. 404 (site or version), 409, 502.
+ */
+export async function startPackage(
+  deps: Deps,
+  actor: { id: string; requestId: string },
+  siteId: string,
+  body: CreatePackageBody,
+): Promise<ModelGenPackageDto> {
+  const runner = requireRunner(deps.config);
+  const [site] = await deps.db.select({ id: sites.id }).from(sites).where(eq(sites.id, siteId));
+  if (!site) throw new AppError(404, "NOT_FOUND", "Eser bulunamadı.");
+  if (!RUNNER_SLUG.test(site.id)) {
+    throw new AppError(400, "MODEL_GEN_SITE_UNSUPPORTED", "Bu eserin kimliği model çalıştırıcının kabul ettiği biçimde değil (küçük harf, rakam ve tire, en çok 64 karakter).");
+  }
+  let job: RunnerJob;
+  try {
+    const { id } = await runner.createPackage({ site: site.id, version: body.version });
+    job = await runner.getJob(id);
+  } catch (err) {
+    if (err instanceof RunnerError && err.kind === "not-found")
+      throw new AppError(404, "MODEL_GEN_VERSION_MISSING", "Bu sürüm çalıştırıcıda yok: önce bir iş onu dışa aktarmalı.");
+    throw toAppError(err);
+  }
+  await deps.db.transaction((tx) =>
+    recordAudit(tx, {
+      actorId: actor.id,
+      action: "model-gen.package",
+      entityType: "site",
+      entityId: site.id,
+      after: { runnerJobId: job.id, version: body.version },
+      requestId: actor.requestId,
+    }),
+  );
+  return toPackageDto(job, runner);
+}
+
+/** A package job as the runner knows it, with fresh signed file links; 404 when it does not (restarted) or it is no package. */
+export async function getPackage(config: Config, id: string): Promise<ModelGenPackageDto> {
+  const runner = requireRunner(config);
+  let job: RunnerJob;
+  try {
+    job = await runner.getJob(id);
+  } catch (err) {
+    if (err instanceof RunnerError && err.kind === "not-found") throw new AppError(404, "NOT_FOUND", "Model çalıştırıcı bu paketleme işini tanımıyor.");
+    throw toAppError(err);
+  }
+  if (job.kind !== "package") throw new AppError(404, "NOT_FOUND", "Model çalıştırıcı bu paketleme işini tanımıyor.");
+  return toPackageDto(job, runner);
+}
+
+function toPackageDto(job: RunnerJob, runner: ModelRunner): ModelGenPackageDto {
+  return {
+    id: job.id,
+    status: job.status,
+    version: job.version,
+    error: job.error,
+    steps: job.events.flatMap((e) => (e.type === "step" && e.name ? [e.name] : [])),
+    checks: job.checks,
+    files: job.files.map((f) => ({ name: f.name, bytes: f.bytes, role: f.role, url: f.url ? runner.publicUrl(f.url) : null })),
+    startedAt: job.startedAt,
+    finishedAt: job.finishedAt,
+  };
 }
 
 /** Writes the runner's final answer once (`status = 'running'` guard); returns the stored row either way. */

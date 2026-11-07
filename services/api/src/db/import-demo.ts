@@ -379,7 +379,7 @@ export async function importDemoContent(manifestFile: string, contentRoot: strin
           await tx.insert(media).values({ id: nightModelId(site.id), ...row }).onConflictDoUpdate({ target: media.id, set: row });
           await tx.update(sites).set({ nightModelMediaId: nightModelId(site.id) }).where(eq(sites.id, site.id));
         }
-        // The map's baked files follow the package: what it no longer names is cleared (the panel never sets them).
+        // The map's baked files follow the package: what it no longer names is cleared (the importer owns the sites it imports).
         const bakedRow = (id: string, name: string) => {
           const file = files.get(mediaFiles.get(id)!)!;
           return { kind: "model" as const, mime: file.mime, url: storage.publicUrl(file.key), title: `${site.model!.name} · ${name}`, license: "AKAR ekip üretimi · temsili model",

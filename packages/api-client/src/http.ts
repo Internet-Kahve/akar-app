@@ -42,6 +42,7 @@ import type {
   AdminHealth,
   ChatAnswer,
   ModelGenJob,
+  ModelGenPackage,
   ModelGenJobPage,
   ModelGenStatus,
   AdminMember,
@@ -1985,6 +1986,29 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       }
     }
 
+    // After both models: each baked file needs the model it was baked from, and a new model cleared the old one
+    // (server). Sent only when the draft brings a new file (a «3D üret» package); an unchanged one keeps its media.
+    const baked = site.model?.mapBaked;
+    if (site.model && baked && [baked.day, baked.night].some((src) => src?.startsWith("data:"))) {
+      const bakedId = async (src: string | undefined, old: string | undefined, oldId: string | null | undefined, suffix: string) => {
+        if (!src) return null;
+        if (!src.startsWith("data:")) return src === old ? (oldId ?? null) : null;
+        return editorUpload(`${site.id}:${suffix}`, "model", src, {
+          title: `${site.model!.name} · ${suffix === "model-harita" ? "harita" : "gece harita"}`,
+          license: CONTRIBUTOR_LICENSE,
+          trust: site.model!.trust,
+        });
+      };
+      await call("PUT", `${path}/map-baked`, {
+        body: {
+          mediaId: await bakedId(baked.day, cur.model?.mapBaked?.day, before.mapBakedModelId, "model-harita"),
+          nightMediaId: site.model.night
+            ? await bakedId(baked.night, cur.model?.mapBaked?.night, before.mapBakedNightModelId, "model-gece-harita")
+            : null,
+        },
+      });
+    }
+
     if (photosChanged) {
       // Only the angles that changed: the server keeps the others with their photographs.
       const before = new Map((cur.photos ?? []).map((p) => [p.id, p.camera ?? null]));
@@ -2760,6 +2784,16 @@ export function createHttpClient(opts: HttpClientOptions): AkarClient {
       ),
     getModelGenJob: (id) =>
       call<ModelGenJob>("GET", `/v1/admin/model-gen/jobs/${encodeURIComponent(id)}`, {
+        cache: "no-store",
+      }),
+    startModelGenPackage: (siteId, version) =>
+      call<ModelGenPackage>(
+        "POST",
+        `/v1/admin/sites/${encodeURIComponent(createdIds.get(siteId) ?? siteId)}/model-gen/packages`,
+        { body: { version } },
+      ),
+    getModelGenPackage: (id) =>
+      call<ModelGenPackage>("GET", `/v1/admin/model-gen/packages/${encodeURIComponent(id)}`, {
         cache: "no-store",
       }),
     track: (event) => {

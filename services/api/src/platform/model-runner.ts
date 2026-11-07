@@ -15,7 +15,10 @@ export class RunnerError extends Error {
   }
 }
 
-export const RUNNER_EVENT_TYPES = ["start", "text", "tool", "export"] as const;
+export const RUNNER_EVENT_TYPES = ["start", "text", "tool", "export", "step"] as const;
+
+/** A package job's files: the day and night models and the map's baked day and night files. */
+export const PACKAGE_ROLES = ["day", "night", "mapDay", "mapNight"] as const;
 
 /** Version numbers may arrive as text or number; the API keeps text. */
 const text = z.union([z.string(), z.number()]).nullish().transform((v) => (v == null ? null : String(v)));
@@ -33,6 +36,8 @@ export type RunnerEvent = z.infer<typeof RunnerEvent>;
 
 const RunnerJobSchema = z.object({
   id: z.string().min(1),
+  /** `package` = a package job; edit jobs carry no kind. */
+  kind: z.string().nullish().transform((v) => v ?? null),
   status: z.enum(["running", "succeeded", "failed"]),
   startedAt: time,
   finishedAt: time,
@@ -45,7 +50,19 @@ const RunnerJobSchema = z.object({
     .nullish()
     .transform((v) => v ?? null),
   files: z
-    .array(z.object({ name: z.string(), bytes: z.number(), url: z.string().nullish().transform((v) => v ?? null) }))
+    .array(
+      z.object({
+        name: z.string(),
+        bytes: z.number(),
+        url: z.string().nullish().transform((v) => v ?? null),
+        role: z.enum(PACKAGE_ROLES).nullish().transform((v) => v ?? null),
+      }),
+    )
+    .nullish()
+    .transform((v) => v ?? []),
+  /** A package job's checks of the baked files against the lit ones, per theme. */
+  checks: z
+    .array(z.object({ theme: z.enum(["day", "night"]), passed: z.boolean() }))
     .nullish()
     .transform((v) => v ?? []),
   // An event type this API does not know is dropped, not an error: the runner may grow new kinds.
@@ -71,6 +88,8 @@ export interface ModelRunner {
   authStatus(): Promise<RunnerAuthStatus>;
   /** Starts a job. Throws `RunnerError` (`busy`, `unknown-site`, `failed`). */
   createJob(input: { site: string; prompt: string; newSession?: boolean | undefined }): Promise<{ id: string }>;
+  /** Starts a package job for an exported version. Throws `RunnerError` (`busy`, `unknown-site`, `not-found` = version not exported, `failed`). */
+  createPackage(input: { site: string; version: string }): Promise<{ id: string }>;
   /** Throws `RunnerError` (`not-found` when the runner restarted, `failed`). */
   getJob(id: string): Promise<RunnerJob>;
   /** Absolute link the browser can open for a relative signed path the runner returned. */
@@ -109,6 +128,17 @@ export function httpModelRunner(
 
   const unreadable = () => new RunnerError("failed", "Model çalıştırıcı beklenmeyen bir yanıt verdi.");
   const rejected = (status: number) => new RunnerError("failed", `Model çalıştırıcı isteği reddetti (HTTP ${status}).`);
+  function started({ status, json }: { status: number; json: unknown }): { id: string } {
+    if (status === 409) {
+      const jobId = (json as { jobId?: unknown } | null)?.jobId;
+      throw new RunnerError("busy", "Model çalıştırıcı başka bir işle meşgul.", typeof jobId === "string" ? jobId : undefined);
+    }
+    if (status === 400) throw new RunnerError("unknown-site", "Model çalıştırıcı bu eseri tanımıyor.");
+    if (status !== 202 && status !== 200 && status !== 201) throw rejected(status);
+    const id = (json as { id?: unknown } | null)?.id;
+    if (typeof id !== "string" || !id) throw unreadable();
+    return { id };
+  }
 
   return {
     async authStatus() {
@@ -120,16 +150,13 @@ export function httpModelRunner(
     },
 
     async createJob(input) {
-      const { status, json } = await call("POST", "/jobs", input);
-      if (status === 409) {
-        const jobId = (json as { jobId?: unknown } | null)?.jobId;
-        throw new RunnerError("busy", "Model çalıştırıcı başka bir işle meşgul.", typeof jobId === "string" ? jobId : undefined);
-      }
-      if (status === 400) throw new RunnerError("unknown-site", "Model çalıştırıcı bu eseri tanımıyor.");
-      if (status !== 202 && status !== 200 && status !== 201) throw rejected(status);
-      const id = (json as { id?: unknown } | null)?.id;
-      if (typeof id !== "string" || !id) throw unreadable();
-      return { id };
+      return started(await call("POST", "/jobs", input));
+    },
+
+    async createPackage(input) {
+      const res = await call("POST", "/packages", input);
+      if (res.status === 404) throw new RunnerError("not-found", "Bu sürüm çalıştırıcıda dışa aktarılmamış.");
+      return started(res);
     },
 
     async getJob(id) {

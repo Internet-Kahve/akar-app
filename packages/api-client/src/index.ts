@@ -209,6 +209,22 @@ export interface ModelGenJobPage {
   items: ModelGenJob[];
   nextCursor: string | null;
 }
+/**
+ * A package job: from one exported version the runner makes the night model and bakes the map's day and night files,
+ * so the version goes into the app as a hand-made model does. Kept by the runner only, until it restarts.
+ */
+export interface ModelGenPackage {
+  id: string;
+  status: "running" | "succeeded" | "failed";
+  version: string | null;
+  error: string | null;
+  /** Steps begun, in order: `night`, `bake`. */
+  steps: string[];
+  checks: Array<{ theme: "day" | "night"; passed: boolean }>;
+  files: Array<ModelGenFile & { role: "day" | "night" | "mapDay" | "mapNight" | null }>;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
 /** One usage event (§11.72): `siteId` for site events, `ref` for the detail its kind takes (`USAGE_EVENTS`). */
 export interface UsageEvent {
   event: UsageEventName;
@@ -375,6 +391,9 @@ export interface AkarClient {
   listModelGenJobs(siteId: string, cursor?: string): Promise<ModelGenJobPage>;
   /** Asks the runner while the job runs; poll it. Carries live `events` and fresh file `url`s. */
   getModelGenJob(id: string): Promise<ModelGenJob>;
+  /** Starts the package job of a version a job exported; poll it with `getModelGenPackage`. */
+  startModelGenPackage(siteId: string, version: string): Promise<ModelGenPackage>;
+  getModelGenPackage(id: string): Promise<ModelGenPackage>;
   /**
    * Counts a usage event (§11.72). Never throws and never waits: events are batched and sent later; a failed
    * send drops them. The demo counts nothing.
@@ -1005,6 +1024,12 @@ export function createMockClient(
       return { items: [], nextCursor: null };
     },
     async getModelGenJob() {
+      throw new Error("Yapay zekâ ile model düzenleme yalnız canlı sistemde çalışır.");
+    },
+    async startModelGenPackage() {
+      throw new Error("Yapay zekâ ile model düzenleme yalnız canlı sistemde çalışır.");
+    },
+    async getModelGenPackage() {
       throw new Error("Yapay zekâ ile model düzenleme yalnız canlı sistemde çalışır.");
     },
     track() {},
