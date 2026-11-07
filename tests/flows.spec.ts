@@ -548,6 +548,32 @@ test("a route's stops can be done, skipped or picked in its panel", async ({ pag
   await expect(walk).toHaveCount(0);
   await expect(page.locator(".route-card").first()).toBeVisible();
 });
+test("one tile failing among others leaves the map, not the schematic view", async ({ page }) => {
+  await page.route("**/harita/akar-style.json", (route) =>
+    route.fulfill({
+      json: {
+        version: 8,
+        sources: { base: { type: "raster", tiles: ["https://tiles.akar.test/{z}/{x}/{y}.png"], tileSize: 256 } },
+        layers: [{ id: "base", type: "raster", source: "base" }],
+      },
+    }),
+  );
+  // A 1×1 PNG for every tile but the first, which fails.
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  let first = true;
+  await page.route("https://tiles.akar.test/**", (route) => {
+    if (first) {
+      first = false;
+      return route.abort();
+    }
+    return route.fulfill({ body: png, contentType: "image/png" });
+  });
+  await page.goto("/#view=map");
+  await expect.poll(() => pinIds(page)).toHaveLength(6);
+  expect(first).toBe(false);
+  await expect(page.locator(".map-fallback")).toHaveCount(0);
+  await expect(page.locator(".map-retry")).toHaveCount(0);
+});
 test("map failure keeps the artifact discovery usable", async ({ page }) => {
   // Use a deterministic tile failure without depending on the provider's style.
   await page.route("**/harita/akar-style.json", (route) =>

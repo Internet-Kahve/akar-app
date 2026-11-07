@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { mapAntialias, mapPixelRatio, modestDevice, touchScreen } from "../lib/device";
+import { fitPadding } from "../lib/fit-padding";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
@@ -318,6 +319,11 @@ export function HeritageMap({
   }, [loaded, failed]);
   useEffect(() => {
     let disposed = false,
+      // The first `load` has come: from then on an error without a source is one missing piece (a sprite, an image).
+      started = false,
+      // Tiles of the base map that came, and whether the schematic view shows because none had.
+      baseTiles = 0,
+      byTiles = false,
       unfollow: (() => void) | undefined;
     import("maplibre-gl")
       .then((lib) => {
@@ -422,6 +428,7 @@ export function HeritageMap({
             }
             m.setSky(sky(currentTheme()));
             mode();
+            started = true;
             setLoaded(true);
             // The models' layer repaints all the time, so the map is never «idle»: settled is when its tiles
             // (buildings among them) have all come in, twice in a row a moment apart.
@@ -437,8 +444,6 @@ export function HeritageMap({
             // The models (several MB) wait for the base map: it shows first, then they come. At most 4 s.
             setTimeout(() => addModels(), 4000);
             reportCity();
-            // A load event can follow a tile error; keep discovery available
-            // through the schematic view for the lifetime of this map.
             // Models and the OSM building layer are an addition: whatever
             // goes wrong there leaves the pins and the base map as they are.
             let modelsAdded = false;
@@ -460,8 +465,33 @@ export function HeritageMap({
               .catch(() => {});
             }
           });
-          m.on("error", () => {
-            if (!disposed) setFailed(true);
+          // The schematic view is for a map that cannot draw: its style failed, or its base map has not brought a
+          // single tile (offline, the tile server down). One tile failing among others that came costs just that
+          // piece, and a base map whose tiles start to arrive takes the place of the schematic view again: before,
+          // any error left the visitor on the schematic view until a reload (7 Nov 2026).
+          const base = (id: unknown) => {
+            const type = typeof id === "string" ? m.getSource(id)?.type : undefined;
+            return type === "vector" || type === "raster" || type === "raster-dem";
+          };
+          m.on("sourcedata", (e) => {
+            if (!e.tile || !base(e.sourceId)) return;
+            baseTiles += 1;
+            if (!disposed && byTiles) {
+              byTiles = false;
+              setFailed(false);
+            }
+          });
+          m.on("error", (e) => {
+            if (disposed) return;
+            const sourceId = (e as { sourceId?: unknown }).sourceId;
+            if (sourceId === undefined) {
+              // A style that never came is the whole map; anything else after the start is one missing piece.
+              if (!started) setFailed(true);
+              return;
+            }
+            if (!base(sourceId) || baseTiles > 0) return;
+            byTiles = true;
+            setFailed(true);
           });
         } catch {
           setFailed(true);
@@ -758,7 +788,7 @@ export function HeritageMap({
         ],
       );
       m.fitBounds(bounds, {
-        padding: { top: 110, left: 70, right: 150, bottom: 110 + bottomInset },
+        padding: fitPadding({ top: 110, left: 70, right: 150, bottom: 110 + bottomInset }, m.getCanvas().clientWidth, m.getCanvas().clientHeight),
         maxZoom: 17,
         duration: 900,
       });
