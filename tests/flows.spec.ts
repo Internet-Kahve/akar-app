@@ -511,6 +511,15 @@ test("route search opens a usable route and selection persists", async ({
   await walk.getByRole("button", { name: "Rotayı bitir" }).click();
   await expect(walk.getByRole("heading", { name: "Rota tamamlandı" })).toBeVisible();
   await expect(walk.locator(".walk-steps li.done")).toHaveCount(2);
+  // The finish card says what the walk earned and which stops' stories are still open, and shares the walk.
+  // Marking stops done earns nothing by itself: no tally, and every stop's story is still open.
+  await expect(walk.locator(".walk-earned")).toHaveCount(0);
+  await expect(walk.locator(".walk-open-stops li")).toHaveCount(2);
+  await walk.getByRole("button", { name: "Paylaş" }).click();
+  const share = page.getByRole("dialog", { name: "Paylaş" });
+  await expect(share.getByRole("img", { name: "Paylaşım kartı" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(share).toHaveCount(0);
   await walk.getByRole("button", { name: "Rotalara dön" }).click();
   await expect(page.locator(".route-card").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /Yeni rota oluştur/ })).toBeVisible();

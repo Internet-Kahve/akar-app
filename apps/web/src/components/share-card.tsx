@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Download, Facebook, Instagram, Link2, MessageCircle, Share2 } from "lucide-react";
+import { Check, Download, Facebook, Flag, Instagram, Link2, MessageCircle, Share2 } from "lucide-react";
 import type { HeritageSite } from "@akar/domain";
 import type { SiteProgress } from "@akar/api-client";
 import { badgeArt, badgeEntries, type AchievementId, type BadgeEntry, type BadgeTier } from "../lib/badges";
@@ -15,7 +15,12 @@ import { useI18n } from "./i18n";
 import { Modal } from "./ui";
 
 /** What the visitor asked to share. */
-export type ShareRequest = { kind: "badge"; entry: BadgeEntry } | { kind: "achievement"; id: AchievementId } | { kind: "week" };
+export type ShareRequest =
+  | { kind: "badge"; entry: BadgeEntry }
+  | { kind: "achievement"; id: AchievementId }
+  | { kind: "week" }
+  /** A finished walk (7 Nov 2026): the route's name, its stops and the badges won on it. */
+  | { kind: "route"; id: string; title: string; done: number; total: number; badges: BadgeEntry[] };
 
 type Art =
   | { kind: "medal"; src: string; tier: BadgeTier }
@@ -353,6 +358,21 @@ export default function ShareDialog({
         footer,
       };
       setMessage(t("share.textAchievement", { title: t(`achievement.${request.id}.title`) }));
+    } else if (request.kind === "route") {
+      const items = request.badges.map((e) => ({ src: badgeArt(e.badge), tier: e.tier }));
+      spec = {
+        file: shareFileName("rota", request.id),
+        kicker: t("share.kickerRoute"),
+        title: request.title,
+        subtitle: t("share.routeStops", { done: request.done, total: request.total }),
+        art: items.length
+          ? { kind: "medals", items: items.slice(0, 3), more: Math.max(0, items.length - 3) }
+          : { kind: "icon", svg: iconSvg(iconHost.current) },
+        person,
+        score,
+        footer,
+      };
+      setMessage(t("share.textRoute", { route: request.title }));
     } else {
       const now = new Date();
       const week = badgesThisWeek(progress, now);
@@ -411,6 +431,11 @@ export default function ShareDialog({
   };
   return (
     <Modal title={t("share.title")} onClose={onClose} className="share-dialog">
+      {request.kind === "route" && (
+        <span ref={iconHost} hidden>
+          <Flag size={240} strokeWidth={2.2} color="#5b3a10" />
+        </span>
+      )}
       {request.kind === "achievement" && (
         <span ref={iconHost} hidden>
           {(() => {

@@ -4876,9 +4876,56 @@ body:has(.gg) { overflow-x: clip; }
 .walk-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .route-page.route-walk .walk-actions .btn svg { display: inline; }
 .walk-finished { justify-items: center; padding: 16px 0 0; text-align: center; }
-.walk-finished > svg { color: var(--gold); }
 .walk-finished h2 { margin: 0; font-size: 20px; }
 .walk-finished p { margin: 0; }
+/* The finish card (7 Nov 2026): what the walk earned, then the stops still open, sharing and the way back. */
+.walk-finished { gap: 14px; }
+.walk-finished > .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.route-page.route-walk .walk-finished .btn svg { display: inline; }
+.walk-finished-flag {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  color: var(--gold);
+}
+.walk-earned { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; width: 100%; margin: 0; }
+.walk-earned > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.walk-earned dd { margin: 0; color: var(--text); font: 700 22px/26px var(--font); }
+.walk-earned dt { color: var(--text-muted); font: 500 12px/16px var(--font); }
+.walk-route-badge {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  text-align: left;
+}
+.walk-route-badge img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; filter: grayscale(1); opacity: 0.55; }
+.walk-route-badge.earned { border: 1.5px solid color-mix(in srgb, var(--gold) 55%, transparent); background: var(--surface); }
+.walk-route-badge.earned img { filter: none; opacity: 1; }
+.walk-route-badge > span { display: grid; gap: 2px; min-width: 0; }
+.walk-route-badge strong { font-size: 15px; line-height: 20px; }
+.walk-route-badge small { font-size: 13px; }
+.walk-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 14px; width: 100%; margin: 0; padding: 0; list-style: none; }
+.walk-badges li { display: grid; justify-items: center; gap: 4px; width: 76px; }
+.walk-badges li > span:last-child { color: var(--text); font: 500 12px/15px var(--font); }
+.walk-open-stops { display: grid; gap: 6px; width: 100%; text-align: left; }
+.walk-open-stops p { font-size: 13px; }
+.walk-open-stops ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.walk-open-stops .text-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 0; color: var(--sehir-aksan, var(--primary)); font: 600 14px/18px var(--font); }
 @media (prefers-reduced-motion: reduce) { .walk-step-dot { transition: none; } }
 .route-page > .route-edit { right: 48px; }
 

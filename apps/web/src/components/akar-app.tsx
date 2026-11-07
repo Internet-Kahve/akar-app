@@ -57,6 +57,7 @@ import {
   MapChips,
   RoutePreview,
   toggleCategory,
+  type RouteWalkSummary,
   type ExploreTab,
   type PlaceMode,
 } from "./explore-panel";
@@ -163,7 +164,16 @@ const CATALOG_REFRESH_MS = 5 * 60_000;
 const isDetailView = (v: string) => v === "detail" || v === "story";
 
 /** A route being walked: its stops, the one the visitor is at (its length once over), and what they did with each. */
-type Walk = { ids: string[]; at: number; routeId?: string | undefined; doneIds: string[]; skippedIds: string[] };
+type Walk = {
+  ids: string[];
+  at: number;
+  routeId?: string | undefined;
+  doneIds: string[];
+  skippedIds: string[];
+  /** The visitor's points and the time when the walk began: the finish card counts what this walk earned. */
+  startPoints?: number | undefined;
+  startedAt?: string | undefined;
+};
 const WALK_KEY = "akar.rota.yuruyus";
 /** The route id of one of the visitor's own routes in the panel. */
 const MINE = "mine:";
@@ -174,7 +184,15 @@ function readWalk(raw: string | null | undefined): Walk | null {
     const list = (x: unknown) => (Array.isArray(x) ? x.filter((v): v is string => typeof v === "string") : []);
     const ids = list(w.ids);
     if (!ids.length || typeof w.at !== "number") return null;
-    return { ids, at: Math.min(Math.max(0, w.at), ids.length), routeId: typeof w.routeId === "string" ? w.routeId : undefined, doneIds: list(w.doneIds), skippedIds: list(w.skippedIds) };
+    return {
+      ids,
+      at: Math.min(Math.max(0, w.at), ids.length),
+      routeId: typeof w.routeId === "string" ? w.routeId : undefined,
+      doneIds: list(w.doneIds),
+      skippedIds: list(w.skippedIds),
+      startPoints: typeof w.startPoints === "number" ? w.startPoints : undefined,
+      startedAt: typeof w.startedAt === "string" ? w.startedAt : undefined,
+    };
   } catch {
     return null;
   }
@@ -821,6 +839,24 @@ export function AkarApp() {
   }, [peekId, siteId, view, walk]);
   // The walked route's own record (its walking path and legs), once the route panel has closed.
   const walkRoute = findRoute(walk?.routeId);
+  // What a finished walk earned (7 Nov 2026): its points, the badges of its stops won since it began, and the
+  // route's own badge, which the API gives once every stop's story is finished or the stop is visited.
+  const walkSummary = useMemo((): RouteWalkSummary | undefined => {
+    if (!walk || walk.at < walk.ids.length) return undefined;
+    const ids = new Set(walk.ids);
+    const since = walk.startedAt ?? "";
+    const counted = new Set([...state.readIds, ...state.visitedIds]);
+    const openIds = walk.ids.filter((id) => !counted.has(id));
+    const badge = walkRoute?.badge;
+    return {
+      done: walk.ids.filter((id) => walk.doneIds.includes(id)).length,
+      total: walk.ids.length,
+      points: walk.startPoints === undefined ? undefined : Math.max(0, state.points - walk.startPoints),
+      badges: badgeEntries(state.sites, progress).filter((e) => ids.has(e.site.id) && e.held && e.held.earnedAt >= since),
+      openIds,
+      ...(badge && { routeBadge: { ...badge, earned: openIds.length === 0 } }),
+    };
+  }, [walk, walkRoute, state.readIds, state.visitedIds, state.points, state.sites, progress]);
   const walkIndex = walk ? walk.ids.indexOf(siteId) : -1;
   const nextStop = walk
     ? walkIndex >= 0
@@ -1785,6 +1821,18 @@ export function AkarApp() {
                         live={live}
                         visitedIds={state.visitedIds}
                         walk={walk && walk.routeId === routeId ? walk : undefined}
+                        summary={walkSummary}
+                        onShare={() =>
+                          walkSummary &&
+                          setShareRequest({
+                            kind: "route",
+                            id: routeId ?? "rota",
+                            title: route ? text(route.name, route.nameEn) : t("route.customTitle"),
+                            done: walkSummary.done,
+                            total: walkSummary.total,
+                            badges: walkSummary.badges,
+                          })
+                        }
                         onBack={() => setRouteId(undefined)}
                         onClose={closeRoute}
                         onSite={selectSite}
@@ -1805,7 +1853,7 @@ export function AkarApp() {
                             const first = Math.max(0, ids.findIndex((id) => !state.visitedIds.includes(id)));
                             // A route found by its name leaves no search behind: the map shows every stop's pin.
                             setQuery("");
-                            walkTo({ ids, at: first, routeId, doneIds: [], skippedIds: [] });
+                            walkTo({ ids, at: first, routeId, doneIds: [], skippedIds: [], startPoints: state.points, startedAt: new Date().toISOString() });
                           }
                         }}
                       />

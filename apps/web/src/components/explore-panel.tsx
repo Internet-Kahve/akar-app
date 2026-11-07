@@ -11,6 +11,7 @@ import {
   Footprints,
   Pencil,
   Plus,
+  Share2,
   SkipForward,
   Route,
   UserRound,
@@ -27,7 +28,10 @@ import {
 import { cityCase } from "../lib/place-names";
 import { siteMeta } from "../lib/site-meta";
 import { legDistance, legMinutes, walkingLeg } from "../lib/route-walking";
+import type { BadgeEntry } from "../lib/badges";
+import { badgeInLang } from "../lib/task-text";
 import { SiteArtwork } from "./site-artwork";
+import { BadgeMedal } from "./badge-medal";
 import { Back, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 
@@ -459,6 +463,103 @@ export interface RouteWalkState {
   skippedIds: string[];
 }
 
+/** What a finished walk earned, for its finish card. */
+export interface RouteWalkSummary {
+  done: number;
+  total: number;
+  /** Points won since the walk began; unknown for a walk begun before this was counted. */
+  points?: number | undefined;
+  /** Badges of the route's stops earned since the walk began. */
+  badges: BadgeEntry[];
+  /** Stops whose story is not finished and that were not visited: what the route's badge still needs. */
+  openIds: string[];
+  routeBadge?: { title: string; url?: string; alt?: string; earned: boolean } | undefined;
+}
+
+/**
+ * The end of a walk (7 Nov 2026): what it earned (points, the stops' badges, the route's badge or what that still
+ * needs), a share card, and the way back. «Tamamladım» alone earns nothing: points and badges come from a stop's
+ * story or a visit at the site, so the stops still open are listed here.
+ */
+function WalkFinished({
+  sites,
+  finished,
+  summary,
+  onSite,
+  onShare,
+  onExit,
+  onRestart,
+}: {
+  sites: HeritageSite[];
+  finished: number;
+  summary?: RouteWalkSummary | undefined;
+  onSite: (id: string) => void;
+  onShare?: (() => void) | undefined;
+  onExit: () => void;
+  onRestart: () => void;
+}) {
+  const { lang, t, text } = useI18n();
+  const open = summary ? sites.filter((s) => summary.openIds.includes(s.id)) : [];
+  const route = summary?.routeBadge;
+  return (
+    <section className="walk-here walk-finished" aria-live="polite">
+      <span className="walk-finished-flag" aria-hidden="true"><Flag size={26} /></span>
+      <h2>{t("walk.finished")}</h2>
+      <p className="muted">{t("walk.finishedCount", { done: finished, total: sites.length })}</p>
+      {/* Nothing won yet says nothing: the stops still open below say how to win. */}
+      {summary && ((summary.points ?? 0) > 0 || summary.badges.length > 0 || route?.earned) && (
+        <dl className="walk-earned">
+          {summary.points !== undefined && (
+            <div><dd>+{summary.points}</dd><dt>{t("walk.points")}</dt></div>
+          )}
+          <div><dd>{summary.badges.length + (route?.earned ? 1 : 0)}</dd><dt>{t("walk.badges")}</dt></div>
+        </dl>
+      )}
+      {route && (
+        <div className={`walk-route-badge${route.earned ? " earned" : ""}`}>
+          <img src={route.url ?? "/rozetler/_hikaye.webp"} alt={route.alt ?? ""} width={56} height={56} />
+          <span>
+            <strong>{route.title}</strong>
+            <small className="muted">{route.earned ? t("walk.routeBadgeEarned") : t("walk.routeBadgeOpen", { count: open.length })}</small>
+          </span>
+        </div>
+      )}
+      {summary && summary.badges.length > 0 && (
+        <ul className="walk-badges" aria-label={t("walk.badgesEarned")}>
+          {summary.badges.map((e) => (
+            <li key={e.badge.id}>
+              <BadgeMedal badge={e.badge} tier={e.tier} earned size={44} eager />
+              <span>{badgeInLang(e.badge, lang).badge.title}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open.length > 0 && (
+        <div className="walk-open-stops">
+          <p className="muted">{t("walk.openStops")}</p>
+          <ul>
+            {open.map((s) => (
+              <li key={s.id}>
+                <button className="text-btn" onClick={() => onSite(s.id)}>
+                  {text(s.name, s.nameEn)} <ArrowRight size={14} aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {onShare && (
+        <button className="btn secondary full walk-share" onClick={onShare}>
+          <Share2 size={17} aria-hidden="true" />
+          {t("walk.share")}
+        </button>
+      )}
+      <button className="btn full" onClick={onExit}>{t("walk.close")}</button>
+      <button className="text-btn route-home" onClick={onRestart}>{t("route.again")}</button>
+    </section>
+  );
+}
+
 /** A route's page in the panel. */
 export function RoutePreview({
   route,
@@ -476,6 +577,8 @@ export function RoutePreview({
   onSkip,
   onExitWalk,
   onEdit,
+  summary,
+  onShare,
 }: {
   route?: HeritageRoute | undefined;
   custom: boolean;
@@ -489,6 +592,9 @@ export function RoutePreview({
   onStart: () => void;
   /** Set while this route is walked: the panel shows the steps and the stop the visitor is at (7 Nov 2026). */
   walk?: RouteWalkState | undefined;
+  /** Set once the walk is over. */
+  summary?: RouteWalkSummary | undefined;
+  onShare?: () => void;
   onStep?: (index: number) => void;
   onDone?: () => void;
   onSkip?: () => void;
@@ -503,7 +609,7 @@ export function RoutePreview({
     return (
       <RouteWalk route={route} custom={custom} sites={sites} live={live} walk={walk} onSite={onSite}
         onStep={onStep ?? (() => {})} onDone={onDone ?? (() => {})} onSkip={onSkip ?? (() => {})}
-        onExit={onExitWalk ?? (() => {})} onRestart={onStart} />
+        onExit={onExitWalk ?? (() => {})} onRestart={onStart} summary={summary} onShare={onShare} />
     );
   return (
     <div className="route-page">
@@ -601,6 +707,8 @@ function RouteWalk({
   onSkip,
   onExit,
   onRestart,
+  summary,
+  onShare,
 }: {
   route?: HeritageRoute | undefined;
   custom: boolean;
@@ -613,6 +721,8 @@ function RouteWalk({
   onSkip: () => void;
   onExit: () => void;
   onRestart: () => void;
+  summary?: RouteWalkSummary | undefined;
+  onShare?: (() => void) | undefined;
 }) {
   const { t, text } = useI18n();
   const here = sites[walk.at];
@@ -680,13 +790,7 @@ function RouteWalk({
           </div>
         </section>
       ) : (
-        <section className="walk-here walk-finished" aria-live="polite">
-          <Flag size={28} aria-hidden="true" />
-          <h2>{t("walk.finished")}</h2>
-          <p className="muted">{t("walk.finishedCount", { done: finished, total: sites.length })}</p>
-          <button className="btn full" onClick={onExit}>{t("walk.close")}</button>
-          <button className="text-btn route-home" onClick={onRestart}>{t("route.again")}</button>
-        </section>
+        <WalkFinished sites={sites} finished={finished} summary={summary} onSite={onSite} onShare={onShare} onExit={onExit} onRestart={onRestart} />
       )}
       {here && (
         <button className="text-btn route-home" onClick={onExit}>
