@@ -797,9 +797,13 @@ test("editors see drafts at the city centre; an unmoved placeholder sends no loc
   const api = fakeApi({
     ...catalogHandlers(),
     ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    // Drafts and inactive sites are read apart (§11.81); this test has no inactive one.
     "GET /v1/admin/site-details": (c) => {
-      assert.ok(c.path.includes("status=draft"));
-      return { items: Object.values(drafts), nextCursor: null };
+      assert.match(c.path, /status=(draft|inactive)/);
+      return {
+        items: c.path.includes("status=draft") ? Object.values(drafts) : [],
+        nextCursor: null,
+      };
     },
     "GET /v1/admin/sites/d1": () => drafts.d1,
     "GET /v1/admin/sites/d2": () => drafts.d2,
@@ -875,6 +879,68 @@ test("editors see drafts at the city centre; an unmoved placeholder sends no loc
     "draft",
     "an unpublished site stays in the panel once, as a draft",
   );
+});
+
+test("§11.81: the panel lists inactive sites, changes only a site's status, and deletes only a site that is not published", async () => {
+  const admin: Record<string, Record<string, unknown>> = {
+    d1: { ...detail("d1", { coordinates: [29.1, 40.2] }), status: "draft" },
+    i1: { ...detail("i1", { coordinates: [29.2, 40.3] }), status: "inactive" },
+  };
+  const writes: Call[] = [];
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/admin/site-details": (c) => ({
+      items: Object.values(admin).filter((d) => c.path.includes(`status=${d.status}`)),
+      nextCursor: null,
+    }),
+    "GET /v1/admin/sites/d1": () => admin.d1,
+    "GET /v1/admin/sites/i1": () => admin.i1,
+    "POST /v1/admin/sites/d1/deactivate": (c) => {
+      writes.push(c);
+      admin.d1 = { ...admin.d1, status: "inactive" };
+      return admin.d1;
+    },
+    "POST /v1/admin/sites/i1/publish": (c) => {
+      writes.push(c);
+      return Response.json(
+        { code: "PUBLISH_BLOCKED", message: "Yayın için eksikler var.", fieldErrors: { _: ["Kapak fotoğrafı yok."] } },
+        { status: 422 },
+      );
+    },
+    "DELETE /v1/admin/sites/i1": (c) => {
+      writes.push(c);
+      delete admin.i1;
+      return new Response(null, { status: 204 });
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const snap = await client.getSnapshot();
+  assert.equal(snap.sites.find((s) => s.id === "i1")?.status, "inactive");
+
+  // A status change is its own call: no info, location or content write.
+  const moved = await client.dispatch({ type: "site-status", siteId: "d1", status: "inactive" });
+  assert.deepEqual(writes.map((c) => [c.method, c.path]), [["POST", "/v1/admin/sites/d1/deactivate"]]);
+  assert.equal(moved.sites.filter((s) => s.id === "d1").map((s) => s.status).join(), "inactive");
+
+  // A refused publish keeps the site as it was.
+  writes.length = 0;
+  await assert.rejects(client.dispatch({ type: "site-status", siteId: "i1", status: "published" }));
+  assert.equal((await client.getSnapshot()).sites.find((s) => s.id === "i1")?.status, "inactive");
+
+  // Deleting a published site is refused before any request; an inactive one leaves the panel.
+  writes.length = 0;
+  await assert.rejects(client.dispatch({ type: "delete-site", siteId: "a" }), /Yayındaki eser silinemez/);
+  assert.deepEqual(writes, []);
+  const after = await client.dispatch({ type: "delete-site", siteId: "i1" });
+  assert.deepEqual(writes.map((c) => [c.method, c.path]), [["DELETE", "/v1/admin/sites/i1"]]);
+  assert.ok(!after.sites.some((s) => s.id === "i1"));
+  assert.ok(after.sites.some((s) => s.id === "a"), "published sites stay");
 });
 
 test("a full editor save goes through the step endpoints in reference order: new files uploaded and their ids mapped, server-only story fields and source locators kept", async () => {

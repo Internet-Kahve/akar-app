@@ -2,7 +2,7 @@ import { normalize } from "@akar/domain";
 import { and, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "../../db/client.ts";
-import { cities, publishStatuses, regions, sites } from "../../db/schema/index.ts";
+import { cities, regions, siteStatuses, sites } from "../../db/schema/index.ts";
 import { decodeCursor, encodeCursor, PageQuery, pageResponse } from "../../platform/pagination.ts";
 import { APPROXIMATE_SOURCES, BUILDING_HEADS, nameKey } from "../ingest/geocode.ts";
 import { pageAdminSites } from "./sites.ts";
@@ -44,7 +44,7 @@ export const DuplicateGroup = z.object({
         id: z.string(),
         name: z.string(),
         district: z.string().nullable(),
-        status: z.enum(publishStatuses),
+        status: z.enum(siteStatuses),
         coordinates: z.tuple([z.number(), z.number()]).nullable().describe("[boylam, enlem]"),
         locationSource: z.string().nullable(),
       }),
@@ -70,7 +70,7 @@ export function locationReport(db: Db, input: LocationReportInput): Promise<{ it
   return pageAdminSites(db, [eq(sites.status, "draft"), state, ...cityWhere(input.city)], input);
 }
 
-const STATUS_ORDER = { published: 0, draft: 1 } as const;
+const STATUS_ORDER = { published: 0, draft: 1, inactive: 2 } as const;
 
 /**
  * Comparable name for the report: the importer's `nameKey` (possessive heads bare, "ve Haziresi" tails
@@ -107,7 +107,7 @@ export async function duplicateReport(db: Db, input: DuplicateReportInput): Prom
     .from(sites)
     .innerJoin(cities, eq(cities.id, sites.cityId))
     .leftJoin(regions, eq(regions.id, sites.regionId))
-    .where(and(...cityWhere(input.city)));
+    .where(and(isNull(sites.deletedAt), ...cityWhere(input.city)));
 
   const groups = new Map<string, { cityId: string; key: string; rows: typeof rows }>();
   for (const r of rows) {

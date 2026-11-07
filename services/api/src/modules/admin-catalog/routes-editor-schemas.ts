@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publishStatuses } from "../../db/schema/index.ts";
+import { publishStatuses, siteStatuses } from "../../db/schema/index.ts";
 import { PageQuery, pageResponse } from "../../platform/pagination.ts";
 import { TrustSchema } from "../catalog/schemas.ts";
 
@@ -66,7 +66,7 @@ const routeFields = z.object({
 
 export const AdminRouteStop = z.object({
   position: z.number().int().describe("Duraktaki sıra, 0'dan başlar"),
-  site: z.object({ id: z.string(), name: z.string(), status: RouteStatus.describe("Eser taslaksa rota yayınlanamaz") }),
+  site: z.object({ id: z.string(), name: z.string(), status: z.enum(siteStatuses).describe("Eser yayında değilse (taslak ya da deaktif) rota yayınlanamaz") }),
   quizId: z.string().nullable(),
   historyImageId: z.string().nullable(),
 });

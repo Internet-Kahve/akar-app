@@ -219,3 +219,12 @@ Dal: `talha/imlec-modelle-tasinir` (PR #115). Backend değişmedi.
 3. **«Girdi doğrulanamadı» (canlıda «deneme» yayınlanırken).** Neden: kaynağın «Bağlantı» alanına `www.…` gibi `https://` olmadan yazılmış adres. Sunucu doğru yanıt veriyor (`fieldErrors: { "sources.0.url": ["Adres http:// ya da https:// ile başlamalı."] }`), ama panel iki yerde eksik; ikisi de düzeltilmedi:
    - Eser kaydı hatada yalnız genel mesajı gösteriyor (`admin-site-editor.tsx` `save()` → `error.message`); alan mesajlarını gösteren `describeFieldError` (`lib/errors.ts`) orada kullanılmıyor.
    - Panel kaydetmeden önce kontrol etmiyor: bağlantının `https://` ile başlaması, gezinti süresinin 0–240 arası tam sayı olması (alan `15.5` ya da `300` kabul ediyor), «Gelir / hizmet ilişkisi» bir eser seçilip «İlişki yok»a dönülünce `relatedSiteId: ""` gitmesi (sunucu reddeder). Sonuncular kodda görüldü, canlıda denenmedi.
+
+## 7 Kasım · eser durumu ve silme (Burak için) — **Docker ile doğrulanmadı**
+
+Dal: `talha/eser-durum-silme`. Karar: `docs/BACKEND-DECISIONS.md` §11.81.
+
+1. **Yeni durum `inactive` (deaktif).** Migration `0040_site_status`: `ALTER TYPE publish_status ADD VALUE 'inactive'`, `sites.deleted_at` ve CHECK `sites_deleted_not_published`. Enum'a değer eklemek aynı işlemde kullanılmadığı için transaction içinde güvenli (PG 12+); migration'da `inactive` değeri hiç kullanılmıyor.
+2. **Uçlar.** `POST /v1/admin/sites/:id/deactivate` yeni; `publish` ve `unpublish` artık deaktif eserden de çalışıyor. `DELETE /v1/admin/sites/:id` yeni: yayındaki eser 409, taslak/deaktif 204. `GET /v1/admin/sites` ve `/site-details` `status=inactive` alıyor. Silinmiş eser `loadSites` ve `pageSites` içinde süzülüyor, bu yüzden tüm panel okuma/yazmaları 404 veriyor; tekrar raporu, rota durağı ve ilişkili eser denetimi de süzüyor. Herkese açık katalog zaten yalnız `published` okuduğu için değişmedi.
+3. **Çalıştırılmadı:** `services/api` testleri ve migration (bu bilgisayarda Docker yok). Yeni test `sites.test.ts` sonunda (§11.81). `npm run check` ile doğrulanmalı. Typecheck (API + web), `npm test` (244/244) ve OpenAPI üretimi geçti.
+4. **Bilinen sınır.** İçe aktarmanın tekrar denetimi (`existingSiteKeys`) silinmiş eserleri hâlâ görüyor: silinen bir eser aynı dosyadan yeniden içe aktarılırsa «zaten var» sayılır. Panelden elle yeni eser açmak engellenmiyor.

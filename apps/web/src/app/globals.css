@@ -5396,3 +5396,45 @@ td small {
   .chat-source-link { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) { .chat-fab { transition: none; } }
+
+/* Panel site list (§11.81): the status is chosen in place; a site that is not published can be deleted. */
+.site-status {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.site-status-published {
+  border-color: var(--verified);
+  color: var(--verified);
+  background: var(--verified-bg);
+}
+.site-status-inactive {
+  color: var(--text-muted);
+  border-style: dashed;
+}
+.site-status:disabled {
+  opacity: 0.6;
+}
+.row-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+.row-actions .icon-btn {
+  width: 44px;
+  height: 44px;
+}
+.icon-btn.danger:not(:disabled) {
+  color: var(--error);
+}
+.icon-btn.danger:not(:disabled):hover {
+  background: color-mix(in srgb, var(--error) 10%, var(--surface));
+}
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

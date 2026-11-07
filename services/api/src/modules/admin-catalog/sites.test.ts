@@ -1,6 +1,6 @@
 import { asc, eq } from "drizzle-orm";
 import assert from "node:assert/strict";
-import { after, before, test } from "node:test";
+import { after, before, beforeEach, test } from "node:test";
 import type { App } from "../../app.ts";
 import { auditLog, catalogRoutes, cities, media, routeStops, siteAboutChapters, siteBadges, siteMedia, sitePartCardPhotos, sitePartCards, siteSectionPhotos, siteSections, siteTaskAnswers, siteTasks, sites, sources, userSiteBadges, userSiteTasks } from "../../db/schema/index.ts";
 import { AppError, type ErrorBody } from "../../errors.ts";
@@ -15,7 +15,12 @@ type Method = "GET" | "POST" | "PUT" | "PATCH";
 type Headers = Record<string, string>;
 type Page = { items: AdminSiteListItem[]; nextCursor: string | null };
 
-const editor = authHeader({ id: "editor-1", role: "editor" });
+let editor: Headers;
+let editorNumber = 0;
+// Each scenario gets its own account quota; requests within a scenario still share it.
+beforeEach(() => {
+  editor = authHeader({ id: `editor-${++editorNumber}`, role: "editor" });
+});
 const user = authHeader({ id: "user-1", role: "user" });
 const moderator = authHeader({ id: "mod-1", role: "moderator" });
 
@@ -1037,7 +1042,7 @@ test("every write leaves one audit row naming the actor and request, with before
 
   const rows = await auditOf(id);
   assert.deepEqual(rows.map((r) => r.action), ["site.create", ...Array(8).fill("site.update"), "site.publish", "site.unpublish"]);
-  assert.ok(rows.every((r) => r.actorId === "editor-1" && r.entityType === "site"));
+  assert.ok(rows.every((r) => r.actorId === `editor-${editorNumber}` && r.entityType === "site"));
   assert.deepEqual(rows.slice(1).map((r) => r.requestId), requestIds);
 
   const slice = (action: string, key: string) => {
@@ -1223,4 +1228,56 @@ test("the about English texts follow the card rules: omitted keeps, written or c
   // Null or blank clears value and status.
   await send("PUT", `${base}/about`, { chapters: [chapter({ titleEn: null, readingEn: null }, { titleEn: " ", bodyEn: null })], looseSections: [] });
   assert.deepEqual(await read(), { chapter: [null, null, null], section: [null, null, null] });
+});
+
+test("§11.81: a site moves between published, draft and inactive; only one that is not published can be deleted, and a deleted site is hidden but kept", async () => {
+  const draft = await newDraft("Silinecek Han");
+  const id = draft.id;
+  const base = `/v1/admin/sites/${id}`;
+  await send("PUT", `${base}/location`, { coordinates: [29.06, 40.18] });
+  await send("PUT", `${base}/model`, { mediaId: "m-1" });
+  await send("PUT", `${base}/media`, { photoIds: ["ph-1"], coverPhotoId: "ph-1" });
+  await send("PUT", `${base}/sources`, { sources: [{ id: "src-vgm", title: "VGM Bursa Envanteri", kind: "book", trust: "verified" }] });
+  await send("PUT", `${base}/stories`, { blocks: [story()] });
+  await send("PUT", `${base}/about`, { chapters: [], looseSections: [{ kind: "history", title: "Tarihçe", body: "Han 1491'de yapıldı.", trust: "verified", sourceId: "src-vgm" }] });
+  await send("PUT", `${base}/history-images`, { images: [{ mediaId: "ph-1", trust: "inferred" }] });
+  assert.equal((await send("POST", `${base}/publish`)).status, "published");
+
+  const remove = () => app.inject({ method: "DELETE", url: base, headers: { ...editor } });
+  // Published: never deleted outright.
+  const refused = await remove();
+  assert.equal(refused.statusCode, 409, refused.body);
+  assert.match(refused.json<ErrorBody>().error.message, /Yayındaki eser silinemez/);
+
+  // Off the map as inactive: no gate, and twice is a conflict.
+  assert.equal((await send("POST", `${base}/deactivate`)).status, "inactive");
+  assert.equal((await call<ErrorBody>("POST", `${base}/deactivate`, editor)).res.statusCode, 409);
+  const inactive = (await call<{ items: AdminSiteListItem[] }>("GET", "/v1/admin/sites?status=inactive", editor)).body;
+  assert.ok(inactive.items.some((i) => i.id === id));
+  // Back on the map runs the gate again, and back off.
+  assert.equal((await send("POST", `${base}/publish`)).status, "published");
+  assert.equal((await send("POST", `${base}/deactivate`)).status, "inactive");
+
+  const deleted = await remove();
+  assert.equal(deleted.statusCode, 204, deleted.body);
+  assert.equal((await call("GET", base, editor)).res.statusCode, 404);
+  assert.equal((await call("POST", `${base}/publish`, editor)).res.statusCode, 404);
+  assert.equal((await remove()).statusCode, 404);
+  const listed = (await call<{ items: AdminSiteListItem[] }>("GET", "/v1/admin/sites?query=silinecek", editor)).body;
+  assert.ok(!listed.items.some((i) => i.id === id));
+  // The row is kept, marked; the audit names each change.
+  const [row] = await app.deps.db.select({ status: sites.status, deletedAt: sites.deletedAt }).from(sites).where(eq(sites.id, id));
+  assert.equal(row?.status, "inactive");
+  assert.ok(row?.deletedAt);
+  assert.deepEqual(
+    (await auditOf(id)).map((r) => r.action).filter((a) => a !== "site.update"),
+    ["site.create", "site.publish", "site.deactivate", "site.publish", "site.deactivate", "site.delete"],
+  );
+  // The name is free again: a new site gets a new id.
+  const again = await newDraft("Silinecek Han");
+  assert.notEqual(again.id, id);
+
+  // A draft can be deleted too.
+  const scratch = await newDraft("Deneme Taslak Hanı");
+  assert.equal((await app.inject({ method: "DELETE", url: `/v1/admin/sites/${scratch.id}`, headers: { ...editor } })).statusCode, 204);
 });
