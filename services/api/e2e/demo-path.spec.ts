@@ -72,7 +72,15 @@ function tokenFor(email: string, role: "user" | "editor" | "moderator" | "admin"
 async function peekSite(page: Page, name: string) {
   // The page under the opening screen takes no input until the map is drawn (§11.49).
   await expect(page.locator(".opening")).toHaveCount(0);
+  // A saved route stays open at its page in the routes panel (7 Nov 2026). «Tüm rotalar» only steps back; the route's
+  // ✕ would also empty Rotam. The site rows are under «Eserler» (a phone's sheet has a back button, not the tabs).
+  const allRoutes = page.getByRole("button", { name: "Tüm rotalar" });
+  if (await allRoutes.isVisible()) await allRoutes.click();
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill(name);
+  const sitesTab = page.getByRole("tab", { name: "Eserler", selected: false });
+  if (await sitesTab.isVisible()) await sitesTab.click();
+  const phoneBack = page.locator(".explore-back");
+  if (await phoneBack.isVisible()) await phoneBack.click();
   await page.locator(".site-row-main").filter({ hasText: name }).first().click();
   await expect(page.locator(".site-peek")).toBeVisible();
 }

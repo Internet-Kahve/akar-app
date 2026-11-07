@@ -5060,6 +5060,8 @@ body:has(.gg) { overflow-x: clip; }
   .app-shell:has(.chat-fab) .story-player,
   .app-shell:has(.chat-fab) .hz-alt-cubuk { padding-right: 76px; }
   .app-shell:has(.chat-fab) .workspace.on-map .side-panel { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  /* The phone's short card sits at the screen's foot; its «›» stands clear of the assistant's button. */
+  .app-shell:has(.chat-fab) .site-peek.compact { padding-right: 76px; }
   .app-shell:has(.chat-fab) .workspace.on-site .detail-panel::after {
     content: "";
     display: block;
