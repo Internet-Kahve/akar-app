@@ -80,6 +80,7 @@ import { TipRow, type TipProps } from "./coach-tip";
 import type { FlowCompanion } from "../lib/flow-companion";
 import { MemoryModal, QuizModal } from "./interaction-modals";
 import { Profile, Admin } from "./profile-admin";
+import type { ModelGenApi } from "./admin-model-gen";
 import { SignInModal, takeGoogleSignIn } from "./sign-in-modal";
 import { ChatWidget } from "./chat-widget";
 import { Modal, Notice } from "./ui";
@@ -629,6 +630,18 @@ export function AkarApp() {
     },
     [],
   );
+  const modelGen = useMemo<ModelGenApi>(() => {
+    const api = () => {
+      if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
+      return client.current;
+    };
+    return {
+      status: () => api().getModelGenStatus(),
+      start: (siteId, input) => api().startModelGenJob(siteId, input),
+      list: (siteId) => api().listModelGenJobs(siteId),
+      get: (id) => api().getModelGenJob(id),
+    };
+  }, []);
   /** Admin panel: the saved values become this tab's map settings at once. */
   const saveMapSettings = useCallback(async (next: MapSettings) => {
     if (!client.current) throw new Error("İşlem şu an yapılamıyor.");
@@ -1421,6 +1434,7 @@ export function AkarApp() {
               narrateSite={narrateSite}
               translateSite={translateSite}
               live={live}
+              modelGen={modelGen}
               mapSettings={mapSettings}
               saveMapSettings={saveMapSettings}
               loadStats={loadStats}
