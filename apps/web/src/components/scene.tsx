@@ -75,7 +75,7 @@ function MediaSwitch({
   onModel: () => void;
   dark?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const box = useRef<HTMLDivElement>(null);
   const index = value === "photo" || !onPhoto ? 0 : 1;
   const [shown, setShown] = useState(lastMediaIndex);
@@ -85,10 +85,21 @@ function MediaSwitch({
     lastMediaIndex = index;
     return () => cancelAnimationFrame(frame);
   }, [index]);
+  // The pill follows the chosen button's size, measured again whenever a label changes width (the site language,
+  // the text size, a late font): «Fotoğraf» and «Photo» are not the same width.
   useEffect(() => {
-    const button = box.current?.children[Math.min(shown, (box.current?.children.length ?? 1) - 1)] as HTMLElement | undefined;
-    if (button) setPill({ x: button.offsetLeft, w: button.offsetWidth });
-  }, [shown]);
+    const host = box.current;
+    if (!host) return;
+    const measure = () => {
+      const button = host.children[Math.min(shown, host.children.length - 1)] as HTMLElement | undefined;
+      if (button) setPill((p) => (p && p.x === button.offsetLeft && p.w === button.offsetWidth ? p : { x: button.offsetLeft, w: button.offsetWidth }));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    for (const child of Array.from(host.children)) observer.observe(child);
+    return () => observer.disconnect();
+  }, [shown, lang]);
   const buttons = [
     ...(onPhoto ? [{ key: "photo" as const, icon: <ImageIcon size={16} />, label: t("site.photo"), go: onPhoto }] : []),
     { key: "model" as const, icon: <Box size={16} />, label: t("site.model3dShort"), go: onModel },
