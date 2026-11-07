@@ -72,7 +72,15 @@ function tokenFor(email: string, role: "user" | "editor" | "moderator" | "admin"
 async function peekSite(page: Page, name: string) {
   // The page under the opening screen takes no input until the map is drawn (§11.49).
   await expect(page.locator(".opening")).toHaveCount(0);
+  // A saved route stays open at its page in the routes panel (7 Nov 2026). «Tüm rotalar» only steps back; the route's
+  // ✕ would also empty Rotam. The site rows are under «Eserler» (a phone's sheet has a back button, not the tabs).
+  const allRoutes = page.getByRole("button", { name: "Tüm rotalar" });
+  if (await allRoutes.isVisible()) await allRoutes.click();
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill(name);
+  const sitesTab = page.getByRole("tab", { name: "Eserler", selected: false });
+  if (await sitesTab.isVisible()) await sitesTab.click();
+  const phoneBack = page.locator(".explore-back");
+  if (await phoneBack.isVisible()) await phoneBack.click();
   await page.locator(".site-row-main").filter({ hasText: name }).first().click();
   await expect(page.locator(".site-peek")).toBeVisible();
 }
@@ -88,8 +96,26 @@ async function openProfile(page: Page) {
   await expect(page.getByRole("heading", { name: "Mirasım", level: 1 })).toBeVisible();
 }
 
-async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+// These paths are not about the hints: a hint shown on a slow machine takes the next touch to put itself away (6 Nov
+// 2026, `coach-tip.tsx`), so every hint counts as already seen here. The hints have their own tests (`tests/`).
+const SEEN_HINTS = () => {
+  const getItem = Storage.prototype.getItem;
+  Storage.prototype.getItem = function (key: string) {
+    return key.startsWith("akar.ipucu.") ? "1" : getItem.call(this, key);
+  };
+};
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(SEEN_HINTS);
+});
+
+async function newContext(browser: Browser, options?: BrowserContextOptions) {
   const context = await browser.newContext(options);
+  await context.addInitScript(SEEN_HINTS);
+  return context;
+}
+
+async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+  const context = await newContext(browser, options);
   const page = await context.newPage();
   await page.goto("/#view=map");
   return { context, page };
@@ -559,7 +585,7 @@ test("the site language follows the account: an empty account takes the device's
 });
 
 test("a guest's visit is counted when the page is hidden and an admin reads it under «İstatistikler»", async ({ browser, page }) => {
-  const context = await browser.newContext();
+  const context = await newContext(browser);
   const guest = await context.newPage();
   // Every batch the page sends with its status; the 10 s timer may send one before the page hides.
   // (A keepalive response body cannot be read here; the panel below shows what the server counted.)

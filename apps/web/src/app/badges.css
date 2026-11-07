@@ -541,6 +541,52 @@
 .share-actions .btn {
   min-height: 44px;
 }
+/* Apps (6 Nov 2026): a round, coloured button each, the name under it. */
+.share-apps {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 14px;
+}
+.share-app {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 60px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: 500 12px/16px var(--font);
+  cursor: pointer;
+}
+.share-app span {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--app, var(--primary));
+  transition: transform 160ms var(--ease);
+}
+.share-app:active span { transform: scale(0.94); }
+.share-app:disabled { opacity: 0.5; cursor: default; }
+.share-app.whatsapp { --app: #25d366; }
+.share-app.instagram { --app: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%); }
+.share-app.x { --app: #000; }
+.share-app.facebook { --app: #1877f2; }
+.share-app.link { --app: var(--surface-2, #e6e8e6); }
+.share-app.link span { color: var(--text); }
+[data-theme="night"] .share-app.x span { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+@media (max-width: 899.98px) {
+  /* Five in one row on a phone, and the card a little shorter so «İndir» stays on screen. */
+  .share-dialog .share-preview { height: min(46dvh, 534px); }
+  .share-apps { flex-wrap: nowrap; gap: 4px; justify-content: space-between; }
+  .share-app { min-width: 0; flex: 1; font-size: 11px; }
+  .share-app span { width: 42px; height: 42px; }
+}
 
 /* ---------------- profile: name, level, rows of cards (stage C) */
 .profile-name {

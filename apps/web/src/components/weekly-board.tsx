@@ -6,7 +6,6 @@ import { avatarById } from "../lib/avatars";
 import { weekRange } from "../lib/share-card";
 import { Avatar, useAvatar } from "./avatar";
 import { useI18n } from "./i18n";
-import { Tag } from "./ui";
 
 type Row = WeeklyLeaderboard["items"][number];
 
@@ -24,8 +23,8 @@ function RowAvatar({ row, size, own }: { row: Row; size: number; own?: boolean |
 
 /**
  * «Haftanın Gezgini» (5 Nov 2026): the week's first, a podium for the first three, the rest of the ten and the
- * visitor's own place. Appearing on it is a choice (off by default, KVKK); the score is the server's ledger. The demo
- * shows made-up rows tagged «Örnek»; the live list never does, and when it is empty it invites the visitor to be first.
+ * visitor's own place. Appearing on it is a choice (off by default, KVKK); the score is the server's ledger. Only real
+ * travellers are listed, in the demo too (6 Nov 2026); when nobody is on it this week, it says so.
  */
 export function WeeklyBoard({
   mode,
@@ -77,7 +76,6 @@ export function WeeklyBoard({
         <h3 id="weekly-board-title">
           <Trophy size={18} aria-hidden="true" /> {t("board.title")}
         </h3>
-        {board?.sample && <Tag tone="muted">{t("board.sample")}</Tag>}
       </div>
       {board && <p className="muted board-week">{t("board.week", { range: weekRange(new Date(board.weekStart), lang) })}</p>}
       {failed ? (

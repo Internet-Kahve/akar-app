@@ -387,6 +387,8 @@ interface RouteDto {
   theme: string;
   stops: Array<{ site: SiteSummaryDto; quizId: string | null; leg?: RouteLeg | null }>;
   walking?: { status: "complete" | "partial" | "unavailable" };
+  /** Absent from an API older than route badges. */
+  badge?: { title: string; url: string | null; alt: string | null } | null;
 }
 /** `AdminRoute`: drafts included; stops may name draft sites. */
 interface AdminRouteDto {
@@ -823,6 +825,9 @@ const mapRoute = (r: RouteDto): HeritageRoute => ({
   theme: r.theme,
   status: "published",
   ...(present(r.nameEn) && { nameEn: r.nameEn }),
+  ...(r.badge?.title.trim() && {
+    badge: { title: r.badge.title, ...(present(r.badge.url) && { url: r.badge.url }), ...(present(r.badge.alt) && { alt: r.badge.alt }) },
+  }),
 });
 
 /** Panel view of a draft route. Duration and distance are computed only for published routes; the panel recomputes both when it saves. */

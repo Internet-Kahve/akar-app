@@ -308,7 +308,7 @@ export interface AkarClient {
   /** `PUT /v1/me/avatar` when signed in (the weekly list shows it); a guest and the demo keep the figure on the device only. */
   setAvatar(avatarId: AvatarId): Promise<void>;
   /**
-   * «Haftanın Gezgini»: `GET /v1/leaderboard/week`. The demo answers with made-up rows marked `sample`; the live list
+   * «Haftanın Gezgini»: `GET /v1/leaderboard/week`. The demo answers with the visitor alone (when shown); the live list
    * never has made-up rows and may be empty.
    */
   getWeeklyLeaderboard(): Promise<WeeklyLeaderboard>;
@@ -1024,26 +1024,15 @@ export function createMockClient(
 }
 
 /**
- * The demo's weekly list: made-up travellers, marked `sample` so the screen tags them «Örnek»; the visitor joins with
- * the demo's points once they turn the list on. The live API never returns made-up rows.
+ * The demo's weekly list: only who is really there, as on the live API (Muhammed, 6 Nov 2026: no made-up travellers;
+ * the team fills the list itself). On this device that is the visitor, once they turn the list on and have points;
+ * otherwise nobody, and the screen says so.
  */
 export function demoLeaderboard(name: string, points: number, visible: boolean, now = new Date()): WeeklyLeaderboard {
-  const sample: Array<{ name: string; avatarId: AvatarId; points: number }> = [
-    { name: "Elif", avatarId: "mihrimah-sultan", points: 330 },
-    { name: "Mert", avatarId: "evliya-celebi", points: 245 },
-    { name: "Zeynep", avatarId: "kosem-sultan", points: 160 },
-    { name: "Can", avatarId: "hezarfen", points: 115 },
-    { name: "Deniz", avatarId: "mimar-sinan", points: 40 },
-  ];
-  const rows = [...sample.map((r) => ({ ...r, me: false })), ...(visible && points > 0 ? [{ name, avatarId: null, points, me: true }] : [])]
-    // On a tie the made-up row stays ahead: it «got there first».
-    .sort((a, b) => b.points - a.points || Number(a.me) - Number(b.me))
-    .map((r, i) => ({ ...r, rank: i + 1 }));
-  const own = rows.find((r) => r.me);
+  const on = visible && points > 0;
   return {
     weekStart: istanbulWeekStart(now).toISOString(),
-    items: rows.slice(0, 10).map(({ rank, name, avatarId, points }) => ({ rank, name, avatarId, points })),
-    me: { rank: own?.rank ?? null, points, visible },
-    sample: true,
+    items: on ? [{ rank: 1, name, avatarId: null, points }] : [],
+    me: { rank: on ? 1 : null, points, visible },
   };
 }

@@ -12,3 +12,10 @@ test('new editorial routes resolve imported IDs without place-specific mappings'
 test('missing duration retains imported duration', () => {
   assert.equal(editorialRoutes([{ id: 'r', ad: 'Walk' }], { sites: [], routes: [{ id: 'r', minutes: 9 }] })[0].minutes, 9);
 });
+test('an editorial route replaces the imported one with its id or name; the others stay', () => {
+  const routes = editorialRoutes([{ id: 'hanlar-bolgesi', ad: 'Hanlar' }], {
+    sites: [], routes: [{ id: 'hanlar', name: 'Hanlar', minutes: 9 }, { id: 'akar-hayrat', name: 'Akar ve Hayrat' }],
+  });
+  assert.deepEqual(routes.map((r) => r.id), ['hanlar-bolgesi', 'akar-hayrat']);
+  assert.equal(routes[0].minutes, 9);
+});

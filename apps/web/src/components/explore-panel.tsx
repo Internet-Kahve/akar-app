@@ -7,9 +7,17 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Flag,
   Footprints,
+  LocateFixed,
+  MapPin,
+  Pencil,
   Plus,
+  Share2,
+  ShieldCheck,
+  SkipForward,
   Route,
+  UserRound,
   X,
 } from "lucide-react";
 import {
@@ -17,12 +25,17 @@ import {
   normalize,
   type HeritageRoute,
   type HeritageSite,
+  type PersonalRoute,
   type SiteCategory,
 } from "@akar/domain";
 import { cityCase } from "../lib/place-names";
 import { siteMeta } from "../lib/site-meta";
 import { legDistance, legMinutes, walkingLeg } from "../lib/route-walking";
+import type { BadgeEntry } from "../lib/badges";
+import { badgeInLang } from "../lib/task-text";
+import { formatDistance } from "../lib/walk-position";
 import { SiteArtwork } from "./site-artwork";
+import { BadgeMedal } from "./badge-medal";
 import { Back, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
 
@@ -200,6 +213,8 @@ export function ExplorePanel({
   onOpenRoute,
   onOpen,
   onCustomRoute,
+  personalRoutes = [],
+  onOpenPersonal,
   onCities,
   onClearFilters,
   categories,
@@ -228,6 +243,9 @@ export function ExplorePanel({
   /** Straight to a site's page from the list; left out while a route is being built. */
   onOpen?: (id: string) => void;
   onCustomRoute: () => void;
+  /** The visitor's own routes with stops: cards like the city's routes, marked as theirs (6 Nov 2026). */
+  personalRoutes?: PersonalRoute[];
+  onOpenPersonal?: (id: string) => void;
   onCities: () => void;
   onClearFilters: () => void;
   /** The kinds of site in this list, with how many of each, whatever is chosen now. */
@@ -270,12 +288,48 @@ export function ExplorePanel({
       </div>
       {tab === "routes" ? (
         <>
-          <div className="explore-heading">
-            {/* A phone has no tabs (3 Nov 2026): back to the sites from here. */}
-            <button className="narrow-only explore-back" onClick={() => onTab("sites")}>
-              <ChevronLeft size={16} />
-              {t("explore.tabSites")}
+          {/* A phone has no tabs (3 Nov 2026): back to the sites from here. */}
+          <button className="narrow-only explore-back" onClick={() => onTab("sites")}>
+            <ChevronLeft size={16} />
+            {t("explore.tabSites")}
+          </button>
+          {/* Rotalarım first, with the way to a new one as its last card (Muhammed, 7 Nov 2026: the big card at the foot
+              outweighed the routes and covered the last one on a phone); the city's routes below, under their heading. */}
+          <section className="route-cards mine" aria-label={t("route.mine")}>
+            <h3 className="route-mine-heading">{t("route.mine")}</h3>
+              {personalRoutes
+                .filter((p) => p.siteIds.length)
+                .map((p) => (
+                  <button className="route-card mine" key={p.id} onClick={() => onOpenPersonal?.(p.id)}>
+                    <span className="route-card-text">
+                      <strong>{p.name}</strong>
+                      <small>{t("explore.myRouteLine", { count: p.siteIds.length })}</small>
+                      <em className="route-mine-tag">
+                        <UserRound size={12} aria-hidden="true" />
+                        {t("explore.myRouteTag")}
+                      </em>
+                    </span>
+                    <span className="route-card-stops" aria-hidden="true">
+                      {p.siteIds.slice(0, 4).map((id) => (
+                        <SiteArtwork key={id} site={allSites.find((s) => s.id === id)} live={live} />
+                      ))}
+                    </span>
+                    <ChevronRight size={18} className="route-card-go" />
+                  </button>
+                ))}
+            <button className="route-new" onClick={onCustomRoute}>
+              <span className="route-new-plus" aria-hidden="true"><Plus size={18} strokeWidth={2.4} /></span>
+              <span className="route-card-text">
+                <strong>{t("explore.custom")}</strong>
+                <small>
+                  {routeIds.length
+                    ? t(routeIds.length === 1 ? "explore.customWaitingOne" : "explore.customWaiting", { count: routeIds.length })
+                    : t("explore.customEmpty")}
+                </small>
+              </span>
             </button>
+          </section>
+          <div className="explore-heading">
             <h2>{heading("routes")}</h2>
           </div>
           <div className="route-cards">
@@ -292,7 +346,7 @@ export function ExplorePanel({
                   <span className="route-card-text">
                     <strong><Localized tr={r.name} en={r.nameEn} /></strong>
                     <small>
-                      {t("explore.routeLine", { count: r.siteIds.length, minutes: r.minutes, distance: r.distance })}
+                      {[t(r.siteIds.length === 1 ? "explore.stopCountOne" : "explore.stopCount", { count: r.siteIds.length }), ...routeTail(r, t)].join(" · ")}
                     </small>
                     {stops > 0 && (
                       <em className="going">{t("common.continueProgress", { done: stops, total: r.siteIds.length })}</em>
@@ -309,24 +363,6 @@ export function ExplorePanel({
               );
             })}
           </div>
-          {/* A new route (Muhammed, 3 Nov 2026: «rezalet, değiştirelim»): a clear card, a small walk drawn on it. */}
-          <button className="custom-route yeni" onClick={onCustomRoute}>
-            <svg className="cr-art" viewBox="0 0 64 44" aria-hidden="true">
-              <path d="M8 34 C 20 34, 18 12, 32 14 S 46 30, 56 10" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 4" strokeLinecap="round" />
-              <circle cx="8" cy="34" r="4.5" />
-              <circle cx="32" cy="14" r="4.5" />
-              <circle cx="56" cy="10" r="4.5" className="cr-new" />
-            </svg>
-            <span>
-              <strong>{t("explore.custom")}</strong>
-              <small>
-                {routeIds.length
-                  ? t(routeIds.length === 1 ? "explore.customWaitingOne" : "explore.customWaiting", { count: routeIds.length })
-                  : t("explore.customEmpty")}
-              </small>
-            </span>
-            <span className="cr-plus" aria-hidden="true"><Plus size={20} strokeWidth={2.4} /></span>
-          </button>
         </>
       ) : (
         <>
@@ -418,6 +454,192 @@ export function ExplorePanel({
   );
 }
 
+/** A route's time and length, each only once known (a route without walking data has neither: no «~0 dk ·»). */
+function routeTail(route: HeritageRoute, t: ReturnType<typeof useI18n>["t"]) {
+  return [route.minutes > 0 ? t("route.minutes", { minutes: route.minutes }) : "", route.distance].filter(Boolean);
+}
+
+/** A route being walked, as the panel shows it: where the visitor is and what they did with each stop. */
+export interface RouteWalkState {
+  /** The stop the visitor is at; `sites.length` once the walk is over. */
+  at: number;
+  doneIds: string[];
+  skippedIds: string[];
+}
+
+/** The walk followed by the visitor's position: the distance to the stop they are at, and the visit there. */
+export interface RouteWalkLocation {
+  on: boolean;
+  /** Metres to the stop; `null` until a position has come. */
+  distance: number | null;
+  /** Close enough for the API to verify the visit. */
+  near: boolean;
+  error?: string | undefined;
+  /** The stop's visit is already verified. */
+  visited: boolean;
+}
+
+/** What a finished walk earned, for its finish card. */
+export interface RouteWalkSummary {
+  done: number;
+  total: number;
+  /** Points won since the walk began; unknown for a walk begun before this was counted. */
+  points?: number | undefined;
+  /** Badges of the route's stops earned since the walk began. */
+  badges: BadgeEntry[];
+  /** Stops whose story is not finished and that were not visited: what the route's badge still needs. */
+  openIds: string[];
+  routeBadge?: { title: string; url?: string; alt?: string; earned: boolean } | undefined;
+}
+
+/**
+ * Where the visitor is against the stop (7 Nov 2026): asked for once («Uzaklığı göster»), then the distance as they
+ * walk («Ulucami'ye 120 m»), and at the stop «Ziyaretini doğrula», the visit that earns the most points and counts
+ * for the route's badge. The demo has no position check, so it offers its simulated visit at any distance.
+ */
+function WalkLocation({
+  live,
+  location,
+  onFollow,
+  onVisit,
+}: {
+  live: boolean;
+  location: RouteWalkLocation;
+  onFollow: (on: boolean) => void;
+  onVisit: () => Promise<void>;
+}) {
+  const { lang, t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const canVisit = !location.visited && (location.near || !live);
+  return (
+    <div className="walk-location" aria-live="polite">
+      {!location.on ? (
+        <button className="text-btn walk-locate" onClick={() => onFollow(true)}>
+          <LocateFixed size={15} aria-hidden="true" />
+          {t("walk.locate")}
+        </button>
+      ) : location.error ? (
+        <p className="muted walk-distance">{location.error}</p>
+      ) : (
+        <p className={`walk-distance${location.near ? " near" : ""}`}>
+          <MapPin size={15} aria-hidden="true" />
+          {location.distance === null
+            ? t("walk.locating")
+            : location.near
+              ? t("walk.atStop")
+              : t("walk.distanceTo", { distance: formatDistance(location.distance, lang) })}
+          <button className="text-btn walk-locate-off" onClick={() => onFollow(false)}>{t("walk.locateOff")}</button>
+        </p>
+      )}
+      {location.visited ? (
+        <p className="walk-visited"><ShieldCheck size={15} aria-hidden="true" /> {t("visit.verified")}</p>
+      ) : (
+        canVisit && (
+          <button
+            className="btn secondary full walk-visit"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await onVisit();
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <MapPin size={16} aria-hidden="true" />
+            {busy ? t("visit.verifying") : live ? t("walk.verifyVisit") : t("visit.demoComplete")}
+          </button>
+        )
+      )}
+    </div>
+  );
+}
+
+/**
+ * The end of a walk (7 Nov 2026): what it earned (points, the stops' badges, the route's badge or what that still
+ * needs), a share card, and the way back. «Tamamladım» alone earns nothing: points and badges come from a stop's
+ * story or a visit at the site, so the stops still open are listed here.
+ */
+function WalkFinished({
+  sites,
+  finished,
+  summary,
+  onSite,
+  onShare,
+  onExit,
+  onRestart,
+}: {
+  sites: HeritageSite[];
+  finished: number;
+  summary?: RouteWalkSummary | undefined;
+  onSite: (id: string) => void;
+  onShare?: (() => void) | undefined;
+  onExit: () => void;
+  onRestart: () => void;
+}) {
+  const { lang, t, text } = useI18n();
+  const open = summary ? sites.filter((s) => summary.openIds.includes(s.id)) : [];
+  const route = summary?.routeBadge;
+  return (
+    <section className="walk-here walk-finished" aria-live="polite">
+      <span className="walk-finished-flag" aria-hidden="true"><Flag size={26} /></span>
+      <h2>{t("walk.finished")}</h2>
+      <p className="muted">{t("walk.finishedCount", { done: finished, total: sites.length })}</p>
+      {/* Nothing won yet says nothing: the stops still open below say how to win. */}
+      {summary && ((summary.points ?? 0) > 0 || summary.badges.length > 0 || route?.earned) && (
+        <dl className="walk-earned">
+          {summary.points !== undefined && (
+            <div><dd>+{summary.points}</dd><dt>{t("walk.points")}</dt></div>
+          )}
+          <div><dd>{summary.badges.length + (route?.earned ? 1 : 0)}</dd><dt>{t("walk.badges")}</dt></div>
+        </dl>
+      )}
+      {route && (
+        <div className={`walk-route-badge${route.earned ? " earned" : ""}`}>
+          <img src={route.url ?? "/rozetler/_hikaye.webp"} alt={route.alt ?? ""} width={56} height={56} />
+          <span>
+            <strong>{route.title}</strong>
+            <small className="muted">{route.earned ? t("walk.routeBadgeEarned") : t("walk.routeBadgeOpen", { count: open.length })}</small>
+          </span>
+        </div>
+      )}
+      {summary && summary.badges.length > 0 && (
+        <ul className="walk-badges" aria-label={t("walk.badgesEarned")}>
+          {summary.badges.map((e) => (
+            <li key={e.badge.id}>
+              <BadgeMedal badge={e.badge} tier={e.tier} earned size={44} eager />
+              <span>{badgeInLang(e.badge, lang).badge.title}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open.length > 0 && (
+        <div className="walk-open-stops">
+          <p className="muted">{t("walk.openStops")}</p>
+          <ul>
+            {open.map((s) => (
+              <li key={s.id}>
+                <button className="text-btn" onClick={() => onSite(s.id)}>
+                  {text(s.name, s.nameEn)} <ArrowRight size={14} aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {onShare && (
+        <button className="btn secondary full walk-share" onClick={onShare}>
+          <Share2 size={17} aria-hidden="true" />
+          {t("walk.share")}
+        </button>
+      )}
+      <button className="btn full" onClick={onExit}>{t("walk.close")}</button>
+      <button className="text-btn route-home" onClick={onRestart}>{t("route.again")}</button>
+    </section>
+  );
+}
+
 /** A route's page in the panel. */
 export function RoutePreview({
   route,
@@ -425,43 +647,91 @@ export function RoutePreview({
   sites,
   live,
   visitedIds,
+  walk,
   onBack,
   onClose,
   onSite,
   onStart,
+  onStep,
+  onDone,
+  onSkip,
+  onExitWalk,
+  onEdit,
+  summary,
+  onShare,
+  location,
+  onFollow,
+  onVisit,
 }: {
   route?: HeritageRoute | undefined;
   custom: boolean;
   sites: HeritageSite[];
   live: boolean;
   visitedIds: string[];
+  location?: RouteWalkLocation | undefined;
+  onFollow?: (on: boolean) => void;
+  onVisit?: () => Promise<void>;
   onBack: () => void;
   /** Takes the route off the map altogether. */
   onClose: () => void;
   onSite: (id: string) => void;
   onStart: () => void;
+  /** Set while this route is walked: the panel shows the steps and the stop the visitor is at (7 Nov 2026). */
+  walk?: RouteWalkState | undefined;
+  /** Set once the walk is over. */
+  summary?: RouteWalkSummary | undefined;
+  onShare?: () => void;
+  onStep?: (index: number) => void;
+  onDone?: () => void;
+  onSkip?: () => void;
+  onExitWalk?: () => void;
+  /** One of the visitor's own routes: a pencil beside the close button takes it to the builder (7 Nov 2026). */
+  onEdit?: (() => void) | undefined;
 }) {
   const { lang, t } = useI18n();
   const tr = lang === "en" ? "tr" : undefined;
   const done = sites.filter((s) => visitedIds.includes(s.id)).length;
+  if (walk && sites.length)
+    return (
+      <RouteWalk route={route} custom={custom} sites={sites} live={live} walk={walk} onSite={onSite}
+        onStep={onStep ?? (() => {})} onDone={onDone ?? (() => {})} onSkip={onSkip ?? (() => {})}
+        onExit={onExitWalk ?? (() => {})} onRestart={onStart} summary={summary} onShare={onShare}
+        location={location} onFollow={onFollow} onVisit={onVisit} />
+    );
   return (
     <div className="route-page">
       <button className="route-close" aria-label={t("route.close")} title={t("route.close")} onClick={onClose}>
         <X size={18} />
       </button>
+      {onEdit && (
+        <button className="route-close route-edit" aria-label={t("route.editTitle")} title={t("route.editTitle")} onClick={onEdit}>
+          <Pencil size={17} />
+        </button>
+      )}
       <Back onClick={onBack}>{t("route.all")}</Back>
       <div className="route-cover">
         <SiteArtwork site={sites[0]} live={live} />
-        <Tag>{custom ? t("route.tagCustom") : t("route.tagCurated")}</Tag>
+        {custom && <Tag>{t("route.tagCustom")}</Tag>}
       </div>
-      <h1>{custom ? t("route.customTitle") : route && <Localized tr={route.name} en={route.nameEn} />}</h1>
+      <h1>{route ? <Localized tr={route.name} en={route.nameEn} /> : t("route.customTitle")}</h1>
       <p className="muted">
         {t(sites.length === 1 ? "explore.stopCountOne" : "explore.stopCount", { count: sites.length })}{" "}
-        {route && t("route.metaTail", { minutes: route.minutes, distance: route.distance })}
+        {route && routeTail(route, t).map((x) => `· ${x} `)}
       </p>
       <p>
         {route?.description ? <span lang={tr}>{route.description}</span> : t("route.defaultDescription")}
       </p>
+      {route?.badge && (
+        // What finishing it earns, before the walk begins (7 Nov 2026), as the finish card shows it at the end.
+        <div className="walk-route-badge route-page-badge">
+          <img src={route.badge.url ?? "/rozetler/_hikaye.webp"} alt={route.badge.alt ?? ""} width={56} height={56} />
+          <span>
+            <small className="muted">{t("route.badgeFor")}</small>
+            <strong>{route.badge.title}</strong>
+            <small className="muted">{t("route.badgeHow")}</small>
+          </span>
+        </div>
+      )}
       <div className="route-stop-list">
         {sites.map((s, i) => {
           const next = sites[i + 1];
@@ -513,6 +783,126 @@ export function RoutePreview({
             {t("route.fromHome")}
           </button>
         </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Walking a route in the panel (Muhammed, 7 Nov 2026: «rotayı başlat dediğinde rota başlasın ama aynı panelden devam
+ * etsin»): the steps along the top, the stop the visitor is at with the walk to it, and three ways on: done (to the
+ * next), skip, or any step tapped. The map beside it flies to each stop.
+ */
+function RouteWalk({
+  route,
+  custom,
+  sites,
+  live,
+  walk,
+  onSite,
+  onStep,
+  onDone,
+  onSkip,
+  onExit,
+  onRestart,
+  summary,
+  onShare,
+  location,
+  onFollow,
+  onVisit,
+}: {
+  route?: HeritageRoute | undefined;
+  custom: boolean;
+  sites: HeritageSite[];
+  live: boolean;
+  walk: RouteWalkState;
+  location?: RouteWalkLocation | undefined;
+  onFollow?: ((on: boolean) => void) | undefined;
+  onVisit?: (() => Promise<void>) | undefined;
+  onSite: (id: string) => void;
+  onStep: (index: number) => void;
+  onDone: () => void;
+  onSkip: () => void;
+  onExit: () => void;
+  onRestart: () => void;
+  summary?: RouteWalkSummary | undefined;
+  onShare?: (() => void) | undefined;
+}) {
+  const { t, text } = useI18n();
+  const here = sites[walk.at];
+  const last = walk.at === sites.length - 1;
+  const before = sites[walk.at - 1];
+  const leg = here && before && walkingLeg(route, before.id, here.id);
+  const finished = sites.filter((s) => walk.doneIds.includes(s.id)).length;
+  const title = route ? text(route.name, route.nameEn) : t("route.customTitle");
+  return (
+    <div className="route-page route-walk">
+      <button className="route-close" aria-label={t("walk.exit")} title={t("walk.exit")} onClick={onExit}>
+        <X size={18} />
+      </button>
+      <span className="walk-kicker">{t("walk.on")}</span>
+      <h1>{title}</h1>
+      <ol className="walk-steps" aria-label={t("walk.steps")}>
+        {sites.map((s, i) => {
+          const isDone = walk.doneIds.includes(s.id);
+          const skipped = !isDone && walk.skippedIds.includes(s.id);
+          return (
+            <li key={s.id} className={`${i === walk.at ? "now" : ""}${isDone ? " done" : ""}${skipped ? " skipped" : ""}`}>
+              <button
+                aria-label={t("walk.goTo", { n: i + 1, name: text(s.name, s.nameEn) })}
+                aria-current={i === walk.at ? "step" : undefined}
+                onClick={() => onStep(i)}
+              >
+                <span className="walk-step-dot">{isDone ? <Check size={14} strokeWidth={3} aria-hidden="true" /> : i + 1}</span>
+                <span className="walk-step-name">{text(s.name, s.nameEn)}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+      {here ? (
+        <section className="walk-here" aria-live="polite">
+          <p className="muted walk-count">
+            {t("walk.stopOf", { at: walk.at + 1, total: sites.length })}
+            {leg && (
+              <>
+                {" · "}
+                <Footprints size={13} aria-hidden="true" />
+                {t("route.legWalk", { minutes: legMinutes(leg), distance: legDistance(leg) })}
+              </>
+            )}
+          </p>
+          <button className="walk-here-card" onClick={() => onSite(here.id)}>
+            <SiteArtwork site={here} live={live} />
+            <span>
+              <strong><Localized tr={here.name} en={here.nameEn} /></strong>
+              <small className="muted">{here.year}</small>
+              <span className="walk-open">{t("walk.open")} <ArrowRight size={14} aria-hidden="true" /></span>
+            </span>
+          </button>
+          {location && onFollow && onVisit && (
+            <WalkLocation live={live} location={location} onFollow={onFollow} onVisit={onVisit} />
+          )}
+          <div className="walk-actions">
+            <button className="btn full" onClick={onDone}>
+              {last ? <Flag size={18} aria-hidden="true" /> : <Check size={18} aria-hidden="true" />}
+              {last ? t("walk.finish") : t("walk.done")}
+            </button>
+            {!last && (
+              <button className="btn secondary walk-skip" onClick={onSkip}>
+                <SkipForward size={16} aria-hidden="true" />
+                {t("walk.skip")}
+              </button>
+            )}
+          </div>
+        </section>
+      ) : (
+        <WalkFinished sites={sites} finished={finished} summary={summary} onSite={onSite} onShare={onShare} onExit={onExit} onRestart={onRestart} />
+      )}
+      {here && (
+        <button className="text-btn route-home" onClick={onExit}>
+          {t("walk.exit")}
+        </button>
       )}
     </div>
   );

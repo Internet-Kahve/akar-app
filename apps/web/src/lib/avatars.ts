@@ -18,7 +18,7 @@ export const AVATARS: AvatarFigure[] = [
   { id: "evliya-celebi", name: "Evliya Çelebi", nameEn: "Evliya Çelebi", colour: "#2f7f86" },
   { id: "fatih", name: "Fatih Sultan Mehmed", nameEn: "Mehmed the Conqueror", colour: "#a23b3b" },
   { id: "mimar-sinan", name: "Mimar Sinan", nameEn: "Architect Sinan", colour: "#4a6fa5" },
-  { id: "mihrimah-sultan", name: "Mihrimah Sultan", nameEn: "Mihrimah Sultan", colour: "#b85c7a" },
+  { id: "mihrimah-sultan", name: "Hürrem Sultan", nameEn: "Hürrem Sultan", colour: "#b85c7a" },
   { id: "hezarfen", name: "Hezarfen Ahmed Çelebi", nameEn: "Hezarfen Ahmed Çelebi", colour: "#d08a2e" },
 ];
 
