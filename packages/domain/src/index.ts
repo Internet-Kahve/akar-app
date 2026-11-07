@@ -656,6 +656,11 @@ export interface HeritageRoute {
   legs?: Array<RouteLeg | null>;
   /** `complete`: every leg computed, so `minutes`/`distance` use the real path (§11.79). */
   walking?: "complete" | "partial" | "unavailable";
+  /**
+   * The badge the API gives whoever finishes every stop (its story or a visit at the site); absent when the route has
+   * none, and for drafts, local routes and the demo.
+   */
+  badge?: { title: string; url?: string; alt?: string };
 }
 export type Role = "user" | "editor" | "moderator" | "admin";
 /** Points an approved memory earns and loses again when it is removed; the API's `memory.approved` ledger value. */

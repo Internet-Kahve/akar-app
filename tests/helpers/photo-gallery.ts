@@ -73,8 +73,8 @@ export function photoGalleryTests() {
       const gallery = page.getByRole("region", {
         name: "Eser fotoğraf galerisi",
       });
-      // The site's photographs; the last tile, «Fotoğrafını ekle», is not one of them.
-      const figures = gallery.locator("figure:not(.ekle)");
+      // The site's photographs (the gallery no longer ends on an «add your photo» tile).
+      const figures = gallery.locator("figure");
       await expect(figures).toHaveCount(3);
       await expect(figures.first().locator("img")).toHaveAttribute(
         "alt",
@@ -136,7 +136,7 @@ export function photoGalleryTests() {
     const gallery = page.getByRole("region", {
       name: "Eser fotoğraf galerisi",
     });
-    await gallery.locator("figure:not(.ekle)").last().getByRole("button").click();
+    await gallery.locator("figure").last().getByRole("button").click();
     const lightbox = page.getByRole("dialog", { name: "Fotoğraf", exact: true });
     const credit = lightbox.locator("p");
     await expect(credit).toContainText("Uzun kaynak ve lisans açıklaması");

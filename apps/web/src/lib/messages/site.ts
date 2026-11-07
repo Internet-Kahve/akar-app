@@ -1,7 +1,7 @@
 /** Site page: story, 3D viewer, about, history, tasks. */
 export const tr = {
   "route.build": "Rota oluştur",
-  "route.choose": "Hangi rotaya?",
+  "route.choose": "Eklendiği rota",
   "route.new": "Yeni rota",
   "route.name": "Rota adı",
   "route.summary": "{count} durak · ~{minutes} dk · {km} km",
@@ -22,6 +22,9 @@ export const tr = {
   "route.saved": "Rota kaydedildi",
   "route.failed": "Rota kaydedilemedi. Yeniden dene.",
   "route.mine": "Rotalarım",
+  "explore.myRouteLine": "{count} durak",
+  "explore.myRouteTag": "Rotam",
+  "route.suggested": "Önerilen rotalar",
 
   "site.todayExists": "Bugünkü hali var",
   "site.todayMissing": "Bu açının bugünkü hali yok",
@@ -379,8 +382,6 @@ export const tr = {
   "gal.prevPage": "Önceki fotoğraflar",
   "gal.nextPage": "Sonraki fotoğraflar",
   "gal.fromVisitors": "{n} ziyaretçiden",
-  "gal.addPhoto": "Fotoğrafını ekle",
-  "gal.addPhotoNote": "Ziyaretçi fotoğrafları adınla burada görünür",
   "hm.eyebrow": "Yaşayan hafıza",
   "hm.of": "hafızası",
   "hm.city": "Şehrin",
@@ -419,7 +420,7 @@ export const tr = {
 
 export const en = {
   "route.build": "Build a route",
-  "route.choose": "Which route?",
+  "route.choose": "Added to",
   "route.new": "New route",
   "route.name": "Route name",
   "route.summary": "{count} stops · ~{minutes} min · {km} km",
@@ -440,6 +441,9 @@ export const en = {
   "route.saved": "Route saved",
   "route.failed": "Could not save the route. Try again.",
   "route.mine": "My routes",
+  "explore.myRouteLine": "{count} stops",
+  "explore.myRouteTag": "My route",
+  "route.suggested": "Suggested routes",
 
   "site.todayExists": "A present-day view is available",
   "site.todayMissing": "This angle has no present-day photo",
@@ -796,8 +800,6 @@ export const en = {
   "gal.prevPage": "Previous photos",
   "gal.nextPage": "Next photos",
   "gal.fromVisitors": "{n} from visitors",
-  "gal.addPhoto": "Add your photo",
-  "gal.addPhotoNote": "Visitors' photos show here with their name",
   "hm.eyebrow": "Living memory",
   "hm.of": "memory",
   "hm.city": "The city's",

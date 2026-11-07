@@ -1,6 +1,6 @@
 "use client";
 import { ArrowUp, MousePointer2, Pointer, X } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { readPreference, writePreference } from "../lib/preferences";
 import { useI18n } from "./i18n";
@@ -149,8 +149,7 @@ export function CoachTip({
     let armed = false;
     const arm = setTimeout(() => (armed = true), 700);
     const away = (e: Event) => {
-      // Waiting behind the photo-or-3D question (design.css hides it meanwhile): that answer is not its touch.
-      if (!armed || document.querySelector(".view-choice")) return;
+      if (!armed) return;
       // The lit element itself still works (the parts button): its press is what the hint asks for.
       const onSpot = pressSpot && !!spot && !!(e.target as Element | null)?.closest?.(spot);
       if (swallow && !onSpot) {
@@ -196,13 +195,7 @@ export function CoachTip({
       role="status"
       style={
         place === "under-spot" && spotRect
-          ? {
-              // Centred under the lit element (over it when there is no room), kept on screen.
-              left: Math.min(window.innerWidth - 170, Math.max(170, spotRect.x + spotRect.w / 2)),
-              ...(spotRect.y + spotRect.h + 150 < window.innerHeight
-                ? { top: spotRect.y + spotRect.h + 14 }
-                : { top: Math.max(12, spotRect.y - 136) }),
-            }
+          ? underSpot(spotRect, !!arrowTo)
           : undefined
       }
     >
@@ -223,6 +216,22 @@ export function CoachTip({
   ) : (
     tip
   );
+}
+
+/**
+ * Where an `under-spot` hint stands: under the lit element (over it when there is no room), the words kept on screen,
+ * and the finger right under the element even when the words cannot be (a button at the screen's edge). With the
+ * spotlight's arrow under the element, the finger comes under the arrow, not over it (Muhammed, 6 Nov 2026).
+ */
+function underSpot(rect: { x: number; y: number; w: number; h: number }, arrow: boolean): CSSProperties {
+  const centre = rect.x + rect.w / 2;
+  const left = Math.min(window.innerWidth - 170, Math.max(170, centre));
+  const below = rect.y + rect.h + (arrow ? 6 + 40 + 10 : 14);
+  return {
+    left,
+    ...(below + 136 < window.innerHeight ? { top: below } : { top: Math.max(12, rect.y - 136) }),
+    ["--finger-x" as string]: `${Math.round(centre - left)}px`,
+  };
 }
 
 export type TipProps = Omit<Parameters<typeof CoachTip>[0], "onDone" | "onSkip"> & {

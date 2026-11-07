@@ -195,6 +195,25 @@ test("snapshot maps site DTOs: coordinates order, photos without card/history me
   assert.match(guest?.headers["x-device-id"] ?? "", /^[0-9a-f-]{36}$/);
 });
 
+test("a route's badge comes with it; a route without one, a blank title or an older API has none", async () => {
+  const handlers = catalogHandlers();
+  const one = (handlers["GET /v1/routes"]!({} as never) as { items: Array<Record<string, unknown>> }).items[0]!;
+  handlers["GET /v1/routes"] = () => ({
+    items: [
+      { ...one, id: "r1", badge: { title: "Hanlar Yolcusu", mediaId: "m1", url: "https://cdn.test/rozet.webp", alt: "Bir han kapısı" } },
+      { ...one, id: "r2", badge: { title: "Yalnız ad", mediaId: null, url: null, alt: null } },
+      { ...one, id: "r3", badge: { title: "  ", mediaId: null, url: null, alt: null } },
+      { ...one, id: "r4", badge: null },
+      { ...one, id: "r5" },
+    ],
+  });
+  const snap = await createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: fakeApi(handlers).fetch }).getSnapshot();
+  const badge = (id: string) => snap.catalogRoutes?.find((r) => r.id === id)?.badge;
+  assert.deepEqual(badge("r1"), { title: "Hanlar Yolcusu", url: "https://cdn.test/rozet.webp", alt: "Bir han kapısı" });
+  assert.deepEqual(badge("r2"), { title: "Yalnız ad" });
+  for (const id of ["r3", "r4", "r5"]) assert.equal(badge(id), undefined);
+});
+
 test("save toggle becomes an explicit PUT or DELETE from the current state", async () => {
   let saved: string[] = [];
   const api = fakeApi({

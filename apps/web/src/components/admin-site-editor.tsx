@@ -31,6 +31,7 @@ import {
 } from "@akar/domain";
 import { ApiError, routes, type AkarClient, type JobTarget } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
+import { TileLoader, WaitWords } from "./loading-screens";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
 import { TasksStep } from "./admin-site-tasks";
@@ -382,6 +383,12 @@ export function SiteEditor({
           <span className="editor-breadcrumb"> › {steps[step]}</span>
         </div>
         <div className="editor-actions">
+          {busy && (
+            <span className="saving-tiles inline" role="status" aria-label="Kaydediliyor">
+              <TileLoader small />
+              <WaitWords group="save" />
+            </span>
+          )}
           {dirty && (
             <button className="btn secondary" onClick={() => setReverting(true)}>
               <RotateCcw size={16} />

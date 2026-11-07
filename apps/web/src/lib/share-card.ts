@@ -61,5 +61,5 @@ export function wrapLines(text: string, maxWidth: number, maxLines: number, meas
 }
 
 /** A file name with no personal data: what is shared and which. */
-export const shareFileName = (kind: "rozet" | "basarim" | "hafta", id: string): string =>
+export const shareFileName = (kind: "rozet" | "basarim" | "hafta" | "rota", id: string): string =>
   `akar-${kind}-${id.replace(/[^a-z0-9-]/gi, "").toLowerCase() || "kart"}.png`;

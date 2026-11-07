@@ -5,6 +5,7 @@ import {
   fitHalfAngle,
   NO_FRAME,
   storyCardFrame,
+  treeBlocksView,
   clampCardScale,
   resizedCardScale,
   storyPartCard,
@@ -79,4 +80,15 @@ test("a hand-placed camera is left alone; a file's close pose looks for a free v
   assert.equal(looksForFreeView({ ...pose, exact: true }, 0.4), false);
   assert.equal(looksForFreeView({ ...pose, distance: 0.6 }, 0.4), false);
   assert.equal(looksForFreeView({ target: null, distance: 0.1 }, 0.4), false);
+});
+
+test("only a tree on the line of sight or around the camera stands aside", () => {
+  const camera = { x: 0, y: 10, z: 50 };
+  const target = { x: 0, y: 0, z: 0 };
+  assert.equal(treeBlocksView(camera, target, { x: 0, y: 5, z: 25 }, 3), true);
+  assert.equal(treeBlocksView(camera, target, { x: 0, y: 11, z: 51 }, 3), true);
+  assert.equal(treeBlocksView(camera, target, { x: 20, y: 5, z: 25 }, 3), false);
+  // Behind the camera or behind what it looks at: not in the way.
+  assert.equal(treeBlocksView(camera, target, { x: 0, y: 12, z: 60 }, 3), false);
+  assert.equal(treeBlocksView(camera, target, { x: 0, y: 0, z: -20 }, 3), false);
 });
