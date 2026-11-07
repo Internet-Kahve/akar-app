@@ -22,10 +22,10 @@ function ChatHarness() {
   return (
     <LangProvider lang={lang}>
       <div className="app-shell">
-        <main className="workspace on-site">
+        <main className={`workspace ${site ? "on-site" : "on-map"}`}>
           <div
             className="side-panel full"
-            style={{ height: "75dvh", overflowY: "auto" }}
+            style={{ height: site ? "75dvh" : "128px", overflowY: "auto" }}
           >
             {site ? (
               <div className="detail-panel">
@@ -46,7 +46,18 @@ function ChatHarness() {
                 />
               </div>
             ) : (
-              <h1>Eserler</h1>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <h1>Bursa · 10 eser</h1>
+                <button className="btn" data-testid="routes">
+                  Rotalar
+                </button>
+              </div>
             )}
           </div>
           <div className="main-stage" />
@@ -54,6 +65,7 @@ function ChatHarness() {
         {reason && <p role="alert">{reason}</p>}
         <ChatWidget
           key={siteId ?? "catalog"}
+          mobileBottom={site ? 258 : 144}
           signedIn={signedIn}
           open={open}
           onOpen={onOpen}

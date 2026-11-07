@@ -218,4 +218,13 @@ Varsayılan istek sırası `gemini-3.5-flash-lite` → `gemini-3.1-flash-lite` �
 
 Mevcut ortamda `GEMINI_CHAT_MODEL` açıkça tanımlanmışsa bu seçim korunur. Varsayılan sıradan başlatmak için bu değişkeni kaldırın veya `gemini-3.5-flash-lite` yapın; `GEMINI_CHAT_FALLBACK_MODELS` tanımsız bırakılabilir ya da `gemini-3.1-flash-lite,gemini-2.5-flash-lite` olarak ayarlanabilir. `gemini-3.1-flash-lite` sabitlenmişse otomatik geçiş yalnız `gemini-2.5-flash-lite` modeline olur. Özel bir model adının otomatik alt modeli yoktur; gerekirse `GEMINI_CHAT_FALLBACK_MODELS` ile açık sıra verilir.
 
-404 veren model/anahtar çifti 5 dakika atlanır. Geçişlerin tamamı aynı 30 saniyelik istek süresini paylaşır. Tüm seçenekler kotadaysa 429, yapılandırma/kimlik doğrulama/geçersiz yanıt/ağ hatasında 502 döner. Bekleme durumu sunucu örneğinin belleğindedir; dağıtık kota rezervasyonu değildir. Gerçek sınırlar [Google AI Studio'da](https://aistudio.google.com/rate-limit) görülebilir.
+404 veren model/anahtar çifti 5 dakika atlanır. Her aşamadaki model geçişleri tek 30 saniyelik süreyi paylaşır; yerel yanıt ve gerektiğinde web araması birlikte en fazla iki aşamadır. Tüm seçenekler kotadaysa 429, yapılandırma/kimlik doğrulama/geçersiz yanıt/ağ hatasında 502 döner. Bekleme durumu sunucu örneğinin belleğindedir; dağıtık kota rezervasyonu değildir. Gerçek sınırlar [Google AI Studio'da](https://aistudio.google.com/rate-limit) görülebilir.
+
+
+### Asistanın kaynak önceliği
+
+Asistan önce yayındaki eserlerin veritabanı metinlerini kullanır: tanıtım ve kimlik bilgileri, hikâyeler, envanterden alınan «Eser hakkında» paragrafları, parça/kart metinleri, geçmiş görsel açıklamaları ve içe aktarılan ölçü sayısı/kubbe geçişi alanları. Genel sohbette de ayrıntılı bloklar yüklenir; soruya ve yakın konuşma bağlamına uyan bloklar 120.000 karakterlik bütçeye öncelikle alınır. Taslaklar, editör notları ve yarışma cevapları dışarıda kalır. Kaynak kitabı/sayfası/HTTPS bağlantısı korunur.
+
+Yerel aşama bilgi eksikliği bildirirse (`needsWeb`), aynı Flash-Lite sırasıyla ikinci aşama Google Search grounding kullanır. Bu aşama JSON çıktı şeması kullanmaz; web bağlantıları yalnız sağlayıcının `groundingMetadata` içindeki gerçekten kullanılan kaynaklardan alınır. Modelin metin içinde ürettiği URL kaynak kabul edilmez. Arama başarısızsa ya da kaynak metaverisi yoksa yerel yanıt korunur ve `webUnavailable` ile belirtilir. Günlük kullanım tek yanıt olarak sayılır.
+
+İstemci kaynakları yanıtın altında gösterir: yerel kaynak esere gider, web kaynağı ayrı sekmede açılır. Google'ın arama önerisi HTML'i yalnız scriptsiz, aynı kökene erişemeyen sandbox iframe içinde gösterilir. Google Search kullanımı projenin kendi Google kotası/fiyatlandırmasına tabidir. Gerçek API akışı [Google grounding belgesini](https://ai.google.dev/gemini-api/docs/generate-content/google-search) izler.

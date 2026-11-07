@@ -106,8 +106,15 @@ test("opening shows example buttons and sends the selected question once", async
   });
   await expect(launcher).toHaveCSS("z-index", "0");
   const box = await launcher.boundingBox();
-  expect(box!.x + box!.width).toBe(page.viewportSize()!.width - 12);
-  expect(box!.y + box!.height).toBe(page.viewportSize()!.height - 12);
+  if (page.viewportSize()!.width < 900) {
+    expect(box!.x).toBe(16);
+    expect(box!.y + box!.height).toBe(page.viewportSize()!.height - 144);
+    const routes = await page.getByTestId("routes").boundingBox();
+    expect(box!.y + box!.height).toBeLessThan(routes!.y);
+  } else {
+    expect(box!.x + box!.width).toBe(page.viewportSize()!.width - 24);
+    expect(box!.y + box!.height).toBe(page.viewportSize()!.height - 32);
+  }
   await launcher.click();
   await expect(
     dialog(page)
@@ -272,4 +279,99 @@ test("a failed example can be retried and guests cannot send questions", async (
     "Vakıf eserleri şehir yaşamını nasıl etkiledi?",
   );
   await checkLayout(page);
+});
+
+test("web citations appear below the answer as small safe links and search suggestions stay isolated", async ({
+  page,
+}) => {
+  await page.route("**/chat-api/v1/chat", (route) =>
+    route.fulfill({
+      json: {
+        answer:
+          "Yerel envanter bilgisi, müzenin restorasyon kaydıyla desteklendi.",
+        general: true,
+        sources: [
+          {
+            kind: "about",
+            siteId: "ulu-cami",
+            title: "Ulu Cami",
+            source: {
+              title: "Bursa Envanteri",
+              page: "s. 42",
+              url: "https://example.org/inventory",
+            },
+          },
+          {
+            kind: "web",
+            siteId: null,
+            title: "Müze restorasyon kaydı",
+            url: "https://museum.example/history",
+            source: null,
+          },
+          {
+            kind: "web",
+            siteId: null,
+            title: "Invalid link",
+            url: "javascript:alert(1)",
+            source: null,
+          },
+        ],
+        searchSuggestions:
+          '<div>Google arama önerileri</div><script>parent.document.body.dataset.injected="yes"</script>',
+      },
+    }),
+  );
+  await page.goto("/chat-harness?catalog");
+  await page.getByRole("button", { name: "Asistana sor", exact: true }).click();
+  await dialog(page)
+    .getByRole("group", { name: "Örnek sorular" })
+    .getByRole("button")
+    .first()
+    .click();
+  const sources = dialog(page).getByRole("list", { name: "Kaynaklar" });
+  await expect(
+    sources.getByRole("link", { name: "Müze restorasyon kaydı" }),
+  ).toHaveAttribute("href", "https://museum.example/history");
+  await expect(
+    sources.getByRole("link", { name: "Bursa Envanteri" }),
+  ).toHaveAttribute("href", "https://example.org/inventory");
+  await expect(sources.getByRole("link", { name: "Invalid link" })).toHaveCount(
+    0,
+  );
+  await expect(
+    sources.getByRole("link", { name: "Müze restorasyon kaydı" }),
+  ).toHaveCSS("font-size", "12px");
+  await expect(
+    dialog(page).getByText("Web kaynaklarıyla desteklendi"),
+  ).toBeVisible();
+  await expect(dialog(page).locator("iframe")).toHaveAttribute(
+    "sandbox",
+    "allow-popups allow-popups-to-escape-sandbox",
+  );
+  await expect(page.locator("body")).not.toHaveAttribute(
+    "data-injected",
+    "yes",
+  );
+  await checkLayout(page);
+  await page.screenshot({ path: test.info().outputPath("chat-sources.png") });
+});
+
+test("launcher switches sides at the mobile breakpoint and leaves the collapsed map panel clear", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/chat-harness?catalog");
+  const launcher = page.getByRole("button", {
+    name: "Asistana sor",
+    exact: true,
+  });
+  await expect(launcher).toHaveCSS("left", "16px");
+  const box = await launcher.boundingBox();
+  const panel = await page.locator(".side-panel").boundingBox();
+  expect(box!.y + box!.height + 12).toBeLessThanOrEqual(panel!.y);
+  await page.screenshot({
+    path: test.info().outputPath("chat-mobile-position.png"),
+  });
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await expect(launcher).toHaveCSS("right", "24px");
 });
