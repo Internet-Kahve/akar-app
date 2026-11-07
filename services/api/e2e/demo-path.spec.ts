@@ -41,7 +41,8 @@ async function signIn(page: Page, email: string) {
   await dialog.getByRole("textbox", { name: "Doğrulama kodu" }).fill(await otpFor(email));
   await dialog.getByRole("button", { name: "Giriş yap", exact: true }).click();
   await dialog.getByRole("button", { name: "Şimdi değil" }).click();
-  await expect(page.getByText("Giriş yaptın.")).toBeVisible();
+  // The visible toast; the screen-reader region repeats its text.
+  await expect(page.locator(".toast").getByText("Giriş yaptın.")).toBeVisible();
   await expect(dialog).toBeHidden();
   await expect(page).toHaveURL(/#view=map$/);
 }
