@@ -20,12 +20,11 @@ const REQUEST_TIMEOUT_MS = 30_000;
 /** Minimum rest for one model/key pair after 429/503; other models keep their own quota. */
 export const KEY_COOLDOWN_MS = 60_000;
 
-/** Active text models with a free tier, strongest first. Verified against Google's model/pricing pages, 7 Nov 2026. */
+/** The assistant's Flash-Lite fallback order, newest first. */
 export const FREE_CHAT_MODELS = [
-  "gemini-3.8-flash",
-  "gemini-3.6-flash",
   "gemini-3.5-flash-lite",
   "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
 ] as const;
 export const DEFAULT_CHAT_MODEL = FREE_CHAT_MODELS[0];
 const UNAVAILABLE_COOLDOWN_MS = 5 * 60_000;

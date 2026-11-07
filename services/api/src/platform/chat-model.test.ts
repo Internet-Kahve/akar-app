@@ -80,7 +80,7 @@ const rateLimited = (e: unknown) =>
 const upstreamFailed = (e: unknown) =>
   e instanceof AppError && e.statusCode === 502;
 
-test("default config falls from the strongest free-tier model to lower models with the exact same question", async (t) => {
+test("default config tries only 3.5, 3.1 and 2.5 Flash-Lite with the exact same question", async (t) => {
   const transport = script(limited(), limited(503), success());
   t.mock.method(globalThis, "fetch", transport.fetchImpl);
   const model = chatModelFromConfig(config({ GEMINI_API_KEY: "test-key" }));
@@ -92,7 +92,7 @@ test("default config falls from the strongest free-tier model to lower models wi
   });
   assert.deepEqual(
     transport.calls.map((c) => c.model),
-    FREE_CHAT_MODELS.slice(0, 3),
+    ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
   );
   assert.deepEqual(
     transport.calls.map((c) => c.key),
@@ -245,12 +245,18 @@ test("authentication and invalid requests fail without consuming every fallback 
 });
 
 test("model configuration preserves explicit pins, deduplicates fallbacks and permits disabling the ladder", () => {
-  assert.equal(config().GEMINI_CHAT_MODEL, "gemini-3.8-flash");
+  assert.equal(config().GEMINI_CHAT_MODEL, "gemini-3.5-flash-lite");
   assert.deepEqual(chatModels(config().GEMINI_CHAT_MODEL), FREE_CHAT_MODELS);
   assert.deepEqual(chatModels("gemini-3.5-flash-lite"), [
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
   ]);
+  assert.deepEqual(chatModels("gemini-3.1-flash-lite"), [
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+  ]);
+  assert.deepEqual(chatModels("gemini-2.5-flash-lite"), ["gemini-2.5-flash-lite"]);
   assert.deepEqual(chatModels("custom"), ["custom"]);
   assert.deepEqual(chatModels("strong", ["strong", "small", "small"]), [
     "strong",
@@ -265,7 +271,7 @@ test("model configuration preserves explicit pins, deduplicates fallbacks and pe
       config().GEMINI_CHAT_MODEL,
       config({ GEMINI_CHAT_FALLBACK_MODELS: "" }).GEMINI_CHAT_FALLBACK_MODELS,
     ),
-    ["gemini-3.8-flash"],
+    ["gemini-3.5-flash-lite"],
   );
   assert.throws(() => config({ GEMINI_CHAT_FALLBACK_MODELS: "invalid/model" }));
   assert.equal(chatModelFromConfig(config()), null);
