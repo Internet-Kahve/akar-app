@@ -690,7 +690,9 @@ test("the weekly board shows real travellers and keeps the account's own score v
   const email = `e2e-board-${run}@akar.test`;
   const mine = tokenFor(email, "user");
   const other = tokenFor(`e2e-board-other-${run}@akar.test`, "user");
-  const otherName = `Deniz ${run}`;
+  // Names get a consonant-only tag: the name filter reads digits as letters («0c» → «oc») and refuses 7+ digits.
+  const tag = [...run].map((c) => "bcdfghjklmnprstv"["0123456789abcdef".indexOf(c)]).join("");
+  const otherName = `Deniz ${tag}`;
   const request = async (token: string, method: string, path: string, body?: unknown) => {
     const response = await fetch(`${API}${path}`, {
       method,
@@ -708,7 +710,7 @@ test("the weekly board shows real travellers and keeps the account's own score v
   const secondSite = catalog.items.find((site: { id: string }) => site.id !== MEMORY_SITE.id)?.id;
   expect(secondSite, "The seeded catalog must have two published sites").toBeTruthy();
   try {
-    await request(mine, "PUT", "/v1/me/profile", { displayName: `Ayşe ${run}` });
+    await request(mine, "PUT", "/v1/me/profile", { displayName: `Ayşe ${tag}` });
     await request(other, "PUT", "/v1/me/profile", { displayName: otherName });
     await request(other, "PUT", "/v1/me/leaderboard", { visible: true });
     await request(other, "POST", `/v1/stories/${MEMORY_SITE.id}/complete`);

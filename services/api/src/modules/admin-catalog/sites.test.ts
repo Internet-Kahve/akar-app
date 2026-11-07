@@ -59,6 +59,8 @@ before(async () => {
     photo("ph-foreign", { sourceId: "src-ek" }),
     { id: "m-1", kind: "model", mime: "model/gltf-binary", url: "https://cdn.test/m-1.glb", license: "CC0", trust: "verified", title: "Model 1", bytes: 2048, parts: ["kubbe", "minare"] },
     { id: "m-2", kind: "model", mime: "model/gltf-binary", url: "https://cdn.test/m-2.glb", license: "CC0", trust: "verified", title: "Model 2", bytes: 4096, parts: ["avlu"] },
+    { id: "m-3", kind: "model", mime: "model/gltf-binary", url: "https://cdn.test/m-3.glb", license: "CC0", trust: "verified", title: "Model 3", bytes: 1024, parts: [] },
+    { id: "m-4", kind: "model", mime: "model/gltf-binary", url: "https://cdn.test/m-4.glb", license: "CC0", trust: "verified", title: "Model 4", bytes: 1024, parts: [] },
     { id: "au-1", kind: "audio", mime: "audio/mpeg", url: "https://cdn.test/au-1.mp3", license: "CC0", trust: "verified" },
   ]);
 });
@@ -529,6 +531,27 @@ test("the model link is replaced, not added, and model and photo links keep vali
   assert.equal(site.modelMediaId, null);
   assert.equal(site.has.model, false);
   assert.deepEqual(await links(), ["ph-3", "ph-1"]);
+});
+
+test("the map's baked files need the model they were baked from, are separate files, and go when that model changes", async () => {
+  const draft = await newDraft("Pişmiş Hanı");
+  const base = `/v1/admin/sites/${draft.id}`;
+  const baked = (mediaId: string | null, nightMediaId: string | null) => call<ErrorBody>("PUT", `${base}/map-baked`, editor, { mediaId, nightMediaId });
+  const fields = async (b: Promise<{ body: ErrorBody }>) => Object.keys((await b).body.error.fieldErrors).sort();
+
+  assert.deepEqual(await fields(baked("m-3", null)), ["mediaId"], "no day model yet");
+  await send("PUT", `${base}/model`, { mediaId: "m-1" });
+  assert.deepEqual(await fields(baked("m-3", "m-4")), ["nightMediaId"], "no night model yet");
+  await send("PUT", `${base}/night-model`, { mediaId: "m-2" });
+  assert.deepEqual(await fields(baked("m-1", "ph-1")), ["mediaId", "nightMediaId"], "the model itself, a photo");
+  assert.deepEqual(await fields(baked("m-3", "m-3")), ["nightMediaId"], "one file for both themes");
+
+  let site = await send("PUT", `${base}/map-baked`, { mediaId: "m-3", nightMediaId: "m-4" });
+  assert.deepEqual([site.mapBakedModelId, site.mapBakedNightModelId], ["m-3", "m-4"]);
+  site = await send("PUT", `${base}/night-model`, { mediaId: null });
+  assert.deepEqual([site.mapBakedModelId, site.mapBakedNightModelId], ["m-3", null], "a night change clears the night baked file only");
+  site = await send("PUT", `${base}/model`, { mediaId: "m-2" });
+  assert.equal(site.mapBakedModelId, null, "another day model clears the day baked file");
 });
 
 test("a gallery photo keeps its 3D angle through a reorder and a new model; null removes it; a foreign photo or part is refused", async () => {

@@ -19,6 +19,7 @@ import {
   setLocation,
   setMapPlacement,
   setModel,
+  setMapBaked,
   setNightModel,
   setPartCards,
   setPhotos,
@@ -45,6 +46,7 @@ import {
   LocationBody,
   MapPlacementBody,
   ModelBody,
+  MapBakedBody,
   NightModelBody,
   PartCardsBody,
   AboutBody,
@@ -202,6 +204,22 @@ export const adminSiteRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => write(req, 200, (tx, ctx) => setNightModel(tx, ctx, req.params.id, req.body)),
+  );
+
+  app.put(
+    "/v1/admin/sites/:id/map-baked",
+    {
+      preHandler: editor,
+      schema: {
+        tags: sitesTag,
+        summary:
+          "Adım 1 · Haritanın pişmiş dosyaları: gündüz ve gece modelinden ışığı dokuya pişirilmiş dosyaları birlikte bağla ya da kaldır. Gündüz dosyası gündüz modeli, gece dosyası gece modeli ister; model değişince ondan pişirilen dosya kalkar",
+        params: IdParams,
+        body: MapBakedBody,
+        response: { 200: AdminSiteDetail },
+      },
+    },
+    async (req) => write(req, 200, (tx, ctx) => setMapBaked(tx, ctx, req.params.id, req.body)),
   );
 
   app.put(

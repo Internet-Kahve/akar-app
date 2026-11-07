@@ -2,8 +2,16 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { requireRole } from "../../platform/auth.ts";
 import { idempotentUnlocked } from "../../platform/idempotency.ts";
 import { PageQuery, pageResponse } from "../../platform/pagination.ts";
-import { CreateJobBody, JobParams, ModelGenJobDto, ModelGenStatusResponse, SiteJobsParams } from "./schemas.ts";
-import { getJob, listJobs, runnerStatus, startJob } from "./service.ts";
+import {
+  CreateJobBody,
+  CreatePackageBody,
+  JobParams,
+  ModelGenJobDto,
+  ModelGenPackageDto,
+  ModelGenStatusResponse,
+  SiteJobsParams,
+} from "./schemas.ts";
+import { getJob, getPackage, listJobs, runnerStatus, startJob, startPackage } from "./service.ts";
 
 /**
  * AI-assisted model editing (§11.80): admins send prompts to the separate model runner and read the job history.
@@ -82,5 +90,40 @@ export const modelGenRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => getJob({ db: app.deps.db, config: app.deps.config }, req.params.id, new Date()),
+  );
+
+  app.post(
+    "/v1/admin/sites/:siteId/model-gen/packages",
+    {
+      schema: {
+        tags: ["admin-model-gen"],
+        summary: "Bir işin dışa aktardığı sürümden uygulamanın dört dosyasını üret: gündüz, gece, haritanın pişmiş gündüz ve gece dosyası (yalnız admin)",
+        description:
+          "Çalıştırıcı gece modelini çıkarır, harita dosyalarını pişirir ve ışıklı dosyalarla karşılaştırır (birkaç dakika sürer). İş saklanmaz; çalıştırıcı yeniden başlarsa unutulur. Sürüm çalıştırıcıda yoksa 404 `MODEL_GEN_VERSION_MISSING`; meşgulse 409 `MODEL_GEN_BUSY`; ulaşılamazsa 502; yapılandırılmamışsa 503.",
+        params: SiteJobsParams,
+        body: CreatePackageBody,
+        response: { 202: ModelGenPackageDto },
+      },
+    },
+    async (req, reply) => {
+      const actor = { id: req.user!.id, requestId: req.id };
+      const body = await startPackage({ db: app.deps.db, config: app.deps.config }, actor, req.params.siteId, req.body);
+      reply.code(202);
+      return body;
+    },
+  );
+
+  app.get(
+    "/v1/admin/model-gen/packages/:id",
+    {
+      schema: {
+        tags: ["admin-model-gen"],
+        summary: "Paketleme işinin durumu ve dosyaların 15 dakika geçerli imzalı bağlantıları (yalnız admin)",
+        description: "Çalıştırıcı işi tanımıyorsa (yeniden başlamış) 404.",
+        params: JobParams,
+        response: { 200: ModelGenPackageDto },
+      },
+    },
+    async (req) => getPackage(app.deps.config, req.params.id),
   );
 };
