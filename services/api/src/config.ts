@@ -1,5 +1,6 @@
 import { DEFAULT_TTS_VOICES, parseVoiceModels } from "./platform/tts.ts";
 import { z } from "zod";
+import { DEFAULT_CHAT_MODEL } from "./platform/chat-model.ts";
 
 const optionalUrl = z
   .string()
@@ -106,7 +107,12 @@ const Env = z.object({
     .string()
     .default("")
     .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))]),
-  GEMINI_CHAT_MODEL: z.string().trim().min(1).default("gemini-3.5-flash-lite"),
+  GEMINI_CHAT_MODEL: z.string().trim().min(1).default(DEFAULT_CHAT_MODEL),
+  /** Ordered lower models; unset = current free-tier ladder below the primary, empty = no fallbacks. */
+  GEMINI_CHAT_FALLBACK_MODELS: z.string()
+    .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))])
+    .pipe(z.array(z.string().regex(/^[a-zA-Z0-9._-]+$/)).max(8))
+    .optional(),
   /** Assistant answers per Istanbul day for everyone together (counted in `usage_daily`, event `chat.message`). */
   CHAT_DAILY_LIMIT: z.coerce.number().int().positive().default(1000),
 

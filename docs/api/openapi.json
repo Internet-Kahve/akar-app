@@ -68058,7 +68058,7 @@
         "tags": [
           "chat"
         ],
-        "description": "Yalnız giriş yapmış kullanıcı. `siteId` verilirse o eserin hikâyesi, «Eser hakkında» paragrafları ve parça kartları, verilmezse yayındaki eserlerin özeti bağlam olur; görev cevapları bağlama girmez. Hesap başına dakikada 6 soru; herkes için günlük sınır `CHAT_DAILY_LIMIT` (dolunca 429). Sohbet saklanmaz, yalnız günlük `chat.message` sayacı artar. Model anahtarı yoksa 503; tüm anahtarlar sınırdaysa 429; bilinmeyen ya da yayında olmayan eser 404.",
+        "description": "Yalnız giriş yapmış kullanıcı. `siteId` verilirse o eserin hikâyesi, «Eser hakkında» paragrafları ve parça kartları, verilmezse yayındaki eserlerin özeti bağlam olur; görev cevapları bağlama girmez. Hesap başına dakikada 6 soru; herkes için günlük sınır `CHAT_DAILY_LIMIT` (dolunca 429). Sohbet saklanmaz, yalnız günlük `chat.message` sayacı artar. Model anahtarı yoksa 503; tüm model/anahtar seçenekleri sınırdaysa 429; bilinmeyen ya da yayında olmayan eser 404.",
         "requestBody": {
           "required": true,
           "content": {
