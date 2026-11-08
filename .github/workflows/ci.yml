@@ -53,4 +53,24 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:e2e
+
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Keep static mobile tests independent of the web suite's time budget.
+    # Match this browser image to @playwright/test, as in the web job above.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/documents-context/
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
       - run: npm run mobile:test
