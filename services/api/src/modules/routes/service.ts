@@ -6,6 +6,7 @@ import { AppError } from "../../errors.ts";
 import { getPublishedSummaries, getSiteDetails } from "../catalog/service.ts";
 import { playableQuiz } from "./quizzes.ts";
 import type { RouteBundle, RouteDto } from "./schemas.ts";
+import { legKey, storedLegs, type LegKey } from "./walking.ts";
 
 const published = eq(catalogRoutes.status, "published");
 
@@ -77,23 +78,42 @@ async function publishedRoutes(db: Db, filter?: SQL): Promise<RouteDto[]> {
     playableQuizIds(db, [...new Set(stops.flatMap((s) => (s.quizId === null ? [] : [s.quizId])))]),
   ]);
 
+  const visibleOf = new Map(
+    rows.map(({ route: r }) => [
+      r.id,
+      stops
+        .filter((s) => s.routeId === r.id)
+        .flatMap((s) => {
+          const site = summaries.get(s.siteId);
+          return site
+            ? [
+                {
+                  position: s.position,
+                  site,
+                  quizId: s.quizId !== null && playable.has(s.quizId) ? s.quizId : null,
+                  historyImageId: s.historyImageId,
+                },
+              ]
+            : [];
+        }),
+    ]),
+  );
+  // Legs between consecutive visible stops: a hidden (unpublished) stop is skipped, so is its leg.
+  const pairsOf = (visible: { site: { coordinates: [number, number] } }[]): LegKey[] =>
+    visible.slice(1).map((s, i) => ({ from: visible[i]!.site.coordinates, to: s.site.coordinates }));
+  const legs = await storedLegs(db, [...visibleOf.values()].flatMap(pairsOf));
+
   return rows.map(({ route: r, cityName, badgeUrl, badgeAlt }) => {
-    const visible = stops
-      .filter((s) => s.routeId === r.id)
-      .flatMap((s) => {
-        const site = summaries.get(s.siteId);
-        return site
-          ? [
-              {
-                position: s.position,
-                site,
-                quizId: s.quizId !== null && playable.has(s.quizId) ? s.quizId : null,
-                historyImageId: s.historyImageId,
-              },
-            ]
-          : [];
-      });
-    const metres = lengths.get(r.id) ?? 0;
+    const visible = visibleOf.get(r.id)!;
+    const pairs = pairsOf(visible);
+    const found = pairs.map((p) =>
+      p.from[0] === p.to[0] && p.from[1] === p.to[1] ? { coordinates: [p.from, p.to], meters: 0, seconds: 0 } : (legs.get(legKey(p)) ?? null),
+    );
+    const computed = found.filter((l) => l !== null);
+    const complete = computed.length === pairs.length;
+    const walkMeters = computed.reduce((sum, l) => sum + l.meters, 0);
+    const walkMinutes = Math.round(computed.reduce((sum, l) => sum + l.seconds, 0) / 60);
+    const metres = complete ? walkMeters : (lengths.get(r.id) ?? 0);
     const narration = visible.reduce((sum, s) => sum + s.site.minutes, 0);
     return {
       id: r.id,
@@ -101,12 +121,17 @@ async function publishedRoutes(db: Db, filter?: SQL): Promise<RouteDto[]> {
       nameEn: r.nameEn,
       description: r.description,
       city: { id: r.cityId, name: cityName },
-      minutes: Math.round(metres / WALK_METRES_PER_MINUTE) + narration,
+      minutes: (complete ? walkMinutes : Math.round(metres / WALK_METRES_PER_MINUTE)) + narration,
       distance: metres < 1000 ? `${Math.round(metres)} m` : `${(metres / 1000).toFixed(1).replace(".", ",")} km`,
       distanceMeters: Math.round(metres),
+      walking: {
+        status: complete ? "complete" : computed.length ? "partial" : "unavailable",
+        meters: complete ? walkMeters : null,
+        minutes: complete ? walkMinutes : null,
+      },
       theme: r.theme,
       badge: r.badgeTitle === null ? null : { title: r.badgeTitle, mediaId: r.badgeMediaId, url: badgeUrl, alt: badgeAlt },
-      stops: visible,
+      stops: visible.map((s, i) => ({ ...s, leg: found[i] ?? null })),
     };
   });
 }

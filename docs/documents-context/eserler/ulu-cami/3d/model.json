@@ -66,6 +66,15 @@
       "uzaklik": "0.12",
       "ic": true,
       "not": "içeride havuz ve selsebil"
+    },
+    {
+      "foto": "02",
+      "hedef": "Payeler",
+      "azimut": 354,
+      "egim": 30,
+      "uzaklik": "0.3",
+      "ic": true,
+      "not": "iç mekân: payeler ve kemerler yukarıdan (4 Kasım 2026, telefonda denendi; ikinci iç açı)"
     }
   ],
   "pisik_onay": true,

@@ -68,3 +68,11 @@ test("arrow keys map to half-metre steps", () => {
   assert.deepEqual(arrowStep("ArrowUp"), [0, 0.5]);
   assert.equal(arrowStep("a"), null);
 });
+
+test("the pin follows the model: a moved model moves the site's location, an unmoved one changes nothing", async () => {
+  const { pinFollowingModel } = await import("./placement");
+  assert.deepEqual(pinFollowingModel([29.0619, 40.184], { lng: 29.0610446, lat: 40.1823147 }), [29.0610446, 40.1823147]);
+  assert.equal(pinFollowingModel([29.0610446, 40.1823147], { lng: 29.06104461, lat: 40.18231469 }), null);
+  assert.equal(pinFollowingModel([29.0619, 40.184], { lng: Number.NaN, lat: 40.18 }), null);
+  assert.deepEqual(pinFollowingModel([29, 40], { lng: 29.123456789, lat: 40.987654321 }), [29.1234568, 40.9876543]);
+});

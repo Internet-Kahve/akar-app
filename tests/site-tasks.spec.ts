@@ -32,6 +32,15 @@ async function openUlucami(page: Page) {
 
 const puzzleRow = (page: Page) => page.getByRole("button", { name: /^Bulmaca/ });
 
+/** The full-screen moment of a new badge: its name and tier, then «Harika» goes back to where the visitor was. */
+async function celebrated(page: Page, title: string, tier: "Bronz" | "Gümüş" | "Altın") {
+  const party = page.getByRole("dialog", { name: /Yeni rozet/ });
+  await expect(party).toContainText(title);
+  await expect(party.locator(".tier-chip")).toHaveText(tier);
+  await party.getByRole("button", { name: "Harika" }).click();
+  await expect(party).toHaveCount(0);
+}
+
 test("the question can be retried, hints come one by one, a right answer earns the badge, and no point is mentioned; the field task is finished from home by tapping the part", async ({
   page,
 }) => {
@@ -62,6 +71,7 @@ test("the question can be retried, hints come one by one, a right answer earns t
   await expect(sheet).not.toContainText("Doğrulanmış");
   await expect(sheet).toContainText("Rozet profiline eklendi");
   expect((await quiz.innerText()).toLocaleLowerCase("tr-TR")).not.toMatch(/puan/);
+  await celebrated(page, "Kündekâri", "Gümüş");
 
   await quiz.getByRole("button", { name: /Sonraki görev · 2\/2/ }).click();
   const field = page.getByRole("dialog", { name: "Saha görevi" });
@@ -79,6 +89,7 @@ test("the question can be retried, hints come one by one, a right answer earns t
   await expect(done.locator(".gv-sayfa")).toContainText("Buldun! Sahaflar Kapısı.");
   await expect(done.locator(".gv-sayfa")).toContainText("Ulucami'ye üç kapıdan girilir");
   await expect(done.locator(".gv-sayfa")).toContainText("Rozet profiline eklendi");
+  await celebrated(page, "Sahaflar Kapısı", "Gümüş");
   // From home: no «Yerinde» tag in the result.
   await expect(done.locator(".gv-yerinde")).toHaveCount(0);
   // Finishing returns to the site, whose row shows the progress.
@@ -101,13 +112,22 @@ test("on site the position decides: too far gets a friendly message, near the si
   await dialog.getByRole("button", { name: "Bu soruyu atla" }).click();
   const field = page.getByRole("dialog", { name: "Saha görevi" });
   await field.getByRole("button", { name: "Buradayım" }).click();
-  await expect(page.getByText("yakınında görünmüyorsun")).toBeVisible();
+  await expect(page.locator(".toast").getByText("yakınında görünmüyorsun")).toBeVisible();
 
   await context.setGeolocation({ latitude: 40.184, longitude: 29.0619 });
   await field.getByRole("button", { name: "Buradayım" }).click();
   await expect(field.locator(".gv-sayfa")).toContainText("Ulucami'ye üç kapıdan girilir");
   await expect(field.locator(".gv-yerinde")).toContainText("Yerinde");
   await expect(field.locator(".gv-sayfa")).toContainText("Rozet profiline eklendi");
+  // Earned at the site: the field badge is gold, and the first badge earned at a site is an achievement of its own.
+  const party = page.getByRole("dialog", { name: /Yeni rozet! · 1\/2/ });
+  await expect(party).toContainText("Sahaflar Kapısı");
+  await expect(party.locator(".tier-chip")).toHaveText("Altın");
+  await party.getByRole("button", { name: "Sonraki" }).click();
+  const feat = page.getByRole("dialog", { name: /Yeni başarım! · 2\/2/ });
+  await expect(feat).toContainText("Yerinde");
+  await feat.getByRole("button", { name: "Harika" }).click();
+  await expect(feat).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

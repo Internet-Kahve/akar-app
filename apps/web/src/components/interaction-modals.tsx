@@ -16,6 +16,8 @@ import { describeError } from "../lib/errors";
 import { kvkkConsent } from "../lib/kvkk";
 import { photoWithoutMetadata } from "../lib/strip-photo";
 import { Modal, Notice, Tag, UploadProgress } from "./ui";
+import { LegalDialog } from "./legal-dialog";
+import { TileLoader, WaitWords } from "./loading-screens";
 import { Localized, useI18n } from "./i18n";
 export function MemoryModal({
   site,
@@ -43,6 +45,7 @@ export function MemoryModal({
   const [text, setText] = useState(""),
     [photo, setPhoto] = useState<string | undefined>(initialPhoto),
     [accepted, setAccepted] = useState(false),
+    [legal, setLegal] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [done, setDone] = useState(false);
@@ -167,7 +170,8 @@ export function MemoryModal({
           </Notice>
           <Notice>
             {t("kvkk.summary")} {t("kvkk.draftNotice")}{" "}
-            <a href="/aydinlatma.html" target="_blank" rel="noopener">{t("kvkk.noticeLink")}</a>
+            <button type="button" className="text-btn" onClick={() => setLegal(true)}>{t("kvkk.noticeLink")}</button>
+            {legal && <LegalDialog kind="kvkk" onClose={() => setLegal(false)} />}
           </Notice>
           <label className="checkbox-label">
             <input
@@ -179,6 +183,13 @@ export function MemoryModal({
             {t("kvkk.checkbox")}
           </label>
           <UploadProgress />
+          {/* While it goes: the tiles turning and a line from the scribe's desk (6 Nov 2026). */}
+          {busy && (
+            <div className="saving-tiles" role="status" aria-label={t("memory.saving")}>
+              <TileLoader />
+              <WaitWords group="save" />
+            </div>
+          )}
           {error && (
             <p role="alert" className="error">
               {error}

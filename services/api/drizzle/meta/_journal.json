@@ -260,6 +260,34 @@
       "when": 1793808083789,
       "tag": "0036_map_baked",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793887904051,
+      "tag": "0037_leaderboard",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793974625123,
+      "tag": "0038_walking_legs",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793997163413,
+      "tag": "0039_model_gen_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794051567814,
+      "tag": "0040_site_status",
+      "breakpoints": true
     }
   ]
 }

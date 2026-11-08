@@ -1,11 +1,13 @@
 "use client";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { mapPixelRatio } from "../lib/device";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { mapAntialias, mapPixelRatio, modestDevice, touchScreen } from "../lib/device";
+import { fitPadding } from "../lib/fit-padding";
 import { demoRegion } from "@akar/api-client";
 import { colors } from "@akar/design-tokens";
 import {
   CITY_MARKER_MAX_ZOOM,
   type CityRecord,
+  type HeritageRoute,
   type HeritageSite,
   type MapSettings,
 } from "@akar/domain";
@@ -24,6 +26,7 @@ import { currentTheme, type Theme } from "../lib/theme";
 import {
   PIN_LABEL_LAYER,
   PIN_LAYER,
+  PIN_SOURCE,
   pinAt,
   pinFeatures,
   pinFiles,
@@ -32,6 +35,7 @@ import {
 } from "../lib/map-pins";
 import { cityIdentityStyle } from "../lib/city-identity";
 import { nearestCity, type LngLat } from "../lib/nearby";
+import { walkingLeg } from "../lib/route-walking";
 import { useCities, useCityScenes } from "./city-scenes";
 import { MapControls } from "./map-controls";
 import { useI18n, type I18n } from "./i18n";
@@ -131,6 +135,7 @@ export function HeritageMap({
   onOpen,
   onClear,
   routeIds,
+  walkingRoute,
   buildingRoute = false,
   collapsed,
   mapSettings,
@@ -146,6 +151,7 @@ export function HeritageMap({
   peek,
   finishedIds,
   routeColour = colors.cityBursa,
+  banner,
 }: {
   /** Hidden behind a site's page, kept for the way back: no model downloads meanwhile. */
   resting?: boolean;
@@ -159,6 +165,8 @@ export function HeritageMap({
   /** A tap on the map itself, away from any site. */
   onClear?: () => void;
   routeIds: string[];
+  /** Curated route whose stored walking legs replace the straight line between its stops (§11.79). */
+  walkingRoute?: HeritageRoute | undefined;
   buildingRoute?: boolean;
   collapsed: boolean;
   /** Without settings the map draws no models (the route preview in the panel). */
@@ -186,8 +194,11 @@ export function HeritageMap({
   finishedIds?: string[];
   /** The route's city colour, for its line and stop stars. */
   routeColour?: string;
+  /** A strip over the map's top (the route being walked: «Rotadasın · 2/4»). */
+  banner?: ReactNode;
 }) {
   const { lang, t, text } = useI18n();
+  const hintId = useId();
   const scenes = useCityScenes();
   const cities = useCities();
   const container = useRef<HTMLDivElement>(null),
@@ -309,6 +320,11 @@ export function HeritageMap({
   }, [loaded, failed]);
   useEffect(() => {
     let disposed = false,
+      // The first `load` has come: from then on an error without a source is one missing piece (a sprite, an image).
+      started = false,
+      // Tiles of the base map that came, and whether the schematic view shows because none had.
+      baseTiles = 0,
+      byTiles = false,
       unfollow: (() => void) | undefined;
     import("maplibre-gl")
       .then((lib) => {
@@ -328,6 +344,9 @@ export function HeritageMap({
             // Phones report up to 3.5 pixels per CSS pixel; the map with its buildings and models draws at most 2
             // (1.5 on a modest phone): the difference is hard to see and the GPU's work drops by half or more.
             pixelRatio: mapPixelRatio(),
+            // MapLibre owns the canvas, so three.js's own `antialias` means nothing here: without this the models' edges on
+            // the map are bare steps (5 Nov 2026, measured: samples 0). On a computer only (lib/device `mapAntialias`).
+            canvasContextAttributes: { antialias: mapAntialias({ modest: modestDevice(), touch: touchScreen() }) },
             attributionControl: { compact: true },
             style: mapStyle(),
           });
@@ -410,6 +429,7 @@ export function HeritageMap({
             }
             m.setSky(sky(currentTheme()));
             mode();
+            started = true;
             setLoaded(true);
             // The models' layer repaints all the time, so the map is never «idle»: settled is when its tiles
             // (buildings among them) have all come in, twice in a row a moment apart.
@@ -425,8 +445,6 @@ export function HeritageMap({
             // The models (several MB) wait for the base map: it shows first, then they come. At most 4 s.
             setTimeout(() => addModels(), 4000);
             reportCity();
-            // A load event can follow a tile error; keep discovery available
-            // through the schematic view for the lifetime of this map.
             // Models and the OSM building layer are an addition: whatever
             // goes wrong there leaves the pins and the base map as they are.
             let modelsAdded = false;
@@ -448,8 +466,33 @@ export function HeritageMap({
               .catch(() => {});
             }
           });
-          m.on("error", () => {
-            if (!disposed) setFailed(true);
+          // The schematic view is for a map that cannot draw: its style failed, or its base map has not brought a
+          // single tile (offline, the tile server down). One tile failing among others that came costs just that
+          // piece, and a base map whose tiles start to arrive takes the place of the schematic view again: before,
+          // any error left the visitor on the schematic view until a reload (7 Nov 2026).
+          const base = (id: unknown) => {
+            const type = typeof id === "string" ? m.getSource(id)?.type : undefined;
+            return type === "vector" || type === "raster" || type === "raster-dem";
+          };
+          m.on("sourcedata", (e) => {
+            if (!e.tile || !base(e.sourceId)) return;
+            baseTiles += 1;
+            if (!disposed && byTiles) {
+              byTiles = false;
+              setFailed(false);
+            }
+          });
+          m.on("error", (e) => {
+            if (disposed) return;
+            const sourceId = (e as { sourceId?: unknown }).sourceId;
+            if (sourceId === undefined) {
+              // A style that never came is the whole map; anything else after the start is one missing piece.
+              if (!started) setFailed(true);
+              return;
+            }
+            if (!base(sourceId) || baseTiles > 0) return;
+            byTiles = true;
+            setFailed(true);
           });
         } catch {
           setFailed(true);
@@ -551,34 +594,47 @@ export function HeritageMap({
     const m = map.current;
     if (!loaded || !m) return;
     let cancelled = false;
-    const coordinates = routeIds
-      .map((id) => sites.find((s) => s.id === id)?.coordinates)
-      .filter((x): x is [number, number] => !!x);
-    const data: GeoJSON.Feature<GeoJSON.LineString> = {
+    const stops = routeIds.flatMap((id) => {
+      const point = sites.find((s) => s.id === id)?.coordinates;
+      return point ? [{ id, point }] : [];
+    });
+    // Each pair of stops: the stored walking path (solid), else a straight schematic segment (dashed).
+    const walked: LngLat[][] = [],
+      schematic: LngLat[][] = [];
+    stops.slice(1).forEach((to, i) => {
+      const from = stops[i]!;
+      const leg = walkingLeg(walkingRoute, from.id, to.id);
+      if (leg) walked.push(leg.coordinates);
+      else schematic.push([from.point, to.point]);
+    });
+    const lines = (coordinates: LngLat[][]): GeoJSON.Feature<GeoJSON.MultiLineString> => ({
       type: "Feature",
       properties: {},
-      geometry: {
-        type: "LineString",
-        coordinates: coordinates.length > 1 ? coordinates : [],
-      },
-    };
-    const route = m.getSource<GeoJSONSource>("route");
-    if (route) route.setData(data);
-    else {
-      m.addSource("route", { type: "geojson", data });
-      m.addLayer({
-        id: "route",
-        type: "line",
-        source: "route",
-        minzoom: CITY_MARKER_MAX_ZOOM,
-        paint: {
-          "line-color": routeColour,
-          "line-width": 4,
-          "line-dasharray": [1.2, 1.2],
-        },
-      });
+      geometry: { type: "MultiLineString", coordinates },
+    });
+    for (const [id, data, dashed] of [
+      ["route", lines(schematic), true],
+      ["route-walk", lines(walked), false],
+    ] as const) {
+      const source = m.getSource<GeoJSONSource>(id);
+      if (source) source.setData(data);
+      else {
+        m.addSource(id, { type: "geojson", data });
+        m.addLayer({
+          id,
+          type: "line",
+          source: id,
+          minzoom: CITY_MARKER_MAX_ZOOM,
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": routeColour,
+            "line-width": 4,
+            ...(dashed && { "line-dasharray": [1.2, 1.2] }),
+          },
+        });
+      }
+      m.setPaintProperty(id, "line-color", routeColour);
     }
-    m.setPaintProperty("route", "line-color", routeColour);
     // The pins draw over the route line; without them the schematic view keeps discovery usable.
     syncPins(
       m,
@@ -597,7 +653,55 @@ export function HeritageMap({
     return () => {
       cancelled = true;
     };
-  }, [sites, selectedId, highlightId, routeIds, loaded, finishedIds, routeColour, lang, buildingRoute]);
+  }, [sites, selectedId, highlightId, routeIds, walkingRoute, loaded, finishedIds, routeColour, lang, buildingRoute]);
+  // Building a route (6 Nov 2026, «pinler yansın büyüsün»): the pins that can be added ring out in a wave for a few
+  // seconds, then the ring goes. A circle layer under the pins, its radius and opacity stepped per frame.
+  useEffect(() => {
+    const m = map.current;
+    if (!loaded || !m || !buildingRoute) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    let gone = false;
+    const start = performance.now();
+    const LAYER = "pin-pulse";
+    const add = () => {
+      if (gone || m.getLayer(LAYER)) return;
+      if (!m.getSource(PIN_SOURCE)) {
+        frame = requestAnimationFrame(add);
+        return;
+      }
+      m.addLayer(
+        {
+          id: LAYER,
+          type: "circle",
+          source: PIN_SOURCE,
+          minzoom: CITY_MARKER_MAX_ZOOM,
+          filter: ["==", ["get", "stop"], 0],
+          paint: { "circle-color": "transparent", "circle-stroke-color": "#C9A13B", "circle-stroke-width": 3, "circle-radius": 0, "circle-stroke-opacity": 0, "circle-translate": [0, -22] },
+        },
+        PIN_LAYER,
+      );
+      step(start);
+    };
+    const step = (now: number) => {
+      if (gone || !m.getLayer(LAYER)) return;
+      const t = (now - start) / 1000;
+      // Each pin a little after the one before (its place in the list), three rings each.
+      const phase = ["-", t * 1.1, ["*", ["%", ["get", "order"], 7], 0.12]] as unknown as number;
+      const ring = ["%", ["max", phase, 0], 1] as unknown as number;
+      const live = t < 3.2;
+      m.setPaintProperty(LAYER, "circle-radius", live ? (["+", 14, ["*", 22, ring]] as unknown as number) : 0);
+      m.setPaintProperty(LAYER, "circle-stroke-opacity", live ? (["*", 0.85, ["-", 1, ring]] as unknown as number) : 0);
+      if (live) frame = requestAnimationFrame(step);
+      else if (m.getLayer(LAYER)) m.removeLayer(LAYER);
+    };
+    add();
+    return () => {
+      gone = true;
+      cancelAnimationFrame(frame);
+      if (m.getLayer(LAYER)) m.removeLayer(LAYER);
+    };
+  }, [buildingRoute, loaded]);
   useEffect(() => {
     if (mapSettings) models.current?.update(sites, mapSettings, scenes);
   }, [sites, mapSettings, scenes, loaded]);
@@ -685,7 +789,7 @@ export function HeritageMap({
         ],
       );
       m.fitBounds(bounds, {
-        padding: { top: 110, left: 70, right: 150, bottom: 110 + bottomInset },
+        padding: fitPadding({ top: 110, left: 70, right: 150, bottom: 110 + bottomInset }, m.getCanvas().clientWidth, m.getCanvas().clientHeight),
         maxZoom: 17,
         duration: 900,
       });
@@ -718,10 +822,27 @@ export function HeritageMap({
   }, [collapsed]);
   return (
     <div className={`map-wrap${cityMode}`}>
+      {/* The pins are drawn into the map's canvas, out of reach of a keyboard: the side panel's list is the way in. */}
+      <a
+        className="map-list-link"
+        href="#site-list"
+        onClick={(e) => {
+          // The app keeps its own state in the hash: the link never changes it.
+          e.preventDefault();
+          document.getElementById("site-list")?.focus();
+        }}
+      >
+        {t("map.listLink")}
+      </a>
+      <p id={hintId} className="sr-only">
+        {t("map.keyboardHint")}
+      </p>
       <div
         ref={container}
         className="map-canvas"
+        role="region"
         aria-label={t("map.aria")}
+        aria-describedby={hintId}
       />
       {(!loaded || failed) && (
         <div className="map-fallback">
@@ -762,6 +883,7 @@ export function HeritageMap({
         }}
         onLocate={() => onLocate?.()}
       />
+      {banner && <div className="map-banner">{banner}</div>}
       {selectedId && peek && (
         <>
           {/* The thin line from the short card to its pin; placed by `placePeek`. */}

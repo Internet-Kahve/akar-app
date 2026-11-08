@@ -15,7 +15,7 @@ Hero eser: 11 cümle (~1 dk). Her cümle tek bilgi, en fazla ~20 kelime. Bedeste
 | 7 | İçeride, doğu–batı yönünde sıralanmış otuz iki mahzen vardır. | 02_ic-kuyumcular.jpg | evet | Ic_Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış | evet |
 | 8 | Evliya Çelebi'ye göre bedestenin dört yanı kuyumcular çarşısıyla çevriliydi. | 07_dis-duvar-kuyumcular.jpg | evet | Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
 | 9 | 1958 Kapalıçarşı yangınında ağır hasar gören yapı, 1960'ta onarıldı. | 06_kubbeler-yakindan.jpg | hayır | Kubbeler | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
-| 10 | Bedesten bugün de çoğunlukla kuyumcu atölyelerine ev sahipliği yapıyor. | 02_ic-kuyumcular.jpg | evet | Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış | hayır |
+| 10 | Bedesten bugün de çoğunlukla kuyumcu atölyelerine ev sahipliği yapıyor. | 02_ic-kuyumcular.jpg | evet | Dukkanlar | E cilt-2 PDF s.29 | Doğrulanmış | evet |
 | 11 | Sonraki durak, Ulucami ile Orhan Bey Camii arasındaki Koza Han. | 08_sonraki-durak-koza-han.jpg | evet | — | E cilt-2 PDF s.8 | Doğrulanmış | hayır |
 
 ## Notlar
@@ -40,11 +40,11 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 3 | Kubbeler | 4° | 62° | 0.42 |
 | 4 | Govde | 320° | 20° | 0.55 |
 | 5 | Merkez | 120° | 25° | 0.62 |
-| 6 | Ic_Sokak | 4° | 30° | 0.25 |
-| 7 | Ic_Sokak | 90° | 8° | 0.12 |
+| 6 | Kubbeler | 4° | 78° | 0.5 |
+| 7 | Ic_Sokak | 90° | 22° | 0.2 |
 | 8 | Dukkanlar | 4° | 14° | 0.25 |
 | 9 | Kubbeler | 60° | 35° | 0.3 |
-| 10 | Dukkanlar | 300° | 14° | 0.22 |
+| 10 | Ic_Sokak | 270° | 5° | 0.09 |
 | 11 | Merkez | 315° | 35° | 0.8 |
 ## Akar akışı
 

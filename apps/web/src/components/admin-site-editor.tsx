@@ -31,12 +31,15 @@ import {
 } from "@akar/domain";
 import { ApiError, routes, type AkarClient, type JobTarget } from "@akar/api-client";
 import { Modal, Notice, Tag } from "./ui";
+import { TileLoader, WaitWords } from "./loading-screens";
 import { PhotoDialog } from "./admin-photo-dialog";
 import { PartCardsStep } from "./admin-part-cards";
 import { TasksStep } from "./admin-site-tasks";
 import { AboutStep } from "./admin-site-about";
 import { PlacementSection, usePlacementEditor } from "./admin-placement";
+import { pinFollowingModel } from "../lib/placement";
 import { AdminModelPreview, poseSummary } from "./admin-model-preview";
+import { ModelGenPanel, type ModelGenApi, type ModelGenPackageFiles } from "./admin-model-gen";
 import { prepareModel } from "../lib/editor-media";
 import { translationLabels } from "../lib/translation-labels";
 const steps = [
@@ -119,6 +122,7 @@ export function SiteEditor({
   narrateSite,
   translateSite,
   live,
+  modelGen,
 }: {
   site: HeritageSite;
   sites: HeritageSite[];
@@ -127,13 +131,15 @@ export function SiteEditor({
   onSave: (s: HeritageSite) => Promise<HeritageSite>;
   /** The placement saved for the site's model, hidden or not (`AkarClient.getMapPlacement`). */
   loadPlacement: (siteId: string) => Promise<MapPlacement | null>;
-  /** Saves the whole placement of the site's model (the `map-placement` command). */
-  savePlacement: (siteId: string, placement: MapPlacement) => Promise<void>;
+  /** Saves the whole placement of the site's model (the `map-placement` command); `siteCoordinates` moves the pin too. */
+  savePlacement: (siteId: string, placement: MapPlacement, siteCoordinates?: [number, number]) => Promise<void>;
   /** Records the voice-overs of the saved story and part card texts (`AkarClient.narrateSite`). */
   narrateSite: AkarClient["narrateSite"];
   /** Fills the empty English story and part card texts with a machine draft (`AkarClient.translateSite`). */
   translateSite: AkarClient["translateSite"];
   live: boolean;
+  /** Chat model editing; only an admin on the live system has it. */
+  modelGen?: ModelGenApi;
 }) {
   const [draft, setDraft] = useState(() => prepareSite(site));
   // The site as last saved (or opened): «Değişiklikleri geri al» goes back to it.
@@ -163,9 +169,27 @@ export function SiteEditor({
     coordinates: draft.coordinates,
     persisted,
     load: loadPlacement,
-    onSave: savePlacement,
+    // The pin moved with the model: «Yerleşimi kaydet» saves the new location too, alone (no other site field is
+    // saved or checked), so other edits on this screen stay unsaved and the placement never leaves the pin behind.
+    onSave: async (siteId, value) => {
+      const moved = pinFollowingModel(savedDraft.coordinates, value);
+      await savePlacement(siteId, value, moved ?? undefined);
+      if (!moved) return;
+      setSavedDraft((s) => ({ ...s, coordinates: moved }));
+      setDraft((d) => ({ ...d, coordinates: moved }));
+      setBaseline((b) => siteKey({ ...(JSON.parse(b) as HeritageSite), coordinates: moved }));
+    },
   });
   const dirty = siteKey(draft) !== baseline || placement.dirty;
+  // Moving the model on the map moves the site's pin with it (the pin is the site's own location): only after an
+  // edit of the placement here, never because a saved placement was read.
+  useEffect(() => {
+    if (!placement.dirty) return;
+    const next = pinFollowingModel(draft.coordinates, placement.value);
+    if (next) field("coordinates", next);
+    // `field` and the coordinates are read at the time of the move.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placement.dirty, placement.value.lng, placement.value.lat]);
   // Both requests work on the texts the server holds: the site must be saved there, with no edit left on this screen.
   const storyJobsReady =
     sites.some((s) => s.id === draft.id) && !dirty && !busy && !storyJob;
@@ -264,6 +288,8 @@ export function SiteEditor({
       setBusy(false);
     }
   }
+  /** Saving without publishing keeps a deactivated site deactivated (§11.81); anything else becomes a draft. */
+  const offMap: HeritageSite["status"] = savedDraft.status === "inactive" ? "inactive" : "draft";
   async function save(status: HeritageSite["status"], exit = false) {
     if (status === "published" && issues.length) {
       setStep(steps.length - 1);
@@ -287,10 +313,14 @@ export function SiteEditor({
         live
           ? canonical.status === "published"
             ? "Eser yayında."
-            : "Taslak sunucuya kaydedildi."
+            : canonical.status === "inactive"
+              ? "Deaktif eser sunucuya kaydedildi."
+              : "Taslak sunucuya kaydedildi."
           : canonical.status === "published"
             ? "Eser demo keşfinde yayında."
-            : "Taslak bu tarayıcıya kaydedildi.",
+            : canonical.status === "inactive"
+              ? "Deaktif eser bu tarayıcıya kaydedildi."
+              : "Taslak bu tarayıcıya kaydedildi.",
       );
       // The placement has its own save; one still open goes out with the site, now that the server has the model.
       const refused =
@@ -353,6 +383,12 @@ export function SiteEditor({
           <span className="editor-breadcrumb"> › {steps[step]}</span>
         </div>
         <div className="editor-actions">
+          {busy && (
+            <span className="saving-tiles inline" role="status" aria-label="Kaydediliyor">
+              <TileLoader small />
+              <WaitWords group="save" />
+            </span>
+          )}
           {dirty && (
             <button className="btn secondary" onClick={() => setReverting(true)}>
               <RotateCcw size={16} />
@@ -365,9 +401,9 @@ export function SiteEditor({
           <button
             className="btn soft"
             disabled={busy}
-            onClick={() => void save("draft")}
+            onClick={() => void save(offMap)}
           >
-            Taslak kaydet
+            {offMap === "inactive" ? "Deaktif olarak kaydet" : "Taslak kaydet"}
           </button>
           <button
             className="btn"
@@ -514,6 +550,15 @@ export function SiteEditor({
                 <ImagePlus size={17} />
                 Fotoğrafla devam et
               </button>
+              {modelGen && (
+                <ModelGenPanel
+                  api={modelGen}
+                  siteId={draft.id}
+                  saved={sites.some((s) => s.id === draft.id)}
+                  busy={busy}
+                  onUse={takePackage}
+                />
+              )}
             </div>
           )}
           {step === 1 && (
@@ -1398,9 +1443,9 @@ export function SiteEditor({
             <button
               className="btn"
               disabled={busy}
-              onClick={() => void save("draft", true)}
+              onClick={() => void save(offMap, true)}
             >
-              Taslağı kaydet ve çık
+              {offMap === "inactive" ? "Kaydet ve çık" : "Taslağı kaydet ve çık"}
             </button>
           </div>
         </Modal>
@@ -1456,6 +1501,26 @@ export function SiteEditor({
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gece modeli okunamadı.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  /** «3D üret» package: the day and night models and the map's baked files, together as a hand-made model has them. */
+  async function takePackage(files: ModelGenPackageFiles) {
+    setBusy(true);
+    setError("");
+    try {
+      const [day, night, mapDay, mapNight] = await Promise.all(
+        [files.day, files.night, files.mapDay, files.mapNight].map((f) => prepareModel(f)),
+      );
+      const { name, bytes, src, parts, triangles } = night!;
+      field("model", {
+        ...day!,
+        night: { name, bytes, src, parts, ...(triangles !== undefined && { triangles }) },
+        mapBaked: { day: mapDay!.src, night: mapNight!.src },
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Model okunamadı.");
     } finally {
       setBusy(false);
     }

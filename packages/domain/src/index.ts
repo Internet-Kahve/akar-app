@@ -559,7 +559,7 @@ export interface HeritageSite {
   coordinates: [number, number];
   minutes: number;
   description: string;
-  status: "published" | "draft";
+  status: SiteStatus;
   stories: StoryBlock[];
   source: string;
   tier: "Hero" | "Tier 2" | "Tier 1";
@@ -615,6 +615,30 @@ export interface HeritageSite {
     narrations?: StoryNarration[];
   }>;
 }
+/** Stored walking path from one route stop to the next (§11.79). */
+export interface RouteLeg {
+  /** `[lng, lat]` points, GeoJSON LineString order. */
+  coordinates: Array<[number, number]>;
+  meters: number;
+  seconds: number;
+}
+/**
+ * Where a site stands in the panel (§11.81): `published` is on the map; `draft` is still being written; `inactive`
+ * was taken off the map and kept. Only `published` is public. A site that is not published can be deleted.
+ */
+export type SiteStatus = "published" | "draft" | "inactive";
+/** Every site status in the order the panel offers them. */
+export const siteStatuses: readonly SiteStatus[] = ["published", "draft", "inactive"];
+export const siteStatusLabels: Record<SiteStatus, string> = {
+  published: "Yayında",
+  draft: "Taslak",
+  inactive: "Deaktif",
+};
+/** A published site is never deleted outright: it is first set to draft or inactive (§11.81). */
+export const canDeleteSite = (site: { status: SiteStatus }): boolean =>
+  site.status !== "published";
+export const PUBLISHED_SITE_DELETE_ERROR =
+  "Yayındaki eser silinemez; önce deaktif et ya da taslağa al.";
 export interface HeritageRoute {
   id: string;
   name: string;
@@ -625,6 +649,18 @@ export interface HeritageRoute {
   theme: string;
   nameEn?: string;
   status?: "draft" | "published";
+  /**
+   * Walking path from `siteIds[i]` to `siteIds[i + 1]`; `null` = not computed yet (drawn schematic).
+   * Absent for drafts and local routes.
+   */
+  legs?: Array<RouteLeg | null>;
+  /** `complete`: every leg computed, so `minutes`/`distance` use the real path (§11.79). */
+  walking?: "complete" | "partial" | "unavailable";
+  /**
+   * The badge the API gives whoever finishes every stop (its story or a visit at the site); absent when the route has
+   * none, and for drafts, local routes and the demo.
+   */
+  badge?: { title: string; url?: string; alt?: string };
 }
 export type Role = "user" | "editor" | "moderator" | "admin";
 /** Points an approved memory earns and loses again when it is removed; the API's `memory.approved` ledger value. */
@@ -677,6 +713,8 @@ export interface Snapshot {
   role?: Role;
   /** The signed-in account's preferences; absent for a guest (kept on the device) and in the demo. */
   preferences?: UserPreferences;
+  /** The signed-in account's figure and weekly-list choice (`GET /v1/me`); absent for a guest and in the demo. */
+  publicProfile?: { avatarId: AvatarId | null; leaderboardVisible: boolean };
 }
 export type Command =
   | { type: "save"; siteId: string }
@@ -695,8 +733,15 @@ export type Command =
       reason?: string;
     }
   | { type: "site"; site: HeritageSite }
-  /** Saves the whole placement of a site's model (the site and its model must already be saved). */
-  | { type: "map-placement"; siteId: string; placement: MapPlacement }
+  /** Changes only the site's status (publishing runs the publication checks); no other field is saved. */
+  | { type: "site-status"; siteId: string; status: SiteStatus }
+  /** Removes a site that is not published from the panel (§11.81): the server keeps its record, hidden. */
+  | { type: "delete-site"; siteId: string }
+  /**
+   * Saves the whole placement of a site's model (the site and its model must already be saved). `siteCoordinates`
+   * also moves the site's own location (its pin) there, alone: no other site field is saved or checked.
+   */
+  | { type: "map-placement"; siteId: string; placement: MapPlacement; siteCoordinates?: [number, number] }
   | { type: "catalog-routes"; routes: HeritageRoute[] }
   | { type: "photo"; photo: SitePhoto; source: SiteSource }
   | { type: "import-sites"; sites: HeritageSite[] };
@@ -1058,7 +1103,10 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
   const next = structuredClone(state);
   if (
     "siteId" in command &&
+    // Panel commands also name drafts and inactive sites; each checks its own site.
     command.type !== "map-placement" &&
+    command.type !== "site-status" &&
+    command.type !== "delete-site" &&
     !state.sites.some(
       (s) => s.id === command.siteId && s.status === "published",
     )
@@ -1209,6 +1257,27 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
         : [...next.sites, incoming];
       break;
     }
+    case "site-status": {
+      const at = next.sites.findIndex((s) => s.id === command.siteId);
+      const site = next.sites[at];
+      if (!site) throw new Error("Eser bulunamadı.");
+      if (!siteStatuses.includes(command.status))
+        throw new Error("Geçersiz eser durumu.");
+      const changed = { ...site, status: command.status };
+      if (command.status === "published") validateSite(changed);
+      next.sites[at] = changed;
+      break;
+    }
+    case "delete-site": {
+      const at = next.sites.findIndex((s) => s.id === command.siteId);
+      const site = next.sites[at];
+      if (!site) throw new Error("Eser bulunamadı.");
+      if (!canDeleteSite(site)) throw new Error(PUBLISHED_SITE_DELETE_ERROR);
+      next.sites.splice(at, 1);
+      next.savedIds = next.savedIds.filter((id) => id !== command.siteId);
+      next.routeIds = next.routeIds.filter((id) => id !== command.siteId);
+      break;
+    }
     case "map-placement": {
       const site = next.sites.find((s) => s.id === command.siteId);
       if (!site) throw new Error("Eser bulunamadı.");
@@ -1218,6 +1287,12 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
         );
       validatePlacement(command.placement);
       site.model.placement = structuredClone(command.placement);
+      if (command.siteCoordinates) {
+        const [lng, lat] = command.siteCoordinates;
+        if (!Number.isFinite(lng) || !Number.isFinite(lat) || Math.abs(lng) > 180 || Math.abs(lat) > 90)
+          throw new Error("Geçerli enlem ve boylam gir.");
+        site.coordinates = [lng, lat];
+      }
       break;
     }
   }
@@ -1226,6 +1301,7 @@ export function reduceSnapshot(state: Snapshot, command: Command): Snapshot {
 
 /**
  * Usage events the apps may count (§11.72). `site`: the event needs a site id; `ref`: what its detail is.
+ * `server`: counted by the API itself, never accepted from `POST /v1/events` (§11.74).
  * A new event is one line here plus the call in the web app; no migration.
  */
 export type UsageRefKind = "none" | "route" | "sentence" | "partCard" | "task" | "lang" | "signIn";
@@ -1245,7 +1321,9 @@ export const USAGE_EVENTS = {
   "my_route.add": { site: true, ref: "none", label: "Rotama ekleme" },
   "route.open": { site: false, ref: "route", label: "Rota açma" },
   "account.sign_in": { site: false, ref: "signIn", label: "Giriş" },
-} as const satisfies Record<string, { site: boolean; ref: UsageRefKind; label: string }>;
+  "chat.message": { site: false, ref: "none", label: "Asistan yanıtı", server: true },
+  "model_gen.job": { site: true, ref: "none", label: "Yapay zekâ model isteği", server: true },
+} as const satisfies Record<string, { site: boolean; ref: UsageRefKind; label: string; server?: true }>;
 
 export type UsageEventName = keyof typeof USAGE_EVENTS;
 export const usageEventNames = Object.keys(USAGE_EVENTS) as [UsageEventName, ...UsageEventName[]];
@@ -1254,3 +1332,112 @@ export const usageEventNames = Object.keys(USAGE_EVENTS) as [UsageEventName, ...
 export const MAX_SENTENCE_INDEX = 499;
 /** Events per `POST /v1/events` request. */
 export const MAX_EVENTS_PER_BATCH = 50;
+
+/* ------------------------------------------------------------------------------------------- display name */
+
+/**
+ * The public display name (5 Nov 2026): shown on the profile, on approved memories and on share cards. The same
+ * rule runs in the app (before saving, and for a guest who keeps the name on the device) and on the server
+ * (`PUT /v1/me/profile`), which is the one that counts.
+ */
+export const DISPLAY_NAME_MIN = 2;
+export const DISPLAY_NAME_MAX = 24;
+
+/** Spaces trimmed and runs of white space made one space. */
+export const normalizeDisplayName = (name: string): string => name.normalize("NFC").replace(/\s+/g, " ").trim();
+
+/**
+ * Word roots that make a name unfit for a public list. Kept short on purpose: it stops the obvious, a moderator
+ * can still remove the rest. A root is matched at the start of a word; the longer ones also inside a run of letters
+ * written without spaces. Short roots only as a whole word, so «Işık», «Kemal» or «Gökçe» pass.
+ */
+const BLOCKED_PREFIX = ["orospu", "yarrak", "pezevenk", "kahpe", "ibne", "siktir", "sikis", "sikik", "amcik", "amina", "gavat", "fuck", "shit", "bitch", "whore", "cunt", "nigg", "faggot"];
+const BLOCKED_WORD = ["amk", "aq", "sik", "got", "oc", "pic", "yavsak", "salak", "gerizekali", "dick", "ass"];
+/** Names that would pass for the team or a role. */
+const RESERVED = ["akar", "akar ekibi", "admin", "yonetici", "moderator", "editor", "destek", "support"];
+
+/** Lower case, Turkish letters folded to Latin, and common look-alike digits and signs read as letters. */
+function foldForCheck(name: string): string {
+  return name
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[çc]/g, "c")
+    .replace(/ğ/g, "g")
+    .replace(/[ıi̇]/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ş/g, "s")
+    .replace(/ü/g, "u")
+    .replace(/[âà]/g, "a")
+    .replace(/[îì]/g, "i")
+    .replace(/[ûù]/g, "u")
+    .replace(/0/g, "o")
+    .replace(/1/g, "i")
+    .replace(/3/g, "e")
+    .replace(/4|@/g, "a")
+    .replace(/5|\$/g, "s")
+    .replace(/7/g, "t");
+}
+
+export type DisplayNameProblem = "short" | "long" | "characters" | "inappropriate" | "reserved";
+
+/** Why a (normalized) name cannot be used, or `null` when it can. */
+export function displayNameProblem(raw: string): DisplayNameProblem | null {
+  const name = normalizeDisplayName(raw);
+  const length = [...name].length;
+  if (length < DISPLAY_NAME_MIN) return "short";
+  if (length > DISPLAY_NAME_MAX) return "long";
+  // Letters (any script), digits, spaces and a few joiners; no links, no @ handles, no control characters.
+  if (!/^[\p{L}\p{M}\p{N}][\p{L}\p{M}\p{N} .'’\-_]*$/u.test(name) || /\p{N}{7,}/u.test(name)) return "characters";
+  // A web address written with dots («www.site.com», «site.com.tr»): a name is not a link.
+  if (/(^|[\s.])www\./iu.test(name) || /\p{L}\.(com|net|org|info|biz|io|co|app|dev|me|tr|gov|edu|xyz)(\.[a-z]{2})?$/iu.test(name) || /\p{L}\.(com|net|org)(?![\p{L}])/iu.test(name)) return "characters";
+  const folded = foldForCheck(name);
+  const words = folded.split(/[^a-z]+/).filter(Boolean);
+  const squashed = words.join("");
+  if (RESERVED.includes(folded.replace(/[^a-z ]+/g, "").trim())) return "reserved";
+  if (words.some((w) => BLOCKED_WORD.includes(w) || BLOCKED_PREFIX.some((p) => w.startsWith(p)))) return "inappropriate";
+  if (BLOCKED_PREFIX.some((p) => p.length >= 5 && squashed.includes(p))) return "inappropriate";
+  return null;
+}
+
+/* ------------------------------------------------------------------------------------------- public profile */
+
+/** The figures a profile picture can be (`apps/web/public/avatarlar/<id>.webp`); the server accepts only these. */
+export const AVATAR_IDS = ["kosem-sultan", "evliya-celebi", "fatih", "mimar-sinan", "mihrimah-sultan", "hezarfen"] as const;
+export type AvatarId = (typeof AVATAR_IDS)[number];
+
+/**
+ * «Haftanın Gezgini» (5 Nov 2026): the week's points from the ledger, Monday 00:00 Europe/Istanbul onwards. Only
+ * accounts that chose to appear (off by default) and have a display name are listed; never an e-mail or an id.
+ */
+export interface WeeklyLeaderboard {
+  /** ISO instant of Monday 00:00 in Istanbul. */
+  weekStart: string;
+  /** The first ten, best first; rank 1-based, ties broken by who got there first. */
+  items: Array<{ rank: number; name: string; avatarId: AvatarId | null; points: number }>;
+  /** The signed-in visitor's week; null for a guest. `rank` is null while hidden or without points. */
+  me: { rank: number | null; points: number; visible: boolean } | null;
+  /** Demo only: made-up rows, shown with «Örnek». */
+  sample?: boolean;
+}
+
+/* ------------------------------------------------------------------------------------------- week */
+
+/** Offset of Europe/Istanbul from UTC at `at`, in minutes (+180 since 2016; read from the platform, not assumed). */
+function istanbulOffsetMinutes(at: Date): number {
+  const part = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Istanbul", timeZoneName: "longOffset" })
+    .formatToParts(at)
+    .find((p) => p.type === "timeZoneName")?.value;
+  const m = /GMT([+-])(\d{2}):?(\d{2})?/.exec(part ?? "");
+  if (!m) return 180;
+  return (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] ?? 0));
+}
+
+/** The start of the week that holds `now`: Monday 00:00 in Istanbul, as an instant. */
+/** Shared by the weekly list (server) and the week's share card (app). */
+export function istanbulWeekStart(now: Date): Date {
+  const offset = istanbulOffsetMinutes(now);
+  const local = new Date(now.getTime() + offset * 60_000); // Istanbul wall clock, read with the UTC getters
+  const sinceMonday = (local.getUTCDay() + 6) % 7;
+  const midnight = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() - sinceMonday);
+  return new Date(midnight - offset * 60_000);
+}
+

@@ -2,6 +2,30 @@
 
 Mevcut Next.js arayüzü Capacitor 8 ile iOS ve Android içine statik olarak paketlenir. `server.url`, uzak sayfa yükleme veya ayrı bir React Native arayüzü kullanılmaz. Harita tile'ları, canlı katalog, medya ve hesap işlemleri internet gerektirir; tam çevrimdışı kullanım desteklenmez.
 
+## Android 1.2.0 · derleme 3
+
+8 Kasım 2026 güncellemesi, `main` üzerindeki `0e9a520` kodunu mobil dala taşır. Güncel hesap/profil, rozetler, haftalık sıralama, asistan, erişilebilirlik ve içerik akışları aynı statik pakette yer alır. Android uygulama kimliği `com.tamerakdeniz.akar`, sürüm 1.2.0 ve `versionCode` 3'tür. Bu çalışma yalnız Android içindir; iOS sürüm ve derlemesi güncellenmedi.
+
+Mobil giriş e-posta/şifre ve e-posta doğrulama kodunu kullanır. Google giriş düğmesi mobil pakette gösterilmez: mevcut web OAuth yönlendirmesi WebView içinde çalıştırılmamalıdır; sistem tarayıcısı ve güvenli uygulamaya dönüş entegrasyonu ayrıca gerekir ([Google OAuth politikası](https://developers.google.com/identity/protocols/oauth2/policies#browsers)). Web Google giriş akışı korunur.
+
+Doğrulama ve teslim:
+
+- Web/API tip kontrolleri, 274 birim testi ve 6 API yapılandırma testi geçti. Web üretim ve canlı mobil statik derlemeleri başarılı.
+- Statik Android/Pixel profilinde 23 test geçti, 1 test mevcut koşuluyla atlandı. İlk çift platform çalışmasında iOS tarafındaki bir testin iz dosyası, eşzamanlı web çalışmasının çıktı dizinini temizlemesi nedeniyle kayboldu; iOS kapsam dışıdır. Sonraki web kontrolleri ayrı çıktı dizini kullanır.
+- Giriş akışının masaüstü/mobil 6 testi, test harness'ine mobil ortam sabitleri eklendikten sonra geçti. Ardından tam web E2E çalışmasında 204 test geçti, 36 test mevcut koşullarıyla atlandı.
+- Android Gradle `assembleDebug` başarılı; APK sürümü ve debug imzası doğrulandı. Pixel 8 / Android emülatörüne kuruldu ve açıldı. Canlı katalog WebView içinde HTTP 200 döndürdü; harita, 3D modeller ve fotoğraflı pinler görsel olarak doğrulandı; kırık görsel bulunmadı. Giriş ekranında e-posta/şifre ve kod seçenekleri mevcut, Google düğmesi yok.
+- Kullanıcının 2311DRK48G telefonundaki 1.1.0 (2) APK ile yeni paketin imzası eşleşti. `adb install --no-streaming -r` başarılı; cihaz 1.2.0 (3) bildirdi ve ilk kurulum tarihi korundu. Uygulama açıldı; gerçek ekranda canlı harita, 3D modeller ve fotoğraflı pinler doğrulandı, açılış günlüğünde fatal hata görülmedi. OTP, kamera/konum izinleri ve paylaşım bu çalışmada ayrıca denenmedi.
+- Paket: `apps/mobile/android/app/build/outputs/apk/debug/akar-1.2.0-build3.apk`. SHA-256: `7d3f72e30de961f8457ed6ae34cc598cdd5ccadcd97688fbf18c9b7ea2502b45`. Telefona doğrudan kurulabilen debug imzalı test paketidir; mağaza yayını değildir.
+
+Yalnız Android paketleme:
+
+```sh
+npm run mobile:build
+npm run sync -w @akar/mobile -- android
+cd apps/mobile/android
+ANDROID_HOME="$HOME/Library/Android/sdk" ./gradlew assembleDebug
+```
+
 ## 1.1.0 · derleme 2
 
 4 Kasım 2026 tarihli mobil güncelleme, `origin/main` üzerindeki `c3382c0` sürümünü içerir: daha hafif harita/3D çizimi, hazır ışıklandırmalı harita modelleri, telefon kartları ve hikâye akışları, erişilebilirlik ayarları ve güncel içerik desteği. Android `versionCode` ve iOS `CURRENT_PROJECT_VERSION` 2, iki platformun görünen sürümü 1.1.0'dır. Uygulama kimliği ve Android debug imzası korunduğundan önceki telefon kurulumu veri silmeden güncellenebilir.

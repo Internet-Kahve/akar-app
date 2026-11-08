@@ -45,3 +45,15 @@ test("raised layers are pulled toward the camera on their own material copy; the
   assert.equal(lifted.polygonOffsetFactor, -0.5);
   assert.equal(lifted.polygonOffsetUnits, -3);
 });
+
+test("a plinth sunk under the ground does not hide the courtyard layers from the ranking", () => {
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(10, 0.6, 10), material);
+  plinth.position.y = -0.3;
+  plinth.updateMatrixWorld(true);
+  const paving = plate(0.03),
+    ring = plate(0.05);
+  const ranks = groundLayerRanks([plinth, paving, ring]);
+  assert.equal(ranks.get(paving), 0);
+  assert.equal(ranks.get(ring), 1);
+  assert.equal(ranks.has(plinth), false);
+});

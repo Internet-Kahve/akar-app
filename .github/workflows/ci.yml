@@ -33,7 +33,7 @@ jobs:
 
   web:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     # Browsers and their system libraries come with the image, so no `playwright install` step.
     # Bump this tag together with @playwright/test in package-lock.json (versions must match).
     container:

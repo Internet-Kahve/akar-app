@@ -60,9 +60,11 @@ test("model placement: rotate and nudge, save, reopen with the values kept, hide
     () =>
       JSON.parse(localStorage.getItem("akar-demo-bursa-v1")!).sites.find(
         (s: { id: string }) => s.id === "ulu-cami",
-      ).model.placement,
+      ),
   );
-  expect(stored).toMatchObject({
+  // The pin moved with the model and was saved with the placement, without the site's other checks.
+  expect(stored.coordinates).toEqual([stored.model.placement.lng, stored.model.placement.lat]);
+  expect(stored.model.placement).toMatchObject({
     visible: false,
     headingDeg: 264,
     altitudeM: 3,

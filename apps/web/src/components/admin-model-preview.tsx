@@ -5,22 +5,10 @@ import type { CameraPose, HeritageSite, PartCard, PhotoCamera, SitePhoto, StoryB
 import { sceneOf } from "../lib/scene-light";
 import { useCityIdentity, useCityScenes } from "./city-scenes";
 import { ModelStage } from "./model-stage";
+import { PHONE_CARD_EDGE, PHONE_CARD_SHARE, PHONE_PREVIEW, storyCardFrame } from "../lib/story-scene";
+import { poseSummary, zoomText } from "../lib/pose-summary";
 
-/** The prototype's distance words (§11.39) against the distance at which the whole model fits. */
-const DISTANCES: Array<[number, string]> = [
-  [0.42, "yakın"],
-  [0.62, "orta"],
-  [0.85, "çatı"],
-  [0.95, "bütün yapı"],
-];
-const distanceWord = (d: number) =>
-  DISTANCES.reduce((best, x) => (Math.abs(x[0] - d) < Math.abs(best[0] - d) ? x : best))[1];
-
-/** «Merkez · 354° · eğim 30° · bütün yapı»: a pose as the panel lists it. */
-export function poseSummary(pose: CameraPose | null | undefined) {
-  if (!pose) return "";
-  return `${pose.target ?? "Merkez"} · ${Math.round(pose.azimuthDeg)}° · eğim ${Math.round(pose.elevationDeg)}° · ${distanceWord(pose.distance)}`;
-}
+export { poseSummary };
 
 /** Two poses that the panel would list the same: same part, within a degree and a hundredth of the distance. */
 const samePose = (a: CameraPose, b: CameraPose) =>
@@ -98,7 +86,7 @@ export function AdminModelPreview({
     if (next.camera) setShown({ pose: { ...next.camera }, interior: next.camera.interior ?? false });
   };
   // Hikâye: what the preview shows for the selected sentence until it is saved (parts tapped, «İçini göster»).
-  const [work, setWork] = useState<{ highlights: string[]; interior: boolean; moved: boolean }>({
+  const [work, setWork] = useState<{ highlights: string[]; interior: boolean; moved: boolean; now?: CameraPose }>({
     highlights: [],
     interior: false,
     moved: false,
@@ -172,6 +160,9 @@ export function AdminModelPreview({
     if (pose) change(apply, before, pose, `${label}: ${poseSummary(pose)}`);
   };
   const own = story?.camera;
+  // The phone's view: a narrow stage and, on a sentence that shows its photograph, the card's place reserved.
+  const [phone, setPhone] = useState(false);
+  const phoneCard = phone && !!sentence && !!story?.showCard;
   const photoMode = !story && onPhotoCamera && tab === "photos";
   return (
     <div className="admin-model-preview">
@@ -185,9 +176,14 @@ export function AdminModelPreview({
           </button>
         </div>
       )}
-      <div className="admin-model-stage">
+      <label className="admin-phone-toggle">
+        <input type="checkbox" checked={phone} onChange={(e) => setPhone(e.target.checked)} /> Telefon önizlemesi (ziyaretçi telefonda böyle görür)
+      </label>
+      <div className={`admin-model-stage${phone ? " phone" : ""}`}>
       <ModelStage
+        {...(phoneCard && { frame: storyCardFrame(false, 1, PHONE_PREVIEW.screenHeight) })}
         model={model}
+        kind={site.kind}
         name={site.name}
         scene={sceneOf(site, scenes)}
         identity={identity}
@@ -201,7 +197,8 @@ export function AdminModelPreview({
               onPoseChange: (camera: CameraPose) => {
                 // A tap on a part also ends a gesture: only a camera that really moved counts as a new angle.
                 const was = story.camera ?? sentencePose(site, storyIndex);
-                if (!was || !samePose(was, camera)) setWork((w) => ({ ...w, moved: true }));
+                // A zoom (wheel, two fingers) is a move too: it is saved with the angle as the pose's distance.
+                if (!was || !samePose(was, camera)) setWork((w) => ({ ...w, moved: true, now: camera }));
               },
               onInsideChange: (open: boolean) => setWork((w) => ({ ...w, interior: open })),
               onPick: (part: string) =>
@@ -229,6 +226,14 @@ export function AdminModelPreview({
                 ...(shown.interior !== undefined && { interior: shown.interior }),
               })}
       />
+      {phoneCard && (
+        <div
+          className="admin-phone-card"
+          style={{ height: Math.round(PHONE_PREVIEW.screenHeight * PHONE_CARD_SHARE), bottom: PHONE_CARD_EDGE }}
+        >
+          Fotoğraf kartı burada durur
+        </div>
+      )}
       {photoMode && photo && overlay > 0 && (
         // The photograph over the model: turn the model until the two line up, then save.
         <img className="admin-photo-overlay" src={photo.src} alt="" style={{ opacity: overlay / 100 }} />
@@ -386,7 +391,7 @@ export function AdminModelPreview({
               }}
             >
               <Camera size={16} />
-              Açıyı ve vurguyu kaydet → {label}
+              Açıyı, yakınlaştırmayı ve vurguyu kaydet → {label}
             </button>
             <label className="check-row admin-card-toggle">
               <input
@@ -424,12 +429,15 @@ export function AdminModelPreview({
             work.interior !== (story.interior ?? false) ||
             work.highlights.join() !== (story.highlights ?? []).join()) && (
             <p className="admin-unsaved" role="status">
-              Önizlemede kaydedilmemiş değişiklik var: «Açıyı ve vurguyu kaydet» ile {label}'e yaz.
+              Önizlemede kaydedilmemiş değişiklik var
+              {work.moved && work.now ? ` (${poseSummary(work.now)})` : ""}: «Açıyı, yakınlaştırmayı ve vurguyu kaydet» ile{" "}
+              {label}'e yaz.
             </p>
           )}
           <p className="muted admin-model-hint">
-            {label} seçili. Modeli döndür, vurgulanacak parçalara dokun (tekrar dokununca çıkar), gerekiyorsa «İçini
-            göster»; sonra kaydet.
+            {label} seçili. Modeli döndür, tekerlek ya da iki parmakla yakınlaştır, vurgulanacak parçalara dokun (tekrar
+            dokununca çıkar), gerekiyorsa «İçini göster»; sonra kaydet. Açı, yakınlaştırma, vurgu ve iç mekân birlikte
+            kaydedilir.
           </p>
           <dl className="admin-sentence-view">
             <dt>Açı</dt>
@@ -439,6 +447,14 @@ export function AdminModelPreview({
                 : sentencePose(site, storyIndex)
                   ? `kendi açısı yok, öncekinde kalır (${poseSummary(sentencePose(site, storyIndex))})`
                   : "kendi açısı yok, model varsayılan açıda açılır"}
+            </dd>
+            <dt>Yakınlaştırma</dt>
+            <dd>
+              {story.camera
+                ? zoomText(story.camera.distance)
+                : sentencePose(site, storyIndex)
+                  ? `öncekinde kalır (${zoomText(sentencePose(site, storyIndex)!.distance)})`
+                  : "varsayılan"}
             </dd>
             <dt>Vurgu</dt>
             <dd>{story.highlights?.length ? story.highlights.join(", ") : "yok (model yavaşça döner)"}</dd>

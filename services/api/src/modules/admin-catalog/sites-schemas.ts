@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { aboutLimits } from "@akar/domain";
-import { cardKinds, historyAngleMatches, publishStatuses, sectionKinds, siteBadgeConditions, siteRoles, siteTiers, sourceKinds } from "../../db/schema/index.ts";
+import { cardKinds, historyAngleMatches, sectionKinds, siteBadgeConditions, siteRoles, siteStatuses, siteTiers, sourceKinds } from "../../db/schema/index.ts";
 import { PageQuery, pageResponse } from "../../platform/pagination.ts";
 import { CardDto, KindSchema, MapPlacementDto, SiteDetail, SiteTaskDto, TrustSchema } from "../catalog/schemas.ts";
 
@@ -42,7 +42,7 @@ const issuesField = z
   .describe("Yayın kapısının eksikleri (publicationIssues + tür/konum kuralları), Türkçe; boş = yayına hazır");
 
 export const AdminListSitesQuery = PageQuery.extend({
-  status: z.enum(publishStatuses).optional().describe("draft ya da published"),
+  status: z.enum(siteStatuses).optional().describe("draft, published ya da inactive (deaktif)"),
   city: z.string().trim().min(1).max(60).optional().describe("Şehir kimliği (slug), örn. bursa"),
   query: z.string().trim().max(100).optional().describe("Ad, şehir, ilçe, mimar; büyük/küçük harf ve aksan duyarsız"),
 });
@@ -55,7 +55,7 @@ export const AdminSiteListItem = z.object({
   kind: KindSchema.nullable().describe("Yapı türü (site_types); içe aktarılan taslakta bilinmeyebilir"),
   city: z.object({ id: z.string(), name: z.string() }),
   district: z.string().nullable(),
-  status: z.enum(publishStatuses),
+  status: z.enum(siteStatuses),
   tier: z.enum(siteTiers),
   trust: TrustSchema,
   coordinates: z.tuple([z.number(), z.number()]).nullable().describe("[boylam, enlem]; konumu bulunamayan taslakta null"),
@@ -103,7 +103,7 @@ export const AdminSiteDetail = SiteDetail.extend({
   kind: KindSchema.nullable().describe("Yapı türü (site_types); yayın için zorunlu"),
   categoryId: z.string().nullable().describe("Vakıf rolü kategorisi; türden gelir"),
   coordinates: z.tuple([z.number(), z.number()]).nullable().describe("[boylam, enlem]; yayın için zorunlu"),
-  status: z.enum(publishStatuses),
+  status: z.enum(siteStatuses),
   dedupeKey: z.string().describe("normalize(ad)|normalize(ilçe); aynı şehirde yinelenen kayıt denetimi"),
   locationSource: z.string().nullable().describe("Konumun kaynağı; PUT .../location 'manual' yapar"),
   importMeta: z.record(z.string(), z.unknown()).nullable().describe("İçe aktarılan envanter satırı (cilt, sayfa, ham tür, ham adres)"),
@@ -204,6 +204,12 @@ export const NightModelBody = z.object({
   mediaId: Id.nullable().describe("kind=model medya, gündüz modeliyle aynı parça adlarıyla; null = gece de gündüz modeli"),
 });
 export type NightModelInput = z.infer<typeof NightModelBody>;
+
+export const MapBakedBody = z.object({
+  mediaId: Id.nullable().describe("kind=model medya: gündüz modelinden pişirilmiş harita dosyası; null = yok"),
+  nightMediaId: Id.nullable().describe("kind=model medya: gece modelinden pişirilmiş harita dosyası; null = yok"),
+});
+export type MapBakedInput = z.infer<typeof MapBakedBody>;
 
 export const PhotoCameraInput = CameraPoseInput.extend({
   interior: z.boolean().optional().describe("true = bu açıda model açılır, içeriden çekilmiş fotoğraf"),

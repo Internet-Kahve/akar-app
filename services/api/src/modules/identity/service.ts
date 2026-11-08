@@ -1,3 +1,4 @@
+import { AVATAR_IDS, type AvatarId } from "@akar/domain";
 import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import type { FastifyBaseLogger } from "fastify";
 import { randomUUID } from "node:crypto";
@@ -143,6 +144,38 @@ export async function saveDisplayName(tx: Tx, userId: string, displayName: strin
     .insert(profiles)
     .values({ userId, displayName })
     .onConflictDoUpdate({ target: profiles.userId, set: { displayName, updatedAt: sql`now()` } });
+}
+
+/** A stored figure id the app still knows, else null (a figure removed later reads as none chosen). */
+export const asAvatarId = (id: string | null | undefined): AvatarId | null =>
+  (AVATAR_IDS as readonly string[]).includes(id ?? "") ? (id as AvatarId) : null;
+
+/** What the weekly list may show of the user: the figure and whether they chose to appear. */
+export async function publicProfileOf(db: Db, userId: string): Promise<{ avatarId: AvatarId | null; leaderboardVisible: boolean }> {
+  const [row] = await db
+    .select({ avatarId: profiles.avatarId, leaderboardVisible: profiles.leaderboardVisible })
+    .from(profiles)
+    .where(eq(profiles.userId, userId));
+  return { avatarId: asAvatarId(row?.avatarId), leaderboardVisible: row?.leaderboardVisible ?? false };
+}
+
+export async function saveAvatar(tx: Tx, userId: string, avatarId: string): Promise<void> {
+  await tx
+    .insert(profiles)
+    .values({ userId, avatarId })
+    .onConflictDoUpdate({ target: profiles.userId, set: { avatarId, updatedAt: sql`now()` } });
+}
+
+/** Turning it on needs a display name: the list never shows a nameless row. */
+export async function saveLeaderboardVisible(tx: Tx, userId: string, visible: boolean): Promise<void> {
+  if (visible) {
+    const [row] = await tx.select({ displayName: profiles.displayName }).from(profiles).where(eq(profiles.userId, userId));
+    if (!row?.displayName) throw new AppError(409, "CONFLICT", "Listede görünmek için önce görünen adını belirle.");
+  }
+  await tx
+    .insert(profiles)
+    .values({ userId, leaderboardVisible: visible })
+    .onConflictDoUpdate({ target: profiles.userId, set: { leaderboardVisible: visible, updatedAt: sql`now()` } });
 }
 
 export type UserPreferences = {

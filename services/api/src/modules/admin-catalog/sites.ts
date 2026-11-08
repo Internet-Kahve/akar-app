@@ -1,14 +1,16 @@
 import {
   normalize,
+  PUBLISHED_SITE_DELETE_ERROR,
   publicationIssues,
   type HeritageSite,
   type SiteKind,
   type SitePhoto,
   type SiteSource,
+  type SiteStatus,
   type StoryBlock,
   type Trust,
 } from "@akar/domain";
-import { and, asc, desc, eq, inArray, ne, notInArray, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, notInArray, or, sql, type SQL } from "drizzle-orm";
 import type { PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -89,6 +91,7 @@ import type {
   LocationInput,
   MapPlacementInput,
   ModelInput,
+  MapBakedInput,
   NightModelInput,
   PartCardsInput,
   AboutInput,
@@ -320,7 +323,8 @@ function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {
  */
 async function loadSites(q: Q, ids: string[]): Promise<Map<string, SiteAggregate>> {
   if (!ids.length) return new Map();
-  const siteRows = await selectSites(q).where(inArray(sites.id, ids));
+  // A deleted site (§11.81) is no site for the panel: not listed, not read, not written.
+  const siteRows = await selectSites(q).where(and(inArray(sites.id, ids), isNull(sites.deletedAt)));
   if (!siteRows.length) return new Map();
 
   const storyRows = await q.select().from(storyBlocks).where(inArray(storyBlocks.siteId, ids)).orderBy(asc(storyBlocks.position));
@@ -805,7 +809,7 @@ async function pageSites<T extends { id: string }>(
     const rows = await db
       .select({ id: sites.id, sortName: sites.sortName })
       .from(sites)
-      .where(and(...where, after ? sql`(${sites.sortName} COLLATE "C", ${sites.id} COLLATE "C") > (${after.n}, ${after.i})` : undefined))
+      .where(and(isNull(sites.deletedAt), ...where, after ? sql`(${sites.sortName} COLLATE "C", ${sites.id} COLLATE "C") > (${after.n}, ${after.i})` : undefined))
       .orderBy(sql`${sites.sortName} COLLATE "C"`, sql`${sites.id} COLLATE "C"`)
       .limit(batch);
     const wanted = keep ? rows : rows.slice(0, page.limit);
@@ -912,7 +916,7 @@ async function checkInfoRefs(
   if (refs.relatedSiteId) {
     if (refs.relatedSiteId === selfId) errors.add("relatedSiteId", "Eser kendisiyle ilişkilendirilemez.");
     else {
-      const rows = await tx.select({ id: sites.id }).from(sites).where(eq(sites.id, refs.relatedSiteId));
+      const rows = await tx.select({ id: sites.id }).from(sites).where(and(eq(sites.id, refs.relatedSiteId), isNull(sites.deletedAt)));
       if (!rows.length) errors.add("relatedSiteId", "İlişkili eser bulunamadı.");
     }
   }
@@ -950,7 +954,8 @@ async function assertNoDuplicate(tx: Tx, cityId: string, dedupeKey: string, exce
   const [dup] = await tx
     .select({ id: sites.id, name: sites.name })
     .from(sites)
-    .where(and(eq(sites.cityId, cityId), eq(sites.dedupeKey, dedupeKey), exceptId ? ne(sites.id, exceptId) : undefined))
+    // A deleted site does not block its name: the editor may add it again (with a new id, see `uniqueSiteId`).
+    .where(and(eq(sites.cityId, cityId), eq(sites.dedupeKey, dedupeKey), isNull(sites.deletedAt), exceptId ? ne(sites.id, exceptId) : undefined))
     .limit(1);
   if (dup) {
     throw new AppError(409, "CONFLICT", `Bu şehirde aynı ad ve ilçeyle kayıtlı bir eser var: ${dup.name} (${dup.id}).`, {
@@ -1250,6 +1255,38 @@ export function setNightModel(tx: Tx, ctx: AuditCtx, id: string, input: NightMod
       }
       errors.throwIfAny();
       return { nightModelMediaId: input.mediaId, ...(input.mediaId !== before.site.nightModelMediaId && { mapBakedNightMediaId: null }) };
+    },
+  );
+}
+
+/**
+ * The map's baked files (light baked into the texture, shown unlit when zoomed out), each baked from the linked day or
+ * night model. Replaced together; a model change clears the one baked from it (`setModel`, `setNightModel`).
+ */
+export function setMapBaked(tx: Tx, ctx: AuditCtx, id: string, input: MapBakedInput): Promise<AdminSiteDetail> {
+  return mutate(
+    tx,
+    ctx,
+    id,
+    (a) => ({ mapBakedMediaId: a.site.mapBakedMediaId, mapBakedNightMediaId: a.site.mapBakedNightMediaId }),
+    async (before) => {
+      const errors = new FieldErrors();
+      const day = modelOf(before)?.id ?? null, night = before.site.nightModelMediaId;
+      const ids = [input.mediaId, input.nightMediaId].filter((m): m is string => m !== null);
+      const kinds = await mediaKindsOf(tx, ids);
+      for (const [field, mediaId, source, missing] of [
+        ["mediaId", input.mediaId, day, "Pişmiş harita dosyası için önce gündüz modelini bağla."],
+        ["nightMediaId", input.nightMediaId, night, "Gece pişmiş harita dosyası için önce gece modelini bağla."],
+      ] as const) {
+        if (mediaId === null) continue;
+        if (!source) errors.add(field, missing);
+        else if (mediaId === day || mediaId === night) errors.add(field, "Pişmiş harita dosyası modelden ayrı bir dosya olmalı.");
+        checkMedia(errors, field, mediaId, kinds, "model");
+      }
+      if (input.mediaId !== null && input.mediaId === input.nightMediaId)
+        errors.add("nightMediaId", "Gündüz ve gece pişmiş dosyaları ayrı olmalı.");
+      errors.throwIfAny();
+      return { mapBakedMediaId: input.mediaId, mapBakedNightMediaId: input.nightMediaId };
     },
   );
 }
@@ -1919,14 +1956,27 @@ export function setTasks(tx: Tx, ctx: AuditCtx, id: string, input: TasksInput): 
   );
 }
 
+/** What `setStatus` says when the site already has the status asked for. */
+const ALREADY: Record<SiteStatus, string> = {
+  published: "Eser zaten yayında.",
+  draft: "Eser zaten taslak.",
+  inactive: "Eser zaten deaktif.",
+};
+
+const STATUS_ACTION: Record<SiteStatus, string> = {
+  published: "site.publish",
+  draft: "site.unpublish",
+  inactive: "site.deactivate",
+};
+
 /**
- * Adım 5 (Yayınla) and its reverse. Publishing runs the whole gate under the site lock: any issue
- * is 422 PUBLISH_BLOCKED with the Turkish list in `fieldErrors._`. A site already in the target
- * state is 409.
+ * Adım 5 (Yayınla) and the other status changes (§11.81): any status to any other. Publishing runs the whole gate
+ * under the site lock: any issue is 422 PUBLISH_BLOCKED with the Turkish list in `fieldErrors._`. Taking a site off
+ * the map (draft or inactive) has no gate. A site already in the target state is 409.
  */
-async function setStatus(tx: Tx, ctx: AuditCtx, id: string, to: "published" | "draft"): Promise<AdminSiteDetail> {
+async function setStatus(tx: Tx, ctx: AuditCtx, id: string, to: SiteStatus): Promise<AdminSiteDetail> {
   const before = await lockAndLoad(tx, id);
-  if (before.site.status === to) throw new AppError(409, "CONFLICT", to === "published" ? "Eser zaten yayında." : "Eser zaten taslak.");
+  if (before.site.status === to) throw new AppError(409, "CONFLICT", ALREADY[to]);
   if (to === "published") {
     const issues = publishIssues(before);
     if (issues.length) throw publishBlocked(issues);
@@ -1935,7 +1985,7 @@ async function setStatus(tx: Tx, ctx: AuditCtx, id: string, to: "published" | "d
   const after = await requireAggregate(tx, id);
   await recordAudit(tx, {
     actorId: ctx.actorId,
-    action: to === "published" ? "site.publish" : "site.unpublish",
+    action: STATUS_ACTION[to],
     entityType: "site",
     entityId: id,
     before: { status: before.site.status },
@@ -1948,6 +1998,29 @@ async function setStatus(tx: Tx, ctx: AuditCtx, id: string, to: "published" | "d
 export const publishSite = (tx: Tx, ctx: AuditCtx, id: string) => setStatus(tx, ctx, id, "published");
 
 export const unpublishSite = (tx: Tx, ctx: AuditCtx, id: string) => setStatus(tx, ctx, id, "draft");
+
+export const deactivateSite = (tx: Tx, ctx: AuditCtx, id: string) => setStatus(tx, ctx, id, "inactive");
+
+/**
+ * Deletes a site that is not published (§11.81): 409 for a published one (take it off the map first). The row stays,
+ * marked `deleted_at`, so the visitors' visits, badges, points and memories of it stay valid; the panel no longer
+ * lists, reads or writes it, and its name is free for a new site. Draft routes keep it as a stop until edited: it can
+ * no longer be published, so neither can they.
+ */
+export async function deleteSite(tx: Tx, ctx: AuditCtx, id: string): Promise<void> {
+  const before = await lockAndLoad(tx, id);
+  if (before.site.status === "published") throw new AppError(409, "CONFLICT", PUBLISHED_SITE_DELETE_ERROR);
+  await tx.update(sites).set({ deletedAt: touched, updatedAt: touched }).where(eq(sites.id, id));
+  await recordAudit(tx, {
+    actorId: ctx.actorId,
+    action: "site.delete",
+    entityType: "site",
+    entityId: id,
+    before: { status: before.site.status, name: before.site.name },
+    after: { deleted: true },
+    requestId: ctx.requestId,
+  });
+}
 
 // ── cards ────────────────────────────────────────────────────────────────────
 

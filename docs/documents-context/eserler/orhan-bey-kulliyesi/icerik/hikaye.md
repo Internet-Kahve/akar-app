@@ -34,9 +34,9 @@ Hedef parça, azimut (0 = kuzeyden bakış), eğim ve uzaklık (1 = bütün mode
 | 3 | Merkez | 300° | 30° | 0.55 |
 | 4 | Merkez | 120° | 30° | 0.6 |
 | 5 | Cami_SonCemaat | 50° | 10° | 0.15 |
-| 6 | Cami_SonCemaat | 60° | 10° | 0.13 |
+| 6 | Cami_SonCemaat | 240° | 8° | 0.16 |
 | 7 | Ic_Mihrap | 13° | 10° | 0.1 |
-| 8 | Sadirvan | 40° | 12° | 0.08 |
+| 8 | Sadirvan | 180° | 3° | 0.2 |
 ## Akar akışı
 
 Bu cümlelerde anlatım sahnesi kenara çekilir, haritada gelir veren yapıdan gelir alana altın bir yay çizilir (`design/test-redmi9t-v2/app.js` → `akisUygula`). Hayrat sütununa eser kimliği ya da «enlem, boylam» yazılır. Etikete yalnız kaynağın söylediği yazılır; envanterde olmayan gider kalemleri (bakım, aydınlatma vb.) eklenmez.

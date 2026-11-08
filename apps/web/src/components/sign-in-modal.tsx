@@ -85,7 +85,7 @@ export function SignInModal({
   }
 
   async function google() {
-    if (!supabase) return;
+    if (!supabase || process.env.NEXT_PUBLIC_MOBILE_BUILD === "1") return;
     // The page leaves for Google and comes back signed in: the return counts the sign-in (`takeGoogleSignIn`).
     try {
       sessionStorage.setItem(GOOGLE_KEY, String(Date.now()));
@@ -94,7 +94,9 @@ export function SignInModal({
       () =>
         supabase.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: window.location.href.split("#")[0] },
+          // Supabase consumes the token hash. Keep the return marker in the query so
+          // the introduction redirect cannot send a successful sign-in to the landing page.
+          options: { redirectTo: `${window.location.origin}/?auth=callback` },
         }),
       t("signin.googleFailed"),
     );
@@ -230,15 +232,20 @@ export function SignInModal({
             </>
           ) : (
             <>
-              <button
-                type="button"
-                className="btn secondary signin-google"
-                disabled={busy}
-                onClick={() => void google()}
-              >
-                {t("signin.google")}
-              </button>
-              <p className="muted">{t("signin.or")}</p>
+              {/* Google requires a system browser and native callback integration. */}
+              {process.env.NEXT_PUBLIC_MOBILE_BUILD !== "1" && (
+                <>
+                  <button
+                    type="button"
+                    className="btn secondary signin-google"
+                    disabled={busy}
+                    onClick={() => void google()}
+                  >
+                    {t("signin.google")}
+                  </button>
+                  <p className="muted">{t("signin.or")}</p>
+                </>
+              )}
               {mode !== "password" && (
                 <p className="muted">{mode === "signup" ? t("signin.signupIntro") : t("signin.intro")}</p>
               )}

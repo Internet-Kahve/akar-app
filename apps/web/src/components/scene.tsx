@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Expand,
-  ImagePlus,
   User,
 } from "lucide-react";
 import type { CameraPose, HeritageSite, SitePhoto } from "@akar/domain";
@@ -27,8 +26,6 @@ import type { FlowCompanion } from "../lib/flow-companion";
 import { Lightbox, useWide, ZoomPhoto, type Shown } from "./about-reading";
 import { Cities, useCityIdentity, useCityScene } from "./city-scenes";
 import { Localized, useI18n } from "./i18n";
-import { PHONE_LAYOUT, useMedia } from "../lib/use-media";
-import { Spotlight } from "./coach-tip";
 import { ModelStage } from "./model-stage";
 import { StoryPhotoCard, type CardPlace } from "./story-photo-card";
 
@@ -58,43 +55,6 @@ function StoryPhoto({ photo }: { photo: SitePhoto }) {
   );
 }
 
-/**
- * Asked once on a phone, the first time a site with a model opens (Muhammed, 3 Nov 2026): photographs (fast) or the
- * 3D model. Meanwhile the photographs show, so nothing heavy loads before the answer; the answer is kept.
- */
-function ViewChoice({ onPick }: { onPick: (mode: "photo" | "model") => void }) {
-  const { t } = useI18n();
-  // Not at once (Muhammed, 3 Nov 2026: «direkt buton çıkmasın»): the page shows first, then the question comes in;
-  // its two answers follow one after the other, each with a small moving picture of what it opens.
-  return (
-    <div className="view-choice" role="group" aria-label={t("view.ask")}>
-      {/* An arrow under the two buttons at the top the question speaks of; the screen stays as it is (4 Nov 2026). */}
-      <Spotlight clear holes=".view-choice, .galeri-arac .scene-media-switch" arrowTo=".galeri-arac .scene-media-switch" />
-      <p className="vc-title">{t("view.ask")}</p>
-      <p className="vc-sub">{t("view.askSub")}</p>
-      <div className="vc-options">
-        <button className="vc-photo" onClick={() => onPick("photo")}>
-          <span className="vc-art" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          <b>{t("view.photos")}</b>
-          <small>{t("view.photosHint")}</small>
-        </button>
-        <span className="vc-or" aria-hidden="true">{t("view.or")}</span>
-        <button className="vc-model" onClick={() => onPick("model")}>
-          <span className="vc-art" aria-hidden="true">
-            <Box size={30} strokeWidth={1.6} />
-          </span>
-          <b>{t("view.model")}</b>
-          <small>{t("view.modelHint")}</small>
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /** Where the switch's selected pill stood last: a switch drawn anew (photo ↔ model) slides it from there. */
 let lastMediaIndex = 0;
 
@@ -114,7 +74,7 @@ function MediaSwitch({
   onModel: () => void;
   dark?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const box = useRef<HTMLDivElement>(null);
   const index = value === "photo" || !onPhoto ? 0 : 1;
   const [shown, setShown] = useState(lastMediaIndex);
@@ -124,10 +84,21 @@ function MediaSwitch({
     lastMediaIndex = index;
     return () => cancelAnimationFrame(frame);
   }, [index]);
+  // The pill follows the chosen button's size, measured again whenever a label changes width (the site language,
+  // the text size, a late font): «Fotoğraf» and «Photo» are not the same width.
   useEffect(() => {
-    const button = box.current?.children[Math.min(shown, (box.current?.children.length ?? 1) - 1)] as HTMLElement | undefined;
-    if (button) setPill({ x: button.offsetLeft, w: button.offsetWidth });
-  }, [shown]);
+    const host = box.current;
+    if (!host) return;
+    const measure = () => {
+      const button = host.children[Math.min(shown, host.children.length - 1)] as HTMLElement | undefined;
+      if (button) setPill((p) => (p && p.x === button.offsetLeft && p.w === button.offsetWidth ? p : { x: button.offsetLeft, w: button.offsetWidth }));
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    for (const child of Array.from(host.children)) observer.observe(child);
+    return () => observer.disconnect();
+  }, [shown, lang]);
   const buttons = [
     ...(onPhoto ? [{ key: "photo" as const, icon: <ImageIcon size={16} />, label: t("site.photo"), go: onPhoto }] : []),
     { key: "model" as const, icon: <Box size={16} />, label: t("site.model3dShort"), go: onModel },
@@ -173,13 +144,11 @@ function PhotoGallery({
   site,
   photos,
   visitors = [],
-  onAddPhoto,
   onModel,
 }: {
   site: HeritageSite;
   photos: SitePhoto[];
   visitors?: VisitorPhoto[];
-  onAddPhoto?: () => void;
   onModel?: () => void;
 }) {
   const { t, text } = useI18n();
@@ -288,15 +257,6 @@ function PhotoGallery({
             </figcaption>
           </figure>
         ))}
-        {onAddPhoto && photos.length > 0 && (
-          <figure className="kucuk ekle">
-            <button className="galeri-ekle" onClick={onAddPhoto}>
-              <ImagePlus size={24} />
-              {t("gal.addPhoto")}
-              <small>{t("gal.addPhotoNote")}</small>
-            </button>
-          </figure>
-        )}
       </div>
       {open !== null && (
         <Lightbox photos={shown} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
@@ -357,7 +317,6 @@ export function Scene({
   highlights,
   turn = true,
   visitors = [],
-  onAddPhoto,
   onHotspot,
   onPick,
   context = "detail",
@@ -371,8 +330,6 @@ export function Scene({
   companion?: FlowCompanion;
   /** Visitors' photographs of the site (Yaşayan hafıza): the gallery shows them after the site's own. */
   visitors?: VisitorPhoto[];
-  /** «Fotoğrafını ekle», the gallery's last tile: İz Bırak. */
-  onAddPhoto?: () => void;
   flow?: boolean;
   live?: boolean;
   photoId?: string;
@@ -418,23 +375,24 @@ export function Scene({
   }, [cardPlace, cardScale]);
   // A model site opens on the model, also in the story (its camera follows the sentences).
   // Photographs or the 3D model, as the visitor chose (kept on the device). A phone that has not chosen yet opens on
-  // the photographs (nothing heavy loads) and is asked once (`ask`); the 3D comes only when wanted.
-  const phoneLayout = useMedia(PHONE_LAYOUT);
-  const [chosen, setChosen] = useState(() => readPreference("akar.gorunum"));
+  // the photographs (nothing heavy loads); the hint over the Fotoğraf/3D switch shows where the 3D is (Muhammed,
+  // 6 Nov 2026: the question card said the same as that hint, so it went).
   const [mode, setModeState] = useState<"photo" | "model">(() => {
     if (!site.model) return "photo";
     const kept = readPreference("akar.gorunum");
     if (kept === "photo" || kept === "model") return kept;
     return typeof window !== "undefined" && matchMedia("(max-width: 899.98px)").matches ? "photo" : "model";
   });
+  const [labelOpen, setLabelOpen] = useState(false);
+  useEffect(() => {
+    if (!labelOpen) return;
+    const timer = setTimeout(() => setLabelOpen(false), 3500);
+    return () => clearTimeout(timer);
+  }, [labelOpen]);
   const setMode = (next: "photo" | "model") => {
-    // The question has shown where to change this: no hint repeats it.
-    if (ask) for (const id of ["d.foto", "masa.foto"]) writePreference(`akar.ipucu.${id}`, "1");
     writePreference("akar.gorunum", next);
-    setChosen(next);
     setModeState(next);
   };
-  const ask = context === "detail" && phoneLayout && !!site.model && !chosen;
   const photo = [...(site.photos ?? []), ...(site.storyPhotos ?? [])].find(
     (p) => p.id === (photoId || site.coverPhotoId),
   );
@@ -469,19 +427,9 @@ export function Scene({
           site={site}
           photos={photos}
           visitors={visitors}
-          onAddPhoto={onAddPhoto}
           onModel={site.model ? () => setMode("model") : undefined}
         />
-        {ask && <ViewChoice onPick={setMode} />}
       </>
-    );
-  // A site with no gallery photograph, not yet answered: the question on the stage's plain ground, no 3D loading.
-  // A task waiting for a tap on a part needs the model: no question then.
-  if (ask && mode === "photo" && site.model && !flow && !onPick)
-    return (
-      <div className="scene media-scene detail-scene">
-        <ViewChoice onPick={setMode} />
-      </div>
     );
   if (site.model && !flow) {
     const card = photoCard && !onPick && mode === "model" ? photo : undefined;
@@ -498,6 +446,7 @@ export function Scene({
           <ModelStage
             key={site.model.src}
             model={site.model}
+            kind={site.kind}
             name={text(site.name, site.nameEn)}
             scene={cityScene}
             identity={identity}
@@ -514,7 +463,7 @@ export function Scene({
             tour={context === "story" && !onPick && !highlights?.length && turn}
             // The sentence's parts breathe in the model (they were never handed to it).
             highlight={context === "story" && !onPick ? highlights : undefined}
-            frame={frameBottom ? { left: 0, bottom: frameBottom } : card && !cardPlace ? storyCardFrame(wide, cardScale) : NO_FRAME}
+            frame={frameBottom ? { left: 0, bottom: frameBottom } : card && !cardPlace ? storyCardFrame(wide, cardScale, typeof window === "undefined" ? 0 : window.innerHeight) : NO_FRAME}
             companion={companion}
             partCards={site.partCards}
             onPick={onPick}
@@ -522,11 +471,18 @@ export function Scene({
             siteId={site.id}
             onPhotos={photos.length ? () => setMode("photo") : undefined}
           />
-          <div className="model-label">
+          {/* On a phone only the (i), its words at a tap (Muhammed, 6 Nov 2026: «çok yer kaplıyor mobilde»). */}
+          <button
+            type="button"
+            className={`model-label${labelOpen ? " open" : ""}`}
+            aria-label={t("site.modelLabel")}
+            aria-expanded={labelOpen}
+            onClick={() => setLabelOpen((open) => !open)}
+          >
             <i />
-            {t("site.modelLabel")}
+            <span>{t("site.modelLabel")}</span>
             <Info size={13} />
-          </div>
+          </button>
           <div className="model-hint">
             <Move size={14} />
             {t("site.modelHint", {

@@ -1,3 +1,4 @@
+import { AVATAR_IDS } from "@akar/domain";
 import { z } from "zod";
 import { pageResponse } from "../../platform/pagination.ts";
 import { SiteBadgeDto, SiteSummary, TrustSchema } from "../catalog/schemas.ts";
@@ -184,3 +185,25 @@ export const PassportResponse = z.object({
   progress: z.array(ProgressEntry).describe("Hikâye ilerlemeleri, son okunan önce (en çok 100; tamamı GET /v1/me/progress'te)"),
 });
 export type PassportResponse = z.infer<typeof PassportResponse>;
+
+export const WeeklyLeaderboardResponse = z.object({
+  weekStart: z.iso.datetime({ offset: true }).describe("Haftanın başı: Pazartesi 00:00 Europe/Istanbul"),
+  items: z
+    .array(
+      z.object({
+        rank: z.number().int().min(1),
+        name: z.string().describe("Görünen ad"),
+        avatarId: z.enum(AVATAR_IDS).nullable(),
+        points: z.number().int().describe("Bu haftanın puanı (puan defterinden)"),
+      }),
+    )
+    .describe("Listede görünmeyi seçmiş, görünen adı olan ilk 10 hesap; e-posta ve kimlik yok"),
+  me: z
+    .object({
+      rank: z.number().int().min(1).nullable().describe("Listede değilse ya da puanı yoksa null"),
+      points: z.number().int(),
+      visible: z.boolean(),
+    })
+    .nullable()
+    .describe("Giriş yapan kullanıcının haftası; misafirde null"),
+});

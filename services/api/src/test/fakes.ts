@@ -1,3 +1,4 @@
+import type { ChatModel, ChatPrompt, ChatReply, WebReply } from "../platform/chat-model.ts";
 import type { Translator, TranslateFields } from "../platform/translate.ts";
 import type { TtsProvider } from "../platform/tts.ts";
 
@@ -24,6 +25,36 @@ export function fakeTranslator(): Translator & { calls: TranslateFields[]; fail:
       fake.calls.push(fields);
       if (fake.fail) throw fake.fail;
       return Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, `EN: ${value}`]));
+    },
+  };
+  return fake;
+}
+
+/** A chat model that records its prompts and answers with `next` (default: a fixed answer using no blocks). */
+export function fakeChat(): ChatModel & {
+  calls: ChatPrompt[];
+  next: ChatReply;
+  fail: Error | null;
+  searchCalls: ChatPrompt[];
+  searchNext: WebReply;
+  searchFail: Error | null;
+} {
+  const fake = {
+    calls: [] as ChatPrompt[],
+    next: { answer: "Yanıt", refs: [], general: false } as ChatReply,
+    searchCalls: [] as ChatPrompt[],
+    searchNext: { answer: "Web", refs: [], sources: [] } as WebReply,
+    searchFail: null as Error | null,
+    async search(prompt: ChatPrompt) {
+      fake.searchCalls.push(prompt);
+      if (fake.searchFail) throw fake.searchFail;
+      return fake.searchNext;
+    },
+    fail: null as Error | null,
+    async reply(prompt: ChatPrompt) {
+      fake.calls.push(prompt);
+      if (fake.fail) throw fake.fail;
+      return fake.next;
     },
   };
   return fake;

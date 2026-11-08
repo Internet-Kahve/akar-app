@@ -26,7 +26,9 @@ import {
   SubmitResponse,
   VerifyVisitBody,
   VerifyVisitResponse,
+  WeeklyLeaderboardResponse,
 } from "./schemas.ts";
+import { weeklyLeaderboard } from "./leaderboard.ts";
 import {
   completeStory,
   getMyRoute,
@@ -309,5 +311,20 @@ export const engagementRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req) => getPassport(app.deps.db, req.user!.id),
+  );
+
+  // ── «Haftanın Gezgini» ─────────────────────────────────────────────────────
+  app.get(
+    "/v1/leaderboard/week",
+    {
+      schema: {
+        tags: ["leaderboard"],
+        summary: "Haftanın Gezgini: bu haftanın ilk 10'u (yalnız görünmeyi seçenler) ve giriş yapanın kendi sırası",
+        description:
+          "Puan yalnız sunucudaki puan defterinden toplanır (Pazartesi 00:00 Europe/Istanbul'dan bu yana). Listede yalnız `PUT /v1/me/leaderboard` ile görünmeyi açmış, görünen adı olan hesaplar vardır; e-posta ve kullanıcı kimliği dönmez. Misafir de okuyabilir; `me` yalnız oturumda dolu.",
+        response: { 200: WeeklyLeaderboardResponse },
+      },
+    },
+    async (req) => weeklyLeaderboard(app.deps.db, req.user?.id ?? null),
   );
 };

@@ -61,6 +61,8 @@ Tüm değişkenler `.env.example` içinde; `src/config.ts` doğrular.
 | `STORAGE_QUOTA_MB` | `1024` | Yönetim panelinin depolama uyarısının ölçtüğü kota, MB (pozitif tam sayı); `1024` = Supabase Free. Ücretli plana geçilince büyütülür. Üretimde zorunlu değil (§11.21) |
 | `DEEPGRAM_API_KEY`, `TTS_VOICES`, `TTS_DAILY_CHAR_LIMIT` | yok, dört Flux sesi, `100000` | Hikâye seslendirmesi (§11.56). Anahtar yoksa `POST /v1/admin/sites/:id/narrations` 503 döner; `TTS_VOICES` `dil.ses=model` listesidir (dört birleşim zorunlu); sınır son 24 saatte seslendirilen karakter üst sınırıdır (aşılırsa 429). Üretimde zorunlu değil |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | yok, `gemini-2.5-flash` | Boş İngilizce hikâye metinlerinin makine çevirisi (§11.56). Anahtar yoksa `POST /v1/admin/sites/:id/translate` 503 döner. Üretimde zorunlu değil |
+| `GEMINI_CHAT_API_KEYS`, `GEMINI_CHAT_MODEL`, `GEMINI_CHAT_FALLBACK_MODELS`, `CHAT_DAILY_LIMIT` | yok, `gemini-3.5-flash-lite`, otomatik sıra, `1000` | Site asistanı `POST /v1/chat`. Varsayılan Flash-Lite sırası: `gemini-3.5-flash-lite` → `gemini-3.1-flash-lite` → `gemini-2.5-flash-lite`. Bir modelin anahtarları 429/503 verirse aynı soru alt modele aktarılır. Anahtar/model çifti en az 60 sn, sağlayıcı daha uzun süre verirse o kadar dinlenir; süre dolunca üst model tekrar denenir. Kota proje/model bazındadır; aynı projenin anahtarları kotayı paylaşır. `GEMINI_CHAT_FALLBACK_MODELS` virgülle ayrılan özel sıra; tanımsızsa seçili modelin altındaki varsayılanlar, boşsa geçiş yok. API anahtarları boşsa `GEMINI_API_KEY` kullanılır; hiç anahtar yoksa 503. Günlük sınır toplam başarılı yanıtlardır; bu uygulama sınırı model değiştirerek aşılmaz. |
+| `MODEL_RUNNER_URL`, `MODEL_RUNNER_SECRET`, `MODEL_RUNNER_PUBLIC_URL` | yok, yok, `MODEL_RUNNER_URL` | Yapay zekâ ile model düzenleme (§11.80): ayrı «model çalıştırıcı» servisinin adresi ve sunucudan sunucuya taşıyıcı (bearer) sırrı. İkisi birlikte yoksa `/v1/admin/**/model-gen/**` uçları 503 `MODEL_GEN_DISABLED` döner. Genel adres, tarayıcının doğrudan açtığı imzalı dosya bağlantılarının tabanıdır. Üretimde zorunlu değil |
 
 ### İlk yönetici
 
@@ -114,6 +116,10 @@ Render artık dağıtım hedefi değildir. Eski hesapların verileri otomatik si
 7. Web projesi Root Directory `apps/web`, Framework Next.js. Production ortamına
    `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publishable key)
    ekle ve yeniden derle. Preview'a üretim veritabanı sırlarını kopyalama.
+   Supabase → Authentication → URL Configuration → Redirect URLs listesine web kökeninin
+   `/?auth=callback` adresini ekle (ör. `https://internetkahve.com.tr/?auth=callback`). Bu adresi
+   kapsayan mevcut `/**` kuralı da yeterlidir. Google dönüşünde bu işaret oturum okunana kadar
+   tanıtım sayfasına yönlendirmeyi engeller; başarılı giriş `/#view=map` adresinde tamamlanır.
 8. Supabase Vault'a `akar_api_url` (API origin) ve `akar_job_secret` (`JOB_SECRET` ile aynı değer)
    kaydet. `scripts/schedule-maintenance.sql` dosyasını SQL Editor'da çalıştır. Dakikalık çağrılar
    kalıcı GLB/içe aktarma işlerini ve sınırlı temizlik gruplarını işler. `/internal/jobs/run`
@@ -209,3 +215,20 @@ npm run ingest -- --city bursa                       # Tier 1 taslak olarak yaza
 - `[yalnız içindekiler]` satırları atlanır (ilçe, adres, sayfa yok); `--include-toc` ile alınır.
 - Veri ekibinin `ad_supheli` işareti "ad şüpheli" olarak taşınır, adresin ilk parçası ad önerisi olur; yayındaki bir eserle aynı ad "olası kopya" işaretlenir.
 - Ağ: Overpass ilçe başına 1 istek, Nominatim saniyede en fazla 1 istek; sonuçlar `.cache/overpass-<şehir>.json` ve `.cache/geocode-<şehir>.json` (git dışı). `--offline` yalnız önbellek. `OVERPASS_URL`, `NOMINATIM_URL`, `NOMINATIM_EMAIL` `.env`'den.
+
+### Sohbet model sırası
+
+Varsayılan istek sırası `gemini-3.5-flash-lite` → `gemini-3.1-flash-lite` → `gemini-2.5-flash-lite` şeklindedir. Diğer modeller otomatik sırada yoktur. Modelin kullanılabilirliği ve kotası Google projesine bağlıdır.
+
+Mevcut ortamda `GEMINI_CHAT_MODEL` açıkça tanımlanmışsa bu seçim korunur. Varsayılan sıradan başlatmak için bu değişkeni kaldırın veya `gemini-3.5-flash-lite` yapın; `GEMINI_CHAT_FALLBACK_MODELS` tanımsız bırakılabilir ya da `gemini-3.1-flash-lite,gemini-2.5-flash-lite` olarak ayarlanabilir. `gemini-3.1-flash-lite` sabitlenmişse otomatik geçiş yalnız `gemini-2.5-flash-lite` modeline olur. Özel bir model adının otomatik alt modeli yoktur; gerekirse `GEMINI_CHAT_FALLBACK_MODELS` ile açık sıra verilir.
+
+404 veren model/anahtar çifti 5 dakika atlanır. Her aşamadaki model geçişleri tek 30 saniyelik süreyi paylaşır; yerel yanıt ve gerektiğinde web araması birlikte en fazla iki aşamadır. Tüm seçenekler kotadaysa 429, yapılandırma/kimlik doğrulama/geçersiz yanıt/ağ hatasında 502 döner. Bekleme durumu sunucu örneğinin belleğindedir; dağıtık kota rezervasyonu değildir. Gerçek sınırlar [Google AI Studio'da](https://aistudio.google.com/rate-limit) görülebilir.
+
+
+### Asistanın kaynak önceliği
+
+Asistan önce yayındaki eserlerin veritabanı metinlerini kullanır: tanıtım ve kimlik bilgileri, hikâyeler, envanterden alınan «Eser hakkında» paragrafları, parça/kart metinleri, geçmiş görsel açıklamaları ve içe aktarılan ölçü sayısı/kubbe geçişi alanları. Genel sohbette de ayrıntılı bloklar yüklenir; soruya ve yakın konuşma bağlamına uyan bloklar 120.000 karakterlik bütçeye öncelikle alınır. Taslaklar, editör notları ve yarışma cevapları dışarıda kalır. Kaynak kitabı/sayfası/HTTPS bağlantısı korunur.
+
+Yerel aşama bilgi eksikliği bildirirse (`needsWeb`), aynı Flash-Lite sırasıyla ikinci aşama Google Search grounding kullanır. Bu aşama JSON çıktı şeması kullanmaz; web bağlantıları yalnız sağlayıcının `groundingMetadata` içindeki gerçekten kullanılan kaynaklardan alınır. Modelin metin içinde ürettiği URL kaynak kabul edilmez. Arama başarısızsa ya da kaynak metaverisi yoksa yerel yanıt korunur ve `webUnavailable` ile belirtilir. Günlük kullanım tek yanıt olarak sayılır.
+
+İstemci kaynakları yanıtın altında gösterir: yerel kaynak esere gider, web kaynağı ayrı sekmede açılır. Google'ın arama önerisi HTML'i yalnız scriptsiz, aynı kökene erişemeyen sandbox iframe içinde gösterilir. Google Search kullanımı projenin kendi Google kotası/fiyatlandırmasına tabidir. Gerçek API akışı [Google grounding belgesini](https://ai.google.dev/gemini-api/docs/generate-content/google-search) izler.

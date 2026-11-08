@@ -1,5 +1,6 @@
 import { DEFAULT_TTS_VOICES, parseVoiceModels } from "./platform/tts.ts";
 import { z } from "zod";
+import { DEFAULT_CHAT_MODEL } from "./platform/chat-model.ts";
 
 const optionalUrl = z
   .string()
@@ -77,6 +78,11 @@ const Env = z.object({
   /** Visit check radius in metres (D4). */
   VISIT_RADIUS_M: z.coerce.number().positive().default(30),
 
+  // Walking paths of routes (§11.79): openrouteservice key; without it routes keep straight lines.
+  ROUTING_API_KEY: optionalText,
+  /** Routing requests per rolling 24 hours (free openrouteservice plan: 2000 directions/day). */
+  ROUTING_DAILY_LIMIT: z.coerce.number().int().positive().default(500),
+
   // AI voice-over and translation of site texts (decision §11.56). Both keys are optional, also in production:
   // without them the endpoints answer 503 and nothing else is affected.
   DEEPGRAM_API_KEY: optionalText,
@@ -96,6 +102,27 @@ const Env = z.object({
   TTS_DAILY_CHAR_LIMIT: z.coerce.number().int().positive().default(100_000),
   GEMINI_API_KEY: optionalText,
   GEMINI_MODEL: z.string().trim().min(1).default("gemini-2.5-flash"),
+  // Site assistant (§11.74). Comma-separated keys, tried in turn; empty = `GEMINI_API_KEY` alone; none = 503.
+  GEMINI_CHAT_API_KEYS: z
+    .string()
+    .default("")
+    .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))]),
+  GEMINI_CHAT_MODEL: z.string().trim().min(1).default(DEFAULT_CHAT_MODEL),
+  /** Ordered lower models; unset = current free-tier ladder below the primary, empty = no fallbacks. */
+  GEMINI_CHAT_FALLBACK_MODELS: z.string()
+    .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))])
+    .pipe(z.array(z.string().regex(/^[a-zA-Z0-9._-]+$/)).max(8))
+    .optional(),
+  /** Assistant answers per Istanbul day for everyone together (counted in `usage_daily`, event `chat.message`). */
+  CHAT_DAILY_LIMIT: z.coerce.number().int().positive().default(1000),
+
+  // AI-assisted model editing (§11.80): the separate model runner service. Both URL and secret are optional,
+  // also in production: without either the endpoints answer 503 and nothing else is affected.
+  MODEL_RUNNER_URL: optionalUrl,
+  /** Server-to-server bearer secret of the runner. Never sent to the browser. */
+  MODEL_RUNNER_SECRET: optionalText,
+  /** Base of the runner's file links as the browser reaches them; default `MODEL_RUNNER_URL`. */
+  MODEL_RUNNER_PUBLIC_URL: optionalUrl,
 });
 
 export type Config = z.infer<typeof Env>;

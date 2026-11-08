@@ -123,6 +123,11 @@ test("discovery, story, memory moderation and persistence form one complete flow
   const finished = page.getByRole("dialog");
   await expect(finished).toContainText("Hikâye tamamlandı");
   await finished.getByRole("button", { name: "Devam et" }).click();
+  // The first finished story is an achievement: celebrated once the story's own card is closed.
+  const feat = page.getByRole("dialog", { name: /Yeni başarım!/ });
+  await expect(feat).toContainText("İlk hikâye");
+  await feat.getByRole("button", { name: "Harika" }).click();
+  await expect(feat).toHaveCount(0);
   // «İz Bırak» opens from the living memory row's window.
   await page.getByRole("button", { name: /^Yaşayan hafıza/ }).click();
   // No trace yet: the wall opens with its invitation on a wide screen, the empty note on a phone.
@@ -432,7 +437,7 @@ test("a link to a site closes the short card and shows the site's panel", async 
   await expect(page.locator(".site-peek")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Koza Hanı", level: 1 })).toBeVisible();
 });
-test("a route shows only its stops on the map, as numbered stars", async ({
+test("a route shows only its stops on the map, each its own pin with a numbered star", async ({
   page,
 }) => {
   await page.goto("/#view=map");
@@ -441,11 +446,13 @@ test("a route shows only its stops on the map, as numbered stars", async ({
   await openRoutes(page);
   await page.locator(".route-card").first().click();
   await expect.poll(async () => (await pinIds(page)).length).toBe(3);
-  const icons = await page.evaluate(async () => {
+  // A stop keeps its own pin (7 Nov 2026) and wears its number as a star badge.
+  const pins = await page.evaluate(async () => {
     const data = await window.akarMap!.getSource("pins")!.getData();
-    return data.features.map((f) => f.properties.icon as string);
+    return data.features.map((f) => [f.properties.icon as string, f.properties.badge as string]);
   });
-  expect(icons.every((icon) => icon.startsWith("stop-"))).toBe(true);
+  expect(pins.every(([icon]) => !icon.startsWith("stop-"))).toBe(true);
+  expect(pins.map(([, badge]) => badge.replace(/-#.*/, "")).sort()).toEqual(["stop-badge-1", "stop-badge-2", "stop-badge-3"]);
 });
 test("a trust tag tells where the statement comes from", async ({ page, isMobile }) => {
   // A phone's short card only says which site it is (3 Nov 2026); the tag stays on the wide screen's card.
@@ -461,6 +468,7 @@ test("a trust tag tells where the statement comes from", async ({ page, isMobile
 });
 test("route search opens a usable route and selection persists", async ({
   page,
+  isMobile,
 }) => {
   await page.goto("/#view=map");
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
@@ -475,16 +483,130 @@ test("route search opens a usable route and selection persists", async ({
   await page
     .getByRole("button", { name: "Rotayı başlat", exact: true })
     .click();
-  // The route opens on its first stop; the panel leads on to the next one.
-  await expect(page.getByRole("button", { name: /^Sonraki durak:/ })).toBeVisible();
+  // The walk goes on in the same panel (7 Nov 2026): the steps along its top, the map at the first stop, its card open.
+  const walk = page.locator(".route-walk");
+  const count = walk.locator(".walk-count");
+  await expect(walk.locator(".walk-steps li")).toHaveCount(2);
+  await expect(count).toHaveText(/^1\. durak \/ 2/);
+  // A wide screen opens the stop's short card too; a phone's sheet is the walk's own card, nothing over it.
+  await expect(page.locator(".site-peek")).toHaveCount(isMobile ? 0 : 1);
+  // The stop's page leads on to the next one with the panel's own «Tamamladım, sıradaki».
+  await walk.locator(".walk-here-card").click();
+  const next = page.locator(".detail-next").getByRole("button", { name: "Tamamladım, sıradaki" });
+  await expect(next).toBeVisible();
+  await next.click();
+  await expect(count).toHaveText(/^2\. durak \/ 2/);
+  await expect(walk.locator(".walk-steps li.done")).toHaveCount(1);
   const routeIds = () =>
     page.evaluate(
       () => (JSON.parse(localStorage.getItem("akar-demo-bursa-v1") ?? "{}") as { routeIds?: string[] }).routeIds ?? [],
     );
   await expect.poll(routeIds).toHaveLength(2);
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // The walk and the chosen route last through a reload.
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
   await expect.poll(routeIds).toHaveLength(2);
+  await expect(count).toHaveText(/^2\. durak \/ 2/);
+  // The last stop done, the walk is over; the way back is the route list.
+  await walk.getByRole("button", { name: "Rotayı bitir" }).click();
+  await expect(walk.getByRole("heading", { name: "Rota tamamlandı" })).toBeVisible();
+  await expect(walk.locator(".walk-steps li.done")).toHaveCount(2);
+  // The finish card says what the walk earned and which stops' stories are still open, and shares the walk.
+  // Marking stops done earns nothing by itself: no tally, and every stop's story is still open.
+  await expect(walk.locator(".walk-earned")).toHaveCount(0);
+  await expect(walk.locator(".walk-open-stops li")).toHaveCount(2);
+  await walk.getByRole("button", { name: "Paylaş" }).click();
+  const share = page.getByRole("dialog", { name: "Paylaş" });
+  await expect(share.getByRole("img", { name: "Paylaşım kartı" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(share).toHaveCount(0);
+  await walk.getByRole("button", { name: "Rotalara dön" }).click();
+  await expect(page.locator(".route-card").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Yeni rota oluştur/ })).toBeVisible();
+});
+test("a route's stops can be done, skipped or picked in its panel", async ({ page }) => {
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
+  await openRoutes(page);
+  await page.locator(".route-card").first().click();
+  await page.getByRole("button", { name: "Rotayı başlat", exact: true }).click();
+  const walk = page.locator(".route-walk");
+  const steps = walk.locator(".walk-steps li");
+  const total = await steps.count();
+  expect(total).toBeGreaterThan(2);
+  await walk.getByRole("button", { name: "Tamamladım, sıradaki" }).click();
+  await walk.getByRole("button", { name: "Atla" }).click();
+  await expect(steps.nth(0)).toHaveClass(/done/);
+  await expect(steps.nth(1)).toHaveClass(/skipped/);
+  await expect(steps.nth(2)).toHaveClass(/now/);
+  // A step tapped takes the walk there.
+  await steps.nth(0).getByRole("button").click();
+  await expect(steps.nth(0)).toHaveClass(/now/);
+  await expect(walk.locator(".walk-count")).toHaveText(new RegExp(`^1\\. durak \\/ ${total}`));
+  // Leaving the walk closes the route as well: one press, back to the list.
+  await walk.getByRole("button", { name: "Rotadan çık" }).last().click();
+  await expect(walk).toHaveCount(0);
+  await expect(page.locator(".route-card").first()).toBeVisible();
+});
+test("a walk shows the distance to its stop by location, and its visit ticks the step", async ({ page, context }) => {
+  // Far from Bursa first: the distance reads in kilometres.
+  await context.grantPermissions(["geolocation"]);
+  await context.setGeolocation({ longitude: 29.1, latitude: 40.2 });
+  await page.goto("/#view=map");
+  await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
+  await openRoutes(page);
+  await page.locator(".route-card").first().click();
+  await page.getByRole("button", { name: "Rotayı başlat", exact: true }).click();
+  const walk = page.locator(".route-walk");
+  const name = (await walk.locator(".walk-here-card strong").innerText()).trim();
+  const stop = createSeed().sites.find((s) => s.name === name)!;
+  // Nothing is asked of the browser until the visitor asks for it.
+  await walk.getByRole("button", { name: "Uzaklığı göster" }).click();
+  await expect(walk.locator(".walk-distance")).toContainText(/Durağa [\d,]+ km/);
+  // At the stop: «Duraktasın».
+  await context.setGeolocation({ longitude: stop.coordinates[0], latitude: stop.coordinates[1] });
+  await expect(walk.locator(".walk-distance")).toContainText("Duraktasın");
+  // The demo's visit (no position check) earns the visit and ticks the step without «Tamamladım».
+  const steps = walk.locator(".walk-steps li");
+  await walk.getByRole("button", { name: /Demo ziyaretini tamamla/ }).click();
+  await expect(walk.locator(".walk-visited")).toContainText("Ziyaretin doğrulandı");
+  await expect(steps.nth(0)).toHaveClass(/done/);
+  // Turned off, the distance goes and the choice is remembered as off.
+  await walk.getByRole("button", { name: "Kapat", exact: true }).click();
+  await expect(walk.getByRole("button", { name: "Uzaklığı göster" })).toBeVisible();
+  // At the end, the finish card counts the visit's points, and the visited stop is no longer among those still open.
+  const total = await steps.count();
+  await steps.nth(total - 1).getByRole("button").click();
+  await walk.getByRole("button", { name: "Rotayı bitir" }).click();
+  await expect(walk.locator(".walk-earned")).toContainText("+100");
+  await expect(walk.locator(".walk-open-stops li")).toHaveCount(total - 1);
+  await expect(walk.locator(".walk-open-stops")).not.toContainText(name);
+});
+test("one tile failing among others leaves the map, not the schematic view", async ({ page }) => {
+  await page.route("**/harita/akar-style.json", (route) =>
+    route.fulfill({
+      json: {
+        version: 8,
+        sources: { base: { type: "raster", tiles: ["https://tiles.akar.test/{z}/{x}/{y}.png"], tileSize: 256 } },
+        layers: [{ id: "base", type: "raster", source: "base" }],
+      },
+    }),
+  );
+  // A 1×1 PNG for every tile but the first, which fails.
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  let first = true;
+  await page.route("https://tiles.akar.test/**", (route) => {
+    if (first) {
+      first = false;
+      return route.abort();
+    }
+    return route.fulfill({ body: png, contentType: "image/png" });
+  });
+  await page.goto("/#view=map");
+  await expect.poll(() => pinIds(page)).toHaveLength(6);
+  expect(first).toBe(false);
+  await expect(page.locator(".map-fallback")).toHaveCount(0);
+  await expect(page.locator(".map-retry")).toHaveCount(0);
 });
 test("map failure keeps the artifact discovery usable", async ({ page }) => {
   // Use a deterministic tile failure without depending on the provider's style.

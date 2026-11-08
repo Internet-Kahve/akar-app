@@ -147,9 +147,10 @@ const catalogHandlers = (): Record<string, Handler> => ({
         minutes: 8,
         distance: "1 km",
         theme: "t",
+        walking: { status: "complete", meters: 120, minutes: 2 },
         stops: [
-          { site: { id: "b" }, quizId: "q1" },
-          { site: { id: "a" }, quizId: null },
+          { site: { id: "b" }, quizId: "q1", leg: { coordinates: [[29.07, 40.18], [29.06, 40.18]], meters: 120, seconds: 95 } },
+          { site: { id: "a" }, quizId: null, leg: null },
         ],
       },
     ],
@@ -182,6 +183,9 @@ test("snapshot maps site DTOs: coordinates order, photos without card/history me
   assert.equal(a.district, "");
   assert.equal(a.stories[0]?.photoId, "cover");
   assert.deepEqual(snap.catalogRoutes?.[0]?.siteIds, ["b", "a"]);
+  // One leg per pair of stops, in stop order; the last stop's (always null) is dropped.
+  assert.deepEqual(snap.catalogRoutes?.[0]?.legs?.map((l) => l?.meters), [120]);
+  assert.equal(snap.catalogRoutes?.[0]?.walking, "complete");
   assert.ok(
     !api.calls.some((c) => c.path.startsWith("/v1/sites/")),
     "the catalog loads in bulk",
@@ -189,6 +193,25 @@ test("snapshot maps site DTOs: coordinates order, photos without card/history me
   const guest = api.calls.find((c) => c.path === "/v1/routes");
   assert.equal(guest?.headers.authorization, undefined);
   assert.match(guest?.headers["x-device-id"] ?? "", /^[0-9a-f-]{36}$/);
+});
+
+test("a route's badge comes with it; a route without one, a blank title or an older API has none", async () => {
+  const handlers = catalogHandlers();
+  const one = (handlers["GET /v1/routes"]!({} as never) as { items: Array<Record<string, unknown>> }).items[0]!;
+  handlers["GET /v1/routes"] = () => ({
+    items: [
+      { ...one, id: "r1", badge: { title: "Hanlar Yolcusu", mediaId: "m1", url: "https://cdn.test/rozet.webp", alt: "Bir han kapısı" } },
+      { ...one, id: "r2", badge: { title: "Yalnız ad", mediaId: null, url: null, alt: null } },
+      { ...one, id: "r3", badge: { title: "  ", mediaId: null, url: null, alt: null } },
+      { ...one, id: "r4", badge: null },
+      { ...one, id: "r5" },
+    ],
+  });
+  const snap = await createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: fakeApi(handlers).fetch }).getSnapshot();
+  const badge = (id: string) => snap.catalogRoutes?.find((r) => r.id === id)?.badge;
+  assert.deepEqual(badge("r1"), { title: "Hanlar Yolcusu", url: "https://cdn.test/rozet.webp", alt: "Bir han kapısı" });
+  assert.deepEqual(badge("r2"), { title: "Yalnız ad" });
+  for (const id of ["r3", "r4", "r5"]) assert.equal(badge(id), undefined);
 });
 
 test("save toggle becomes an explicit PUT or DELETE from the current state", async () => {
@@ -774,9 +797,13 @@ test("editors see drafts at the city centre; an unmoved placeholder sends no loc
   const api = fakeApi({
     ...catalogHandlers(),
     ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    // Drafts and inactive sites are read apart (§11.81); this test has no inactive one.
     "GET /v1/admin/site-details": (c) => {
-      assert.ok(c.path.includes("status=draft"));
-      return { items: Object.values(drafts), nextCursor: null };
+      assert.match(c.path, /status=(draft|inactive)/);
+      return {
+        items: c.path.includes("status=draft") ? Object.values(drafts) : [],
+        nextCursor: null,
+      };
     },
     "GET /v1/admin/sites/d1": () => drafts.d1,
     "GET /v1/admin/sites/d2": () => drafts.d2,
@@ -852,6 +879,68 @@ test("editors see drafts at the city centre; an unmoved placeholder sends no loc
     "draft",
     "an unpublished site stays in the panel once, as a draft",
   );
+});
+
+test("§11.81: the panel lists inactive sites, changes only a site's status, and deletes only a site that is not published", async () => {
+  const admin: Record<string, Record<string, unknown>> = {
+    d1: { ...detail("d1", { coordinates: [29.1, 40.2] }), status: "draft" },
+    i1: { ...detail("i1", { coordinates: [29.2, 40.3] }), status: "inactive" },
+  };
+  const writes: Call[] = [];
+  const api = fakeApi({
+    ...catalogHandlers(),
+    ...accountHandlers({ T: { saved: [], points: 0 } }, "editor"),
+    "GET /v1/admin/site-details": (c) => ({
+      items: Object.values(admin).filter((d) => c.path.includes(`status=${d.status}`)),
+      nextCursor: null,
+    }),
+    "GET /v1/admin/sites/d1": () => admin.d1,
+    "GET /v1/admin/sites/i1": () => admin.i1,
+    "POST /v1/admin/sites/d1/deactivate": (c) => {
+      writes.push(c);
+      admin.d1 = { ...admin.d1, status: "inactive" };
+      return admin.d1;
+    },
+    "POST /v1/admin/sites/i1/publish": (c) => {
+      writes.push(c);
+      return Response.json(
+        { code: "PUBLISH_BLOCKED", message: "Yayın için eksikler var.", fieldErrors: { _: ["Kapak fotoğrafı yok."] } },
+        { status: 422 },
+      );
+    },
+    "DELETE /v1/admin/sites/i1": (c) => {
+      writes.push(c);
+      delete admin.i1;
+      return new Response(null, { status: 204 });
+    },
+  });
+  const client = createHttpClient({
+    baseUrl: "http://api.test",
+    storage: storage(),
+    getToken: () => "T",
+    fetch: api.fetch,
+  });
+  const snap = await client.getSnapshot();
+  assert.equal(snap.sites.find((s) => s.id === "i1")?.status, "inactive");
+
+  // A status change is its own call: no info, location or content write.
+  const moved = await client.dispatch({ type: "site-status", siteId: "d1", status: "inactive" });
+  assert.deepEqual(writes.map((c) => [c.method, c.path]), [["POST", "/v1/admin/sites/d1/deactivate"]]);
+  assert.equal(moved.sites.filter((s) => s.id === "d1").map((s) => s.status).join(), "inactive");
+
+  // A refused publish keeps the site as it was.
+  writes.length = 0;
+  await assert.rejects(client.dispatch({ type: "site-status", siteId: "i1", status: "published" }));
+  assert.equal((await client.getSnapshot()).sites.find((s) => s.id === "i1")?.status, "inactive");
+
+  // Deleting a published site is refused before any request; an inactive one leaves the panel.
+  writes.length = 0;
+  await assert.rejects(client.dispatch({ type: "delete-site", siteId: "a" }), /Yayındaki eser silinemez/);
+  assert.deepEqual(writes, []);
+  const after = await client.dispatch({ type: "delete-site", siteId: "i1" });
+  assert.deepEqual(writes.map((c) => [c.method, c.path]), [["DELETE", "/v1/admin/sites/i1"]]);
+  assert.ok(!after.sites.some((s) => s.id === "i1"));
+  assert.ok(after.sites.some((s) => s.id === "a"), "published sites stay");
 });
 
 test("a full editor save goes through the step endpoints in reference order: new files uploaded and their ids mapped, server-only story fields and source locators kept", async () => {
@@ -2957,6 +3046,7 @@ test("the placement command PUTs the whole placement with an Idempotency-Key, re
       stored = c.body as Record<string, unknown>;
       return {};
     },
+    "PUT /v1/admin/sites/a/location": () => ({}),
   });
   const client = createHttpClient({
     baseUrl: "http://api.test",
@@ -3006,6 +3096,16 @@ test("the placement command PUTs the whole placement with an Idempotency-Key, re
       }
     ).visible,
     true,
+  );
+  assert.ok(!api.calls.some((c) => c.path.endsWith("/location")), "no pin move unless asked");
+  // The pin follows the model: the placement first, then the site's location alone.
+  await client.dispatch({ type: "map-placement", siteId: "a", placement: hidden, siteCoordinates: [29.0625, 40.1841] });
+  assert.deepEqual(
+    api.calls.filter((c) => c.method === "PUT").slice(-2).map((c) => [c.path, c.body]),
+    [
+      ["/v1/admin/sites/a/map-placement", hidden],
+      ["/v1/admin/sites/a/location", { coordinates: [29.0625, 40.1841] }],
+    ],
   );
   const puts = api.calls.filter((c) => c.method === "PUT").length;
   await assert.rejects(
@@ -3618,4 +3718,55 @@ test("usage events go out in batches of at most 50 with keepalive; a failed send
   await new Promise((r) => setTimeout(r, 0));
   client.flushUsage();
   assert.equal(sent.length, 2);
+});
+
+test("display name: a guest keeps it on the device, an account saves it with PUT /v1/me/profile; a bad name is refused before any request", async () => {
+  const s = storage();
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: null }),
+    "GET /v1/me/passport": () => ({ points: 0, saved: [], read: [], visited: [], quizzesSolved: [] }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "PUT /v1/me/profile": () => ({ id: "u", displayName: "Ayşe Nur" }),
+  });
+  const guest = createHttpClient({ baseUrl: "http://api.test", storage: s, fetch: api.fetch });
+  assert.equal((await guest.getSnapshot()).name, "Gezgin");
+  assert.equal(await guest.setDisplayName("  Yolcu   Ali "), "Yolcu Ali");
+  assert.equal((await createHttpClient({ baseUrl: "http://api.test", storage: s, fetch: api.fetch }).getSnapshot()).name, "Yolcu Ali");
+  assert.ok(!api.calls.some((c) => c.path === "/v1/me/profile"), "a guest's name never leaves the device");
+
+  let signedIn = true;
+  const account = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => (signedIn ? "tok" : null), fetch: api.fetch });
+  await account.getSnapshot();
+  await assert.rejects(account.setDisplayName("a"));
+  await assert.rejects(account.setDisplayName("Akar Ekibi"));
+  assert.ok(!api.calls.some((c) => c.path === "/v1/me/profile"));
+  assert.equal(await account.setDisplayName(" Ayşe Nur "), "Ayşe Nur");
+  const put = api.calls.find((c) => c.path === "/v1/me/profile")!;
+  assert.equal(put.method, "PUT");
+  assert.ok(put.headers["idempotency-key"]);
+  signedIn = false;
+});
+
+test("weekly list and figure: the list is read as is; a guest's figure stays on the device, an account's is saved", async () => {
+  const board = { weekStart: "2026-11-01T21:00:00.000Z", items: [{ rank: 1, name: "Ayşe", avatarId: "fatih", points: 115 }], me: null };
+  const api = fakeApi({
+    ...catalogHandlers(),
+    "GET /v1/leaderboard/week": () => board,
+    "GET /v1/me": () => ({ id: "u", role: "user", displayName: "Ayşe", avatarId: "fatih", leaderboardVisible: true }),
+    "GET /v1/me/passport": () => ({ points: 0, saved: [], read: [], visited: [], quizzesSolved: [] }),
+    "GET /v1/me/memories": () => ({ items: [], nextCursor: null }),
+    "PUT /v1/me/avatar": () => ({ avatarId: "mimar-sinan" }),
+    "PUT /v1/me/leaderboard": () => ({ visible: false }),
+  });
+  const guest = createHttpClient({ baseUrl: "http://api.test", storage: storage(), fetch: api.fetch });
+  assert.deepEqual(await guest.getWeeklyLeaderboard(), board);
+  await guest.setAvatar("mimar-sinan");
+  assert.ok(!api.calls.some((c) => c.path === "/v1/me/avatar"));
+
+  const account = createHttpClient({ baseUrl: "http://api.test", storage: storage(), getToken: () => "tok", fetch: api.fetch });
+  assert.deepEqual((await account.getSnapshot()).publicProfile, { avatarId: "fatih", leaderboardVisible: true });
+  await account.setAvatar("mimar-sinan");
+  assert.equal(api.calls.find((c) => c.path === "/v1/me/avatar")?.method, "PUT");
+  assert.equal(await account.setLeaderboardVisible(false), false);
 });

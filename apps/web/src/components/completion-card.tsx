@@ -5,6 +5,8 @@ import type { CSSProperties } from "react";
 import type { HeritageSite, SiteBadge } from "@akar/domain";
 import { useI18n } from "./i18n";
 import { badgeInLang } from "../lib/task-text";
+import { badgeTier } from "../lib/badges";
+import { BadgeMedal } from "./badge-medal";
 
 /** After the last sentence: the badge just earned, the site's other badges and what comes next. */
 export function CompletionCard({
@@ -44,9 +46,14 @@ export function CompletionCard({
   const ref = useRef<HTMLDialogElement>(null),
     titleId = useId();
   useEffect(() => {
+    // Focus goes back to where it was when the window closes.
+    const previous = document.activeElement as HTMLElement | null;
     const dialog = ref.current;
     dialog?.showModal();
-    return () => dialog?.close();
+    return () => {
+      dialog?.close();
+      previous?.focus?.();
+    };
   }, []);
   const badges = (site.badges ?? []).map((b) => ({ original: b, ...badgeInLang(b, lang) }));
   const first = earned[0];
@@ -69,9 +76,15 @@ export function CompletionCard({
         </button>
         <div className="completion-stage" aria-hidden="true">
           <i className="completion-rays" />
-          <span className="completion-badge">
-            <Award size={44} />
-          </span>
+          {first ? (
+            <span className="completion-medal">
+              <BadgeMedal badge={first} tier={badgeTier(first, { onSite: false })} earned size={132} eager />
+            </span>
+          ) : (
+            <span className="completion-badge">
+              <Award size={44} />
+            </span>
+          )}
         </div>
         <div className="completion-body">
           <span className="completion-done">
@@ -92,7 +105,7 @@ export function CompletionCard({
               <ul className="completion-badges">
                 {badges.map(({ original, badge: b, english }) => (
                   <li key={b.id} className={earned.includes(original) ? "new" : holds(b) ? "held" : ""}>
-                    <Award size={18} />
+                    <BadgeMedal badge={original} tier={badgeTier(original)} earned={holds(original)} size={36} />
                     <b lang={english ? undefined : tr}>{b.title}</b>
                     {earned.includes(original) ? (
                       <small>{t("completion.justEarned")}</small>

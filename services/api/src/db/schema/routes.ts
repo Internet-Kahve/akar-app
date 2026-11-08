@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgTable, primaryKey, smallint, text, unique } from "drizzle-orm/pg-core";
+import { check, doublePrecision, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { cities, historyImages, sites, sources } from "./catalog.ts";
 import { media } from "./media.ts";
-import { publishStatusEnum, timestamps, trustEnum } from "./shared.ts";
+import { publishStatusEnum, type publishStatuses, timestamps, trustEnum } from "./shared.ts";
 
 /** Duration and distance are not stored: computed from the stop chain (PostGIS) + narration minutes. */
 export const catalogRoutes = pgTable(
@@ -18,7 +18,8 @@ export const catalogRoutes = pgTable(
     theme: text("theme").notNull(),
     badgeTitle: text("badge_title"),
     badgeMediaId: text("badge_media_id").references(() => media.id),
-    status: publishStatusEnum("status").notNull().default("draft"),
+    /** One enum with sites (§11.81), but a route is only ever draft or published. */
+    status: publishStatusEnum("status").$type<(typeof publishStatuses)[number]>().notNull().default("draft"),
     ...timestamps,
   },
   (t) => [
@@ -83,3 +84,30 @@ export const routeStops = pgTable(
   },
   (t) => [primaryKey({ columns: [t.routeId, t.position] }), unique("route_stops_site_uq").on(t.routeId, t.siteId)],
 );
+
+/**
+ * Walking path between two points, cached by the exact coordinates of both ends (decision §11.79). A moved
+ * site or reordered stops simply looks up another pair; nothing is invalidated and a late answer cannot
+ * overwrite a newer one. `geometry` is null when the routing service found no path (`failed_at` set): retried
+ * after an hour by the maintenance run.
+ */
+export const walkingLegs = pgTable(
+  "walking_legs",
+  {
+    fromLng: doublePrecision("from_lng").notNull(),
+    fromLat: doublePrecision("from_lat").notNull(),
+    toLng: doublePrecision("to_lng").notNull(),
+    toLat: doublePrecision("to_lat").notNull(),
+    /** `[lng, lat]` pairs of the path, GeoJSON LineString order. */
+    geometry: jsonb("geometry").$type<[number, number][]>(),
+    meters: integer("meters"),
+    seconds: integer("seconds"),
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.fromLng, t.fromLat, t.toLng, t.toLat] }),
+    index("walking_legs_computed_idx").on(t.computedAt),
+    check("walking_legs_result", sql`(${t.geometry} IS NULL) = (${t.failedAt} IS NOT NULL) AND (${t.geometry} IS NULL) = (${t.meters} IS NULL) AND (${t.meters} IS NULL) = (${t.seconds} IS NULL)`),
+  ],
+).enableRLS();

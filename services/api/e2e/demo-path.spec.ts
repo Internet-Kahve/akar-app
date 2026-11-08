@@ -41,8 +41,10 @@ async function signIn(page: Page, email: string) {
   await dialog.getByRole("textbox", { name: "Doğrulama kodu" }).fill(await otpFor(email));
   await dialog.getByRole("button", { name: "Giriş yap", exact: true }).click();
   await dialog.getByRole("button", { name: "Şimdi değil" }).click();
-  await expect(page.getByText("Giriş yaptın.")).toBeVisible();
+  // The visible toast; the screen-reader region repeats its text.
+  await expect(page.locator(".toast").getByText("Giriş yaptın.")).toBeVisible();
   await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/#view=map$/);
 }
 
 async function otpFor(email: string): Promise<string> {
@@ -72,7 +74,15 @@ function tokenFor(email: string, role: "user" | "editor" | "moderator" | "admin"
 async function peekSite(page: Page, name: string) {
   // The page under the opening screen takes no input until the map is drawn (§11.49).
   await expect(page.locator(".opening")).toHaveCount(0);
+  // A saved route stays open at its page in the routes panel (7 Nov 2026). «Tüm rotalar» only steps back; the route's
+  // ✕ would also empty Rotam. The site rows are under «Eserler» (a phone's sheet has a back button, not the tabs).
+  const allRoutes = page.getByRole("button", { name: "Tüm rotalar" });
+  if (await allRoutes.isVisible()) await allRoutes.click();
   await page.getByRole("textbox", { name: "Eser, şehir veya rota ara" }).fill(name);
+  const sitesTab = page.getByRole("tab", { name: "Eserler", selected: false });
+  if (await sitesTab.isVisible()) await sitesTab.click();
+  const phoneBack = page.locator(".explore-back");
+  if (await phoneBack.isVisible()) await phoneBack.click();
   await page.locator(".site-row-main").filter({ hasText: name }).first().click();
   await expect(page.locator(".site-peek")).toBeVisible();
 }
@@ -83,13 +93,38 @@ async function openSite(page: Page, name: string) {
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 }
 
+async function openMapSignIn(page: Page) {
+  await expect(page.locator(".opening")).toHaveCount(0);
+  await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
+  await expect(page.getByRole("dialog", { name: "Giriş yap", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/#view=map$/);
+}
+
 async function openProfile(page: Page) {
   await page.getByRole("button", { name: "Mirasım profilini aç" }).click();
   await expect(page.getByRole("heading", { name: "Mirasım", level: 1 })).toBeVisible();
 }
 
-async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+// These paths are not about the hints: a hint shown on a slow machine takes the next touch to put itself away (6 Nov
+// 2026, `coach-tip.tsx`), so every hint counts as already seen here. The hints have their own tests (`tests/`).
+const SEEN_HINTS = () => {
+  const getItem = Storage.prototype.getItem;
+  Storage.prototype.getItem = function (key: string) {
+    return key.startsWith("akar.ipucu.") ? "1" : getItem.call(this, key);
+  };
+};
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(SEEN_HINTS);
+});
+
+async function newContext(browser: Browser, options?: BrowserContextOptions) {
   const context = await browser.newContext(options);
+  await context.addInitScript(SEEN_HINTS);
+  return context;
+}
+
+async function guestPage(browser: Browser, options?: BrowserContextOptions) {
+  const context = await newContext(browser, options);
   const page = await context.newPage();
   await page.goto("/#view=map");
   return { context, page };
@@ -130,9 +165,9 @@ test("guest writes a photo memory, a moderator approves it, a new guest reads it
 
   // 2. Moderator signs in from Mirasım and approves it in the panel.
   const moderator = await guestPage(browser);
-  await openProfile(moderator.page);
-  await moderator.page.getByRole("button", { name: "Giriş yap" }).click();
+  await openMapSignIn(moderator.page);
   await signIn(moderator.page, moderatorEmail);
+  await openProfile(moderator.page);
   await moderator.page.getByRole("button", { name: "Yönetim paneli" }).click();
   await moderator.page.locator(".admin-nav").getByRole("button", { name: /Katkılar/ }).click();
   const card = moderator.page.locator(".moderation-card").filter({ hasText: text });
@@ -207,8 +242,7 @@ test("a guest's saved site and Rotam move into the account at sign-in; Rotam the
 
   // 2. Sign in: both move into the account.
   await page.goto("/#view=map");
-  await openProfile(page);
-  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await openMapSignIn(page);
   await signIn(page, email);
   const auth = { authorization: `Bearer ${tokenFor(email, "user")}` };
   const account = async () => {
@@ -258,8 +292,7 @@ test("an admin deletes another visitor's approved memory permanently from the pu
   await call(admin, `/v1/admin/memories/${created.id}/decision`, { status: "approved" });
 
   const page = (await guestPage(browser)).page;
-  await openProfile(page);
-  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await openMapSignIn(page);
   await signIn(page, adminEmail);
   await page.goto("/#view=map");
   await openSite(page, MEMORY_SITE.name);
@@ -322,6 +355,7 @@ test("live guests and ordinary accounts cannot open the content studio", async (
   await expect(page.getByRole("button", { name: "Yeni eser", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
   await signIn(page, `e2e-ui-user-${randomUUID().slice(0, 8)}@akar.test`);
+  await page.goto("/#view=admin");
   await expect(page.getByText("Bu hesabın yönetim yetkisi bulunmuyor.")).toBeVisible();
   await openProfile(page);
   await expect(page.getByRole("button", { name: /yönetim paneli/i })).toHaveCount(0);
@@ -334,6 +368,7 @@ for (const role of ["editor", "moderator", "admin"] as const) {
     await page.goto("/#view=profile");
     await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
     await signIn(page, email);
+    await openProfile(page);
     await page.getByRole("button", { name: "Yönetim paneli", exact: true }).click();
     const nav = page.locator(".admin-nav");
     await expect(nav.getByRole("button", { name: "İçe aktar", exact: true })).toHaveCount(0);
@@ -379,6 +414,7 @@ test("live photo metadata editing preserves imported licenses and excludes unsup
   await page.goto("/#view=profile");
   await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
   await signIn(page, email);
+  await openProfile(page);
   await page.getByRole("button", { name: "Yönetim paneli", exact: true }).click();
   await page.locator(".admin-nav").getByRole("button", { name: "Kartlar ve fotoğraflar", exact: true }).click();
   await page.locator(".photo-option").filter({ hasText: "Test fotoğrafı" }).click();
@@ -405,6 +441,7 @@ test("map settings follow delayed reads without overwriting an edited field", as
   await page.goto("/#view=admin");
   await page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
   await signIn(page, email);
+  await page.goto("/#view=admin");
   await page.getByRole("button", { name: "Harita ayarları", exact: true }).click();
   const models = page.getByLabel("Aynı anda en çok model");
   const zoom = page.getByLabel("Modellerin yüklendiği yakınlaştırma");
@@ -490,11 +527,13 @@ test("an admin finds a newly registered member, grants admin access and revokes 
     await member.page.goto("/#view=admin");
     await member.page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
     await signIn(member.page, memberEmail);
+    await member.page.goto("/#view=admin");
     await expect(member.page.getByText("Bu hesabın yönetim yetkisi bulunmuyor.")).toBeVisible();
 
     await admin.page.goto("/#view=admin");
     await admin.page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
     await signIn(admin.page, adminEmail);
+    await admin.page.goto("/#view=admin");
     await admin.page.getByRole("button", { name: "Üyeler ve roller", exact: true }).click();
     await admin.page.getByLabel("E-posta ile üye ara").fill(memberEmail);
     await admin.page.getByRole("button", { name: "Ara", exact: true }).click();
@@ -535,16 +574,15 @@ test("the site language follows the account: an empty account takes the device's
   const { context, page } = await guestPage(browser);
   try {
     // 1. A Turkish browser signs in: the account had no language and takes Turkish.
-    await openProfile(page);
-    await page.getByRole("button", { name: "Giriş yap" }).click();
+    await openMapSignIn(page);
     await signIn(page, email);
     await expect.poll(async () => (await preferences()).siteLang).toBe("tr");
 
     // 2. Switching while signed in saves the account too.
     await page.goto("/#view=map");
     await expect(page.locator(".opening")).toHaveCount(0);
-    // A phone shows only the current language: one press on it turns to the other.
-    await page.getByRole("group", { name: "Dil / Language" }).getByRole("button", { name: isMobile ? "TR" : "EN" }).click();
+    // The globe switches the account language on desktop and mobile.
+    await page.getByRole("button", { name: "Switch to English" }).click();
     await expect.poll(async () => (await preferences()).siteLang).toBe("en");
 
     // 3. The device says Turkish again (as another device would): the signed-in load brings the account's English.
@@ -559,7 +597,7 @@ test("the site language follows the account: an empty account takes the device's
 });
 
 test("a guest's visit is counted when the page is hidden and an admin reads it under «İstatistikler»", async ({ browser, page }) => {
-  const context = await browser.newContext();
+  const context = await newContext(browser);
   const guest = await context.newPage();
   // Every batch the page sends with its status; the 10 s timer may send one before the page hides.
   // (A keepalive response body cannot be read here; the panel below shows what the server counted.)
@@ -586,6 +624,7 @@ test("a guest's visit is counted when the page is hidden and an admin reads it u
   await page.goto("/#view=admin");
   await page.getByRole("main").getByRole("button", { name: "Giriş yap", exact: true }).click();
   await signIn(page, email);
+  await page.goto("/#view=admin");
   await page.getByRole("button", { name: "İstatistikler", exact: true }).click();
   await page.getByRole("button", { name: "Son 7 gün" }).click();
   const row = page.locator(".stats-table tbody tr").filter({ hasText: MEMORY_SITE.name });
@@ -593,4 +632,119 @@ test("a guest's visit is counted when the page is hidden and an admin reads it u
   await row.getByRole("button", { name: MEMORY_SITE.name }).click();
   await expect(page.getByRole("heading", { name: MEMORY_SITE.name, level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Hikâye cümleleri" })).toBeVisible();
+});
+
+test("the assistant asks a guest to sign in; signed in, it asks about the open site and shows the answer's sources", async ({
+  browser,
+}) => {
+  const email = `e2e-chat-${randomUUID().slice(0, 8)}@akar.test`;
+  const { context, page } = await guestPage(browser);
+  try {
+    // 1. A guest's tap opens the sign-in with the reason.
+    await expect(page.locator(".opening")).toHaveCount(0);
+    await page.getByRole("button", { name: "Asistana sor" }).click();
+    await expect(page.getByText("Asistanı kullanmak için giriş yap.")).toBeVisible();
+    await signIn(page, email);
+
+    // 2. The model is stubbed (no key in CI): a busy model keeps the question for a retry, then an answer comes.
+    const sent: Array<Record<string, unknown>> = [];
+    let calls = 0;
+    await page.route(`${API}/v1/chat`, async (route) => {
+      sent.push(route.request().postDataJSON());
+      calls += 1;
+      if (calls === 1)
+        return route.fulfill({
+          status: 503,
+          json: { error: { code: "SERVICE_UNAVAILABLE", message: "Asistan yapılandırılmamış." } },
+        });
+      return route.fulfill({
+        json: {
+          answer: "Ulucami 1399'da tamamlandı.",
+          sources: [{ kind: "story", siteId: MEMORY_SITE.id, title: "Yıldırım'ın adağı", source: { title: "Bursa Envanteri", page: "s. 12" } }],
+          general: true,
+        },
+      });
+    });
+    await openSite(page, MEMORY_SITE.name);
+    await page.getByRole("button", { name: "Asistana sor" }).click();
+    const chat = page.getByRole("dialog", { name: "Akar asistanı" });
+    await expect(chat.getByText(`${MEMORY_SITE.name} hakkında soruyorsun.`)).toBeVisible();
+    const box = chat.getByRole("textbox", { name: "Sorunu yaz…" });
+    await box.fill("Ne zaman yapıldı?");
+    await box.press("Enter");
+    await expect(chat.getByRole("alert")).toHaveText("Asistan şu an kullanılamıyor.");
+    await expect(box).toHaveValue("Ne zaman yapıldı?");
+
+    await chat.getByRole("button", { name: "Gönder" }).click();
+    await expect(chat.getByText("Ulucami 1399'da tamamlandı.")).toBeVisible();
+    await expect(chat.getByRole("list", { name: "Kaynaklar" })).toContainText("Bursa Envanteri, s. 12");
+    await expect(chat.getByText("Genel bilgi")).toBeVisible();
+    expect(sent[1]).toEqual({ message: "Ne zaman yapıldı?", history: [], siteId: MEMORY_SITE.id, lang: "tr" });
+  } finally {
+    await context.close();
+  }
+});
+
+test("the weekly board shows real travellers and keeps the account's own score visible before and after joining", async ({ page }) => {
+  const run = randomUUID().slice(0, 8);
+  const email = `e2e-board-${run}@akar.test`;
+  const mine = tokenFor(email, "user");
+  const other = tokenFor(`e2e-board-other-${run}@akar.test`, "user");
+  // Names get a consonant-only tag: the name filter reads digits as letters («0c» → «oc») and refuses 7+ digits.
+  const tag = [...run].map((c) => "bcdfghjklmnprstv"["0123456789abcdef".indexOf(c)]).join("");
+  const otherName = `Deniz ${tag}`;
+  const request = async (token: string, method: string, path: string, body?: unknown) => {
+    const response = await fetch(`${API}${path}`, {
+      method,
+      headers: {
+        authorization: `Bearer ${token}`,
+        "idempotency-key": randomUUID(),
+        ...(body === undefined ? {} : { "content-type": "application/json" }),
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    expect(response.ok, `${method} ${path}: ${response.status}`).toBe(true);
+    return response.json();
+  };
+  const catalog = await (await fetch(`${API}/v1/site-details`)).json();
+  const secondSite = catalog.items.find((site: { id: string }) => site.id !== MEMORY_SITE.id)?.id;
+  expect(secondSite, "The seeded catalog must have two published sites").toBeTruthy();
+  try {
+    await request(mine, "PUT", "/v1/me/profile", { displayName: `Ayşe ${tag}` });
+    await request(other, "PUT", "/v1/me/profile", { displayName: otherName });
+    await request(other, "PUT", "/v1/me/leaderboard", { visible: true });
+    await request(other, "POST", `/v1/stories/${MEMORY_SITE.id}/complete`);
+    await request(other, "POST", `/v1/stories/${secondSite}/complete`);
+    await request(mine, "POST", `/v1/stories/${MEMORY_SITE.id}/complete`);
+
+    await page.goto("/#view=map");
+    await openMapSignIn(page);
+    await signIn(page, email);
+    await openProfile(page);
+    const board = page.locator(".weekly-board");
+    await expect(board.locator(".board-champion")).toContainText(otherName);
+    await expect(board.locator(".board-champion")).toContainText("30 puan");
+    await expect(board.locator(".board-me")).toHaveText("Listede görünmüyorsun · bu hafta 15 puan");
+    const visible = board.getByRole("switch", { name: /Listede görün/ });
+    // The controlled switch reflects the server response, so wait for the saved state.
+    await visible.click();
+    await expect(visible).toBeChecked();
+    const joined = await request(mine, "GET", "/v1/leaderboard/week");
+    await expect(board.locator(".board-me")).toHaveText(`Senin sıran: ${joined.me.rank}. · 15 puan`);
+
+    // Earn points through the real API while the profile stays open, then refresh the displayed score.
+    await request(mine, "POST", `/v1/stories/${secondSite}/complete`);
+    await board.getByRole("button", { name: "Puanları yenile" }).click();
+    await expect(board.locator(".board-me")).toContainText("30 puan");
+    await visible.click();
+    await expect(visible).not.toBeChecked();
+    await expect(board.locator(".board-me")).toHaveText("Listede görünmüyorsun · bu hafta 30 puan");
+    await page.reload();
+    await expect(board.locator(".board-me")).toHaveText("Listede görünmüyorsun · bu hafta 30 puan");
+    await expect(visible).not.toBeChecked();
+  } finally {
+    // Leave the local leaderboard as it was, including when an assertion fails.
+    await request(mine, "PUT", "/v1/me/leaderboard", { visible: false });
+    await request(other, "PUT", "/v1/me/leaderboard", { visible: false });
+  }
 });

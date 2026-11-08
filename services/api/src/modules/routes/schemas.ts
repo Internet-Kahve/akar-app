@@ -5,11 +5,28 @@ export const ListRoutesQuery = z.object({
   city: z.string().trim().min(1).max(60).optional().describe("Şehir kimliği (slug), örn. bursa"),
 });
 
+export const RouteLeg = z.object({
+  coordinates: z.array(z.tuple([z.number(), z.number()])).describe("Yürüme yolu, [boylam, enlem] çiftleri (GeoJSON LineString sırası)"),
+  meters: z.number().int(),
+  seconds: z.number().int(),
+});
+
 export const RouteStop = z.object({
   position: z.number().int().describe("Duraktaki sıra, 0'dan başlar"),
   site: SiteSummary,
   quizId: z.string().nullable().describe("Durağın bulmacası; bulmacanın eseri yayında değilse null"),
   historyImageId: z.string().nullable().describe("Durağın \"Geçmişi Gör\" görseli"),
+  leg: RouteLeg.nullable().describe(
+    "Bir sonraki durağa yürüme yolu; son durakta ya da yol henüz hesaplanmadıysa null (o bacak şematik düz çizgidir)",
+  ),
+});
+
+export const RouteWalking = z.object({
+  status: z
+    .enum(["complete", "partial", "unavailable"])
+    .describe("complete: bütün bacaklar hesaplandı; partial: bir kısmı; unavailable: hiçbiri"),
+  meters: z.number().int().nullable().describe("Toplam yürüme mesafesi; yalnız complete iken"),
+  minutes: z.number().int().nullable().describe("Toplam yürüme süresi (anlatım hariç); yalnız complete iken"),
 });
 
 export const RouteBadge = z.object({
@@ -25,9 +42,13 @@ export const RouteDto = z.object({
   nameEn: z.string().nullable(),
   description: z.string(),
   city: z.object({ id: z.string(), name: z.string() }),
-  minutes: z.number().int().describe("Hesaplanır: yürüme (4,5 km/sa) + durakların anlatım süresi"),
-  distance: z.string().describe("Hesaplanır: yayındaki durak zincirinin uzunluğu, örn. 1,2 km"),
+  minutes: z
+    .number()
+    .int()
+    .describe("Hesaplanır: yürüme + durakların anlatım süresi; yürüme walking.status complete iken gerçek yoldan, yoksa düz çizgiden (4,5 km/sa)"),
+  distance: z.string().describe("Hesaplanır, örn. 1,2 km; walking.status complete iken gerçek yürüme yolu, yoksa durak zincirinin düz uzunluğu"),
   distanceMeters: z.number().int(),
+  walking: RouteWalking.describe("Kayıtlı yürüme yollarının durumu (§11.79)"),
   theme: z.string(),
   badge: RouteBadge.nullable().describe("Rotayı bitirene verilen rozet; tanımlı değilse null"),
   stops: z.array(RouteStop).describe("Yalnızca yayındaki eserler, sıralı"),

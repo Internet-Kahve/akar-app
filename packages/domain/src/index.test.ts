@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   reduceSnapshot,
+  canDeleteSite,
   categoriesOf,
   categoryLabels,
   filterSites,
@@ -500,4 +501,50 @@ test("a replaced model reports each part the content still names, with every pla
     { part: "Avlu", usedIn: ["İçini göster"] },
   ]);
   assert.deepEqual(partsMissing(site, []), []);
+});
+
+test("display names: 2–24 characters once trimmed, no links or slurs, no team names; ordinary names pass", async () => {
+  const { displayNameProblem, normalizeDisplayName } = await import("./index.ts");
+  assert.equal(normalizeDisplayName("  Ayşe   Nur  "), "Ayşe Nur");
+  for (const ok of ["Ayşe Nur", "Işık", "Kemal", "Gökçe", "Çağrı Ö.", "Evliya'nın izinde", "Ali-Rıza", "Mehmet 1453", "Seyyah_34", "Zeynep"])
+    assert.equal(displayNameProblem(ok), null, ok);
+  assert.equal(displayNameProblem(" A "), "short");
+  assert.equal(displayNameProblem("x".repeat(25)), "long");
+  assert.equal(displayNameProblem("a".repeat(24)), null);
+  assert.equal(displayNameProblem("www.site.com/x"), "characters");
+  for (const link of ["www.site.com", "site.com", "Benim Site.com.tr", "akar.io", "WWW.ornek.NET"]) assert.equal(displayNameProblem(link), "characters", link);
+  for (const ok of ["Ali K.", "Dr. Ayşe", "A. Rıza", "Ece.Nur"]) assert.equal(displayNameProblem(ok), null, ok);
+  assert.equal(displayNameProblem("@hesap"), "characters");
+  assert.equal(displayNameProblem("05321234567"), "characters");
+  assert.equal(displayNameProblem("Akar Ekibi"), "reserved");
+  assert.equal(displayNameProblem("ADMIN"), "reserved");
+  for (const bad of ["or0spu", "Orospu çocuğu", "amk", "AQ", "s1kt1r git", "pezevenkadam", "Fuck you"])
+    assert.equal(displayNameProblem(bad), "inappropriate", bad);
+});
+
+test("§11.81: a site moves between published, draft and inactive; only one that is not published can be deleted", () => {
+  let state = createSeed();
+  const id = "ulu-cami";
+  assert.equal(state.sites.find((s) => s.id === id)?.status, "published");
+  assert.throws(() => reduceSnapshot(state, { type: "delete-site", siteId: id }), /Yayındaki eser silinemez/);
+
+  state = reduceSnapshot(state, { type: "save", siteId: id });
+  state = reduceSnapshot(state, { type: "site-status", siteId: id, status: "inactive" });
+  const site = state.sites.find((s) => s.id === id)!;
+  assert.equal(site.status, "inactive");
+  assert.ok(canDeleteSite(site));
+  // Back on the map: publishing runs the publication checks again.
+  assert.equal(
+    reduceSnapshot(state, { type: "site-status", siteId: id, status: "published" }).sites.find((s) => s.id === id)?.status,
+    "published",
+  );
+
+  const deleted = reduceSnapshot(state, { type: "delete-site", siteId: id });
+  assert.ok(!deleted.sites.some((s) => s.id === id));
+  assert.ok(!deleted.savedIds.includes(id));
+  assert.throws(() => reduceSnapshot(deleted, { type: "delete-site", siteId: id }), /Eser bulunamadı/);
+  assert.throws(
+    () => reduceSnapshot(state, { type: "site-status", siteId: id, status: "archived" as never }),
+    /Geçersiz eser durumu/,
+  );
 });

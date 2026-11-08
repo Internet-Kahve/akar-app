@@ -10,6 +10,15 @@ const CARD_STRIP_HEIGHT = 96;
 const CARD_EDGE = 20;
 const CARD_GAP = 12;
 
+/**
+ * On a phone the card is a photograph the screen's width, this share of the screen's height, 8 px off the foot
+ * (design.css `.story-photo-card`, 4 Nov 2026). The camera reserves exactly that, or the model sinks behind it.
+ */
+export const PHONE_CARD_SHARE = 0.22;
+export const PHONE_CARD_EDGE = 8;
+/** What the admin's phone preview stands for (a 390 × 812 phone: the stage above the sheet is about 640 tall). */
+export const PHONE_PREVIEW = { width: 360, height: 640, screenHeight: 812 };
+
 /** The visitor sizes the photo card between these (Muhammed, 2 Nov 2026); 1 is the designed size. */
 export const CARD_SCALE_MIN = 0.75;
 export const CARD_SCALE_MAX = 1.6;
@@ -17,9 +26,11 @@ export const clampCardScale = (scale: number) =>
   Math.round(Math.min(CARD_SCALE_MAX, Math.max(CARD_SCALE_MIN, scale)) * 100) / 100;
 
 /** What the card at its own place by default covers: the model is framed in the rest, at any size of the card. */
-export function storyCardFrame(wide: boolean, scale = 1): SceneFrame {
-  return wide
-    ? { left: CARD_EDGE + Math.round(CARD_WIDTH * scale) + CARD_GAP, bottom: 0 }
+export function storyCardFrame(wide: boolean, scale = 1, screenHeight = 0): SceneFrame {
+  if (wide) return { left: CARD_EDGE + Math.round(CARD_WIDTH * scale) + CARD_GAP, bottom: 0 };
+  // A phone's card is not sized by the visitor: its height is a share of the screen.
+  return screenHeight > 0
+    ? { left: 0, bottom: PHONE_CARD_EDGE + Math.round(screenHeight * PHONE_CARD_SHARE) + PHONE_CARD_EDGE }
     : { left: 0, bottom: CARD_GAP + Math.round(CARD_STRIP_HEIGHT * scale) + CARD_GAP };
 }
 
@@ -66,4 +77,17 @@ export function storyPartCard(
   highlights: string[],
 ): PartCard | undefined {
   return cards.find((card) => card.parts.some((p) => highlights.includes(p)));
+}
+
+type Point = { x: number; y: number; z: number };
+/** Whether a tree (a sphere) stands on the line from the camera to what it looks at, or around the camera itself. */
+export function treeBlocksView(camera: Point, target: Point, centre: Point, radius: number): boolean {
+  const way = { x: target.x - camera.x, y: target.y - camera.y, z: target.z - camera.z };
+  const to = { x: centre.x - camera.x, y: centre.y - camera.y, z: centre.z - camera.z };
+  const length = way.x * way.x + way.y * way.y + way.z * way.z;
+  const along = length ? Math.min(1, Math.max(0, (to.x * way.x + to.y * way.y + to.z * way.z) / length)) : 0;
+  const dx = to.x - way.x * along,
+    dy = to.y - way.y * along,
+    dz = to.z - way.z * along;
+  return dx * dx + dy * dy + dz * dz < radius * radius;
 }

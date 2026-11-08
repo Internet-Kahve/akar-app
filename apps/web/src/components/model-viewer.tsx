@@ -1,6 +1,13 @@
 "use client";
+import { writePreference } from "../lib/preferences";
+import { PHONE_LAYOUT } from "../lib/use-media";
 import { useEffect, useRef, useState } from "react";
-import { modelPixelRatio, modestDevice } from "../lib/device";
+import { modelMotionRatio, modelPixelRatio, modestDevice } from "../lib/device";
+import { isAllUnlit } from "../lib/light-materials";
+import { warmNightInterior } from "../lib/night-interior";
+import { MODEST_ANISOTROPY, smoothTextures, TEXTURE_ANISOTROPY } from "../lib/texture-quality";
+import { liftOverlays } from "../lib/overlay-layers";
+import { gpuDebugOn, mountGpuDebug } from "../lib/gpu-debug";
 import { sized } from "../lib/image-size";
 import type {
   CameraPose,
@@ -30,6 +37,7 @@ import {
   tourCarriesOn,
   type SceneFrame,
   looksForFreeView,
+  treeBlocksView,
 } from "../lib/story-scene";
 import {
   forgetDownload,
@@ -46,6 +54,10 @@ const LIFT_GAP = 0.35;
 const INSIDE_ELEVATION = 30;
 /** A pose closer than this (of the distance where the whole model fits) has the trees stand aside. */
 const CLOSE_POSE = 0.4;
+/** Draws closer together than this count as motion (a phone at 15 fps still is). */
+const MOTION_GAP_MS = 80;
+/** The sharp frame comes this long after the last moving one. */
+const MOTION_REST_MS = 180;
 /**
  * Part glow: hover (mouse) and the open card's parts. Gold by day; blue by night, where the night files' lit windows
  * and minarets are already gold and a gold glow did not stand out (Muhammed, 2 Nov 2026).
@@ -53,9 +65,8 @@ const CLOSE_POSE = 0.4;
 const GLOW = { day: new THREE.Color(0xf2c230), night: new THREE.Color(0x6fdcff) };
 const HOVER_GLOW = 0.28;
 const PICK_GLOW = 0.55;
-/** Height the angle's photograph takes above the phone's site card (design.css: 10 + 190 + 34 + 10 + 40 px of buttons). */
 /** A phone's angle photograph: this share of the screen's height, above the lowered card and the ‹ ✕ › row. */
-const VIEW_PHOTO_PHONE_SHARE = 0.46;
+const VIEW_PHOTO_PHONE_SHARE = 0.22;
 const VIEW_PHOTO_PHONE_FOOT = 116;
 /** One breath of a highlighted part: fade and light again. */
 const BREATH_MS = 1600;
@@ -408,10 +419,12 @@ export default function ModelViewer({
     let cancelLift = () => {};
     let detachPointer = () => {};
     let unfollowTheme = () => {};
+    let unmountDebug = () => {};
+    let shadowSize: number | null = null;
     try {
-      // A modest phone: fewer pixels, no antialiasing, a smaller shadow map.
+      // A modest phone: fewer pixels and a smaller shadow map; the edges stay smooth on every device (5 Nov 2026).
       const modest = modestDevice();
-      renderer = new THREE.WebGLRenderer({ antialias: !modest, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
       renderer.setPixelRatio(modelPixelRatio());
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       {
@@ -429,6 +442,8 @@ export default function ModelViewer({
       element.appendChild(renderer.domElement);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(detail ? 38 : 40, 1, 0.01, 10000);
+      // `?debug=gpu`: the device and context facts over the viewer, for reports from phones we do not have.
+      unmountDebug = mountGpuDebug(element, renderer, camera, () => shadowSize);
       controls = new OrbitControls(camera, renderer.domElement);
       // As the prototype's viewer: left drag turns, right drag (two fingers) moves, the wheel (pinch) zooms; turning
       // eases out after the hand lets go.
@@ -441,26 +456,85 @@ export default function ModelViewer({
       // on the spot, which held the page for 1.7–3.3 s on a slow phone.
       let compiling = false;
       let shadowsStale = true;
+      // A model that opens on its interior still gets its first shadow map.
+      let shadowsDrawn = false;
+      // What the camera can see, for its depth range (below). Measured again whenever the scene changes.
+      let reachStale = true;
+      const reachBox = new THREE.Box3();
+      const reach = new THREE.Sphere();
       const staleShadows = () => {
         shadowsStale = true;
+        reachStale = true;
+      };
+      /**
+       * Z-fighting on phones (Muhammed, 6 Nov 2026: Ulucami and the others flicker on a phone). A phone's depth buffer
+       * can be 16 bits: with the near plane fixed at 1/100 of the model, surfaces a few centimetres apart could not be
+       * told apart from a whole-building view. The near plane now starts just before the nearest thing the camera can
+       * see and the far plane ends just after the farthest, so the depth steps fall on the building. Inside the
+       * building (or close) the near plane stays at the model's 1/100, as before.
+       */
+      const fitDepth = () => {
+        if (reachStale) {
+          reachBox.setFromObject(scene);
+          reachStale = false;
+          if (reachBox.isEmpty()) return;
+          reachBox.getBoundingSphere(reach);
+        }
+        if (reach.radius <= 0) return;
+        const floor = reach.radius / 100;
+        const away = camera.position.distanceTo(reach.center);
+        const near = Math.max(floor, (away - reach.radius * 1.2) * 0.9);
+        const far = away + reach.radius * 2;
+        if (Math.abs(near - camera.near) > floor * 0.01 || Math.abs(far - camera.far) > floor) {
+          camera.near = near;
+          camera.far = far;
+          camera.updateProjectionMatrix();
+        }
       };
       scene.addEventListener("childadded", staleShadows);
       scene.addEventListener("childremoved", staleShadows);
       // Closed cover: the interior is not drawn (`lib/interior`); set once the model is here.
       let syncInterior = () => {};
       let syncTrees = () => {};
-      // Open, the interior gets its own light: under the sun's shadow and a sky light it stayed nearly black.
-      let inner: THREE.DirectionalLight | null = null;
-      let innerWanted = () => false;
+      // The light stays the same open or closed (Muhammed, 6 Nov 2026: «dışını gösterde ne ışık varsa aynısı olsun»).
+      // Whether a cover group is between closed and open (the lift animation).
+      let coverMoving = () => false;
+      // Two draws this close together are motion: fewer pixels until it stops, then one sharp frame at full size.
+      const stillRatio = renderer.getPixelRatio();
+      const motionRatio = modelMotionRatio(stillRatio, modest);
+      let moving = false;
+      let lastDraw = -Infinity;
+      let settle = 0;
+      let treesMoved = false;
       const render = () => {
         if (disposed || compiling) return;
+        const now = performance.now();
+        if (!moving && now - lastDraw < MOTION_GAP_MS && motionRatio < stillRatio) {
+          moving = true;
+          renderer!.setPixelRatio(motionRatio);
+        }
+        lastDraw = now;
+        if (moving) {
+          clearTimeout(settle);
+          settle = window.setTimeout(() => {
+            moving = false;
+            renderer!.setPixelRatio(stillRatio);
+            if (treesMoved) staleShadows();
+            treesMoved = false;
+            render();
+          }, MOTION_REST_MS);
+        }
         syncInterior();
         syncTrees();
-        if (inner) inner.intensity = innerWanted() ? (currentTheme() === "night" ? 0.8 : 1.2) : 0;
-        if (shadowsStale) {
+        // While the roof is lifting or settling the sun's shadow map is not drawn again (Muhammed, 6 Nov 2026: «içini
+        // göster için ekstra bir hesaplanma olmasın»): once at rest, open or closed, it is drawn one time, so the sun
+        // comes in where the domes were («güneş içeri girsin»). A model that opens on its interior gets its first.
+        if (shadowsStale && (!coverMoving() || !shadowsDrawn)) {
           renderer!.shadowMap.needsUpdate = true;
           shadowsStale = false;
+          shadowsDrawn = true;
         }
+        fitDepth();
         renderer!.render(scene, camera);
       };
       controls.addEventListener("change", render);
@@ -569,6 +643,8 @@ export default function ModelViewer({
           }
           object = gltf.scene;
           const light: CityScene["light"] = JSON.parse(lightKey);
+          // A night file is unlit: no light reaches it, so the sun's shadow map would be drawn for nothing.
+          const unlit = isAllUnlit(object);
           saturate(object, light.saturation);
           // Turned like on the map, so a pose's azimuth (0 = from the north) means the real north.
           object.rotation.y = -THREE.MathUtils.degToRad(heading);
@@ -577,7 +653,7 @@ export default function ModelViewer({
           {
             object.traverse(item => {
               if (!(item instanceof THREE.Mesh)) return;
-              item.castShadow = item.receiveShadow = true;
+              item.castShadow = item.receiveShadow = !unlit;
               for (let node: THREE.Object3D | null = item; node && node !== object; node = node.parent) {
                 if (/^Yer_Golgesi/.test(node.name)) { item.visible = false; return; }
                 if (PRESENTATION_PARTS.test(node.name)) return;
@@ -587,6 +663,10 @@ export default function ModelViewer({
           }
           // Coplanar ground surfaces keep one drawing order from every angle (no flicker on the courtyard).
           liftGroundLayers(object);
+          // Lines, bands and seams laid on a surface stay in front of it from every angle (lib/overlay-layers).
+          liftOverlays(object);
+          warmNightInterior(object, model.interiorParts ?? []);
+          smoothTextures(object, modest ? MODEST_ANISOTROPY : TEXTURE_ANISOTROPY, renderer!.capabilities.getMaxAnisotropy());
           if (box.isEmpty()) box.setFromObject(object);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
@@ -595,6 +675,8 @@ export default function ModelViewer({
           {
             const R = size.length() / 2 * 1.3;
             const sun = addModelLights(scene, R, model.placement?.frontDeg ?? 180, currentTheme());
+            if (unlit) sun.castShadow = false;
+            shadowSize = modest ? 1024 : sun.shadow.mapSize.x;
             if (modest) {
               sun.shadow.mapSize.set(1024, 1024);
               sun.shadow.normalBias = R / 1024;
@@ -719,16 +801,27 @@ export default function ModelViewer({
             // and stands in front of what is in the way. A camera sent inside looks inside, not at the back of a wall.
             if (part && looksForFreeView(next, CLOSE_POSE)) {
               free = -1;
-              search: for (const up of [0, 12, 26])
+              // The pose's own height first, round the part; higher only when no side at that height has room enough.
+              // On a phone the camera stands farther back (a narrower frame), so piers are in the way more often: the
+              // widest view overall used to win, which was from high above (Muhammed, 6 Nov 2026: Ulucami's pool «yukarıdan»).
+              search: for (const up of [0, 12, 26]) {
+                let best = -1;
+                let bestWay = way;
                 for (const turn of [0, 45, -45, 90, -90, 135, -135, 180]) {
                   const candidate = wayAt(az + THREE.MathUtils.degToRad(turn), Math.min(THREE.MathUtils.degToRad(70), el + THREE.MathUtils.degToRad(up)));
                   const room = clearDistance(goal, candidate, d, part);
-                  if (room > free) {
-                    free = room;
-                    way = candidate;
+                  if (room > best) {
+                    best = room;
+                    bestWay = candidate;
                   }
-                  if (room >= d * 0.7) break search;
+                  if (room >= d * 0.7) break;
                 }
+                if (best > free) {
+                  free = best;
+                  way = bestWay;
+                }
+                if (free >= d * 0.4) break search;
+              }
             }
             const to = goal.clone().addScaledVector(way, free);
             cancelAnimationFrame(frame);
@@ -760,6 +853,8 @@ export default function ModelViewer({
             };
             frame = requestAnimationFrame(step);
           };
+          // `?debug=gpu`: a pose can be tried from the console (`__akarAim({target, azimuthDeg, elevationDeg, distance})`).
+          if (gpuDebugOn()) (window as unknown as { __akarAim?: unknown }).__akarAim = (pose: CameraPose) => aim.current?.(pose);
           // Parts that answer a tap: a card's parts, or every part when the site has no cards.
           const [partNames, cardParts] = JSON.parse(partsKey) as [string[], string[][]];
           const known = new Set(partNames);
@@ -944,6 +1039,7 @@ export default function ModelViewer({
           };
           let coverOpen: (() => boolean) | null = null;
           let coverWanted = () => false;
+          let compileFading = async () => {};
           // "İçini göster": every group must name at least one part of this model, else no button.
           const groups = (JSON.parse(groupsKey) as string[][]).map((names) =>
             names.flatMap((n) => root.getObjectByName(n) ?? []),
@@ -973,21 +1069,37 @@ export default function ModelViewer({
                 });
               return list;
             });
+            // A fading material is another shader: compiled with the rest while the card is up, not at the first press.
+            compileFading = async () => {
+              const list = fading.flat().filter((f) => !f.transparent);
+              const set = (on: boolean) => {
+                for (const f of list) {
+                  f.material.transparent = on;
+                  f.material.needsUpdate = true;
+                }
+              };
+              set(true);
+              await renderer!.compileAsync(scene, camera).catch(() => {});
+              set(false);
+            };
             const progress = groups.map(() => 0);
             let goal = 0;
             coverOpen = () => goal === 1 || progress.some((t) => t > 0);
             coverWanted = () => goal === 1;
+            coverMoving = () => progress.some((t) => t !== goal);
             let liftFrame = 0;
             let last = 0;
             cancelLift = () => cancelAnimationFrame(liftFrame);
+            // The sun's whole map is not drawn again every frame of the lift (5 Nov 2026, «içini gösterde kasıyor»): only when
+            // a group is gone or back, and when it all comes to rest.
             const place = () => {
-              staleShadows();
               parts.forEach((g, i) => {
                 const t = progress[i]!;
                 // easeOutBack: a slight overshoot as the group settles.
                 const k = t === 0 ? 0 : 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;
                 for (const p of g) {
                   p.node.position.y = p.y + p.dy * k;
+                  if (p.node.visible !== t < 0.999) staleShadows();
                   p.node.visible = t < 0.999;
                 }
                 for (const f of fading[i]!) {
@@ -1019,6 +1131,7 @@ export default function ModelViewer({
                   progress[i] = goal === 1 ? Math.min(1, t + dt) : Math.max(0, t - dt);
               });
               place();
+              if (!moving) staleShadows();
               render();
               if (moving && !disposed) liftFrame = requestAnimationFrame(step);
             };
@@ -1028,6 +1141,7 @@ export default function ModelViewer({
               if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
                 progress.fill(goal);
                 place();
+                staleShadows();
                 render();
               } else {
                 last = performance.now();
@@ -1050,26 +1164,31 @@ export default function ModelViewer({
             if (open) lift.current(true, false);
             setInside(open);
           }
-          inner = new THREE.DirectionalLight(0xfff1dc, 0);
-          inner.position.set(0.15, 1, 0.25);
-          scene.add(inner, inner.target);
-          const lit = new THREE.HemisphereLight(0xfff4e6, 0xcdbda3, 0);
-          scene.add(lit);
-          innerWanted = () => {
-            const on = coverWanted() || !!coverOpen?.();
-            lit.intensity = on ? (currentTheme() === "night" ? 0.45 : 0.7) : 0;
-            return on;
-          };
-          // Open, or with the camera sent close, the trees stand aside: it must not meet one on the way.
-          const trees: THREE.Object3D[] = [];
+          // The trees stay where they stand (Muhammed, 7 Nov 2026: turning the model they came and went, and the light with
+          // them). Only with «İçini göster» open does a tree between the camera and the interior stand aside (5 Nov 2026:
+          // «içini göster deyince etraftaki ağaçlar gidiyor»: the others stay).
+          const trees: { node: THREE.Object3D; centre: THREE.Vector3; radius: number }[] = [];
+          root.updateMatrixWorld(true);
           root.traverse((node) => {
-            if (/^(Cevre|Avlu)_Agac/.test(node.name)) trees.push(node);
+            if (!/^(Cevre|Avlu)_Agac/.test(node.name)) return;
+            const sphere = new THREE.Box3().setFromObject(node).getBoundingSphere(new THREE.Sphere());
+            trees.push({ node, centre: sphere.center, radius: sphere.radius });
           });
           syncTrees = () => {
-            const show = !closePose && !coverWanted();
-            if (!trees.length || trees[0]!.visible === show) return;
-            for (const tree of trees) tree.visible = show;
-            staleShadows();
+            let changed = false;
+            for (const tree of trees) {
+              const open = interiorRef.current || coverWanted();
+              const show = !open || !treeBlocksView(camera.position, controls!.target, tree.centre, tree.radius);
+              if (tree.node.visible !== show) {
+                tree.node.visible = show;
+                changed = true;
+              }
+            }
+            // Not mid-turn: a whole shadow map for one tree is a visible hitch. It is drawn when the model comes to rest.
+            if (changed) {
+              if (moving) treesMoved = true;
+              else staleShadows();
+            }
           };
           // Only where the cover can open: otherwise nothing would ever show the interior again.
           const hiddenNames = JSON.parse(hiddenKey) as string[];
@@ -1113,6 +1232,7 @@ export default function ModelViewer({
           renderer!
             .compileAsync(scene, camera)
             .catch(() => {})
+            .then(() => (disposed ? undefined : compileFading()))
             .finally(() => {
               compiling = false;
               if (disposed) return;
@@ -1124,6 +1244,8 @@ export default function ModelViewer({
                   for (const m of Array.isArray(item.material) ? item.material : [item.material])
                     for (const value of Object.values(m)) if (value instanceof THREE.Texture) renderer!.initTexture(value);
                 });
+              // One draw with it all there sends the interior's geometry to the GPU under the card, not at the first press.
+              if (hiddenNodes.length) render();
               interiorReady = true;
               render();
               // What is said about the model waits for the model (`TipRow`).
@@ -1168,6 +1290,7 @@ export default function ModelViewer({
       cancelLift();
       detachPointer();
       unfollowTheme();
+      unmountDebug();
       observer?.disconnect();
       controls?.dispose();
       decoder?.dispose();
@@ -1262,6 +1385,9 @@ export default function ModelViewer({
           title={t("site.showParts")}
           aria-pressed={showingParts}
           onClick={() => {
+            // The opening screen can still be fading out, before TipRow mounts its click listener.
+            // Remember the completed action here so a later hint does not teach it again.
+            writePreference(window.matchMedia(PHONE_LAYOUT).matches ? "akar.ipucu.d.parca" : "akar.ipucu.masa.parca", "1");
             cancelAnimationFrame(pulseFrame.current);
             setShowingParts(true);
             const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

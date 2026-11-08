@@ -1,5 +1,5 @@
 import { reduceSnapshot, type HeritageSite, type Snapshot } from "@akar/domain";
-import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import type { Db } from "../../db/client.ts";
 import { catalogRoutes, cities, historyImages, media, quizAnswers, quizzes, routeStops, sites, sources } from "../../db/schema/index.ts";
@@ -145,7 +145,7 @@ async function assertBadge(db: Tx | Db, badgeTitle: string | null, badgeMediaId:
 }
 
 /** What the publish gate reads of a stop: its site's id, name and publication state. */
-type GateStop = { siteId: string; siteName: string; siteStatus: PublishStatus };
+type GateStop = { siteId: string; siteName: string; siteStatus: HeritageSite["status"] };
 
 /**
  * Stops must be unique, in the route's city, and may carry only their own site's quiz and history
@@ -157,7 +157,7 @@ async function validateStops(db: Tx | Db, route: RouteRow, stops: RouteStopInput
 
   const siteIds = [...new Set(stops.map((s) => s.siteId))];
   const siteRows = siteIds.length
-    ? await db.select({ id: sites.id, cityId: sites.cityId, name: sites.name, status: sites.status }).from(sites).where(inArray(sites.id, siteIds))
+    ? await db.select({ id: sites.id, cityId: sites.cityId, name: sites.name, status: sites.status }).from(sites).where(and(inArray(sites.id, siteIds), isNull(sites.deletedAt)))
     : [];
   const siteById = new Map(siteRows.map((s) => [s.id, s]));
 
@@ -428,7 +428,7 @@ export async function listAdminQuizzes(db: Db, q: ListAdminQuizzesQuery): Promis
 async function assertQuizRefs(db: Tx | Db, input: QuizBody, siteMayChange: boolean): Promise<void> {
   const errors: Record<string, string[]> = {};
   if (siteMayChange) {
-    const [site] = await db.select({ id: sites.id }).from(sites).where(eq(sites.id, input.siteId));
+    const [site] = await db.select({ id: sites.id }).from(sites).where(and(eq(sites.id, input.siteId), isNull(sites.deletedAt)));
     if (!site) errors.siteId = ["Eser bulunamadı."];
   }
   if (input.sourceId) {

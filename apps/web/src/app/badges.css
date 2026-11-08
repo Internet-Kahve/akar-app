@@ -1,0 +1,1026 @@
+/* Badges as game medals (5 Nov 2026): the medal's own picture, the tier's disc and light behind it, the large card
+   and the celebration. The tier is drawn here, not in the picture: bronze (story), silver (task), gold (at the site). */
+.medal {
+  --tier-a: #e7a56b;
+  --tier-b: #9a5a2a;
+  --tier-c: #6b3a17;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--medal, 72px);
+  height: var(--medal, 72px);
+  isolation: isolate;
+}
+.medal.tier-silver {
+  --tier-a: #f4f7fa;
+  --tier-b: #a9b6c3;
+  --tier-c: #5f6f80;
+}
+.medal.tier-gold {
+  --tier-a: #ffe9a3;
+  --tier-b: #e6b53c;
+  --tier-c: #9a6a12;
+}
+/* The tier's metal disc: it shows round the medal's edge whatever its shape. */
+.medal::before {
+  content: "";
+  position: absolute;
+  inset: 1%;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.7), transparent 38%),
+    conic-gradient(from 200deg, var(--tier-c), var(--tier-a), var(--tier-b), var(--tier-c), var(--tier-a), var(--tier-c));
+  box-shadow:
+    0 0 0 max(2px, calc(var(--medal, 72px) * 0.025)) #2b1d14,
+    0 calc(var(--medal, 72px) * 0.05) calc(var(--medal, 72px) * 0.1) rgba(43, 29, 20, 0.28);
+}
+.medal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+/* Gold: slow rays behind and a glint that passes over now and then. */
+.medal.tier-gold.earned::after {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  z-index: -2;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 214, 102, 0.55) 0 9deg, transparent 9deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 45%, transparent 70%);
+  mask: radial-gradient(circle, #000 45%, transparent 70%);
+  animation: medal-turn 18s linear infinite;
+}
+.medal.tier-silver.earned::after {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  z-index: -2;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 232, 244, 0.75), transparent 68%);
+}
+@keyframes medal-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Not earned: the same medal as a grey silhouette, so the shelf is never a row of empty boxes. */
+.medal.locked img {
+  filter: grayscale(1) contrast(0.6) brightness(1.08);
+  opacity: 0.5;
+}
+.medal.locked::before {
+  background: radial-gradient(circle at 34% 28%, #eeeae3, #c9c3b9 60%, #a49d92);
+  box-shadow: 0 0 0 max(2px, calc(var(--medal, 72px) * 0.02)) rgba(43, 29, 20, 0.35);
+  opacity: 0.55;
+}
+[data-theme="night"] .medal.locked img {
+  opacity: 0.42;
+  filter: grayscale(1) contrast(0.6) brightness(0.9);
+}
+[data-theme="night"] .medal.locked::before {
+  opacity: 0.3;
+}
+
+/* An achievement: a struck gold coin with its sign. */
+.medal.achievement .achievement-face {
+  display: grid;
+  place-items: center;
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+  border: max(2px, calc(var(--medal, 64px) * 0.045)) solid #2b1d14;
+  color: #5b3a10;
+  background: radial-gradient(circle at 36% 30%, #fff1bf, #ecc055 52%, #b8861f);
+  box-shadow:
+    inset 0 calc(var(--medal, 64px) * -0.06) 0 rgba(0, 0, 0, 0.16),
+    inset 0 calc(var(--medal, 64px) * 0.05) 0 rgba(255, 255, 255, 0.55);
+}
+.medal.achievement.locked .achievement-face {
+  color: #8d867c;
+  background: radial-gradient(circle at 36% 30%, #f4f1ec, #d8d2c8 60%, #b9b2a6);
+  border-color: rgba(43, 29, 20, 0.35);
+}
+.medal.achievement::before {
+  inset: 0;
+}
+[data-theme="night"] .medal.achievement.locked .achievement-face {
+  opacity: 0.55;
+}
+
+/* ---------------- the profile's shelf */
+.medal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 14px 8px;
+  padding: 12px 0 0;
+}
+.medal-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 4px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.18s var(--ease), background 0.18s var(--ease);
+}
+.medal-tile:hover {
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+.medal-tile:active {
+  transform: scale(0.96);
+}
+.medal-tile b {
+  font: 600 12px/16px var(--font);
+  overflow-wrap: anywhere;
+}
+.medal-tile small {
+  font: 400 11px/14px var(--font);
+  color: var(--text-muted);
+}
+.medal-tile.earned small {
+  color: var(--gold-text);
+}
+.medal-tile.locked b {
+  color: var(--text-muted);
+}
+
+.achievement-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.achievement-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.achievement-list li > span:not(.medal) {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.achievement-list b {
+  font: 600 13px/18px var(--font);
+}
+.achievement-list small {
+  font: 400 12px/16px var(--font);
+  color: var(--text-muted);
+}
+.achievement-list li:not(.done) b {
+  color: var(--text-muted);
+}
+.achievement-bar {
+  position: relative;
+  display: block;
+  height: 14px;
+  margin-top: 4px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  overflow: hidden;
+}
+.achievement-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #e6b53c, #f3cf6a);
+}
+.achievement-bar em {
+  position: relative;
+  display: block;
+  font: 600 10px/14px var(--font);
+  font-style: normal;
+  text-align: center;
+  color: var(--text);
+}
+
+/* ---------------- tier chips */
+.tier-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font: 700 11px/16px var(--font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3b2410;
+  background: linear-gradient(180deg, #f0be8c, #c47c43);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15), 0 0 0 1.5px #2b1d14;
+}
+.tier-chip.tier-silver {
+  color: #26313c;
+  background: linear-gradient(180deg, #ffffff, #b3c0cc);
+}
+.tier-chip.tier-gold {
+  color: #4a3005;
+  background: linear-gradient(180deg, #fff0b3, #e6b53c);
+}
+.tier-chip.on-site {
+  color: var(--verified);
+  background: var(--verified-bg);
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------------- the large card */
+.badge-card {
+  text-align: center;
+}
+.badge-card-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 220px;
+  margin: 0 -24px 8px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--gold) 26%, transparent), transparent 62%);
+}
+.badge-card-rays {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--gold) 22%, transparent) 0 10deg, transparent 10deg 26deg);
+  animation: medal-turn 30s linear infinite;
+}
+.badge-card.tier-bronze .badge-card-rays {
+  opacity: 0.5;
+}
+.badge-card:has(.medal.locked) .badge-card-rays {
+  opacity: 0.15;
+}
+.badge-card-tier {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.badge-card-text {
+  margin: 0 0 6px;
+  font: 400 15px/22px var(--font);
+}
+.badge-card-date {
+  margin: 0;
+  font-size: 13px;
+}
+.badge-card-howto {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  text-align: left;
+}
+.badge-card-howto p {
+  margin: 4px 0 0;
+}
+.badge-card-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--gold-text);
+}
+.badge-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+.badge-card-actions .btn {
+  min-height: 44px;
+}
+
+/* ---------------- the celebration */
+.celebration {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  border: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  justify-items: center;
+  overflow: hidden;
+  color: #fff8ea;
+  background: radial-gradient(circle at 50% 38%, #5a3b16 0%, #2a1a0c 55%, #120b05 100%);
+}
+.celebration::backdrop {
+  background: rgba(10, 6, 2, 0.6);
+}
+.celebration-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 300px;
+}
+.celebration-rays {
+  position: absolute;
+  width: min(140vw, 900px);
+  aspect-ratio: 1;
+  background: repeating-conic-gradient(rgba(255, 206, 92, 0.22) 0 8deg, transparent 8deg 22deg);
+  -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%);
+  mask: radial-gradient(circle, #000 20%, transparent 65%);
+  animation: medal-turn 26s linear infinite;
+}
+.celebration-ring {
+  position: absolute;
+  width: 230px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 220, 140, 0.8);
+  box-shadow: 0 0 40px 8px rgba(255, 196, 64, 0.45), inset 0 0 30px rgba(255, 196, 64, 0.4);
+  animation: celebrate-ring 900ms var(--ease) both;
+}
+.celebration-medal {
+  position: relative;
+  animation: celebrate-float 900ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.celebration-medal .medal img {
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.4));
+}
+.celebration-confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+.celebration-confetti i {
+  position: absolute;
+  top: -4vh;
+  left: calc(50% + var(--x));
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: celebrate-fall 1.9s var(--d) ease-in both;
+}
+.celebration-text {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: min(100%, 420px);
+  text-align: center;
+}
+.celebration-kicker {
+  margin: 0;
+  font: 700 13px/18px var(--font);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffd56b;
+}
+.celebration-text h2 {
+  margin: 0;
+  font: 600 32px/38px var(--font-display);
+  color: #fff8ea;
+}
+.celebration-text p {
+  margin: 0;
+  color: rgba(255, 248, 234, 0.85);
+}
+.celebration-actions {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+}
+.celebration-actions .btn,
+.celebration-actions .text-btn {
+  justify-content: center;
+  min-height: 48px;
+}
+.celebration .btn.celebration-ok {
+  font-size: 17px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #f6cf62, #d99b1f);
+  color: #3a2200;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.2), 0 0 0 2px #2b1d14;
+}
+.celebration .celebration-actions .btn.secondary {
+  color: #fff8ea;
+  background: rgba(255, 248, 234, 0.12);
+}
+.celebration .celebration-actions .text-btn {
+  color: #ffe6a6;
+}
+@keyframes celebrate-float {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.35) rotate(-12deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.06) rotate(3deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes celebrate-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes celebrate-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(90vh) rotate(var(--r));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .medal.tier-gold.earned::after,
+  .badge-card-rays,
+  .celebration-rays,
+  .celebration-ring,
+  .celebration-medal {
+    animation: none;
+  }
+  .celebration-confetti {
+    display: none;
+  }
+}
+
+/* The story's last card: the badge just earned floats in where the plain award sign was. */
+.completion-medal {
+  position: relative;
+  animation: celebrate-float 900ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .completion-medal {
+    animation: none;
+  }
+}
+
+/* ---------------- sharing */
+.share-week {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 4px 0 0;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: 600 14px/20px var(--font);
+  color: #3a2200;
+  background: linear-gradient(180deg, #f6cf62, #d99b1f);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 0 0 1.5px #2b1d14;
+  cursor: pointer;
+}
+.achievement-share {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+}
+.share-dialog {
+  text-align: center;
+}
+.share-preview {
+  display: grid;
+  place-items: center;
+  height: min(54vh, 534px);
+  max-width: 100%;
+  aspect-ratio: 9 / 16;
+  margin: 0 auto;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #1d130a;
+}
+.share-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.share-preview p {
+  color: #f6e9cf;
+}
+.share-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+.share-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.share-actions .btn {
+  min-height: 44px;
+}
+/* Apps (6 Nov 2026): a round, coloured button each, the name under it. */
+.share-apps {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 14px;
+}
+.share-app {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 60px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: 500 12px/16px var(--font);
+  cursor: pointer;
+}
+.share-app span {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--app, var(--primary));
+  transition: transform 160ms var(--ease);
+}
+.share-app:active span { transform: scale(0.94); }
+.share-app:disabled { opacity: 0.5; cursor: default; }
+.share-app.whatsapp { --app: #25d366; }
+.share-app.instagram { --app: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%); }
+.share-app.x { --app: #000; }
+.share-app.facebook { --app: #1877f2; }
+.share-app.link { --app: var(--surface-2, #e6e8e6); }
+.share-app.link span { color: var(--text); }
+[data-theme="night"] .share-app.x span { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+@media (max-width: 899.98px) {
+  /* Five in one row on a phone, and the card a little shorter so «İndir» stays on screen. */
+  .share-dialog .share-preview { height: min(46dvh, 534px); }
+  .share-apps { flex-wrap: nowrap; gap: 4px; justify-content: space-between; }
+  .share-app { min-width: 0; flex: 1; font-size: 11px; }
+  .share-app span { width: 42px; height: 42px; }
+}
+
+/* ---------------- profile: name, level, rows of cards (stage C) */
+.profile-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  width: 100%;
+  margin: 10px 0 0;
+}
+.profile-card .profile-name h2 {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.profile-name .round-btn,
+.achievement-share {
+  width: 44px;
+  height: 44px;
+}
+.profile-name.editing input {
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 240px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  font: 600 18px/1 var(--font);
+  color: var(--text);
+  background: var(--surface);
+}
+.profile-name.editing input[aria-invalid="true"] {
+  border-color: var(--error);
+}
+.profile-name.editing p {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  font-size: 12px;
+  text-align: center;
+}
+.profile-name.editing p.error {
+  color: var(--error);
+}
+
+.level-bar {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 14px 0 0;
+  text-align: left;
+}
+.level-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.level-head .muted {
+  margin-left: auto;
+  font-size: 13px;
+}
+.level-badge {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font: 800 14px/1 var(--font);
+  color: #4a3005;
+  background: radial-gradient(circle at 36% 30%, #fff1bf, #ecc055 55%, #b8861f);
+  box-shadow: 0 0 0 2px #2b1d14, inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+.level-track {
+  position: relative;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+.level-track i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d99b1f, #f6cf62);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+}
+.level-bar small {
+  font-size: 12px;
+}
+
+/* A row of cards that scrolls sideways; «Tümünü gör» under it. */
+.strip-wrap {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.strip {
+  display: flex;
+  gap: 10px;
+  margin: 8px -4px 0;
+  padding: 4px 4px 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+.strip > * {
+  flex: none;
+  scroll-snap-align: start;
+}
+.medal-strip .medal-tile {
+  width: 108px;
+}
+.see-all {
+  justify-self: end;
+  margin: -6px 0 -10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  font: 600 14px/20px var(--font);
+  color: var(--gold-text);
+  cursor: pointer;
+}
+.discovered-card {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 4px;
+  width: 152px;
+  padding: 0 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.discovered-cover {
+  display: grid;
+  place-items: center;
+  height: 112px;
+  min-height: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--gold) 14%, var(--surface));
+}
+.discovered-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.discovered-card strong,
+.discovered-card small {
+  padding: 0 10px;
+}
+.discovered-card strong {
+  font: 600 14px/18px var(--font);
+}
+.discovered-card small {
+  display: grid;
+  gap: 2px;
+  font: 400 12px/16px var(--font);
+  color: var(--text-muted);
+}
+.discovered-visit {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--verified);
+}
+.discovered-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.discovered-grid .discovered-card {
+  width: auto;
+}
+
+/* The whole collection. */
+.collection-progress {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.collection-progress .achievement-bar {
+  height: 12px;
+}
+.collection-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filter-chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 13px/1 var(--font);
+  cursor: pointer;
+}
+.filter-chip[aria-pressed="true"] {
+  border-color: transparent;
+  color: #3a2200;
+  background: linear-gradient(180deg, #f6cf62, #d99b1f);
+}
+.collection-site select {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font: 500 14px/1 var(--font);
+}
+.collection-empty {
+  padding: 24px 0;
+  text-align: center;
+}
+
+/* ---------------- «Haftanın Gezgini» (stage D) */
+.weekly-board h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.weekly-board h3 svg {
+  color: var(--gold-text);
+}
+.board-week {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.board-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 18px 8px 6px;
+  text-align: center;
+}
+.board-empty > span {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  color: #5b3a10;
+  background: radial-gradient(circle at 36% 30%, #fff1bf, #ecc055 55%, #b8861f);
+  box-shadow: 0 0 0 3px #2b1d14, 0 8px 18px rgba(184, 134, 31, 0.35);
+}
+.board-empty p {
+  margin: 0;
+  max-width: 34ch;
+}
+.board-champion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 14px 0 6px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  color: #fff8ea;
+  background: radial-gradient(circle at 20% 30%, #7a521c, #2e1d0d 70%);
+}
+.board-champion-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: 5px;
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, #9a6a12, #ffe9a3, #e6b53c, #9a6a12, #ffe9a3, #9a6a12);
+  box-shadow: 0 0 0 2px #2b1d14, 0 0 24px rgba(255, 196, 64, 0.45);
+}
+.board-champion > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.board-champion small {
+  font: 700 11px/14px var(--font);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffd56b;
+}
+.board-champion b {
+  font: 600 26px/1.1 var(--font-display);
+  overflow-wrap: anywhere;
+}
+.board-champion em {
+  font: 600 14px/18px var(--font);
+  font-style: normal;
+  color: rgba(255, 248, 234, 0.85);
+}
+.board-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.board-podium li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+.board-podium li b {
+  max-width: 100%;
+  font: 600 13px/16px var(--font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-podium li small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.board-step {
+  display: grid;
+  place-items: start center;
+  width: 100%;
+  padding-top: 6px;
+  border-radius: 10px 10px 4px 4px;
+  font: 800 20px/1 var(--font);
+  color: #3b2410;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.15), 0 0 0 1.5px #2b1d14;
+}
+.board-podium .place-1 .board-step {
+  height: 64px;
+  background: linear-gradient(180deg, #fff0b3, #e6b53c);
+}
+.board-podium .place-2 .board-step {
+  height: 46px;
+  color: #26313c;
+  background: linear-gradient(180deg, #ffffff, #b3c0cc);
+}
+.board-podium .place-3 .board-step {
+  height: 34px;
+  background: linear-gradient(180deg, #f0be8c, #c47c43);
+}
+.board-list {
+  display: grid;
+  gap: 2px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.board-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 6px;
+  border-radius: var(--radius-md);
+}
+.board-list li:nth-child(odd) {
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+}
+.board-list b {
+  flex: 1;
+  min-width: 0;
+  font: 600 14px/18px var(--font);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-rank {
+  width: 22px;
+  font: 700 14px/1 var(--font);
+  text-align: center;
+  color: var(--text-muted);
+}
+.board-initial {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  color: #fff;
+  background: #8a7a66;
+}
+.board-me {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font: 600 14px/20px var(--font);
+  background: color-mix(in srgb, var(--gold) 14%, transparent);
+}
+.board-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin: 12px 0 0;
+  cursor: pointer;
+}
+.board-toggle > span {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+.board-toggle small {
+  font-size: 12px;
+  line-height: 16px;
+}
+.board-toggle input {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  accent-color: var(--gold);
+}
+.board-join {
+  min-height: 44px;
+  margin-top: 12px;
+}

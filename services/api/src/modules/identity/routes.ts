@@ -25,9 +25,16 @@ import {
   StaffListResponse,
   StaffMemberDto,
   UserIdParams,
+  AvatarBody,
+  AvatarResponse,
+  LeaderboardVisibilityBody,
+  LeaderboardVisibilityResponse,
 } from "./schemas.ts";
 import {
   displayNameOf,
+  publicProfileOf,
+  saveAvatar,
+  saveLeaderboardVisible,
   inviteResponse,
   inviteStaff,
   listStaff,
@@ -88,6 +95,7 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
         email: user.email ?? null,
         displayName: await displayNameOf(app.deps.db, user.id),
         preferences: await preferencesOf(app.deps.db, user.id),
+        ...(await publicProfileOf(app.deps.db, user.id)),
       };
     },
   );
@@ -109,6 +117,52 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
       const result = await idempotent(app.deps.db, req, userId, async (tx) => {
         await saveDisplayName(tx, userId, displayName);
         return { status: 200, body: { id: userId, displayName } };
+      });
+      return result.body;
+    },
+  );
+
+  app.put(
+    "/v1/me/avatar",
+    {
+      preHandler: requireUser,
+      schema: {
+        tags: ["me"],
+        summary: "Profil resmini (figür) kaydet; haftalık listede adın yanında görünür",
+        body: AvatarBody,
+        response: { 200: AvatarResponse },
+      },
+    },
+    async (req) => {
+      const userId = req.user!.id;
+      const { avatarId } = req.body;
+      const result = await idempotent(app.deps.db, req, userId, async (tx) => {
+        await saveAvatar(tx, userId, avatarId);
+        return { status: 200, body: { avatarId } };
+      });
+      return result.body;
+    },
+  );
+
+  app.put(
+    "/v1/me/leaderboard",
+    {
+      preHandler: requireUser,
+      schema: {
+        tags: ["me"],
+        summary: "Haftanın Gezgini listesinde görün ya da çık (KVKK: varsayılan kapalı)",
+        description:
+          "true: görünen ad, figür ve bu haftanın puanı herkese açık haftalık listede görünür. Görünen ad yoksa 409. false: listeden hemen çıkar. E-posta ve kullanıcı kimliği hiçbir zaman listede yer almaz.",
+        body: LeaderboardVisibilityBody,
+        response: { 200: LeaderboardVisibilityResponse },
+      },
+    },
+    async (req) => {
+      const userId = req.user!.id;
+      const { visible } = req.body;
+      const result = await idempotent(app.deps.db, req, userId, async (tx) => {
+        await saveLeaderboardVisible(tx, userId, visible);
+        return { status: 200, body: { visible } };
       });
       return result.body;
     },

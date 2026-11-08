@@ -408,3 +408,27 @@ test("mock: translate marks empty English as machine draft and leaves written En
   await assert.rejects(c.narrateSite(site.id, { storyBlockId: "no-such" }));
   await assert.rejects(c.narrateSite(site.id, { partCardId: "no-such" }));
 });
+test("demo: the display name is kept on the device and checked like the server", async () => {
+  const s = storage();
+  const client = createMockClient(s);
+  assert.equal(await client.setDisplayName("  Ayşe  "), "Ayşe");
+  assert.equal((await createMockClient(s).getSnapshot()).name, "Ayşe");
+  await assert.rejects(client.setDisplayName("x".repeat(25)));
+  assert.equal((await createMockClient(s).getSnapshot()).name, "Ayşe");
+});
+test("demo weekly list: no made-up rows; the visitor alone, only after turning it on", async () => {
+  const { demoLeaderboard } = await import("./index");
+  const hidden = demoLeaderboard("Ayşe", 200, false, new Date("2026-11-05T09:00:00Z"));
+  assert.equal(hidden.sample, undefined);
+  assert.equal(hidden.weekStart, "2026-11-01T21:00:00.000Z");
+  assert.deepEqual(hidden.items, []);
+  assert.deepEqual(hidden.me, { rank: null, points: 200, visible: false });
+  const shown = demoLeaderboard("Ayşe", 200, true);
+  assert.deepEqual(shown.items, [{ rank: 1, name: "Ayşe", avatarId: null, points: 200 }]);
+  assert.equal(shown.me?.rank, 1);
+  assert.deepEqual(demoLeaderboard("Ayşe", 0, true).items, []);
+  const s = storage();
+  const client = createMockClient(s);
+  assert.equal(await client.setLeaderboardVisible(true), true);
+  assert.equal((await createMockClient(s).getWeeklyLeaderboard()).me?.visible, true);
+});

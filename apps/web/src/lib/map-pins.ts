@@ -58,7 +58,6 @@ const UNRANKED = 999;
 const PIXEL_RATIO = 2;
 const PIN_WIDTH = 32;
 const PIN_HEIGHT = 38.4;
-const STAR_SIZE = 36;
 /** The photograph pin (`photoPinImage`): a 40 px round photograph on a point. */
 const PHOTO_PIN_WIDTH = 40;
 const PHOTO_PIN_HEIGHT = 48;
@@ -73,6 +72,8 @@ export interface PinProperties {
   stop: number;
   /** Image id of the pin, see `pinImageId`. */
   icon: string;
+  /** Image id of a route stop's numbered star on the pin's corner (`stopBadgeId`); empty when not a stop. */
+  badge: string;
   /** The story of this site was finished: its pin carries a tick. */
   finished: boolean;
   /** `symbol-sort-key`: the site's `displayOrder`. */
@@ -90,7 +91,8 @@ export type PinCollection = GeoJSON.FeatureCollection<
 
 /**
  * Image id: a route stop is the numbered star in the route's colour; any other pin is its kind, ticked once finished,
- * ringed in gold while selected.
+ * ringed in gold while selected. The map no longer swaps a stop's pin for the star (`stopBadgeId`); the star alone is
+ * kept for callers that draw a stop by itself.
  */
 export const pinImageId = (
   kind: SiteKind,
@@ -107,6 +109,13 @@ export const pinImageId = (
         ? `pin-${kind}-done`
         : `pin-${kind}`;
 
+/**
+ * A route stop keeps its own pin and wears its number as a small star on the pin's top left (Muhammed, 7 Nov 2026:
+ * a stop's pin turned into the bare star, so a site without a building of its own, Eyne Bey, was no longer
+ * recognisable). The top right stays the tick's and the building «+»'s.
+ */
+export const stopBadgeId = (stop: number, accent: string = colors.cityBursa) => (stop ? `stop-badge-${stop}-${accent}` : "");
+
 export function pinFeatures(
   sites: HeritageSite[],
   routeIds: string[],
@@ -120,14 +129,16 @@ export function pinFeatures(
       .filter((site) => site.kind in kindIcons)
       .map((site) => {
         const stop = routeIds.indexOf(site.id) + 1;
-        const finished = look.finishedIds?.includes(site.id) ?? false;
+        // Building a route the «+» badge takes the pin's corner: the «story heard» tick waits (6 Nov 2026, the two drew
+        // one over the other).
+        const finished = !look.buildingRoute && (look.finishedIds?.includes(site.id) ?? false);
         const selected = site.id === selectedId;
         // A pin with the site's own photograph says which site it is (Muhammed, 3 Nov 2026: «pinler anlaşılmıyor»).
         const cover = look.photos
           ? (site.photos?.find((p) => p.id === site.coverPhotoId) ?? site.photos?.[0])?.src
           : undefined;
         const photo = (cover && sized(cover, 40)) || "";
-        const plain = pinImageId(site.kind, stop, finished, look.accent, selected);
+        const plain = pinImageId(site.kind, 0, finished, look.accent, selected);
         return {
           type: "Feature",
           geometry: { type: "Point", coordinates: site.coordinates },
@@ -138,12 +149,13 @@ export function pinFeatures(
             building: !!look.buildingRoute,
             kind: site.kind,
             stop,
-            icon: photo && !stop ? `photo-${site.id}${plain.slice(`pin-${site.kind}`.length)}` : plain,
+            icon: photo ? `photo-${site.id}${plain.slice(`pin-${site.kind}`.length)}` : plain,
+            badge: stopBadgeId(stop, look.accent),
             finished,
             order: site.displayOrder ?? UNRANKED,
             selected,
             label: "",
-            photo: stop ? "" : photo,
+            photo,
           },
         };
       }),
@@ -158,6 +170,8 @@ export function pinFeatures(
  */
 /** The «+» badge of a pin while a route is being built, and its image (drawn in `addPinImages`). */
 export const PIN_PLUS_LAYER = "pin-plus";
+/** A route stop's numbered star on its pin (`stopBadgeId`). */
+export const PIN_STOP_LAYER = "pin-stop";
 const PIN_PLUS_IMAGE = "pin-plus";
 
 export function pinLayers(labels: boolean): AddLayerObject[] {
@@ -212,7 +226,23 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "icon-ignore-placement": true,
     },
   };
-  if (!labels) return [icons];
+  const stopBadge: AddLayerObject = {
+    id: PIN_STOP_LAYER,
+    type: "symbol",
+    source: PIN_SOURCE,
+    minzoom: CITY_MARKER_MAX_ZOOM,
+    filter: [">", ["get", "stop"], 0] as never,
+    layout: {
+      "icon-image": ["get", "badge"],
+      "icon-anchor": "center",
+      // Mirrors the «+»: on the arch's top left corner, placed from the pin's point; a selected pin is larger.
+      "icon-offset": ["case", ["get", "selected"], ["literal", [-16, -46]], ["literal", [-12, -34]]],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+      "symbol-sort-key": ["get", "stop"],
+    },
+  };
+  if (!labels) return [icons, stopBadge];
   const names: AddLayerObject = {
     id: PIN_LABEL_LAYER,
     type: "symbol",
@@ -257,7 +287,7 @@ export function pinLayers(labels: boolean): AddLayerObject[] {
       "text-halo-width": 2,
     },
   };
-  return [names, icons, plusBadge];
+  return [names, icons, stopBadge, plusBadge];
 }
 
 const symbols = new Map<string, Promise<HTMLImageElement>>();
@@ -330,22 +360,29 @@ export function starPoints(size: number) {
   });
 }
 
-function stopImage(stop: number, accent: string) {
-  const size = Math.ceil(STAR_SIZE * PIXEL_RATIO);
+/** The stop number on a pin's corner: a 24 px star of the route's colour with a white rim. */
+function stopBadgeImage(stop: number, accent: string) {
+  const box = 26;
+  const size = Math.ceil(box * PIXEL_RATIO);
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
   ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
+  ctx.translate(1, 1);
   ctx.beginPath();
-  starPoints(STAR_SIZE).forEach(([x, y]) => ctx.lineTo(x, y));
+  starPoints(box - 2).forEach(([x, y]) => ctx.lineTo(x, y));
   ctx.closePath();
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#FFFFFF";
+  ctx.stroke();
   ctx.fillStyle = accent;
   ctx.fill();
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "600 14px Inter, system-ui, sans-serif";
+  ctx.font = "700 12px Inter, system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(String(stop), STAR_SIZE / 2, STAR_SIZE / 2 + 0.5);
+  ctx.fillText(String(stop), (box - 2) / 2, (box - 2) / 2 + 0.5);
   return ctx.getImageData(0, 0, size, size);
 }
 
@@ -538,16 +575,16 @@ async function addPinImages(
       async ([id, p]) =>
         [
           id,
-          p.stop
-            ? stopImage(p.stop, accent)
-            : p.photo
-              ? await photoPinImage(p.kind, p.photo, p.finished, p.selected)
-              : await pinImage(p.kind, p.finished, p.selected),
+          p.photo
+            ? await photoPinImage(p.kind, p.photo, p.finished, p.selected)
+            : await pinImage(p.kind, p.finished, p.selected),
         ] as const,
     ),
   );
   for (const [id, image] of images)
     if (!map.hasImage(id)) map.addImage(id, image, { pixelRatio: PIXEL_RATIO });
+  for (const { properties: p } of pins.features)
+    if (p.badge && !map.hasImage(p.badge)) map.addImage(p.badge, stopBadgeImage(p.stop, accent), { pixelRatio: PIXEL_RATIO });
 }
 
 /**
@@ -579,8 +616,8 @@ export const pinLayersOn = (map: MapLibreMap) =>
 
 /** The site whose pin or label is at a screen point (pixels from the map's top left), or `null`. */
 export function pinAt(map: MapLibreMap, x: number, y: number): string | null {
-  // A tap on a pin's «+» badge (building a route) is a tap on the pin.
-  const layers = [...pinLayersOn(map), ...[PIN_PLUS_LAYER].filter((id) => map.getLayer(id))];
+  // A tap on a pin's «+» badge (building a route) or its stop number is a tap on the pin.
+  const layers = [...pinLayersOn(map), ...[PIN_PLUS_LAYER, PIN_STOP_LAYER].filter((id) => map.getLayer(id))];
   if (!layers.length) return null;
   const hit = map.queryRenderedFeatures(
     [

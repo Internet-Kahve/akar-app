@@ -47,7 +47,7 @@ test("admin finds a member, confirms a role change and removes access on desktop
   await dialog.getByRole("button", { name: "Değişikliği onayla" }).click();
   await expect(dialog).toBeHidden();
   await expect(row.getByText("Yönetici", { exact: true })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator(".admin-members").getByRole("status")).toContainText(
     "Yönetici olarak güncellendi",
   );
   await page.screenshot({

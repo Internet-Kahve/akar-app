@@ -1,4 +1,14 @@
 "use client";
+import { Avatar, useAvatar } from "./avatar";
+import { AvatarPicker } from "./avatar-picker";
+import { AchievementMedal } from "./badge-medal";
+import { WeeklyBoard } from "./weekly-board";
+import { BadgeCollection, BadgeStrip, DiscoveredStrip, LevelBar, NameEditor, ShareWeekButton } from "./profile-parts";
+import { BadgeCard } from "./badge-card";
+import { achievements as measureAchievements, badgeEntries, type BadgeEntry } from "../lib/badges";
+import { badgesThisWeek } from "../lib/share-card";
+import type { ShareRequest } from "./share-card";
+import { LegalDialog, type LegalKind } from "./legal-dialog";
 import { AccessControls } from "./access-menu";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -15,9 +25,15 @@ import {
   RotateCcw,
   Map as MapIcon,
   BarChart3,
+  Camera,
+  Share2,
+  Trash2,
 } from "lucide-react";
 import {
+  canDeleteSite,
   memoryPermissions,
+  siteStatuses,
+  siteStatusLabels,
   type Command,
   type HeritageSite,
   type MapPlacement,
@@ -28,12 +44,14 @@ import {
 import type { AdminHealth, AkarClient, ModerationPage, SiteProgress } from "@akar/api-client";
 import { Modal, Motif, Notice, Tag } from "./ui";
 import { Localized, useI18n } from "./i18n";
-import { badgeInLang, taskInLang } from "../lib/task-text";
+import { badgeInLang } from "../lib/task-text";
 import { ConfirmDialog, MemoryActions } from "./memory-actions";
 import dynamic from "next/dynamic";
 
 // The content studio is for the team only: its screens come in their own chunks when an admin opens them, not with
 // every visitor's first download (3 Nov 2026; ~186 KB of source the map never used).
+/* The share card's canvas code comes only when the visitor asks to share. */
+const ShareDialog = dynamic(() => import("./share-card"), { ssr: false });
 const SiteEditor = dynamic(() => import("./admin-site-editor").then((m) => m.SiteEditor), { ssr: false });
 const RouteAdmin = dynamic(() => import("./admin-collections").then((m) => m.RouteAdmin), { ssr: false });
 const PhotoAdmin = dynamic(() => import("./admin-collections").then((m) => m.PhotoAdmin), { ssr: false });
@@ -42,6 +60,7 @@ const AdminMembers = dynamic(() => import("./admin-members").then((m) => m.Admin
 const AdminHealthAlert = dynamic(() => import("./admin-health").then((m) => m.AdminHealthAlert), { ssr: false });
 const AdminMapSettings = dynamic(() => import("./admin-map-settings").then((m) => m.AdminMapSettings), { ssr: false });
 const AdminStats = dynamic(() => import("./admin-stats").then((m) => m.AdminStats), { ssr: false });
+import type { ModelGenApi } from "./admin-model-gen";
 type Commit = (command: Command) => Promise<boolean>;
 export function Profile({
   state,
@@ -56,6 +75,11 @@ export function Profile({
   onExperimentalChange,
   auth,
   commit,
+  onRename,
+  collectionOpen,
+  onCollection,
+  board,
+  onAvatar,
 }: {
   state: Snapshot;
   progress: SiteProgress;
@@ -68,20 +92,31 @@ export function Profile({
   experimental: boolean;
   onExperimentalChange: (enabled: boolean) => void;
   commit: Commit;
+  /** Saves the display name (the account's, or the device's for a guest and the demo). */
+  onRename: (name: string) => Promise<void>;
+  /** The whole badge collection is open (also from «Koleksiyonda gör» in a celebration). */
+  collectionOpen: boolean;
+  onCollection: (open: boolean) => void;
+  /** «Haftanın Gezgini»: how to read the list and turn appearing on or off. */
+  board: { mode: "account" | "guest" | "demo"; load: AkarClient["getWeeklyLeaderboard"]; setVisible: AkarClient["setLeaderboardVisible"]; onSignIn?: () => void };
+  /** A figure picked: the account keeps it too, for the weekly list. */
+  onAvatar: (id: string) => void;
   /** Present only when connected to the real API; `email` is `null` for a guest. */
   auth?: { email: string | null; onSignIn: () => void; onSignOut: () => void; onDelete: () => Promise<boolean> };
 }) {
   const { lang, t } = useI18n();
   const [erasing, setErasing] = useState(false);
+  const [legal, setLegal] = useState<LegalKind | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [figure, setFigure] = useAvatar();
   const tr = lang === "en" ? "tr" : undefined;
   const firstSite = state.sites.find((s) => s.status === "published");
-  const badges = state.sites.filter((site) => site.status === "published").flatMap((site) =>
-    (site.badges ?? []).map((badge) => ({
-      ...badge,
-      site,
-      earned: progress.badges.some((owned) => owned.badgeId === badge.id),
-    })),
-  );
+  const [openBadge, setOpenBadge] = useState<BadgeEntry | null>(null);
+  const [sharing, setSharing] = useState<ShareRequest | null>(null);
+  const weekCount = badgesThisWeek(progress, new Date()).length;
+  const badges = badgeEntries(state.sites, progress);
+  const earnedCount = badges.filter((b) => b.held).length;
+  const feats = measureAchievements({ sites: state.sites, readIds: state.readIds, memories: state.memories, progress });
   return (
     <main id="main-content" tabIndex={-1} className="profile-page">
       <header className="profile-heading">
@@ -91,10 +126,22 @@ export function Profile({
       <div className="profile-grid">
         <aside>
           <div className="profile-card">
-            <div className="avatar large">{state.name.slice(0, 1).toLocaleUpperCase(lang)}</div>
-            <h2>{state.name}</h2>
-            <p className="profile-badge-count">{t("profile.badgeCount", { count: badges.filter((b) => b.earned).length })}</p>
-            <p className="profile-progress-summary">{t("profile.progressSummary", { sites: state.readIds.length, tasks: progress.tasks.length })}</p>
+            <div className="profile-hero" style={{ ["--figure" as string]: figure.colour }}>
+              <div className="profile-cover" aria-hidden="true" />
+              <button className="profile-avatar-btn" onClick={() => setPicking(true)} aria-label={t("profile.avatarChange")}>
+                <Avatar figure={figure} size={96} />
+                <span className="profile-avatar-edit" aria-hidden="true"><Camera size={14} /></span>
+              </button>
+              <NameEditor name={state.name} onRename={onRename} />
+              <p className="profile-figure"><Localized tr={figure.name} en={figure.nameEn} /></p>
+              <dl className="profile-stats">
+                <div><dd>{earnedCount}</dd><dt>{t("profile.statBadges")}</dt></div>
+                <div><dd>{state.readIds.length}</dd><dt>{t("profile.statSites")}</dt></div>
+                <div><dd>{progress.tasks.length}</dd><dt>{t("profile.statTasks")}</dt></div>
+              </dl>
+              <LevelBar points={state.points} />
+            </div>
+            {picking && <AvatarPicker current={figure.id} onPick={(id) => { setFigure(id); onAvatar(id); setPicking(false); }} onClose={() => setPicking(false)} />}
             <div className="profile-motif"><Motif /></div>
             {auth ? (
               auth.email ? (
@@ -154,8 +201,9 @@ export function Profile({
               </>
             )}
             <AccessControls />
-            <a className="text-btn" href="/aydinlatma.html">{t("profile.notice")}</a>
-            <a className="text-btn" href="/lisanslar.html">{t("profile.licenses")}</a>
+            <button className="text-btn" onClick={() => setLegal("kvkk")}>{t("profile.notice")}</button>
+            <button className="text-btn" onClick={() => setLegal("licenses")}>{t("profile.licenses")}</button>
+            {legal && <LegalDialog kind={legal} onClose={() => setLegal(null)} />}
             {canManage && (
               <button className="text-btn" onClick={onAdmin}>
                 <Shield size={16} />
@@ -173,19 +221,39 @@ export function Profile({
         </aside>
         <div className="profile-main">
           <section className="card profile-badges">
-            <div className="row between"><h3>{t("profile.badges")}</h3><span>{badges.filter((b) => b.earned).length} / {badges.length}</span></div>
-            {badges.length ? <div className="badges">
-              {badges.map((owned) => {
-                const { badge, english } = badgeInLang(owned, lang);
-                const task = owned.site.tasks?.find((x) => x.id === owned.taskId);
-                return <div key={badge.id} className={owned.earned ? "earned" : ""}>
-                <img src={`/figma/${owned.earned ? "718a4" : "b8133"}.svg`} alt="" />
-                <b lang={english ? undefined : tr}>{badge.title}</b>
-                <small>{owned.earned ? <Localized tr={owned.site.name} en={owned.site.nameEn} /> : owned.condition === "story" ? t("profile.badgeStory") : t("profile.badgeTask", { title: task ? taskInLang(task, lang).task.title : badge.title })}</small>
-              </div>;
-              })}
-            </div> : <p className="muted">{t("profile.noBadges")}</p>}
+            <div className="row between"><h3>{t("profile.badges")}</h3><span>{earnedCount} / {badges.length}</span></div>
+            {weekCount > 0 && <ShareWeekButton onShare={() => setSharing({ kind: "week" })} />}
+            {badges.length ? <BadgeStrip entries={badges} onOpen={setOpenBadge} onAll={() => onCollection(true)} /> : <p className="muted">{t("profile.noBadges")}</p>}
+            {collectionOpen && <BadgeCollection entries={badges} onOpen={setOpenBadge} onClose={() => onCollection(false)} />}
+            {openBadge && <BadgeCard entry={badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge} onClose={() => setOpenBadge(null)} onSite={(site) => { setOpenBadge(null); onCollection(false); onSite(site.id); }} onShare={() => { setSharing({ kind: "badge", entry: badges.find((b) => b.badge.id === openBadge.badge.id) ?? openBadge }); setOpenBadge(null); }} />}
+            {sharing && <ShareDialog request={sharing} name={state.name} points={state.points} sites={state.sites} progress={progress} onClose={() => setSharing(null)} />}
           </section>
+          <section className="card profile-achievements">
+            <h3>{t("profile.achievements")}</h3>
+            <ul className="achievement-list">
+              {feats.map((a) => (
+                <li key={a.id} className={a.done ? "done" : ""}>
+                  <AchievementMedal id={a.id} done={a.done} size={52} />
+                  <span>
+                    <b>{t(`achievement.${a.id}.title`)}</b>
+                    <small>{t(`achievement.${a.id}.text`)}</small>
+                    {!a.done && a.progress[1] > 1 && (
+                      <span className="achievement-bar" role="progressbar" aria-valuemin={0} aria-valuemax={a.progress[1]} aria-valuenow={a.progress[0]} aria-label={t(`achievement.${a.id}.title`)}>
+                        <i style={{ width: `${(a.progress[0] / a.progress[1]) * 100}%` }} />
+                        <em>{t("profile.achievementProgress", { have: a.progress[0], need: a.progress[1] })}</em>
+                      </span>
+                    )}
+                  </span>
+                  {a.done && (
+                    <button className="round-btn plain achievement-share" onClick={() => setSharing({ kind: "achievement", id: a.id })} aria-label={t("profile.shareAchievement", { title: t(`achievement.${a.id}.title`) })}>
+                      <Share2 size={17} />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+          <WeeklyBoard mode={board.mode} refreshKey={`${state.points}:${state.name}`} load={board.load} setVisible={board.setVisible} onSignIn={board.onSignIn} />
           <section className="card profile-saved">
             <h3>{t("profile.saved")}</h3>
             {state.savedIds.length ? state.sites.filter((site) => state.savedIds.includes(site.id)).map((site) =>
@@ -194,50 +262,7 @@ export function Profile({
           </section>
           <div className="card profile-discovered">
             <h3>{t("profile.discovered")}</h3>
-            {state.readIds.length === 0 ? (
-              <div className="empty-inline">
-                <BookOpen size={26} />
-                <p>
-                  {firstSite
-                    ? t("profile.firstStory")
-                    : t("profile.noSites")}
-                </p>
-                {firstSite && (
-                  <button
-                    className="text-btn"
-                    onClick={() => onSite(firstSite.id)}
-                  >
-                    {t("profile.start")} <ArrowRight size={15} />
-                  </button>
-                )}
-              </div>
-            ) : (
-              state.readIds.map((id) => (
-                <button
-                  className="list-row"
-                  key={id}
-                  onClick={() => onSite(id)}
-                >
-                  <span>
-                    <strong>
-                      {(() => {
-                        const s = state.sites.find((x) => x.id === id);
-                        return s && <Localized tr={s.name} en={s.nameEn} />;
-                      })()}
-                    </strong>
-                    <small>
-                      {t("profile.storyDone")}{" "}
-                      {state.visitedIds.includes(id)
-                        ? auth
-                          ? `· ${t("profile.visitVerified")}`
-                          : `· ${t("profile.visitDemo")}`
-                        : ""}
-                    </small>
-                  </span>
-                  <ArrowRight size={17} />
-                </button>
-              ))
-            )}
+            <DiscoveredStrip state={state} live={!!auth} onSite={onSite} onStart={firstSite ? () => onSite(firstSite.id) : undefined} />
           </div>
           <div className="card">
             <h3>{t("profile.shared")}</h3>
@@ -304,6 +329,7 @@ export function Admin({
   saveMapSettings,
   loadStats,
   loadSiteStats,
+  modelGen,
 }: {
   state: Snapshot;
   commit: Commit;
@@ -323,6 +349,8 @@ export function Admin({
   saveMapSettings: (settings: MapSettings) => Promise<MapSettings>;
   loadStats: AkarClient["getUsageStats"];
   loadSiteStats: AkarClient["getSiteUsageStats"];
+  /** Chat model editing (admin only, live system). */
+  modelGen: ModelGenApi;
 }) {
   const canEdit = role === "editor" || role === "admin";
   const [page, setPage] = useState<ModerationPage>({
@@ -351,6 +379,8 @@ export function Admin({
     ),
     [query, setQuery] = useState(""),
     [editing, setEditing] = useState<HeritageSite | null>(null),
+    [deleting, setDeleting] = useState<HeritageSite | null>(null),
+    [statusBusy, setStatusBusy] = useState<string | null>(null),
     [reject, setReject] = useState<string>(),
     [reason, setReason] = useState(""),
     [health, setHealth] = useState<AdminHealth | null>(null),
@@ -574,6 +604,7 @@ export function Admin({
             narrateSite={narrateSite}
             translateSite={translateSite}
             live={live}
+            modelGen={live && role === "admin" ? modelGen : undefined}
           />
         ) : tab === "members" && role === "admin" ? (
           <AdminMembers
@@ -635,7 +666,7 @@ export function Admin({
                         <th>Seviye</th>
                         <th>Durum</th>
                         <th>
-                          <span className="sr-only">Düzenle</span>
+                          <span className="sr-only">İşlemler</span>
                         </th>
                       </tr>
                     </thead>
@@ -658,24 +689,57 @@ export function Admin({
                               <Tag>{s.tier}</Tag>
                             </td>
                             <td>
-                              <Tag
-                                tone={
-                                  s.status === "published" ? "success" : "muted"
-                                }
+                              {/* §11.81: any status to any other; publishing runs the publication checks. */}
+                              <select
+                                className={`site-status site-status-${s.status}`}
+                                aria-label={`${s.name} durumu`}
+                                value={s.status}
+                                disabled={statusBusy === s.id}
+                                onChange={async (e) => {
+                                  const status = e.target
+                                    .value as HeritageSite["status"];
+                                  setStatusBusy(s.id);
+                                  try {
+                                    await commit({
+                                      type: "site-status",
+                                      siteId: s.id,
+                                      status,
+                                    });
+                                  } finally {
+                                    setStatusBusy(null);
+                                  }
+                                }}
                               >
-                                {s.status === "published"
-                                  ? "Yayında"
-                                  : "Taslak"}
-                              </Tag>
+                                {siteStatuses.map((status) => (
+                                  <option key={status} value={status}>
+                                    {siteStatusLabels[status]}
+                                  </option>
+                                ))}
+                              </select>
                             </td>
                             <td>
-                              <button
-                                className="icon-btn"
-                                aria-label={`${s.name} düzenle`}
-                                onClick={() => setEditing(s)}
-                              >
-                                <Pencil size={16} />
-                              </button>
+                              <span className="row-actions">
+                                <button
+                                  className="icon-btn"
+                                  aria-label={`${s.name} düzenle`}
+                                  onClick={() => setEditing(s)}
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  className="icon-btn danger"
+                                  aria-label={`${s.name} sil`}
+                                  title={
+                                    canDeleteSite(s)
+                                      ? "Eseri sil"
+                                      : "Yayındaki eser silinemez; önce deaktif et ya da taslağa al."
+                                  }
+                                  disabled={!canDeleteSite(s)}
+                                  onClick={() => setDeleting(s)}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -811,6 +875,19 @@ export function Admin({
           </section>
         )}
       </div>
+      {deleting && (
+        <ConfirmDialog
+          title="Eseri sil"
+          confirm="Evet, sil"
+          onClose={() => setDeleting(null)}
+          onConfirm={() => commit({ type: "delete-site", siteId: deleting.id })}
+        >
+          <p>
+            «{deleting.name}» ({siteStatusLabels[deleting.status].toLocaleLowerCase("tr")}) panelden kaldırılacak.
+            Ziyaretçilerin bu eserdeki rozet ve puanları korunur. Emin misin?
+          </p>
+        </ConfirmDialog>
+      )}
       {reject && (
         <Modal title="Katkıyı reddet" onClose={() => setReject(undefined)}>
           <label className="field">

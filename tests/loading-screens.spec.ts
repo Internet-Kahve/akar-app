@@ -51,16 +51,19 @@ test("the opening screen names the default city and draws its pattern from the c
   await expect(page.locator(".map-canvas canvas")).toBeVisible();
 });
 
-test("the emblem is drawn once and turns, and stands drawn when the visitor asks for less motion", async ({ page }) => {
+test("the opening turns the city's own motif in its colour with a ring round it, a waiting word under it, and stands still for less motion", async ({ page }) => {
   const release = await holdMap(page);
   await page.goto("/#view=map");
-  const stroke = page.locator(".opening .emblem path");
-  await expect(stroke).toHaveAttribute("pathLength", "1");
-  // Drawn once, then turning in place with a ring running round it (3 Nov 2026: «yanıp sönmesin, dönsün»).
-  await expect(stroke).toHaveCSS("animation-name", "emblem-draw-once");
-  await expect(stroke).toHaveCSS("animation-duration", "1.4s");
-  await expect(page.locator(".opening .emblem .emblem-turn")).toHaveCSS("animation-name", "emblem-turn");
-  await expect(page.locator(".opening .emblem .emblem-ring")).toHaveCSS("animation-name", "emblem-ring");
+  // Bursa's emblem (from its record), in Bursa's colour, turning and breathing (6 Nov 2026).
+  const motif = page.locator(".opening .loader-city i");
+  await expect(motif).toHaveCSS("background-color", BURSA.accent);
+  expect(await motif.evaluate((el) => getComputedStyle(el).maskImage)).toContain("amblem-bursa.svg");
+  await expect(motif).toHaveCSS("animation-name", "loader-turn, loader-breathe");
+  await expect(page.locator(".opening .loader-city circle")).toHaveCSS("animation-name", "loader-ring");
+  // A word from the waqf's world, for the eye only.
+  const words = page.locator(".opening .wait-words");
+  await expect(words).toHaveAttribute("aria-hidden", "true");
+  await expect(words).toHaveText(/…/);
   release();
   // The map draws slowly in software rendering under a full run; the other opening checks wait as long.
   await expect(page.locator(".opening")).toHaveCount(0, { timeout: 12000 });
@@ -70,9 +73,7 @@ test("the emblem is drawn once and turns, and stands drawn when the visitor asks
   // The same address with only its #view: a full load, not a jump within the page.
   await page.goto("about:blank");
   await page.goto("/#view=map");
-  const drawn = page.locator(".opening .emblem path");
-  await expect(drawn).toHaveCSS("animation-name", "none");
-  await expect(drawn).toHaveCSS("stroke-dashoffset", "0px");
+  await expect(page.locator(".opening .loader-city i")).toHaveCSS("animation-name", "none");
   still();
   await expect(page.locator(".opening")).toHaveCount(0);
 });
@@ -150,7 +151,10 @@ test("the 3D card tells the percentage and the megabytes of the download itself,
     );
     const bar = card.getByRole("progressbar", { name: "3D model yükleniyor" });
     await expect(bar).toHaveAttribute("aria-valuenow", "62");
-    await expect(card.locator(".model-loading-emblem path")).toHaveAttribute("pathLength", "1");
+    // A mosque: the building rises (hans and the rest get arches); the waiting words are the builder's.
+    await expect(card.locator(".loader-building")).toBeVisible();
+    await expect(card.locator(".loader-arcade")).toHaveCount(0);
+    await expect(card.locator(".wait-words")).toHaveText(/…/);
     // The city's pattern (from its record) is behind the card, faint.
     const pattern = page.locator(".model-viewer .city-pattern");
     await expect(pattern).toHaveCount(1);
