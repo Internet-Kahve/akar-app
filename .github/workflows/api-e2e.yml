@@ -23,6 +23,12 @@ jobs:
     env:
       AKAR_E2E_BROWSER_CHANNEL: chrome
     steps:
+      - name: Reserve Supabase ports before network downloads
+        run: |
+          # Supabase ports overlap Linux's ephemeral range. Keep outgoing downloads
+          # from claiming them before Docker binds the local services.
+          reserved_ports="$(sysctl -n net.ipv4.ip_local_reserved_ports)"
+          sudo sysctl -w "net.ipv4.ip_local_reserved_ports=${reserved_ports:+$reserved_ports,}54320-54329"
       - uses: actions/checkout@v7.0.1
         with:
           sparse-checkout-cone-mode: false
@@ -55,6 +61,8 @@ jobs:
       - name: API and database logs on failure
         if: failure()
         run: |
+          sudo ss -tanp | grep -E ':5432[0-9]\b' || true
+          docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
           cat /tmp/akar-api.log 2>/dev/null || true
           docker compose -f services/api/docker-compose.yml logs --no-color db || true
       - name: Stop disposable services
