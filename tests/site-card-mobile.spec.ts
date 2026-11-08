@@ -99,9 +99,14 @@ test("«3D model · Temsili» and «İçini göster» ride on the card's top edg
 
 test("scrolling the closed card's content raises it a little, enough to scroll, not all the way", async ({ page, browserName, isMobile }) => {
   test.skip(browserName === "webkit" && isMobile, "Playwright mobile WebKit does not implement mouse.wheel");
+  // Hold the 1.8 s idle-settle timer while measuring the intentional intermediate stop.
+  // On a busy CI runner it can otherwise close again before the assertion samples it.
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
   const c = await box(page, ".workspace.on-site .side-panel");
   await page.mouse.move(c.x + c.width / 2, c.y + c.height - 30);
   await page.mouse.wheel(0, 120);
+  await page.clock.runFor(400);
   await expect(grip(page)).toHaveAttribute("aria-expanded", "true");
   await expect.poll(async () => (await box(page, ".workspace.on-site .side-panel")).height).toBeGreaterThan(c.height + 120);
   const risen = (await box(page, ".workspace.on-site .side-panel")).height;

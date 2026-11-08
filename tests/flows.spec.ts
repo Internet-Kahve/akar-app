@@ -96,6 +96,8 @@ test("discovery, story, memory moderation and persistence form one complete flow
 }) => {
   // The longest journey of the suite, drawn in software on the CI browsers.
   test.slow();
+  // Static mobile WebKit renders the whole multi-screen journey in software in CI.
+  if (test.info().project.name === "ios-web") test.setTimeout(180_000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/#view=map");
