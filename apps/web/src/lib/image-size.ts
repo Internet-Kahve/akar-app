@@ -6,9 +6,14 @@
  * Only the catalogue's own photographs go through it: local content (`/icerik/…`, `/tanitim/…` excepted) and the
  * catalogue's Supabase storage (next.config `images.remotePatterns`). Drawings (SVG), data and blob URLs (a photo a
  * visitor just picked) and anything else stay as they are.
+ *
+ * `IMAGE_WIDTHS` is also the optimiser allowlist (`next.config` `imageSizes` / `deviceSizes`). A width that nothing
+ * on screen asks for is left out, because each width of one source is its own transformation. Slots that show the
+ * same file share a width: the 44 px history button uses the 256 px thumbnail, and a model angle uses the gallery's
+ * 1200. The largest slot is the 1200 CSS photograph at 2×; 2560 is the next step up from that, where the default
+ * ladder used to jump from 2048 to 3840.
  */
-/** next.config: the default `imageSizes` and `deviceSizes` of Next 16; `w` must be one of them. */
-export const IMAGE_WIDTHS = [32, 48, 64, 96, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840];
+export const IMAGE_WIDTHS = [96, 256, 384, 640, 750, 828, 1200, 2560];
 /** Pixels per CSS pixel the sizes are made for: phones are 2–3, wide screens 1–2. */
 const DENSITY = 2;
 const SUPABASE = /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\//;
