@@ -6,7 +6,7 @@ import type { PartCard, SitePhoto, SiteSource } from "@akar/domain";
 import { Lightbox, useWide } from "./about-reading";
 import { Localized, useI18n } from "./i18n";
 import { PartCardDialog } from "./part-card";
-import { clampCardScale, resizedCardScale } from "../lib/story-scene";
+import { CARD_SCALE_MAX, CARD_WIDTH, clampCardScale, resizedCardScale } from "../lib/story-scene";
 
 /** A press that moves less than this (px) is a tap, not a drag. */
 const DRAG_SLOP = 6;
@@ -168,7 +168,13 @@ export function StoryPhotoCard({
             else setOpen(true);
           }}
         >
-          <img src={sized(photo.src, 1024)} alt="" draggable={false} decoding="async" />
+          {/* Largest the card grows: 320px desktop frame × 1.6. That snaps to the gallery's 1200px file. */}
+          <img
+            src={sized(photo.src, Math.round(CARD_WIDTH * CARD_SCALE_MAX))}
+            alt=""
+            draggable={false}
+            decoding="async"
+          />
           <span>
             <strong>
               <Localized tr={photo.title} en={photo.titleEn} />

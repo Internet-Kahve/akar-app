@@ -5,7 +5,7 @@ export type SceneFrame = { left: number; bottom: number };
 export const NO_FRAME: SceneFrame = { left: 0, bottom: 0 };
 
 /** The story's photo card: beside the model on a wide screen, a strip under it on a narrow one (`.story-photo-card`). */
-const CARD_WIDTH = 320;
+export const CARD_WIDTH = 320;
 const CARD_STRIP_HEIGHT = 96;
 const CARD_EDGE = 20;
 const CARD_GAP = 12;
